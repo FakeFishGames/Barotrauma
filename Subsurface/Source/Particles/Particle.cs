@@ -38,9 +38,7 @@ namespace Barotrauma.Particles
 
         private Vector2 drawPosition;
         private float drawRotation;
-
-        //private float checkCollisionTimer;
-
+        
         private Hull currentHull;
 
         private List<Gap> hullGaps;
@@ -75,7 +73,6 @@ namespace Barotrauma.Particles
         
         public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null)
         {
-
             this.prefab = prefab;
 
             spriteIndex = Rand.Int(prefab.Sprites.Count);
@@ -116,8 +113,6 @@ namespace Barotrauma.Particles
             if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
                 hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
-                //hullLimits = new List<Hull>();
-                //hullLimits = FindLimits(position);
             }
 
             if (prefab.RotateToDirection)
@@ -127,18 +122,6 @@ namespace Barotrauma.Particles
                 prevRotation = rotation;
             }
         }
-
-        //private List<Hull> FindLimits(Vector2 position)
-        //{
-        //    List<Hull> hullList = new List<Hull>();
-
-        //    currentHull = Hull.FindHull(position);
-        //    if (currentHull == null) return hullList;
-
-        //    hullList.Add(currentHull);
-
-        //    return FindAdjacentHulls(hullList, currentHull, Math.Abs(velocity.X) > Math.Abs(velocity.Y));
-        //}
 
         public bool Update(float deltaTime)
         {
@@ -190,12 +173,13 @@ namespace Barotrauma.Particles
 
                 if (currentHull == null)
                 {
-                    var collidedHull = Hull.FindHullOld(edgePos);
+                    Hull collidedHull = Hull.FindHull(position);
                     if (collidedHull != null)
                     {
                         if (prefab.DeleteOnCollision) return false;
                         OnWallCollisionOutside(collidedHull);
-                    }
+                    }                   
+
                 }
                 else if (!Submarine.RectContains(currentHull.WorldRect, edgePos))
                 {
@@ -216,11 +200,11 @@ namespace Barotrauma.Particles
                         }
 
                         gapFound = true;
+                        break;
                     }
 
                     if (!gapFound)
                     {
-
                         OnWallCollisionInside(currentHull, edgePos);
                     }
                     else
@@ -229,9 +213,8 @@ namespace Barotrauma.Particles
                         hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
 
                         if (OnChangeHull != null) OnChangeHull(edgePos, currentHull);
-                    }                    
-                }
-              
+                    }
+                }              
             }
 
             lifeTime -= deltaTime;
