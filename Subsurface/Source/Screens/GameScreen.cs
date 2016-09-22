@@ -340,7 +340,7 @@ namespace Barotrauma
             spriteBatch.End();
             
             spriteBatch.Begin(SpriteSortMode.Immediate,
-                BlendState.AlphaBlend, SamplerState.LinearWrap,
+                BlendState.NonPremultiplied, SamplerState.LinearWrap,
                 null, null, 
                 damageEffect,
                 cam.Transform);

@@ -437,7 +437,7 @@ namespace Barotrauma
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff =  Math.Min((s.damage / prefab.MaxHealth), 0.65f);
+                        float newCutoff = Math.Min((s.damage / prefab.MaxHealth), 0.65f);
 
                         if (Math.Abs(newCutoff - prevCutoff) > 0.01f)
                         {
@@ -539,7 +539,9 @@ namespace Barotrauma
 
             var section = sections[sectionIndex];
 
-            int particleAmount = (int)(Math.Min(Health - section.damage, damage) * Rand.Range(0.1f, 1.0f));
+            int particleAmount = (int)(Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f));
+
+            particleAmount = Math.Min(particleAmount, 200);
             for (int i = 0; i < particleAmount; i++)
             {
                 Vector2 particlePos = new Vector2(
