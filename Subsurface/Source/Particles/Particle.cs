@@ -103,7 +103,7 @@ namespace Barotrauma.Particles
 
             sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
-            color = prefab.StartColor;
+            color = new Color(prefab.StartColor, 1.0f);
             alpha = prefab.StartAlpha;
             
             velocityChange = prefab.VelocityChange;
@@ -214,7 +214,7 @@ namespace Barotrauma.Particles
 
                         if (OnChangeHull != null) OnChangeHull(edgePos, currentHull);
                     }
-                }              
+                }
             }
 
             lifeTime -= deltaTime;
@@ -242,24 +242,24 @@ namespace Barotrauma.Particles
 
             if (position.Y < prevHullRect.Y - prevHullRect.Height)
             {
-                position.Y = prevHullRect.Y - prevHullRect.Height + 1.0f;
+                position.Y = prevHullRect.Y - prevHullRect.Height + prefab.CollisionRadius;
                 velocity.Y = -velocity.Y;
             }
             else if (position.Y > prevHullRect.Y)
             {
-                position.Y = prevHullRect.Y - 1.0f;
+                position.Y = prevHullRect.Y - prefab.CollisionRadius;
                 velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
                 velocity.Y = -velocity.Y * 0.1f;
             }
 
             if (position.X < prevHullRect.X)
             {
-                position.X = prevHullRect.X + 1.0f;
+                position.X = prevHullRect.X + prefab.CollisionRadius;
                 velocity.X = -velocity.X;
             }
             else if (position.X > prevHullRect.X + prevHullRect.Width)
             {
-                position.X = prevHullRect.X + prevHullRect.Width - 1.0f;
+                position.X = prevHullRect.X + prevHullRect.Width - prefab.CollisionRadius;
                 velocity.X = -velocity.X;
             }
 
@@ -275,24 +275,24 @@ namespace Barotrauma.Particles
             
             if (position.Y < hullRect.Y - hullRect.Height)
             {
-                position.Y = hullRect.Y - hullRect.Height - 1.0f;
+                position.Y = hullRect.Y - hullRect.Height - prefab.CollisionRadius;
                 velocity.Y = -velocity.Y;
             }
             else if (position.Y > hullRect.Y)
             {
-                position.Y = hullRect.Y + 1.0f;
+                position.Y = hullRect.Y + prefab.CollisionRadius;
                 velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
                 velocity.Y = -velocity.Y;
             }
 
             if (position.X < hullRect.X)
             {
-                position.X = hullRect.X - 1.0f;
+                position.X = hullRect.X - prefab.CollisionRadius;
                 velocity.X = -velocity.X;
             }
             else if (position.X > hullRect.X + hullRect.Width)
             {
-                position.X = hullRect.X + hullRect.Width + 1.0f;
+                position.X = hullRect.X + hullRect.Width + prefab.CollisionRadius;
                 velocity.X = -velocity.X;
             }
 
