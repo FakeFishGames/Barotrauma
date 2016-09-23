@@ -27,6 +27,7 @@ namespace Barotrauma
             get { return netStateID; }
         }
 
+        byte dequeuedInput = 0; byte prevDequeuedInput = 0;
         List<byte> memInput = new List<byte>();
         List<float> memMouseX = new List<float>();
         List<float> memMouseY = new List<float>();
@@ -74,7 +75,7 @@ namespace Barotrauma
 
         private CharacterInventory inventory;
 
-        public float LastNetworkUpdate;
+        private UInt32 LastNetworkUpdateID = 0;
 
         //public int LargeUpdateTimer;
 
@@ -638,11 +639,54 @@ namespace Barotrauma
 
         public bool IsKeyHit(InputType inputType)
         {
+            if (GameMain.Server != null && Character.Controlled != null)
+            {
+                switch (inputType)
+                {
+                    case InputType.Left:
+                        return ((dequeuedInput & 1) > 0) && !((prevDequeuedInput & 1) > 0);
+                        //break;
+                    case InputType.Right:
+                        return ((dequeuedInput & 2) > 0) && !((prevDequeuedInput & 2) > 0);
+                        //break;
+                    case InputType.Up:
+                        return ((dequeuedInput & 4) > 0) && !((prevDequeuedInput & 4) > 0);
+                        //break;
+                    case InputType.Down:
+                        return ((dequeuedInput & 8) > 0) && !((prevDequeuedInput & 8) > 0);
+                        //break;
+                    default:
+                        return false;
+                        //break;
+                }
+            }
+
             return keys[(int)inputType].Hit;
         }
 
         public bool IsKeyDown(InputType inputType)
         {
+            if (GameMain.Server!=null && Character.Controlled!=this)
+            {
+                bool retVal = false;
+                switch (inputType)
+                {
+                    case InputType.Left:
+                        retVal = (dequeuedInput & 1) > 0;
+                        break;
+                    case InputType.Right:
+                        retVal = (dequeuedInput & 2) > 0;
+                        break;
+                    case InputType.Up:
+                        retVal = (dequeuedInput & 4) > 0;
+                        break;
+                    case InputType.Down:
+                        retVal = (dequeuedInput & 8) > 0;
+                        break;
+                }
+                return retVal;
+            }
+            
             return keys[(int)inputType].Held;
         }
 
@@ -1146,7 +1190,38 @@ namespace Barotrauma
             {
                 if (GameMain.Server != null)
                 {
-                    
+                    if (!IsDead)
+                    {
+                        if (memInput.Count > 0)
+                        {
+                            AnimController.Frozen = false;
+                            prevDequeuedInput = dequeuedInput;
+                            dequeuedInput = memInput[memInput.Count - 1];
+                            memInput.RemoveAt(memInput.Count - 1);
+                        }
+                        else
+                        {
+                            AnimController.Frozen = true;
+                            return;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (GameMain.Client != null)
+                {
+                    byte newInput = 0;
+                    newInput |= IsKeyDown(InputType.Left) ? (byte)1 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Right) ? (byte)2 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Up) ? (byte)4 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Down) ? (byte)8 : (byte)0;
+                    memInput.Insert(0,newInput);
+                    LastNetworkUpdateID++;
+                    while (memInput.Count>60)
+                    {
+                        memInput.RemoveAt(memInput.Count - 1);
+                    }
                 }
             }
             /*if (networkUpdateSent)
@@ -1585,12 +1660,48 @@ namespace Barotrauma
         }
 
         public virtual void ClientWrite(NetOutgoingMessage msg) 
-        { 
-            //TODO: write inputs
+        {
+            if (GameMain.Server != null) return;
+            msg.Write((byte)ClientNetObject.CHARACTER_INPUT);
+
+            while (memInput.Count > 60)
+            {
+                memInput.RemoveAt(memInput.Count - 1);
+            }
+
+            msg.Write(LastNetworkUpdateID);
+            byte inputCount = Math.Min((byte)memInput.Count, (byte)60);
+            msg.Write(inputCount);
+
+            for (int i = 0; i < inputCount; i++)
+            {
+                msg.Write(memInput[i]);
+            }
         }
         public virtual void ServerRead(NetIncomingMessage msg, Client c) 
-        { 
-            //TODO: read inputs
+        {
+            if (GameMain.Server == null) return;
+
+            UInt32 networkUpdateID = msg.ReadUInt32();
+            byte inputCount = msg.ReadByte();
+            
+            for (int i=0;i<inputCount;i++)
+            {
+                byte newInput = msg.ReadByte();
+                if ((i < (networkUpdateID-LastNetworkUpdateID)) && (i<60))
+                {
+                    memInput.Insert(0, newInput);
+                }
+            }
+            if (networkUpdateID > LastNetworkUpdateID)
+            {
+                LastNetworkUpdateID = networkUpdateID;
+            }
+            while (memInput.Count > 60)
+            {
+                //deleting inputs from the queue here means the server is way behind and data needs to be dropped
+                memInput.RemoveAt(memInput.Count - 1);
+            }
         }
 
         public virtual void ServerWrite(NetOutgoingMessage msg, Client c) 
