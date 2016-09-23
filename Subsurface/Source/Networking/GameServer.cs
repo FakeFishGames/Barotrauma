@@ -505,7 +505,7 @@ namespace Barotrauma.Networking
                     ClientReadLobby(inc);
                     break;
                 case ClientPacketHeader.UPDATE_INGAME:
-                    //TODO
+                    ClientReadIngame(inc);
                     break;
             }            
         }
@@ -558,7 +558,7 @@ namespace Barotrauma.Networking
                 inc.SenderConnection.Disconnect("You're not a connected client.");
                 return;
             }
-
+            
             ClientNetObject objHeader;
             while ((objHeader=(ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
             {
@@ -566,10 +566,10 @@ namespace Barotrauma.Networking
                 {
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
-                        UInt32 lastLobbyUpdID = inc.ReadUInt32();
-                        if (lastLobbyUpdID > c.lastRecvLobbyUpdate)
+                        UInt32 lastGeneralUpdID = inc.ReadUInt32();
+                        if (lastGeneralUpdID > c.lastRecvGeneralUpdate)
                         {
-                            c.lastRecvLobbyUpdate = lastLobbyUpdID;
+                            c.lastRecvGeneralUpdate = lastGeneralUpdID;
                         }
                         UInt32 lastChatID = inc.ReadUInt32();
                         if (lastChatID > c.lastRecvChatMsgID)
@@ -580,6 +580,9 @@ namespace Barotrauma.Networking
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
                         break;
+                    default:
+                        return;
+                        //break;
                 }
             }
 
@@ -593,18 +596,78 @@ namespace Barotrauma.Networking
                 inc.SenderConnection.Disconnect("You're not a connected client.");
                 return;
             }
+            
+            ClientNetObject objHeader;
+            while ((objHeader = (ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
+            {
+                switch (objHeader)
+                {
+                    case ClientNetObject.SYNC_IDS:
+                        //TODO: might want to use a clever class for this
+                        UInt32 lastGeneralUpdID = inc.ReadUInt32();
+                        if (lastGeneralUpdID > c.lastRecvGeneralUpdate)
+                        {
+                            c.lastRecvGeneralUpdate = lastGeneralUpdID;
+                        }
+                        UInt32 lastChatID = inc.ReadUInt32();
+                        if (lastChatID > c.lastRecvChatMsgID)
+                        {
+                            c.lastRecvChatMsgID = lastChatID;
+                        }
+                        break;
+                    case ClientNetObject.CHAT_MESSAGE:
+                        ChatMessage.ServerRead(inc, c);
+                        break;
+                    case ClientNetObject.CHARACTER_INPUT:
+                        if (c.Character != null && !c.Character.IsDead && !c.Character.IsUnconscious)
+                        {
+                            c.Character.ServerRead(inc, c);
+                        }
+                        break;
+                    default:
+                        return;
+                        //break;
+                }
+            }
         }
 
         private void ClientWriteIngame(Client c)
         {
+            NetOutgoingMessage outmsg = server.CreateMessage();
+            outmsg.Write((byte)ServerPacketHeader.UPDATE_INGAME);
+
+            outmsg.Write((byte)ServerNetObject.SYNC_IDS);
+            outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
+
+            foreach (GUIComponent gc in GameMain.NetLobbyScreen.ChatBox.children)
+            {
+                if (gc is GUITextBlock)
+                {
+                    if (gc.UserData is ChatMessage)
+                    {
+                        ChatMessage cMsg = (ChatMessage)gc.UserData;
+                        if (cMsg.NetStateID > c.lastRecvChatMsgID)
+                        {
+                            cMsg.ServerWrite(outmsg, c);
+                        }
+                    }
+                }
+            }
+
+            outmsg.Write((byte)ServerNetObject.CHARACTER_POSITION);
             if (c.Character != null && !c.Character.IsDead)
             {
-
+                outmsg.Write(false); //not dead
+                outmsg.WritePadBits();
             }
             else
             {
-
+                outmsg.Write(true); //dead
+                outmsg.WritePadBits();
             }
+
+            outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+            server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
         }
 
         private void ClientWriteLobby(Client c)
@@ -614,7 +677,7 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
             
-            if (c.lastRecvLobbyUpdate<GameMain.NetLobbyScreen.LastUpdateID)
+            if (c.lastRecvGeneralUpdate<GameMain.NetLobbyScreen.LastUpdateID)
             {
                 outmsg.Write(true);
                 outmsg.WritePadBits();
@@ -622,7 +685,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(GameMain.NetLobbyScreen.GetServerName());
                 outmsg.Write(GameMain.NetLobbyScreen.ServerMessage);
                 var subList = GameMain.NetLobbyScreen.GetSubList();
-                if (c.lastRecvLobbyUpdate < 1)
+                if (c.lastRecvGeneralUpdate < 1)
                 {
                     outmsg.Write((UInt16)subList.Count);
                     for (int i = 0; i < subList.Count; i++)
@@ -776,8 +839,24 @@ namespace Barotrauma.Networking
 
             if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
 
-            var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
-            server.SendMessage(startMessage, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
+            List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+            foreach (Client c in connectedClients)
+            {
+                c.inGame = true;
+                
+                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
+                Vector2 spawnPosition = spawnPoint.WorldPosition;
+
+                DebugConsole.NewMessage(Convert.ToString(spawnPosition.X) + "," + Convert.ToString(spawnPosition.Y), Color.Lime);
+                Character spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, null, true, false);
+                c.Character = spawnedCharacter;
+                
+                GameMain.GameSession.CrewManager.characters.Add(c.Character);
+            }
+
+            CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
+            //var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
+            //server.SendMessage(startMessage, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
 
             yield return CoroutineStatus.Running;
 
@@ -802,28 +881,34 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        private NetOutgoingMessage CreateStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode)
+        private void CreateStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode, List<Client> clients)
         {
-            NetOutgoingMessage msg = server.CreateMessage();
-            msg.Write((byte)ServerPacketHeader.STARTGAME);
+            foreach (Client c in clients)
+            {
+                NetOutgoingMessage msg = server.CreateMessage();
+                msg.Write((byte)ServerPacketHeader.STARTGAME);
 
-            msg.Write(seed);
+                msg.Write(seed);
 
-            msg.Write(GameMain.NetLobbyScreen.LevelSeed);
+                msg.Write(GameMain.NetLobbyScreen.LevelSeed);
 
-            msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
+                msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
 
-            msg.Write(selectedSub.Name);
-            msg.Write(selectedSub.MD5Hash.Hash);
+                msg.Write(selectedSub.Name);
+                msg.Write(selectedSub.MD5Hash.Hash);
 
-            msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
-            msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
+                msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
+                msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
-            msg.Write(selectedMode.Name);
+                msg.Write(selectedMode.Name);
 
-            msg.Write(AllowRespawn);
-            
-            return msg;
+                msg.Write(AllowRespawn);
+                
+                msg.Write(c.Character.WorldPosition.X);
+                msg.Write(c.Character.WorldPosition.Y);
+                
+                c.Connection.SendMessage(msg, NetDeliveryMethod.ReliableUnordered,0);
+            }
         }
 
         public void EndGame()

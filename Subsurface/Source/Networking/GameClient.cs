@@ -485,6 +485,10 @@ namespace Barotrauma.Networking
             {
                 SendLobbyUpdate();
             }
+            else
+            {
+                SendIngameUpdate();
+            }
 
             // Update current time
             updateTimer = DateTime.Now + updateInterval;  
@@ -512,6 +516,9 @@ namespace Barotrauma.Networking
                         {
                             case ServerPacketHeader.UPDATE_LOBBY:
                                 ReadLobbyUpdate(inc);
+                                break;
+                            case ServerPacketHeader.UPDATE_INGAME:
+                                ReadIngameUpdate(inc);
                                 break;
                             case ServerPacketHeader.QUERY_STARTGAME:
                                 string subName = inc.ReadString();
@@ -560,6 +567,9 @@ namespace Barotrauma.Networking
 
             bool respawnAllowed     = inc.ReadBoolean();
 
+            float posX              = inc.ReadFloat();
+            float posY              = inc.ReadFloat();
+
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 
             if (gameMode == null)
@@ -590,6 +600,10 @@ namespace Barotrauma.Networking
             endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
 
             GameMain.GameScreen.Select();
+
+            DebugConsole.NewMessage(Convert.ToString(posX) + "," + Convert.ToString(posY), Color.Lime);
+            Character myChar = Character.Create(Character.HumanConfigFile, new Vector2(posX, posY), null, true, false);
+            Character.Controlled = myChar;
 
             yield return CoroutineStatus.Success;
         }
@@ -661,6 +675,32 @@ namespace Barotrauma.Networking
             }
         }
 
+        private void ReadIngameUpdate(NetIncomingMessage inc)
+        {
+            ServerNetObject objHeader;
+            while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
+            {
+                switch (objHeader)
+                {
+                    case ServerNetObject.SYNC_IDS:
+                        lastSentChatMsgID = inc.ReadUInt32();
+                        break;
+                    case ServerNetObject.CHARACTER_POSITION:
+                        bool dead = inc.ReadBoolean();
+                        inc.ReadPadBits();
+                        if (Character.Controlled != null)
+                        {
+                            if (dead && !Character.Controlled.IsDead)
+                                Character.Controlled.Kill(CauseOfDeath.Damage);
+                        }
+                        break;
+                    case ServerNetObject.CHAT_MESSAGE:
+                        ChatMessage.ClientRead(inc);
+                        break;
+                }
+            }
+        }
+
         private void SendLobbyUpdate()
         {
             NetOutgoingMessage outmsg = client.CreateMessage();
@@ -679,6 +719,34 @@ namespace Barotrauma.Networking
             {
                 cMsg.ClientWrite(outmsg);
             }
+            outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
+            client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
+        }
+
+        private void SendIngameUpdate()
+        {
+            NetOutgoingMessage outmsg = client.CreateMessage();
+            outmsg.Write((byte)ClientPacketHeader.UPDATE_INGAME);
+
+            outmsg.Write((byte)ClientNetObject.SYNC_IDS);
+            outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
+            outmsg.Write(ChatMessage.LastID);
+            ChatMessage removeMsg;
+            while ((removeMsg = chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastSentChatMsgID)) != null)
+            {
+                chatMsgQueue.Remove(removeMsg);
+            }
+
+            foreach (ChatMessage cMsg in chatMsgQueue)
+            {
+                cMsg.ClientWrite(outmsg);
+            }
+
+            if (Character.Controlled != null)
+            {
+                Character.Controlled.ClientWrite(outmsg);
+            }
+
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
         }

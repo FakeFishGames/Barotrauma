@@ -28,7 +28,7 @@ namespace Barotrauma.Networking
         public NetConnection Connection { get; set; }
         public string version;
         public bool inGame;
-        public UInt32 lastRecvLobbyUpdate = 0;
+        public UInt32 lastRecvGeneralUpdate = 0;
 
         public bool hasLobbyData = false;
         public UInt32 lastSentChatMsgID = 0; //last msg this client said

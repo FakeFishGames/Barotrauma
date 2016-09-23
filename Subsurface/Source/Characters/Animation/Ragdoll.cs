@@ -702,9 +702,9 @@ namespace Barotrauma
             }
             if (isFrozen)
             {
-                for (int i=0;i < Limbs.Length;i++)
+                foreach (Limb l in Limbs)
                 {
-                    Limbs[i].body.PhysEnabled = true;
+                    l.body.PhysEnabled = true;
                 }
                 isFrozen = false;
             }
