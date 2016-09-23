@@ -639,7 +639,7 @@ namespace Barotrauma
 
         public bool IsKeyHit(InputType inputType)
         {
-            if (GameMain.Server != null && Character.Controlled != null)
+            if (GameMain.Server != null && Character.Controlled != this)
             {
                 switch (inputType)
                 {
