@@ -32,6 +32,9 @@ namespace Barotrauma
         List<float> memMouseX = new List<float>();
         List<float> memMouseY = new List<float>();
 
+        List<float> memPosX = new List<float>();
+        List<float> memPosY = new List<float>();
+
         //the Character that the player is currently controlling
         private static Character controlled;
 
