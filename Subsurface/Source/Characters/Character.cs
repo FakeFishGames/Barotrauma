@@ -644,16 +644,19 @@ namespace Barotrauma
                 switch (inputType)
                 {
                     case InputType.Left:
-                        return ((dequeuedInput & 1) > 0) && !((prevDequeuedInput & 1) > 0);
+                        return ((dequeuedInput & 0x1) > 0) && !((prevDequeuedInput & 0x1) > 0);
                         //break;
                     case InputType.Right:
-                        return ((dequeuedInput & 2) > 0) && !((prevDequeuedInput & 2) > 0);
+                        return ((dequeuedInput & 0x2) > 0) && !((prevDequeuedInput & 0x2) > 0);
                         //break;
                     case InputType.Up:
-                        return ((dequeuedInput & 4) > 0) && !((prevDequeuedInput & 4) > 0);
+                        return ((dequeuedInput & 0x4) > 0) && !((prevDequeuedInput & 0x4) > 0);
                         //break;
                     case InputType.Down:
-                        return ((dequeuedInput & 8) > 0) && !((prevDequeuedInput & 8) > 0);
+                        return ((dequeuedInput & 0x8) > 0) && !((prevDequeuedInput & 0x8) > 0);
+                        //break;
+                    case InputType.Run:
+                        return ((dequeuedInput & 0x20) > 0) && !((prevDequeuedInput & 0x20) > 0);
                         //break;
                     default:
                         return false;
@@ -672,16 +675,19 @@ namespace Barotrauma
                 switch (inputType)
                 {
                     case InputType.Left:
-                        retVal = (dequeuedInput & 1) > 0;
+                        retVal = (dequeuedInput & 0x1) > 0;
                         break;
                     case InputType.Right:
-                        retVal = (dequeuedInput & 2) > 0;
+                        retVal = (dequeuedInput & 0x2) > 0;
                         break;
                     case InputType.Up:
-                        retVal = (dequeuedInput & 4) > 0;
+                        retVal = (dequeuedInput & 0x4) > 0;
                         break;
                     case InputType.Down:
-                        retVal = (dequeuedInput & 8) > 0;
+                        retVal = (dequeuedInput & 0x8) > 0;
+                        break;
+                    case InputType.Run:
+                        retVal = (dequeuedInput & 0x20) > 0;
                         break;
                 }
                 return retVal;
@@ -789,7 +795,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null && Character.Controlled != this)
             {
-                if ((dequeuedInput & 16) > 0)
+                if ((dequeuedInput & 0x10) > 0)
                 {
                     AnimController.TargetDir = Direction.Left;
                 }
@@ -1224,11 +1230,12 @@ namespace Barotrauma
                 if (GameMain.Client != null)
                 {
                     byte newInput = 0;
-                    newInput |= IsKeyDown(InputType.Left) ? (byte)1 : (byte)0;
-                    newInput |= IsKeyDown(InputType.Right) ? (byte)2 : (byte)0;
-                    newInput |= IsKeyDown(InputType.Up) ? (byte)4 : (byte)0;
-                    newInput |= IsKeyDown(InputType.Down) ? (byte)8 : (byte)0;
-                    newInput |= (AnimController.TargetDir == Direction.Left) ? (byte)16 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Left) ? (byte)0x1 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Right) ? (byte)0x2 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Up) ? (byte)0x4 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Down) ? (byte)0x8 : (byte)0;
+                    newInput |= (AnimController.TargetDir == Direction.Left) ? (byte)0x10 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Run) ? (byte)0x20 : (byte)0;
                     memInput.Insert(0,newInput);
                     LastNetworkUpdateID++;
                     while (memInput.Count>60)
