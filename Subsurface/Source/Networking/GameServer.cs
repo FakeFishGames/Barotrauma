@@ -849,6 +849,7 @@ namespace Barotrauma.Networking
 
                 DebugConsole.NewMessage(Convert.ToString(spawnPosition.X) + "," + Convert.ToString(spawnPosition.Y), Color.Lime);
                 Character spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, null, true, false);
+                spawnedCharacter.AnimController.Frozen = true;
                 c.Character = spawnedCharacter;
                 
                 GameMain.GameSession.CrewManager.characters.Add(c.Character);
