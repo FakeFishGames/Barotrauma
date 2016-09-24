@@ -787,6 +787,18 @@ namespace Barotrauma
                 }
             }
 
+            if (GameMain.Server != null && Character.Controlled != this)
+            {
+                if ((dequeuedInput & 16) > 0)
+                {
+                    AnimController.TargetDir = Direction.Left;
+                }
+                else
+                {
+                    AnimController.TargetDir = Direction.Right;
+                }
+            }
+
             if (attackCoolDown >0.0f)
             {
                 attackCoolDown -= deltaTime;
@@ -1216,6 +1228,7 @@ namespace Barotrauma
                     newInput |= IsKeyDown(InputType.Right) ? (byte)2 : (byte)0;
                     newInput |= IsKeyDown(InputType.Up) ? (byte)4 : (byte)0;
                     newInput |= IsKeyDown(InputType.Down) ? (byte)8 : (byte)0;
+                    newInput |= (AnimController.TargetDir == Direction.Left) ? (byte)16 : (byte)0;
                     memInput.Insert(0,newInput);
                     LastNetworkUpdateID++;
                     while (memInput.Count>60)
@@ -1684,15 +1697,16 @@ namespace Barotrauma
 
             UInt32 networkUpdateID = msg.ReadUInt32();
             byte inputCount = msg.ReadByte();
-            
+
             for (int i=0;i<inputCount;i++)
             {
                 byte newInput = msg.ReadByte();
-                if ((i < (networkUpdateID-LastNetworkUpdateID)) && (i<60))
+                if ((i < ((long)networkUpdateID-(long)LastNetworkUpdateID)) && (i<60))
                 {
-                    memInput.Insert(0, newInput);
+                    memInput.Insert(i, newInput);
                 }
             }
+            
             if (networkUpdateID > LastNetworkUpdateID)
             {
                 LastNetworkUpdateID = networkUpdateID;
