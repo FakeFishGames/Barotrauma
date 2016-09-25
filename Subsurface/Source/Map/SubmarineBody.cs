@@ -311,7 +311,7 @@ namespace Barotrauma
                     //should never be null when casting a line out from inside the bounding box
                     Debug.Assert(intersection != null);
 
-                    //''+ translatedir'' in order to move the character slightly away from the wall
+                    //\"+ translatedir\" in order to move the character slightly away from the wall
                     c.AnimController.SetPosition(ConvertUnits.ToSimUnits(c.WorldPosition + ((Vector2)intersection - limb.WorldPosition)) + translateDir);
 
                     return;

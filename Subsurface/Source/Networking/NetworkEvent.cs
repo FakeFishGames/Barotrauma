@@ -215,7 +215,7 @@ namespace Barotrauma.Networking
             if (e == null)
             {
 #if DEBUG   
-                DebugConsole.ThrowError("Couldn't find an entity matching the ID ''" + id + "''");   
+                DebugConsole.ThrowError("Couldn't find an entity matching the ID \"" + id + "\"");   
 #endif
                 return false;
             }

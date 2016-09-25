@@ -67,7 +67,7 @@ namespace Barotrauma.Networking
         {
             if (!File.Exists(filePath))
             {
-                DebugConsole.ThrowError("Sending a file failed. File ''"+filePath+"'' not found.");
+                DebugConsole.ThrowError("Sending a file failed. File \""+filePath+"\" not found.");
                 return null;
             }
 
@@ -80,7 +80,7 @@ namespace Barotrauma.Networking
 
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't open file ''"+filePath+"''",e);
+                DebugConsole.ThrowError("Couldn't open file \""+filePath+"\"",e);
             }
              
             return sender;

@@ -192,7 +192,7 @@ namespace Barotrauma
             passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tab.HostServer]);
             
             isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), "Public server", Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
-            isPublicBox.ToolTip = "Public servers are shown in the list of available servers in the ''Join Server'' -tab";
+            isPublicBox.ToolTip = "Public servers are shown in the list of available servers in the \"Join Server\" -tab";
 
 
             useUpnpBox = new GUITickBox(new Rectangle(10, 250, 20, 20), "Attempt UPnP port forwarding", Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
@@ -407,7 +407,7 @@ namespace Barotrauma
 
             if (doc==null)
             {
-                DebugConsole.ThrowError("Error loading save file ''"+fileName+"''. The file may be corrupted.");
+                DebugConsole.ThrowError("Error loading save file \""+fileName+"\". The file may be corrupted.");
                 return false;
             }
 
@@ -569,7 +569,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading save ''"+saveFile+"'' failed", e);
+                DebugConsole.ThrowError("Loading save \""+saveFile+"\" failed", e);
                 return false;
             }
 

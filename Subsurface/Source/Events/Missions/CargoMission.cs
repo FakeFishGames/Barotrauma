@@ -50,7 +50,7 @@ namespace Barotrauma
             ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
             if (itemPrefab==null)
             {
-                DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab ''"+element.Name.ToString()+"'' not found");
+                DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab \""+element.Name.ToString()+"\" not found");
                 return;
             }
 

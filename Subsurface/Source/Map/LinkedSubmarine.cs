@@ -212,7 +212,7 @@ namespace Barotrauma
 
             if (!File.Exists(pathBox.Text))
             {
-                new GUIMessageBox("Error", "Submarine file ''" + pathBox.Text + "'' not found!");
+                new GUIMessageBox("Error", "Submarine file \"" + pathBox.Text + "\" not found!");
                 pathBox.Flash(Color.Red);
                 pathBox.Text = filePath;
                 return false;

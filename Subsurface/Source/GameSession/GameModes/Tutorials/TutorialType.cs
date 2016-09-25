@@ -52,7 +52,7 @@ namespace Barotrauma.Tutorials
             WayPoint wayPoint = WayPoint.GetRandom(SpawnType.Cargo, null);
             if (wayPoint == null)
             {
-                DebugConsole.ThrowError("A waypoint with the spawntype ''cargo'' is required for the tutorial event");
+                DebugConsole.ThrowError("A waypoint with the spawntype \"cargo\" is required for the tutorial event");
                 return;
             }
 
@@ -65,7 +65,7 @@ namespace Barotrauma.Tutorials
             var idCard = character.Inventory.FindItem("ID Card");
             if (idCard == null)
             {
-                DebugConsole.ThrowError("Item prefab ''ID Card'' not found!");
+                DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");
                 return;
             }
             idCard.AddTag("com");

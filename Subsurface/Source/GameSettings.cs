@@ -207,7 +207,7 @@ namespace Barotrauma
             {                
                 if (keyMapping[(int)inputType]==null)
                 {
-                    DebugConsole.ThrowError("Key binding for the input type ''" + inputType + " not set!");
+                    DebugConsole.ThrowError("Key binding for the input type \"" + inputType + " not set!");
                     keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
                 } 
             }

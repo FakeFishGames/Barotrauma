@@ -110,7 +110,7 @@ namespace Barotrauma
 
             catch (Exception e)
             {
-                DebugConsole.ThrowError("ERROR: deleting save file ''"+fileName+" failed.", e);
+                DebugConsole.ThrowError("ERROR: deleting save file \""+fileName+" failed.", e);
             }
 
         }
@@ -119,14 +119,14 @@ namespace Barotrauma
         {
             if (!Directory.Exists(SaveFolder))
             {
-                DebugConsole.ThrowError("Save folder ''" + SaveFolder + " not found! Attempting to create a new folder");
+                DebugConsole.ThrowError("Save folder \"" + SaveFolder + " not found! Attempting to create a new folder");
                 try
                 {
                     Directory.CreateDirectory(SaveFolder);
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Failed to create the folder ''" + SaveFolder + "''!", e);
+                    DebugConsole.ThrowError("Failed to create the folder \"" + SaveFolder + "\"!", e);
                 }
             }
 
@@ -144,7 +144,7 @@ namespace Barotrauma
         {
             if (!Directory.Exists(SaveFolder))
             {
-                DebugConsole.ThrowError("Save folder ''"+SaveFolder+"'' not found. Created new folder");
+                DebugConsole.ThrowError("Save folder \""+SaveFolder+"\" not found. Created new folder");
                 Directory.CreateDirectory(SaveFolder);
             }
 
@@ -189,7 +189,7 @@ namespace Barotrauma
         {
             if (!File.Exists(fileName))
             {
-                DebugConsole.ThrowError("File ''"+fileName+" doesn't exist!");
+                DebugConsole.ThrowError("File \""+fileName+" doesn't exist!");
                 return null;
             }
 

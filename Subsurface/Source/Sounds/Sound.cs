@@ -78,7 +78,7 @@ namespace Barotrauma
         {
             if (!File.Exists(file))
             {
-                DebugConsole.ThrowError("File ''" + file + "'' not found!");
+                DebugConsole.ThrowError("File \"" + file + "\" not found!");
                 return null;
             }
             

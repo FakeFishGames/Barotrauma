@@ -140,7 +140,7 @@ namespace Barotrauma.Networking
             }
             else if (connectedClients.Any(c => c.name.ToLower() == name.ToLower() && c.Connection != inc.SenderConnection))
             {
-                inc.SenderConnection.Disconnect("The name ''" + name + "'' is already in use. Please choose another name.");
+                inc.SenderConnection.Disconnect("The name \"" + name + "\" is already in use. Please choose another name.");
                 DebugConsole.NewMessage(name + " couldn't join the server (name already in use)", Color.Red);
                 return;
             }
@@ -222,7 +222,7 @@ namespace Barotrauma.Networking
             else if (connectedClients.Find(x => x.name == sender.name && x != sender) != null)
             {
                 DisconnectClient(sender, sender.name + " was unable to connect to the server (name already in use)",
-                    "The name ''" + sender.name + "'' is already in use. Please choose another name.");
+                    "The name \"" + sender.name + "\" is already in use. Please choose another name.");
             }
             else
             {

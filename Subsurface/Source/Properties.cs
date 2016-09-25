@@ -94,7 +94,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Failed to set the value of the property ''" + Name + "'' of ''" + obj + "'' to " + value);
+                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj + "\" to " + value);
                 DebugConsole.ThrowError("(Type not implemented)");
 
                 return false;
@@ -109,7 +109,7 @@ namespace Barotrauma
                      
             if (property.PropertyType!= value.GetType())
             {
-                DebugConsole.ThrowError("Failed to set the value of the property ''"+Name+"'' of ''"+obj.ToString()+"'' to "+value.ToString());
+                DebugConsole.ThrowError("Failed to set the value of the property \""+Name+"\" of \""+obj.ToString()+"\" to "+value.ToString());
 
                 DebugConsole.ThrowError("(Non-matching type, should be "+property.PropertyType+" instead of " +value.GetType()+")");
                 return false;

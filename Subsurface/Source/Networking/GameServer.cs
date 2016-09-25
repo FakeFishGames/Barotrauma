@@ -973,12 +973,12 @@ namespace Barotrauma.Networking
 
             if (myCharacter == null)
             {
-                AddChatMessage("Press TAB to chat. Use ''d;'' to talk to dead players and spectators, "
-                    + "and ''player name;'' to only send the message to a specific player.", ChatMessageType.Server);
+                AddChatMessage("Press TAB to chat. Use \"d;\" to talk to dead players and spectators, "
+                    + "and \"player name;\" to only send the message to a specific player.", ChatMessageType.Server);
             }
             else
             {
-                AddChatMessage("Press TAB to chat. Use ''r;'' to talk through the radio.", ChatMessageType.Server);
+                AddChatMessage("Press TAB to chat. Use \"r;\" to talk through the radio.", ChatMessageType.Server);
             }
 
             GameMain.NetLobbyScreen.StartButton.Enabled = true;
@@ -1578,7 +1578,7 @@ namespace Barotrauma.Networking
 
                 if (targetClient == null)
                 {
-                    AddChatMessage("Player ''" + command + "'' not found!", ChatMessageType.Error);
+                    AddChatMessage("Player \"" + command + "\" not found!", ChatMessageType.Error);
                     return;
                 }
             }

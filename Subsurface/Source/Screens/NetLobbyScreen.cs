@@ -1179,24 +1179,24 @@ namespace Barotrauma
                 string errorMsg = "";
                 if (sub == null)
                 {
-                    errorMsg = "Submarine ''" + subName + "'' was selected by the server. Matching file not found in your submarine folder. ";
+                    errorMsg = "Submarine \"" + subName + "\" was selected by the server. Matching file not found in your submarine folder. ";
                 }
                 else if (sub.MD5Hash.Hash == null)
                 {
-                    errorMsg = "Couldn't load submarine ''" + subName + "''. The file may be corrupted. ";
+                    errorMsg = "Couldn't load submarine \"" + subName + "\". The file may be corrupted. ";
 
                     if (matchingListSub != null) matchingListSub.TextColor = Color.Red;
                 }
                 else
                 {
-                    errorMsg = "Your version of the submarine file ''" + sub.Name + "'' doesn't match the server's version! "
+                    errorMsg = "Your version of the submarine file \"" + sub.Name + "\" doesn't match the server's version! "
                     + "Your MD5 hash: " + sub.MD5Hash.Hash + " \n"
                     + "Server's MD5 hash: " + md5Hash + ". ";
                 }
                     
                 string downloadMsg = string.IsNullOrEmpty(GameMain.Client.ActiveFileTransferName) ?
                     "Do you want to download the file from the server host?" :
-                    "Do you want to download the file and cancel downloading ''" + GameMain.Client.ActiveFileTransferName + "''?";
+                    "Do you want to download the file and cancel downloading \"" + GameMain.Client.ActiveFileTransferName + "\"?";
 
                 if (GUIMessageBox.MessageBoxes.Count>0)
                 {
