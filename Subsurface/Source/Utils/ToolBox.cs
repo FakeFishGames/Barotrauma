@@ -36,7 +36,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't load xml document ''"+filePath+"''!", e);
+                DebugConsole.ThrowError("Couldn't load xml document \""+filePath+"\"!", e);
                 return null;
             }
 
@@ -54,7 +54,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading font ''"+file+"'' failed", e);
+                DebugConsole.ThrowError("Loading font \""+file+"\" failed", e);
             }
 
             return font;
@@ -197,7 +197,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Error in " + attribute.Value.ToString() + "! ''" + val + "'' is not a valid boolean value");
+                DebugConsole.ThrowError("Error in " + attribute.Value.ToString() + "! \"" + val + "\" is not a valid boolean value");
                 return false;
             }
         }
@@ -244,7 +244,7 @@ namespace Barotrauma
             if (components.Length!=2)
             {
                 if (!errorMessages) return vector;
-                DebugConsole.ThrowError("Failed to parse the string ''"+stringVector2+"'' to Vector2");
+                DebugConsole.ThrowError("Failed to parse the string \""+stringVector2+"\" to Vector2");
                 return vector;
             }
 
@@ -267,7 +267,7 @@ namespace Barotrauma
 
             if (components.Length < 3)
             {
-                if (errorMessages) DebugConsole.ThrowError("Failed to parse the string ''" + stringVector4 + "'' to Vector4");
+                if (errorMessages) DebugConsole.ThrowError("Failed to parse the string \"" + stringVector4 + "\" to Vector4");
                 return vector;
             }
 
@@ -488,7 +488,7 @@ namespace Barotrauma
 
                 if (lineCount == 0)
                 {
-                    DebugConsole.ThrowError("File ''" + filePath + "'' is empty!");
+                    DebugConsole.ThrowError("File \"" + filePath + "\" is empty!");
                     file.Close();
                     return "";
                 }
@@ -513,7 +513,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't open file ''" + filePath + "''!", e);
+                DebugConsole.ThrowError("Couldn't open file \"" + filePath + "\"!", e);
 
                 return "";
             }            

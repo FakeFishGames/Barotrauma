@@ -80,7 +80,7 @@ namespace Barotrauma.Items.Components
 
                 if (subElement.Attribute("texture") == null)
                 {
-                    DebugConsole.ThrowError("Item ''" + item.Name + "'' doesn't have a texture specified!");
+                    DebugConsole.ThrowError("Item \"" + item.Name + "\" doesn't have a texture specified!");
                     return;
                 }
 

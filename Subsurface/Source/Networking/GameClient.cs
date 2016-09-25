@@ -131,7 +131,7 @@ namespace Barotrauma.Networking
             }
             catch
             {
-                new GUIMessageBox("Could not connect to server", "Failed to resolve address ''"+serverIP+":"+Port+"''. Please make sure you have entered a valid IP address.");
+                new GUIMessageBox("Could not connect to server", "Failed to resolve address \""+serverIP+":"+Port+"\". Please make sure you have entered a valid IP address.");
                 return;
             }
 
@@ -574,7 +574,7 @@ namespace Barotrauma.Networking
 
             if (gameMode == null)
             {
-                DebugConsole.ThrowError("Game mode ''" + modeName + "'' not found!");
+                DebugConsole.ThrowError("Game mode \"" + modeName + "\" not found!");
                 yield return CoroutineStatus.Success;
             }
 

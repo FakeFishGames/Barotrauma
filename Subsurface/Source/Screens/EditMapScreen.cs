@@ -485,7 +485,7 @@ namespace Barotrauma
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Couldn't delete file ''"+sub.FilePath+"''!", e);
+                        DebugConsole.ThrowError("Couldn't delete file \""+sub.FilePath+"\"!", e);
                     }
                 }
 

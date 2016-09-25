@@ -203,7 +203,7 @@ namespace Barotrauma
 
             GUIComponent.Init(Window);
             DebugConsole.Init(Window);
-            DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package ''" + SelectedPackage.Name + "'' selected");
+            DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
 
             LightManager = new Lights.LightManager(GraphicsDevice);

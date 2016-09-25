@@ -58,7 +58,7 @@ namespace Barotrauma.Particles
 
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Particle prefab ''" + prefabName+"'' not found!");
+                DebugConsole.ThrowError("Particle prefab \"" + prefabName+"\" not found!");
                 return null;
             }
 

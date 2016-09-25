@@ -17,7 +17,7 @@ namespace Barotrauma
             try { doc = XDocument.Load(file); }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading style ''" + file + "'' failed", e);
+                DebugConsole.ThrowError("Loading style \"" + file + "\" failed", e);
                 return;
             }
 
