@@ -65,7 +65,7 @@ namespace Barotrauma.Items.Components
                     var itemPrefab = ItemPrefab.list.FirstOrDefault(ip => ip.Name.ToLowerInvariant() == deconstructProduct.ItemPrefabName.ToLowerInvariant()) as ItemPrefab;
                     if (itemPrefab==null)
                     {
-                        DebugConsole.ThrowError("Tried to deconstruct item ''"+targetItem.Name+"'' but couldn't find item prefab ''"+deconstructProduct+"''!");
+                        DebugConsole.ThrowError("Tried to deconstruct item \""+targetItem.Name+"\" but couldn't find item prefab \""+deconstructProduct+"\"!");
                         continue;
                     }
                     Item.Spawner.QueueItem(itemPrefab, containers[1].Inventory);

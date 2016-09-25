@@ -173,13 +173,13 @@ namespace Barotrauma
                         t = Type.GetType("Barotrauma." + type, true, true);
                         if (t == null)
                         {
-                            DebugConsole.ThrowError("Error in " + configFile + "! Could not find a mission class of the type ''" + type + "''.");
+                            DebugConsole.ThrowError("Error in " + configFile + "! Could not find a mission class of the type \"" + type + "\".");
                             continue;
                         }
                     }
                     catch
                     {
-                        DebugConsole.ThrowError("Error in " + configFile + "! Could not find a mission class of the type ''" + type + "''.");
+                        DebugConsole.ThrowError("Error in " + configFile + "! Could not find a mission class of the type \"" + type + "\".");
                         continue;
                     }
 

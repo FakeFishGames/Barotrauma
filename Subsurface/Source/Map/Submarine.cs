@@ -569,7 +569,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Saving submarine ''" + filePath + "'' failed!", e);
+                DebugConsole.ThrowError("Saving submarine \"" + filePath + "\" failed!", e);
                 return false;
             }
 
@@ -607,7 +607,7 @@ namespace Barotrauma
         {
             if (!Hull.hullList.Any())
             {
-                DebugConsole.ThrowError("No hulls found in the submarine. Hulls determine the ''borders'' of an individual room and are required for water and air distribution to work correctly.");
+                DebugConsole.ThrowError("No hulls found in the submarine. Hulls determine the \"borders\" of an individual room and are required for water and air distribution to work correctly.");
             }
 
             foreach (Item item in Item.ItemList)
@@ -628,7 +628,7 @@ namespace Barotrauma
             if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)
             {
                 DebugConsole.ThrowError("The submarine doesn't have spawnpoints for cargo (which are used for determining where to place bought items). "
-                    +"To fix this, create a new spawnpoint and change its ''spawn type'' parameter to ''cargo''.");
+                    +"To fix this, create a new spawnpoint and change its \"spawn type\" parameter to \"cargo\".");
             }
         }
 
@@ -647,7 +647,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Directory ''" + SavePath + "'' not found and creating the directory failed.", e);
+                    DebugConsole.ThrowError("Directory \"" + SavePath + "\" not found and creating the directory failed.", e);
                     return;
                 }
             }
@@ -662,7 +662,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Couldn't open directory ''" + SavePath + "''!", e);
+                DebugConsole.ThrowError("Couldn't open directory \"" + SavePath + "\"!", e);
                 return;
             }
 
@@ -674,7 +674,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Couldn't open subdirectory ''" + subDirectory + "''!", e);
+                    DebugConsole.ThrowError("Couldn't open subdirectory \"" + subDirectory + "\"!", e);
                     return;
                 }
             }
@@ -717,7 +717,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Loading submarine ''" + file + "'' failed!", e);
+                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed!", e);
                     return null;
                 }                
 
@@ -731,7 +731,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Loading submarine ''" + file + "'' failed! ("+e.Message+")");
+                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! ("+e.Message+")");
                     return null;
                 }
             }
@@ -744,13 +744,13 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Loading submarine ''" + file + "'' failed! (" + e.Message + ")");
+                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
                     return null;
                 }
             }
             else
             {
-                DebugConsole.ThrowError("Couldn't load submarine ''" + file + "! (Unrecognized file extension)");
+                DebugConsole.ThrowError("Couldn't load submarine \"" + file + "! (Unrecognized file extension)");
                 return null;
             }
 
@@ -796,13 +796,13 @@ namespace Barotrauma
                     t = Type.GetType("Barotrauma." + typeName, true, true);
                     if (t == null)
                     {
-                        DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type ''" + typeName + "''.");
+                        DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".");
                         continue;
                     }
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type ''" + typeName + "''.", e);
+                    DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".", e);
                     continue;
                 }
 
@@ -813,7 +813,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Could not find the method ''Load'' in " + t + ".", e);
+                    DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".", e);
                 }
             }
 

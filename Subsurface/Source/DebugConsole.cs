@@ -65,7 +65,7 @@ namespace Barotrauma
             textBox.Color = Color.Black * 0.7f;
 
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
-            NewMessage("Enter ''help'' for a list of available console commands", Color.Cyan);
+            NewMessage("Enter \"help\" for a list of available console commands", Color.Cyan);
 
         }
 
@@ -163,7 +163,7 @@ namespace Barotrauma
 #if !DEBUG
             if (GameMain.Client != null && !IsCommandPermitted(commands[0].ToLowerInvariant(), GameMain.Client))
             {
-                ThrowError("You're not permitted to use the command ''" + commands[0].ToLowerInvariant()+"''!");
+                ThrowError("You're not permitted to use the command \"" + commands[0].ToLowerInvariant()+"\"!");
                 return;
             }
 #endif
@@ -172,7 +172,7 @@ namespace Barotrauma
             {
                 case "help":
                     NewMessage("menu: go to main menu", Color.Cyan);
-                    NewMessage("game: enter the ''game screen''", Color.Cyan);
+                    NewMessage("game: enter the \"game screen\"", Color.Cyan);
                     NewMessage("edit: switch to submarine editor", Color.Cyan);
                     NewMessage("edit [submarine name]: load a submarine and switch to submarine editor", Color.Cyan);
                     NewMessage("load [submarine name]: load a submarine", Color.Cyan);
@@ -212,7 +212,7 @@ namespace Barotrauma
                     NewMessage("kick [name]: kick a player out from the server", Color.Cyan);
                     NewMessage("ban [name]: kick and ban the player from the server", Color.Cyan);
                     NewMessage("banip [IP address]: ban the IP address from the server", Color.Cyan);
-                    NewMessage("debugdraw: toggles the ''debug draw mode''", Color.Cyan);
+                    NewMessage("debugdraw: toggles the \"debug draw mode\"", Color.Cyan);
                     NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
                     
                     break;
@@ -661,7 +661,7 @@ namespace Barotrauma
 
                     if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")
                     {
-                        DebugConsole.ThrowError("MasterServerUrl ''"+GameMain.Config.MasterServerUrl+"''!");
+                        DebugConsole.ThrowError("MasterServerUrl \""+GameMain.Config.MasterServerUrl+"\"!");
                     }
 
                     GameMain.Config.Save("config.xml");

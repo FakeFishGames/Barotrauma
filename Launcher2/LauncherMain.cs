@@ -273,7 +273,7 @@ namespace Launcher2
             string exePath = Directory.GetCurrentDirectory() + "//" + executables[0];
             if (!File.Exists(exePath))
             {
-                ShowError("Error", "Couldn't find the executable ''" + exePath + "''!");
+                ShowError("Error", "Couldn't find the executable \"" + exePath + "\"!");
                 return false;
             }
 
@@ -283,7 +283,7 @@ namespace Launcher2
             }
             catch (Exception exception)
             {
-                ShowError("Error while opening executable ''" + exePath + "''", exception.Message);
+                ShowError("Error while opening executable \"" + exePath + "\"", exception.Message);
                 return false;
             }
             

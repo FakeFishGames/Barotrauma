@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
             TargetItem = ItemPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == name.ToLowerInvariant()) as ItemPrefab;
             if (TargetItem == null)
             {
-                DebugConsole.ThrowError("Error in fabricable item "+name+"! Item ''" + element.Name + "'' not found.");
+                DebugConsole.ThrowError("Error in fabricable item "+name+"! Item \"" + element.Name + "\" not found.");
                 return;
             }
 
@@ -43,7 +43,7 @@ namespace Barotrauma.Items.Components
                 ItemPrefab requiredItem = ItemPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == requiredItemName.Trim().ToLowerInvariant()) as ItemPrefab;
                 if (requiredItem == null)
                 {
-                    DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item ''" + requiredItemName + "'' not found.");
+                    DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item \"" + requiredItemName + "\" not found.");
 
                     continue;
                 }

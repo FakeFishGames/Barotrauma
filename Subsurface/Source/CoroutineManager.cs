@@ -75,7 +75,7 @@ namespace Barotrauma
                                 return true;
 
                             case CoroutineStatus.Failure:
-                                DebugConsole.ThrowError("Coroutine ''" + handle.Name + "'' has failed");
+                                DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
                                 return true;
                         }
                     }

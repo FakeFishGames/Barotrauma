@@ -457,14 +457,14 @@ namespace Barotrauma
 
                 if (!System.IO.File.Exists(file))
                 {
-                    DebugConsole.ThrowError("Spawning a character failed - file ''"+file+"'' not found!");
+                    DebugConsole.ThrowError("Spawning a character failed - file \""+file+"\" not found!");
                     return null;
                 }
             }
 #else
             if (!System.IO.File.Exists(file))
             {
-                DebugConsole.ThrowError("Spawning a character failed - file ''"+file+"'' not found!");
+                DebugConsole.ThrowError("Spawning a character failed - file \""+file+"\" not found!");
                 return null;
             }
 #endif
@@ -632,7 +632,7 @@ namespace Barotrauma
                     if (humanConfigFile == null)
                     {
                         DebugConsole.ThrowError("Couldn't find a config file for humans from the selected content package!");
-                        DebugConsole.ThrowError("(The config file must end with ''human.xml'')");
+                        DebugConsole.ThrowError("(The config file must end with \"human.xml\")");
                         return "";
                     }
                 }

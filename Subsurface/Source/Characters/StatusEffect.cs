@@ -316,7 +316,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Couldn't apply value "+value.ToString()+" ("+type+") to property ''"+property.Name+"'' ("+property.GetValue().GetType()+")! "
+                DebugConsole.ThrowError("Couldn't apply value "+value.ToString()+" ("+type+") to property \""+property.Name+"\" ("+property.GetValue().GetType()+")! "
                     +"Make sure the type of the value set in the config files matches the type of the property.");
             }
         }

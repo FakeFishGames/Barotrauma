@@ -44,7 +44,7 @@ namespace Barotrauma
             if (!infoTexts.TryGetValue(infoName.ToLowerInvariant(), out infoList) || !infoList.Any())
             {
 #if DEBUG
-                return "Info text ''" + infoName + "'' not found";
+                return "Info text \"" + infoName + "\" not found";
 #else
                 return "";
 #endif

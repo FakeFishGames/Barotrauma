@@ -304,7 +304,7 @@ namespace Barotrauma.Items.Components
                         }
                         catch
                         {
-                            DebugConsole.ThrowError("Error in " + element + "! ''" + element.Attribute("type").Value + "'' is not a valid alignment");
+                            DebugConsole.ThrowError("Error in " + element + "! \"" + element.Attribute("type").Value + "\" is not a valid alignment");
                         }
 
                         guiFrame = new GUIFrame(
@@ -320,7 +320,7 @@ namespace Barotrauma.Items.Components
 
                         if (filePath == "")
                         {
-                            DebugConsole.ThrowError("Error when instantiating item ''"+item.Name+"'' - sound with no file path set");
+                            DebugConsole.ThrowError("Error when instantiating item \""+item.Name+"\" - sound with no file path set");
                             continue;
                         }
                 
@@ -732,13 +732,13 @@ namespace Barotrauma.Items.Components
                 t = Type.GetType("Barotrauma.Items.Components." + type + "", false, true);
                 if (t == null)
                 {
-                    if (errorMessages) DebugConsole.ThrowError("Could not find the component ''" + type + "'' (" + file + ")");
+                    if (errorMessages) DebugConsole.ThrowError("Could not find the component \"" + type + "\" (" + file + ")");
                     return null;
                 }
             }
             catch (Exception e)
             {
-                if (errorMessages) DebugConsole.ThrowError("Could not find the component ''" + type + "'' (" + file + ")", e);
+                if (errorMessages) DebugConsole.ThrowError("Could not find the component \"" + type + "\" (" + file + ")", e);
                 return null;
             }
 
@@ -749,13 +749,13 @@ namespace Barotrauma.Items.Components
                 constructor = t.GetConstructor(new Type[] { typeof(Item), typeof(XElement) });
                 if (constructor == null)
                 {
-                    DebugConsole.ThrowError("Could not find the constructor of the component ''" + type + "'' (" + file + ")");
+                    DebugConsole.ThrowError("Could not find the constructor of the component \"" + type + "\" (" + file + ")");
                     return null;
                 }
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Could not find the constructor of the component ''" + type + "'' (" + file + ")", e);
+                DebugConsole.ThrowError("Could not find the constructor of the component \"" + type + "\" (" + file + ")", e);
                 return null;
             }
 

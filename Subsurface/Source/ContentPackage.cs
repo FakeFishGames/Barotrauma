@@ -61,7 +61,7 @@ namespace Barotrauma
 
             if (doc==null)
             {
-                DebugConsole.ThrowError("Couldn't load content package ''"+filePath+"''!");
+                DebugConsole.ThrowError("Couldn't load content package \""+filePath+"\"!");
                 return;
             }
 
