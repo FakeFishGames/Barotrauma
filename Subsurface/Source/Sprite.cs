@@ -181,7 +181,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Sprite ''"+file+"'' not found!");
+                DebugConsole.ThrowError("Sprite \""+file+"\" not found!");
             }
 
             return null;

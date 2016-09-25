@@ -248,7 +248,7 @@ namespace Barotrauma
 
             refLimb = GetLimb(LimbType.Torso);
             if (refLimb == null) refLimb = GetLimb(LimbType.Head);
-            if (refLimb == null) DebugConsole.ThrowError("Character ''" + character + "'' doesn't have a head or torso!");
+            if (refLimb == null) DebugConsole.ThrowError("Character \"" + character + "\" doesn't have a head or torso!");
 
             UpdateCollisionCategories();
 
@@ -935,7 +935,7 @@ namespace Barotrauma
                 //clamp the magnitude of the correction movement between 0.5f - 5.0f
                 Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist * 2.0f, 0.5f, 5.0f);
 
-                //heading in the right direction -> use the ''normal'' movement if it's faster than correctionMovement
+                //heading in the right direction -> use the \"normal\" movement if it's faster than correctionMovement
                 //i.e. the character is close to the targetposition but the character is still running
                 if (Math.Sign(targetMovement.X) == Math.Sign(newCorrectionMovement.X))
                 {

@@ -54,7 +54,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading texture ''"+path+"'' failed!", e);
+                DebugConsole.ThrowError("Loading texture \""+path+"\" failed!", e);
                 return null;
             }
 

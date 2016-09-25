@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                ErrorMessage = "Error while receiving file ''"+FileName+"'' {"+e.Message+"}";
+                ErrorMessage = "Error while receiving file \""+FileName+"\" {"+e.Message+"}";
                 DeleteFile();
 
                 if (onFinished != null) onFinished(this);
@@ -111,13 +111,13 @@ namespace Barotrauma.Networking
 
             if (type != (byte)fileType)
             {
-                ErrorMessage = "Unexpected file type ''" + type + "'' (expected " + fileType + ")";
+                ErrorMessage = "Unexpected file type \"" + type + "\" (expected " + fileType + ")";
                 return false;
             }
 
             if (!Regex.Match(fileName, @"^[\w\- ]+[\w\-. ]*$").Success)
             {
-                ErrorMessage = "Illegal characters in file name ''" + fileName + "''";
+                ErrorMessage = "Illegal characters in file name \"" + fileName + "\"";
                 return false;
             }
 
@@ -126,7 +126,7 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Submarine:
                     if (Path.GetExtension(fileName) != ".sub")
                     {
-                        ErrorMessage = "Wrong file extension ''" + Path.GetExtension(fileName) + "''! (Expected .sub)";
+                        ErrorMessage = "Wrong file extension \"" + Path.GetExtension(fileName) + "\"! (Expected .sub)";
                         return false;
                     }
                     break;
@@ -159,7 +159,7 @@ namespace Barotrauma.Networking
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Couldn't delete file ''" + file + "''!", e);
+                    DebugConsole.ThrowError("Couldn't delete file \"" + file + "\"!", e);
                 }
             }
         }
@@ -256,13 +256,13 @@ namespace Barotrauma.Networking
                     }
                     catch (Exception e)
                     {
-                        ErrorMessage = "Loading submarine ''" + file + "'' failed! {"+ e.Message + "}";
+                        ErrorMessage = "Loading submarine \"" + file + "\" failed! {"+ e.Message + "}";
                         return false;
                     }  
 
                     if (stream == null)
                     {
-                        ErrorMessage = "Decompressing submarine file''" + file + "'' failed!";
+                        ErrorMessage = "Decompressing submarine file\"" + file + "\" failed!";
                         return false;
                     }
 
@@ -287,7 +287,7 @@ namespace Barotrauma.Networking
                         stream.Close();
                         stream.Dispose();
 
-                        ErrorMessage = "Parsing file ''"+file+"'' failed! The file may not be a valid submarine file.";
+                        ErrorMessage = "Parsing file \""+file+"\" failed! The file may not be a valid submarine file.";
                         return false;
                     }
 

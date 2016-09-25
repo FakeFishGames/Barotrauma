@@ -236,7 +236,7 @@ namespace Barotrauma
                 catch
                 {
                     type = LimbType.None;
-                    DebugConsole.ThrowError("Error in "+element+"! ''"+element.Attribute("type").Value+"'' is not a valid limb type");
+                    DebugConsole.ThrowError("Error in "+element+"! \""+element.Attribute("type").Value+"\" is not a valid limb type");
                 }
 
 

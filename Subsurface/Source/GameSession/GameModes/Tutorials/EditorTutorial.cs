@@ -18,14 +18,14 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
-            infoBox = CreateInfoFrame("Press ''Structure'' at the left side of the screen to start placing some walls.");
+            infoBox = CreateInfoFrame("Press \"Structure\" at the left side of the screen to start placing some walls.");
 
             while (GameMain.EditMapScreen.SelectedTab != (int)MapEntityCategory.Structure)
             {
                 yield return CoroutineStatus.Running;
             }
             
-            infoBox = CreateInfoFrame("Select ''topwall'' from the list.", true);
+            infoBox = CreateInfoFrame("Select \"topwall\" from the list.", true);
 
             while (MapEntityPrefab.Selected == null || MapEntityPrefab.Selected.Name != "topwall")
             {

@@ -68,7 +68,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to cast vote type ''"+voteTypeByte+"''", e);
+                DebugConsole.ThrowError("Failed to cast vote type \""+voteTypeByte+"\"", e);
                 return;
             }
 

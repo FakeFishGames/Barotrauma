@@ -34,21 +34,21 @@ namespace Barotrauma.RuinGeneration
 
             if (Prefab == null)
             {
-                DebugConsole.ThrowError("Loading ruin structure failed - structure prefab ''"+prefab+" not found");
+                DebugConsole.ThrowError("Loading ruin structure failed - structure prefab \""+prefab+" not found");
                 return;
             }
 
             string alignmentStr = ToolBox.GetAttributeString(element,"alignment","Bottom");
             if (!Enum.TryParse<Alignment>(alignmentStr, true, out Alignment))
             {
-                DebugConsole.ThrowError("Error in ruin structure ''"+prefab+"'' - "+alignmentStr+" is not a valid alignment");
+                DebugConsole.ThrowError("Error in ruin structure \""+prefab+"\" - "+alignmentStr+" is not a valid alignment");
             }
             
 
             string typeStr = ToolBox.GetAttributeString(element,"type","");
             if (!Enum.TryParse<RuinStructureType>(typeStr,true, out Type))
             {
-                DebugConsole.ThrowError("Error in ruin structure ''" + prefab + "'' - " + typeStr + " is not a valid type");
+                DebugConsole.ThrowError("Error in ruin structure \"" + prefab + "\" - " + typeStr + " is not a valid type");
                 return;
             }
 

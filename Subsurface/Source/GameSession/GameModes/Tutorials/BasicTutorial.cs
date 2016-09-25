@@ -109,7 +109,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(0.5f);
 
             infoBox = CreateInfoFrame("The reactor core has started generating heat, which in turn generates power for the submarine. The power generation is very low at the moment,"
-            + " because the reactor is set to shut itself down when the temperature rises above 500 degrees Celsius. You can adjust the temperature limit by changing the ''Shutdown Temperature'' in the control panel.", true);
+            + " because the reactor is set to shut itself down when the temperature rises above 500 degrees Celsius. You can adjust the temperature limit by changing the \"Shutdown Temperature\" in the control panel.", true);
 
             while (infoBox != null)
             {
@@ -130,7 +130,7 @@ namespace Barotrauma.Tutorials
             }
             yield return new WaitForSeconds(0.5f);
 
-            infoBox = CreateInfoFrame("Looks like we're up and running! Now you should turn on the ''Automatic temperature control'', which will make the reactor "
+            infoBox = CreateInfoFrame("Looks like we're up and running! Now you should turn on the \"Automatic temperature control\", which will make the reactor "
                 + "automatically adjust the temperature to a suitable level. Even though it's an easy way to keep the reactor up and running most of the time, "
                 + "you should keep in mind that it changes the temperature very slowly and carefully, which may cause issues if there are sudden changes in grid load.");
 
@@ -256,7 +256,7 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
-            infoBox = CreateInfoFrame("You can take a look at the area around the sub by selecting the ''Sonar'' checkbox.");
+            infoBox = CreateInfoFrame("You can take a look at the area around the sub by selecting the \"Sonar\" checkbox.");
 
             while (!radar.IsActive)
             {
@@ -555,7 +555,7 @@ namespace Barotrauma.Tutorials
                             brokenBox = Character.Controlled.SelectedConstruction;
 
                             infoBox = CreateInfoFrame("Here's our problem: this junction box is broken. Luckily engineers are adept at fixing electrical devices - "
-                                +"you just need to find a spare wire and click the ''Fix''-button to repair the box.");
+                                +"you just need to find a spare wire and click the \"Fix\"-button to repair the box.");
                             break;
                         }
 

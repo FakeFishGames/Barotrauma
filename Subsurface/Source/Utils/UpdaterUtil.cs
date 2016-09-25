@@ -189,7 +189,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    System.Diagnostics.Debug.WriteLine("Could not delete file ''" + file + "'' (" + e.Message + ")");
+                    System.Diagnostics.Debug.WriteLine("Could not delete file \"" + file + "\" (" + e.Message + ")");
                     continue;
                 }
             }
@@ -215,7 +215,7 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    System.Diagnostics.Debug.WriteLine("Could not delete file ''" + file + "'' (" + e.Message + ")");
+                    System.Diagnostics.Debug.WriteLine("Could not delete file \"" + file + "\" (" + e.Message + ")");
                     continue;
                 }
             }

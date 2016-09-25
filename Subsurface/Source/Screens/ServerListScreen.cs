@@ -255,7 +255,7 @@ namespace Barotrauma
                 switch (response.StatusCode)
                 {
                     case System.Net.HttpStatusCode.NotFound:
-                        DebugConsole.ThrowError("Error while connecting to master server (404 - ''" + NetConfig.MasterServerUrl + "'' not found)");
+                        DebugConsole.ThrowError("Error while connecting to master server (404 - \"" + NetConfig.MasterServerUrl + "\" not found)");
                         break;
                     case System.Net.HttpStatusCode.ServiceUnavailable:
                         DebugConsole.ThrowError("Error while connecting to master server (505 - Service Unavailable)");

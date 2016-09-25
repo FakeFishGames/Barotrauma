@@ -91,7 +91,7 @@ namespace Barotrauma
         {
             MapEntityPrefab ep = new MapEntityPrefab();
             ep.name = "Hull";
-            ep.Description = "Hulls determine which parts are considered to be ''inside the sub''. Generally every room should be enclosed by a hull.";
+            ep.Description = "Hulls determine which parts are considered to be \"inside the sub\". Generally every room should be enclosed by a hull.";
             ep.constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             ep.resizeHorizontal = true;
             ep.resizeVertical = true;
