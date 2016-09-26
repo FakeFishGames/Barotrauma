@@ -18,6 +18,10 @@ namespace Barotrauma
 
         private BlurEffect lightBlur;
 
+        private Effect damageEffect;
+
+        private Texture2D damageStencil;
+
         public BackgroundCreatureManager BackgroundCreatureManager;
 
         public Camera Cam
@@ -46,10 +50,14 @@ namespace Barotrauma
             var blurEffect = content.Load<Effect>("blurshader");
 #endif
 
+            damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
+
+            damageEffect = content.Load<Effect>("damageshader");
+            damageEffect.Parameters["xStencil"].SetValue(damageStencil);
+            damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
+            damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
 
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
-
-
         }
 
         public override void Select()
@@ -101,12 +109,15 @@ namespace Barotrauma
             }
 #endif
 
-            if (GameMain.GameSession!=null) GameMain.GameSession.Update((float)deltaTime);
-            //EventManager.Update(gameTime);
+            Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 6);
+            //Physics.accumulator = Physics.step;
+            while (Physics.accumulator >= Physics.step)
+            {
 
-            if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
+                if (GameMain.GameSession != null) GameMain.GameSession.Update((float)Physics.step);
+                //EventManager.Update(gameTime);
 
-            Character.UpdateAll(cam, (float)deltaTime);
+                if (Level.Loaded != null) Level.Loaded.Update((float)Physics.step);
 
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
             {
@@ -116,16 +127,13 @@ namespace Barotrauma
                 }
             }
 
-            BackgroundCreatureManager.Update(cam, (float)deltaTime);
 
-            GameMain.ParticleManager.Update((float)deltaTime);
+                BackgroundCreatureManager.Update(cam, (float)Physics.step);
 
-            StatusEffect.UpdateAll((float)deltaTime);
+                GameMain.ParticleManager.Update((float)Physics.step);
 
-            Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 6);
-            //Physics.accumulator = Physics.step;
-            while (Physics.accumulator >= Physics.step)
-            {
+                StatusEffect.UpdateAll((float)Physics.step);
+
                 if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
                 {
                     cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
@@ -210,6 +218,8 @@ namespace Barotrauma
             {
                 sub.UpdateTransform();
             }
+
+            GameMain.ParticleManager.UpdateTransforms();
 
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 
@@ -336,6 +346,17 @@ namespace Barotrauma
             Submarine.DrawFront(spriteBatch);
                         
             spriteBatch.End();
+            
+            spriteBatch.Begin(SpriteSortMode.Immediate,
+                BlendState.NonPremultiplied, SamplerState.LinearWrap,
+                null, null, 
+                damageEffect,
+                cam.Transform);
+
+            Submarine.DrawDamageable(spriteBatch, damageEffect);
+                        
+            spriteBatch.End();
+
 
             GameMain.LightManager.DrawLightMap(spriteBatch, cam, lightBlur.Effect);
 

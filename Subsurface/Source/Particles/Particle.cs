@@ -37,9 +37,8 @@ namespace Barotrauma.Particles
         private Vector2 velocityChange;
 
         private Vector2 drawPosition;
-
-        //private float checkCollisionTimer;
-
+        private float drawRotation;
+        
         private Hull currentHull;
 
         private List<Gap> hullGaps;
@@ -65,34 +64,32 @@ namespace Barotrauma.Particles
             get { return velocityChange; }
             set { velocityChange = value; }
         }
+
+        public Vector2 Velocity
+        {
+            get { return velocity; }
+            set { velocity = value; }
+        }
         
         public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null)
         {
-
             this.prefab = prefab;
 
             spriteIndex = Rand.Int(prefab.Sprites.Count);
 
             currentHull = Hull.FindHull(position, hullGuess);
-            //if (currentHull != null && currentHull.Submarine != null)
-            //{
-            //    Vector2 subVel = ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
-            //    //subVel.Y = -subVel.Y;
-            //    speed += subVel;
-            //}
-            //else
-            //{
-            //    int a = 1;
-            //}
-            //if (currentHull == null) position = Submarine.Loaded == null ? position : position + Submarine.Loaded.Position;
 
             this.position = position;
             prevPosition = position;
-
+            
             drawPosition = position;
-
             
             velocity = MathUtils.IsValid(speed) ? speed : Vector2.Zero;
+
+            if (currentHull != null && currentHull.Submarine != null)
+            {
+                velocity += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+            }
 
             this.rotation = rotation + Rand.Range(prefab.StartRotationMin, prefab.StartRotationMax);    
             prevRotation = rotation;
@@ -106,7 +103,7 @@ namespace Barotrauma.Particles
 
             sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
-            color = prefab.StartColor;
+            color = new Color(prefab.StartColor, 1.0f);
             alpha = prefab.StartAlpha;
             
             velocityChange = prefab.VelocityChange;
@@ -116,8 +113,6 @@ namespace Barotrauma.Particles
             if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
                 hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
-                //hullLimits = new List<Hull>();
-                //hullLimits = FindLimits(position);
             }
 
             if (prefab.RotateToDirection)
@@ -128,26 +123,14 @@ namespace Barotrauma.Particles
             }
         }
 
-        //private List<Hull> FindLimits(Vector2 position)
-        //{
-        //    List<Hull> hullList = new List<Hull>();
-
-        //    currentHull = Hull.FindHull(position);
-        //    if (currentHull == null) return hullList;
-
-        //    hullList.Add(currentHull);
-
-        //    return FindAdjacentHulls(hullList, currentHull, Math.Abs(velocity.X) > Math.Abs(velocity.Y));
-        //}
-
         public bool Update(float deltaTime)
         {
-
-            Vector2 subVel = currentHull ==null || currentHull.Submarine==null ? Vector2.Zero : ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+            prevPosition = position;
+            prevRotation = rotation;
 
             //over 3 times faster than position += velocity * deltatime
-            position.X += (velocity.X+subVel.X) * deltaTime;
-            position.Y += (velocity.Y+subVel.Y) * deltaTime;
+            position.X += velocity.X * deltaTime;
+            position.Y += velocity.Y * deltaTime;
 
             if (prefab.RotateToDirection)
             {
@@ -159,6 +142,16 @@ namespace Barotrauma.Particles
             else
             {
                 rotation += angularVelocity * deltaTime;
+            }
+
+            if (prefab.WaterDrag > 0.0f && 
+                (currentHull == null || (currentHull.Submarine != null && position.Y - currentHull.Submarine.DrawPosition.Y < currentHull.Surface)))
+            {
+                ApplyDrag(prefab.WaterDrag, deltaTime);
+            }
+            else if (prefab.Drag > 0.0f)
+            {
+                ApplyDrag(prefab.Drag, deltaTime);
             }
 
             velocity.X += velocityChange.X * deltaTime;
@@ -174,11 +167,21 @@ namespace Barotrauma.Particles
                 color.G / 255.0f + prefab.ColorChange.Y * deltaTime,
                 color.B / 255.0f + prefab.ColorChange.Z * deltaTime);
             
-            if ((prefab.DeleteOnCollision || prefab.CollidesWithWalls) && currentHull!=null)
+            if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
                 Vector2 edgePos =  position + prefab.CollisionRadius * Vector2.Normalize(velocity) * size.X;
-                
-                if (!Submarine.RectContains(currentHull.WorldRect, edgePos))
+
+                if (currentHull == null)
+                {
+                    Hull collidedHull = Hull.FindHull(position);
+                    if (collidedHull != null)
+                    {
+                        if (prefab.DeleteOnCollision) return false;
+                        OnWallCollisionOutside(collidedHull);
+                    }                   
+
+                }
+                else if (!Submarine.RectContains(currentHull.WorldRect, edgePos))
                 {
                     if (prefab.DeleteOnCollision) return false;
 
@@ -196,15 +199,13 @@ namespace Barotrauma.Particles
                             if (Math.Sign(velocity.X) != Math.Sign(gap.WorldRect.Center.X - currentHull.WorldRect.Center.X)) continue;
                         }
 
-                        //Rectangle enlargedRect = new Rectangle(gap.Rect.X - 10, gap.Rect.Y + 10, gap.Rect.Width + 20, gap.Rect.Height + 20);
-                        //if (!Submarine.RectContains(enlargedRect, position)) continue;
                         gapFound = true;
+                        break;
                     }
 
                     if (!gapFound)
                     {
-
-                        OnWallCollision(currentHull, edgePos);
+                        OnWallCollisionInside(currentHull, edgePos);
                     }
                     else
                     {
@@ -212,21 +213,8 @@ namespace Barotrauma.Particles
                         hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
 
                         if (OnChangeHull != null) OnChangeHull(edgePos, currentHull);
-
                     }
-
-                    //Hull prevHull = Hull.FindHull(prevPosition, hullLimits, currentHull);
-
-                    //if (prevHull == null) return false;
-
                 }
-
-                //if (position.Y < currentHull.Rect.Y-currentHull.Rect.Height)
-                //{
-                //    position.Y = currentHull.Rect.Y - currentHull.Rect.Height;
-                //    velocity.Y *= -0.2f;
-                //}
-                //if (!Submarine.RectContains(currentHull.Rect, position)) return false;
             }
 
             lifeTime -= deltaTime;
@@ -236,58 +224,104 @@ namespace Barotrauma.Particles
             return true;
         }
 
-        private void OnWallCollision(Hull prevHull, Vector2 position)
+        private void ApplyDrag(float dragCoefficient, float deltaTime)
+        {
+            if (velocity == Vector2.Zero) return;
+
+            float speed = velocity.Length();
+            velocity -= (velocity / speed) * Math.Min(speed * speed * prefab.WaterDrag * deltaTime, 1.0f);
+        }
+
+        private void OnWallCollisionInside(Hull prevHull, Vector2 position)
         {
             Rectangle prevHullRect = prevHull.WorldRect;
 
+            Vector2 subVel = ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity);
+
+            velocity -= subVel;
+
             if (position.Y < prevHullRect.Y - prevHullRect.Height)
             {
-                position.Y = prevHullRect.Y - prevHullRect.Height + 1.0f;
+                position.Y = prevHullRect.Y - prevHullRect.Height + prefab.CollisionRadius;
                 velocity.Y = -velocity.Y;
             }
             else if (position.Y > prevHullRect.Y)
             {
-                position.Y = prevHullRect.Y - 1.0f;
+                position.Y = prevHullRect.Y - prefab.CollisionRadius;
                 velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
                 velocity.Y = -velocity.Y * 0.1f;
             }
 
             if (position.X < prevHullRect.X)
             {
-                position.X = prevHullRect.X + 1.0f;
+                position.X = prevHullRect.X + prefab.CollisionRadius;
                 velocity.X = -velocity.X;
             }
             else if (position.X > prevHullRect.X + prevHullRect.Width)
             {
-                position.X = prevHullRect.X + prevHullRect.Width - 1.0f;
+                position.X = prevHullRect.X + prevHullRect.Width - prefab.CollisionRadius;
+                velocity.X = -velocity.X;
+            }
+
+            velocity *= prefab.Restitution;
+
+            velocity += subVel;
+        }
+
+
+        private void OnWallCollisionOutside(Hull collisionHull)
+        {
+            Rectangle hullRect = collisionHull.WorldRect;
+            
+            if (position.Y < hullRect.Y - hullRect.Height)
+            {
+                position.Y = hullRect.Y - hullRect.Height - prefab.CollisionRadius;
+                velocity.Y = -velocity.Y;
+            }
+            else if (position.Y > hullRect.Y)
+            {
+                position.Y = hullRect.Y + prefab.CollisionRadius;
+                velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
+                velocity.Y = -velocity.Y;
+            }
+
+            if (position.X < hullRect.X)
+            {
+                position.X = hullRect.X - prefab.CollisionRadius;
+                velocity.X = -velocity.X;
+            }
+            else if (position.X > hullRect.X + hullRect.Width)
+            {
+                position.X = hullRect.X + hullRect.Width + prefab.CollisionRadius;
                 velocity.X = -velocity.X;
             }
 
             velocity *= prefab.Restitution;
         }
+
+        public void UpdateDrawPos()
+        {
+            drawPosition = Physics.Interpolate(prevPosition, position);
+            drawRotation = Physics.Interpolate(prevRotation, rotation);
+
+            prevPosition = position;
+            prevRotation = rotation;
+        }
         
         public void Draw(SpriteBatch spriteBatch)
         {
-            drawPosition = Physics.Interpolate(prevPosition, position);
-            float drawRotation = Physics.Interpolate(prevRotation, rotation);
-
-            //drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
-
             Vector2 drawSize = size;
 
-            if (prefab.GrowTime>0.0f && totalLifeTime-lifeTime < prefab.GrowTime)
+            if (prefab.GrowTime > 0.0f && totalLifeTime - lifeTime < prefab.GrowTime)
             {
                 drawSize *= ((totalLifeTime - lifeTime) / prefab.GrowTime);
             }
 
-            prefab.Sprites[spriteIndex].Draw(spriteBatch, 
-                new Vector2(drawPosition.X,  -drawPosition.Y), 
-                color * alpha, 
+            prefab.Sprites[spriteIndex].Draw(spriteBatch,
+                new Vector2(drawPosition.X, -drawPosition.Y),
+                color * alpha,
                 prefab.Sprites[spriteIndex].Origin, drawRotation,
                 drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
-
-            prevPosition = position;
-            prevRotation = rotation;
         }
     }
 }
