@@ -534,6 +534,8 @@ namespace Barotrauma.Networking
                                     GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList) &&
                                     GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox));
 
+                                WriteCharacterInfo(readyToStartMsg);
+
                                 client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
                                 
                                 break;
@@ -602,7 +604,7 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Select();
 
             DebugConsole.NewMessage(Convert.ToString(posX) + "," + Convert.ToString(posY), Color.Lime);
-            Character myChar = Character.Create(Character.HumanConfigFile, new Vector2(posX, posY), null, true, false);
+            Character myChar = Character.Create(Character.HumanConfigFile, new Vector2(posX, posY), characterInfo, true, false);
             Character.Controlled = myChar;
 
             yield return CoroutineStatus.Success;
@@ -800,16 +802,29 @@ namespace Barotrauma.Networking
             {
                 spriteBatch.DrawString(GUI.Font, "Disconnected", new Vector2(x + 10, y + 25), Color.White);
             }
-
-
         }
 
 
         public override void Disconnect()
         {
-            //TODO: tell server
             client.Shutdown("");
             GameMain.NetworkMember = null;
+        }
+
+        public void WriteCharacterInfo(NetOutgoingMessage msg)
+        {
+            if (characterInfo == null) return;
+
+            msg.Write(characterInfo.Gender == Gender.Male);
+            msg.Write((byte)characterInfo.HeadSpriteId);
+
+            var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
+            int count = Math.Min(jobPreferences.Count, 3);
+            msg.Write((byte)count);
+            for (int i = 0; i < count; i++)
+            {
+                msg.Write(jobPreferences[i].Name);
+            }
         }
 
 

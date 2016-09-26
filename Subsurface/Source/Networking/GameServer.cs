@@ -499,6 +499,7 @@ namespace Barotrauma.Networking
                     if (connectedClient != null)
                     {
                         connectedClient.ReadyToStart = inc.ReadBoolean();
+                        UpdateCharacterInfo(inc, connectedClient);
                     }
                     break;
                 case ClientPacketHeader.UPDATE_LOBBY:
@@ -848,7 +849,7 @@ namespace Barotrauma.Networking
                 Vector2 spawnPosition = spawnPoint.WorldPosition;
 
                 DebugConsole.NewMessage(Convert.ToString(spawnPosition.X) + "," + Convert.ToString(spawnPosition.Y), Color.Lime);
-                Character spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, null, true, false);
+                Character spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, c.characterInfo, true, false);
                 spawnedCharacter.AnimController.Frozen = true;
                 c.Character = spawnedCharacter;
                 
@@ -907,7 +908,7 @@ namespace Barotrauma.Networking
                 
                 msg.Write(c.Character.WorldPosition.X);
                 msg.Write(c.Character.WorldPosition.Y);
-                
+                                
                 c.Connection.SendMessage(msg, NetDeliveryMethod.ReliableUnordered,0);
             }
         }
@@ -1232,6 +1233,38 @@ namespace Barotrauma.Networking
             }
 
             return true;
+        }
+
+        private void UpdateCharacterInfo(NetIncomingMessage message, Client sender)
+        {
+            Gender gender = Gender.Male;
+            int headSpriteId = 0;
+            try
+            {
+                gender = message.ReadBoolean() ? Gender.Male : Gender.Female;
+                headSpriteId = message.ReadByte();
+            }
+            catch (Exception e)
+            {
+                gender = Gender.Male;
+                headSpriteId = 0;
+
+                DebugConsole.Log("Received invalid characterinfo from \"" +sender.name+"\"! { "+e.Message+" }");
+            }
+            
+            List<JobPrefab> jobPreferences = new List<JobPrefab>();
+            int count = message.ReadByte();
+            for (int i = 0; i < Math.Min(count, 3); i++)
+            {
+                string jobName = message.ReadString();
+
+                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+                if (jobPrefab != null) jobPreferences.Add(jobPrefab);
+            }
+
+            sender.characterInfo = new CharacterInfo(Character.HumanConfigFile, name, gender);
+            sender.characterInfo.HeadSpriteId = headSpriteId;
+            sender.jobPreferences = jobPreferences;
         }
         
         public void AssignJobs(List<Client> unassigned)
