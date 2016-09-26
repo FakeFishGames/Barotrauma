@@ -442,6 +442,18 @@ namespace Barotrauma
                 float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
 
                 ApplyImpact(wallImpact, -collisionNormal, contact);
+
+                Vector2 n;
+                FixedArray2<Vector2> particlePos;
+                contact.GetWorldManifold(out n, out particlePos);
+                
+                int particleAmount = (int)(wallImpact*10.0f);
+                for (int i = 0; i < particleAmount; i++)
+                {
+                    var particle = GameMain.ParticleManager.CreateParticle("iceshards",
+                        ConvertUnits.ToDisplayUnits(particlePos[0]) + Rand.Vector(Rand.Range(1.0f, 50.0f)), 
+                        Rand.Vector(Rand.Range(50.0f,500.0f)) + Velocity);
+                }
             
                 return true;
             }

@@ -178,11 +178,24 @@ namespace Barotrauma.Items.Components
             if ((targetStructure = (targetBody.UserData as Structure)) != null)
             {
                 if (!fixableEntities.Contains(targetStructure.Name)) return;
+                if (targetStructure.IsPlatform) return;
 
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
                 if (sectionIndex < 0) return;
 
-                targetStructure.HighLightSection(sectionIndex);
+                Vector2 progressBarPos = targetStructure.SectionPosition(sectionIndex);
+                if (targetStructure.Submarine != null)
+                {
+                    progressBarPos += targetStructure.Submarine.DrawPosition;
+                }
+
+                var progressBar = user.UpdateHUDProgressBar(
+                    targetStructure,
+                    progressBarPos,
+                    1.0f - targetStructure.SectionDamage(sectionIndex) / targetStructure.Health,
+                    Color.Red, Color.Green);
+
+                progressBar.Size = new Vector2(60.0f, 20.0f);
 
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess);
 
@@ -195,12 +208,10 @@ namespace Barotrauma.Items.Components
                         (sectionIndex == targetStructure.SectionCount - 2 && i == 1) ||
                         (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f))
                     {
-                        targetStructure.HighLightSection(sectionIndex + i);
+                        //targetStructure.HighLightSection(sectionIndex + i);
                         targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
                     }
                 }
-
-
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
@@ -213,7 +224,7 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnUse, targetItem.AllPropertyObjects, deltaTime);
             }        
         }
-
+        
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             Gap leak = objective.OperateTarget as Gap;
@@ -222,7 +233,7 @@ namespace Barotrauma.Items.Components
             float dist = Vector2.Distance(leak.WorldPosition, item.WorldPosition);
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
-            if (dist > range*5.0f) return true;
+            if (dist > range * 5.0f) return true;
             
             //steer closer if almost in range
             if (dist > range)
@@ -240,8 +251,6 @@ namespace Barotrauma.Items.Components
                 //close enough -> stop moving
                 character.AIController.SteeringManager.Reset();
             }
-             
-            
 
             character.CursorPosition = leak.Position;
             character.SetInput(InputType.Aim, false, true);

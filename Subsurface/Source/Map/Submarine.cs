@@ -159,7 +159,7 @@ namespace Barotrauma
         {
             get
             {
-                return subBody.Position;
+                return subBody ==null ? Vector2.Zero : subBody.Position;
             }
         }
 
@@ -297,16 +297,28 @@ namespace Barotrauma
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
-                if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth < 0.5f)
+                if (MapEntity.mapEntityList[i].DrawOverWater)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
             }
         }
+
+        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
+        {
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            {
+                if (MapEntity.mapEntityList[i].DrawDamageEffect)
+                    MapEntity.mapEntityList[i].DrawDamage(spriteBatch, damageEffect);
+            }
+            damageEffect.Parameters["aCutoff"].SetValue(0.0f);
+            damageEffect.Parameters["cCutoff"].SetValue(0.0f);
+        }
+
 
         public static void DrawBack(SpriteBatch spriteBatch, bool editing = false)
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
-                if (MapEntity.mapEntityList[i].Sprite == null || MapEntity.mapEntityList[i].Sprite.Depth >= 0.5f)
+                if (MapEntity.mapEntityList[i].DrawBelowWater)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
             }
         }

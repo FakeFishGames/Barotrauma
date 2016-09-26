@@ -163,6 +163,8 @@ namespace Barotrauma
                 hulls[1] = temp;
             }
 
+            flowTargetHull = hulls[0];
+
             for (int i = 0 ; i <2; i++)
             {
                 if (hulls[i]==null) continue;

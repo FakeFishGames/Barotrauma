@@ -86,6 +86,30 @@ namespace Barotrauma
         {
             get { return null; } 
         }
+
+        public virtual bool DrawBelowWater
+        {
+            get
+            {
+                return Sprite != null && Sprite.Depth > 0.5f;
+            }
+        }
+
+        public virtual bool DrawOverWater
+        {
+            get
+            {
+                return !DrawBelowWater;
+            }
+        }
+
+        public virtual bool DrawDamageEffect
+        {
+            get
+            {
+                return false;
+            }
+        }
         
         public virtual bool IsLinkable
         {
@@ -202,6 +226,8 @@ namespace Barotrauma
         }
 
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back=true) {}
+
+        public virtual void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect) {}
 
         public override void Remove()
         {
