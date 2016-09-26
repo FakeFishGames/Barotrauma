@@ -18,19 +18,39 @@ namespace Barotrauma
 
         private Color fullColor, emptyColor;
 
-        public Vector2 WorldPosition;
+        private Vector2 worldPosition;
+
+        public Vector2 WorldPosition
+        {
+            get
+            {
+                return worldPosition;
+            }
+            set
+            {
+                worldPosition = value;
+                if (parentSub != null)
+                {                 
+                    worldPosition -= parentSub.DrawPosition;
+                }
+            }
+        }
 
         public Vector2 Size;
 
-        public HUDProgressBar(Vector2 worldPosition)
-            : this(worldPosition, Color.Red, Color.Green)
+        private Submarine parentSub;
+
+        public HUDProgressBar(Vector2 worldPosition, Submarine parentSubmarine = null)
+            : this(worldPosition, parentSubmarine, Color.Red, Color.Green)
         {
         }
 
-        public HUDProgressBar(Vector2 worldPosition, Color emptyColor, Color fullColor)
+        public HUDProgressBar(Vector2 worldPosition, Submarine parentSubmarine, Color emptyColor, Color fullColor)
         {
             this.emptyColor = emptyColor;
             this.fullColor = fullColor;
+            
+            parentSub = parentSubmarine;
 
             WorldPosition = worldPosition;
 
@@ -48,13 +68,17 @@ namespace Barotrauma
         {
             float a = Math.Min(FadeTimer, 1.0f);
 
-            Vector2 pos = cam.WorldToScreen(
-                new Vector2(WorldPosition.X - Size.X / 2, WorldPosition.Y + Size.Y / 2));
+            Vector2 pos = new Vector2(WorldPosition.X - Size.X / 2, WorldPosition.Y + Size.Y / 2);
 
-            pos.Y = -pos.Y;
+            if (parentSub != null)
+            {
+                pos += parentSub.DrawPosition;
+            }
+
+            pos = cam.WorldToScreen(pos);
             
             GUI.DrawProgressBar(spriteBatch,
-                pos,
+                new Vector2(pos.X, -pos.Y),
                 Size, progress, 
                 Color.Lerp(emptyColor, fullColor, progress) * a,
                 Color.White * a * 0.8f);
