@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
@@ -21,11 +20,10 @@ namespace Barotrauma
         public float damage;
         public Gap gap;
 
-        public int GapIndex;
+        public int GapID;
 
         public float lastSentDamage;
 
-        public bool isHighLighted;
         public ConvexHull hull;
 
         public WallSection(Rectangle rect)
@@ -43,7 +41,7 @@ namespace Barotrauma
 
     class Structure : MapEntity, IDamageable
     {
-        public static int wallSectionSize = 100;
+        public static int wallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
 
         List<ConvexHull> convexHulls;
@@ -103,6 +101,30 @@ namespace Barotrauma
         public float Health
         {
             get { return prefab.MaxHealth; }
+        }
+
+        public override bool DrawBelowWater
+        {
+            get
+            {
+                return base.DrawBelowWater || prefab.BackgroundSprite != null;
+            }
+        }
+
+        public override bool DrawOverWater
+        {
+            get
+            {
+                return !DrawDamageEffect;
+            }
+        }
+
+        public override bool DrawDamageEffect
+        {
+            get
+            {
+                return prefab.HasBody;
+            }
         }
 
         public override Rectangle Rect
@@ -373,6 +395,20 @@ namespace Barotrauma
         {
             if (prefab.sprite == null) return;
 
+            Draw(spriteBatch, editing, back, null);
+        }
+
+        public override void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect)
+        {
+            Draw(spriteBatch, false, false, damageEffect);
+        }
+
+        private static float prevCutoff;
+
+        private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
+        {
+            if (prefab.sprite == null) return;
+
             Color color = (isHighlighted) ? Color.Orange : Color.White;
             if (isSelected && editing)
             {
@@ -382,51 +418,46 @@ namespace Barotrauma
             }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
-            if(sections.Length == 1)
-                prefab.sprite.DrawTiled(spriteBatch, new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), new Vector2(rect.Width, rect.Height), Vector2.Zero, color,Point.Zero);
 
-            foreach (WallSection s in sections)
+            if (back && damageEffect == null)
             {
-                Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
-                if (sections.Length != 1 && s.damage < prefab.MaxHealth)
-                   prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
-
-                if (s.isHighLighted)
+                if (prefab.BackgroundSprite != null)
                 {
-                    GUI.DrawRectangle(spriteBatch,
-                        new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
-                        new Color((s.damage / prefab.MaxHealth), 1.0f - (s.damage / prefab.MaxHealth), 0.0f, 1.0f), true);
+                    prefab.BackgroundSprite.DrawTiled(
+                        spriteBatch, 
+                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), 
+                        new Vector2(rect.Width, rect.Height), 
+                        Vector2.Zero, color, Point.Zero);
                 }
-
-                s.isHighLighted = false;
-                
-                if (s.damage < 0.01f) continue;
-
-                 GUI.DrawRectangle(spriteBatch,
-                    new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height),
-                     Color.Black * (s.damage / prefab.MaxHealth), true); 
             }
-            /*
-            if(_convexHulls == null) return;
-            var rand = new Random(32434324);
-            foreach (var hull in _convexHulls)
+            
+            if (back == prefab.sprite.Depth > 0.5f || editing)
             {
-                if (sections.Count(x => x.hull == hull) <= 1)
-                    continue;
-                var col = new Color((int) (255 * rand.NextDouble()), (int)(255 * rand.NextDouble()), (int)(255 * rand.NextDouble()), 255);
-                GUI.DrawRectangle(spriteBatch,new Vector2 (hull.BoundingBox.X + drawOffset.X, -(hull.BoundingBox.Y + drawOffset.Y)), new Vector2(hull.BoundingBox.Width, hull.BoundingBox.Height),col,true );
-            }*/
+                foreach (WallSection s in sections)
+                {
+                    if (damageEffect != null)
+                    {
+                        float newCutoff = Math.Min((s.damage / prefab.MaxHealth), 0.65f);
+
+                        if (Math.Abs(newCutoff - prevCutoff) > 0.01f)
+                        {
+                            damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
+                            damageEffect.Parameters["cCutoff"].SetValue(newCutoff*1.2f);
+
+                            damageEffect.CurrentTechnique.Passes[0].Apply();
+
+                            prevCutoff = newCutoff;
+                        }
+                    }
+
+                    Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
+                    prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
+                }
+            }
         }
 
         private bool OnWallCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            //Structure structure = f1.Body.UserData as Structure;
-
-            //if (f2.Body.UserData as Item != null)
-            //{
-            //    if (prefab.IsPlatform || prefab.StairDirection != Direction.None) return false;
-            //}
-
             if (prefab.IsPlatform)
             {
                 Limb limb;
@@ -468,9 +499,12 @@ namespace Barotrauma
             return true;
         }
 
-        public void HighLightSection(int sectionIndex)
+        public WallSection GetSection(int sectionIndex)
         {
-            sections[sectionIndex].isHighLighted = true;
+            if (sectionIndex < 0 || sectionIndex >= sections.Length) return null;
+
+            return sections[sectionIndex];
+
         }
         
         public bool SectionBodyDisabled(int sectionIndex)
@@ -503,8 +537,24 @@ namespace Barotrauma
 
             if (sectionIndex < 0 || sectionIndex > sections.Length - 1) return;
 
-            if (GameMain.Client == null) SetDamage(sectionIndex, sections[sectionIndex].damage + damage);
+            var section = sections[sectionIndex];
 
+            int particleAmount = (int)(Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f));
+
+            particleAmount = Math.Min(particleAmount, 200);
+            for (int i = 0; i < particleAmount; i++)
+            {
+                Vector2 particlePos = new Vector2(
+                    Rand.Range(section.rect.X, section.rect.Right),
+                    Rand.Range(section.rect.Y - section.rect.Height, section.rect.Y));
+
+                if (Submarine != null) particlePos += Submarine.DrawPosition;
+
+                var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)));
+                if (particle == null) break;
+            }
+
+            if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage);
         }
 
         public int FindSectionIndex(Vector2 displayPos)
@@ -763,7 +813,7 @@ namespace Barotrauma
                         s.sections[index].damage = 
                             ToolBox.GetAttributeFloat(subElement, "damage", 0.0f);
 
-                        s.sections[index].GapIndex = ToolBox.GetAttributeInt(subElement, "gap", -1);
+                        s.sections[index].GapID = ToolBox.GetAttributeInt(subElement, "gap", -1);
 
                         break;
                 }
@@ -774,9 +824,9 @@ namespace Barotrauma
         {
             foreach (WallSection s in sections)
             {
-                if (s.GapIndex == -1) continue;
+                if (s.GapID == -1) continue;
 
-                s.gap = FindEntityByID((ushort)s.GapIndex) as Gap;
+                s.gap = FindEntityByID((ushort)s.GapID) as Gap;
                 if (s.gap != null) s.gap.ConnectedWall = this;
             }
         }

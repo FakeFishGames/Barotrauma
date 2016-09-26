@@ -93,6 +93,7 @@
     <Compile Include="Source\Characters\CharacterInfo.cs" />
     <Compile Include="Source\Characters\AI\ISteerable.cs" />
     <Compile Include="Source\Characters\DelayedEffect.cs" />
+    <Compile Include="Source\Characters\HUDProgressBar.cs" />
     <Compile Include="Source\Characters\HuskInfection.cs" />
     <Compile Include="Source\Characters\Jobs\Job.cs" />
     <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />
@@ -496,6 +497,7 @@
     <Content Include="Content\Characters\Watcher\watcher.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\damageshader.fx" />
     <Content Include="Content\InfoTexts.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
@@ -803,6 +805,9 @@
     <Content Include="Content\Map\structures2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Map\walldamage.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Map\waypointIcons.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -810,6 +815,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Particles\flames.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Particles\shrapnel.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\UI\damageOverlay.png">
@@ -1105,6 +1113,9 @@
     <None Include="Content\Content.mgcb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\damageshader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\effects.mgfx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -1267,10 +1278,25 @@
     <None Include="Content\Sounds\Damage\LimbSlash2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Sounds\Damage\StructureBlunt10.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Sounds\Damage\StructureBlunt6.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\Damage\StructureBlunt7.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\StructureBlunt8.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\StructureBlunt9.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\StructureCrunch4.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Sounds\Damage\StructureCrunch5.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\fire.ogg">
