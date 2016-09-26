@@ -93,6 +93,8 @@ namespace Barotrauma
         protected Item closestItem;
         private Character closestCharacter, selectedCharacter;
 
+        private Dictionary<object, HUDProgressBar> hudProgressBars;
+
         protected bool isDead;
         private CauseOfDeath lastAttackCauseOfDeath;
         private CauseOfDeath causeOfDeath;
@@ -301,6 +303,11 @@ namespace Barotrauma
             }
         }
 
+        public Dictionary<object, HUDProgressBar> HUDProgressBars
+        {
+            get { return hudProgressBars; }
+        }
+
         public HuskInfection huskInfection;
         public float HuskInfectionState
         {
@@ -498,6 +505,8 @@ namespace Barotrauma
             
             selectedItems = new Item[2];
 
+            hudProgressBars = new Dictionary<object, HUDProgressBar>();
+
             IsNetworkPlayer = isNetworkPlayer;
 
             oxygen = 100.0f;
@@ -516,8 +525,6 @@ namespace Barotrauma
 
             XDocument doc = ToolBox.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
-
-            
             
             SpeciesName = ToolBox.GetAttributeString(doc.Root, "name", "Unknown");
 
@@ -1184,6 +1191,16 @@ namespace Barotrauma
             {
                 Lights.LightManager.ViewTarget = this;
                 CharacterHUD.Update(deltaTime, this);
+
+                foreach (HUDProgressBar progressBar in hudProgressBars.Values)
+                {
+                    progressBar.Update(deltaTime);
+                }
+
+                foreach (var pb in hudProgressBars.Where(pb => pb.Value.FadeTimer<=0.0f).ToList())
+                {
+                    hudProgressBars.Remove(pb.Key);
+                }
             }
 
             if (IsUnconscious)
@@ -1277,10 +1294,6 @@ namespace Barotrauma
             if (!Enabled) return;
 
             AnimController.Draw(spriteBatch);
-            
-            //GUI.DrawLine(spriteBatch, ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y),
-            //    ConvertUnits.ToDisplayUnits(animController.limbs[0].SimPosition.X, animController.limbs[0].SimPosition.Y) +
-            //    ConvertUnits.ToDisplayUnits(animController.targetMovement.X, animController.targetMovement.Y), Color.Green);
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam)
@@ -1292,9 +1305,6 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
-            Vector2 pos = DrawPosition;
-            pos.Y = -pos.Y;
-
             if (GameMain.DebugDraw)
             {
                 AnimController.DebugDraw(spriteBatch);
@@ -1303,6 +1313,9 @@ namespace Barotrauma
             }
 
             if (this == controlled) return;
+            
+            Vector2 pos = DrawPosition;
+            pos.Y = -pos.Y;
 
             if (info != null)
             {
@@ -1331,6 +1344,26 @@ namespace Barotrauma
                     speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f, 
                     Math.Min((float)speechBubbleTimer, 1.0f));
             }
+        }
+
+        /// <summary>
+        /// Creates a progress bar that's "linked" to the specified object (or updates an existing one if there's one already linked to the object)
+        /// The progress bar will automatically fade out after 1 sec if the method hasn't been called during that time
+        /// </summary>
+        public HUDProgressBar UpdateHUDProgressBar(object linkedObject, Vector2 worldPosition, float progress, Color emptyColor, Color fullColor)
+        {
+            HUDProgressBar progressBar = null;
+            if (!hudProgressBars.TryGetValue(linkedObject, out progressBar))
+            {
+                progressBar = new HUDProgressBar(worldPosition, Submarine, emptyColor, fullColor);
+                hudProgressBars.Add(linkedObject, progressBar);
+            }
+
+            progressBar.WorldPosition = worldPosition;
+            progressBar.FadeTimer = Math.Max(progressBar.FadeTimer, 1.0f);
+            progressBar.Progress = progress;
+
+            return progressBar;
         }
 
         public void PlaySound(AIController.AiState state)

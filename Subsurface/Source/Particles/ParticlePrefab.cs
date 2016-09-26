@@ -20,6 +20,8 @@ namespace Barotrauma.Particles
         public readonly Vector2 StartSizeMin, StartSizeMax;
         public readonly Vector2 SizeChangeMin, SizeChangeMax;
 
+        public readonly float Drag, WaterDrag;
+
         public readonly Color StartColor;
         public readonly float StartAlpha;
 
@@ -89,6 +91,9 @@ namespace Barotrauma.Particles
                 SizeChangeMax = SizeChangeMin;
             }
 
+            Drag = ToolBox.GetAttributeFloat(element, "drag", 0.0f);
+            WaterDrag = ToolBox.GetAttributeFloat(element, "waterdrag", 0.0f);
+            
             Restitution = ToolBox.GetAttributeFloat(element, "restitution", 0.5f);
 
             switch (ToolBox.GetAttributeString(element, "blendstate", "alphablend"))
