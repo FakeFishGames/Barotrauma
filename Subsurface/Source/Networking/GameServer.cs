@@ -740,7 +740,7 @@ namespace Barotrauma.Networking
                 }
             }
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-            server.SendMessage(outmsg,c.Connection,NetDeliveryMethod.Unreliable);
+            server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
         }
 
         public bool StartGameClicked(GUIButton button, object obj)
@@ -845,7 +845,7 @@ namespace Barotrauma.Networking
             {
                 c.inGame = true;
                 
-                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human);
+                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, selectedSub);
                 Vector2 spawnPosition = spawnPoint.WorldPosition;
 
                 DebugConsole.NewMessage(Convert.ToString(spawnPosition.X) + "," + Convert.ToString(spawnPosition.Y), Color.Lime);
@@ -856,7 +856,7 @@ namespace Barotrauma.Networking
                 GameMain.GameSession.CrewManager.characters.Add(c.Character);
             }
 
-            CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
+            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
             //var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
             //server.SendMessage(startMessage, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
 
@@ -883,9 +883,9 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        private void CreateStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode, List<Client> clients)
+        private void SendStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode, List<Client> clients)
         {
-            foreach (Client c in clients)
+            foreach (Client client in clients)
             {
                 NetOutgoingMessage msg = server.CreateMessage();
                 msg.Write((byte)ServerPacketHeader.STARTGAME);
@@ -905,12 +905,19 @@ namespace Barotrauma.Networking
                 msg.Write(selectedMode.Name);
 
                 msg.Write(AllowRespawn);
-                
-                msg.Write(c.Character.WorldPosition.X);
-                msg.Write(c.Character.WorldPosition.Y);
-                                
-                c.Connection.SendMessage(msg, NetDeliveryMethod.ReliableUnordered,0);
+
+                var clientsWithCharacter = clients.FindAll(c => c.Character != null);
+
+                msg.Write((byte)clientsWithCharacter.Count);
+                foreach (Client c in clientsWithCharacter)
+                {
+                    c.Character.WriteSpawnData(msg);
+                    msg.Write(c == client);
+                }
+
+                server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
             }
+       
         }
 
         public void EndGame()
