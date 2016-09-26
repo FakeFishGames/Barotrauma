@@ -569,9 +569,6 @@ namespace Barotrauma.Networking
 
             bool respawnAllowed     = inc.ReadBoolean();
 
-            float posX              = inc.ReadFloat();
-            float posY              = inc.ReadFloat();
-
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 
             if (gameMode == null)
@@ -597,16 +594,23 @@ namespace Barotrauma.Networking
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
             
+            int characterCount = inc.ReadByte();
+            for (int i = 0; i < characterCount; i++)
+            {
+                var character = Character.ReadSpawnData(inc);
+                if (inc.ReadBoolean())
+                {
+                    myCharacter = character;
+                    Character.Controlled = character;
+                }
+            }
+            
             gameStarted = true;
 
             endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
 
             GameMain.GameScreen.Select();
-
-            DebugConsole.NewMessage(Convert.ToString(posX) + "," + Convert.ToString(posY), Color.Lime);
-            Character myChar = Character.Create(Character.HumanConfigFile, new Vector2(posX, posY), characterInfo, true, false);
-            Character.Controlled = myChar;
-
+            
             yield return CoroutineStatus.Success;
         }
 
@@ -906,46 +910,5 @@ namespace Barotrauma.Networking
 
             return false;
         }
-        
-        /// <summary>
-        /// sends some random data to the server (can be a networkevent or just something completely random)
-        /// use for debugging purposes
-        /// </summary>
-        //public void SendRandomData()
-        //{
-        //    NetOutgoingMessage msg = client.CreateMessage();
-        //    switch (Rand.Int(5))
-        //    {
-        //        case 0:
-        //            msg.WriteEnum(PacketTypes.NetworkEvent);
-        //            msg.WriteEnum(NetworkEventType.EntityUpdate);
-        //            msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
-        //            break;
-        //        case 1:
-        //            msg.WriteEnum(PacketTypes.NetworkEvent);
-        //            msg.Write((byte)Enum.GetNames(typeof(NetworkEventType)).Length);
-        //            msg.Write(Rand.Int(MapEntity.mapEntityList.Count));
-        //            break;
-        //        case 2:
-        //            msg.WriteEnum(PacketTypes.NetworkEvent);
-        //            msg.WriteEnum(NetworkEventType.ComponentUpdate);
-        //            msg.Write((int)Item.ItemList[Rand.Int(Item.ItemList.Count)].ID);
-        //            msg.Write(Rand.Int(8));
-        //            break;
-        //        case 3:
-        //            msg.Write((byte)Enum.GetNames(typeof(PacketTypes)).Length);
-        //            break;
-        //    }
-
-        //    int bitCount = Rand.Int(100);
-        //    for (int i = 0; i<bitCount; i++)
-        //    {
-        //        msg.Write(Rand.Int(2)==0);
-        //    }
-
-
-        //    client.SendMessage(msg, (Rand.Int(2)==0) ? NetDeliveryMethod.ReliableOrdered : NetDeliveryMethod.Unreliable);
-        //}
-
     }
 }
