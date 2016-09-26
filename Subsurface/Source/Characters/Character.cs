@@ -1355,7 +1355,7 @@ namespace Barotrauma
             HUDProgressBar progressBar = null;
             if (!hudProgressBars.TryGetValue(linkedObject, out progressBar))
             {
-                progressBar = new HUDProgressBar(worldPosition, emptyColor, fullColor);
+                progressBar = new HUDProgressBar(worldPosition, Submarine, emptyColor, fullColor);
                 hudProgressBars.Add(linkedObject, progressBar);
             }
 
