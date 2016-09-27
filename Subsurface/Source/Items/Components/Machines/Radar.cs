@@ -284,6 +284,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Submarine sub in Submarine.Loaded)
             {
+                if (!sub.OnRadar) continue;
                 if (item.Submarine == sub || sub.DockedTo.Contains(item.Submarine)) continue;
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) continue;
                 
