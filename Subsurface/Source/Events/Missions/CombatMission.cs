@@ -1,7 +1,4 @@
-﻿using System;
-using Barotrauma;
-
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -47,11 +44,11 @@ namespace Barotrauma
             {
                 if (i < halfPlayers)
                 {
-                    randList[i].TeamID = 0;
+                    randList[i].TeamID = 1;
                 }
                 else
                 {
-                    randList[i].TeamID = 1;
+                    randList[i].TeamID = 2;
                 }
             }
 
@@ -70,40 +67,28 @@ namespace Barotrauma
             TeamASub = Submarine.MainSubs[0];
             TeamBSub = Submarine.MainSubs[1];
             TeamBSub.SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
-            
-            for (int i = 0; i < Character.CharacterList.Count; i++)
-            {
-                if (Character.CharacterList[i].TeamID==0)
-                {
-                    TeamACrew.Add(Character.CharacterList[i]);
-                }
-                else
-                {
-                    TeamBCrew.Add(Character.CharacterList[i]);
-                }
-            }
         }
 
         public override void Update(float deltaTime)
         {
             if (TeamACrew.Count == 0 && TeamBCrew.Count == 0)
             {
-                for (int i = 0; i < Character.CharacterList.Count; i++)
+                if (GameMain.Server != null)
                 {
-                    if (Character.CharacterList[i].TeamID == 0)
+                    GameMain.Server.AllowRespawn = false;
+                }
+
+                foreach (Character character in Character.CharacterList)
+                {
+                    if (character.TeamID == 1)
                     {
-                        TeamACrew.Add(Character.CharacterList[i]);
+                        TeamACrew.Add(character);
                     }
-                    else
+                    else if (character.TeamID == 2)
                     {
-                        TeamBCrew.Add(Character.CharacterList[i]);
+                        TeamBCrew.Add(character);
                     }
                 }
-            }
-
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.AllowRespawn = false;
             }
 
             bool ADead = TeamACrew.All(c => c.IsDead);

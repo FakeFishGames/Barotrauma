@@ -906,10 +906,10 @@ namespace Barotrauma.Networking
 
             if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
             
-            for (int j = 0; j < teamCount; j++)
+            for (int j = 1; j <= teamCount; j++)
             {
-                List<Client> teamClients = connectedClients.FindAll(c => c.TeamID == j).ToList();
-                if (teamClients == null) continue;
+                List<Client> teamClients = connectedClients.FindAll(c => c.TeamID == j);
+                if (!teamClients.Any()) continue;
 
                 AssignJobs(teamClients);
 
@@ -934,7 +934,7 @@ namespace Barotrauma.Networking
                     characterInfos.Add(characterInfo);
                 }
 
-                WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[j]);
+                WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[j - 1]);
 
                 for (int i = 0; i < teamClients.Count; i++)
                 {
@@ -947,8 +947,8 @@ namespace Barotrauma.Networking
                     teamClients[i].Character.TeamID = teamClients[i].TeamID;
                 }
 
-                //host plays in team 0
-                if (characterInfo != null && j == 0)
+                //host plays in team 1
+                if (characterInfo != null && j == 1)
                 {
                     myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
                     Character.Controlled = myCharacter;
