@@ -27,6 +27,8 @@ namespace Barotrauma
 
         private int reward;
 
+        protected string[] Locations = new string[2];
+
         public string Name
         {
             get { return name; }
@@ -57,7 +59,7 @@ namespace Barotrauma
             get { return Vector2.Zero; }
         }
 
-        public string SuccessMessage
+        virtual public string SuccessMessage
         {
             get { return successMessage; }
         }
@@ -111,7 +113,7 @@ namespace Barotrauma
             }
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand, string missionType = "")
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, string missionType = "", bool isSinglePlayer = false)
         {
             missionType = missionType.ToLowerInvariant();
 
@@ -182,22 +184,29 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Error in " + configFile + "! Could not find a mission class of the type \"" + type + "\".");
                         continue;
                     }
+                    
+                    if (isSinglePlayer && t.GetInterface("Barotrauma.SinglePlayerMission")==null) continue;
 
                     ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
+                    
                     object instance = constructor.Invoke(new object[] { element });
 
                     Mission mission = (Mission)instance;
 
                     for (int n = 0; n<2; n++)
                     {
+                        mission.Locations[n] = locations[n].Name;
                         mission.description = mission.description.Replace("[location"+(n+1)+"]", locations[n].Name);
 
                         mission.successMessage = mission.successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
                         mission.failureMessage = mission.failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+
+                        for (int m=0;m<mission.messages.Count;m++)
+                        {
+                            mission.messages[m] = mission.messages[m].Replace("[location" + (n + 1) + "]", locations[n].Name);
+                        }
                     }
-
-
-
+                    
                     return mission;
                 }
 
@@ -211,6 +220,8 @@ namespace Barotrauma
         public virtual void Start(Level level) { }
 
         public virtual void Update(float deltaTime) { }
+
+        public virtual bool AssignClientIDs(List<Networking.Client> clients) { return false; }
 
         public void ShowMessage(int index)
         {
@@ -241,5 +252,10 @@ namespace Barotrauma
 
             mode.Money += reward;
         }
+    }
+
+    interface SinglePlayerMission
+    {
+        //all valid single player missions should inherit this
     }
 }

@@ -107,14 +107,14 @@ namespace Barotrauma
             }
         }
 
-        public void StartShift(string levelSeed)
+        public void StartShift(string levelSeed, bool loadSecondSub = true)
         {
             Level level = Level.CreateRandom(levelSeed);
 
-            StartShift(level);
+            StartShift(level,true,loadSecondSub);
         }
 
-        public void StartShift(Level level, bool reloadSub = true)
+        public void StartShift(Level level, bool reloadSub = true, bool loadSecondSub = false)
         {
             GameMain.LightManager.LosEnabled = (GameMain.Server==null || GameMain.Server.CharacterInfo!=null);
                         
@@ -128,6 +128,18 @@ namespace Barotrauma
             
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
             Submarine.MainSub = submarine;
+            if (loadSecondSub)
+            {
+                if (Submarine.MainSubs[1] == null)
+                {
+                    Submarine.MainSubs[1] = new Submarine(Submarine.MainSub.FilePath,Submarine.MainSub.MD5Hash.Hash,true);
+                    Submarine.MainSubs[1].Load(false);
+                }
+                else if (reloadSub)
+                {
+                    Submarine.MainSubs[1].Load(false);
+                }
+            }
 
             //var secondSub = new Submarine(submarine.FilePath, submarine.MD5Hash.Hash);
             //secondSub.Load(false);
@@ -153,7 +165,7 @@ namespace Barotrauma
             if (gameMode!=null) gameMode.Start();
 
             if (gameMode.Mission != null) Mission.Start(Level.Loaded);
-                        
+            
             TaskManager.StartShift(level);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);

@@ -52,7 +52,12 @@ namespace Barotrauma
         
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
-        public static Submarine MainSub;
+        public static Submarine[] MainSubs = new Submarine[2];
+        public static Submarine MainSub
+        {
+            get { return MainSubs[0]; }
+            set { MainSubs[0] = value; }
+        }
         private static List<Submarine> loaded = new List<Submarine>();
 
         private SubmarineBody subBody;
@@ -1010,6 +1015,7 @@ namespace Barotrauma
             subBody = null;
 
             if (MainSub == this) MainSub = null;
+            if (MainSubs[1] == this) MainSubs[1] = null;
 
             DockedTo.Clear();
         }

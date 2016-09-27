@@ -104,6 +104,7 @@
     <Compile Include="Source\ContentPackage.cs" />
     <Compile Include="Source\CoroutineManager.cs" />
     <Compile Include="Source\Events\Missions\CargoMission.cs" />
+    <Compile Include="Source\Events\Missions\CombatMission.cs" />
     <Compile Include="Source\Events\Missions\Mission.cs" />
     <Compile Include="Source\Events\Missions\MonsterMission.cs" />
     <Compile Include="Source\Events\Missions\SalvageMission.cs" />

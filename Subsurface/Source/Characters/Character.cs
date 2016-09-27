@@ -78,7 +78,9 @@ namespace Barotrauma
         
         private Item selectedConstruction;
         private Item[] selectedItems;
-        
+
+        public byte TeamID = 0;
+
         public AnimController AnimController;
 
         private Vector2 cursorPosition;

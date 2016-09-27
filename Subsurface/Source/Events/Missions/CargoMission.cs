@@ -8,9 +8,8 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class CargoMission : Mission
+    class CargoMission : Mission, SinglePlayerMission
     {
-
         private XElement itemConfig;
 
         private List<Item> items;

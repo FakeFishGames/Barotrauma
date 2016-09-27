@@ -312,7 +312,7 @@ namespace Barotrauma.Networking
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((autoRestart && isCrewDead) 
                     || 
-                    (EndRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition))
+                    (EndRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition && Submarine.MainSubs[1]==null))
                 {
                     if (AutoRestart && isCrewDead)
                     {
@@ -883,13 +883,17 @@ namespace Barotrauma.Networking
 
             GUIMessageBox.CloseAll();
 
-            AssignJobs(connectedClients);
-
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
-       
+            
             GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
-            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed);
+
+            yield return CoroutineStatus.Running;
+
+            bool hasTwoTeams = false;
+            if (GameMain.GameSession.gameMode.Mission != null) hasTwoTeams = GameMain.GameSession.gameMode.Mission.AssignClientIDs(connectedClients);
+
+            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed,hasTwoTeams);
 
             GameServer.Log("Starting a new round...", Color.Cyan);
             GameServer.Log("Submarine: " + selectedSub.Name, Color.Cyan);
@@ -897,49 +901,105 @@ namespace Barotrauma.Networking
             GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
 
             if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
-
-            yield return CoroutineStatus.Running;
-
-            List<CharacterInfo> characterInfos = new List<CharacterInfo>();
-
-            foreach (Client client in connectedClients)
-            {
-                client.inGame = true;
-
-                if (client.characterInfo == null)
-                {
-                    client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);
-                }
-                characterInfos.Add(client.characterInfo);
-
-                client.characterInfo.Job = new Job(client.assignedJob);
-            }
-
-            if (characterInfo != null)
-            {
-                characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
-                characterInfos.Add(characterInfo);
-            }
-
-            WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
             
-            for (int i = 0; i < connectedClients.Count; i++)
+            if (!hasTwoTeams)
             {
-                connectedClients[i].Character = Character.Create(
-                    connectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
-                connectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
-                
-                GameMain.GameSession.CrewManager.characters.Add(connectedClients[i].Character);
+                AssignJobs(connectedClients);
+
+                List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+
+                foreach (Client client in connectedClients)
+                {
+                    client.inGame = true;
+
+                    if (client.characterInfo == null)
+                    {
+                        client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);
+                    }
+                    characterInfos.Add(client.characterInfo);
+
+                    client.characterInfo.Job = new Job(client.assignedJob);
+                }
+
+                if (characterInfo != null)
+                {
+                    characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
+                    characterInfos.Add(characterInfo);
+                }
+
+                WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
+
+                for (int i = 0; i < connectedClients.Count; i++)
+                {
+                    connectedClients[i].Character = Character.Create(
+                        connectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
+                    connectedClients[i].Character.GiveJobItems(assignedWayPoints[i]);
+
+                    GameMain.GameSession.CrewManager.characters.Add(connectedClients[i].Character);
+                }
+
+                if (characterInfo != null)
+                {
+                    myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
+                    Character.Controlled = myCharacter;
+
+                    myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
+
+                    GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+                }
             }
-
-            if (characterInfo != null)
+            else
             {
-                myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
-                Character.Controlled = myCharacter;
+                for (int j=0;j<2;j++)
+                {
+                    List<Client> teamClients = connectedClients.FindAll(c => c.TeamID == j).ToList();
+                    if (teamClients == null) continue;
+                    AssignJobs(teamClients);
 
-                myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
+                    List<CharacterInfo> characterInfos = new List<CharacterInfo>();
 
-                GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+                    foreach (Client client in teamClients)
+                    {
+                        client.inGame = true;
+
+                        if (client.characterInfo == null)
+                        {
+                            client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);
+                        }
+                        characterInfos.Add(client.characterInfo);
+
+                        client.characterInfo.Job = new Job(client.assignedJob);
+                    }
+
+                    if (characterInfo != null)
+                    {
+                        characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
+                        characterInfos.Add(characterInfo);
+                    }
+
+                    WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[j]);
+
+                    for (int i = 0; i < teamClients.Count; i++)
+                    {
+                        teamClients[i].Character = Character.Create(
+                            teamClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
+                        teamClients[i].Character.GiveJobItems(assignedWayPoints[i]);
+
+                        GameMain.GameSession.CrewManager.characters.Add(teamClients[i].Character);
+
+                        teamClients[i].Character.TeamID = teamClients[i].TeamID;
+                    }
+
+                    if (characterInfo != null)
+                    {
+                        myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
+                        Character.Controlled = myCharacter;
+
+                        myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
+
+                        GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+                    }
+                }
             }
            
             var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
@@ -1006,6 +1066,7 @@ namespace Barotrauma.Networking
             msg.Write(selectedMode.Name);
 
             msg.Write(AllowRespawn);
+            msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
             //msg.Write(GameMain.NetLobbyScreen.GameDuration.TotalMinutes);
 
@@ -1670,6 +1731,7 @@ namespace Barotrauma.Networking
         {
             msg.Write(c.Info == null);
             msg.Write(c.ID);
+            msg.Write(c.TeamID);
             msg.Write(c.ConfigPath);
 
             msg.Write(c.WorldPosition.X);

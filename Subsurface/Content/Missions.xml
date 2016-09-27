@@ -174,4 +174,15 @@
       </Item>
     </Items>
   </CargoMission> 
+  
+  <CombatMission
+    name="Search and Destroy"
+    description="[location1] and [location2] are at war! Eliminate the enemy crew and return to base."
+    commonness="100"
+    reward="2000"
+    successmessage="[winner] has defeated [loser]!"
+	failuremessage="Both crews have perished.">
+	<message header="Crew eliminated" text="[location1] has fallen! Navigate back to your base."/>
+	<message header="Crew eliminated" text="[location2] has fallen! Navigate back to your base."/>
+  </CombatMission>
 </Missions>
