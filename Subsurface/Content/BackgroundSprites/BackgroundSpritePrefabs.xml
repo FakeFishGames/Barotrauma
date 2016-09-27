@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <backgroundsprites>
   <hanging1 alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,0,242,543" origin="0.5,0.0"/>
+    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,0,242,543" origin="0.5,0.15"/>
   </hanging1>
 
   <hanging2 alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
-    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.0"/>
+    <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.15"/>
   </hanging2>
 
   <kelp1 alignment="Top" minsize="0.5" maxsize="1.5" commonness="10">
@@ -35,9 +35,14 @@
 
   <branches2 minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="Maze" />
-    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="255,0,246,479" origin="0.5,0.9"/>
+    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="247,0,278,479" origin="0.2,0.9"/>
   </branches2>
 
+  <branches3 minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
+    <overridecommonness commonness="10" leveltype="Maze" />
+    <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="526,0,245,479" origin="0.4,0.9"/>
+  </branches3>
+  
   <fungus minsize="0.5" maxsize="1.5" alignwithsurface="true" swingamount="1" commonness="3">
     <overridecommonness commonness="10" leveltype="Maze" />
     <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="0,681,442,343" origin="0.5,0.9"/>

@@ -86,36 +86,35 @@ namespace Barotrauma
             {
                 BackgroundSpritePrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
                 GraphEdge selectedEdge = null;
-                Vector2? pos = FindSpritePosition(level, prefab, out selectedEdge);
+                Vector2 edgeNormal = Vector2.One;
+                Vector2? pos = FindSpritePosition(level, prefab, out selectedEdge, out edgeNormal);
 
                 if (pos == null) continue;
 
                 float rotation = 0.0f;
                 if (prefab.AlignWithSurface)
                 {
-                    Vector2 leftPoint = selectedEdge.point2;
-                    Vector2 rightPoint = selectedEdge.point1;
-                    
-                    rotation = -MathUtils.VectorToAngle(rightPoint - leftPoint);
+                    rotation = MathUtils.VectorToAngle(new Vector2(edgeNormal.Y, edgeNormal.X));
                 }
 
                 rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, false);
 
                 var newSprite = new BackgroundSprite(prefab, 
                     (Vector2)pos, Rand.Range(prefab.Scale.X, prefab.Scale.Y, false), rotation);
-                
+
                 int x = (int)Math.Floor(((Vector2)pos).X / GridSize);
-                if (x<0 || x >= sprites.GetLength(0)) continue;
+                if (x < 0 || x >= sprites.GetLength(0)) continue;
                 int y = (int)Math.Floor(((Vector2)pos).Y / GridSize);
-                if (y<0 || y >= sprites.GetLength(1)) continue;
+                if (y < 0 || y >= sprites.GetLength(1)) continue;
 
                 sprites[x,y].Add(newSprite);
             }
         }
 
-        private Vector2? FindSpritePosition(Level level, BackgroundSpritePrefab prefab, out GraphEdge closestEdge)
+        private Vector2? FindSpritePosition(Level level, BackgroundSpritePrefab prefab, out GraphEdge closestEdge, out Vector2 edgeNormal)
         {
             closestEdge = null;
+            edgeNormal = Vector2.One;
 
             Vector2 randomPos = new Vector2(
                 Rand.Range(0.0f, level.Size.X, false), 
@@ -127,43 +126,46 @@ namespace Barotrauma
 
             VoronoiCell cell = cells[Rand.Int(cells.Count, false)];
             List<GraphEdge> edges = new List<GraphEdge>();
+            List<Vector2> normals = new List<Vector2>();
             foreach (GraphEdge edge in cell.edges)
             {
                 if (!edge.isSolid || edge.OutsideLevel) continue;
+
+                Vector2 normal = edge.GetNormal(cell);
                 
-                if (prefab.Alignment.HasFlag(Alignment.Bottom) &&
-                    Math.Abs(edge.point1.X - edge.point2.X) < Math.Abs(edge.point1.Y - edge.point2.Y))
-                {
-                    if (edge.Center.Y < cell.Center.Y) edges.Add(edge);
-                }
-                else if (prefab.Alignment.HasFlag(Alignment.Top) &&
-                    Math.Abs(edge.point1.X - edge.point2.X) < Math.Abs(edge.point1.Y - edge.point2.Y))
-                {
-                    if (edge.Center.Y > cell.Center.Y) edges.Add(edge);
-                }
-                else if (prefab.Alignment.HasFlag(Alignment.Left))
-                {
-                    if (edge.Center.X < cell.Center.X) edges.Add(edge);
-                }
-                else if (prefab.Alignment.HasFlag(Alignment.Right))
-                {
-                    if (edge.Center.X > cell.Center.X) edges.Add(edge);
-                }
-                else
+                if (prefab.Alignment.HasFlag(Alignment.Bottom) && normal.Y < -0.5f)
                 {
                     edges.Add(edge);
                 }
+                else if (prefab.Alignment.HasFlag(Alignment.Top) && normal.Y > 0.5f)
+                {
+                    edges.Add(edge);
+                }
+                else if (prefab.Alignment.HasFlag(Alignment.Left) && normal.X < -0.5f)
+                {
+                    edges.Add(edge);
+                }
+                else if (prefab.Alignment.HasFlag(Alignment.Right) && normal.X > 0.5f)
+                {
+                    edges.Add(edge);
+                }
+                else
+                {
+                    continue;
+                }
+
+                normals.Add(normal);
             }
 
             if (!edges.Any()) return null;
 
-            closestEdge = edges[Rand.Int(edges.Count,false)];
+            int index = Rand.Int(edges.Count,false);
+            closestEdge = edges[index];
+            edgeNormal = normals[index];
 
             float length = Vector2.Distance(closestEdge.point1, closestEdge.point2);
             Vector2 dir = (closestEdge.point1 - closestEdge.point2) / length;
-            Vector2 pos = closestEdge.Center;
-
-            pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f, false);
+            Vector2 pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f, false);
             
             return pos;
         }
