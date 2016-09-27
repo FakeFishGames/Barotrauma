@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<LevelGenerationParameters>
+  <Default
+    width="150000"
+    height="60000"
+    VoronoiSiteInterval="2000,2000"
+    VoronoiSiteVariance="800,800"
+    MainPathNodeIntervalRange="10000,30000"
+    BackgroundColor="29,36,50"
+    SmallTunnelCount="5"
+    SmallTunnelLengthRange="5000,10000"
+    RuinCount="1"
+    BottomHoleProbability="0.4"
+    BackgroundSpriteAmount="1000"
+    />
+
+  <Open
+    width="200000"
+    height="50000"
+    VoronoiSiteInterval="2000,2000"
+    VoronoiSiteVariance="800,800"
+    MainPathNodeIntervalRange="5000,10000"
+    BackgroundColor="55,61,72"
+    SmallTunnelCount="3"
+    SmallTunnelLengthRange="5000,10000"
+    RuinCount="1"
+    BottomHoleProbability="1"
+    BackgroundSpriteAmount="800"
+    />
+
+  <Pillars
+    width="100000"
+    height="80000"
+    VoronoiSiteInterval="1000,8000"
+    VoronoiSiteVariance="100,1400"
+    MainPathNodeIntervalRange="5000,10000"
+    BackgroundColor="55,72,58"
+    SmallTunnelCount="10"
+    SmallTunnelLengthRange="5000,10000"
+    RuinCount="1"
+    BottomHoleProbability="0.5"
+    BackgroundSpriteAmount="1000"
+    />
+
+  <Slabs
+    width="150000"
+    height="50000"
+    VoronoiSiteInterval="8000,1000"
+    VoronoiSiteVariance="1400,100"
+    MainPathNodeIntervalRange="5000,10000"
+    BackgroundColor="55,72,58"
+    SmallTunnelCount="10"
+    SmallTunnelLengthRange="5000,10000"
+    RuinCount="1"
+    BottomHoleProbability="0.0"
+    BackgroundSpriteAmount="1000"
+    />
+
+  <Maze
+    width="100000"
+    height="70000"
+    VoronoiSiteInterval="1500,1500"
+    VoronoiSiteVariance="700,700"
+    MainPathNodeIntervalRange="6000,10000"
+    BackgroundColor="25,23,10"
+    SmallTunnelCount="10"
+    SmallTunnelLengthRange="5000,50000"
+    RuinCount="3"
+    BottomHoleProbability="0.5"
+    BackgroundSpriteAmount="1000"
+    />
+</LevelGenerationParameters>
