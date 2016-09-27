@@ -206,6 +206,7 @@ namespace Barotrauma
 
             Mission.Init();
             MapEntityPrefab.Init();
+            LevelGenerationParams.LoadPresets();
             TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
 
