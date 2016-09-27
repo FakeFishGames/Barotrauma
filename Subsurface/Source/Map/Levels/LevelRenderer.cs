@@ -68,7 +68,9 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            dustOffset -= Vector2.UnitY * 10.0f * (float)deltaTime;
+            dustOffset -= Vector2.UnitY * 10.0f * deltaTime;
+
+            backgroundSpriteManager.Update(deltaTime);
         }
 
         public void SetWallVertices(VertexPositionTexture[] vertices)
@@ -196,7 +198,6 @@ namespace Barotrauma
 
         public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam)
         {
-
             if (wallVertices == null) return;
             
             basicEffect.World = cam.ShaderTransform
