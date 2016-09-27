@@ -496,10 +496,6 @@ namespace Barotrauma
                     if (GameMain.Client == null) Hull.EditFire = !Hull.EditFire;
                     
                     break;
-                case "generatelevel":
-                    GameMain.Level = new Level("asdf", 50.0f, 500,500, 50);
-                    GameMain.Level.Generate();
-                    break;
                 case "fixitems":
                     foreach (Item it in Item.ItemList)
                     {
