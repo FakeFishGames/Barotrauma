@@ -48,28 +48,16 @@ namespace Barotrauma
             get { return midPos; }
         }
 
-        public WrappingWall(List<VoronoiCell> pathCells, List<VoronoiCell> mapCells, float maxY, int dir = -1)
+        public WrappingWall(List<VoronoiCell> pathCells, List<VoronoiCell> mapCells, Rectangle ignoredArea, int dir = -1)
         {
             cells = new List<VoronoiCell>();
-
-            VoronoiCell lowestPathCell = null;
-            foreach (VoronoiCell pathCell in pathCells)
-            {
-                if (lowestPathCell == null || pathCell.Center.Y < lowestPathCell.Center.Y)
-                {
-                    lowestPathCell = pathCell;
-                }
-            }
-
-            float bottomY = Math.Max(lowestPathCell.Center.Y, maxY);
 
             VoronoiCell edgeCell = null;
             foreach (VoronoiCell cell in mapCells)
             {
-                if (cell.Center.Y > bottomY) continue;
-                if (edgeCell == null
-                    || (dir < 0 && cell.Center.X < edgeCell.Center.X)
-                    || (dir > 0 && cell.Center.X > edgeCell.Center.X))
+                if (ignoredArea.Contains(cell.Center)) continue;                
+                if (Math.Sign(cell.Center.X - ignoredArea.Center.X) != Math.Sign(dir)) continue;
+                if (edgeCell == null || cell.Center.Y < edgeCell.Center.Y)
                 {
                     edgeCell = cell;
                 }

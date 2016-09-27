@@ -137,6 +137,7 @@
     <Compile Include="Source\Map\EntityGrid.cs" />
     <Compile Include="Source\Map\FireSource.cs" />
     <Compile Include="Source\Map\Levels\CaveGenerator.cs" />
+    <Compile Include="Source\Map\Levels\LevelGenerationParams.cs" />
     <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
     <Compile Include="Source\Map\Levels\Ruins\BTRoom.cs" />
     <Compile Include="Source\Map\Levels\Ruins\Corridor.cs" />
@@ -348,6 +349,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\BackgroundSprites\vegetation2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\BackgroundSprites\vegetation3.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\BackgroundSprites\vegetation4.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\BackgroundSprites\vegetation5.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Charybdis\charybdis.png">
@@ -769,6 +779,10 @@
     </Content>
     <Content Include="Content\Map\iceWall.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Map\LevelGenerationParameters.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Content\Map\locationNames.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
