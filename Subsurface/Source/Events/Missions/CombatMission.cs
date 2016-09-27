@@ -4,6 +4,7 @@ using Barotrauma;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -17,7 +18,7 @@ namespace Barotrauma
         public List<Character> TeamBCrew = new List<Character>();
 
         int state = 0;
-        string winner; string loser;
+        string winner, loser;
 
         public override string SuccessMessage
         {
@@ -30,7 +31,7 @@ namespace Barotrauma
             
         }
 
-        public override bool AssignClientIDs(List<Client> clients)
+        public override bool AssignTeamIDs(List<Client> clients)
         {
             List<Client> randList = new List<Client>(clients);
             for (int i = 0; i < randList.Count; i++)
@@ -105,22 +106,8 @@ namespace Barotrauma
                 GameMain.Server.AllowRespawn = false;
             }
 
-            bool ADead = true;
-            foreach (Character c in TeamACrew)
-            {
-                if (!c.IsDead)
-                {
-                    ADead = false; break;
-                }
-            }
-            bool BDead = true;
-            foreach (Character c in TeamBCrew)
-            {
-                if (!c.IsDead)
-                {
-                    BDead = false; break;
-                }
-            }
+            bool ADead = TeamACrew.All(c => c.IsDead);
+            bool BDead = TeamBCrew.All(c => c.IsDead);
 
             if (BDead && !ADead)
             {
@@ -164,22 +151,8 @@ namespace Barotrauma
 
         public override void End()
         {
-            bool ADead = true;
-            foreach (Character c in TeamACrew)
-            {
-                if (!c.IsDead && !c.IsUnconscious)
-                {
-                    ADead = false; break;
-                }
-            }
-            bool BDead = true;
-            foreach (Character c in TeamBCrew)
-            {
-                if (!c.IsDead && !c.IsUnconscious)
-                {
-                    BDead = false; break;
-                }
-            }
+            bool ADead = TeamACrew.All(c => c.IsDead || c.IsUnconscious);
+            bool BDead = TeamBCrew.All(c => c.IsDead || c.IsUnconscious);
 
             if (BDead && !ADead)
             {
