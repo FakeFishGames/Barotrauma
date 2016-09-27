@@ -67,6 +67,12 @@ namespace Barotrauma
             TeamASub = Submarine.MainSubs[0];
             TeamBSub = Submarine.MainSubs[1];
             TeamBSub.SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
+
+            foreach (Submarine submarine in Submarine.Loaded)
+            {
+                //hide all subs from radar to make sneak attacks possible
+                submarine.OnRadar = false;
+            }
         }
 
         public override void Update(float deltaTime)
@@ -91,11 +97,12 @@ namespace Barotrauma
                 }
             }
 
-            bool ADead = TeamACrew.All(c => c.IsDead);
-            bool BDead = TeamBCrew.All(c => c.IsDead);
+            bool ADead = TeamACrew.All(c => c.IsDead || c.IsUnconscious);
+            bool BDead = TeamBCrew.All(c => c.IsDead || c.IsUnconscious);
 
             if (BDead && !ADead)
             {
+                TeamBCrew.ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeath.Damage); }); //make sure nobody in this team can be revived because that would be pretty weird
                 winner = Locations[0];
                 loser = Locations[1];
                 if (state==0)
@@ -106,6 +113,7 @@ namespace Barotrauma
             }
             if (ADead && !BDead)
             {
+                TeamACrew.ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeath.Damage); }); //same as above
                 winner = Locations[1];
                 loser = Locations[0];
                 if (state == 0)
@@ -114,8 +122,8 @@ namespace Barotrauma
                     state = 1;
                 }
             }
-
-            if ((TeamBSub != null && TeamBSub.AtEndPosition) || (TeamASub != null && TeamASub.AtEndPosition))
+            
+            if ((TeamBSub != null && TeamBSub.AtEndPosition && TeamBCrew.Any(c => c.Submarine == TeamBSub)) || (TeamASub != null && TeamASub.AtEndPosition && TeamBCrew.Any(c => c.Submarine == TeamASub)))
             {
                 if (ADead && !BDead)
                 {
@@ -124,7 +132,7 @@ namespace Barotrauma
                 }
             }
 
-            if ((TeamASub != null && TeamASub.AtStartPosition) || (TeamBSub != null && TeamBSub.AtStartPosition))
+            if ((TeamASub != null && TeamASub.AtStartPosition && TeamACrew.Any(c => c.Submarine == TeamASub)) || (TeamBSub != null && TeamBSub.AtStartPosition && TeamACrew.Any(c => c.Submarine == TeamBSub)))
             {
                 if (BDead && !ADead)
                 {

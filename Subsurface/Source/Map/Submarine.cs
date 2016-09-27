@@ -30,7 +30,6 @@ namespace Barotrauma
 
     class Submarine : Entity
     {
-
         public static string SavePath = "Submarines";
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 80000.0f);
@@ -85,6 +84,8 @@ namespace Barotrauma
             get { return name; }
             set { name = value; }
         }
+
+        public bool OnRadar = true;
 
         public string Description
         {
