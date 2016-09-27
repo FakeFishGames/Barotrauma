@@ -737,6 +737,7 @@ namespace Barotrauma.Networking
             string modeName = inc.ReadString();
 
             bool respawnAllowed = inc.ReadBoolean();
+            bool loadSecondSub = inc.ReadBoolean();
 
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 
@@ -760,7 +761,7 @@ namespace Barotrauma.Networking
             //int gameModeIndex = inc.ReadInt32();
 
             GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
-            GameMain.GameSession.StartShift(levelSeed);
+            GameMain.GameSession.StartShift(levelSeed,loadSecondSub);
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
 
@@ -1137,6 +1138,7 @@ namespace Barotrauma.Networking
         {
             bool noInfo         = inc.ReadBoolean();
             ushort id           = inc.ReadUInt16();
+            byte teamid         = inc.ReadByte();
             string configPath   = inc.ReadString();
 
             Vector2 position    = new Vector2(inc.ReadFloat(), inc.ReadFloat());
@@ -1155,6 +1157,7 @@ namespace Barotrauma.Networking
 
                 character = Character.Create(configPath, position, null, true);
                 character.ID = id;
+                character.TeamID = teamid;
             }
             else
             {
@@ -1179,6 +1182,7 @@ namespace Barotrauma.Networking
 
                 character = Character.Create(configPath, position, ch, ownerId != myID, hasAi);
                 character.ID = id;
+                character.TeamID = teamid;
 
                 if (configPath == Character.HumanConfigFile)
                 {

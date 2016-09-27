@@ -295,10 +295,6 @@ namespace Barotrauma
                 Location location = locations[i];
                 Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
                 
-
-
-
-
                 Rectangle drawRect = location.Type.Sprite.SourceRect;
                 Rectangle sourceRect = drawRect;
                 drawRect.X = (int)pos.X - drawRect.Width/2;
@@ -387,7 +383,7 @@ namespace Barotrauma
 
                     if (rand.NextDouble() < 0.3f) return null;
 
-                    mission = Mission.LoadRandom(locations, rand);
+                    mission = Mission.LoadRandom(locations, rand, "", true);
                 }
 
                 return mission;

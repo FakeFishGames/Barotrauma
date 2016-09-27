@@ -24,6 +24,8 @@ namespace Barotrauma.Networking
         public string name;
         public byte ID;
 
+        public byte TeamID = 0;
+
         public Character Character;
         public CharacterInfo characterInfo;
         public NetConnection Connection { get; set; }
