@@ -80,18 +80,28 @@ namespace Barotrauma
 
         public SinglePlayerMode(XElement element)
             : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"), null)
-        {
-            string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
-
-            GenerateMap(mapSeed);
-
-            Map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
-
+        {            
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "crew") continue;
-                
-                GameMain.GameSession.CrewManager = new CrewManager(subElement);                
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "crew":
+                        GameMain.GameSession.CrewManager = new CrewManager(subElement); 
+                        break;
+                    case "map":
+                        Map = Map.Load(subElement);
+                        break;
+                }               
+            }
+
+            //backwards compatibility with older save files
+            if (Map==null)
+            {
+                string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
+
+                GenerateMap(mapSeed);
+
+                Map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
             }
 
             savedOnStart = true;
@@ -378,13 +388,14 @@ namespace Barotrauma
             //element.Add(new XAttribute("day", day));
             XElement modeElement = new XElement("gamemode");
 
-            modeElement.Add(new XAttribute("currentlocation", Map.CurrentLocationIndex));
-            modeElement.Add(new XAttribute("mapseed", Map.Seed));
-
+            //modeElement.Add(new XAttribute("currentlocation", Map.CurrentLocationIndex));
+            //modeElement.Add(new XAttribute("mapseed", Map.Seed));
+            
+            
             CrewManager.Save(modeElement);
+            Map.Save(modeElement);
 
             element.Add(modeElement);
-            
         }
     }
 }

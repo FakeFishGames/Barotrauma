@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using Voronoi2;
 
 namespace Barotrauma
@@ -27,6 +28,8 @@ namespace Barotrauma
 
         private Location currentLocation;
         private Location selectedLocation;
+
+        private Location highlightedLocation;
 
         private LocationConnection selectedConnection;
 
@@ -55,6 +58,26 @@ namespace Barotrauma
             get { return seed; }
         }
 
+        public static Map Load(XElement element)
+        {
+            string mapSeed = ToolBox.GetAttributeString(element, "seed", "a");
+
+            int size = ToolBox.GetAttributeInt(element, "size", 500);
+            Map map = new Map(mapSeed, size);
+
+            map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
+
+            string discoveredStr = ToolBox.GetAttributeString(element, "discovered", "");
+
+            string[] discoveredStrs = discoveredStr.Split(',');
+            for (int i = 0; i < discoveredStrs.Length; i++ )
+            {
+                map.locations[i].Discovered = discoveredStrs[i].ToLowerInvariant() == "true";
+            }
+            
+            return map;
+        }
+
         public Map(string seed, int size)
         {
             this.seed = seed;
@@ -67,15 +90,16 @@ namespace Barotrauma
 
             connections = new List<LocationConnection>();
 
-            if (iceTexture==null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
+            if (iceTexture == null) iceTexture = new Sprite("Content/Map/iceSurface.png", Vector2.Zero);
             if (iceCraters == null) iceCraters = TextureLoader.FromFile("Content/Map/iceCraters.png");
-            if (iceCrack == null) iceCrack = TextureLoader.FromFile("Content/Map/iceCrack.png");
+            if (iceCrack == null)   iceCrack = TextureLoader.FromFile("Content/Map/iceCrack.png");
             
             Rand.SetSyncedSeed(ToolBox.StringToInt(this.seed));
 
             GenerateLocations();
 
             currentLocation = locations[locations.Count / 2];
+            currentLocation.Discovered = true;
             GenerateDifficulties(currentLocation, new List<LocationConnection> (connections), 10.0f);
 
             foreach (LocationConnection connection in connections)
@@ -203,6 +227,7 @@ namespace Barotrauma
         public void MoveToNextLocation()
         {
             currentLocation = selectedLocation;
+            currentLocation.Discovered = true;
             selectedLocation = null;
         }
 
@@ -213,23 +238,18 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Location index out of bounds");
                 return;
             }
+
             currentLocation = locations[index];
+            currentLocation.Discovered = true;
         }
 
-        private Location highlightedLocation;
         public void Draw(SpriteBatch spriteBatch, Rectangle rect, float scale = 1.0f)
         {
-            //GUI.DrawRectangle(spriteBatch, rect, Color.DarkBlue, true);
-            
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
             Vector2 offset = -currentLocation.MapPosition;
 
             iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, Color.White*0.8f);
-            GUI.DrawRectangle(spriteBatch, rect, Color.White);
-            //spriteBatch.Draw(iceTexture, offset, rect, null, null, 0f, null, Color.White, SpriteEffects.None, 0.0f);
-
-            //Vector2 scale = new Vector2((float)rect.Width/ size, (float)rect.Height/size);
-
+            
             float maxDist = 20.0f;
             float closestDist = 0.0f;
             highlightedLocation = null;
@@ -248,10 +268,9 @@ namespace Barotrauma
                 }
             }
 
-
             foreach (LocationConnection connection in connections)
             {
-                Color crackColor = Color.White * Math.Max(connection.Difficulty/100.0f, 0.5f);
+                Color crackColor = Color.White * Math.Max(connection.Difficulty/100.0f, 1.5f);
 
                 if (highlightedLocation != currentLocation &&
                     connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation))
@@ -267,38 +286,63 @@ namespace Barotrauma
                     } 
                 }
 
-
                 if (selectedLocation != currentLocation &&
                     (connection.Locations.Contains(selectedLocation) && connection.Locations.Contains(currentLocation)))
                 {
                     crackColor = Color.Red;
                 }
-
-                foreach (Vector2[] segment in connection.CrackSegments)
+                else if (!connection.Locations[0].Discovered || !connection.Locations[1].Discovered)
                 {
-                    Vector2 start = rectCenter + (segment[0] + offset) * scale;
-                    Vector2 end = rectCenter + (segment[1] + offset) * scale;
-                    
-                    if (!rect.Contains(start) || !rect.Contains(end)) continue;
+                    crackColor *= 0.2f;
+                }
+                
+                for (int i = 0; i < connection.CrackSegments.Count; i++ )
+                {
+                    var segment = connection.CrackSegments[i];
+
+                    Vector2 start   = rectCenter + (segment[0] + offset) * scale;
+                    Vector2 end     = rectCenter + (segment[1] + offset) * scale;
+
+                    if (!rect.Contains(start) && !rect.Contains(end))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        Vector2? intersection = MathUtils.GetLineRectangleIntersection(start, end, new Rectangle(rect.X, rect.Y + rect.Height, rect.Width, rect.Height));
+                        if (intersection != null)
+                        {
+                            if (!rect.Contains(start))
+                            {
+                                start = (Vector2)intersection;
+                            }
+                            else
+                            {
+                                end = (Vector2)intersection;
+                            }
+                        }
+                    }
 
                     float dist = Vector2.Distance(start, end);
 
+                    int width = (int)(MathHelper.Clamp(connection.Difficulty, 2.0f, 20.0f) * scale);
+
                     spriteBatch.Draw(iceCrack,
-                        new Rectangle((int)start.X, (int)start.Y, (int)dist+2, 30),
-                        new Rectangle(0, 0, iceCrack.Width, 60), crackColor, MathUtils.VectorToAngle(end -start),
+                        new Rectangle((int)start.X, (int)start.Y, (int)dist + 2, width),
+                        new Rectangle(0, 0, iceCrack.Width, 60), crackColor, MathUtils.VectorToAngle(end - start),
                         new Vector2(0, 30), SpriteEffects.None, 0.01f);
                 }
             }
+
+            rect.Inflate(8, 8);
+            GUI.DrawRectangle(spriteBatch, rect, Color.Black, 8);
+            GUI.DrawRectangle(spriteBatch, rect, Color.LightGray);
 
             for (int i = 0; i < locations.Count; i++)
             {
                 Location location = locations[i];
                 Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
                 
-
-
-
-
                 Rectangle drawRect = location.Type.Sprite.SourceRect;
                 Rectangle sourceRect = drawRect;
                 drawRect.X = (int)pos.X - drawRect.Width/2;
@@ -308,7 +352,7 @@ namespace Barotrauma
 
                 Color color = location.Connections.Find(c => c.Locations.Contains(currentLocation))==null ? Color.White : Color.Green;
 
-                color *= (location.Discovered) ? 0.8f : 0.4f;
+                color *= (location.Discovered) ? 0.8f : 0.2f;
 
                 if (location == currentLocation) color = Color.Orange;
 
@@ -348,14 +392,26 @@ namespace Barotrauma
                 if (location == null) continue;
 
                 Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
-                pos.X = (int)pos.X;
-                pos.Y = (int)pos.Y;
-                if (highlightedLocation == location)
-                {
-                    spriteBatch.DrawString(GUI.Font, location.Name, pos + new Vector2(0, 50), Color.DarkRed, 0.0f, GUI.Font.MeasureString(location.Name)/2.0f, 1.0f, SpriteEffects.None, 0.0f);
-                }
+                pos.X = (int)(pos.X + location.Type.Sprite.SourceRect.Width*0.6f);
+                pos.Y = (int)(pos.Y - 10);
+                GUI.DrawString(spriteBatch, pos, location.Name, Color.White, Color.Black * 0.8f, 3);
             }
 
+        }
+
+        public void Save(XElement element)
+        {
+            XElement mapElement = new XElement("map");
+
+            mapElement.Add(new XAttribute("currentlocation", CurrentLocationIndex));
+            mapElement.Add(new XAttribute("seed", Seed));
+            mapElement.Add(new XAttribute("size", size));
+
+            List<bool> discovered = locations.Select(l => l.Discovered).ToList();
+
+            mapElement.Add(new XAttribute("discovered", string.Join(",", discovered)));
+
+            element.Add(mapElement);
         }
     }
 
