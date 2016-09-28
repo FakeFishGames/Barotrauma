@@ -72,7 +72,16 @@ namespace Barotrauma
             string[] discoveredStrs = discoveredStr.Split(',');
             for (int i = 0; i < discoveredStrs.Length; i++ )
             {
-                map.locations[i].Discovered = discoveredStrs[i].ToLowerInvariant() == "true";
+                int index = -1;
+                if (int.TryParse(discoveredStrs[i], out index)) map.locations[index].Discovered = true;
+            }
+            
+            string passedStr = ToolBox.GetAttributeString(element, "passed", "");
+            string[] passedStrs = passedStr.Split(',');
+            for (int i = 0; i < passedStrs.Length; i++)
+            {
+                int index = -1;
+                if (int.TryParse(passedStrs[i], out index)) map.connections[index].Passed = true;
             }
             
             return map;
@@ -226,6 +235,8 @@ namespace Barotrauma
 
         public void MoveToNextLocation()
         {
+            selectedConnection.Passed = true;
+
             currentLocation = selectedLocation;
             currentLocation.Discovered = true;
             selectedLocation = null;
@@ -291,7 +302,7 @@ namespace Barotrauma
                 {
                     crackColor = Color.Red;
                 }
-                else if (!connection.Locations[0].Discovered || !connection.Locations[1].Discovered)
+                else if (!connection.Passed)
                 {
                     crackColor *= 0.2f;
                 }
@@ -407,9 +418,19 @@ namespace Barotrauma
             mapElement.Add(new XAttribute("seed", Seed));
             mapElement.Add(new XAttribute("size", size));
 
-            List<bool> discovered = locations.Select(l => l.Discovered).ToList();
+            List<int> discoveredLocations = new List<int>();
+            for (int i = 0; i < locations.Count; i++ )
+            {
+                if (locations[i].Discovered) discoveredLocations.Add(i);
+            }
+            mapElement.Add(new XAttribute("discovered", string.Join(",", discoveredLocations)));
 
-            mapElement.Add(new XAttribute("discovered", string.Join(",", discovered)));
+            List<int> passedConnections = new List<int>();
+            for (int i = 0; i < connections.Count; i++)
+            {
+                if (connections[i].Passed) passedConnections.Add(i);
+            }
+            mapElement.Add(new XAttribute("passed", string.Join(",", passedConnections)));
 
             element.Add(mapElement);
         }
@@ -425,19 +446,21 @@ namespace Barotrauma
 
         public List<Vector2[]> CrackSegments;
 
+        public bool Passed;
+
         private int missionsCompleted;
 
         private Mission mission;
         public Mission Mission
         {
             get 
-            {         
-                if (mission==null || mission.Completed)
+            {
+                if (mission == null || mission.Completed)
                 {
-                    if (mission !=null && mission.Completed) missionsCompleted++;
+                    if (mission != null && mission.Completed) missionsCompleted++;
 
                     long seed = (long)locations[0].MapPosition.X + (long)locations[0].MapPosition.Y * 100;
-                    seed += (long)locations[1].MapPosition.X*10000 + (long)locations[1].MapPosition.Y * 1000000;
+                    seed += (long)locations[1].MapPosition.X * 10000 + (long)locations[1].MapPosition.Y * 1000000;
 
                     MTRandom rand = new MTRandom((int)((seed + missionsCompleted) % int.MaxValue));
 
@@ -449,8 +472,6 @@ namespace Barotrauma
                 return mission;
             }
         }
-
-
 
         public Location[] Locations
         {
