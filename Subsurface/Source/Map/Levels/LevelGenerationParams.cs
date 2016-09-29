@@ -133,33 +133,7 @@ namespace Barotrauma
             get { return bottomHoleProbability; }
             set { bottomHoleProbability = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
-
-        //public LevelGenerationParams()
-        //{
-        //    Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
-
-        //    width = 100000.0f;
-        //    height = 50000.0f;
-
-        //    voronoiSiteInterval = 2000.0f;
-        //    voronoiSiteVariance = new Vector2(voronoiSiteInterval, voronoiSiteInterval) * 0.4f;
-
-        //    mainPathNodeIntervalRange = new Vector2(5000.0f, 10000.0f);
-
-        //    float brightness = Rand.Range(1.0f, 1.3f, false);
-        //    BackgroundColor = Color.Lerp(new Color(11, 18, 26), new Color(50, 46, 20), Rand.Range(0.0f, 1.0f, false)) * brightness;
-        //    BackgroundColor = new Color(BackgroundColor, 1.0f);
-
-        //    smallTunnelCount = 5;
-        //    smallTunnelLengthRange = new Vector2(5000.0f, 10000.0f);
-
-        //    ruinCount = 1;
-
-        //    bottomHoleProbability = Rand.Range(0.1f, 0.8f, false);
-
-        //    BackgroundSpriteAmount = (int)((new Vector2(width, height)).Length() / 100);
-        //}
-
+        
         public static LevelGenerationParams GetRandom(string seed)
         {
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
@@ -194,7 +168,7 @@ namespace Barotrauma
         {
             presets = new List<LevelGenerationParams>();
 
-            var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.LevelGenerationPresets);
+            var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.LevelGenerationParameters);
             if (!files.Any())
             {
                 files.Add("Content/Map/LevelGenerationParameters.xml");
@@ -202,7 +176,6 @@ namespace Barotrauma
                         
             foreach (string file in files)
             {
-
                 XDocument doc = ToolBox.TryLoadXml(file);
                 if (doc == null || doc.Root == null) return;
 

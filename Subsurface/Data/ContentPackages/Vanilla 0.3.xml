@@ -46,6 +46,7 @@
   <BackgroundSpritePrefabs file="Content/BackgroundSprites/BackgroundSpritePrefabs.xml" />
   <RandomEvents file="Content/randomevents.xml" />
   <LocationTypes file="Content/Map/locationTypes.xml" />
+  <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
   <Missions file="Content/Missions.xml" />
   <Jobs file="Content/Jobs.xml" />
   <Executable file="Barotrauma.exe" />
