@@ -341,7 +341,7 @@ namespace Barotrauma
             {
                 wallAttackPos = Vector2.Zero;
                 limb.AttackTimer = 0.0f;
-                if (Vector2.Distance(limb.SimPosition, attackPosition)<5.0) coolDownTimer = attackCoolDown;                
+                coolDownTimer = attackCoolDown;                
             }
         }
         
