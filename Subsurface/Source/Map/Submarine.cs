@@ -285,8 +285,6 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            if (PlayerInput.KeyHit(InputType.Crouch)) Submarine.MainSub.FlipX();
-
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++ )
             {
                 MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
@@ -500,9 +498,7 @@ namespace Barotrauma
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
                 if (e.MoveWithLevel || e.Submarine != this || e is Item) continue;
-
-                e.FlipX();
-
+                
                 if (e is LinkedSubmarine)
                 {
                     Submarine sub = ((LinkedSubmarine)e).Sub;
@@ -513,6 +509,10 @@ namespace Barotrauma
                         sub.SetPosition(relative1 + SubBody.Position);
                         sub.FlipX(parents);
                     }
+                }
+                else
+                {
+                    e.FlipX();
                 }
             }
 
@@ -562,8 +562,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-
-            if (PlayerInput.KeyHit(InputType.Crouch)) FlipX();
+            if (PlayerInput.KeyHit(InputType.Crouch) && (this == MainSub)) FlipX();
 
             if (Level.Loaded == null) return;
             
