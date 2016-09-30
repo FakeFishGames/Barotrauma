@@ -577,21 +577,7 @@ namespace Barotrauma.Items.Components
             return (average+100.0f)/2.0f;        
         }
 
-        //public bool CheckFailure(Character Character)
-        //{
-        //    foreach (Skill skill in requiredSkills)
-        //    {
-        //        int characterLevel = Character.GetSkillLevel(skill.Name);
-        //        if (characterLevel > skill.Level) continue;
-
-        //        item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, Character);
-        //        //Item.ApplyStatusEffects();
-        //        return true;
-                
-        //    }
-
-        //    return false;
-        //}
+        public virtual void FlipX() { }
 
         public bool HasRequiredContainedItems(bool addMessage)
         {

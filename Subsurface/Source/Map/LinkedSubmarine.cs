@@ -108,7 +108,7 @@ namespace Barotrauma
         {
             return Vector2.Distance(position, WorldPosition) < 50.0f;
         }
-
+        
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!editing || wallVertices == null) return;
@@ -212,8 +212,7 @@ namespace Barotrauma
             }
             return editingHUD;
         }
-
-
+        
         private bool Reload(GUIButton button, object obj)
         {
             var pathBox = obj as GUITextBox;
