@@ -800,6 +800,16 @@ namespace Barotrauma
             return true;
         }
 
+        public override void FlipX()
+        {
+            base.FlipX();
+
+            foreach (ItemComponent component in components)
+            {
+                component.FlipX();
+            }
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
