@@ -1303,7 +1303,7 @@ namespace Barotrauma
             CharacterHUD.Draw(spriteBatch, this, cam);
         }
 
-        public virtual void DrawFront(SpriteBatch spriteBatch)
+        public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
             if (!Enabled) return;
 
@@ -1321,14 +1321,15 @@ namespace Barotrauma
 
             if (info != null)
             {
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 120.0f) - GUI.Font.MeasureString(Info.Name) * 0.5f;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 80.0f - (5.0f/cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
+                
                 if (Character.Controlled != null && TeamID!=Character.Controlled.TeamID)
                 {
                     nameColor = Color.Red;
                 }
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos + new Vector2(1.0f, 1.0f), Color.Black, 0.0f,Vector2.Zero,Vector2.One,SpriteEffects.None,0.001f);
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, Vector2.One, SpriteEffects.None, 0.0f);
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos + new Vector2(1.0f/cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f,Vector2.Zero, 1.0f / cam.Zoom,SpriteEffects.None,0.001f);
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f/cam.Zoom, SpriteEffects.None, 0.0f);
 
                 if (GameMain.DebugDraw)
                 {
