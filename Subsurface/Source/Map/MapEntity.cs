@@ -510,6 +510,20 @@ namespace Barotrauma
             entity.isSelected = true;
             selectedList.Add(entity);
         }
+
+        public virtual void FlipX()
+        {
+            if (Submarine == null)
+            {
+                DebugConsole.ThrowError("Couldn't flip MapEntity \""+Name+"\", submarine==null");
+                return;
+            }
+
+            Vector2 relative = WorldPosition - Submarine.WorldPosition;
+            relative.Y = 0.0f;
+
+            Move(-relative * 2.0f);
+        }
         
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) {}
 

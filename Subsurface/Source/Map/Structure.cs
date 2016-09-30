@@ -70,7 +70,8 @@ namespace Barotrauma
 
         public Direction StairDirection
         {
-            get { return prefab.StairDirection; }
+            get;
+            private set;
         }
 
         public override string Name
@@ -176,6 +177,8 @@ namespace Barotrauma
             prefab = sp;
             
             isHorizontal = (rect.Width>rect.Height);
+
+            StairDirection = prefab.StairDirection;
             
             if (prefab.HasBody)
             {
@@ -207,29 +210,9 @@ namespace Barotrauma
                 sections = new WallSection[1];
                 sections[0] = new WallSection(rect);
 
-                if (StairDirection!=Direction.None)
+                if (StairDirection != Direction.None)
                 {
-                    bodies = new List<Body>();
-
-                    Body newBody = BodyFactory.CreateRectangle(GameMain.World,
-                        ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) + Submarine.GridSize.X*3.0f),
-                        ConvertUnits.ToSimUnits(10),
-                        1.5f);
-
-                    newBody.BodyType = BodyType.Static;
-                    Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
-                    stairPos += new Vector2(
-                        (StairDirection == Direction.Right) ? -Submarine.GridSize.X*1.5f : Submarine.GridSize.X*1.5f,
-                        - Submarine.GridSize.Y*2.0f);
-
-                    newBody.Position = ConvertUnits.ToSimUnits(stairPos);
-                    newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
-                    newBody.Friction = 0.8f;
-
-                    newBody.CollisionCategories = Physics.CollisionStairs;
-
-                    newBody.UserData = this;
-                    bodies.Add(newBody);
+                    CreateStairBodies();
                 }
             }
 
@@ -240,6 +223,31 @@ namespace Barotrauma
             }
 
             InsertToList();
+        }
+
+        private void CreateStairBodies()
+        {
+            bodies = new List<Body>();
+
+            Body newBody = BodyFactory.CreateRectangle(GameMain.World,
+                ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) + Submarine.GridSize.X * 3.0f),
+                ConvertUnits.ToSimUnits(10),
+                1.5f);
+
+            newBody.BodyType = BodyType.Static;
+            Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
+            stairPos += new Vector2(
+                (StairDirection == Direction.Right) ? -Submarine.GridSize.X * 1.5f : Submarine.GridSize.X * 1.5f,
+                -Submarine.GridSize.Y * 2.0f);
+
+            newBody.Position = ConvertUnits.ToSimUnits(stairPos);
+            newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
+            newBody.Friction = 0.8f;
+
+            newBody.CollisionCategories = Physics.CollisionStairs;
+
+            newBody.UserData = this;
+            bodies.Add(newBody);
         }
 
         private void CreateSections()
@@ -736,6 +744,20 @@ namespace Barotrauma
             return newBody;
         }
 
+        public override void FlipX()
+        {
+            base.FlipX();
+
+            if (StairDirection != Direction.None)
+            {
+                StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
+                bodies.ForEach(b => GameMain.World.RemoveBody(b));
+
+                CreateStairBodies();
+            }
+
+            //todo: flip sprites & wall sections
+        }
         
         public override XElement Save(XElement parentElement)
         {

@@ -470,6 +470,14 @@ namespace Barotrauma.Items.Components
                 wireSprite.Depth + ((item.ID % 100) * 0.00001f));
         }
 
+        public override void FlipX()
+        {            
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                Nodes[i] = new Vector2(-Nodes[i].X, Nodes[i].Y);
+            }            
+        }
+
         public override XElement Save(XElement parentElement)
         {
             XElement componentElement = base.Save(parentElement);
