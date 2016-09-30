@@ -359,7 +359,7 @@ namespace Barotrauma
 
             if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch);            
 
-            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
+            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch,cam);
 
             spriteBatch.End();
 
