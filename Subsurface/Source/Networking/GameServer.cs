@@ -909,7 +909,7 @@ namespace Barotrauma.Networking
             for (int j = 1; j <= teamCount; j++)
             {
                 List<Client> teamClients = connectedClients.FindAll(c => c.TeamID == j);
-                if (!teamClients.Any()) continue;
+                if (!teamClients.Any() && j!=1) continue;
 
                 AssignJobs(teamClients);
 
@@ -928,7 +928,7 @@ namespace Barotrauma.Networking
                     client.characterInfo.Job = new Job(client.assignedJob);
                 }
 
-                if (characterInfo != null)
+                if (characterInfo != null && j == 1)
                 {
                     characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
                     characterInfos.Add(characterInfo);

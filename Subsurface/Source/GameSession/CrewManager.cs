@@ -12,6 +12,8 @@ namespace Barotrauma
     {
         public List<Character> characters;
         public List<CharacterInfo> characterInfos;
+
+        public int WinningTeam = 1;
         
         private int money;
         

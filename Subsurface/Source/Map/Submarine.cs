@@ -76,6 +76,8 @@ namespace Barotrauma
         private Vector2 prevPosition;
 
         private float lastNetworkUpdate, networkUpdateTimer;
+
+        private EntityGrid entityGrid = null;
         
         //properties ----------------------------------------------------
 
@@ -321,7 +323,7 @@ namespace Barotrauma
 
         public void UpdateTransform()
         {
-            DrawPosition = Physics.Interpolate(prevPosition, Position);            
+            DrawPosition = Physics.Interpolate(prevPosition, Position);  
         }
 
         //math/physics stuff ----------------------------------------------------
@@ -473,14 +475,136 @@ namespace Barotrauma
             lastPickedFraction = closestFraction;
             return closestBody;
         }
-                
+
         //movement ----------------------------------------------------
 
+        private bool flippedX = false;
+        public bool FlippedX
+        {
+            get { return flippedX; }
+        }
+
+        public void FlipX(List<Submarine> parents=null)
+        {
+            if (parents == null) parents = new List<Submarine>();
+            parents.Add(this);
+
+            flippedX = !flippedX;
+
+            Item.UpdateHulls();
+
+            List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
+            List<Vector2> bodyPos = new List<Vector2>(); bodyItems.ForEach(it => bodyPos.Add(Vector2.Zero));
+            for (int i = 0; i < bodyItems.Count; i++)
+            {
+                bodyPos[i] = bodyItems[i].WorldPosition;
+            }
+            
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (e.MoveWithLevel || e.Submarine != this || e is Item || e is WayPoint) continue;
+                Vector2 relative = e.WorldPosition - WorldPosition;
+                relative.X = -relative.X*2.0f;
+                relative.Y = 0.0f;
+                e.Move(relative);
+                if (e is LinkedSubmarine)
+                {
+                    Submarine sub = ((LinkedSubmarine)e).Sub;
+                    if (!parents.Contains(sub))
+                    {
+                        Vector2 relative1 = sub.SubBody.Position - SubBody.Position;
+                        relative1.X = -relative1.X;
+                        sub.SetPosition(relative1 + SubBody.Position);
+                        sub.FlipX(parents);
+                    }
+                }
+            }
+
+            /*foreach (Submarine sub in loaded)
+            {
+                if (sub != this && sub.Submarine == this && !parents.Contains(sub))
+                {
+                    Vector2 relative = sub.SubBody.Position - SubBody.Position;
+                    relative.X = -relative.X;
+                    sub.SetPosition(relative + SubBody.Position);
+                    sub.FlipX(parents);
+                }
+            }*/
+
+            List<WayPoint> subWayPoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine == this);
+            foreach (WayPoint wp in subWayPoints)
+            {
+                Vector2 relative = wp.WorldPosition - WorldPosition;
+                relative.X = -relative.X * 2.0f;
+                relative.Y = 0.0f;
+                wp.Move(relative);
+            }
+
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            {
+                if (MapEntity.mapEntityList[i].Submarine != this) continue;
+                MapEntity.mapEntityList[i].Move(-HiddenSubPosition);
+            }
+
+            Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
+            SubmarineBody newSubBody = new SubmarineBody(this);
+            GameMain.World.RemoveBody(subBody.Body);
+            subBody = newSubBody;
+            SetPosition(pos);
+
+            if (entityGrid != null)
+            {
+                Hull.EntityGrids.Remove(entityGrid);
+                entityGrid = null;
+            }
+            entityGrid = Hull.GenerateEntityGrid(this);
+
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            {
+                if (MapEntity.mapEntityList[i].Submarine != this) continue;
+                MapEntity.mapEntityList[i].Move(HiddenSubPosition);
+            }
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine != this || bodyItems.Contains(item)) continue;
+                
+                Vector2 relative;
+                relative = item.WorldPosition - WorldPosition;
+                relative.X = -relative.X * 2.0f;
+                relative.Y = 0.0f;
+
+                Items.Components.Wire wire = item.GetComponent<Items.Components.Wire>();
+
+                if (wire != null)
+                {
+                    for (int i = 0; i < wire.Nodes.Count; i++)
+                    {
+                        wire.Nodes[i] = new Vector2(-wire.Nodes[i].X, wire.Nodes[i].Y);
+                    }
+                }
+
+                item.Move(relative);
+            }
+
+            for (int i=0;i<bodyItems.Count;i++)
+            {
+                Vector2 relative = bodyPos[i] - bodyItems[i].WorldPosition;
+                bodyItems[i].Move(relative);
+                if (bodyItems[i].Name.ToLower().Contains("suit")) DebugConsole.NewMessage(bodyItems[i].Name,Color.Red);
+            }
+
+            Item.UpdateHulls();
+            Gap.UpdateHulls();
+        }
 
         public void Update(float deltaTime)
         {
-            if (Level.Loaded == null) return;
 
+            if (PlayerInput.KeyHit(InputType.Crouch)) FlipX();
+
+            if (Level.Loaded == null) return;
+            
             if (subBody == null) return;
             
             subBody.Update(deltaTime);
@@ -925,8 +1049,13 @@ namespace Barotrauma
 
             loaded.Add(this);
 
-            Hull.GenerateEntityGrid(this);
-            
+            if (entityGrid != null)
+            {
+                Hull.EntityGrids.Remove(entityGrid);
+                entityGrid = null;
+            }
+            entityGrid = Hull.GenerateEntityGrid(this);
+
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
                 if (MapEntity.mapEntityList[i].Submarine != this) continue;

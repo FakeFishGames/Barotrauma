@@ -39,6 +39,14 @@ namespace Barotrauma
         private bool loadSub;
         private Submarine sub;
 
+        public Submarine Sub
+        {
+            get
+            {
+                return sub;
+            }
+        }
+
         private XElement saveElement;
 
         public override bool IsLinkable
@@ -48,7 +56,7 @@ namespace Barotrauma
                 return true;
             }
         }
-
+        
         public LinkedSubmarine(Submarine submarine)
             : base(null, submarine) 
         {
@@ -386,8 +394,8 @@ namespace Barotrauma
         {
             if (!loadSub) return;
 
-            sub = Submarine.Load(saveElement, false);            
-
+            sub = Submarine.Load(saveElement, false);
+            
             Vector2 worldPos = ToolBox.GetAttributeVector2(saveElement, "worldpos", Vector2.Zero);
             if (worldPos != Vector2.Zero)
             {
@@ -398,8 +406,6 @@ namespace Barotrauma
                 sub.SetPosition(WorldPosition - Submarine.WorldPosition);
                 sub.Submarine = Submarine;
             }
-            
-            
             
             var linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
 
