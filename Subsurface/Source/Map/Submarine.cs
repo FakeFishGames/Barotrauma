@@ -285,6 +285,8 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
+            if (PlayerInput.KeyHit(InputType.Crouch)) Submarine.MainSub.FlipX();
+
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++ )
             {
                 MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
@@ -494,19 +496,23 @@ namespace Barotrauma
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
-            List<Vector2> bodyPos = new List<Vector2>(); bodyItems.ForEach(it => bodyPos.Add(Vector2.Zero));
+
+            List<Vector2> bodyPos = new List<Vector2>(); 
             for (int i = 0; i < bodyItems.Count; i++)
             {
-                bodyPos[i] = bodyItems[i].WorldPosition;
+                Vector2 relative = bodyItems[i].WorldPosition - WorldPosition;
+                relative.Y = 0.0f;
+
+                bodyPos.Add(bodyItems[i].Position - relative*2.0f);
             }
-            
+
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
                 if (e.MoveWithLevel || e.Submarine != this || e is Item || e is WayPoint) continue;
                 Vector2 relative = e.WorldPosition - WorldPosition;
-                relative.X = -relative.X*2.0f;
                 relative.Y = 0.0f;
-                e.Move(relative);
+                e.Move(-relative * 2.0f);
+
                 if (e is LinkedSubmarine)
                 {
                     Submarine sub = ((LinkedSubmarine)e).Sub;
@@ -567,12 +573,7 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != this || bodyItems.Contains(item)) continue;
-                
-                Vector2 relative;
-                relative = item.WorldPosition - WorldPosition;
-                relative.X = -relative.X * 2.0f;
-                relative.Y = 0.0f;
+                if (item.Submarine != this) continue;
 
                 Items.Components.Wire wire = item.GetComponent<Items.Components.Wire>();
 
@@ -584,14 +585,18 @@ namespace Barotrauma
                     }
                 }
 
-                item.Move(relative);
+                if (item.Submarine != this || bodyItems.Contains(item)) continue;
+                
+                Vector2 relative = item.WorldPosition - WorldPosition;
+                relative.Y = 0.0f;
+
+                item.Move(-relative * 2.0f);
             }
 
-            for (int i=0;i<bodyItems.Count;i++)
+            for (int i = 0; i < bodyItems.Count; i++)
             {
-                Vector2 relative = bodyPos[i] - bodyItems[i].WorldPosition;
-                bodyItems[i].Move(relative);
-                if (bodyItems[i].Name.ToLower().Contains("suit")) DebugConsole.NewMessage(bodyItems[i].Name,Color.Red);
+                bodyItems[i].SetTransform(ConvertUnits.ToSimUnits(bodyPos[i]), bodyItems[i].body.Rotation);
+                bodyItems[i].Submarine = this;
             }
 
             Item.UpdateHulls();
