@@ -57,7 +57,7 @@ namespace Barotrauma
 
         public Vector2 TargetPosition
         {
-            //get { return targetPosition; }
+            //get { return targetPosition.Value; }
             set
             {
                 if (!MathUtils.IsValid(value)) return;

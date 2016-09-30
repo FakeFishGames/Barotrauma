@@ -1327,8 +1327,8 @@ namespace Barotrauma
                 {
                     nameColor = Color.Red;
                 }
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black, 0.0f,Vector2.Zero,1.0f,SpriteEffects.None,-15);
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, -20);
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos + new Vector2(1.0f, 1.0f), Color.Black, 0.0f,Vector2.Zero,Vector2.One,SpriteEffects.None,0.001f);
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, Vector2.One, SpriteEffects.None, 0.0f);
 
                 if (GameMain.DebugDraw)
                 {

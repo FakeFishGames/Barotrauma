@@ -67,6 +67,7 @@ namespace Barotrauma
             TeamASub = Submarine.MainSubs[0];
             TeamBSub = Submarine.MainSubs[1];
             TeamBSub.SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
+            //TeamASub.FlipX();
 
             foreach (Submarine submarine in Submarine.Loaded)
             {
@@ -128,6 +129,7 @@ namespace Barotrauma
                 if (ADead && !BDead)
                 {
                     //team B wins!
+                    GameMain.GameSession.CrewManager.WinningTeam = 2;
                     if (GameMain.Server!=null) GameMain.Server.EndGame();
                 }
             }
@@ -137,6 +139,7 @@ namespace Barotrauma
                 if (BDead && !ADead)
                 {
                     //team A wins!
+                    GameMain.GameSession.CrewManager.WinningTeam = 1;
                     if (GameMain.Server != null) GameMain.Server.EndGame();
                 }
             }

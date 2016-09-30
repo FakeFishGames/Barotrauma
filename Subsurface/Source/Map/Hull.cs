@@ -16,6 +16,13 @@ namespace Barotrauma
     {
         public static List<Hull> hullList = new List<Hull>();
         private static List<EntityGrid> entityGrids = new List<EntityGrid>();
+        public static List<EntityGrid> EntityGrids
+        {
+            get
+            {
+                return entityGrids;
+            }
+        }
 
         public static bool ShowHulls = true;
 
@@ -65,7 +72,7 @@ namespace Barotrauma
 
         private float lastSentVolume, lastSentOxygen;
         private float lastNetworkUpdate;
-
+        
         public List<Gap> ConnectedGaps;
 
         public override string Name
@@ -249,7 +256,7 @@ namespace Barotrauma
             return rect;
         }
 
-        public static void GenerateEntityGrid(Submarine submarine)
+        public static EntityGrid GenerateEntityGrid(Submarine submarine)
         {
             var newGrid = new EntityGrid(submarine, 200.0f);
 
@@ -259,6 +266,7 @@ namespace Barotrauma
             {
                 if (hull.Submarine == submarine) newGrid.InsertEntity(hull);
             }
+            return newGrid;
         }
 
         public void AddToGrid(Submarine submarine)
