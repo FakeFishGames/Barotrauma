@@ -67,7 +67,7 @@ namespace Barotrauma
             TeamASub = Submarine.MainSubs[0];
             TeamBSub = Submarine.MainSubs[1];
             TeamBSub.SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
-            //TeamASub.FlipX();
+            TeamBSub.FlipX();
 
             foreach (Submarine submarine in Submarine.Loaded)
             {

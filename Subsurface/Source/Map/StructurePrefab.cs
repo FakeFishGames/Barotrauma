@@ -17,6 +17,7 @@ namespace Barotrauma
 
         private bool isPlatform;
         private Direction stairDirection;
+        private bool canSpriteFlipX;
 
         private float maxHealth;
         
@@ -46,6 +47,11 @@ namespace Barotrauma
         public Direction StairDirection
         {
             get { return stairDirection; }
+        }
+
+        public bool CanSpriteFlipX
+        {
+            get { return canSpriteFlipX; }
         }
 
         public Vector2 Size
@@ -107,6 +113,8 @@ namespace Barotrauma
                             sp.sprite.effects = SpriteEffects.FlipHorizontally;
                         if (ToolBox.GetAttributeBool(subElement, "flipvertical", false)) 
                             sp.sprite.effects = SpriteEffects.FlipVertically;
+                        if (ToolBox.GetAttributeBool(subElement, "canflipx", false))
+                            sp.canSpriteFlipX = true;
 
                         break;
                     case "backgroundsprite":

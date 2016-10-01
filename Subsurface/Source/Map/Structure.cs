@@ -57,7 +57,9 @@ namespace Barotrauma
         bool isHorizontal;
 
         public float lastUpdate;
-        
+
+        public SpriteEffects SpriteEffects = SpriteEffects.None;
+
         public override Sprite Sprite
         {
             get { return prefab.sprite; }
@@ -438,7 +440,10 @@ namespace Barotrauma
                         Vector2.Zero, color, Point.Zero);
                 }
             }
-            
+
+            SpriteEffects oldEffects = prefab.sprite.effects;
+            prefab.sprite.effects ^= SpriteEffects;
+
             if (back == prefab.sprite.Depth > 0.5f || editing)
             {
                 foreach (WallSection s in sections)
@@ -462,6 +467,8 @@ namespace Barotrauma
                     prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
                 }
             }
+
+            prefab.sprite.effects = oldEffects;
         }
 
         private bool OnWallCollision(Fixture f1, Fixture f2, Contact contact)
@@ -747,6 +754,11 @@ namespace Barotrauma
         public override void FlipX()
         {
             base.FlipX();
+            
+            if (prefab.CanSpriteFlipX)
+            {
+                SpriteEffects ^= SpriteEffects.FlipHorizontally;
+            }
 
             if (StairDirection != Direction.None)
             {
