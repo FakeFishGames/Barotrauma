@@ -58,6 +58,8 @@ namespace Barotrauma
             private set;
         }
 
+        private bool canSpriteFlipX;
+
         //if a matching itemprefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias
         //(allows changing item names while keeping backwards compatibility with older sub files)
         public string[] Aliases
@@ -114,6 +116,11 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        public bool CanSpriteFlipX
+        {
+            get { return canSpriteFlipX; }
         }
 
         public Vector2 Size
@@ -280,6 +287,9 @@ namespace Barotrauma
                         {
                             spriteFolder = Path.GetDirectoryName(filePath);
                         }
+
+                        if (ToolBox.GetAttributeBool(subElement, "canflipx", false))
+                            canSpriteFlipX = true;
 
                         sprite = new Sprite(subElement, spriteFolder);
                         size = sprite.size;

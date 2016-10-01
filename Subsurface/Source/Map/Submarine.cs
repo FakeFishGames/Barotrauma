@@ -562,7 +562,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (PlayerInput.KeyHit(InputType.Crouch) && (this == MainSub)) FlipX();
+            //if (PlayerInput.KeyHit(InputType.Crouch) && (this == MainSub)) FlipX();
 
             if (Level.Loaded == null) return;
             

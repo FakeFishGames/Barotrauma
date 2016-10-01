@@ -40,6 +40,8 @@ namespace Barotrauma
         
         public Hull CurrentHull;
 
+        public SpriteEffects SpriteEffects = SpriteEffects.None;
+
         //components that determine the functionality of the item
         public List<ItemComponent> components;
         public List<IDrawableComponent> drawableComponents;
@@ -804,6 +806,11 @@ namespace Barotrauma
         {
             base.FlipX();
 
+            if (prefab.CanSpriteFlipX)
+            {
+                SpriteEffects ^= SpriteEffects.FlipHorizontally;
+            }
+
             foreach (ItemComponent component in components)
             {
                 component.FlipX();
@@ -815,6 +822,9 @@ namespace Barotrauma
             Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
 
+            SpriteEffects oldEffects = prefab.sprite.effects;
+            prefab.sprite.effects ^= SpriteEffects;
+
             if (prefab.sprite != null)
             {
                 float depth = Sprite.Depth;
@@ -822,7 +832,7 @@ namespace Barotrauma
 
                 if (body == null)
                 {
-                    if (prefab.ResizeHorizontal || prefab.ResizeVertical)
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
                     {
                         prefab.sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X-rect.Width/2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), color);
                     }
@@ -854,6 +864,8 @@ namespace Barotrauma
                     }                    
                 }
             }
+
+            prefab.sprite.effects = oldEffects;
 
             for (int i = 0; i < drawableComponents.Count; i++ )
             {
