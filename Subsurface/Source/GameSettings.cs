@@ -25,9 +25,7 @@ namespace Barotrauma
 
         private KeyOrMouse[] keyMapping;
 
-
         private bool unsavedSettings;
-
 
         public GUIFrame SettingsFrame
         {
@@ -287,7 +285,7 @@ namespace Barotrauma
         private bool ChangeSoundVolume(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
-            SoundVolume = MathHelper.Clamp(barScroll, 0.0f, 1.0f);
+            SoundVolume = barScroll;
 
             return true;
         }
@@ -295,22 +293,11 @@ namespace Barotrauma
         private bool ChangeMusicVolume(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
-            MusicVolume = MathHelper.Clamp(barScroll, 0.0f, 1.0f);
+            MusicVolume = barScroll;
 
             return true;
         }
-
-        //private bool ToggleFullScreen(object userData)
-        //{
-        //    UnsavedSettings = true;
-        //    FullScreenEnabled = !FullScreenEnabled;
-
-        //    GameMain.Graphics.IsFullScreen = FullScreenEnabled;
-        //    GameMain.Graphics.ApplyChanges();
-
-        //    return true;
-        //}
-
+        
         public void ResetSettingsFrame()
         {
             settingsFrame = null;
@@ -363,14 +350,16 @@ namespace Barotrauma
             y += 70;
 
             new GUITextBlock(new Rectangle(0, y, 100, 20), "Sound volume:", GUI.Style, settingsFrame);
-            GUIScrollBar soundScrollBar = new GUIScrollBar(new Rectangle(0, y+20, 150, 20), GUI.Style,0.1f, settingsFrame);
+            GUIScrollBar soundScrollBar = new GUIScrollBar(new Rectangle(0, y + 20, 150, 20), GUI.Style, 0.1f, settingsFrame);
             soundScrollBar.BarScroll = SoundVolume;
             soundScrollBar.OnMoved = ChangeSoundVolume;
+            soundScrollBar.Step = 0.05f;
 
-            new GUITextBlock(new Rectangle(0, y+40, 100, 20), "Music volume:", GUI.Style, settingsFrame);
-            GUIScrollBar musicScrollBar = new GUIScrollBar(new Rectangle(0, y+60, 150, 20), GUI.Style, 0.1f, settingsFrame);
+            new GUITextBlock(new Rectangle(0, y + 40, 100, 20), "Music volume:", GUI.Style, settingsFrame);
+            GUIScrollBar musicScrollBar = new GUIScrollBar(new Rectangle(0, y + 60, 150, 20), GUI.Style, 0.1f, settingsFrame);
             musicScrollBar.BarScroll = MusicVolume;
             musicScrollBar.OnMoved = ChangeMusicVolume;
+            musicScrollBar.Step = 0.05f;
 
             x = 200;
             y = 10;

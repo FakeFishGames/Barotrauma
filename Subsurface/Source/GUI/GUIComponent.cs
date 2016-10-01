@@ -286,9 +286,15 @@ namespace Barotrauma
                 toolTipBlock.rect.Height = toolTipBlock.WrappedText.Split('\n').Length * 18;
                 toolTipBlock.Color = Color.Black * 0.7f;
                 toolTipBlock.userData = ToolTip;
+
             }
 
             toolTipBlock.rect = new Rectangle(MouseOn.Rect.Center.X, MouseOn.rect.Bottom, toolTipBlock.rect.Width, toolTipBlock.rect.Height);
+            if (toolTipBlock.rect.Right > GameMain.GraphicsWidth - 10)
+            {
+                toolTipBlock.rect.Location -= new Point(toolTipBlock.rect.Right - (GameMain.GraphicsWidth - 10), 0);
+            }
+
             toolTipBlock.Draw(spriteBatch);
         }
 

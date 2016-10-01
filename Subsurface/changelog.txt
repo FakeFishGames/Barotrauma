@@ -1,4 +1,26 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.2.0
+---------------------------------------------------------------------------------------------------------
+
+Level generation improvements:
+	- customizable level generation parameters (see Content/Map/LevelGenerationParameters.xml)
+	- different "level types" - each uses a different set of parameters, resulting in more varied levels
+	- more vegetation & other decorative background sprites
+	- the entrances and exits of the levels have more variety (not always straight vertical tunnels)
+
+Improved MiniMap (now called "Status Monitor"):
+	- shows hull integrity and oxygen levels
+	- can be configured to only show oxygen/water levels if the rooms have detectors installed
+
+- improved wall damage visuals
+- the single player map shows which locations have been visited and the passageways that have been used
+- minor visual improvements to the single player campaign menus
+- huskification bugfixes
+- oxygen isn't distributed through gaps or vents that are underwater (i.e. air pockets can form when the 
+sub is flooding)
+- molochs (or other large creatures) can't push the sub around as easily anymore
+
+---------------------------------------------------------------------------------------------------------
 v0.5.1.3
 ---------------------------------------------------------------------------------------------------------
 
