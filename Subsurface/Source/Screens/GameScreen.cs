@@ -46,13 +46,13 @@ namespace Barotrauma
 
 #if LINUX
             var blurEffect = content.Load<Effect>("blurshader_opengl");
+            damageEffect = content.Load<Effect>("damageshader_opengl");
 #else
             var blurEffect = content.Load<Effect>("blurshader");
+            damageEffect = content.Load<Effect>("damageshader");
 #endif
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
-
-            damageEffect = content.Load<Effect>("damageshader");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
             damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
@@ -108,19 +108,16 @@ namespace Barotrauma
                     GameMain.GameSession.Submarine.ApplyForce(targetMovement * GameMain.GameSession.Submarine.SubBody.Body.Mass * 100.0f);
             }
 #endif
+            if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
+
+            if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
+
+            Character.UpdateAll(cam, (float)deltaTime);
 
             Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 6);
             //Physics.accumulator = Physics.step;
             while (Physics.accumulator >= Physics.step)
             {
-
-                if (GameMain.GameSession != null) GameMain.GameSession.Update((float)Physics.step);
-                //EventManager.Update(gameTime);
-
-                if (Level.Loaded != null) Level.Loaded.Update((float)Physics.step);
-
-                Character.UpdateAll(cam, (float)Physics.step);
-
                 BackgroundCreatureManager.Update(cam, (float)Physics.step);
 
                 GameMain.ParticleManager.Update((float)Physics.step);

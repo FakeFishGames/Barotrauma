@@ -66,7 +66,7 @@
     name="Railgun Shell"
     category="Misc"
     pickdistance="200"
-    price="100">
+    price="200">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -93,7 +93,7 @@
     name="Nuclear Shell"
     category="Misc"
     pickdistance="200"
-    price="100">
+    price="500">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>

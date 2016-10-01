@@ -38,7 +38,7 @@
     name="Depth Charge Shell"
     category="Misc"
     pickdistance="150"
-    price="50">
+    price="200">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -66,7 +66,7 @@
     name="Nuclear Depth Charge"
     category="Misc"
     pickdistance="150"
-    price="50">
+    price="500">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>

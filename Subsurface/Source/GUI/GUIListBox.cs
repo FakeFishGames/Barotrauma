@@ -122,7 +122,7 @@ namespace Barotrauma
         }
 
         public GUIListBox(Rectangle rect, GUIStyle style, Alignment alignment, GUIComponent parent = null)
-            : this(rect, null, style, parent)
+            : this(rect, null, alignment, style, parent, false)
         {
         }
 
