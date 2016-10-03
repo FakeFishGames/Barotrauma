@@ -63,6 +63,8 @@ namespace Barotrauma
 
         public SpriteEffects SpriteEffects = SpriteEffects.None;
 
+        private bool flippedX;
+
         public override Sprite Sprite
         {
             get { return prefab.sprite; }
@@ -260,6 +262,14 @@ namespace Barotrauma
             int xsections = 1, ysections = 1;
             int width, height;
 
+            if (!HasBody)
+            {
+                sections = new WallSection[1];
+                sections[0] = new WallSection(rect);
+                return;
+                
+            }
+
             if (isHorizontal)
             {
                 xsections = (int)Math.Ceiling((float)rect.Width / wallSectionSize);
@@ -275,15 +285,33 @@ namespace Barotrauma
                 height = (int)wallSectionSize;
             }
 
+
             for (int x = 0; x < xsections; x++)
             {
                 for (int y = 0; y < ysections; y++)
                 {
-                    Rectangle sectionRect = new Rectangle(rect.X + x * width, rect.Y - y * height, width, height);
-                    sectionRect.Width -= (int)Math.Max((sectionRect.X + sectionRect.Width) - (rect.X + rect.Width), 0.0f);
-                    sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
+                    if (flippedX)
+                    {
+                        Rectangle sectionRect = new Rectangle(rect.Right - (x + 1) * width, rect.Y - y * height, width, height);
 
-                    sections[x + y] = new WallSection(sectionRect);
+                        int over = Math.Max(rect.X - sectionRect.X, 0);
+
+                        sectionRect.X += over;
+                        sectionRect.Width -= over;
+
+                        sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
+
+                        sections[xsections - 1 - x + y] = new WallSection(sectionRect);
+                    }
+
+                    else
+                    {
+                        Rectangle sectionRect = new Rectangle(rect.X + x * width, rect.Y - y * height, width, height);
+                        sectionRect.Width -= (int)Math.Max(sectionRect.Right - rect.Right, 0.0f);
+                        sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
+
+                        sections[x + y] = new WallSection(sectionRect);
+                    }
                 }
             }
         }
@@ -437,9 +465,9 @@ namespace Barotrauma
                 if (prefab.BackgroundSprite != null)
                 {
                     prefab.BackgroundSprite.DrawTiled(
-                        spriteBatch, 
-                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), 
-                        new Vector2(rect.Width, rect.Height), 
+                        spriteBatch,
+                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                        new Vector2(rect.Width, rect.Height),
                         Vector2.Zero, color, Point.Zero);
                 }
             }
@@ -449,16 +477,16 @@ namespace Barotrauma
 
             if (back == prefab.sprite.Depth > 0.5f || editing)
             {
-                foreach (WallSection s in sections)
+                for (int i = 0; i < sections.Length; i++)
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = Math.Min((s.damage / prefab.MaxHealth), 0.65f);
+                        float newCutoff = Math.Min((sections[i].damage / prefab.MaxHealth), 0.65f);
 
                         if (Math.Abs(newCutoff - prevCutoff) > 0.01f)
                         {
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
-                            damageEffect.Parameters["cCutoff"].SetValue(newCutoff*1.2f);
+                            damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
 
                             damageEffect.CurrentTechnique.Passes[0].Apply();
 
@@ -466,8 +494,21 @@ namespace Barotrauma
                         }
                     }
 
-                    Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
-                    prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
+                    Point textureOffset = new Point(
+                        Math.Abs(rect.Location.X - sections[i].rect.Location.X),
+                        Math.Abs(rect.Location.Y - sections[i].rect.Location.Y));
+
+                    if (flippedX && isHorizontal)
+                    {
+                        textureOffset.X = rect.Width - textureOffset.X - sections[i].rect.Width;
+                    }
+
+                    prefab.sprite.DrawTiled(
+                        spriteBatch,
+                        new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
+                        new Vector2(sections[i].rect.Width, sections[i].rect.Height),
+                        Vector2.Zero, color, 
+                        textureOffset);
                 }
             }
 
@@ -577,6 +618,15 @@ namespace Barotrauma
 
         public int FindSectionIndex(Vector2 displayPos)
         {
+            if (!sections.Any()) return -1;
+
+            //if the sub has been flipped horizontally, the first section may be smaller than wallSectionSize
+            //and we need to adjust the position accordingly
+            if (sections[0].rect.Width < wallSectionSize)
+            {
+                displayPos.X += wallSectionSize - sections[0].rect.Width;
+            }
+
             int index = (isHorizontal) ?
                 (int)Math.Floor((displayPos.X - rect.X) / wallSectionSize) :
                 (int)Math.Floor((rect.Y - displayPos.Y) / wallSectionSize);
@@ -757,6 +807,8 @@ namespace Barotrauma
         public override void FlipX()
         {
             base.FlipX();
+
+            flippedX = !flippedX;
             
             if (prefab.CanSpriteFlipX)
             {
@@ -771,7 +823,7 @@ namespace Barotrauma
                 CreateStairBodies();
             }
 
-            //todo: flip sprites & wall sections
+            CreateSections();
         }
         
         public override XElement Save(XElement parentElement)
