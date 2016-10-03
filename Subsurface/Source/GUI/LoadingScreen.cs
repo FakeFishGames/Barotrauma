@@ -101,6 +101,7 @@ namespace Barotrauma
 
             if (Hull.renderer != null)
             {
+                Hull.renderer.ScrollWater(deltaTime);
                 Hull.renderer.RenderBack(spriteBatch, renderTarget, 0.0f);
             }
             

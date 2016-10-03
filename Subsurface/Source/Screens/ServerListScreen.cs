@@ -370,7 +370,7 @@ namespace Barotrauma
         {
             menu.Update((float)deltaTime);
 
-            GUI.Update((float)deltaTime);
+            //GUI.Update((float)deltaTime);
         }
     }
 }

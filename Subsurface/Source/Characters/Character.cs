@@ -58,6 +58,9 @@ namespace Barotrauma
             }
         }
 
+        public Hull PreviousHull = null;
+        public Hull CurrentHull = null;
+
         public readonly bool IsNetworkPlayer;
 
         private bool networkUpdateSent;
@@ -1131,6 +1134,10 @@ namespace Barotrauma
         public virtual void Update(Camera cam, float deltaTime)
         {
             if (!Enabled) return;
+
+            PreviousHull = CurrentHull;
+            CurrentHull = Hull.FindHull(WorldPosition, CurrentHull, true);
+            //if (PreviousHull != CurrentHull && Character.Controlled == this) Hull.DetectItemVisibility(this); //WIP item culling
 
             speechBubbleTimer = Math.Max(0.0f, speechBubbleTimer - deltaTime);
 

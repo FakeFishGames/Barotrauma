@@ -162,38 +162,6 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            if (rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
-            {
-                state = ComponentState.Hover;
-                if (PlayerInput.LeftButtonHeld())
-                {
-                    if (OnPressed != null)
-                    {
-                        if (OnPressed()) state = ComponentState.Selected;
-                    }
-                }
-                else if (PlayerInput.LeftButtonClicked())
-                {
-                    GUI.PlayUISound(GUISoundType.Click);
-
-                    if (OnClicked != null)
-                    {
-                        if (OnClicked(this, UserData) && CanBeSelected) state = ComponentState.Selected;
-                    }
-                    else
-                    {
-                        Selected = !Selected;
-                       // state = state == ComponentState.Selected ? ComponentState.None : ComponentState.Selected;
-                    }
-                }
-            }
-            else
-            {
-                state = Selected ? ComponentState.Selected : ComponentState.None;
-            }
-
-            frame.State = state;
-
             //Color currColor = color;
             //if (state == ComponentState.Hover) currColor = hoverColor;
             //if (state == ComponentState.Selected) currColor = selectedColor;
@@ -207,6 +175,41 @@ namespace Barotrauma
             DrawChildren(spriteBatch);
 
             //if (!Enabled) GUI.DrawRectangle(spriteBatch, rect, Color.Gray*0.5f, true);
+        }
+
+        public override void Update(float deltaTime)
+        {
+            if (!Visible) return;
+            base.Update(deltaTime);
+            if (rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
+            {
+                state = ComponentState.Hover;
+                if (PlayerInput.LeftButtonHeld())
+                {
+                    if (OnPressed != null)
+                    {
+                        if (OnPressed()) state = ComponentState.Selected;
+                    }
+                }
+                else if (PlayerInput.LeftButtonClicked())
+                {
+                    GUI.PlayUISound(GUISoundType.Click);
+                    if (OnClicked != null)
+                    {
+                        if (OnClicked(this, UserData) && CanBeSelected) state = ComponentState.Selected;
+                    }
+                    else
+                    {
+                        Selected = !Selected;
+                        // state = state == ComponentState.Selected ? ComponentState.None : ComponentState.Selected;
+                    }
+                }
+            }
+            else
+            {
+                state = Selected ? ComponentState.Selected : ComponentState.None;
+            }
+            frame.State = state;
         }
     }
 }

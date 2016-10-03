@@ -119,6 +119,11 @@ namespace Barotrauma.Items.Components
       
         }
 
+        public override void UpdateHUD(Character character)
+        {
+            GuiFrame.Update(1.0f / 60.0f);
+        }
+
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             force = MathHelper.Lerp(force, 0.0f, 0.1f);

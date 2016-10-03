@@ -114,6 +114,14 @@ namespace Barotrauma
 
             Character.UpdateAll(cam, (float)deltaTime);
 
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
+            {
+                if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
+                {
+                    Character.Controlled.SelectedConstruction.UpdateHUD(Character.Controlled);
+                }
+            }
+
             Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 6);
             //Physics.accumulator = Physics.step;
             while (Physics.accumulator >= Physics.step)
@@ -168,9 +176,13 @@ namespace Barotrauma
         {
             cam.UpdateTransform(true);
 
+            if (Hull.renderer != null)
+            {
+                Hull.renderer.ScrollWater((float)deltaTime);
+            }
 
             //damageStencil = TextureLoader.FromFile("Content/Map/background.png");
-            
+
             DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();

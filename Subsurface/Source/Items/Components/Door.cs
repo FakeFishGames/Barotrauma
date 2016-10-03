@@ -95,6 +95,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public Rectangle WindowRect
+        {
+            get { return window; }
+        }
+
         [Editable, HasDefaultValue(false, true)]
         public bool IsOpen
         {

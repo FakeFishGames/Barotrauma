@@ -197,22 +197,23 @@ namespace Barotrauma.Networking
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
 
             // execute the request
-            RestResponse response = (RestResponse)restClient.Execute(request);
-
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            restClient.ExecuteAsync(request, response =>
             {
-                DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
-                return;
-            }
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    DebugConsole.ThrowError("Error while connecting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")");
+                    return;
+                }
 
-            if (response != null && !string.IsNullOrWhiteSpace(response.Content))
-            {
-                DebugConsole.ThrowError("Error while connecting to master server (" +response.Content+")");
-                return;
-            }
+                if (response != null && !string.IsNullOrWhiteSpace(response.Content))
+                {
+                    DebugConsole.ThrowError("Error while connecting to master server (" + response.Content + ")");
+                    return;
+                }
 
-            registeredToMaster = true;
-            refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+                registeredToMaster = true;
+                refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+            });
         }
 
         private IEnumerable<object> RefreshMaster()
