@@ -288,8 +288,7 @@ namespace Barotrauma
                             spriteFolder = Path.GetDirectoryName(filePath);
                         }
 
-                        if (ToolBox.GetAttributeBool(subElement, "canflipx", false))
-                            canSpriteFlipX = true;
+                        canSpriteFlipX = ToolBox.GetAttributeBool(subElement, "canflipx", true);
 
                         sprite = new Sprite(subElement, spriteFolder);
                         size = sprite.size;
