@@ -71,12 +71,15 @@ namespace Barotrauma
 
         private bool hasLoaded;
 
+        private GameTime fixedTime;
+        private double updatesToMake;
+
         //public static Random localRandom;
         //public static Random random;
 
         //private Stopwatch renderTimer;
         //public static int renderTimeElapsed;
-                        
+
         public Camera Cam
         {
             get { return GameScreen.Cam; }
@@ -120,6 +123,7 @@ namespace Barotrauma
             
             graphicsWidth = Config.GraphicsWidth;
             graphicsHeight = Config.GraphicsHeight;
+            Graphics.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
 
             Graphics.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
 
@@ -138,11 +142,16 @@ namespace Barotrauma
             IsFixedTimeStep = false;
             //TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 55);
 
+            updatesToMake = 0.0;
+            fixedTime = new GameTime();
+
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
+
+            Graphics.ApplyChanges();
         }
 
         /// <summary>
@@ -282,40 +291,51 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            base.Update(gameTime);
+            double realDeltaTime = gameTime.ElapsedGameTime.TotalSeconds;
+            double deltaTime = 0.016;
+            updatesToMake += realDeltaTime;
 
-            double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
-            PlayerInput.Update(deltaTime);
-
-            bool paused = false;
-
-            if (hasLoaded && !titleScreenOpen)
+            while (updatesToMake > 0.0)
             {
-                SoundPlayer.Update();
+                fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
+                TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
+                fixedTime.ElapsedGameTime = addTime;
+                fixedTime.TotalGameTime.Add(addTime);
+                base.Update(fixedTime);
+                
+                PlayerInput.Update(deltaTime);
 
-                if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
+                bool paused = false;
 
-                DebugConsole.Update(this, (float)deltaTime);
-
-                paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
-                         (NetworkMember == null || !NetworkMember.GameStarted);
-
-                if (!paused) Screen.Selected.Update(deltaTime);
-
-                if (NetworkMember != null)
+                if (hasLoaded && !titleScreenOpen)
                 {
-                    NetworkMember.Update((float)deltaTime);
-                }
-                else
-                {
-                    NetworkEvent.Events.Clear();
+                    SoundPlayer.Update();
+
+                    if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
+
+                    DebugConsole.Update(this, (float)deltaTime);
+
+                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
+                             (NetworkMember == null || !NetworkMember.GameStarted);
+
+                    if (!paused) Screen.Selected.Update(deltaTime);
+
+                    if (NetworkMember != null)
+                    {
+                        NetworkMember.Update((float)deltaTime);
+                    }
+                    else
+                    {
+                        NetworkEvent.Events.Clear();
+                    }
+
+                    GUI.Update((float)deltaTime);
                 }
 
-                GUI.Update((float)deltaTime);
+                CoroutineManager.Update((float)deltaTime, paused ? 0.0f : (float)deltaTime);
 
+                updatesToMake -= deltaTime;
             }
-
-            CoroutineManager.Update((float)deltaTime, paused ? 0.0f : (float)deltaTime);
         }
 
 

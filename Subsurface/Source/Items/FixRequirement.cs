@@ -187,17 +187,22 @@ namespace Barotrauma
 
         public static void DrawHud(SpriteBatch spriteBatch, Item item, Character character)
         {
+            if (frame == null) return;
+
+            frame.Draw(spriteBatch);
+        }
+
+        public static void UpdateHud(Item item, Character character)
+        {
             if (frame == null || frame.UserData != item)
             {
                 CreateGUIFrame(item);
-                
             }
             UpdateGUIFrame(item, character);
 
             if (frame == null) return;
 
             frame.Update((float)Physics.step);
-            frame.Draw(spriteBatch);
         }
     }
 }

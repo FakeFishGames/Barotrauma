@@ -160,8 +160,7 @@ namespace Barotrauma.Items.Components
             int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
-
-            GuiFrame.Update(1.0f / 60.0f);
+            
             GuiFrame.Draw(spriteBatch);
 
             if (voltage < minVoltage && powerConsumption > 0.0f) return;
@@ -208,6 +207,11 @@ namespace Barotrauma.Items.Components
                     valueChanged = true;
                 }
             }
+        }
+
+        public override void UpdateHUD(Character character)
+        {
+            GuiFrame.Update(1.0f / 60.0f);
         }
 
         private void UpdateAutoPilot(float deltaTime)

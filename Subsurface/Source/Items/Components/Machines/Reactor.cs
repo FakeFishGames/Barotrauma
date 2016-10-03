@@ -438,7 +438,6 @@ namespace Barotrauma.Items.Components
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
 
-            GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
             float xOffset = (graphTimer / (float)updateGraphInterval);
@@ -479,6 +478,11 @@ namespace Barotrauma.Items.Components
 
 
             //y = y - 260;
+        }
+
+        public override void UpdateHUD(Character character)
+        {
+            GuiFrame.Update(1.0f / 60.0f);
         }
 
         private bool ToggleAutoTemp(GUITickBox tickBox)

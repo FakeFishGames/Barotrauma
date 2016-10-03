@@ -463,7 +463,9 @@ namespace Barotrauma.Items.Components
         //}
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
-        
+
+        public virtual void UpdateHUD(Character character) { }
+
         /// <returns>true if the operation was completed</returns>
         public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective) 
         {

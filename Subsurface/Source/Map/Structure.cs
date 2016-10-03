@@ -52,7 +52,10 @@ namespace Barotrauma
         List<Body> bodies;
 
         //sections of the wall that are supposed to be rendered
-        private WallSection[] sections;
+        public WallSection[] sections {
+            get;
+            private set;
+        }
 
         bool isHorizontal;
 

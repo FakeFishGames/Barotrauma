@@ -246,6 +246,11 @@ namespace Barotrauma.Items.Components
             spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
         }
 
+        public override void UpdateHUD(Character character)
+        {
+            GuiFrame.Update(1.0f / 60.0f);
+        }
+
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
             message.WriteRangedSingle(MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f), 0.0f, 1.0f, 8);

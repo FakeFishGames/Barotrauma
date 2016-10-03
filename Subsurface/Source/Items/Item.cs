@@ -40,6 +40,8 @@ namespace Barotrauma
         
         public Hull CurrentHull;
 
+        public bool Visible = true;
+
         public SpriteEffects SpriteEffects = SpriteEffects.None;
 
         //components that determine the functionality of the item
@@ -819,6 +821,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
+            if (!Visible) return;
             Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
 
@@ -1073,6 +1076,21 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 ic.DrawHUD(spriteBatch, character);
+            }
+        }
+
+        public virtual void UpdateHUD(Character character)
+        {
+            if (condition <= 0.0f)
+            {
+                FixRequirement.UpdateHud(this, character);
+                return;
+            }
+
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.UpdateHUD(character);
             }
         }
 

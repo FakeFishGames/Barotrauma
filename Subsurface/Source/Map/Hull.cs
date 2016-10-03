@@ -60,6 +60,8 @@ namespace Barotrauma
 
         private bool update;
 
+        public bool Visible = true;
+
         private Sound currentFlowSound;
         private int soundIndex;
         private float soundVolume;
@@ -559,6 +561,17 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             //if (back) return;
+            Rectangle drawRect;
+            if (!Visible)
+            {
+                drawRect =
+                Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+
+                GUI.DrawRectangle(spriteBatch,
+                    new Vector2(drawRect.X, -drawRect.Y),
+                    new Vector2(rect.Width, rect.Height),
+                    Color.Black,true);
+            }
 
             if (!ShowHulls && !GameMain.DebugDraw) return;
 
@@ -566,7 +579,7 @@ namespace Barotrauma
             
             if (aiTarget != null) aiTarget.Draw(spriteBatch);
 
-            Rectangle drawRect =
+            drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
             GUI.DrawRectangle(spriteBatch,
@@ -744,6 +757,65 @@ namespace Barotrauma
             }
 
             return null;
+        }
+
+        public static void DetectItemVisibility(Character c=null)
+        {
+            if (c==null)
+            {
+                foreach (Item it in Item.ItemList)
+                {
+                    it.Visible = true;
+                }
+            }
+            else
+            {
+                Hull h = c.CurrentHull;
+                hullList.ForEach(j => j.Visible = false);
+                List<Hull> visibleHulls;
+                if (h == null || c.Submarine == null)
+                {
+                    visibleHulls = hullList.FindAll(j => j.CanSeeOther(null, false));
+                }
+                else
+                {
+                    visibleHulls = hullList.FindAll(j => h.CanSeeOther(j, true));
+                }
+                visibleHulls.ForEach(j => j.Visible = true);
+                foreach (Item it in Item.ItemList)
+                {
+                    if (it.CurrentHull == null || visibleHulls.Contains(it.CurrentHull)) it.Visible = true;
+                    else it.Visible = false;
+                }
+            }
+        }
+
+        private bool CanSeeOther(Hull other,bool allowIndirect=true)
+        {
+            if (other == this) return true;
+            
+            if (other != null && other.Submarine==Submarine)
+            {
+                bool retVal = false;
+                foreach (Gap g in ConnectedGaps)
+                {
+                    if (g.ConnectedWall != null && g.ConnectedWall.CastShadow) continue;
+                    List<Hull> otherHulls = Hull.hullList.FindAll(h => h.ConnectedGaps.Contains(g) && h!=this);
+                    retVal = otherHulls.Any(h => h == other);
+                    if (!retVal && allowIndirect) retVal = otherHulls.Any(h => h.CanSeeOther(other, false));
+                    if (retVal) return true;
+                }
+            }
+            else
+            {
+                foreach (Gap g in ConnectedGaps)
+                {
+                    if (g.ConnectedDoor != null && !hullList.Any(h => h.ConnectedGaps.Contains(g) && h!=this)) return true;
+                }
+                List<MapEntity> structures = MapEntity.mapEntityList.FindAll(me => me is Structure && me.Rect.Intersects(Rect));
+                return structures.Any(st => !(st as Structure).CastShadow);
+            }
+            return false;
         }
 
         //public List<Gap> FindGaps()

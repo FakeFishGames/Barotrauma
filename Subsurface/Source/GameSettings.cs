@@ -44,6 +44,8 @@ namespace Barotrauma
         public int GraphicsWidth    { get; set; }
         public int GraphicsHeight   { get; set; }
 
+        public bool VSyncEnabled { get; set; }
+
         //public bool FullScreenEnabled { get; set; }
 
         public WindowMode WindowMode
@@ -126,6 +128,7 @@ namespace Barotrauma
             XElement graphicsMode = doc.Root.Element("graphicsmode");
             GraphicsWidth = ToolBox.GetAttributeInt(graphicsMode, "width", 0);
             GraphicsHeight = ToolBox.GetAttributeInt(graphicsMode, "height", 0);
+            VSyncEnabled = ToolBox.GetAttributeBool(graphicsMode, "vsync", true);
 
             if (GraphicsWidth==0 || GraphicsHeight==0)
             {
@@ -253,6 +256,7 @@ namespace Barotrauma
                 gMode.ReplaceAttributes(
                     new XAttribute("width", GraphicsWidth),
                     new XAttribute("height", GraphicsHeight),
+                    new XAttribute("vsync", VSyncEnabled),
                     new XAttribute("displaymode", windowMode));
             }
 
@@ -346,6 +350,20 @@ namespace Barotrauma
             displayModeDD.SelectItem(GameMain.Config.WindowMode);
 
             displayModeDD.OnSelected = (guiComponent, obj) => { GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData; return true; };
+
+            y += 70;
+
+            GUITickBox vsyncTickBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Enable vertical sync", Alignment.CenterY | Alignment.Left, settingsFrame);
+            vsyncTickBox.OnSelected = (GUITickBox box) =>
+            {
+                VSyncEnabled = !VSyncEnabled;
+                GameMain.Graphics.SynchronizeWithVerticalRetrace = VSyncEnabled;
+                GameMain.Graphics.ApplyChanges();
+                UnsavedSettings = true;
+
+                return true;
+            };
+            vsyncTickBox.Selected = VSyncEnabled;
 
             y += 70;
 
