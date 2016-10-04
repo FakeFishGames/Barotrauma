@@ -214,10 +214,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void UpdateHUD(Character character)
+        {
+            Inventory.Update((float)Timing.Step);
+        }
+        
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (!drawInventory && false) return;
-
             Inventory.Draw(spriteBatch);
         }
 
