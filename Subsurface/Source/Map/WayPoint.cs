@@ -178,7 +178,7 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD();
             }
             
-            editingHUD.Update((float)Physics.step);
+            editingHUD.Update((float)Timing.Step);
             editingHUD.Draw(spriteBatch);
 
             if (!PlayerInput.LeftButtonClicked()) return;

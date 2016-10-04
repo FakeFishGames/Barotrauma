@@ -325,7 +325,7 @@ namespace Barotrauma
 
         public void UpdateTransform()
         {
-            DrawPosition = Physics.Interpolate(prevPosition, Position);            
+            DrawPosition = Timing.Interpolate(prevPosition, Position);            
         }
 
         //math/physics stuff ----------------------------------------------------

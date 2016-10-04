@@ -127,9 +127,9 @@ namespace Barotrauma
 
         public void UpdateTransform(bool interpolate = true, bool clampPos = false)
         {
-            Vector2 interpolatedPosition = interpolate ? Physics.Interpolate(prevPosition, position) : position;
+            Vector2 interpolatedPosition = interpolate ? Timing.Interpolate(prevPosition, position) : position;
 
-            float interpolatedZoom = interpolate ? Physics.Interpolate(prevZoom, zoom) : zoom;
+            float interpolatedZoom = interpolate ? Timing.Interpolate(prevZoom, zoom) : zoom;
 
             worldView.X = (int)(interpolatedPosition.X - worldView.Width / 2.0);
             worldView.Y = (int)(interpolatedPosition.Y + worldView.Height / 2.0);
