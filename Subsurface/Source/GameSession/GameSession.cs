@@ -317,19 +317,15 @@ namespace Barotrauma
 
             if (gameMode != null)   gameMode.Update(deltaTime);
             if (Mission != null)    Mission.Update(deltaTime);
+            if (infoFrame != null)  infoFrame.Update(deltaTime);
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            //guiRoot.Draw(spriteBatch);
             infoButton.Draw(spriteBatch);
             
             if (gameMode != null)   gameMode.Draw(spriteBatch);
-            if (infoFrame != null)
-            {
-                infoFrame.Update(0.016f);
-                infoFrame.Draw(spriteBatch);
-            }
+            if (infoFrame != null)  infoFrame.Draw(spriteBatch);            
         }
 
         public void Save(string filePath)
