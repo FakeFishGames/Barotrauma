@@ -29,39 +29,39 @@
   </smallverticalback2>
 
   <engineeringLabel width="153" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth ="0.99"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.99" canflipx="false"/>
   </engineeringLabel>
 
   <commandLabel width="128" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth ="0.99"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth="0.99" canflipx="false"/>
   </commandLabel>
 
   <airlockLabel width = "99" height ="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth ="0.99"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth="0.99" canflipx="false"/>
   </airlockLabel>
 
   <cabinsLabel width="83" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth ="0.99"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth="0.99" canflipx="false"/>
   </cabinsLabel>
 
   <medicalLabel width="110" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.99"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.99" canflipx="false"/>
   </medicalLabel>
 
   <arrowUp width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth ="0.99" canflipx="true"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth ="0.99"/>
   </arrowUp>
 
   <arrowDown width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth ="0.99" canflipx="true"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth ="0.99"/>
   </arrowDown>
 
   <arrowLeft width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth ="0.99" canflipx="true"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth ="0.99"/>
   </arrowLeft>
 
   <arrowRight width="16" height="16">
-    <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth ="0.99" canflipx="true"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth ="0.99"/>
   </arrowRight>
 
   <leftwall description="A vertical wall with collision detection"    
@@ -170,19 +170,19 @@
   </PipesBackground>
 
   <SlopeForward width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,0,224,64" depth = "0.95" canflipx="true"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,0,224,64" depth = "0.95" />
   </SlopeForward>
 
   <SlopeBack width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/structures2.png" sourcerect="0,64,224,64" depth = "0.95" canflipx="true"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="0,64,224,64" depth = "0.95" />
   </SlopeBack>
 
   <stairsright width="256" height="320" stairdirection="Right">
-    <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" depth = "0.1" canflipx="true"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" depth = "0.1" />
   </stairsright>
 
   <stairsleft width="256" height="320" stairdirection="Left">
-    <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" fliphorizontal="true" depth = "0.1"  canflipx="true"/>
+    <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" fliphorizontal="true" depth = "0.1" />
   </stairsleft>
 
   <bunk width="173" height="129">

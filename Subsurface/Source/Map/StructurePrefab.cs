@@ -113,8 +113,8 @@ namespace Barotrauma
                             sp.sprite.effects = SpriteEffects.FlipHorizontally;
                         if (ToolBox.GetAttributeBool(subElement, "flipvertical", false)) 
                             sp.sprite.effects = SpriteEffects.FlipVertically;
-                        if (ToolBox.GetAttributeBool(subElement, "canflipx", false))
-                            sp.canSpriteFlipX = true;
+                        
+                        sp.canSpriteFlipX = ToolBox.GetAttributeBool(subElement, "canflipx", true);
 
                         break;
                     case "backgroundsprite":
