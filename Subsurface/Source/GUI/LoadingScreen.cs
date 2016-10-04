@@ -127,9 +127,13 @@ namespace Barotrauma
                     }
                 }
 
-                spriteBatch.DrawString(GUI.LargeFont, loadText, 
-                    new Vector2(GameMain.GraphicsWidth/2.0f - GUI.LargeFont.MeasureString(loadText).X/2.0f, GameMain.GraphicsHeight*0.8f), 
-                    Color.White);            
+                if (GUI.LargeFont!=null)
+                {
+                    spriteBatch.DrawString(GUI.LargeFont, loadText, 
+                        new Vector2(GameMain.GraphicsWidth/2.0f - GUI.LargeFont.MeasureString(loadText).X/2.0f, GameMain.GraphicsHeight*0.8f), 
+                        Color.White); 
+                }
+           
             }
             spriteBatch.End();
 

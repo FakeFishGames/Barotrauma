@@ -350,7 +350,7 @@ namespace Barotrauma.Items.Components
                 activateButton.Enabled = CanBeFabricated(targetItem, character);
             }
 
-            GuiFrame.Update((float)Physics.step);
+            GuiFrame.Update((float)Timing.Step);
         }
 
         private bool CanBeFabricated(FabricableItem fabricableItem, Character user)
