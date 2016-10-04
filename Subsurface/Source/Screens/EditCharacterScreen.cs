@@ -98,26 +98,15 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         public override void Update(double deltaTime)
         {
-            Physics.accumulator += deltaTime;
-            //cam.Zoom += Math.Sign(PlayerInput.GetMouseState.ScrollWheelValue - PlayerInput.GetOldMouseState.ScrollWheelValue)*0.1f;
-                       
             cam.MoveCamera((float)deltaTime);
 
             if (physicsEnabled)
             {
-                Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 4);
-                while (Physics.accumulator >= Physics.step)
-                {
-                    Character.UpdateAnimAll((float)Physics.step * 1000.0f);
+                Character.UpdateAnimAll((float)deltaTime);
 
-                    Ragdoll.UpdateAll(cam, (float)Physics.step);
+                Ragdoll.UpdateAll(cam, (float)deltaTime);
 
-                    GameMain.World.Step((float)Physics.step);
-
-                    Physics.accumulator -= Physics.step;
-                }
-
-                Physics.Alpha = Physics.accumulator / Physics.step;
+                GameMain.World.Step((float)deltaTime);
             }                                                
         }
 

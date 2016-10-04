@@ -202,7 +202,7 @@ namespace Barotrauma
 
             if (frame == null) return;
 
-            frame.Update((float)Physics.step);
+            frame.Update((float)Timing.Step);
         }
     }
 }
