@@ -6,12 +6,43 @@ using Microsoft.Xna.Framework.Input;
 using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
+    class InventorySlot
+    {
+        public Rectangle Rect;
+
+        public GUIComponent.ComponentState State;
+
+        public bool Disabled;
+
+        public bool IsHighlighted
+        {
+            get
+            {
+                return State == GUIComponent.ComponentState.Hover;
+            }
+        }
+
+        public Color Color;
+
+        public InventorySlot(Rectangle rect)
+        {
+            Rect = rect;
+
+            State = GUIComponent.ComponentState.None;
+
+            Color = Color.White * 0.4f;
+        }
+    }
+
     class Inventory
     {
+        public static InventorySlot draggingSlot;
         public static Item draggingItem;
+
         public static Item doubleClickedItem;
 
         public readonly Entity Owner;
@@ -31,6 +62,8 @@ namespace Barotrauma
 
         protected int selectedSlot = -1;
 
+        protected InventorySlot[] slots;
+
         public Item[] Items;
 
         public bool Locked;
@@ -44,6 +77,23 @@ namespace Barotrauma
                 centerPos.X *= GameMain.GraphicsWidth;
                 centerPos.Y *= GameMain.GraphicsHeight;
             }
+        }
+
+        private Vector2 drawOffset;
+        public Vector2 DrawOffset
+        {
+            get
+            {
+                return drawOffset;
+            }
+
+            set
+            {
+                if (value == drawOffset) return;
+
+                drawOffset = value;
+                CreateSlots();
+            } 
         }
 
         public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow=5)
@@ -116,7 +166,7 @@ namespace Barotrauma
             }
         }
 
-        protected void PutItem(Item item, int i, bool createNetworkEvent, bool removeItem = true)
+        protected virtual void PutItem(Item item, int i, bool createNetworkEvent, bool removeItem = true)
         {
             if (Owner == null) return;
 
@@ -143,7 +193,7 @@ namespace Barotrauma
             return Items.FirstOrDefault(i => i != null && (i.Name == itemName || i.HasTag(itemName)));
         }
 
-        public void RemoveItem(Item item)
+        public virtual void RemoveItem(Item item)
         {
             if (item == null) return;
 
@@ -161,72 +211,90 @@ namespace Barotrauma
             item.Drop(null, false);
             return;
         }
-        //public void DropItem(int i)
-        //{
-        //    items[i].Drop();
-        //    items[i] = null;
-        //}
-
-        public virtual void Draw(SpriteBatch spriteBatch)
+        
+        protected virtual void CreateSlots()
         {
-            string toolTip = "";
+            slots = new InventorySlot[capacity];
 
             int rectWidth = 40, rectHeight = 40;
-
-            Rectangle highlightedSlot = Rectangle.Empty;
             int spacing = 10;
-            
+
             int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
 
             int startX = (int)centerPos.X - (rectWidth * slotsPerRow + spacing * (slotsPerRow - 1)) / 2;
             int startY = (int)centerPos.Y - rows * (spacing + rectHeight);
 
             Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
-            Rectangle draggingItemSlot = slotRect;
-
-            selectedSlot = -1;
-
             for (int i = 0; i < capacity; i++)
             {
-                slotRect.X = startX + (rectWidth + spacing) * (i % slotsPerRow);
-                slotRect.Y = startY + (rectHeight + spacing) * ((int)Math.Floor((double)i / slotsPerRow));
+                slotRect.X = startX + (rectWidth + spacing) * (i % slotsPerRow) + (int)DrawOffset.X;
+                slotRect.Y = startY + (rectHeight + spacing) * ((int)Math.Floor((double)i / slotsPerRow)) + (int)DrawOffset.Y;
 
-                if (draggingItem == Items[i]) draggingItemSlot = slotRect;
+                slots[i] = new InventorySlot(slotRect);
+            }
+        }
 
-                UpdateSlot(spriteBatch, slotRect, i, Items[i], false);
-                if (slotRect.Contains(PlayerInput.MousePosition) && Items[i] != null)
-                {
-                    highlightedSlot = slotRect;
-                    toolTip = GameMain.DebugDraw ? Items[i].ToString() : Items[i].Name;
-                }
+        public virtual void Update(float deltaTime)
+        {
+            if (slots == null) CreateSlots();
+            
+            for (int i = 0; i < capacity; i++)
+            {
+                if (slots[i].Disabled) continue;
+                UpdateSlot(slots[i], i, Items[i], false);
             }
 
-            if (draggingItem != null && !draggingItemSlot.Contains(PlayerInput.MousePosition) && draggingItem.Container == this.Owner)
-            {
-                if (PlayerInput.LeftButtonHeld())
-                {
-                    slotRect.X = (int)PlayerInput.MousePosition.X - slotRect.Width / 2;
-                    slotRect.Y = (int)PlayerInput.MousePosition.Y - slotRect.Height / 2;
-                    //GUI.DrawRectangle(spriteBatch, rect, Color.White, true);
-                    //draggingItem.sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), Color.White);
 
-                    DrawSlot(spriteBatch, slotRect, draggingItem, false, false);
-                }
-                else
+            if (draggingItem != null && !draggingSlot.Rect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)
+            {
+                if (!PlayerInput.LeftButtonHeld())
                 {
-                    if (Owner!=null)
+                    if (Owner != null)
                     {
                         new NetworkEvent(NetworkEventType.InventoryUpdate, Owner.ID, true);
                     }
 
                     DropItem(draggingItem);
-                    //draggingItem = null;
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(toolTip))
+        }
+
+        public virtual void Draw(SpriteBatch spriteBatch)
+        {
+            string toolTip = "";
+
+            if (slots == null) CreateSlots();
+
+            for (int i = 0; i < capacity; i++)
             {
-                DrawToolTip(spriteBatch, toolTip, highlightedSlot);
+                if (slots[i].Disabled) continue;
+
+                //don't draw the slot if dragged an item out of it
+                bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].IsHighlighted;
+
+                DrawSlot(spriteBatch, slots[i], Items[i], drawItem);
+            }
+            
+            if (draggingItem != null && 
+                !draggingSlot.Rect.Contains(PlayerInput.MousePosition) && 
+                draggingItem.ParentInventory == this)
+            {
+                Rectangle dragRect = new Rectangle(
+                    (int)PlayerInput.MousePosition.X - 10,
+                    (int)PlayerInput.MousePosition.Y - 10,
+                    40, 40);
+
+                DrawSlot(spriteBatch, new InventorySlot(dragRect), draggingItem);
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (slots[i].IsHighlighted && !slots[i].Disabled)
+                {
+                    DrawToolTip(spriteBatch, toolTip, slots[i].Rect);
+                    break;
+                }
             }
         }
 
@@ -251,12 +319,21 @@ namespace Barotrauma
                 1.0f, SpriteEffects.None, 0.0f);
         }
 
-        protected void UpdateSlot(SpriteBatch spriteBatch, Rectangle rect, int slotIndex, Item item, bool isSubSlot, float alpha = 0.4f, bool drawItem=true)
+        protected void UpdateSlot(InventorySlot slot, int slotIndex, Item item, bool isSubSlot)
         {
-            bool mouseOn = rect.Contains(PlayerInput.MousePosition) && !Locked;
+            bool mouseOn = slot.Rect.Contains(PlayerInput.MousePosition) && !Locked;
 
-            if (mouseOn)
+            slot.State = GUIComponent.ComponentState.None;
+
+            if (!(this is CharacterInventory) && !mouseOn && selectedSlot==slotIndex)
             {
+                selectedSlot = -1;
+            }
+
+            if (mouseOn && 
+                (draggingItem!=null || selectedSlot==slotIndex || selectedSlot==-1))
+            {
+                slot.State = GUIComponent.ComponentState.Hover;
 
                 if (!isSubSlot && selectedSlot == -1)
                 {
@@ -265,9 +342,10 @@ namespace Barotrauma
 
                 if (draggingItem == null)
                 {
-                    if (PlayerInput.LeftButtonHeld() && selectedSlot == slotIndex)
+                    if (PlayerInput.LeftButtonHeld())
                     {
-                        draggingItem = item;
+                        draggingItem = Items[slotIndex];
+                        draggingSlot = slot;
                     }  
                 }
                 else if (PlayerInput.LeftButtonReleased())
@@ -280,22 +358,38 @@ namespace Barotrauma
                     //selectedSlot = slotIndex;
                     TryPutItem(draggingItem, slotIndex, true, true);
                     draggingItem = null;
+                    draggingSlot = null;
                 }
-
             }
-
-            DrawSlot(spriteBatch, rect, (draggingItem == item && !mouseOn) ? null : item, mouseOn && selectedSlot == slotIndex, isSubSlot, alpha, drawItem);
-
         }
 
-        public void DrawSubInventory(SpriteBatch spriteBatch, Rectangle rect, int slotIndex)
+        public void UpdateSubInventory(float deltaTime, int slotIndex)
         {
             var item = Items[slotIndex];
+            if (item == null) return;
 
-            selectedSlot = -1;
+            var container = item.GetComponent<ItemContainer>();
+            if (container == null) return;
 
-            int itemCapacity = item == null ? 0 : item.Capacity;
-            if (itemCapacity == 0) return;            
+            if (container.Inventory.slots == null) container.Inventory.CreateSlots();
+
+            slots[slotIndex].State = GUIComponent.ComponentState.Hover;
+
+            container.Inventory.Update(deltaTime);
+        }
+
+        public void DrawSubInventory(SpriteBatch spriteBatch, int slotIndex)
+        {
+            var item = Items[slotIndex];
+            if (item == null) return;
+
+            var container = item.GetComponent<ItemContainer>();
+            if (container == null) return;
+
+            if (container.Inventory.slots == null) container.Inventory.CreateSlots();
+            
+
+            int itemCapacity = container.Capacity;
 
 #if DEBUG
             System.Diagnostics.Debug.Assert(slotIndex >= 0 && slotIndex < Items.Length);
@@ -303,59 +397,37 @@ namespace Barotrauma
             if (slotIndex < 0 || slotIndex >= Items.Length) return;
 #endif
 
-            Rectangle containerRect = new Rectangle(rect.X - 5, rect.Y - (40 + 10) * itemCapacity - 5,
-                    rect.Width + 10, rect.Height + (40 + 10) * itemCapacity + 10);
+            var slot = slots[slotIndex];
+            Rectangle containerRect = new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
+                    slot.Rect.Width + 10, slot.Rect.Height + (40 + 10) * itemCapacity + 10);
 
-            Rectangle subRect = rect;
+            Rectangle subRect = slot.Rect;
             subRect.Height = 40;
 
-            selectedSlot = containerRect.Contains(PlayerInput.MousePosition) && !Locked ? slotIndex : -1;
-
-            GUI.DrawRectangle(spriteBatch, new Rectangle(containerRect.X, containerRect.Y, containerRect.Width, containerRect.Height - 50), Color.Black * 0.8f, true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(containerRect.X, containerRect.Y, containerRect.Width, containerRect.Height - slot.Rect.Height - 5), Color.Black * 0.8f, true);
             GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
 
-            Item[] containedItems = null;
-            if (Items[slotIndex] != null) containedItems = Items[slotIndex].ContainedItems;
-
-            string toolTip = "";
-            Rectangle highlightedRect = Rectangle.Empty;
-
-            if (containedItems != null)
+            for (int i = 0; i < itemCapacity; i++)
             {
-                for (int i = 0; i < itemCapacity; i++)
-                {
-                    subRect.Y = subRect.Y - subRect.Height - 10;
-                    highlightedRect = subRect;
-                    UpdateSlot(spriteBatch, subRect, selectedSlot, i < containedItems.Length ? containedItems[i] : null, true);
-
-                    if (i >= containedItems.Length || containedItems[i] == null) continue;
-
-                    if (highlightedRect.Contains(PlayerInput.MousePosition))
-                    {
-                        if (GameMain.DebugDraw)
-                        {
-                            toolTip = containedItems[i].ToString();
-                        }
-                        else
-                        {
-                            toolTip = string.IsNullOrEmpty(containedItems[i].Description) ? 
-                                containedItems[i].Name : 
-                                containedItems[i].Name + '\n' + containedItems[i].Description;
-                        }
-                    }
-                }
+                subRect.Y = subRect.Y - subRect.Height - 10;
+                container.Inventory.slots[i].Rect = subRect;
             }
 
-            if (!string.IsNullOrWhiteSpace(toolTip)) DrawToolTip(spriteBatch, toolTip, highlightedRect);
+            container.Inventory.Draw(spriteBatch);
 
-            
+            if (!containerRect.Contains(PlayerInput.MousePosition))
+            {
+                if (draggingItem == null || draggingItem.Container != item) selectedSlot = -1;
+            }         
         }
 
-        protected void DrawSlot(SpriteBatch spriteBatch, Rectangle rect, Item item, bool isHighLighted, bool isSubSlot, float alpha=0.4f, bool drawItem=true)
+        protected void DrawSlot(SpriteBatch spriteBatch, InventorySlot slot, Item item, bool drawItem=true)
         {
-            GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * alpha*0.75f, true);
+            Rectangle rect = slot.Rect;
+
+            GUI.DrawRectangle(spriteBatch, rect, (slot.IsHighlighted ? Color.Red * 0.4f : slot.Color), true);
             
-            if (item != null)
+            if (item != null && drawItem)
             {
                 if (item.Condition < 100.0f)
                 {
@@ -365,21 +437,17 @@ namespace Barotrauma
                         Color.Lerp(Color.Red, Color.Green, item.Condition / 100.0f)*0.8f, true);
                 }
 
-                if (!isHighLighted)
+                var containedItems = item.ContainedItems;
+                if (containedItems != null && containedItems.Length == 1 && containedItems[0].Condition < 100.0f)
                 {
-                    var containedItems = item.ContainedItems;
-                    if (containedItems != null && containedItems.Length == 1 && containedItems[0].Condition < 100.0f)
-                    {
-                        GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Y, rect.Width, 8), Color.Black*0.8f, true);
-                        GUI.DrawRectangle(spriteBatch,
-                            new Rectangle(rect.X, rect.Y, (int)(rect.Width * containedItems[0].Condition / 100.0f), 8),
-                            Color.Lerp(Color.Red, Color.Green, containedItems[0].Condition / 100.0f)*0.8f, true);
-                    }
-                }
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Y, rect.Width, 8), Color.Black*0.8f, true);
+                    GUI.DrawRectangle(spriteBatch,
+                        new Rectangle(rect.X, rect.Y, (int)(rect.Width * containedItems[0].Condition / 100.0f), 8),
+                        Color.Lerp(Color.Red, Color.Green, containedItems[0].Condition / 100.0f)*0.8f, true);
+                }                
             }
 
-
-            GUI.DrawRectangle(spriteBatch, rect, (isHighLighted ? Color.Red : Color.White) * alpha, false);
+            GUI.DrawRectangle(spriteBatch, rect, (slot.IsHighlighted ? Color.Red * 0.4f : slot.Color), false);
 
             if (item == null || !drawItem) return;
 
