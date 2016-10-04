@@ -46,6 +46,9 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        public List<string> monsterNames;
+        public Dictionary<string, bool> monsterEnabled;
+
         public bool ShowNetStats;
 
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
@@ -254,6 +257,17 @@ namespace Barotrauma.Networking
             FileStreamSender.MaxTransferDuration = new TimeSpan(0,0,ToolBox.GetAttributeInt(doc.Root, "MaxFileTransferDuration", 150));
 
             showLogButton.Visible = SaveServerLogs;
+
+            monsterNames = Directory.GetDirectories("Content/Characters").ToList();
+            for (int i=0;i<monsterNames.Count;i++)
+            {
+                monsterNames[i] = monsterNames[i].Replace("Content/Characters", "").Replace("/", "").Replace("\\", "");
+            }
+            monsterEnabled = new Dictionary<string, bool>();
+            foreach (string s in monsterNames)
+            {
+                monsterEnabled.Add(s, true);
+            }
         }
 
         private void CreateSettingsFrame()
@@ -290,6 +304,8 @@ namespace Barotrauma.Networking
 
             int y = 0;
 
+            settingsTabs[0].Padding = new Vector4(40.0f, 5.0f, 40.0f, 40.0f);
+
             new GUITextBlock(new Rectangle(0, y, 100, 20), "Submarine selection:", GUI.Style, settingsTabs[0]);
             var selectionFrame = new GUIFrame(new Rectangle(0, y + 20, 300, 20), null, settingsTabs[0]);
             for (int i = 0; i < 3; i++)
@@ -318,7 +334,7 @@ namespace Barotrauma.Networking
             endBox.Selected = EndRoundAtLevelEnd;
             endBox.OnSelected = (GUITickBox) => { EndRoundAtLevelEnd = GUITickBox.Selected; return true; };
 
-            y += 30;
+            y += 25;
 
             var endVoteBox = new GUITickBox(new Rectangle(0, y, 20, 20), "End round by voting", Alignment.Left, settingsTabs[0]);
             endVoteBox.Selected = Voting.AllowEndVoting;
@@ -346,7 +362,7 @@ namespace Barotrauma.Networking
             };
             votesRequiredSlider.OnMoved(votesRequiredSlider, votesRequiredSlider.BarScroll);
             
-            y += 40;
+            y += 35;
 
             var respawnBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow respawning", Alignment.Left, settingsTabs[0]);
             respawnBox.Selected = AllowRespawn;
@@ -357,9 +373,9 @@ namespace Barotrauma.Networking
             };
 
 
-            var respawnIntervalText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Respawn interval", GUI.Style, settingsTabs[0], GUI.SmallFont);
+            var respawnIntervalText = new GUITextBlock(new Rectangle(20, y + 18, 20, 20), "Respawn interval", GUI.Style, settingsTabs[0], GUI.SmallFont);
 
-            var respawnIntervalSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            var respawnIntervalSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
             respawnIntervalSlider.UserData = respawnIntervalText;
             respawnIntervalSlider.Step = 0.05f;
             respawnIntervalSlider.BarScroll = RespawnInterval / 600.0f;
@@ -373,12 +389,12 @@ namespace Barotrauma.Networking
             };
             respawnIntervalSlider.OnMoved(respawnIntervalSlider, respawnIntervalSlider.BarScroll);
             
-            y += 40;
+            y += 35;
 
             var minRespawnText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Minimum players to respawn", GUI.Style, settingsTabs[0]);
             minRespawnText.ToolTip = "What percentage of players has to be dead/spectating until a respawn shuttle is dispatched";
 
-            var minRespawnSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            var minRespawnSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
             minRespawnSlider.ToolTip = minRespawnText.ToolTip;
             minRespawnSlider.UserData = minRespawnText;
             minRespawnSlider.Step = 0.1f;
@@ -393,13 +409,13 @@ namespace Barotrauma.Networking
             };
             minRespawnSlider.OnMoved(minRespawnSlider, MinRespawnRatio);
 
-            y += 35;
+            y += 30;
 
             var respawnDurationText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Duration of respawn transport", GUI.Style, settingsTabs[0]);
             respawnDurationText.ToolTip = "The amount of time respawned players have to navigate the respawn shuttle to the main submarine. " +
                 "After the duration expires, the shuttle will automatically head back out of the level.";
 
-            var respawnDurationSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            var respawnDurationSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
             respawnDurationSlider.ToolTip = minRespawnText.ToolTip;
             respawnDurationSlider.UserData = respawnDurationText;
             respawnDurationSlider.Step = 0.1f;
@@ -423,8 +439,40 @@ namespace Barotrauma.Networking
             };
             respawnDurationSlider.OnMoved(respawnDurationSlider, respawnDurationSlider.BarScroll);
 
-            y += 40;
+            y += 35;
 
+            var monsterButton = new GUIButton(new Rectangle(0, y, 130, 20), "Monster Spawns", GUI.Style, settingsTabs[0]);
+            monsterButton.Enabled = !GameStarted;
+            var monsterFrame = new GUIListBox(new Rectangle(-290, 60, 280, 250), GUI.Style, settingsTabs[0]);
+            monsterFrame.Visible = false;
+            monsterButton.UserData = monsterFrame;
+            monsterButton.OnClicked = (button, obj) =>
+            {
+                ((GUIComponent)obj).Visible = !((GUIComponent)obj).Visible;
+                return true;
+            };
+            foreach (string s in monsterNames)
+            {
+                GUITextBlock textBlock = new GUITextBlock(
+                    new Rectangle(0, 0, 260, 25),
+                    s,
+                    GUI.Style,
+                    Alignment.Left, Alignment.Left, monsterFrame);
+                textBlock.Padding = new Vector4(35.0f, 3.0f, 0.0f, 0.0f);
+                textBlock.UserData = monsterFrame;
+                textBlock.CanBeFocused = false;
+
+                var monsterEnabledBox = new GUITickBox(new Rectangle(-25, 0, 20, 20), "", Alignment.Left, textBlock);
+                monsterEnabledBox.Selected = monsterEnabled[s];
+                monsterEnabledBox.OnSelected = (GUITickBox) =>
+                {
+                    monsterEnabled[s] = !monsterEnabled[s];
+                    return true;
+                };
+            }
+
+                var cargoButton = new GUIButton(new Rectangle(160, y, 130, 20), "Additional Cargo", GUI.Style, settingsTabs[0]);
+            cargoButton.Enabled = !GameStarted;
 
             //--------------------------------------------------------------------------------
             //                              server settings 

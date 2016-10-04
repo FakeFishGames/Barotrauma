@@ -302,7 +302,7 @@ namespace Barotrauma.Networking
             
             if (gameStarted)
             {
-                inGameHUD.Update((float)Physics.step);
+                //inGameHUD.Update((float)Physics.step);
 
                 if (respawnManager != null) respawnManager.Update(deltaTime);
 

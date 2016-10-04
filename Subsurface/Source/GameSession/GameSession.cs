@@ -164,6 +164,8 @@ namespace Barotrauma
 
             if (gameMode!=null) gameMode.Start();
 
+            Items.Components.Radar.StartMarker = "Start";
+            Items.Components.Radar.EndMarker = "End";
             if (gameMode.Mission != null) Mission.Start(Level.Loaded);
             
             TaskManager.StartShift(level);

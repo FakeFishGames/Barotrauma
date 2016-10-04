@@ -47,6 +47,15 @@ namespace Barotrauma
 
         private void SpawnMonsters()
         {
+            if (GameMain.Server != null)
+            {
+                string tryKey = GameMain.Server.monsterNames.Find(s => characterFile.ToLower().Contains(s.ToLower()));
+                if (tryKey != null)
+                {
+                    if (!GameMain.Server.monsterEnabled[tryKey]) return; //spawn was disallowed by host
+                }
+            }
+
             float minDist = Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
 
             //find a random spawnpos that isn't too close to the main sub
