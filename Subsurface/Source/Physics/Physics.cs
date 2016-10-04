@@ -20,33 +20,6 @@ namespace Barotrauma
 
         public static float DisplayToRealWorldRatio = 1.0f / 80.0f;
 
-        public static double accumulator;
-        public static double step = 1.0/60.0;
-
-        public const float DisplayToSimRation = 100.0f;
-
-        public static double Alpha
-        {
-            get { return alpha; }
-            set { alpha = Math.Min(Math.Max(value, 0.0), 1.0); }
-        }
-
-        public static double Interpolate(double previous, double current)
-        {
-            return current * alpha + previous * (1.0 - alpha);
-        }
-
-        public static float Interpolate(float previous, float current)
-        {
-            return current * (float)alpha + previous * (1.0f - (float)alpha);
-        }
-
-        public static Vector2 Interpolate(Vector2 previous, Vector2 current)
-        {
-            return new Vector2(
-                Interpolate(previous.X, current.X), 
-                Interpolate(previous.Y, current.Y));
-        }
+        public const float DisplayToSimRation = 100.0f;            
     }
-
 }
