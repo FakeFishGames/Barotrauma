@@ -350,7 +350,12 @@ namespace Barotrauma
 
             mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
             mapZoom = MathHelper.Clamp(mapZoom, 1.0f, 4.0f);
-            //shiftPanel.Update((float)deltaTime);
+
+            GameMain.GameSession.Map.Update((float)deltaTime, new Rectangle(
+                bottomPanel[selectedRightPanel].Rect.X + 20,
+                bottomPanel[selectedRightPanel].Rect.Y + 20,
+                bottomPanel[selectedRightPanel].Rect.Width - 310,
+                bottomPanel[selectedRightPanel].Rect.Height - 40), mapZoom);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
