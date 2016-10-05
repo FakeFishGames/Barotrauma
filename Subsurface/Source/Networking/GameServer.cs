@@ -967,15 +967,15 @@ namespace Barotrauma.Networking
                 Vector2 position = new Vector2(
                     cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, false),
                     cargoRoom.Rect.Y - cargoRoom.Rect.Height);
+
                 foreach (string s in extraCargo.Keys)
                 {
                     ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == s) as ItemPrefab;
+                    if (itemPrefab == null) continue;
+
                     for (int i = 0; i < extraCargo[s]; i++)
                     {
-                        var item = new Item(itemPrefab, position, cargoRoom.Submarine);
-                        item.FindHull();
-
-                        Item.ItemList.Add(item);
+                        Item.Spawner.QueueItem(itemPrefab, position, sub, false);
                     }
                 }
             }
