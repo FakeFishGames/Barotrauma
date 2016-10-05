@@ -87,7 +87,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character)
         {
-            GuiFrame.Update((float)Physics.step);
+            GuiFrame.Update((float)Timing.Step);
         }
 
         private bool ToggleActive(GUIButton button, object obj)

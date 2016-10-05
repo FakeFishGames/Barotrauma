@@ -284,6 +284,8 @@ namespace Barotrauma.Networking
         {
             if (ShowNetStats) netStats.Update(deltaTime);
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
+            if (log.LogFrame != null) log.LogFrame.Update(deltaTime);
+            
 
             if (!started) return;
 
@@ -302,8 +304,6 @@ namespace Barotrauma.Networking
             
             if (gameStarted)
             {
-                //inGameHUD.Update((float)Physics.step);
-
                 if (respawnManager != null) respawnManager.Update(deltaTime);
 
                 bool isCrewDead =  
@@ -1336,7 +1336,6 @@ namespace Barotrauma.Networking
             }
             else if (log.LogFrame!=null)
             {
-                log.LogFrame.Update(0.016f);
                 log.LogFrame.Draw(spriteBatch);
             }
 

@@ -301,8 +301,8 @@ namespace Barotrauma.Particles
 
         public void UpdateDrawPos()
         {
-            drawPosition = Physics.Interpolate(prevPosition, position);
-            drawRotation = Physics.Interpolate(prevRotation, rotation);
+            drawPosition = Timing.Interpolate(prevPosition, position);
+            drawRotation = Timing.Interpolate(prevRotation, rotation);
 
             prevPosition = position;
             prevRotation = rotation;

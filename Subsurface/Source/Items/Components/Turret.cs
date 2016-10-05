@@ -366,7 +366,7 @@ namespace Barotrauma.Items.Components
 
                     break;
                 case "trigger_in":
-                    item.Use((float)Physics.step, null);
+                    item.Use((float)Timing.Step, null);
                     break;
             }
         }

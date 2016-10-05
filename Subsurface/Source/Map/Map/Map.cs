@@ -254,20 +254,18 @@ namespace Barotrauma
             currentLocation.Discovered = true;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect, float scale = 1.0f)
+        public void Update(float deltaTime, Rectangle rect, float scale = 1.0f)
         {
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
             Vector2 offset = -currentLocation.MapPosition;
 
-            iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, Color.White*0.8f);
-            
             float maxDist = 20.0f;
             float closestDist = 0.0f;
             highlightedLocation = null;
-            for (int i = 0; i < locations.Count;i++ )
+            for (int i = 0; i < locations.Count; i++)
             {
                 Location location = locations[i];
-                Vector2 pos = rectCenter + (location.MapPosition+offset) * scale;
+                Vector2 pos = rectCenter + (location.MapPosition + offset) * scale;
 
                 if (!rect.Contains(pos)) continue;
 
@@ -281,21 +279,30 @@ namespace Barotrauma
 
             foreach (LocationConnection connection in connections)
             {
-                Color crackColor = Color.White * Math.Max(connection.Difficulty/100.0f, 1.5f);
-
                 if (highlightedLocation != currentLocation &&
                     connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation))
                 {
-                    crackColor = Color.Red;
-
-                    if (PlayerInput.LeftButtonClicked()&&
+                    if (PlayerInput.LeftButtonClicked() &&
                         selectedLocation != highlightedLocation && highlightedLocation != null)
                     {
                         selectedConnection = connection;
-                        selectedLocation = highlightedLocation;    
-                        GameMain.LobbyScreen.SelectLocation(highlightedLocation, connection);                    
-                    } 
+                        selectedLocation = highlightedLocation;
+                        GameMain.LobbyScreen.SelectLocation(highlightedLocation, connection);
+                    }
                 }
+            }
+        }
+
+        public void Draw(SpriteBatch spriteBatch, Rectangle rect, float scale = 1.0f)
+        {
+            Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
+            Vector2 offset = -currentLocation.MapPosition;
+
+            iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, Color.White*0.8f);
+            
+            foreach (LocationConnection connection in connections)
+            {
+                Color crackColor = Color.White * Math.Max(connection.Difficulty/100.0f, 1.5f);
 
                 if (selectedLocation != currentLocation &&
                     (connection.Locations.Contains(selectedLocation) && connection.Locations.Contains(currentLocation)))

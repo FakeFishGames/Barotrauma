@@ -472,12 +472,12 @@ namespace Barotrauma
         {
             if (pauseMenuOpen)
             {
-                pauseMenu.Update(0.016f);
+                pauseMenu.Update(deltaTime);
             }
 
             if (settingsMenuOpen)
             {
-                GameMain.Config.SettingsFrame.Update(0.016f);
+                GameMain.Config.SettingsFrame.Update(deltaTime);
             }
 
             if (GUIMessageBox.MessageBoxes.Count > 0)
