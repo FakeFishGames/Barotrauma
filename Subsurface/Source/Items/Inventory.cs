@@ -237,7 +237,7 @@ namespace Barotrauma
         public virtual void Update(float deltaTime)
         {
             if (slots == null) CreateSlots();
-            
+
             for (int i = 0; i < capacity; i++)
             {
                 if (slots[i].Disabled) continue;
@@ -245,7 +245,8 @@ namespace Barotrauma
             }
 
 
-            if (draggingItem != null && !draggingSlot.Rect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)
+            if (draggingItem != null &&
+                (draggingSlot == null || (!draggingSlot.Rect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
             {
                 if (!PlayerInput.LeftButtonHeld())
                 {
@@ -276,9 +277,8 @@ namespace Barotrauma
                 DrawSlot(spriteBatch, slots[i], Items[i], drawItem);
             }
             
-            if (draggingItem != null && 
-                !draggingSlot.Rect.Contains(PlayerInput.MousePosition) && 
-                draggingItem.ParentInventory == this)
+            if (draggingItem != null &&
+                (draggingSlot == null || (!draggingSlot.Rect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
             {
                 Rectangle dragRect = new Rectangle(
                     (int)PlayerInput.MousePosition.X - 10,
