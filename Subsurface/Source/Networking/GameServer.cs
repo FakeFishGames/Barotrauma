@@ -907,12 +907,13 @@ namespace Barotrauma.Networking
 
             if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
             
-            for (int j = 1; j <= teamCount; j++)
+            for (int teamID = 1; teamID <= teamCount; teamID++)
             {
-                List<Client> teamClients = connectedClients.FindAll(c => c.TeamID == j);
-                if (!teamClients.Any() && j!=1) continue;
+                List<Client> teamClients = teamCount == 1 ? connectedClients : connectedClients.FindAll(c => c.TeamID == teamID);
 
-                AssignJobs(teamClients);
+                if (!teamClients.Any() && teamID > 1) continue;
+
+                AssignJobs(teamClients, teamID==1);
 
                 List<CharacterInfo> characterInfos = new List<CharacterInfo>();
 
@@ -929,13 +930,14 @@ namespace Barotrauma.Networking
                     client.characterInfo.Job = new Job(client.assignedJob);
                 }
 
-                if (characterInfo != null && j == 1)
+                //host's character
+                if (characterInfo != null && teamID == 1)
                 {
                     characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
                     characterInfos.Add(characterInfo);
                 }
 
-                WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[j - 1]);
+                WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[teamID - 1]);
 
                 for (int i = 0; i < teamClients.Count; i++)
                 {
@@ -945,17 +947,17 @@ namespace Barotrauma.Networking
 
                     GameMain.GameSession.CrewManager.characters.Add(teamClients[i].Character);
 
-                    teamClients[i].Character.TeamID = teamClients[i].TeamID;
+                    teamClients[i].Character.TeamID = (byte)teamID;
                 }
 
                 //host plays in team 1
-                if (characterInfo != null && j == 1)
+                if (characterInfo != null && teamID == 1)
                 {
-                    myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
-                    Character.Controlled = myCharacter;
-
+                    myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false); 
                     myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
+                    myCharacter.TeamID = (byte)teamID;
 
+                    Character.Controlled = myCharacter;
                     GameMain.GameSession.CrewManager.characters.Add(myCharacter);
                 }
             }
@@ -1781,13 +1783,13 @@ namespace Barotrauma.Networking
             SendMessage(message, NetDeliveryMethod.ReliableOrdered, recipients);
         }
 
-        public void AssignJobs(List<Client> unassigned)
+        public void AssignJobs(List<Client> unassigned, bool assignHost)
         {
             unassigned = new List<Client>(unassigned);
             
             int[] assignedClientCount = new int[JobPrefab.List.Count];
 
-            if (characterInfo!=null)
+            if (characterInfo!=null && assignHost)
             {
                 assignedClientCount[JobPrefab.List.FindIndex(jp => jp == GameMain.NetLobbyScreen.JobPreferences[0])]=1;
             }
