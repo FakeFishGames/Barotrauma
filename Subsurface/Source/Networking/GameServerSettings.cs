@@ -503,10 +503,14 @@ namespace Barotrauma.Networking
                 return true;
             };
 
+            var allitems = new List<MapEntityPrefab>();
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
                 if (category == MapEntityCategory.Machine || category == MapEntityCategory.Structure) continue;
-                var items = MapEntityPrefab.list.FindAll(ep => ep.Price > 0.0f && ep.Category.HasFlag(category));
+                var items = MapEntityPrefab.list.FindAll(ep => ep is ItemPrefab && (ep.Price > 0.0f || ep.tags.Contains("smallitem")) && ep.Category.HasFlag(category));
+                DebugConsole.NewMessage(category.ToString() + " " + items.Count.ToString(), Color.Lime);
+                items.RemoveAll(ep => allitems.Contains(ep));
+                allitems.AddRange(items);
                 foreach (MapEntityPrefab pf in items)
                 {
                     GUITextBlock textBlock = new GUITextBlock(
