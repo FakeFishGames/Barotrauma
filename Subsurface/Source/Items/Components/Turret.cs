@@ -347,6 +347,22 @@ namespace Barotrauma.Items.Components
 
             return projectiles;
         }
+
+        public override void FlipX()
+        {
+            minRotation = (float)Math.PI - minRotation;
+            maxRotation = (float)Math.PI - maxRotation;
+
+            var temp = minRotation;
+            minRotation = maxRotation;
+            maxRotation = temp;
+
+            while (minRotation < 0)
+            {
+                minRotation += MathHelper.TwoPi;
+                maxRotation += MathHelper.TwoPi;
+            }
+        }
         
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power)
         {

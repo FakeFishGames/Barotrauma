@@ -103,10 +103,13 @@ namespace Barotrauma.Items.Components
             return pingState > 1.0f;
         }
 
+        public override void UpdateHUD(Character character)
+        {
+            GuiFrame.Update((float)Timing.Step);
+        }
+
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-
-            GuiFrame.Update(1.0f / 60.0f);
             GuiFrame.Draw(spriteBatch);
 
             if (voltage < minVoltage && powerConsumption > 0.0f) return;
