@@ -185,11 +185,101 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateChildrenRect(float deltaTime)
+        {
+            int x = rect.X, y = rect.Y;
+
+            if (!scrollBarHidden)
+            {
+                if (scrollBar.IsHorizontal)
+                {
+                    x -= (int)((totalSize - rect.Width) * scrollBar.BarScroll);
+                }
+                else
+                {
+                    y -= (int)((totalSize - rect.Height) * scrollBar.BarScroll);
+                }
+            }
+
+            for (int i = 0; i < children.Count; i++)
+            {
+                GUIComponent child = children[i];
+                if (child == frame || !child.Visible) continue;
+
+                child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
+                if (scrollBar.IsHorizontal)
+                {
+                    x += child.Rect.Width + spacing;
+                }
+                else
+                {
+                    y += child.Rect.Height + spacing;
+                }
+
+
+                if (scrollBar.IsHorizontal)
+                {
+                    if (child.Rect.Right < rect.X) continue;
+                    if (child.Rect.Right > rect.Right) break;
+
+                    if (child.Rect.X < rect.X && child.Rect.Right >= rect.X)
+                    {
+                        x = rect.X;
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (child.Rect.Y + child.Rect.Height < rect.Y) continue;
+                    if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) break;
+
+                    if (child.Rect.Y < rect.Y && child.Rect.Y + child.Rect.Height >= rect.Y)
+                    {
+                        y = rect.Y;
+                        continue;
+                    }
+                }
+
+                if (deltaTime>0.0f) child.Update(deltaTime);
+                if (enabled && child.CanBeFocused &&
+                    (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
+                {
+                    child.State = ComponentState.Hover;
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        Debug.WriteLine("clicked");
+                        Select(i);
+                        //selected = child;
+                        //if (OnSelected != null)
+                        //{
+                        //    if (!OnSelected(selected, child.UserData)) selected = null;
+                        //}
+
+                    }
+                }
+                else if (selected.Contains(child))
+                {
+                    child.State = ComponentState.Selected;
+
+                    if (CheckSelected != null)
+                    {
+                        if (CheckSelected() != child.UserData) selected.Remove(child);
+                    }
+                }
+                else
+                {
+                    child.State = ComponentState.None;
+                }
+            }
+        }
+
         public override void Update(float deltaTime)
         {
             if (!Visible) return;
 
-            base.Update(deltaTime);
+            UpdateChildrenRect(deltaTime);
+            
+            //base.Update(deltaTime);
 
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.Update(deltaTime);
 
@@ -258,6 +348,7 @@ namespace Barotrauma
             //float oldScroll = scrollBar.BarScroll;
             //float oldSize = scrollBar.BarSize;
             UpdateScrollBarSize();
+            UpdateChildrenRect(0.0f);
 
             //if (oldSize == 1.0f && scrollBar.BarScroll == 0.0f) scrollBar.BarScroll = 1.0f;
 
@@ -325,7 +416,6 @@ namespace Barotrauma
                 GUIComponent child = children[i];
                 if (child == frame || !child.Visible) continue;
 
-                child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
                 if (scrollBar.IsHorizontal)
                 {
                     x += child.Rect.Width + spacing;
@@ -357,36 +447,6 @@ namespace Barotrauma
                         y = rect.Y;
                         continue;
                     }
-                }
-                
-                if (enabled && child.CanBeFocused &&
-                    (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
-                {
-                    child.State = ComponentState.Hover;
-                    if (PlayerInput.LeftButtonClicked())
-                    {
-                        Debug.WriteLine("clicked");
-                        Select(i);
-                        //selected = child;
-                        //if (OnSelected != null)
-                        //{
-                        //    if (!OnSelected(selected, child.UserData)) selected = null;
-                        //}
-
-                    }
-                }
-                else if (selected.Contains(child))
-                {
-                    child.State = ComponentState.Selected;
-
-                    if (CheckSelected != null)
-                    {
-                        if (CheckSelected() != child.UserData) selected.Remove(child);
-                    }
-                }
-                else
-                {
-                    child.State = ComponentState.None;
                 }
 
                 child.Draw(spriteBatch);

@@ -1,6 +1,8 @@
 ﻿using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -49,8 +51,9 @@ namespace Barotrauma
         {
             if (GameMain.Server != null)
             {
-                string tryKey = GameMain.Server.monsterNames.Find(s => characterFile.ToLower().Contains(s.ToLower()));
-                if (tryKey != null)
+                List<string> monsterNames = GameMain.Server.monsterEnabled.Keys.ToList();
+                string tryKey = monsterNames.Find(s => characterFile.ToLower().Contains(s.ToLower()));
+                if (!string.IsNullOrWhiteSpace(tryKey))
                 {
                     if (!GameMain.Server.monsterEnabled[tryKey]) return; //spawn was disallowed by host
                 }
