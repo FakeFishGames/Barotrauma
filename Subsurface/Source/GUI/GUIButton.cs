@@ -116,6 +116,20 @@ namespace Barotrauma
             }
         }
 
+        public override Rectangle Rect
+        {
+            get
+            {
+                return rect;
+            }
+            set
+            {
+                frame.Rect = new Rectangle(value.X, value.Y, frame.Rect.Width, frame.Rect.Height);
+                textBlock.Rect = value;
+                rect = value;
+            }
+        }
+
         public bool Selected { get; set; }
 
         public GUIButton(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null)

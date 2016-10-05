@@ -959,6 +959,26 @@ namespace Barotrauma.Networking
                     GameMain.GameSession.CrewManager.characters.Add(myCharacter);
                 }
             }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, sub);
+                var cargoRoom = cargoSpawnPos.CurrentHull;
+                Vector2 position = new Vector2(
+                    cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, false),
+                    cargoRoom.Rect.Y - cargoRoom.Rect.Height);
+                foreach (string s in extraCargo.Keys)
+                {
+                    ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == s) as ItemPrefab;
+                    for (int i = 0; i < extraCargo[s]; i++)
+                    {
+                        var item = new Item(itemPrefab, position, cargoRoom.Submarine);
+                        item.FindHull();
+
+                        Item.ItemList.Add(item);
+                    }
+                }
+            }
             
            
             var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);

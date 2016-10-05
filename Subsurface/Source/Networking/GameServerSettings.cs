@@ -45,9 +45,9 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-
-        public List<string> monsterNames;
+        
         public Dictionary<string, bool> monsterEnabled;
+        public Dictionary<string, int> extraCargo;
 
         public bool ShowNetStats;
 
@@ -258,7 +258,7 @@ namespace Barotrauma.Networking
 
             showLogButton.Visible = SaveServerLogs;
 
-            monsterNames = Directory.GetDirectories("Content/Characters").ToList();
+            List<string> monsterNames = Directory.GetDirectories("Content/Characters").ToList();
             for (int i=0;i<monsterNames.Count;i++)
             {
                 monsterNames[i] = monsterNames[i].Replace("Content/Characters", "").Replace("/", "").Replace("\\", "");
@@ -268,6 +268,7 @@ namespace Barotrauma.Networking
             {
                 monsterEnabled.Add(s, true);
             }
+            extraCargo = new Dictionary<string, int>();
         }
 
         private void CreateSettingsFrame()
@@ -448,9 +449,16 @@ namespace Barotrauma.Networking
             monsterButton.UserData = monsterFrame;
             monsterButton.OnClicked = (button, obj) =>
             {
+                if (gameStarted)
+                {
+                    ((GUIComponent)obj).Visible = false;
+                    button.Enabled = false;
+                    return true;
+                }
                 ((GUIComponent)obj).Visible = !((GUIComponent)obj).Visible;
                 return true;
             };
+            List<string> monsterNames = monsterEnabled.Keys.ToList();
             foreach (string s in monsterNames)
             {
                 GUITextBlock textBlock = new GUITextBlock(
@@ -466,13 +474,106 @@ namespace Barotrauma.Networking
                 monsterEnabledBox.Selected = monsterEnabled[s];
                 monsterEnabledBox.OnSelected = (GUITickBox) =>
                 {
+                    if (gameStarted)
+                    {
+                        monsterFrame.Visible = false;
+                        monsterButton.Enabled = false;
+                        return true;
+                    }
                     monsterEnabled[s] = !monsterEnabled[s];
                     return true;
                 };
             }
 
-                var cargoButton = new GUIButton(new Rectangle(160, y, 130, 20), "Additional Cargo", GUI.Style, settingsTabs[0]);
+            var cargoButton = new GUIButton(new Rectangle(160, y, 130, 20), "Additional Cargo", GUI.Style, settingsTabs[0]);
             cargoButton.Enabled = !GameStarted;
+
+            var cargoFrame = new GUIListBox(new Rectangle(300, 60, 280, 250), GUI.Style, settingsTabs[0]);
+            cargoFrame.Visible = false;
+            cargoButton.UserData = cargoFrame;
+            cargoButton.OnClicked = (button, obj) =>
+            {
+                if (gameStarted)
+                {
+                    ((GUIComponent)obj).Visible = false;
+                    button.Enabled = false;
+                    return true;
+                }
+                ((GUIComponent)obj).Visible = !((GUIComponent)obj).Visible;
+                return true;
+            };
+
+            foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
+            {
+                if (category == MapEntityCategory.Machine || category == MapEntityCategory.Structure) continue;
+                var items = MapEntityPrefab.list.FindAll(ep => ep.Price > 0.0f && ep.Category.HasFlag(category));
+                foreach (MapEntityPrefab pf in items)
+                {
+                    GUITextBlock textBlock = new GUITextBlock(
+                        new Rectangle(0, 0, 260, 25),
+                        pf.Name,
+                        GUI.Style,
+                        Alignment.Left, Alignment.Left, cargoFrame);
+                    textBlock.Padding = new Vector4(30.0f, 3.0f, 0.0f, 0.0f);
+                    textBlock.UserData = cargoFrame;
+                    textBlock.CanBeFocused = false;
+
+                    if (pf.sprite != null)
+                    {
+                        float scale = Math.Min(Math.Min(30.0f / pf.sprite.SourceRect.Width, 30.0f / pf.sprite.SourceRect.Height), 1.0f);
+                        GUIImage img = new GUIImage(new Rectangle(-15-(int)(pf.sprite.SourceRect.Width*scale*0.5f), 12-(int)(pf.sprite.SourceRect.Height*scale*0.5f), 40, 40), pf.sprite, Alignment.Left, textBlock);
+                        img.Color = pf.SpriteColor;
+                        img.Scale = scale;
+                    }
+
+                    int cargoVal = 0;
+                    extraCargo.TryGetValue(pf.Name, out cargoVal);
+                    var countText = new GUITextBlock(
+                        new Rectangle(180, 0, 50, 25),
+                        cargoVal.ToString(),
+                        GUI.Style,
+                        Alignment.Left, Alignment.Center, textBlock);
+
+                    var incButton = new GUIButton(new Rectangle(220, 5, 10, 15), ">", GUI.Style, textBlock);
+                    incButton.UserData = countText;
+                    incButton.OnClicked = (button, obj) =>
+                    {
+                        int val;
+                        if (extraCargo.TryGetValue(pf.Name, out val))
+                        {
+                            extraCargo[pf.Name]++; val = extraCargo[pf.Name];
+                        }
+                        else
+                        {
+                            extraCargo.Add(pf.Name,1); val = 1;
+                        }
+                        ((GUITextBlock)obj).Text = val.ToString();
+                        ((GUITextBlock)obj).SetTextPos();
+                        return true;
+                    };
+
+                    var decButton = new GUIButton(new Rectangle(180, 5, 10, 15), "<", GUI.Style, textBlock);
+                    decButton.UserData = countText;
+                    decButton.OnClicked = (button, obj) =>
+                    {
+                        int val;
+                        if (extraCargo.TryGetValue(pf.Name, out val))
+                        {
+                            extraCargo[pf.Name]--;
+                            val = extraCargo[pf.Name];
+                            if (val <= 0)
+                            {
+                                extraCargo.Remove(pf.Name);
+                                val = 0;
+                            }
+                            ((GUITextBlock)obj).Text = val.ToString();
+                            ((GUITextBlock)obj).SetTextPos();
+                        }
+                        
+                        return true;
+                    };
+                }
+            }
 
             //--------------------------------------------------------------------------------
             //                              server settings 
