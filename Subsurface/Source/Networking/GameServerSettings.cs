@@ -503,81 +503,76 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            var allitems = new List<MapEntityPrefab>();
-            foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
+
+            foreach (MapEntityPrefab pf in MapEntityPrefab.list)
             {
-                if (category == MapEntityCategory.Machine || category == MapEntityCategory.Structure) continue;
-                var items = MapEntityPrefab.list.FindAll(ep => ep is ItemPrefab && (ep.Price > 0.0f || ep.tags.Contains("smallitem")) && ep.Category.HasFlag(category));
-                DebugConsole.NewMessage(category.ToString() + " " + items.Count.ToString(), Color.Lime);
-                items.RemoveAll(ep => allitems.Contains(ep));
-                allitems.AddRange(items);
-                foreach (MapEntityPrefab pf in items)
+                if (pf.Price <= 0.0f) continue;
+
+                GUITextBlock textBlock = new GUITextBlock(
+                    new Rectangle(0, 0, 260, 25),
+                    pf.Name,
+                    GUI.Style,
+                    Alignment.Left, Alignment.Left, cargoFrame);
+                textBlock.Padding = new Vector4(30.0f, 3.0f, 0.0f, 0.0f);
+                textBlock.UserData = cargoFrame;
+                textBlock.CanBeFocused = false;
+
+                if (pf.sprite != null)
                 {
-                    GUITextBlock textBlock = new GUITextBlock(
-                        new Rectangle(0, 0, 260, 25),
-                        pf.Name,
-                        GUI.Style,
-                        Alignment.Left, Alignment.Left, cargoFrame);
-                    textBlock.Padding = new Vector4(30.0f, 3.0f, 0.0f, 0.0f);
-                    textBlock.UserData = cargoFrame;
-                    textBlock.CanBeFocused = false;
+                    float scale = Math.Min(Math.Min(30.0f / pf.sprite.SourceRect.Width, 30.0f / pf.sprite.SourceRect.Height), 1.0f);
+                    GUIImage img = new GUIImage(new Rectangle(-15-(int)(pf.sprite.SourceRect.Width*scale*0.5f), 12-(int)(pf.sprite.SourceRect.Height*scale*0.5f), 40, 40), pf.sprite, Alignment.Left, textBlock);
+                    img.Color = pf.SpriteColor;
+                    img.Scale = scale;
+                }
 
-                    if (pf.sprite != null)
+                int cargoVal = 0;
+                extraCargo.TryGetValue(pf.Name, out cargoVal);
+                var countText = new GUITextBlock(
+                    new Rectangle(180, 0, 50, 25),
+                    cargoVal.ToString(),
+                    GUI.Style,
+                    Alignment.Left, Alignment.Center, textBlock);
+
+                var incButton = new GUIButton(new Rectangle(220, 5, 10, 15), ">", GUI.Style, textBlock);
+                incButton.UserData = countText;
+                incButton.OnClicked = (button, obj) =>
+                {
+                    int val;
+                    if (extraCargo.TryGetValue(pf.Name, out val))
                     {
-                        float scale = Math.Min(Math.Min(30.0f / pf.sprite.SourceRect.Width, 30.0f / pf.sprite.SourceRect.Height), 1.0f);
-                        GUIImage img = new GUIImage(new Rectangle(-15-(int)(pf.sprite.SourceRect.Width*scale*0.5f), 12-(int)(pf.sprite.SourceRect.Height*scale*0.5f), 40, 40), pf.sprite, Alignment.Left, textBlock);
-                        img.Color = pf.SpriteColor;
-                        img.Scale = scale;
+                        extraCargo[pf.Name]++; val = extraCargo[pf.Name];
                     }
-
-                    int cargoVal = 0;
-                    extraCargo.TryGetValue(pf.Name, out cargoVal);
-                    var countText = new GUITextBlock(
-                        new Rectangle(180, 0, 50, 25),
-                        cargoVal.ToString(),
-                        GUI.Style,
-                        Alignment.Left, Alignment.Center, textBlock);
-
-                    var incButton = new GUIButton(new Rectangle(220, 5, 10, 15), ">", GUI.Style, textBlock);
-                    incButton.UserData = countText;
-                    incButton.OnClicked = (button, obj) =>
+                    else
                     {
-                        int val;
-                        if (extraCargo.TryGetValue(pf.Name, out val))
+                        extraCargo.Add(pf.Name,1); val = 1;
+                    }
+                    ((GUITextBlock)obj).Text = val.ToString();
+                    ((GUITextBlock)obj).SetTextPos();
+                    return true;
+                };
+
+                var decButton = new GUIButton(new Rectangle(180, 5, 10, 15), "<", GUI.Style, textBlock);
+                decButton.UserData = countText;
+                decButton.OnClicked = (button, obj) =>
+                {
+                    int val;
+                    if (extraCargo.TryGetValue(pf.Name, out val))
+                    {
+                        extraCargo[pf.Name]--;
+                        val = extraCargo[pf.Name];
+                        if (val <= 0)
                         {
-                            extraCargo[pf.Name]++; val = extraCargo[pf.Name];
-                        }
-                        else
-                        {
-                            extraCargo.Add(pf.Name,1); val = 1;
+                            extraCargo.Remove(pf.Name);
+                            val = 0;
                         }
                         ((GUITextBlock)obj).Text = val.ToString();
                         ((GUITextBlock)obj).SetTextPos();
-                        return true;
-                    };
-
-                    var decButton = new GUIButton(new Rectangle(180, 5, 10, 15), "<", GUI.Style, textBlock);
-                    decButton.UserData = countText;
-                    decButton.OnClicked = (button, obj) =>
-                    {
-                        int val;
-                        if (extraCargo.TryGetValue(pf.Name, out val))
-                        {
-                            extraCargo[pf.Name]--;
-                            val = extraCargo[pf.Name];
-                            if (val <= 0)
-                            {
-                                extraCargo.Remove(pf.Name);
-                                val = 0;
-                            }
-                            ((GUITextBlock)obj).Text = val.ToString();
-                            ((GUITextBlock)obj).SetTextPos();
-                        }
+                    }
                         
-                        return true;
-                    };
-                }
+                    return true;
+                };
             }
+            
 
             //--------------------------------------------------------------------------------
             //                              server settings 
