@@ -66,46 +66,48 @@ namespace Barotrauma
             int x = 0;
             foreach (Character character in gameSession.CrewManager.characters)
             {
-                if (singleplayer || character.TeamID == GameMain.GameSession.CrewManager.WinningTeam)
+                if (GameMain.GameSession.Mission is CombatMission && 
+                    character.TeamID != GameMain.GameSession.CrewManager.WinningTeam)
                 {
-                    var characterFrame = new GUIFrame(new Rectangle(x, y, 170, 70), Color.Transparent, GUI.Style, listBox);
-                    characterFrame.OutlineColor = Color.Transparent;
-                    characterFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                    characterFrame.CanBeFocused = false;
-
-                    character.Info.CreateCharacterFrame(characterFrame,
-                        character.Info.Job != null ? (character.Info.Name + '\n' + "(" + character.Info.Job.Name + ")") : character.Info.Name, null);
-
-
-                    string statusText = "OK";
-                    Color statusColor = Color.DarkGreen;
-
-                    if (character.IsDead)
-                    {
-                        statusText = InfoTextManager.GetInfoText("CauseOfDeath." + character.CauseOfDeath.ToString());
-                        statusColor = Color.DarkRed;
-                    }
-                    else
-                    {
-
-                        if (character.IsUnconscious)
-                        {
-                            statusText = "Unconscious";
-                            statusColor = Color.DarkOrange;
-                        }
-                        else if (character.Health / character.MaxHealth < 0.8f)
-                        {
-                            statusText = "Injured";
-                            statusColor = Color.DarkOrange;
-                        }
-
-                    }
-
-                    new GUITextBlock(new Rectangle(0, 0, 0, 20), statusText,
-                        GUI.Style, Alignment.BottomLeft, Alignment.TopCenter, characterFrame, true, GUI.SmallFont).Color = statusColor * 0.7f;
-
-                    x += characterFrame.Rect.Width + 10;
+                    continue;
                 }
+
+                var characterFrame = new GUIFrame(new Rectangle(x, y, 170, 70), Color.Transparent, GUI.Style, listBox);
+                characterFrame.OutlineColor = Color.Transparent;
+                characterFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                characterFrame.CanBeFocused = false;
+
+                character.Info.CreateCharacterFrame(characterFrame,
+                    character.Info.Job != null ? (character.Info.Name + '\n' + "(" + character.Info.Job.Name + ")") : character.Info.Name, null);
+                
+                string statusText = "OK";
+                Color statusColor = Color.DarkGreen;
+
+                if (character.IsDead)
+                {
+                    statusText = InfoTextManager.GetInfoText("CauseOfDeath." + character.CauseOfDeath.ToString());
+                    statusColor = Color.DarkRed;
+                }
+                else
+                {
+
+                    if (character.IsUnconscious)
+                    {
+                        statusText = "Unconscious";
+                        statusColor = Color.DarkOrange;
+                    }
+                    else if (character.Health / character.MaxHealth < 0.8f)
+                    {
+                        statusText = "Injured";
+                        statusColor = Color.DarkOrange;
+                    }
+
+                }
+
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), statusText,
+                    GUI.Style, Alignment.BottomLeft, Alignment.TopCenter, characterFrame, true, GUI.SmallFont).Color = statusColor * 0.7f;
+
+                x += characterFrame.Rect.Width + 10;                
             }
 
             y += 120;
