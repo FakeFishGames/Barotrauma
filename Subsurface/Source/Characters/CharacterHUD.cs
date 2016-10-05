@@ -46,6 +46,19 @@ namespace Barotrauma
             if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
 
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
+
+            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            {
+                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                {
+                    character.Inventory.Update(deltaTime);
+                }
+
+                if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                {
+                    character.SelectedCharacter.Inventory.Update(deltaTime);
+                }
+            }
         }
 
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
@@ -84,12 +97,15 @@ namespace Barotrauma
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-                if (character.Inventory != null && !character.LockHands &&
-                    character.Stun >= -0.1f) character.Inventory.DrawOwn(spriteBatch, Vector2.Zero);
+                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                {
+                    character.Inventory.DrawOwn(spriteBatch);
+                }
 
                 if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    character.SelectedCharacter.Inventory.DrawOwn(spriteBatch, new Vector2(320.0f, 0.0f));
+                    character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f, 0.0f);
+                    character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
 
                     if (cprButton == null)
                     {
