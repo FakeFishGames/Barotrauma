@@ -217,6 +217,24 @@ namespace Barotrauma
             if (flashTimer > 0.0f) flashTimer -= deltaTime;
             if (!Enabled) return;
             
+            if (rect.Contains(PlayerInput.MousePosition) && Enabled &&
+                (MouseOn == null || MouseOn == this || IsParentOf(MouseOn) || MouseOn.IsParentOf(this)))
+            {
+
+                state = ComponentState.Hover;
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    Select();
+                    if (OnSelected != null) OnSelected(this, Keys.None);
+                }
+            }
+            else
+            {
+                state = ComponentState.None;
+            }
+
+            textBlock.State = state;
+            
             if (CaretEnabled)
             {
                 caretTimer += deltaTime;
@@ -248,24 +266,6 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            if (rect.Contains(PlayerInput.MousePosition) && Enabled &&
-                (MouseOn == null || MouseOn == this || IsParentOf(MouseOn) || MouseOn.IsParentOf(this)))
-            {
-
-                state = ComponentState.Hover;
-                if (PlayerInput.LeftButtonClicked())
-                {
-                    Select();
-                    if (OnSelected != null) OnSelected(this, Keys.None);
-                }
-            }
-            else
-            {
-                state = ComponentState.None;
-            }
-
-            textBlock.State = state;
-
             DrawChildren(spriteBatch);
 
             if (!CaretEnabled) return;
@@ -279,7 +279,6 @@ namespace Barotrauma
                     new Vector2((int)caretPos.X + 2, caretPos.Y + Font.MeasureString("I").Y - 3),
                     textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
             }
-
         }
 
         public void ReceiveTextInput(char inputChar)

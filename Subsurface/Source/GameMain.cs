@@ -72,7 +72,6 @@ namespace Barotrauma
         private bool hasLoaded;
 
         private GameTime fixedTime;
-        private double updatesToMake;
 
         //public static Random localRandom;
         //public static Random random;
@@ -142,7 +141,7 @@ namespace Barotrauma
             IsFixedTimeStep = false;
             //TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 55);
 
-            updatesToMake = 0.0;
+            Timing.Accumulator = 0.0f;
             fixedTime = new GameTime();
 
             World = new World(new Vector2(0, -9.82f));
@@ -291,51 +290,59 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            double realDeltaTime = gameTime.ElapsedGameTime.TotalSeconds;
-            double deltaTime = 0.016;
-            updatesToMake += realDeltaTime;
+            Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
 
-            while (updatesToMake > 0.0)
+            while (Timing.Accumulator >= Timing.Step)
             {
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
                 fixedTime.ElapsedGameTime = addTime;
                 fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
-                
-                PlayerInput.Update(deltaTime);
+
+                PlayerInput.Update(Timing.Step);
 
                 bool paused = false;
 
-                if (hasLoaded && !titleScreenOpen)
+                if (titleScreenOpen)
+                {
+                    if (TitleScreen.LoadState >= 100.0f && 
+                        (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
+                    {
+                        titleScreenOpen = false;
+                    }
+                }
+                else if (hasLoaded)
                 {
                     SoundPlayer.Update();
 
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
-                    DebugConsole.Update(this, (float)deltaTime);
+                    DebugConsole.Update(this, (float)Timing.Step);
 
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
-
-                    if (!paused) Screen.Selected.Update(deltaTime);
+                    
+                    if (!paused)
+                    {
+                        Screen.Selected.Update(Timing.Step);
+                    }
 
                     if (NetworkMember != null)
                     {
-                        NetworkMember.Update((float)deltaTime);
-                    }
-                    else
-                    {
-                        NetworkEvent.Events.Clear();
+                        NetworkMember.Update((float)Timing.Step);
                     }
 
-                    GUI.Update((float)deltaTime);
+                    GUI.Update((float)Timing.Step);
                 }
+                
 
-                CoroutineManager.Update((float)deltaTime, paused ? 0.0f : (float)deltaTime);
+                CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
-                updatesToMake -= deltaTime;
+                Timing.Accumulator -= Timing.Step;
             }
+
+            Timing.Alpha = Timing.Accumulator / Timing.Step;
         }
 
 
@@ -344,8 +351,6 @@ namespace Barotrauma
         /// </summary>
         protected override void Draw(GameTime gameTime)
         {
-            //renderTimer.Restart();
-
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
             FrameCounter.Update(deltaTime);
@@ -353,22 +358,11 @@ namespace Barotrauma
             if (titleScreenOpen)
             {
                 TitleScreen.Draw(spriteBatch, GraphicsDevice, (float)deltaTime);
-                if (TitleScreen.LoadState>=100.0f && 
-                    (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
-                {
-                    titleScreenOpen = false;
-                }
             }
             else if (hasLoaded)
             {
                 Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
             }
-
-            //double elapsed = sw.Elapsed.TotalSeconds;
-            //if (elapsed < Physics.step)
-            //{
-            //    System.Threading.Thread.Sleep((int)((Physics.step - elapsed) * 1000.0));
-            //}
         }
 
         static bool waitForKeyHit = true;

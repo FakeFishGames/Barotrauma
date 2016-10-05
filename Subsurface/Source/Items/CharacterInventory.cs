@@ -278,12 +278,43 @@ namespace Barotrauma
             
             return TryPutItem(item, new List<InvSlotType>() {placeToSlots}, createNetworkEvent);
         }
-         
-        public void DrawOwn(SpriteBatch spriteBatch, Vector2 offset)
-        {
-            string toolTip = "";
-            Rectangle highlightedSlot = Rectangle.Empty;
 
+        protected override void PutItem(Item item, int i, bool createNetworkEvent, bool removeItem = true)
+        {
+            base.PutItem(item, i, createNetworkEvent, removeItem);
+            CreateSlots();
+        }
+
+        public override void RemoveItem(Item item)
+        {
+            base.RemoveItem(item);
+            CreateSlots();
+        }
+
+        protected override void CreateSlots()
+        {
+            slots = new InventorySlot[capacity];
+
+            int rectWidth = 40, rectHeight = 40;
+            
+            Rectangle slotRect = new Rectangle(0, 0, rectWidth, rectHeight);
+            for (int i = 0; i < capacity; i++)
+            {
+                slotRect.X = (int)(SlotPositions[i].X + DrawOffset.X);
+                slotRect.Y = (int)(SlotPositions[i].Y + DrawOffset.Y);
+
+                slots[i] = new InventorySlot(slotRect);
+
+                slots[i].Color = limbSlots[i] == InvSlotType.Any ? Color.White * 0.2f : Color.White * 0.4f;
+            }
+
+            MergeSlots();
+        }
+
+        public override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+            
             if (doubleClickedItem != null)
             {
                 if (doubleClickedItem.ParentInventory != this)
@@ -309,7 +340,7 @@ namespace Barotrauma
                         //not equipped -> attempt to equip
                         if (IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
                         {
-                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);                            
+                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);
                         }
                         //equipped -> attempt to unequip
                         else if (doubleClickedItem.AllowedSlots.Contains(InvSlotType.Any))
@@ -319,17 +350,77 @@ namespace Barotrauma
                     }
                 }
             }
+            
+            if (selectedSlot > -1)
+            {
+                UpdateSubInventory(deltaTime, selectedSlot);
+            }
+
+            if (character == Character.Controlled)
+            {
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (selectedSlot != i &&
+                        Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
+                    {
+                        //-3 because selected items are in slots 3 and 4 (hands)
+                        useOnSelfButton[i - 3].Update(deltaTime);
+                    }
+                }
+            }
+
+            //cancel dragging if too far away from the container of the dragged item
+            if (draggingItem != null)
+            {
+                var rootContainer = draggingItem.GetRootContainer();
+                var rootInventory = draggingItem.ParentInventory;
+
+                if (rootContainer != null)
+                {
+                    rootInventory = rootContainer.ParentInventory != null ?
+                        rootContainer.ParentInventory : rootContainer.GetComponent<Items.Components.ItemContainer>().Inventory;
+                }
+
+                if (rootInventory != null &&
+                    rootInventory.Owner != Character.Controlled &&
+                    rootInventory.Owner != Character.Controlled.SelectedConstruction &&
+                    rootInventory.Owner != Character.Controlled.SelectedCharacter)
+                {
+                    draggingItem = null;
+                }
+            }
+
 
             doubleClickedItem = null;
+        }
 
-            const int rectWidth = 40, rectHeight = 40;
-            Rectangle slotRect = new Rectangle(0, 0, rectWidth, rectHeight);
-            Rectangle draggingItemSlot = slotRect;
+        private void MergeSlots()
+        {
+            for (int i = 0; i < capacity-1; i++)
+            {
+                if (slots[i].Disabled || Items[i] == null) continue;
+                
+                for (int n = i+1; n < capacity; n++)
+                {
+                    if (Items[n] == Items[i])
+                    {
+                        slots[i].Rect = Rectangle.Union(slots[i].Rect, slots[n].Rect);
+                        slots[n].Disabled = true;
+                    }
+                }               
+            }
+        }
+                 
+        public void DrawOwn(SpriteBatch spriteBatch)
+        {
+            if (slots == null) CreateSlots();
+
+            Rectangle slotRect = new Rectangle(0, 0, 40, 40);
 
             for (int i = 0; i < capacity; i++)
             {
-                slotRect.X = (int)(SlotPositions[i].X + offset.X);
-                slotRect.Y = (int)(SlotPositions[i].Y + offset.Y);
+                slotRect.X = (int)(SlotPositions[i].X + DrawOffset.X);
+                slotRect.Y = (int)(SlotPositions[i].Y + DrawOffset.Y);
 
                 if (i==1) //head
                 {
@@ -353,149 +444,31 @@ namespace Barotrauma
                         SpriteEffects.None, 0.1f);
                 }
             }
+
+            base.Draw(spriteBatch);
             
-            for (int i = 0; i < capacity; i++)
+            if (character == Character.Controlled)
             {
-                slotRect.X = (int)(SlotPositions[i].X + offset.X);
-                slotRect.Y = (int)(SlotPositions[i].Y + offset.Y);
-
-                bool multiSlot = false;
-                //skip if the item is in multiple slots
-                if (Items[i]!=null)
-                {                    
-                    for (int n = 0; n < capacity; n++ )
-                    {
-                        if (i==n || Items[n] != Items[i]) continue;
-                        multiSlot = true;
-                        break;
-                    }
-                }
-
-
-                if (multiSlot) continue;
-
-                if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition) && (selectedSlot == -1 || selectedSlot == i))
+                for (int i = 0; i < capacity; i++)
                 {
-                    if (GameMain.DebugDraw)
+                    if (selectedSlot != i &&
+                        Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
                     {
-                        toolTip = Items[i].ToString();
+                        useOnSelfButton[i - 3].Draw(spriteBatch);
                     }
-                    else
-                    {
-                        toolTip = string.IsNullOrEmpty(Items[i].Description) ? Items[i].Name : Items[i].Name + '\n' + Items[i].Description;                   
-                    }
-
-                    highlightedSlot = slotRect;
-                }
-
-                if (selectedSlot == i) highlightedSlot = slotRect;
-
-                UpdateSlot(spriteBatch, slotRect, i, Items[i], false, i>5 ? 0.2f : 0.4f);
-                
-                if (draggingItem!=null && draggingItem == Items[i]) draggingItemSlot = slotRect;
-            }
-
-
-            for (int i = 0; i < capacity; i++)
-            {
-                bool multiSlot = false;
-
-                //check if the item is in multiple slots
-                if (Items[i] != null)
-                {
-                    slotRect.X = (int)(SlotPositions[i].X + offset.X);
-                    slotRect.Y = (int)(SlotPositions[i].Y + offset.Y);
-                    slotRect.Width = 40;
-                    slotRect.Height = 40;
-
-                    for (int n = 0; n < capacity; n++)
-                    {
-                        if (Items[n] != Items[i]) continue;
-
-                        if (!multiSlot && i > n) break;
-                        
-                        if (i!=n)
-                        {
-                            multiSlot = true;
-                            slotRect = Rectangle.Union(
-                                new Rectangle((int)(SlotPositions[n].X+offset.X), (int)(SlotPositions[n].Y+offset.Y), rectWidth, rectHeight), slotRect);
-                        }
-                    }
-                }
-
-
-
-                if (multiSlot)
-                {
-                    if (Items[i] != null && slotRect.Contains(PlayerInput.MousePosition) && (selectedSlot==-1 || selectedSlot==i))
-                    {
-                        toolTip = string.IsNullOrEmpty(Items[i].Description) ? Items[i].Name : Items[i].Name + '\n' + Items[i].Description;
-                        highlightedSlot = slotRect;
-                    }
-
-                    if (selectedSlot == i) highlightedSlot = slotRect;
- 
-                    UpdateSlot(spriteBatch, slotRect, i, Items[i], i > 4);               
-                }
-
-
-                if (character==Character.Controlled && selectedSlot != i &&
-                    Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
-                {
-                    useOnSelfButton[i - 3].Update(0.016f);
-                    useOnSelfButton[i - 3].Draw(spriteBatch);
                 }
             }
 
             if (selectedSlot > -1)
             {
-                DrawSubInventory(spriteBatch, highlightedSlot, selectedSlot);
-            }
+                DrawSubInventory(spriteBatch, selectedSlot);
 
-            slotRect.Width = rectWidth;
-            slotRect.Height = rectHeight;
-
-            if (!string.IsNullOrWhiteSpace(toolTip))
-            {
-                DrawToolTip(spriteBatch, toolTip, highlightedSlot);
-            }
-
-            if (draggingItem == null) return;
-
-            var rootContainer = draggingItem.GetRootContainer();
-            var rootInventory = draggingItem.ParentInventory;
-
-            if (rootContainer != null)
-            {
-                rootInventory = rootContainer.ParentInventory != null ? 
-                    rootContainer.ParentInventory : rootContainer.GetComponent<Items.Components.ItemContainer>().Inventory; 
-            }
-
-            if (rootInventory != null &&
-                rootInventory.Owner != Character.Controlled &&
-                rootInventory.Owner != Character.Controlled.SelectedConstruction &&
-                rootInventory.Owner != Character.Controlled.SelectedCharacter)
-            {
-                draggingItem = null;
-                return;
-            }
-
-            if (!draggingItemSlot.Contains(PlayerInput.MousePosition))
-            {
-                if (PlayerInput.LeftButtonHeld())
+                if (selectedSlot > -1 && 
+                    !slots[selectedSlot].IsHighlighted &&
+                    (draggingItem == null || draggingItem.Container != Items[selectedSlot]))
                 {
-                    slotRect.X = (int)PlayerInput.MousePosition.X - slotRect.Width / 2;
-                    slotRect.Y = (int)PlayerInput.MousePosition.Y - slotRect.Height / 2;
-
-                    DrawSlot(spriteBatch, slotRect, draggingItem, false, false);
+                    selectedSlot = -1;
                 }
-                else
-                {                    
-                    DropItem(draggingItem);
-
-                    new NetworkEvent(NetworkEventType.DropItem, draggingItem.ID, true);
-                    //draggingItem = null;
-                }                    
             }
         }
 
