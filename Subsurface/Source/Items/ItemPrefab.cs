@@ -277,6 +277,9 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
 
+            tags = new List<string>();
+            tags.AddRange(ToolBox.GetAttributeString(element, "tags", "").Split(','));
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())

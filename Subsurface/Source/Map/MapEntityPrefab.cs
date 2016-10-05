@@ -18,7 +18,9 @@ namespace Barotrauma
         public static List<MapEntityPrefab> list = new List<MapEntityPrefab>();
 
         protected string name;
-        
+
+        public List<string> tags;
+
         protected bool isLinkable;
 
         public Sprite sprite;
