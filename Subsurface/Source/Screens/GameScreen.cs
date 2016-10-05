@@ -154,6 +154,14 @@ namespace Barotrauma
             }
                 
             GameMain.World.Step((float)deltaTime);
+
+
+            if (!PlayerInput.LeftButtonHeld())
+            {
+                Inventory.draggingSlot = null;
+                Inventory.draggingItem = null;
+            }
+
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -188,8 +196,6 @@ namespace Barotrauma
             
             GUI.Draw((float)deltaTime, spriteBatch, cam);
                         
-            if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
-
             spriteBatch.End();
         }
 
