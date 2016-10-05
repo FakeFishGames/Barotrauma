@@ -506,7 +506,7 @@ namespace Barotrauma.Networking
 
             foreach (MapEntityPrefab pf in MapEntityPrefab.list)
             {
-                if (pf.Price <= 0.0f) continue;
+                if (!(pf is ItemPrefab) || (pf.Price <= 0.0f && !pf.tags.Contains("smallitem"))) continue;
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 260, 25),
