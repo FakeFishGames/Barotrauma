@@ -16,6 +16,8 @@ namespace Barotrauma
 
         private bool spawnDeep;
 
+        private bool disallowed;
+        
         private Level.PositionType spawnPosType;
 
         public override string ToString()
@@ -40,6 +42,16 @@ namespace Barotrauma
             }
 
             spawnDeep = ToolBox.GetAttributeBool(element, "spawndeep", false);
+
+            if (GameMain.Server != null)
+            {
+                List<string> monsterNames = GameMain.Server.monsterEnabled.Keys.ToList();
+                string tryKey = monsterNames.Find(s => characterFile.ToLower().Contains(s.ToLower()));
+                if (!string.IsNullOrWhiteSpace(tryKey))
+                {
+                    if (!GameMain.Server.monsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
+                }
+            }
         }
 
         protected override void Start()
@@ -49,15 +61,7 @@ namespace Barotrauma
 
         private void SpawnMonsters()
         {
-            if (GameMain.Server != null)
-            {
-                List<string> monsterNames = GameMain.Server.monsterEnabled.Keys.ToList();
-                string tryKey = monsterNames.Find(s => characterFile.ToLower().Contains(s.ToLower()));
-                if (!string.IsNullOrWhiteSpace(tryKey))
-                {
-                    if (!GameMain.Server.monsterEnabled[tryKey]) return; //spawn was disallowed by host
-                }
-            }
+            if (disallowed) return;
 
             float minDist = Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
 
@@ -90,6 +94,11 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            if (disallowed)
+            {
+                Finished();
+                return;
+            }
             if (monsters == null) SpawnMonsters();
 
             //base.Update(deltaTime);
