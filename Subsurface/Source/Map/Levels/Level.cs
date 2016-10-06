@@ -757,7 +757,7 @@ namespace Barotrauma
             int tries = 0;
             do
             {
-                Vector2 startPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType);
+                Vector2 startPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType, true);
 
                 startPos += Rand.Vector(Rand.Range(0.0f, randomSpread, false), false);
                 
