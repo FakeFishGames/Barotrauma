@@ -9,26 +9,30 @@ namespace Barotrauma
 {
     class CombatMission : Mission
     {
-        public Submarine TeamASub = null;
-        public List<Character> TeamACrew = new List<Character>();
-        public Submarine TeamBSub = null;
-        public List<Character> TeamBCrew = new List<Character>();
+        private Submarine[] subs;
+        private List<Character>[] crews;
 
-        int state = 0;
-        string winner, loser;
+        private int state = 0;
+        private int winner = -1;
 
         public override string SuccessMessage
         {
-            get { return successMessage.Replace("[loser]",loser).Replace("[winner]",winner); }
+            get 
+            {
+                if (winner == -1) return "";
+
+                return successMessage
+                    .Replace("[loser]", Locations[1 - winner]
+                    .Replace("[winner]", Locations[winner])); 
+            }
         }
 
         public CombatMission(XElement element)
             : base(element)
         {
-            
         }
 
-        public override bool AssignTeamIDs(List<Client> clients,out int hostTeam)
+        public override bool AssignTeamIDs(List<Client> clients, out int hostTeam)
         {
             List<Client> randList = new List<Client>(clients);
             for (int i = 0; i < randList.Count; i++)
@@ -51,11 +55,11 @@ namespace Barotrauma
                     randList[i].TeamID = 2;
                 }
             }
-            if (halfPlayers*2==randList.Count)
+            if (halfPlayers * 2 == randList.Count)
             {
                 hostTeam = Rand.Range(1, 2);
             }
-            else if (halfPlayers*2<randList.Count)
+            else if (halfPlayers * 2 < randList.Count)
             {
                 hostTeam = 1;
             }
@@ -82,10 +86,12 @@ namespace Barotrauma
 
             Items.Components.Radar.StartMarker = Locations[0];
             Items.Components.Radar.EndMarker = Locations[1];
-            TeamASub = Submarine.MainSubs[0];
-            TeamBSub = Submarine.MainSubs[1];
-            TeamBSub.SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
-            TeamBSub.FlipX();
+
+            subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
+            subs[1].SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
+            subs[1].FlipX();
+
+            crews = new List<Character>[] { new List<Character>(), new List<Character>() };
 
             foreach (Submarine submarine in Submarine.Loaded)
             {
@@ -96,7 +102,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (TeamACrew.Count == 0 && TeamBCrew.Count == 0)
+            if (crews[0].Count == 0 && crews[1].Count == 0)
             {
                 if (GameMain.Server != null)
                 {
@@ -107,57 +113,45 @@ namespace Barotrauma
                 {
                     if (character.TeamID == 1)
                     {
-                        TeamACrew.Add(character);
+                        crews[0].Add(character);
                     }
                     else if (character.TeamID == 2)
                     {
-                        TeamBCrew.Add(character);
+                        crews[1].Add(character);
                     }
                 }
             }
-
-            bool ADead = TeamACrew.All(c => c.IsDead || c.IsUnconscious);
-            bool BDead = TeamBCrew.All(c => c.IsDead || c.IsUnconscious);
-
-            if (BDead && !ADead)
-            {
-                TeamBCrew.ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeath.Damage); }); //make sure nobody in this team can be revived because that would be pretty weird
-                winner = Locations[0];
-                loser = Locations[1];
-                if (state==0)
-                {
-                    ShowMessage(1);
-                    state = 1;
-                }
-            }
-            if (ADead && !BDead)
-            {
-                TeamACrew.ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeath.Damage); }); //same as above
-                winner = Locations[1];
-                loser = Locations[0];
-                if (state == 0)
-                {
-                    ShowMessage(0);
-                    state = 1;
-                }
-            }
             
-            if ((TeamBSub != null && TeamBSub.AtEndPosition && TeamBCrew.Any(c => c.Submarine == TeamBSub)) || (TeamASub != null && TeamASub.AtEndPosition && TeamBCrew.Any(c => c.Submarine == TeamASub)))
+            if (state == 0)
             {
-                if (ADead && !BDead)
+                bool[] teamDead = 
+                { 
+                    crews[0].All(c => c.IsDead || c.IsUnconscious),
+                    crews[1].All(c => c.IsDead || c.IsUnconscious)
+                };
+
+                for (int i = 0; i < teamDead.Length; i++)
                 {
-                    //team B wins!
-                    GameMain.GameSession.CrewManager.WinningTeam = 2;
-                    if (GameMain.Server!=null) GameMain.Server.EndGame();
+                    if (!teamDead[i] && teamDead[1-i])
+                    {
+                        //make sure nobody in the other team can be revived because that would be pretty weird
+                        crews[1-i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeath.Damage); });
+
+                        winner = i;
+
+                        ShowMessage(i);
+                        state = 1;
+                        break;
+                    }
                 }
             }
-
-            if ((TeamASub != null && TeamASub.AtStartPosition && TeamACrew.Any(c => c.Submarine == TeamASub)) || (TeamBSub != null && TeamBSub.AtStartPosition && TeamACrew.Any(c => c.Submarine == TeamBSub)))
+            else
             {
-                if (BDead && !ADead)
+                if (subs[winner] != null && 
+                    (winner == 0 && subs[winner].AtStartPosition) || (winner == 1 && subs[winner].AtEndPosition) &&
+                    crews[winner].Any(c => !c.IsDead && c.Submarine == subs[winner]))
                 {
-                    //team A wins!
-                    GameMain.GameSession.CrewManager.WinningTeam = 1;
+                    GameMain.GameSession.CrewManager.WinningTeam = winner+1;
                     if (GameMain.Server != null) GameMain.Server.EndGame();
                 }
             }
@@ -165,42 +159,12 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (GameMain.NetworkMember==null) return;            
-
-            bool ADead = TeamACrew.All(c => c.IsDead || c.IsUnconscious);
-            bool BDead = TeamBCrew.All(c => c.IsDead || c.IsUnconscious);
-
-            if (BDead && !ADead)
+            if (GameMain.NetworkMember == null) return;            
+            
+            if (winner > -1)
             {
-                winner = Locations[0];
-                loser = Locations[1];
-            }
-            if (ADead && !BDead)
-            {
-                winner = Locations[1];
-                loser = Locations[0];
-            }
-
-            if ((TeamBSub != null && TeamBSub.AtEndPosition) || (TeamASub != null && TeamASub.AtEndPosition))
-            {
-                if (ADead && !BDead)
-                {
-                    //team B wins!
-                    GiveReward();
-
-                    completed = true;
-                }
-            }
-
-            if ((TeamASub != null && TeamASub.AtStartPosition) || (TeamBSub != null && TeamBSub.AtStartPosition))
-            {
-                if (BDead && !ADead)
-                {
-                    //team A wins!
-                    GiveReward();
-
-                    completed = true;
-                }
+                GiveReward();
+                completed = true;
             }
         }
     }
