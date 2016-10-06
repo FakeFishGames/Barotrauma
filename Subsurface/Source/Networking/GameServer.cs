@@ -892,8 +892,9 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Running;
 
             int teamCount = 1;
+            int hostTeam = 1;
             if (GameMain.GameSession.gameMode.Mission != null && 
-                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients))
+                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
             {
                 teamCount = 2;
             }
@@ -913,7 +914,7 @@ namespace Barotrauma.Networking
 
                 if (!teamClients.Any() && teamID > 1) continue;
 
-                AssignJobs(teamClients, teamID==1);
+                AssignJobs(teamClients, teamID==hostTeam);
 
                 List<CharacterInfo> characterInfos = new List<CharacterInfo>();
 
@@ -931,7 +932,7 @@ namespace Barotrauma.Networking
                 }
 
                 //host's character
-                if (characterInfo != null && teamID == 1)
+                if (characterInfo != null && teamID == hostTeam)
                 {
                     characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
                     characterInfos.Add(characterInfo);
@@ -951,7 +952,7 @@ namespace Barotrauma.Networking
                 }
 
                 //host plays in team 1
-                if (characterInfo != null && teamID == 1)
+                if (characterInfo != null && teamID == hostTeam)
                 {
                     myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false); 
                     myCharacter.GiveJobItems(assignedWayPoints[assignedWayPoints.Length - 1]);
