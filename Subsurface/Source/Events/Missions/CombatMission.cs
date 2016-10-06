@@ -15,6 +15,26 @@ namespace Barotrauma
         private int state = 0;
         private int winner = -1;
 
+        private string[] descriptions;
+
+        private static string[] teamNames;
+
+        public override string Description
+        {
+            get
+            {
+                if (GameMain.NetworkMember==null || GameMain.NetworkMember.Character==null)
+                {
+                    //non-team-specific description
+                    return descriptions[0];
+                }
+
+                //team specific
+                return descriptions[GameMain.NetworkMember.Character.TeamID];
+            }
+        }
+
+
         public override string SuccessMessage
         {
             get 
@@ -22,14 +42,47 @@ namespace Barotrauma
                 if (winner == -1) return "";
 
                 return successMessage
-                    .Replace("[loser]", Locations[1 - winner]
-                    .Replace("[winner]", Locations[winner])); 
+                    .Replace("[loser]", teamNames[1 - winner])
+                    .Replace("[winner]", teamNames[winner]); 
             }
         }
 
-        public CombatMission(XElement element)
-            : base(element)
+        public CombatMission(XElement element, Location[] locations)
+            : base(element, locations)
         {
+            descriptions = new string[]
+            {
+                ToolBox.GetAttributeString(element, "descriptionneutral", ""),
+                ToolBox.GetAttributeString(element, "description1", ""),
+                ToolBox.GetAttributeString(element, "description2", "")
+            };
+
+            for (int i = 0; i < descriptions.Length; i++ )
+            {
+                for (int n = 0; n < 2;n++ )
+                {
+                    descriptions[i] = descriptions[i].Replace("[location" + (n + 1) + "]", Locations[n]);
+                }
+            }
+
+            teamNames = new string[]
+            {
+                ToolBox.GetAttributeString(element, "teamname1", "Team A"),
+                ToolBox.GetAttributeString(element, "teamname2", "Team B")
+            };            
+        }
+
+        public static string GetTeamName(int teamID)
+        {
+            //team IDs start from 1, while teamName array starts from 0
+            teamID--;
+
+            if (teamID < 0 || teamID >= teamNames.Length)
+            {
+                return "Team " + teamID;
+            }
+
+            return teamNames[teamID];
         }
 
         public override bool AssignTeamIDs(List<Client> clients, out int hostTeam)
@@ -111,6 +164,15 @@ namespace Barotrauma
 
                 foreach (Character character in Character.CharacterList)
                 {
+                    if (GameMain.NetworkMember != null && character == GameMain.NetworkMember.Character)
+                    {
+                        //ugly hack to switch the text in the mission popup to the team-specific description
+                        if (GUIMessageBox.MessageBoxes.Count > 0 && GUIMessageBox.MessageBoxes.Peek().UserData as string == "missionstartmessage")
+                        {
+                            (GUIMessageBox.MessageBoxes.Peek() as GUIMessageBox).Text = Description;
+                        }
+                    }
+
                     if (character.TeamID == 1)
                     {
                         crews[0].Add(character);
@@ -122,14 +184,14 @@ namespace Barotrauma
                 }
             }
             
+            bool[] teamDead = 
+            { 
+                crews[0].All(c => c.IsDead || c.IsUnconscious),
+                crews[1].All(c => c.IsDead || c.IsUnconscious)
+            };
+
             if (state == 0)
             {
-                bool[] teamDead = 
-                { 
-                    crews[0].All(c => c.IsDead || c.IsUnconscious),
-                    crews[1].All(c => c.IsDead || c.IsUnconscious)
-                };
-
                 for (int i = 0; i < teamDead.Length; i++)
                 {
                     if (!teamDead[i] && teamDead[1-i])
@@ -154,6 +216,11 @@ namespace Barotrauma
                     GameMain.GameSession.CrewManager.WinningTeam = winner+1;
                     if (GameMain.Server != null) GameMain.Server.EndGame();
                 }
+            }
+
+            if (teamDead[0] && teamDead[1])
+            {
+                if (GameMain.Server != null) GameMain.Server.EndGame();
             }
         }
 

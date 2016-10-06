@@ -35,7 +35,8 @@ namespace Barotrauma
 
             if (mission == null) return;
 
-            new GUIMessageBox(mission.Name, mission.Description, 400, 400);
+            var missionMsg = new GUIMessageBox(mission.Name, mission.Description, 400, 400);
+            missionMsg.UserData = "missionstartmessage";
 
             Networking.GameServer.Log("Mission: " + mission.Name, Color.Cyan);
             Networking.GameServer.Log(mission.Description, Color.Cyan);

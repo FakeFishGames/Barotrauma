@@ -177,13 +177,22 @@
   
   <CombatMission
     name="Search and Destroy"
-    description="[location1] and [location2] are at war! Eliminate the enemy crew and return to base."
+    
+    descriptionneutral="A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2]."
+    description1="A renegade vessel has been detected at the outskirts of [location2]. Treason against the Europa Coalition is punishable by death - eliminate the renegades and return to [location1]!"
+    description2="You're a member of a renegade group opposing the Europa Coalition. According to your informants at [location1], a Coalition ship has just been dispatched on a mission to take down your vessel. Eliminate their crew and return to [location2]."    
+    
+    teamname1="Coalition"
+    teamname2="Renegade"
+    
     multiplayeronly="true"
     commonness="20"
     reward="2000"
-    successmessage="[winner] has defeated [loser]!"
+    
+    successmessage="The [loser] vessel has been defeated by the [winner] crew!"
 	  failuremessage="Both crews have perished.">
-	  <message header="Crew eliminated" text="[location1] has fallen! Navigate back to your base."/>
-	  <message header="Crew eliminated" text="[location2] has fallen! Navigate back to your base."/>
+    
+    <message header="Crew eliminated" text="The renegade crew has been defeated! The Coalition vessel has to make its way back to [location1]."/>
+    <message header="Crew eliminated" text="The Coalition crew has been defeated! The renegade vessel has to make its way back to [location2]."/>
   </CombatMission>
 </Missions>

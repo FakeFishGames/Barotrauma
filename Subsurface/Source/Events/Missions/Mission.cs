@@ -34,7 +34,7 @@ namespace Barotrauma
             get { return name; }
         }
 
-        public string Description
+        public virtual string Description
         {
             get { return description; }
         }
@@ -88,7 +88,7 @@ namespace Barotrauma
             }
         }
 
-        public Mission(XElement element)
+        public Mission(XElement element, Location[] locations)
         {
             name = ToolBox.GetAttributeString(element, "name", "");
 
@@ -110,6 +110,21 @@ namespace Barotrauma
                 if (subElement.Name.ToString().ToLowerInvariant() != "message") continue;
                 headers.Add(ToolBox.GetAttributeString(subElement, "header", ""));
                 messages.Add(ToolBox.GetAttributeString(subElement, "text", ""));
+            }
+
+
+            for (int n = 0; n < 2; n++)
+            {
+                Locations[n] = locations[n].Name;
+                description = description.Replace("[location" + (n + 1) + "]", locations[n].Name);
+
+                successMessage = successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+
+                for (int m = 0; m < messages.Count; m++)
+                {
+                    messages[m] = messages[m].Replace("[location" + (n + 1) + "]", locations[n].Name);
+                }
             }
         }
 
@@ -192,25 +207,11 @@ namespace Barotrauma
                         continue;
                     }
                     
-                    ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
+                    ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement), typeof(Location[]) });
                     
-                    object instance = constructor.Invoke(new object[] { element });
+                    object instance = constructor.Invoke(new object[] { element, locations });
 
                     Mission mission = (Mission)instance;
-
-                    for (int n = 0; n<2; n++)
-                    {
-                        mission.Locations[n] = locations[n].Name;
-                        mission.description = mission.description.Replace("[location"+(n+1)+"]", locations[n].Name);
-
-                        mission.successMessage = mission.successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                        mission.failureMessage = mission.failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-
-                        for (int m=0;m<mission.messages.Count;m++)
-                        {
-                            mission.messages[m] = mission.messages[m].Replace("[location" + (n + 1) + "]", locations[n].Name);
-                        }
-                    }
                     
                     return mission;
                 }

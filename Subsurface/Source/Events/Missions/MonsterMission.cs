@@ -20,8 +20,8 @@ namespace Barotrauma
             get { return monster != null && !monster.IsDead ? radarPosition : Vector2.Zero; }
         }
 
-        public MonsterMission(XElement element)
-            : base(element)
+        public MonsterMission(XElement element, Location[] locations)
+            : base(element, locations)
         {
             monsterFile = ToolBox.GetAttributeString(element, "monsterfile", "");
         }
