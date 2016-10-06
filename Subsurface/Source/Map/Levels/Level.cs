@@ -784,11 +784,21 @@ namespace Barotrauma
             return position;
         }
 
-        public Vector2 GetRandomInterestingPosition(bool useSyncedRand, PositionType positionType)
+        public Vector2 GetRandomInterestingPosition(bool useSyncedRand, PositionType positionType, bool avoidSubs)
         {
             if (!positionsOfInterest.Any()) return Size * 0.5f;
 
             var matchingPositions = positionsOfInterest.FindAll(p => positionType.HasFlag(p.PositionType));
+
+            if (avoidSubs)
+            {
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    float minDist = Math.Max(sub.Borders.Width, sub.Borders.Height);
+                    matchingPositions.RemoveAll(p => Vector2.Distance(p.Position, sub.WorldPosition) < minDist);
+                }
+            }
+
             if (!matchingPositions.Any())
             {
                 return positionsOfInterest[Rand.Int(positionsOfInterest.Count, !useSyncedRand)].Position;

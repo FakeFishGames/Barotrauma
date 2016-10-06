@@ -62,30 +62,17 @@ namespace Barotrauma
         private void SpawnMonsters()
         {
             if (disallowed) return;
-
-            float minDist = Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
-
-            //find a random spawnpos that isn't too close to the main sub
-            int tries = 0;
-            Vector2 spawnPos = Vector2.Zero;
-            do
-            {
-                spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType);
-                tries++;
-            } while (tries < 50 && Vector2.Distance(spawnPos, Submarine.MainSub.WorldPosition) < minDist);
-
+            
+            Vector2 spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType, true);
             
             int amount = Rand.Range(minAmount, maxAmount, false);
 
             monsters = new Character[amount];
 
+            if (spawnDeep) spawnPos.Y -= Level.Loaded.Size.Y;
+                
             for (int i = 0; i < amount; i++)
             {
-                if (spawnDeep)
-                {
-                    spawnPos.Y -= Level.Loaded.Size.Y;
-                }
-
                 spawnPos.X += Rand.Range(-0.5f, 0.5f, false);
                 spawnPos.Y += Rand.Range(-0.5f, 0.5f, false);
                 monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null);
