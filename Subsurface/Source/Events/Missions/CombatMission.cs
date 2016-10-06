@@ -28,7 +28,7 @@ namespace Barotrauma
             
         }
 
-        public override bool AssignTeamIDs(List<Client> clients)
+        public override bool AssignTeamIDs(List<Client> clients,out int hostTeam)
         {
             List<Client> randList = new List<Client>(clients);
             for (int i = 0; i < randList.Count; i++)
@@ -50,6 +50,18 @@ namespace Barotrauma
                 {
                     randList[i].TeamID = 2;
                 }
+            }
+            if (halfPlayers*2==randList.Count)
+            {
+                hostTeam = Rand.Range(1, 2);
+            }
+            else if (halfPlayers*2<randList.Count)
+            {
+                hostTeam = 1;
+            }
+            else
+            {
+                hostTeam = 2;
             }
 
             return true;
