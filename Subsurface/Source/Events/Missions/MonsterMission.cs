@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class MonsterMission : Mission, SinglePlayerMission
+    class MonsterMission : Mission
     {
         private string monsterFile;
 
