@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class SalvageMission : Mission, SinglePlayerMission
+    class SalvageMission : Mission
     {
         private ItemPrefab itemPrefab;
 

@@ -74,6 +74,12 @@ namespace Barotrauma
                 GameMain.Server.AllowRespawn = false;
             }
 
+            if (GameMain.NetworkMember == null)
+            {
+                DebugConsole.ThrowError("Combat missions cannot be played in the single player mode.");
+                return;
+            }
+
             Items.Components.Radar.StartMarker = Locations[0];
             Items.Components.Radar.EndMarker = Locations[1];
             TeamASub = Submarine.MainSubs[0];
@@ -159,6 +165,8 @@ namespace Barotrauma
 
         public override void End()
         {
+            if (GameMain.NetworkMember==null) return;            
+
             bool ADead = TeamACrew.All(c => c.IsDead || c.IsUnconscious);
             bool BDead = TeamBCrew.All(c => c.IsDead || c.IsUnconscious);
 

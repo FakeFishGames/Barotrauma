@@ -148,8 +148,15 @@ namespace Barotrauma
                 matchingElements = doc.Root.Elements().ToList().FindAll(m => m.Name.ToString().ToLowerInvariant().Replace("mission", "") == missionType);
             }
 
-
-
+            if (isSinglePlayer)
+            {
+                matchingElements.RemoveAll(m => ToolBox.GetAttributeBool(m, "multiplayeronly", false));
+            }
+            else
+            {
+                matchingElements.RemoveAll(m => ToolBox.GetAttributeBool(m, "singleplayeronly", false));
+            }
+            
             int i = 0;
             foreach (XElement element in matchingElements)
             {
@@ -185,8 +192,6 @@ namespace Barotrauma
                         continue;
                     }
                     
-                    if (isSinglePlayer && t.GetInterface("Barotrauma.SinglePlayerMission")==null) continue;
-
                     ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
                     
                     object instance = constructor.Invoke(new object[] { element });
@@ -252,10 +257,5 @@ namespace Barotrauma
 
             mode.Money += reward;
         }
-    }
-
-    interface SinglePlayerMission
-    {
-        //all valid single player missions should inherit this
     }
 }
