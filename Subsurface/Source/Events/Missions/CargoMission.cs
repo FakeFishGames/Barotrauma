@@ -16,8 +16,8 @@ namespace Barotrauma
 
         private int requiredDeliveryAmount;
 
-        public CargoMission(XElement element)
-            : base(element)
+        public CargoMission(XElement element, Location[] locations)
+            : base(element, locations)
         {
             itemConfig = element.Element("Items");
 

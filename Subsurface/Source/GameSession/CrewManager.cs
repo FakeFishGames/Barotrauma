@@ -219,7 +219,7 @@ namespace Barotrauma
             {
                 if (teamIDs.Count > 1)
                 {
-                    new GUITextBlock(new Rectangle(0,y-20,100,20),"Team "+teamIDs[i], GUI.Style, crewFrame);
+                    new GUITextBlock(new Rectangle(0, y - 20, 100, 20), CombatMission.GetTeamName(teamIDs[i]), GUI.Style, crewFrame);
                 }
 
                 GUIListBox crewList = new GUIListBox(new Rectangle(0, y, 280, listBoxHeight), Color.White * 0.7f, GUI.Style, crewFrame);
