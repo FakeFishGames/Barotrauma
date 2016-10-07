@@ -887,7 +887,7 @@ namespace Barotrauma
 
             if (isSelected || isHighlighted)
             {
-                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green);
+                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green,false,0,(int)Math.Max((1.5f/GameScreen.Selected.Cam.Zoom),1.0f));
 
                 foreach (Rectangle t in prefab.Triggers)
                 {
@@ -900,7 +900,10 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, 
                         rectWorldPos,
                         new Vector2(transformedTrigger.Width, transformedTrigger.Height), 
-                        Color.Green);
+                        Color.Green,
+                        false,
+                        0,
+                        (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
                 }
             }
             

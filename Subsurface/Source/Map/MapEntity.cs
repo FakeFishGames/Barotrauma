@@ -451,7 +451,7 @@ namespace Barotrauma
                         GUI.DrawRectangle(spriteBatch, 
                             new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount, 
                             new Vector2(e.rect.Width, e.rect.Height), 
-                            Color.DarkRed);
+                            Color.DarkRed,false,0,(int)Math.Max(1.5f/GameScreen.Selected.Cam.Zoom,1.0f));
                     
                     //stop dragging the "selection rectangle"
                     selectionPos = Vector2.Zero;
@@ -459,7 +459,7 @@ namespace Barotrauma
             }
             if (selectionPos != null && selectionPos != Vector2.Zero)
             {                
-                GUI.DrawRectangle(spriteBatch, new Vector2(selectionPos.X, -selectionPos.Y), selectionSize, Color.DarkRed);
+                GUI.DrawRectangle(spriteBatch, new Vector2(selectionPos.X, -selectionPos.Y), selectionSize, Color.DarkRed,false,0,(int)Math.Max(1.5f / GameScreen.Selected.Cam.Zoom, 1.0f));
             }
         }
 
@@ -543,7 +543,7 @@ namespace Barotrauma
 
                     bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos)<5.0f;
 
-                    GUI.DrawRectangle(spriteBatch, handlePos - new Vector2(3.0f, 3.0f), new Vector2(6.0f, 6.0f), Color.White * (highlighted ? 1.0f : 0.6f), true);
+                    GUI.DrawRectangle(spriteBatch, handlePos - new Vector2(3.0f, 3.0f), new Vector2(6.0f, 6.0f), Color.White * (highlighted ? 1.0f : 0.6f), true,0, (int)Math.Max(1.5f / GameScreen.Selected.Cam.Zoom, 1.0f));
 
                     if (highlighted)
                     {

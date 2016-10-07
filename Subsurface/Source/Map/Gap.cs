@@ -189,7 +189,7 @@ namespace Barotrauma
             Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
             if (isHighlighted) clr = Color.Gold;
 
-            GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), clr * 0.5f, true);
+            GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), clr * 0.5f, true,0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
 
             for (int i = 0; i < linkedTo.Count; i++)
             {
@@ -212,7 +212,10 @@ namespace Barotrauma
                 GUI.DrawRectangle(sb,
                     new Vector2(WorldRect.X - 5, -WorldRect.Y - 5),
                     new Vector2(rect.Width + 10, rect.Height + 10),
-                    Color.Red);
+                    Color.Red,
+                    false,
+                    0,
+                    (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
         }
         

@@ -570,7 +570,8 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X, -drawRect.Y),
                     new Vector2(rect.Width, rect.Height),
-                    Color.Black,true);
+                    Color.Black,true,
+                    0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
 
             if (!ShowHulls && !GameMain.DebugDraw) return;
@@ -585,11 +586,11 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(drawRect.X, -drawRect.Y),
                 new Vector2(rect.Width, rect.Height),
-                Color.Blue);
+                Color.Blue,false,0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
 
             GUI.DrawRectangle(spriteBatch,
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
-                Color.Red*((100.0f-OxygenPercentage)/400.0f), true);
+                Color.Red*((100.0f-OxygenPercentage)/400.0f), true,0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
 
             if (GameMain.DebugDraw)
             {
@@ -604,7 +605,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X + 5, -drawRect.Y + 5),
                     new Vector2(rect.Width - 10, rect.Height - 10),
-                    isHighlighted ? Color.LightBlue*0.5f : Color.Red*0.5f, true);
+                    isHighlighted ? Color.LightBlue*0.5f : Color.Red*0.5f, true,0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
         }
 
