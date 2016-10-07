@@ -143,8 +143,24 @@ namespace Barotrauma
             }
             set
             {
+                Rectangle oldRect = Rect;
                 base.Rect = value;
                 if (prefab.HasBody) CreateSections();
+                else
+                {
+                    foreach (WallSection sec in sections)
+                    {
+                        Rectangle secRect = sec.rect;
+                        secRect.X -= oldRect.X; secRect.Y -= oldRect.Y;
+                        secRect.X *= value.Width; secRect.X /= oldRect.Width;
+                        secRect.Y *= value.Height; secRect.Y /= oldRect.Height;
+                        secRect.Width *= value.Width; secRect.Width /= oldRect.Width;
+                        secRect.Height *= value.Height; secRect.Height /= oldRect.Height;
+                        secRect.X += value.X; secRect.Y += value.Y;
+                        sec.rect = secRect;
+                    }
+                }
+                
             }
         }
                 

@@ -128,16 +128,16 @@ namespace Barotrauma
             get { return size; }
         }
 
-        public override void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
+        public override void UpdatePlacing(Camera cam)
         {
-            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub); 
+            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
             if (PlayerInput.RightButtonClicked())
             {
                 selected = null;
                 return;
             }
-            
+
             if (!resizeHorizontal && !resizeVertical)
             {
                 if (PlayerInput.LeftButtonClicked())
@@ -145,16 +145,14 @@ namespace Barotrauma
                     var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.MainSub);
                     //constructor.Invoke(lobject);
                     item.Submarine = Submarine.MainSub;
-                    item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub==null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
+                    item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                     item.FindHull();
 
                     placePosition = Vector2.Zero;
 
-                   // selected = null;
+                    // selected = null;
                     return;
                 }
-
-                sprite.Draw(spriteBatch, new Vector2(position.X + sprite.size.X / 2.0f, -position.Y + sprite.size.Y / 2.0f), SpriteColor);
             }
             else
             {
@@ -179,17 +177,54 @@ namespace Barotrauma
                         item.Submarine = Submarine.MainSub;
                         item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                         item.FindHull();
-                        
+
                         //selected = null;
                         return;
                     }
 
                     position = placePosition;
                 }
+            }
+
+            //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
+
+        }
+
+        public override void DrawPlacing(SpriteBatch spriteBatch,Camera cam)
+        {
+            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
+
+            if (PlayerInput.RightButtonClicked())
+            {
+                selected = null;
+                return;
+            }
+
+            if (!resizeHorizontal && !resizeVertical)
+            {
+                sprite.Draw(spriteBatch, new Vector2(position.X + sprite.size.X / 2.0f, -position.Y + sprite.size.Y / 2.0f), SpriteColor);
+            }
+            else
+            {
+                Vector2 placeSize = size;
+
+                if (placePosition == Vector2.Zero)
+                {
+                    if (PlayerInput.LeftButtonHeld()) placePosition = position;
+                }
+                else
+                {
+                    if (resizeHorizontal)
+                        placeSize.X = Math.Max(position.X - placePosition.X, size.X);
+                    if (resizeVertical)
+                        placeSize.Y = Math.Max(placePosition.Y - position.Y, size.Y);
+                    
+                    position = placePosition;
+                }
 
                 if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, SpriteColor);
             }
-            
+
             //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
 
         }
