@@ -15,7 +15,7 @@ namespace Barotrauma
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
         
         //which entities have been selected for editing
-        protected static List<MapEntity> selectedList = new List<MapEntity>();
+        public static List<MapEntity> selectedList = new List<MapEntity>();
         
         protected static GUIComponent editingHUD;
         
@@ -54,7 +54,7 @@ namespace Barotrauma
                 }
             }
         }
-
+        
         public static bool SelectedAny
         {
             get { return selectedList.Count > 0; }
@@ -463,18 +463,15 @@ namespace Barotrauma
             }
         }
 
-        /// <summary>
-        /// Call DrawEditing() if only one entity is selected
-        /// </summary>
-        public static void Edit(SpriteBatch spriteBatch, Camera cam)
+        public static void UpdateEditor(Camera cam)
         {
             if (selectedList.Count == 1)
             {
-                selectedList[0].DrawEditing(spriteBatch, cam);
+                selectedList[0].UpdateEditing(cam);
 
                 if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
                 {
-                    selectedList[0].DrawResizing(spriteBatch, cam);
+                    selectedList[0].UpdateResizing(cam);
                 }
             }
             else
@@ -490,6 +487,19 @@ namespace Barotrauma
                 }
 
                 editingHUD = null;
+            }
+        }
+
+        public static void DrawEditor(SpriteBatch spriteBatch, Camera cam)
+        {
+            if (selectedList.Count == 1)
+            {
+                selectedList[0].DrawEditing(spriteBatch, cam);
+
+                if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
+                {
+                    selectedList[0].DrawResizing(spriteBatch, cam);
+                }
             }
         }
 
@@ -524,10 +534,12 @@ namespace Barotrauma
 
             Move(-relative * 2.0f);
         }
-        
+
+        public virtual void UpdateEditing(Camera cam) { }
+
         public virtual void DrawEditing(SpriteBatch spriteBatch, Camera cam) {}
 
-        private void DrawResizing(SpriteBatch spriteBatch, Camera cam)
+        private void UpdateResizing(Camera cam)
         {
             isHighlighted = true;
 
@@ -538,50 +550,43 @@ namespace Barotrauma
             {
                 for (int y = StartY; y < 2; y += 2)
                 {
-                    
                     Vector2 handlePos = cam.WorldToScreen(Position + new Vector2(x * (rect.Width * 0.5f + 5), y * (rect.Height * 0.5f + 5)));
 
-                    bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos)<5.0f;
+                    bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos) < 5.0f;
 
-                    GUI.DrawRectangle(spriteBatch, handlePos - new Vector2(3.0f, 3.0f), new Vector2(6.0f, 6.0f), Color.White * (highlighted ? 1.0f : 0.6f), true,0, (int)Math.Max(1.5f / GameScreen.Selected.Cam.Zoom, 1.0f));
-
-                    if (highlighted)
+                    if (highlighted && PlayerInput.LeftButtonDown())
                     {
-                        if (PlayerInput.LeftButtonDown())
-                        {
-                            selectionPos = Vector2.Zero;
-                            resizeDirX = x;
-                            resizeDirY = y;
-                            resizing = true;
-                        }
+                        selectionPos = Vector2.Zero;
+                        resizeDirX = x;
+                        resizeDirY = y;
+                        resizing = true;
                     }
                 }
             }
 
             if (resizing)
             {
-
                 Vector2 placePosition = new Vector2(rect.X, rect.Y);
                 Vector2 placeSize = new Vector2(rect.Width, rect.Height);
 
                 Vector2 mousePos = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
-                if (resizeDirX >0)
+                if (resizeDirX > 0)
                 {
                     mousePos.X = Math.Max(mousePos.X, rect.X + Submarine.GridSize.X);
                     placeSize.X = mousePos.X - placePosition.X;
                 }
-                else if (resizeDirX <0)
+                else if (resizeDirX < 0)
                 {
                     mousePos.X = Math.Min(mousePos.X, rect.Right - Submarine.GridSize.X);
 
-                    placeSize.X = (placePosition.X + placeSize.X)-mousePos.X;
+                    placeSize.X = (placePosition.X + placeSize.X) - mousePos.X;
                     placePosition.X = mousePos.X;
                 }
                 if (resizeDirY < 0)
                 {
                     mousePos.Y = Math.Min(mousePos.Y, rect.Y - Submarine.GridSize.Y);
-                    placeSize.Y = placePosition.Y-mousePos.Y;
+                    placeSize.Y = placePosition.Y - mousePos.Y;
                 }
                 else if (resizeDirY > 0)
                 {
@@ -599,6 +604,31 @@ namespace Barotrauma
                 if (!PlayerInput.LeftButtonHeld())
                 {
                     resizing = false;
+                }
+            }
+        }
+
+        private void DrawResizing(SpriteBatch spriteBatch, Camera cam)
+        {
+            isHighlighted = true;
+
+            int startX = ResizeHorizontal ? -1 : 0;
+            int StartY = ResizeVertical ? -1 : 0;
+
+            for (int x = startX; x < 2; x += 2)
+            {
+                for (int y = StartY; y < 2; y += 2)
+                {                    
+                    Vector2 handlePos = cam.WorldToScreen(Position + new Vector2(x * (rect.Width * 0.5f + 5), y * (rect.Height * 0.5f + 5)));
+
+                    bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos)<5.0f;
+
+                    GUI.DrawRectangle(spriteBatch,
+                        handlePos - new Vector2(3.0f, 3.0f),
+                        new Vector2(6.0f, 6.0f),
+                        Color.White * (highlighted ? 1.0f : 0.6f),
+                        true, 0,
+                        (int)Math.Max(1.5f / GameScreen.Selected.Cam.Zoom, 1.0f));
                 }
             }
         }

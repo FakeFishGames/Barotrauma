@@ -918,15 +918,16 @@ namespace Barotrauma
             }
         }
 
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        public override void UpdateEditing(Camera cam)
         {
-            if (editingHUD==null || editingHUD.UserData as Item != this)
+            if (editingHUD == null || editingHUD.UserData as Item != this)
             {
-                editingHUD = CreateEditingHUD();            
+                editingHUD = CreateEditingHUD(Screen.Selected != GameMain.EditMapScreen);
             }
 
-            editingHUD.Draw(spriteBatch);
             editingHUD.Update((float)Timing.Step);
+
+            if (Screen.Selected != GameMain.EditMapScreen) return;
 
             if (!prefab.IsLinkable) return;
 
@@ -945,20 +946,11 @@ namespace Barotrauma
             }
         }
 
-        public void DrawInGameEditing(SpriteBatch spriteBatch)
+        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD == null || editingHUD.UserData as Item != this)
-            {
-                editingHUD = CreateEditingHUD(true);
-            }
-
-            if (editingHUD.Rect.Height > 60)
-            {
-                editingHUD.Update((float)Timing.Step);
-                editingHUD.Draw(spriteBatch);
-            }
+            if (editingHUD != null) editingHUD.Draw(spriteBatch);
         }
-
+        
         private GUIComponent CreateEditingHUD(bool inGame=false)
         {
             int width = 450;
@@ -1063,7 +1055,7 @@ namespace Barotrauma
             return editingHUD;
         }
 
-        public virtual void DrawHUD(SpriteBatch spriteBatch, Character character)
+        public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
             if (condition <= 0.0f)
             {
@@ -1073,7 +1065,7 @@ namespace Barotrauma
 
             if (HasInGameEditableProperties)
             {
-                DrawInGameEditing(spriteBatch);
+                DrawEditing(spriteBatch, cam);
             }
 
             foreach (ItemComponent ic in components)
@@ -1082,7 +1074,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void UpdateHUD(Character character)
+        public virtual void UpdateHUD(Camera cam, Character character)
         {
             if (condition <= 0.0f)
             {
@@ -1090,6 +1082,10 @@ namespace Barotrauma
                 return;
             }
 
+            if (HasInGameEditableProperties)
+            {
+                UpdateEditing(cam);
+            }
 
             foreach (ItemComponent ic in components)
             {

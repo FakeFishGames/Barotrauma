@@ -149,16 +149,15 @@ namespace Barotrauma
             }
         }
 
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        public override void UpdateEditing(Camera cam)
         {
             if (editingHUD == null || editingHUD.UserData as LinkedSubmarine != this)
             {
                 editingHUD = CreateEditingHUD();
             }
 
-            editingHUD.Update(0.016f);
-            editingHUD.Draw(spriteBatch);
-            
+            editingHUD.Update((float)Timing.Step);
+
             if (!PlayerInput.LeftButtonClicked() || !PlayerInput.KeyDown(Keys.Space)) return;
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -176,6 +175,13 @@ namespace Barotrauma
                     linkedTo.Add(entity);
                 }
             }
+        }
+
+        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        {
+            if (editingHUD == null) return;
+
+            editingHUD.Draw(spriteBatch);            
         }
 
 
