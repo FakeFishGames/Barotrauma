@@ -113,7 +113,7 @@ namespace Barotrauma
             {
                 if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
                 {
-                    Character.Controlled.SelectedConstruction.UpdateHUD(Character.Controlled);
+                    Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);
                 }
             }
             Character.UpdateAll(cam, (float)deltaTime);
@@ -181,7 +181,7 @@ namespace Barotrauma
             {
                 if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
                 {
-                    Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, Character.Controlled);
+                    Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
                 }
                 else if (!Character.Controlled.SelectedConstruction.IsInPickRange(Character.Controlled.WorldPosition))
                 {

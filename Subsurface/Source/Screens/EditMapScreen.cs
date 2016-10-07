@@ -891,6 +891,8 @@ namespace Barotrauma
             if (!characterMode && !wiringMode)
             {
                 if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.UpdatePlacing(cam);
+
+                MapEntity.UpdateEditor(cam);                    
             }
 
             if ((characterMode || wiringMode) && dummyCharacter != null)
@@ -914,7 +916,7 @@ namespace Barotrauma
                 {
                     if (dummyCharacter.SelectedConstruction != null)
                     {
-                        dummyCharacter.SelectedConstruction.UpdateHUD(dummyCharacter);
+                        dummyCharacter.SelectedConstruction.UpdateHUD(cam, dummyCharacter);
                     }
 
                     if (PlayerInput.KeyHit(InputType.Select) && dummyCharacter.ClosestItem != dummyCharacter.SelectedConstruction) dummyCharacter.SelectedConstruction = null;
@@ -971,7 +973,7 @@ namespace Barotrauma
             {
                 if (dummyCharacter.SelectedConstruction != null)
                 {
-                    dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, dummyCharacter);
+                    dummyCharacter.SelectedConstruction.DrawHUD(spriteBatch, cam, dummyCharacter);
                 }
                 
                 dummyCharacter.DrawHUD(spriteBatch, cam);
@@ -993,7 +995,7 @@ namespace Barotrauma
                     GUItabs[selectedTab].Draw(spriteBatch);
                 }
 
-                MapEntity.Edit(spriteBatch, cam);
+                MapEntity.DrawEditor(spriteBatch, cam);
             }
 
             if (tutorial != null) tutorial.Draw(spriteBatch);
