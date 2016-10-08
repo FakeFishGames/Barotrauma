@@ -835,6 +835,11 @@ namespace Barotrauma
                 }
                 else
                 {
+                    foreach (MapEntity me in MapEntity.mapEntityList)
+                    {
+                        me.IsHighlighted = false;
+                    }
+
                     if (dummyCharacter.SelectedConstruction==null)
                     {
                         Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(dummyCharacter.CursorPosition);
@@ -861,6 +866,13 @@ namespace Barotrauma
 
             GUIComponent.MouseOn = null;
 
+            if (!characterMode && !wiringMode)
+            {
+                if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.UpdatePlacing(cam);
+
+                MapEntity.UpdateEditor(cam);                    
+            }
+
             leftPanel.Update((float)deltaTime);
             topPanel.Update((float)deltaTime);
 
@@ -872,7 +884,7 @@ namespace Barotrauma
                 }
                 wiringToolPanel.Update((float)deltaTime);
             }
-
+            
             if (loadFrame!=null)
             {
                 loadFrame.Update((float)deltaTime);
@@ -888,20 +900,9 @@ namespace Barotrauma
                 if (PlayerInput.RightButtonClicked()) selectedTab = -1;
             }
 
-            if (!characterMode && !wiringMode)
-            {
-                if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.UpdatePlacing(cam);
-
-                MapEntity.UpdateEditor(cam);                    
-            }
 
             if ((characterMode || wiringMode) && dummyCharacter != null)
             {
-                foreach (MapEntity me in MapEntity.mapEntityList)
-                {
-                    me.IsHighlighted = false;
-                }
-
                 dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false);
 
                 foreach (Item item in dummyCharacter.SelectedItems)

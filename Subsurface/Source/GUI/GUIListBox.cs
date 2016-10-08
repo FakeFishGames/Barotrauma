@@ -103,15 +103,6 @@ namespace Barotrauma
             get { return scrollBarEnabled; }
             set
             {
-                if (value)
-                {
-                    if (!scrollBarEnabled && scrollBarHidden) ShowScrollBar();
-                }
-                else
-                {
-                    if (scrollBarEnabled && !scrollBarHidden) HideScrollBar();
-                }
-
                 scrollBarEnabled = value;
             }
         }
@@ -337,13 +328,23 @@ namespace Barotrauma
                 Math.Max(Math.Min((float)rect.Width / (float)totalSize, 1.0f), 5.0f / rect.Width) :
                 Math.Max(Math.Min((float)rect.Height / (float)totalSize, 1.0f), 5.0f / rect.Height);
 
-            if (scrollBar.BarSize < 1.0f && scrollBarHidden) ShowScrollBar();
-            if (scrollBar.BarSize >= 1.0f && !scrollBarHidden) HideScrollBar();
+            scrollBarHidden = scrollBar.BarSize >= 1.0f;
         }
 
         public override void AddChild(GUIComponent child)
         {
+            //temporarily reduce the size of the rect to prevent the child from expanding over the scrollbar
+            if (scrollBar.IsHorizontal)            
+                rect.Height -= scrollBar.Rect.Height;
+            else
+                rect.Width -= scrollBar.Rect.Width;
+
             base.AddChild(child);
+
+            if (scrollBar.IsHorizontal)
+                rect.Height += scrollBar.Rect.Height;
+            else
+                rect.Width += scrollBar.Rect.Width;
 
             //float oldScroll = scrollBar.BarScroll;
             //float oldSize = scrollBar.BarSize;
@@ -373,25 +374,12 @@ namespace Barotrauma
 
             UpdateScrollBarSize();
         }
-
-        private void ShowScrollBar()
-        {
-            if (scrollBarHidden && !scrollBar.IsHorizontal) Rect = new Rectangle(rect.X, rect.Y, rect.Width - scrollBar.Rect.Width, rect.Height);
-            scrollBarHidden = false;
-
-        }
-
-        private void HideScrollBar()
-        {
-            if (!scrollBarHidden && !scrollBar.IsHorizontal) Rect = new Rectangle(rect.X, rect.Y, rect.Width + scrollBar.Rect.Width, rect.Height);
-            scrollBarHidden = true;
-        }
-
+        
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
-            base.Draw(spriteBatch);
+            //base.Draw(spriteBatch);
 
             frame.Draw(spriteBatch);
             //GUI.DrawRectangle(spriteBatch, rect, color*alpha, true);

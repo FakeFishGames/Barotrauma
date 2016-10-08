@@ -171,30 +171,35 @@ namespace Barotrauma
             }
         }
 
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        public override void UpdateEditing(Camera cam)
         {
             if (editingHUD == null || editingHUD.UserData != this)
             {
                 editingHUD = CreateEditingHUD();
             }
-            
+
             editingHUD.Update((float)Timing.Step);
-            editingHUD.Draw(spriteBatch);
 
-            if (!PlayerInput.LeftButtonClicked()) return;
+            if (PlayerInput.LeftButtonClicked())
+            {
+                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
-            Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+                foreach (MapEntity e in mapEntityList)
+                {
+                    if (e.GetType() != typeof(WayPoint)) continue;
+                    if (e == this) continue;
 
-            foreach (MapEntity e in mapEntityList)
-            {                
-                if (e.GetType()!=typeof(WayPoint)) continue;
-                if (e == this) continue;
+                    if (!Submarine.RectContains(e.Rect, position)) continue;
 
-                if (!Submarine.RectContains(e.Rect, position)) continue;
-
-                linkedTo.Add(e);
-                e.linkedTo.Add(this);
+                    linkedTo.Add(e);
+                    e.linkedTo.Add(this);
+                }
             }
+        }
+
+        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        {
+            if (editingHUD != null) editingHUD.Draw(spriteBatch);
         }
 
         private bool ChangeSpawnType(GUIButton button, object obj)
