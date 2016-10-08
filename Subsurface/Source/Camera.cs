@@ -201,7 +201,7 @@ namespace Barotrauma
                 Vector2 diffViewCenter;
                 diffViewCenter = ((mouseInWorld - Position) * Zoom);
                 Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, GameMain.DebugDraw ? 0.01f : 0.1f, 2.0f);
-                Position = mouseInWorld - (diffViewCenter / Zoom);
+                if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
             }
             else
             {
