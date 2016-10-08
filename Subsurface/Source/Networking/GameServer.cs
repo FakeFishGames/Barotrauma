@@ -971,7 +971,7 @@ namespace Barotrauma.Networking
 
                 if (cargoSpawnPos == null)
                 {
-                    DebugConsole.ThrowError("Couldn't spawn additional cargo (cargo spawnpoint now found)");
+                    DebugConsole.ThrowError("Couldn't spawn additional cargo (cargo spawnpoint not found)");
                     continue;
                 }
 
