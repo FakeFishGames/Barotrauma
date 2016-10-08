@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public BackgroundCreatureManager BackgroundCreatureManager;
 
-        public Camera Cam
+        public override Camera Cam
         {
             get { return cam; }
         }

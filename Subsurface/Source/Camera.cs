@@ -110,6 +110,8 @@ namespace Barotrauma
 
             viewMatrix = 
                 Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
+
+            UpdateTransform();
         }
 
         public Vector2 TargetPos
