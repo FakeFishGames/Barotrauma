@@ -901,7 +901,7 @@ namespace Barotrauma
             }
 
             editingHUD.Draw(spriteBatch);
-            editingHUD.Update((float)Physics.step);
+            editingHUD.Update((float)Timing.Step);
 
             if (!prefab.IsLinkable) return;
 
@@ -929,7 +929,7 @@ namespace Barotrauma
 
             if (editingHUD.Rect.Height > 60)
             {
-                editingHUD.Update((float)Physics.step);
+                editingHUD.Update((float)Timing.Step);
                 editingHUD.Draw(spriteBatch);
             }
         }

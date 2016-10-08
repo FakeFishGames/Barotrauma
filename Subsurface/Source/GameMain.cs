@@ -72,7 +72,6 @@ namespace Barotrauma
         private bool hasLoaded;
 
         private GameTime fixedTime;
-        private double updatesToMake;
 
         //public static Random localRandom;
         //public static Random random;
@@ -145,7 +144,7 @@ namespace Barotrauma
             IsFixedTimeStep = false;
             //TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 55);
 
-            updatesToMake = 0.0;
+            Timing.Accumulator = 0.0f;
             fixedTime = new GameTime();
 
             World = new World(new Vector2(0, -9.82f));
@@ -293,12 +292,10 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            double realDeltaTime = gameTime.ElapsedGameTime.TotalSeconds;
-            double deltaTime = 0.016;
-            updatesToMake += realDeltaTime;
+            Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
             PlayerInput.UpdateVariable();
 
-            while (updatesToMake > 0.0)
+            while (Timing.Accumulator >= Timing.Step)
             {
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0,0,0,0,16);
@@ -306,7 +303,7 @@ namespace Barotrauma
                 fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
 
-                PlayerInput.Update(deltaTime);
+                PlayerInput.Update(Timing.Step);
 
                 bool paused = false;
 
@@ -320,32 +317,30 @@ namespace Barotrauma
 
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
-                    DebugConsole.Update(this, (float)deltaTime);
+                    DebugConsole.Update(this, (float)Timing.Step);
 
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
                     if (!paused)
                     {
-                        Screen.Selected.Update(deltaTime);
+                        Screen.Selected.Update(Timing.Step);
                     }
 
                     if (NetworkMember != null)
                     {
-                        NetworkMember.Update((float)deltaTime);
-                    }
-                    else
-                    {
-
+                        NetworkMember.Update((float)Timing.Step);
                     }
 
-                    GUI.Update((float)deltaTime);
+                    GUI.Update((float)Timing.Step);
                 }
 
-                CoroutineManager.Update((float)deltaTime, paused ? 0.0f : (float)deltaTime);
+                CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
-                updatesToMake -= deltaTime;
+                Timing.Accumulator -= Timing.Step;
             }
+
+            Timing.Alpha = Timing.Accumulator / Timing.Step;
         }
 
 

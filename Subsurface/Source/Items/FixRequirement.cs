@@ -190,7 +190,7 @@ namespace Barotrauma
             frame.Draw(spriteBatch);
         }
 
-        public static void UpdateHud(Item item,Character character)
+        public static void UpdateHud(Item item, Character character)
         {
             if (frame == null || frame.UserData != item)
             {
@@ -200,7 +200,7 @@ namespace Barotrauma
 
             if (frame == null) return;
 
-            frame.Update((float)Physics.step);
+            frame.Update((float)Timing.Step);
         }
     }
 }

@@ -303,7 +303,7 @@ namespace Barotrauma.Networking
             
             if (gameStarted)
             {
-                inGameHUD.Update((float)Physics.step);
+                inGameHUD.Update((float)Timing.Step);
 
                 if (respawnManager != null) respawnManager.Update(deltaTime);
 
@@ -788,28 +788,31 @@ namespace Barotrauma.Networking
         {
             GameMain.NetLobbyScreen.StartButton.Enabled = false;
 
-            NetOutgoingMessage msg = server.CreateMessage();
-            msg.Write((byte)ServerPacketHeader.QUERY_STARTGAME);
-
-            msg.Write(selectedSub.Name);
-            msg.Write(selectedSub.MD5Hash.Hash);
-
-            msg.Write(selectedShuttle.Name);
-            msg.Write(selectedShuttle.MD5Hash.Hash);
-            
-            connectedClients.ForEach(c => c.ReadyToStart = false);
-
-            server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
-
-            //give the clients a few seconds to request missing sub/shuttle files before starting the round
-            float waitForResponseTimer = 3.0f;
-            while (connectedClients.Any(c => !c.ReadyToStart) && waitForResponseTimer > 0.0f)
+            if (connectedClients.Any())
             {
-                waitForResponseTimer -= CoroutineManager.UnscaledDeltaTime;
-                yield return CoroutineStatus.Running;
-            }
+                NetOutgoingMessage msg = server.CreateMessage();
+                msg.Write((byte)ServerPacketHeader.QUERY_STARTGAME);
 
-            //todo: wait until file transfers are finished/cancelled
+                msg.Write(selectedSub.Name);
+                msg.Write(selectedSub.MD5Hash.Hash);
+
+                msg.Write(selectedShuttle.Name);
+                msg.Write(selectedShuttle.MD5Hash.Hash);
+            
+                connectedClients.ForEach(c => c.ReadyToStart = false);
+
+                server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
+
+                //give the clients a few seconds to request missing sub/shuttle files before starting the round
+                float waitForResponseTimer = 3.0f;
+                while (connectedClients.Any(c => !c.ReadyToStart) && waitForResponseTimer > 0.0f)
+                {
+                    waitForResponseTimer -= CoroutineManager.UnscaledDeltaTime;
+                    yield return CoroutineStatus.Running;
+                }
+
+                //todo: wait until file transfers are finished/cancelled
+            }
 
             GameMain.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
 
@@ -848,12 +851,21 @@ namespace Barotrauma.Networking
                 WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, selectedSub);
                 Vector2 spawnPosition = spawnPoint.WorldPosition;
 
-                DebugConsole.NewMessage(Convert.ToString(spawnPosition.X) + "," + Convert.ToString(spawnPosition.Y), Color.Lime);
+                DebugConsole.NewMessage(spawnPosition.ToString(), Color.Lime);
                 Character spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, c.characterInfo, true, false);
                 spawnedCharacter.AnimController.Frozen = true;
                 c.Character = spawnedCharacter;
                 
                 GameMain.GameSession.CrewManager.characters.Add(c.Character);
+            }
+
+            if (characterInfo!=null)
+            {
+                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, selectedSub);
+                myCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, characterInfo, false, false);
+                
+                GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+                Character.Controlled = myCharacter;
             }
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
@@ -908,11 +920,20 @@ namespace Barotrauma.Networking
 
                 var clientsWithCharacter = clients.FindAll(c => c.Character != null);
 
-                msg.Write((byte)clientsWithCharacter.Count);
+                int characterCount = clientsWithCharacter.Count;
+                if (myCharacter != null) characterCount++;
+
+                msg.Write((byte)characterCount);
                 foreach (Client c in clientsWithCharacter)
                 {
                     c.Character.WriteSpawnData(msg);
                     msg.Write(c == client);
+                }
+                
+                if (myCharacter != null)
+                {
+                    myCharacter.WriteSpawnData(msg);
+                    msg.Write(false);
                 }
 
                 server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
@@ -1291,7 +1312,6 @@ namespace Barotrauma.Networking
                 if (c.Character == null || !c.Character.IsDead) continue;
 
                 assignedClientCount[JobPrefab.List.IndexOf(c.Character.Info.Job.Prefab)]++;
-
             }
 
             //if any of the players has chosen a job that is Always Allowed, give them that job
