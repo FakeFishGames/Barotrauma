@@ -165,6 +165,7 @@
     <Compile Include="Source\Screens\BlurEffect.cs" />
     <Compile Include="Source\Screens\NetLobbyVoting.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
+    <Compile Include="Source\Timing.cs" />
     <Compile Include="Source\Utils\MTRandom.cs" />
     <Compile Include="Source\Utils\Rand.cs" />
     <Compile Include="Source\Events\PropertyTask.cs" />

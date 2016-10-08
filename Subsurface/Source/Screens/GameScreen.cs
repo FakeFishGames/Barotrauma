@@ -91,9 +91,6 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         public override void Update(double deltaTime)
         {
-            //the accumulator code is based on this article:
-            //http://gafferongames.com/game-physics/fix-your-timestep/
-            Physics.accumulator += deltaTime;
 
 #if DEBUG
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null)
@@ -109,15 +106,9 @@ namespace Barotrauma
             }
 #endif
 
-            Physics.accumulator = Math.Min(Physics.accumulator, Physics.step * 6);
-            //Physics.accumulator = Physics.step;
-            while (Physics.accumulator >= Physics.step)
-            {
+            if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
 
-                if (GameMain.GameSession != null) GameMain.GameSession.Update((float)Physics.step);
-                //EventManager.Update(gameTime);
-
-                if (Level.Loaded != null) Level.Loaded.Update((float)Physics.step);
+            if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
 
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
             {
@@ -126,51 +117,50 @@ namespace Barotrauma
                     Character.Controlled.SelectedConstruction.UpdateHUD(Character.Controlled);
                 }
             }
+            Character.UpdateAll(cam, (float)deltaTime);
+            
 
+            BackgroundCreatureManager.Update(cam, (float)deltaTime);
 
-                BackgroundCreatureManager.Update(cam, (float)Physics.step);
+            GameMain.ParticleManager.Update((float)deltaTime);
 
-                GameMain.ParticleManager.Update((float)Physics.step);
+            StatusEffect.UpdateAll((float)deltaTime);
 
-                StatusEffect.UpdateAll((float)Physics.step);
-
-                if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
-                {
-                    cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
-                    //Lights.LightManager.ViewPos = Character.Controlled.WorldPosition; 
-                }
-                cam.MoveCamera((float)Physics.step);
+            if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
+            {
+                cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
+            }
+            cam.MoveCamera((float)deltaTime);
                 
-                foreach (Submarine sub in Submarine.Loaded)
-                {
-                    sub.SetPrevTransform(sub.Position);
-                }
-
-                foreach (PhysicsBody pb in PhysicsBody.list)
-                {
-                    pb.SetPrevTransform(pb.SimPosition, pb.Rotation);
-                }
-                
-                MapEntity.UpdateAll(cam, (float)Physics.step);
-
-                Character.UpdateAnimAll((float)Physics.step);
-
-                Ragdoll.UpdateAll(cam, (float)Physics.step);
-
-                foreach (Submarine sub in Submarine.Loaded)
-                {
-                    sub.Update((float)Physics.step);
-                }
-                
-                GameMain.World.Step((float)Physics.step);
-
-                //Level.AfterWorldStep();
-
-                Physics.accumulator -= Physics.step;
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                sub.SetPrevTransform(sub.Position);
             }
 
+            foreach (PhysicsBody pb in PhysicsBody.list)
+            {
+                pb.SetPrevTransform(pb.SimPosition, pb.Rotation);
+            }
 
-            Physics.Alpha = Physics.accumulator / Physics.step;
+            MapEntity.UpdateAll(cam, (float)deltaTime);
+
+            Character.UpdateAnimAll((float)deltaTime);
+
+            Ragdoll.UpdateAll(cam, (float)deltaTime);
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                sub.Update((float)deltaTime);
+            }
+                
+            GameMain.World.Step((float)deltaTime);
+
+
+            if (!PlayerInput.LeftButtonHeld())
+            {
+                Inventory.draggingSlot = null;
+                Inventory.draggingItem = null;
+            }
 
         }
 
@@ -206,8 +196,6 @@ namespace Barotrauma
             
             GUI.Draw((float)deltaTime, spriteBatch, cam);
                         
-            if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
-
             spriteBatch.End();
         }
 

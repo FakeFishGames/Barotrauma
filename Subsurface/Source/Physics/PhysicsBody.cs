@@ -339,10 +339,10 @@ namespace Barotrauma
 
         public void UpdateDrawPosition()
         {
-            drawPosition = Physics.Interpolate(prevPosition, body.Position) - offsetFromTargetPos;
+            drawPosition = Timing.Interpolate(prevPosition, body.Position) - offsetFromTargetPos;
             drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
 
-            drawRotation = Physics.Interpolate(prevRotation, body.Rotation);
+            drawRotation = Timing.Interpolate(prevRotation, body.Rotation);
 
             if (offsetFromTargetPos == Vector2.Zero) return;
 
@@ -379,7 +379,7 @@ namespace Barotrauma
         /// </summary>
         public void SmoothRotate(float targetRotation, float force = 10.0f)
         {
-            float nextAngle = body.Rotation + body.AngularVelocity * (float)Physics.step;
+            float nextAngle = body.Rotation + body.AngularVelocity * (float)Timing.Step;
 
             float angle = MathUtils.GetShortestAngle(nextAngle, targetRotation);
 
