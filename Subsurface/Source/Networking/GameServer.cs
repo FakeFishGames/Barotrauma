@@ -963,9 +963,18 @@ namespace Barotrauma.Networking
                 }
             }
 
-            foreach (Submarine sub in Submarine.Loaded)
+            foreach (Submarine sub in Submarine.MainSubs)
             {
+                if (sub == null) continue;
+
                 WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, sub);
+
+                if (cargoSpawnPos == null)
+                {
+                    DebugConsole.ThrowError("Couldn't spawn additional cargo (cargo spawnpoint now found)");
+                    continue;
+                }
+
                 var cargoRoom = cargoSpawnPos.CurrentHull;
                 Vector2 position = new Vector2(
                     cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, false),
@@ -980,7 +989,7 @@ namespace Barotrauma.Networking
                     {
                         Item.Spawner.QueueItem(itemPrefab, position, sub, false);
                     }
-                }
+                }                
             }
             
            
