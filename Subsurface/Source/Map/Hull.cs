@@ -100,6 +100,8 @@ namespace Barotrauma
                     Item.UpdateHulls();
                     Gap.UpdateHulls();
                 }
+
+                surface = rect.Y - rect.Height + Volume / rect.Width;
             }
         }
 
@@ -506,7 +508,7 @@ namespace Barotrauma
             }
 
             //interpolate the position of the rendered surface towards the "target surface"
-            surface = MathHelper.Lerp(surface, surfaceY, deltaTime*10.0f);
+            surface = Math.Max(MathHelper.Lerp(surface, surfaceY, deltaTime*10.0f), rect.Y - rect.Height);
 
             if (volume < FullVolume)
             {
@@ -556,7 +558,7 @@ namespace Barotrauma
             if (!Visible)
             {
                 drawRect =
-                Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+                    Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X, -drawRect.Y),
@@ -577,11 +579,11 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(drawRect.X, -drawRect.Y),
                 new Vector2(rect.Width, rect.Height),
-                Color.Blue,false,0, (int)Math.Max((1.5f / Screen.Selected.Cam.Zoom), 1.0f));
+                Color.Blue, false, 0, (int)Math.Max((1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
             GUI.DrawRectangle(spriteBatch,
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
-                Color.Red*((100.0f-OxygenPercentage)/400.0f), true,0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                Color.Red * ((100.0f - OxygenPercentage) / 400.0f), true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
 
             if (GameMain.DebugDraw)
             {
@@ -596,7 +598,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X + 5, -drawRect.Y + 5),
                     new Vector2(rect.Width - 10, rect.Height - 10),
-                    isHighlighted ? Color.LightBlue*0.5f : Color.Red*0.5f, true,0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                    isHighlighted ? Color.LightBlue * 0.5f : Color.Red * 0.5f, true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
         }
         
