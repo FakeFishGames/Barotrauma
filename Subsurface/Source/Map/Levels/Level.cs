@@ -814,6 +814,11 @@ namespace Barotrauma
                 WrappingWall.UpdateWallShift(Submarine.MainSub.WorldPosition, wrappingWalls);
             }
 
+            if (Hull.renderer != null)
+            {
+                Hull.renderer.ScrollWater((float)deltaTime);
+            }
+
             renderer.Update(deltaTime);
         }
 
