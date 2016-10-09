@@ -82,6 +82,10 @@
     
     <Projectile launchimpulse="80.0">
       <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
+
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
+      </StatusEffect>
     </Projectile>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
@@ -110,8 +114,13 @@
 
     <Projectile launchimpulse="80.0">
       <Attack damage="1000" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
+      
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Weapons/bigexplosion.ogg">
         <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
+      </StatusEffect>
+
+      <StatusEffect type="OnActive" target="This">
+        <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
       </StatusEffect>
     </Projectile>
 

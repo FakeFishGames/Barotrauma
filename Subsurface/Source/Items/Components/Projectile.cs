@@ -88,6 +88,8 @@ namespace Barotrauma.Items.Components
             item.body.CollisionCategories = Physics.CollisionProjectile;
             item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;
 
+            IsActive = true;
+
             if (stickJoint == null || !doesStick) return;
 
             if (stickTarget != null)
@@ -111,6 +113,8 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null); 
+
             if (stickJoint != null && stickJoint.JointTranslation < 0.01f)  
             {
                 if (stickTarget != null)
@@ -173,6 +177,8 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f);
             ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+
+            IsActive = false;
 
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 
