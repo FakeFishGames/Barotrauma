@@ -403,17 +403,7 @@ namespace Barotrauma
             foreach (Gap gap in ConnectedGaps)
             {
                 float gapFlow = gap.LerpedFlowForce.Length();
-
-#if DEBUG
-                var asd = MapEntity.FindEntityByID(gap.ID);
-
-                if (asd != gap)
-                {
-                    int adslkmfdlasfk = 9;
-                }
-#endif
-
-
+                
                 if (gapFlow > strongestFlow)
                 {
                     strongestFlow = gapFlow;
@@ -492,11 +482,9 @@ namespace Barotrauma
                     waveVel[i] = waveVel[i] * -0.5f;
                 }
 
-
                 //acceleration
                 float a = -WaveStiffness * waveY[i] - waveVel[i] * WaveDampening;
                 waveVel[i] = waveVel[i] + a;
-
             }
 
             for (int j = 0; j < 2; j++)
@@ -516,6 +504,9 @@ namespace Barotrauma
                     waveY[i + 1] = waveY[i + 1] + rightDelta[i];
                 }
             }
+
+            //interpolate the position of the rendered surface towards the "target surface"
+            surface = MathHelper.Lerp(surface, surfaceY, deltaTime*10.0f);
 
             if (volume < FullVolume)
             {
@@ -608,15 +599,7 @@ namespace Barotrauma
                     isHighlighted ? Color.LightBlue*0.5f : Color.Red*0.5f, true,0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
         }
-
-        private float GetSurfaceY()
-        {            
-            float top = rect.Y + Submarine.DrawPosition.Y;
-            float bottom = top - rect.Height;
-
-            return  bottom + Volume / rect.Width;
-        }
-
+        
         public void Render(GraphicsDevice graphicsDevice, Camera cam)
         {
             if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
@@ -626,10 +609,7 @@ namespace Barotrauma
             //calculate where the surface should be based on the water volume
             float top = rect.Y + submarinePos.Y;
             float bottom = top - rect.Height;
-            float surfaceY = bottom + Volume / rect.Width;
 
-            //interpolate the position of the rendered surface towards the "target surface"
-            surface = surface + ((surfaceY - submarinePos.Y) - surface) / 10.0f;
             float drawSurface = surface + submarinePos.Y;
 
             Matrix transform =  cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
