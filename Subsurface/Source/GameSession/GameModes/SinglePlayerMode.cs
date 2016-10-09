@@ -241,17 +241,19 @@ namespace Barotrauma
         {
             isRunning = false;
 
-            if (subsToLeaveBehind == null || leavingSub == null)
-            {
-                DebugConsole.ThrowError("Leaving submarine not selected -> selecting the closest one");
-
-                leavingSub = GetLeavingSub();
-
-                subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-            }
-
-
             bool success = CrewManager.characters.Any(c => !c.IsDead);
+
+            if (success)
+            {
+                if (subsToLeaveBehind == null || leavingSub == null)
+                {
+                    DebugConsole.ThrowError("Leaving submarine not selected -> selecting the closest one");
+
+                    leavingSub = GetLeavingSub();
+
+                    subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
+                }
+            }
             
             GameMain.GameSession.EndShift("");
 
