@@ -102,6 +102,7 @@ namespace Barotrauma
                 }
 
                 surface = rect.Y - rect.Height + Volume / rect.Width;
+                Pressure = surface;
             }
         }
 
@@ -259,7 +260,7 @@ namespace Barotrauma
 
             return rect;
         }
-
+        
         public static EntityGrid GenerateEntityGrid(Submarine submarine)
         {
             var newGrid = new EntityGrid(submarine, 200.0f);
@@ -318,6 +319,9 @@ namespace Barotrauma
                 Item.UpdateHulls();
                 Gap.UpdateHulls();
             }
+
+            surface = rect.Y - rect.Height + Volume / rect.Width;
+            Pressure = surface;
         }
 
         public override void Remove()
@@ -404,6 +408,12 @@ namespace Barotrauma
             float strongestFlow = 0.0f;
             foreach (Gap gap in ConnectedGaps)
             {
+                if (gap.IsRoomToRoom)
+                {
+                    //only the first linked hull plays the flow sound
+                    if (gap.linkedTo[1] == this) continue;
+                }
+
                 float gapFlow = gap.LerpedFlowForce.Length();
                 
                 if (gapFlow > strongestFlow)
@@ -411,9 +421,8 @@ namespace Barotrauma
                     strongestFlow = gapFlow;
                 }
             }
-
-
-            if (strongestFlow>0.1f)
+            
+            if (strongestFlow > 1.0f)
             {
                 soundVolume = soundVolume + ((strongestFlow < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
                 soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
@@ -430,8 +439,7 @@ namespace Barotrauma
                 }
 
                 currentFlowSound = flowSound;
-
-                soundIndex = currentFlowSound.Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
+                soundIndex = currentFlowSound.Loop(soundIndex, soundVolume, WorldPosition, Math.Min(strongestFlow*5.0f, 2000.0f));
             }
             else
             {
@@ -515,10 +523,13 @@ namespace Barotrauma
                 LethalPressure -= 10.0f * deltaTime;
                 if (Volume == 0.0f)
                 {
+                    //wait for the surface to be lerped back to bottom and the waves to settle until disabling update
+                    if (surface > rect.Y - rect.Height + 1) return;
                     for (int i = 1; i < waveY.Length - 1; i++)
                     {
                         if (waveY[i] > 0.1f) return;
                     }
+
                     update = false;
                 }
             }
