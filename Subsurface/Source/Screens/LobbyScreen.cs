@@ -330,10 +330,10 @@ namespace Barotrauma
             {
                 GUIComponent child = selectedItemList.children[i];
 
-                MapEntityPrefab ep = child.UserData as MapEntityPrefab;
-                if (ep == null) continue;
+                ItemPrefab ip = child.UserData as ItemPrefab;
+                if (ip == null) continue;
 
-                gameMode.CargoManager.AddItem(ep);
+                gameMode.CargoManager.AddItem(ip);
                 
                 selectedItemList.RemoveChild(child);
             }

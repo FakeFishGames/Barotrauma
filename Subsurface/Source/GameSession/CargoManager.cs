@@ -5,14 +5,14 @@ namespace Barotrauma
 {
     class CargoManager
     {
-        private List<MapEntityPrefab> purchasedItems;
+        private List<ItemPrefab> purchasedItems;
         
         public CargoManager()
         {
-            purchasedItems = new List<MapEntityPrefab>();
+            purchasedItems = new List<ItemPrefab>();
         }
 
-        public void AddItem(MapEntityPrefab item)
+        public void AddItem(ItemPrefab item)
         {
             purchasedItems.Add(item);
         }
@@ -35,11 +35,11 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (MapEntityPrefab prefab in purchasedItems)
+            foreach (ItemPrefab prefab in purchasedItems)
             {
                 Vector2 position = new Vector2(
                     Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20),
-                    Rand.Range(cargoRoom.Rect.Y - cargoRoom.Rect.Height, cargoRoom.Rect.Y));
+                    cargoRoom.Rect.Y - cargoRoom.Rect.Height + prefab.Size.Y/2);
 
                 new Item(prefab as ItemPrefab, position, wp.Submarine);
             }
