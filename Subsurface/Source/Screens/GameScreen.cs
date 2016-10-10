@@ -166,13 +166,6 @@ namespace Barotrauma
         {
             cam.UpdateTransform(true);
 
-            if (Hull.renderer != null)
-            {
-                Hull.renderer.ScrollWater((float)deltaTime);
-            }
-
-            //damageStencil = TextureLoader.FromFile("Content/Map/background.png");
-
             DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();

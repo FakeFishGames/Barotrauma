@@ -417,16 +417,7 @@ namespace Barotrauma
 
             string saveTime = ToolBox.GetAttributeString(doc.Root, "savetime", "unknown");
 
-            XElement modeElement = null;
-            foreach (XElement element in doc.Root.Elements())
-            {
-                if (element.Name.ToString().ToLowerInvariant() != "gamemode") continue;
-
-                modeElement = element;
-                break;
-            }
-
-            string mapseed = ToolBox.GetAttributeString(modeElement, "mapseed", "unknown");
+            string mapseed = ToolBox.GetAttributeString(doc.Root, "mapseed", "unknown");
 
             GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 0, 200, 230), Color.Black*0.4f, GUI.Style, menuTabs[(int)Tab.LoadGame]);
             saveFileFrame.UserData = "savefileframe";

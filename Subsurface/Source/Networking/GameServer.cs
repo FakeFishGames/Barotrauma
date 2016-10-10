@@ -986,7 +986,7 @@ namespace Barotrauma.Networking
 
                     for (int i = 0; i < extraCargo[s]; i++)
                     {
-                        Item.Spawner.QueueItem(itemPrefab, position, sub, false);
+                        Item.Spawner.QueueItem(itemPrefab, position + (Vector2.UnitX * itemPrefab.Size.Y/2), sub, false);
                     }
                 }                
             }

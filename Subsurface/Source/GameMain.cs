@@ -292,6 +292,8 @@ namespace Barotrauma
         {
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
 
+            bool paused = false;
+
             while (Timing.Accumulator >= Timing.Step)
             {
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
@@ -301,8 +303,6 @@ namespace Barotrauma
                 base.Update(fixedTime);
 
                 PlayerInput.Update(Timing.Step);
-
-                bool paused = false;
 
                 if (titleScreenOpen)
                 {
@@ -342,7 +342,7 @@ namespace Barotrauma
                 Timing.Accumulator -= Timing.Step;
             }
 
-            Timing.Alpha = Timing.Accumulator / Timing.Step;
+            if (!paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
         }
 
 

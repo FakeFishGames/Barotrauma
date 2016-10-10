@@ -311,7 +311,7 @@ namespace Barotrauma
             MergeSlots();
         }
 
-        public override void Update(float deltaTime)
+        public override void Update(float deltaTime, bool subInventory = false)
         {
             base.Update(deltaTime);
             
