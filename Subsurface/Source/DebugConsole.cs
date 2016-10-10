@@ -226,21 +226,22 @@ namespace Barotrauma
                     Character spawnedCharacter = null;
 
                     Vector2 spawnPosition = Vector2.Zero;
-                    WayPoint spawnPoint = null;
+
+                    spawnPosition = Vector2.Zero;
 
                     if (commands.Length > 2)
                     {
                         switch (commands[2].ToLowerInvariant())
                         {
                             case "inside":
-                                spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                                spawnPosition = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub).WorldPosition;
                                 break;
                             case "outside":
-                                spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
+                                spawnPosition = WayPoint.GetRandom(SpawnType.Enemy).WorldPosition;
                                 break;
                             case "near":
                             case "close":
-                                float closestDist = 0.0f;
+                                float closestDist = -1.0f;
                                 foreach (WayPoint wp in WayPoint.WayPointList)
                                 {
                                     if (wp.Submarine != null) continue;
@@ -250,25 +251,26 @@ namespace Barotrauma
 
                                     float dist = Vector2.Distance(wp.WorldPosition, GameMain.GameScreen.Cam.WorldViewCenter);
 
-                                    if (spawnPoint == null || dist < closestDist)
+                                    if (closestDist < 0.0f || dist < closestDist)
                                     {
-                                        spawnPoint = wp;
+                                        spawnPosition = wp.WorldPosition;
                                         closestDist = dist;
                                     }
                                 }
                                 break;
+                            case "cursor":
+                                spawnPosition = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                                break;
                             default:
-                                spawnPoint = WayPoint.GetRandom(commands[1].ToLowerInvariant()=="human" ? SpawnType.Human : SpawnType.Enemy);
+                                spawnPosition = WayPoint.GetRandom(commands[1].ToLowerInvariant()=="human" ? SpawnType.Human : SpawnType.Enemy).WorldPosition;
                                 break;
                         }
 
                     }
                     else
                     {
-                        spawnPoint = WayPoint.GetRandom(commands[1].ToLowerInvariant() == "human" ? SpawnType.Human : SpawnType.Enemy);
+                        spawnPosition = WayPoint.GetRandom(commands[1].ToLowerInvariant() == "human" ? SpawnType.Human : SpawnType.Enemy).WorldPosition;
                     }
-
-                    spawnPosition = spawnPoint == null ? Vector2.Zero : spawnPoint.WorldPosition;
 
                     if (commands[1].ToLowerInvariant()=="human")
                     {
