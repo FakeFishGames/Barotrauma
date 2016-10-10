@@ -29,10 +29,8 @@ namespace Barotrauma
             mission = Mission.LoadRandom(locations, rand, param as string);
         }
 
-        public override void Start()
+        public override void MsgBox()
         {
-            base.Start();
-
             if (mission == null) return;
 
             var missionMsg = new GUIMessageBox(mission.Name, mission.Description, 400, 400);

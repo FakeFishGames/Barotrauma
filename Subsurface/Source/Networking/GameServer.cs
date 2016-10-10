@@ -950,8 +950,7 @@ namespace Barotrauma.Networking
 
                     teamClients[i].Character.TeamID = (byte)teamID;
                 }
-
-                //host plays in team 1
+                
                 if (characterInfo != null && teamID == hostTeam)
                 {
                     myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false); 
