@@ -309,6 +309,11 @@ namespace Barotrauma
                 {
                     crackColor = Color.Red;
                 }
+                else if (highlightedLocation != currentLocation &&
+                (connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(currentLocation)))
+                {
+                    crackColor = Color.Red * 0.5f;
+                }
                 else if (!connection.Passed)
                 {
                     crackColor *= 0.2f;

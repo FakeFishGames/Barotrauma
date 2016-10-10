@@ -124,9 +124,10 @@ namespace Barotrauma
             }
             set
             {
+                base.Rect = value;
+
                 frame.Rect = new Rectangle(value.X, value.Y, frame.Rect.Width, frame.Rect.Height);
                 textBlock.Rect = value;
-                rect = value;
             }
         }
 

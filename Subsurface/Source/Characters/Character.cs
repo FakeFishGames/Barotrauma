@@ -1328,7 +1328,7 @@ namespace Barotrauma
 
             if (info != null)
             {
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 80.0f - (5.0f/cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f/cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
                 
                 if (Character.Controlled != null && TeamID!=Character.Controlled.TeamID)

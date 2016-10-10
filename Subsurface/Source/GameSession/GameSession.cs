@@ -336,9 +336,11 @@ namespace Barotrauma
                 new XElement("Gamesession"));
 
             var now = DateTime.Now;
-            doc.Root.Add(new XAttribute("savetime", now.Hour + ":" + now.Minute + ", " + now.ToShortDateString()));
+            doc.Root.Add(new XAttribute("savetime", now.ToShortTimeString() + ", " + now.ToShortDateString()));
 
             doc.Root.Add(new XAttribute("submarine", submarine==null ? "" : submarine.Name));
+
+            doc.Root.Add(new XAttribute("mapseed", Map.Seed));
 
             ((SinglePlayerMode)gameMode).Save(doc.Root);
 

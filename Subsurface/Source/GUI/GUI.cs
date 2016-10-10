@@ -449,6 +449,33 @@ namespace Barotrauma
                         "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
                         new Vector2(10, 50), Color.White);
                 }
+
+                for (int i = 1; i < Sounds.SoundManager.DefaultSourceCount; i++)
+                {
+                    Color clr = Color.White;
+
+                    string soundStr = i+": ";
+
+                    var playingSound = Sounds.SoundManager.GetPlayingSound(i);
+
+                    if (playingSound == null)
+                    {
+                        soundStr+= "none";
+                        clr *= 0.5f;
+                    }
+                    else
+                    {
+                        soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSound.FilePath);
+
+                        if (Sounds.SoundManager.IsLooping(i))
+                        {
+                            soundStr += " (looping)";
+                            clr = Color.Yellow;
+                        }
+                    }
+
+                    GUI.DrawString(spriteBatch, new Vector2(200, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
+                }
             }
             
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
