@@ -119,6 +119,7 @@ namespace Barotrauma
 
                     message.Write(items[i].Position.X);
                     message.Write(items[i].Position.Y);
+                    message.Write(items[i].Submarine != null ? items[i].Submarine.ID : (ushort)0);
                 }
                 else
                 {
@@ -144,6 +145,7 @@ namespace Barotrauma
                 ushort itemId   = message.ReadUInt16();
 
                 Vector2 pos = Vector2.Zero;
+                Submarine sub = null;
                 ushort inventoryId = message.ReadUInt16();
 
                 int inventorySlotIndex = -1;
@@ -155,13 +157,18 @@ namespace Barotrauma
                 else
                 {
                     pos = new Vector2(message.ReadSingle(), message.ReadSingle());
+                    ushort subID = message.ReadUInt16();
+                    if (subID > 0)
+                    {
+                        sub = Submarine.Loaded.Find(s => s.ID == subID);
+                    }
                 }
 
                 string tags = "";
                 if (itemName == "ID Card")
                 {
                     tags = message.ReadString();
-                }                
+                }    
 
                 var prefab = MapEntityPrefab.list.Find(me => me.Name == itemName);
                 if (prefab == null) continue;
@@ -188,11 +195,14 @@ namespace Barotrauma
                     }
                 }                
 
-                var item = new Item(itemPrefab, pos, null);                
+                var item = new Item(itemPrefab, pos, sub);                
 
                 item.ID = itemId;
-                item.CurrentHull = Hull.FindHull(pos, null, false); 
-                item.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+                if (sub != null)
+                {
+                    item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
+                    item.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+                }
 
                 if (!string.IsNullOrEmpty(tags)) item.Tags = tags;
 
