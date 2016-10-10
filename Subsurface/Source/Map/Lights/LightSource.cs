@@ -306,20 +306,21 @@ namespace Barotrauma.Lights
                     Vector2 center = new Vector2(LightTexture.Width / 2, LightTexture.Height / 2);
                     float scale = range / (lightTexture.Width / 2.0f);
 
-                    spriteBatch.Draw(lightTexture, new Vector2(WorldPosition.X, -WorldPosition.Y), null, color, 0, center, scale, SpriteEffects.None, 1);
+                    spriteBatch.Draw(lightTexture, new Vector2(WorldPosition.X, -WorldPosition.Y), null, color * (color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
                 }
                 else
                 {
-                    overrideLightTexture.Draw(spriteBatch, 
-                        new Vector2(WorldPosition.X, -WorldPosition.Y), Color, 
-                        overrideLightTexture.Origin, -Rotation, 
-                        new Vector2(overrideLightTexture.size.X/overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y/overrideLightTexture.SourceRect.Height));
+                    overrideLightTexture.Draw(spriteBatch,
+                        new Vector2(WorldPosition.X, -WorldPosition.Y), color * (color.A / 255.0f),
+                        overrideLightTexture.Origin, -Rotation,
+                        new Vector2(overrideLightTexture.size.X / overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y / overrideLightTexture.SourceRect.Height));
                 }
             }
 
             if (LightSprite != null)
             {
                 LightSprite.Draw(spriteBatch, new Vector2(WorldPosition.X, -WorldPosition.Y), Color, LightSprite.Origin);
+
             } 
         }
 

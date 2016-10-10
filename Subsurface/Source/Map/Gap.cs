@@ -30,8 +30,13 @@ namespace Barotrauma
         private float higherSurface;
         private float lowerSurface;
 
+        private Vector2 lerpedFlowForce;
+
         //if set to true, hull connections of this gap won't be updated when changes are being done to hulls
         public bool DisableHullRechecks;
+        
+        //can ambient light get through the gap even if it's not open
+        public bool PassAmbientLight;
 
         public float Open
         {
@@ -47,8 +52,6 @@ namespace Barotrauma
         {
             get { return lerpedFlowForce; }
         }
-
-        private Vector2 lerpedFlowForce;
 
         public Hull FlowTargetHull
         {

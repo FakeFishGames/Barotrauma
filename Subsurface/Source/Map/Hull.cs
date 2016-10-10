@@ -723,7 +723,6 @@ namespace Barotrauma
             }
 
             var entities = EntityGrid.GetEntities(entityGrids, position, useWorldCoordinates);
-
             foreach (Hull hull in entities)
             {
                 if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position)) return hull;
@@ -731,7 +730,7 @@ namespace Barotrauma
 
             return null;
         }
-
+        
         //returns the water block which contains the point (or null if it isn't inside any)
         public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
         {
