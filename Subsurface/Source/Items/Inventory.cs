@@ -268,8 +268,6 @@ namespace Barotrauma
 
         public virtual void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
-            string toolTip = "";
-
             if (slots == null || isSubInventory != subInventory) return;
 
             for (int i = 0; i < capacity; i++)
@@ -295,8 +293,20 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i].IsHighlighted && !slots[i].Disabled)
+                if (slots[i].IsHighlighted && !slots[i].Disabled && Items[i] != null)
                 {
+                    string toolTip = "";
+                    if (GameMain.DebugDraw)
+                    {
+                        toolTip = Items[i].ToString();
+                    }
+                    else
+                    {
+                        toolTip = string.IsNullOrEmpty(Items[i].Description) ?
+                            Items[i].Name :
+                            Items[i].Name + '\n' + Items[i].Description;
+                    }
+
                     DrawToolTip(spriteBatch, toolTip, slots[i].Rect);
                     break;
                 }
