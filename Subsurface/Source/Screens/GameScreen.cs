@@ -128,6 +128,8 @@ namespace Barotrauma
             {
                 cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
             }
+
+            GameMain.LightManager.Update((float)deltaTime);
             cam.MoveCamera((float)deltaTime);
                 
             foreach (Submarine sub in Submarine.Loaded)
@@ -205,7 +207,7 @@ namespace Barotrauma
 
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 
-            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
+            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam, lightBlur.Effect);
             if (Character.Controlled != null)
             {
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
@@ -339,8 +341,7 @@ namespace Barotrauma
                         
             spriteBatch.End();
 
-
-            GameMain.LightManager.DrawLightMap(spriteBatch, cam, lightBlur.Effect);
+            GameMain.LightManager.DrawLightMap(spriteBatch, lightBlur.Effect);
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend, SamplerState.LinearWrap,
@@ -355,7 +356,7 @@ namespace Barotrauma
 
             if (Character.Controlled != null)
             {
-                GameMain.LightManager.DrawLOS(graphics, spriteBatch, cam, lightBlur.Effect);
+                GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect);
             }
 
         }
