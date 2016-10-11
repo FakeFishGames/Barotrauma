@@ -60,7 +60,6 @@ namespace Barotrauma.Items.Components
             isActiveTickBox.OnSelected = (GUITickBox box) =>
             {
                 IsActive = box.Selected;
-                item.NewComponentEvent(this, true, false);
 
                 return true;
             };
@@ -117,12 +116,7 @@ namespace Barotrauma.Items.Components
             int radius = GuiFrame.Rect.Height / 2 - 30;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
         }
-
-        public override void UpdateHUD(Character character)
-        {
-            GuiFrame.Update(1.0f / 60.0f);
-        }
-
+        
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
         {
             Vector2 center = new Vector2(rect.X + rect.Width*0.5f, rect.Center.Y);

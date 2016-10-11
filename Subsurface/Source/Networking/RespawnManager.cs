@@ -237,7 +237,7 @@ namespace Barotrauma.Networking
 
                 foreach (Door door in shuttleDoors)
                 {
-                    if (door.IsOpen) door.SetState(false, false, true);
+                    if (door.IsOpen) door.SetState(false,false,true);
                 }
 
                 var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == respawnShuttle && g.ConnectedWall != null);

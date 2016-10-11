@@ -313,7 +313,7 @@ namespace Barotrauma
         public override void Update(float deltaTime, bool subInventory = false)
         {
             base.Update(deltaTime);
-            
+
             if (doubleClickedItem != null)
             {
                 if (doubleClickedItem.ParentInventory != this)
@@ -339,7 +339,7 @@ namespace Barotrauma
                         //not equipped -> attempt to equip
                         if (IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
                         {
-                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);
+                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any));
                         }
                         //equipped -> attempt to unequip
                         else if (doubleClickedItem.AllowedSlots.Contains(InvSlotType.Any))
@@ -349,7 +349,7 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
             if (selectedSlot > -1)
             {
                 UpdateSubInventory(deltaTime, selectedSlot);

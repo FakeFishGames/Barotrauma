@@ -568,6 +568,7 @@ namespace Barotrauma.Networking
             string modeName         = inc.ReadString();
 
             bool respawnAllowed     = inc.ReadBoolean();
+            bool loadSecondSub      = inc.ReadBoolean();
 
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 

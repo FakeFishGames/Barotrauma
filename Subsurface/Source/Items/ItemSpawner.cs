@@ -85,7 +85,7 @@ namespace Barotrauma
                 if (itemInfo.Inventory != null)
                 {
                     spawnedItem = new Item(itemInfo.Prefab, Vector2.Zero, null);
-                    itemInfo.Inventory.TryPutItem(spawnedItem, spawnedItem.AllowedSlots, false);
+                    itemInfo.Inventory.TryPutItem(spawnedItem, spawnedItem.AllowedSlots);
                 }
                 else
                 {
@@ -95,12 +95,128 @@ namespace Barotrauma
                 AddToSpawnedList(spawnedItem);
                 items.Add(spawnedItem);
             }
-            
+
+            //if (GameMain.Server != null) GameMain.Server.SendItemSpawnMessage(items);
         }
 
         public void AddToSpawnedList(Item item)
         {
             spawnItems.Add(item);
+        }
+
+        public void FillNetworkData(Lidgren.Network.NetBuffer message, List<Item> items)
+        {
+            message.Write((byte)items.Count);
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                message.Write(items[i].Prefab.Name);
+                message.Write(items[i].ID);
+
+                if (items[i].ParentInventory == null || items[i].ParentInventory.Owner == null)
+                {
+                    message.Write((ushort)0);
+
+                    message.Write(items[i].Position.X);
+                    message.Write(items[i].Position.Y);
+                    message.Write(items[i].Submarine != null ? items[i].Submarine.ID : (ushort)0);
+                }
+                else
+                {
+                    message.Write(items[i].ParentInventory.Owner.ID);
+
+                    int index = items[i].ParentInventory.FindIndex(items[i]);
+                    message.Write(index < 0 ? (byte)255 : (byte)index);
+                }
+                                
+                if (items[i].Name == "ID Card")
+                {
+                    message.Write(items[i].Tags);
+                }
+            }
+        }
+
+        public void ReadNetworkData(Lidgren.Network.NetBuffer message)
+        {
+            var itemCount = message.ReadByte();
+            for (int i = 0; i < itemCount; i++)
+            {
+                string itemName = message.ReadString();
+                ushort itemId   = message.ReadUInt16();
+
+                Vector2 pos = Vector2.Zero;
+                Submarine sub = null;
+                ushort inventoryId = message.ReadUInt16();
+
+                int inventorySlotIndex = -1;
+                
+                if (inventoryId > 0)
+                {
+                    inventorySlotIndex = message.ReadByte();
+                }
+                else
+                {
+                    pos = new Vector2(message.ReadSingle(), message.ReadSingle());
+                    ushort subID = message.ReadUInt16();
+                    if (subID > 0)
+                    {
+                        sub = Submarine.Loaded.Find(s => s.ID == subID);
+                    }
+                }
+
+                string tags = "";
+                if (itemName == "ID Card")
+                {
+                    tags = message.ReadString();
+                }    
+
+                var prefab = MapEntityPrefab.list.Find(me => me.Name == itemName);
+                if (prefab == null) continue;
+
+                var itemPrefab = prefab as ItemPrefab;
+                if (itemPrefab == null) continue;
+
+                Inventory inventory = null;
+
+                var inventoryOwner = Entity.FindEntityByID(inventoryId);
+                if (inventoryOwner != null)
+                {
+                    if (inventoryOwner is Character)
+                    {
+                        inventory = (inventoryOwner as Character).Inventory;
+                    }
+                    else if (inventoryOwner is Item)
+                    {
+                        var containers = (inventoryOwner as Item).GetComponents<Items.Components.ItemContainer>();
+                        if (containers!=null && containers.Any())
+                        {
+                            inventory = containers.Last().Inventory;
+                        }
+                    }
+                }                
+
+                var item = new Item(itemPrefab, pos, sub);                
+
+                item.ID = itemId;
+                if (sub != null)
+                {
+                    item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
+                    item.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+                }
+
+                if (!string.IsNullOrEmpty(tags)) item.Tags = tags;
+
+                if (inventory != null)
+                {
+                    if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
+                        inventory.TryPutItem(item, inventorySlotIndex, false))
+                    {
+                        continue;
+                    }
+                    inventory.TryPutItem(item, item.AllowedSlots);
+                }
+
+            }
         }
 
         public void Clear()
@@ -147,9 +263,33 @@ namespace Barotrauma
 
                 items.Add(item);
             }
-            
+
+            //if (GameMain.Server != null) GameMain.Server.SendItemRemoveMessage(items);
         }
-        
+
+        public void FillNetworkData(Lidgren.Network.NetBuffer message, List<Item> items)
+        {
+            message.Write((byte)items.Count);
+            foreach (Item item in items)
+            {
+                message.Write(item.ID);
+            }
+        }
+
+        public void ReadNetworkData(Lidgren.Network.NetBuffer message)
+        {
+            var itemCount = message.ReadByte();
+            for (int i = 0; i<itemCount; i++)
+            {
+                ushort itemId = message.ReadUInt16();
+
+                var item = MapEntity.FindEntityByID(itemId) as Item;
+                if (item == null) continue;
+
+                item.Remove();
+            }
+        }
+
         public void Clear()
         {
             removeQueue.Clear();

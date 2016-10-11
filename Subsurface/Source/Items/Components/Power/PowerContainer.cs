@@ -86,7 +86,6 @@ namespace Barotrauma.Items.Components
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 RechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);
-                item.NewComponentEvent(this, true, false);
 
                 return true;
             };
@@ -95,7 +94,6 @@ namespace Barotrauma.Items.Components
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 RechargeSpeed = Math.Max(rechargeSpeed + maxRechargeSpeed * 0.1f, 0.0f);
-                item.NewComponentEvent(this, true, false);
 
                 return true;
             };

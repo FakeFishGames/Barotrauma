@@ -228,9 +228,7 @@ namespace Barotrauma.Items.Components
             Msg = prevMsg;
 
             attached = true;
-
-            if (character != null) item.NewComponentEvent(this, true, true);
-
+            
             return true;
         }
 
