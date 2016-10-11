@@ -464,7 +464,7 @@ namespace Barotrauma
                 if (limb.pullJoint != null)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.pullJoint.WorldAnchorA);
-                    if (currentHull != null) pos += currentHull.Submarine.Position;
+                    if (currentHull != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
 
@@ -492,7 +492,7 @@ namespace Barotrauma
                 if (limb.body.TargetPosition != Vector2.Zero)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.body.TargetPosition);
-                    if (currentHull != null) pos += currentHull.Submarine.Position;
+                    if (currentHull != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
 
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
