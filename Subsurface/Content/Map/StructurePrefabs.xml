@@ -200,6 +200,18 @@
     <sprite texture="Content/Map/ruins.png" sourcerect="896,192,128,832" depth ="0.061"/>
   </RuinWallVertical>
 
+
+  <RuinWallHeavyHorizontal category="Alien" castshadow="true"
+    width="128" height="128" resizehorizontal="true" body="true" health="100000">
+    <sprite texture="Content/Map/ruins3.png" sourcerect="352,896,672,128" depth ="0.06"/>
+  </RuinWallHeavyHorizontal>
+
+  <RuinWallHeavyVertical category="Alien" castshadow="true"
+    width="128" height="128" resizevertical="true" body="true" health="100000">
+    <sprite texture="Content/Map/ruins3.png" sourcerect="896,0,128,672" depth ="0.061"/>
+  </RuinWallHeavyVertical>
+  
+
   <RuinWallHorizontalSmall category="Alien" castshadow="true"
     width="128" height="54" resizehorizontal="true" body="true" health="500">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,842,832,54" depth ="0.062"/>
@@ -221,6 +233,11 @@
     <sprite texture="Content/Map/ruins.png" sourcerect="512,0,233,512" depth ="0.981" />
   </RuinBackCarvings>
 
+  <RuinBackFractal category="Alien"
+    width="64" height="64" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/ruins3.png" sourcerect="0,0,640,896" depth ="0.98"/>
+  </RuinBackFractal>
+  
   <RuinBlock category="Alien" 
     width="514" height="296">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,513,514,296" depth ="0.99" />
