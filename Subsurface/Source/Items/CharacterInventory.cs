@@ -310,7 +310,7 @@ namespace Barotrauma
             MergeSlots();
         }
 
-        public override void Update(float deltaTime)
+        public override void Update(float deltaTime, bool subInventory = false)
         {
             base.Update(deltaTime);
             
@@ -339,7 +339,7 @@ namespace Barotrauma
                         //not equipped -> attempt to equip
                         if (IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
                         {
-                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any));
+                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);
                         }
                         //equipped -> attempt to unequip
                         else if (doubleClickedItem.AllowedSlots.Contains(InvSlotType.Any))
@@ -467,7 +467,7 @@ namespace Barotrauma
                     (draggingItem == null || draggingItem.Container != Items[selectedSlot]))
                 {
                     selectedSlot = -1;
-                }                   
+                }
             }
         }
         

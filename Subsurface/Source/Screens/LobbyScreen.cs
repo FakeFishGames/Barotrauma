@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class LobbyScreen : Screen
     {
-        enum PanelTab { Crew = 0, Map = 1, CurrentLocation = 2, Store = 3 }
+        enum PanelTab { Crew = 0, Map = 1, Store = 3 }
 
         private GUIFrame topPanel;
         private GUIFrame[] bottomPanel;
@@ -72,19 +72,15 @@ namespace Barotrauma
                 Alignment.BottomLeft, Alignment.BottomLeft, topPanel);
             moneyText.TextGetter = GetMoney;
             
-            GUIButton button = new GUIButton(new Rectangle(-360, 0, 100, 30), "Map", null, Alignment.BottomRight, GUI.Style, topPanel);
+            GUIButton button = new GUIButton(new Rectangle(-240, 0, 100, 30), "Map", null, Alignment.BottomRight, GUI.Style, topPanel);
             button.UserData = PanelTab.Map;
             button.OnClicked = SelectRightPanel;
             SelectRightPanel(button, button.UserData);
 
-            button = new GUIButton(new Rectangle(-240, 0, 100, 30), "Crew", null, Alignment.BottomRight, GUI.Style, topPanel);
+            button = new GUIButton(new Rectangle(-120, 0, 100, 30), "Crew", null, Alignment.BottomRight, GUI.Style, topPanel);
             button.UserData = PanelTab.Crew;
             button.OnClicked = SelectRightPanel;
-
-            button = new GUIButton(new Rectangle(-120, 0, 100, 30), "Hire", null, Alignment.BottomRight, GUI.Style, topPanel);
-            button.UserData = PanelTab.CurrentLocation;
-            button.OnClicked = SelectRightPanel;
-
+            
             button = new GUIButton(new Rectangle(0, 0, 100, 30), "Store", null, Alignment.BottomRight, GUI.Style, topPanel);
             button.UserData = PanelTab.Store;
             button.OnClicked = SelectRightPanel;
@@ -106,7 +102,9 @@ namespace Barotrauma
             //new GUITextBlock(new Rectangle(0, 0, 200, 25), "Crew:", Color.Transparent, Color.White, Alignment.Left, GUI.Style, bottomPanel[(int)PanelTab.Crew]);
 
             int crewColumnWidth = Math.Min(300, (panelRect.Width - 40) / 2);
-            characterList = new GUIListBox(new Rectangle(0, 0, crewColumnWidth, 0), GUI.Style, bottomPanel[(int)PanelTab.Crew]);
+
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Crew:", GUI.Style, bottomPanel[(int)PanelTab.Crew], GUI.LargeFont);
+            characterList = new GUIListBox(new Rectangle(0, 40, crewColumnWidth, 0), GUI.Style, bottomPanel[(int)PanelTab.Crew]);
             characterList.OnSelected = SelectCharacter;
 
             //---------------------------------------
@@ -118,12 +116,7 @@ namespace Barotrauma
                 Alignment.BottomRight, GUI.Style, bottomPanel[(int)PanelTab.Map]);
             startButton.OnClicked = StartShift;
             startButton.Enabled = false;
-
-            //---------------------------------------
-
-            bottomPanel[(int)PanelTab.CurrentLocation] = new GUIFrame(panelRect, GUI.Style);
-            bottomPanel[(int)PanelTab.CurrentLocation].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-
+            
             //---------------------------------------
 
             bottomPanel[(int)PanelTab.Store] = new GUIFrame(panelRect, GUI.Style);
@@ -131,13 +124,13 @@ namespace Barotrauma
 
             int sellColumnWidth = (panelRect.Width - 40) / 2 - 20;
 
-            selectedItemList = new GUIListBox(new Rectangle(0, 0, sellColumnWidth, 400), Color.White * 0.7f, GUI.Style, bottomPanel[(int)PanelTab.Store]);
+            selectedItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, 400), Color.White * 0.7f, GUI.Style, bottomPanel[(int)PanelTab.Store]);
             selectedItemList.OnSelected = DeselectItem;
 
             var costText = new GUITextBlock(new Rectangle(0, 0, 100, 25), "Cost: ", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, bottomPanel[(int)PanelTab.Store]);
             costText.TextGetter = CostTextGetter;
 
-            buyButton = new GUIButton(new Rectangle(sellColumnWidth + 20, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, bottomPanel[(int)PanelTab.Store]);
+            buyButton = new GUIButton(new Rectangle(selectedItemList.Rect.Width - 100, 0, 100, 25), "Buy", Alignment.Bottom, GUI.Style, bottomPanel[(int)PanelTab.Store]);
             buyButton.OnClicked = BuyItems;
 
             storeItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, 400), Color.White * 0.7f, Alignment.TopRight, GUI.Style, bottomPanel[(int)PanelTab.Store]);
@@ -158,10 +151,7 @@ namespace Barotrauma
                     SelectItemCategory(categoryButton, category);
                 }
                 x += 110;
-
-            }
-
-            
+            }            
         }
 
         public override void Select()
@@ -170,49 +160,51 @@ namespace Barotrauma
 
             gameMode = GameMain.GameSession.gameMode as SinglePlayerMode;
 
-            foreach (GUIComponent component in topPanel.children)
-            {
-                var button = component as GUIButton;
-                if (button == null || button.Text != "Hire") continue;
-
-                button.Enabled = GameMain.GameSession.Map.CurrentLocation.Type.HasHireableCharacters;
-                break;
-            }
-
             UpdateCharacterLists();            
         }
 
         private void UpdateLocationTab(Location location)
         {
             topPanel.RemoveChild(topPanel.FindChild("locationtitle"));
-
             topPanel.UserData = location;
 
             var locationTitle = new GUITextBlock(new Rectangle(0, 0, 200, 25),
                 "Location: "+location.Name, Color.Transparent, Color.White, Alignment.TopLeft, GUI.Style, topPanel);
             locationTitle.UserData = "locationtitle";
             locationTitle.Font = GUI.LargeFont;
-
-            bottomPanel[(int)PanelTab.CurrentLocation].ClearChildren();
-            bottomPanel[(int)PanelTab.CurrentLocation].UserData = location;
-
-            if (location.HireManager != null)
+            
+            
+            if (hireList == null)
             {
-                hireList = new GUIListBox(new Rectangle(0, 0, 300, 0), GUI.Style, Alignment.Left, bottomPanel[(int)PanelTab.CurrentLocation]);
+                hireList = new GUIListBox(new Rectangle(0, 40, 300, 0), GUI.Style, Alignment.Right, bottomPanel[(int)PanelTab.Crew]);
+                new GUITextBlock(new Rectangle(0, 0, 300, 20), "Hire:", GUI.Style, Alignment.Right, Alignment.Left, bottomPanel[(int)PanelTab.Crew], false, GUI.LargeFont);
+
                 hireList.OnSelected = SelectCharacter;
-
-                hireList.ClearChildren();
-                foreach (CharacterInfo c in location.HireManager.availableCharacters)
-                {
-                    var frame = c.CreateCharacterFrame(hireList, c.Name + " (" + c.Job.Name + ")", c);
-
-                    new GUITextBlock(
-                        new Rectangle(0, 0, 0, 25),
-                        c.Salary.ToString(),
-                        null, null,
-                        Alignment.TopRight, GUI.Style, frame);
-                }            
             }
+
+            if (location.HireManager == null)
+            {
+                hireList.ClearChildren();
+                hireList.Enabled = false;
+
+                new GUITextBlock(new Rectangle(0, 0, 0, 0), "No-one available for hire", Color.Transparent, Color.LightGray, Alignment.Center, Alignment.Center, GUI.Style, hireList);
+                return;
+            }
+
+            hireList.Enabled = true;
+            hireList.ClearChildren();
+
+            foreach (CharacterInfo c in location.HireManager.availableCharacters)
+            {
+                var frame = c.CreateCharacterFrame(hireList, c.Name + " (" + c.Job.Name + ")", c);
+
+                new GUITextBlock(
+                    new Rectangle(0, 0, 0, 25),
+                    c.Salary.ToString(),
+                    null, null,
+                    Alignment.TopRight, GUI.Style, frame);
+            }            
+            
         }
 
 
@@ -273,6 +265,8 @@ namespace Barotrauma
             frame.HoverColor = Color.Gold * 0.2f;
             frame.SelectedColor = Color.Gold * 0.5f;
 
+            frame.ToolTip = ep.Description;
+
             SpriteFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
             GUITextBlock textBlock = new GUITextBlock(
@@ -283,6 +277,7 @@ namespace Barotrauma
                 null, frame);
             textBlock.Font = font;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
+            textBlock.ToolTip = ep.Description;
 
             if (ep.sprite != null)
             {
@@ -297,6 +292,7 @@ namespace Barotrauma
                 null, null, Alignment.TopLeft,
                 Alignment.TopLeft, GUI.Style, frame);
             textBlock.Font = font;
+            textBlock.ToolTip = ep.Description;
 
         }
 
@@ -334,14 +330,13 @@ namespace Barotrauma
             {
                 GUIComponent child = selectedItemList.children[i];
 
-                MapEntityPrefab ep = child.UserData as MapEntityPrefab;
-                if (ep == null) continue;
+                ItemPrefab ip = child.UserData as ItemPrefab;
+                if (ip == null) continue;
 
-                gameMode.CargoManager.AddItem(ep);
+                gameMode.CargoManager.AddItem(ip);
                 
                 selectedItemList.RemoveChild(child);
             }
-
 
             return false;
         }
@@ -365,7 +360,6 @@ namespace Barotrauma
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-
             if (characterList.CountChildren != CrewManager.characterInfos.Count)
             {
                 UpdateCharacterLists();
@@ -431,12 +425,7 @@ namespace Barotrauma
         
         private bool SelectItemCategory(GUIButton button, object selection)
         {
-
             if (!(selection is MapEntityCategory)) return false;
-            //var existingList = bottomPanel[(int)PanelTab.Store].children.Find(c => c is GUIListBox && c.UserData is MapEntityCategory);
-            //if (existingList != null) bottomPanel[(int)PanelTab.Store].RemoveChild(existingList);
-
-            //bottomPanel[(int)PanelTab.Store].AddChild(storeItemLists[(int)selection]);
 
             storeItemList.ClearChildren();
 
@@ -485,27 +474,32 @@ namespace Barotrauma
             CharacterInfo characterInfo = selection as CharacterInfo;
             if (characterInfo == null) return false;
 
+            characterList.Deselect();
+            hireList.Deselect();
+
             if (Character.Controlled != null && characterInfo == Character.Controlled.Info) return false;
 
             if (previewFrame == null || previewFrame.UserData != characterInfo)
             {
-                previewFrame = new GUIFrame(new Rectangle(bottomPanel[(int)PanelTab.Crew].Rect.Width/2, 60, Math.Min(300,bottomPanel[(int)PanelTab.Crew].Rect.Width/2 - 40), 300),
+                int width = Math.Min(300, bottomPanel[(int)PanelTab.Crew].Rect.Width - hireList.Rect.Width - characterList.Rect.Width - 50);
+                
+                previewFrame = new GUIFrame(new Rectangle(0, 60, width, 300),
                         new Color(0.0f, 0.0f, 0.0f, 0.8f),
-                        Alignment.Top, GUI.Style, bottomPanel[selectedRightPanel]);
+                        Alignment.TopCenter, GUI.Style, bottomPanel[selectedRightPanel]);
                 previewFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
                 previewFrame.UserData = characterInfo;
                 
                 characterInfo.CreateInfoFrame(previewFrame);                
             }
 
-            if (selectedRightPanel == (int)PanelTab.CurrentLocation)
+            if (component.Parent == hireList)
             {
                 GUIButton hireButton = new GUIButton(new Rectangle(0,0, 100, 20), "Hire", Alignment.BottomCenter, GUI.Style, previewFrame);
                 hireButton.UserData = characterInfo;
                 hireButton.OnClicked = HireCharacter;
             }
 
-            return false;
+            return true;
         }
 
         private bool HireCharacter(GUIButton button, object selection)
@@ -516,6 +510,8 @@ namespace Barotrauma
             if (gameMode.TryHireCharacter(GameMain.GameSession.Map.CurrentLocation.HireManager, characterInfo))
             {
                 UpdateLocationTab(GameMain.GameSession.Map.CurrentLocation);
+
+                SelectCharacter(null,null);
             }
 
 

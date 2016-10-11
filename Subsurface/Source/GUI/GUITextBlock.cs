@@ -61,7 +61,12 @@ namespace Barotrauma
             set
             {
                 if (base.Rect == value) return;
-                base.Rect = value;
+                foreach (GUIComponent child in children)
+                {
+                    child.Rect = new Rectangle(child.Rect.X + value.X - rect.X, child.Rect.Y + value.Y - rect.Y, child.Rect.Width, child.Rect.Height);
+                }
+
+                rect = value;
                 SetTextPos();
             }
         }
@@ -163,7 +168,7 @@ namespace Barotrauma
             }
         }
 
-        private void SetTextPos()
+        public void SetTextPos()
         {
             if (text==null) return;
 

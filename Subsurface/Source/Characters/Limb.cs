@@ -462,14 +462,14 @@ namespace Barotrauma
                 Vector2 normal = new Vector2(-line.Y, line.X);
                 normal = Vector2.Normalize(-normal);
 
-                float dragDot = Vector2.Dot(normal, velDir);
+                float dragDot = Math.Abs(Vector2.Dot(normal, velDir));
                 Vector2 dragForce = Vector2.Zero;
                 if (dragDot > 0)
                 {
                     float vel = LinearVelocity.Length()*2.0f;
                     float drag = dragDot * vel * vel
                         * ConvertUnits.ToSimUnits(sprite.size.Y);
-                    dragForce = drag * -velDir;
+                    dragForce = Math.Min(drag, Mass*1000.0f) * -velDir;
                     //if (dragForce.Length() > 100.0f) { }
                 }
 
@@ -499,7 +499,8 @@ namespace Barotrauma
             float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
 
             AttackTimer += deltaTime;
-                body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
+
+            body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
 
             if (dist < attack.Range * 0.5f)
             {

@@ -30,8 +30,13 @@ namespace Barotrauma
         private float higherSurface;
         private float lowerSurface;
 
+        private Vector2 lerpedFlowForce;
+
         //if set to true, hull connections of this gap won't be updated when changes are being done to hulls
         public bool DisableHullRechecks;
+        
+        //can ambient light get through the gap even if it's not open
+        public bool PassAmbientLight;
 
         public float Open
         {
@@ -47,8 +52,6 @@ namespace Barotrauma
         {
             get { return lerpedFlowForce; }
         }
-
-        private Vector2 lerpedFlowForce;
 
         public Hull FlowTargetHull
         {
@@ -189,7 +192,7 @@ namespace Barotrauma
             Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
             if (isHighlighted) clr = Color.Gold;
 
-            GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), clr * 0.5f, true);
+            GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), clr * 0.5f, true,0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
 
             for (int i = 0; i < linkedTo.Count; i++)
             {
@@ -212,7 +215,10 @@ namespace Barotrauma
                 GUI.DrawRectangle(sb,
                     new Vector2(WorldRect.X - 5, -WorldRect.Y - 5),
                     new Vector2(rect.Width + 10, rect.Height + 10),
-                    Color.Red);
+                    Color.Red,
+                    false,
+                    0,
+                    (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
         }
         

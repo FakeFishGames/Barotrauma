@@ -7,6 +7,8 @@ namespace Barotrauma.Items.Components
     {
         private float maxPower;
 
+        private float lastReceivedMessage;
+
         [Editable, HasDefaultValue(1000.0f, true)]
         public float MaxPower
         {
@@ -73,13 +75,43 @@ namespace Barotrauma.Items.Components
             }
             else if (connection.Name == "toggle")
             {
-                IsOn = !IsOn;
+                SetState(!IsOn,false,true);
             }
             else if (connection.Name == "set_state")
             {
-                IsOn = signal != "0";
+                SetState(signal != "0", false, true);
+            }
+        }
+
+        public void SetState(bool on, bool isNetworkMessage, bool sendNetworkMessage = false)
+        {
+            if (GameMain.Client != null && !isNetworkMessage) return;
+
+            IsOn = on;
+            if (sendNetworkMessage)
+            {
+                item.NewComponentEvent(this, false, true);
+            }
+        }
+
+        public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
+        {
+            message.Write(IsOn);
+
+            return true;
+        }
+
+        public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
+        {
+            if (sendingTime < lastReceivedMessage) return;
+            if (GameMain.Server != null)
+            {
+                return;
             }
 
+            lastReceivedMessage = sendingTime;
+
+            SetState(message.ReadBoolean(), true);
         }
     }
 }

@@ -6,7 +6,35 @@ namespace Barotrauma
 {
     class ItemSpawner
     {
-        private readonly Queue<Pair<ItemPrefab, object>> spawnQueue;
+        class ItemSpawnInfo
+        {
+            public readonly ItemPrefab Prefab;
+
+            public readonly Vector2 Position;
+            public readonly Inventory Inventory;
+            public readonly Submarine Submarine;
+
+            public ItemSpawnInfo(ItemPrefab prefab, Vector2 worldPosition)
+            {
+                Prefab = prefab;
+                Position = worldPosition;
+            }
+
+            public ItemSpawnInfo(ItemPrefab prefab, Vector2 position, Submarine sub)
+            {
+                Prefab = prefab;
+                Position = position;
+                Submarine = sub;
+            }
+            
+            public ItemSpawnInfo(ItemPrefab prefab, Inventory inventory)
+            {
+                Prefab = prefab;
+                Inventory = inventory;
+            }
+        }
+
+        private readonly Queue<ItemSpawnInfo> spawnQueue;
 
 
         public List<Item> spawnItems = new List<Item>();
@@ -14,37 +42,31 @@ namespace Barotrauma
 
         public ItemSpawner()
         {
-            spawnQueue = new Queue<Pair<ItemPrefab, object>>();
+            spawnQueue = new Queue<ItemSpawnInfo>();
         }
 
         public void QueueItem(ItemPrefab itemPrefab, Vector2 worldPosition, bool isNetworkMessage = false)
         {
-            if (!isNetworkMessage && GameMain.Client != null)
-            {
-                //clients aren't allowed to spawn new items unless the server says so
-                return;
-            }
+            //clients aren't allowed to spawn new items unless the server says so
+            if (!isNetworkMessage && GameMain.Client != null) return;
+            
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition));
+        }
 
-            var itemInfo = new Pair<ItemPrefab, object>();
-            itemInfo.First = itemPrefab;
-            itemInfo.Second = worldPosition;
+        public void QueueItem(ItemPrefab itemPrefab, Vector2 position, Submarine sub, bool isNetworkMessage = false)
+        {
+            //clients aren't allowed to spawn new items unless the server says so
+            if (!isNetworkMessage && GameMain.Client != null) return;
 
-            spawnQueue.Enqueue(itemInfo);
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub));
         }
 
         public void QueueItem(ItemPrefab itemPrefab, Inventory inventory, bool isNetworkMessage = false)
         {
-            if (!isNetworkMessage && GameMain.Client != null)
-            {
-                //clients aren't allowed to spawn new items unless the server says so
-                return;
-            }
+            //clients aren't allowed to spawn new items unless the server says so
+            if (!isNetworkMessage && GameMain.Client != null) return;
 
-            var itemInfo = new Pair<ItemPrefab, object>();
-            itemInfo.First = itemPrefab;
-            itemInfo.Second = inventory;
-
-            spawnQueue.Enqueue(itemInfo);
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory));
         }
 
         public void Update()
@@ -58,23 +80,20 @@ namespace Barotrauma
             {
                 var itemInfo = spawnQueue.Dequeue();
 
-                if (itemInfo.Second is Vector2)
+                Item spawnedItem = null;
+
+                if (itemInfo.Inventory != null)
                 {
-                    var item = new Item(itemInfo.First, (Vector2)itemInfo.Second, null);
-                    AddToSpawnedList(item);
-
-                    items.Add(item);
+                    spawnedItem = new Item(itemInfo.Prefab, Vector2.Zero, null);
+                    itemInfo.Inventory.TryPutItem(spawnedItem, spawnedItem.AllowedSlots, false);
                 }
-                else if (itemInfo.Second is Inventory)
+                else
                 {
-                    var item = new Item(itemInfo.First, Vector2.Zero, null);
-                    AddToSpawnedList(item);
-
-                    var inventory = (Inventory)itemInfo.Second;
-                    inventory.TryPutItem(item, null);
-
-                    items.Add(item);
+                    spawnedItem = new Item(itemInfo.Prefab, itemInfo.Position, itemInfo.Submarine);
                 }
+
+                AddToSpawnedList(spawnedItem);
+                items.Add(spawnedItem);
             }
             
         }

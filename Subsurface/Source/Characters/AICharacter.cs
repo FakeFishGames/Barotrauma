@@ -64,9 +64,9 @@ namespace Barotrauma
             aiController.Update(deltaTime);
         }
 
-        public override void DrawFront(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
+        public override void DrawFront(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch,Camera cam)
         {
-            base.DrawFront(spriteBatch);
+            base.DrawFront(spriteBatch,cam);
 
             if (GameMain.DebugDraw && !isDead) aiController.DebugDraw(spriteBatch);
         }

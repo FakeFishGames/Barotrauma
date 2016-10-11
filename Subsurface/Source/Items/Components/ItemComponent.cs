@@ -585,6 +585,8 @@ namespace Barotrauma.Items.Components
             return (average+100.0f)/2.0f;        
         }
 
+        public virtual void FlipX() { }
+
         public bool HasRequiredContainedItems(bool addMessage)
         {
             List<RelatedItem> requiredContained = requiredItems.FindAll(ri=> ri.Type == RelatedItem.RelationType.Contained);

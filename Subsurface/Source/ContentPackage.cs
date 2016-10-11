@@ -17,7 +17,7 @@ namespace Barotrauma
         Structure, 
         Executable, 
         LocationTypes, 
-        LevelGenerationPresets,
+        LevelGenerationParameters,
         RandomEvents, 
         Missions, 
         BackgroundCreaturePrefabs, BackgroundSpritePrefabs

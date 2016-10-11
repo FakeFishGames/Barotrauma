@@ -122,7 +122,7 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
            
             light.ParentSub = item.Submarine;
-            
+
             ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             if (item.Container != null)

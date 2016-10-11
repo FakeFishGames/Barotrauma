@@ -39,6 +39,14 @@ namespace Barotrauma
         private bool loadSub;
         private Submarine sub;
 
+        public Submarine Sub
+        {
+            get
+            {
+                return sub;
+            }
+        }
+
         private XElement saveElement;
 
         public override bool IsLinkable
@@ -48,7 +56,7 @@ namespace Barotrauma
                 return true;
             }
         }
-
+        
         public LinkedSubmarine(Submarine submarine)
             : base(null, submarine) 
         {
@@ -100,7 +108,7 @@ namespace Barotrauma
         {
             return Vector2.Distance(position, WorldPosition) < 50.0f;
         }
-
+        
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!editing || wallVertices == null) return;
@@ -141,16 +149,15 @@ namespace Barotrauma
             }
         }
 
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        public override void UpdateEditing(Camera cam)
         {
             if (editingHUD == null || editingHUD.UserData as LinkedSubmarine != this)
             {
                 editingHUD = CreateEditingHUD();
             }
 
-            editingHUD.Update(0.016f);
-            editingHUD.Draw(spriteBatch);
-            
+            editingHUD.Update((float)Timing.Step);
+
             if (!PlayerInput.LeftButtonClicked() || !PlayerInput.KeyDown(Keys.Space)) return;
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -168,6 +175,13 @@ namespace Barotrauma
                     linkedTo.Add(entity);
                 }
             }
+        }
+
+        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        {
+            if (editingHUD == null) return;
+
+            editingHUD.Draw(spriteBatch);            
         }
 
 
@@ -204,8 +218,7 @@ namespace Barotrauma
             }
             return editingHUD;
         }
-
-
+        
         private bool Reload(GUIButton button, object obj)
         {
             var pathBox = obj as GUITextBox;
@@ -386,8 +399,8 @@ namespace Barotrauma
         {
             if (!loadSub) return;
 
-            sub = Submarine.Load(saveElement, false);            
-
+            sub = Submarine.Load(saveElement, false);
+            
             Vector2 worldPos = ToolBox.GetAttributeVector2(saveElement, "worldpos", Vector2.Zero);
             if (worldPos != Vector2.Zero)
             {
@@ -398,8 +411,6 @@ namespace Barotrauma
                 sub.SetPosition(WorldPosition - Submarine.WorldPosition);
                 sub.Submarine = Submarine;
             }
-            
-            
             
             var linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
 

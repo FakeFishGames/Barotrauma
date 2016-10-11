@@ -26,6 +26,11 @@ namespace Barotrauma
 
         private bool savedOnStart;
 
+        private List<Submarine> subsToLeaveBehind;
+
+        private Submarine leavingSub;
+        private bool atEndPosition;
+
         public override Mission Mission
         {
             get
@@ -80,18 +85,28 @@ namespace Barotrauma
 
         public SinglePlayerMode(XElement element)
             : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"), null)
-        {
-            string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
-
-            GenerateMap(mapSeed);
-
-            Map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
-
+        {            
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "crew") continue;
-                
-                GameMain.GameSession.CrewManager = new CrewManager(subElement);                
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "crew":
+                        GameMain.GameSession.CrewManager = new CrewManager(subElement); 
+                        break;
+                    case "map":
+                        Map = Map.Load(subElement);
+                        break;
+                }               
+            }
+
+            //backwards compatibility with older save files
+            if (Map==null)
+            {
+                string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
+
+                GenerateMap(mapSeed);
+
+                Map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
             }
 
             savedOnStart = true;
@@ -198,12 +213,6 @@ namespace Barotrauma
             }
 
             endShiftButton.Draw(spriteBatch);
-            //chatBox.Draw(spriteBatch);
-            //textBox.Draw(spriteBatch);
-
-            //timerBar.Draw(spriteBatch);
-
-            //if (Game1.Client == null) endShiftButton.Draw(spriteBatch);
         }
 
         public override void Update(float deltaTime)
@@ -230,30 +239,33 @@ namespace Barotrauma
 
         public override void End(string endMessage = "")
         {
-
             isRunning = false;
 
-            //if (endMessage != "" || this.endMessage == null) this.endMessage = endMessage;
-
             bool success = CrewManager.characters.Any(c => !c.IsDead);
+
+            if (success)
+            {
+                if (subsToLeaveBehind == null || leavingSub == null)
+                {
+                    DebugConsole.ThrowError("Leaving submarine not selected -> selecting the closest one");
+
+                    leavingSub = GetLeavingSub();
+
+                    subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
+                }
+            }
             
             GameMain.GameSession.EndShift("");
 
             if (success)
             {
-                var leavingSub = GetLeavingSub();
-
-                if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition)
+                if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
                 {
-                    System.Diagnostics.Debug.Assert(leavingSub != Submarine.MainSub);
-                    
                     Submarine oldMainSub = Submarine.MainSub;
                     Submarine.MainSub = leavingSub;
 
                     GameMain.GameSession.Submarine = leavingSub;
-
-                    List<Submarine> subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-
+                    
                     foreach (Submarine sub in subsToLeaveBehind)
                     {
                         MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
@@ -261,12 +273,10 @@ namespace Barotrauma
                     }
                 }
 
-
-                if (Submarine.MainSub.AtEndPosition)
+                if (atEndPosition)
                 {
                     Map.MoveToNextLocation();
                 }
-
 
                 SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
             }
@@ -302,18 +312,18 @@ namespace Barotrauma
 
         private bool TryEndShift(GUIButton button, object obj)
         {
-            List<Submarine> subsNotDocked = new List<Submarine>();
-
-            var leavingSub = obj as Submarine;
+            leavingSub = obj as Submarine;
             if (leavingSub != null)
             {
-                subsNotDocked = GetSubsToLeaveBehind(leavingSub);
+                subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
             }
 
-            if (subsNotDocked.Any())
+            atEndPosition = leavingSub.AtEndPosition;
+
+            if (subsToLeaveBehind.Any())
             {
                 string msg = "";
-                if (subsNotDocked.Count==1)
+                if (subsToLeaveBehind.Count == 1)
                 {
                     msg = "One of your vessels isn't at the exit yet. Do you want to leave it behind?";
                 }
@@ -325,7 +335,7 @@ namespace Barotrauma
                 var msgBox = new GUIMessageBox("Warning", msg, new string[] {"Yes", "No"});
                 msgBox.Buttons[0].OnClicked += EndShift;
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
-                msgBox.Buttons[0].UserData = Submarine.Loaded.FindAll(s => !subsNotDocked.Contains(s));
+                msgBox.Buttons[0].UserData = Submarine.Loaded.FindAll(s => !subsToLeaveBehind.Contains(s));
 
                 msgBox.Buttons[1].OnClicked += msgBox.Close;
             }
@@ -343,7 +353,7 @@ namespace Barotrauma
 
             List<Submarine> leavingSubs = obj as List<Submarine>;
             if (leavingSubs == null) leavingSubs = new List<Submarine>() { GetLeavingSub() };
-
+            
             var cinematic = new TransitionCinematic(leavingSubs, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endshift" : "crewdead";
@@ -378,13 +388,14 @@ namespace Barotrauma
             //element.Add(new XAttribute("day", day));
             XElement modeElement = new XElement("gamemode");
 
-            modeElement.Add(new XAttribute("currentlocation", Map.CurrentLocationIndex));
-            modeElement.Add(new XAttribute("mapseed", Map.Seed));
-
+            //modeElement.Add(new XAttribute("currentlocation", Map.CurrentLocationIndex));
+            //modeElement.Add(new XAttribute("mapseed", Map.Seed));
+            
+            
             CrewManager.Save(modeElement);
+            Map.Save(modeElement);
 
             element.Add(modeElement);
-            
         }
     }
 }

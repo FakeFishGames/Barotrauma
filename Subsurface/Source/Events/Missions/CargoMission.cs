@@ -10,15 +10,14 @@ namespace Barotrauma
 {
     class CargoMission : Mission
     {
-
         private XElement itemConfig;
 
         private List<Item> items;
 
         private int requiredDeliveryAmount;
 
-        public CargoMission(XElement element)
-            : base(element)
+        public CargoMission(XElement element, Location[] locations)
+            : base(element, locations)
         {
             itemConfig = element.Element("Items");
 
@@ -71,7 +70,7 @@ namespace Barotrauma
 
             Vector2 position = new Vector2(
                 cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, false),
-                cargoRoom.Rect.Y - cargoRoom.Rect.Height);
+                cargoRoom.Rect.Y - cargoRoom.Rect.Height + itemPrefab.Size.Y / 2);
 
             var item = new Item(itemPrefab, position, cargoRoom.Submarine);
             item.FindHull();

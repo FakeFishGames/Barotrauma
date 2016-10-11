@@ -86,7 +86,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Coroutine " + handle.Name + " threw an exception: " + e.Message);
+                DebugConsole.ThrowError("Coroutine " + handle.Name + " threw an exception: " + e.Message + "\n" + e.StackTrace.ToString());
                 return true;
             }
         }
