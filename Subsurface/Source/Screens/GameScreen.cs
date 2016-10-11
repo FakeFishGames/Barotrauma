@@ -95,6 +95,9 @@ namespace Barotrauma
 #if DEBUG
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null)
             {
+                var closestSub = Submarine.GetClosest(cam.WorldViewCenter);
+                if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
+
                 Vector2 targetMovement = Vector2.Zero;
                 if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
                 if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
@@ -102,7 +105,7 @@ namespace Barotrauma
                 if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
 
                 if (targetMovement != Vector2.Zero)
-                    GameMain.GameSession.Submarine.ApplyForce(targetMovement * GameMain.GameSession.Submarine.SubBody.Body.Mass * 100.0f);
+                    closestSub.ApplyForce(targetMovement * closestSub.SubBody.Body.Mass * 100.0f);
             }
 #endif
             if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);

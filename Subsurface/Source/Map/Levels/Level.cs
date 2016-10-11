@@ -807,7 +807,7 @@ namespace Barotrauma
             return matchingPositions[Rand.Int(matchingPositions.Count, !useSyncedRand)].Position;
         }
 
-        public void Update (float deltaTime)
+        public void Update(float deltaTime)
         {
             if (Submarine.MainSub != null)
             {
@@ -849,6 +849,11 @@ namespace Barotrauma
 
         public void DrawBack(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundSpriteManager = null)
         {
+            float brightness = MathHelper.Clamp(50.0f + (cam.Position.Y - Size.Y) / 2000.0f, 10.0f, 40.0f);
+
+            float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
+            GameMain.LightManager.AmbientLight = new Color(backgroundColor * (brightness / avgValue), 1.0f);
+
             graphics.Clear(backgroundColor);
 
             if (renderer == null) return;
