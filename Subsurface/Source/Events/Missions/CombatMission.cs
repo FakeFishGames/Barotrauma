@@ -164,15 +164,6 @@ namespace Barotrauma
 
                 foreach (Character character in Character.CharacterList)
                 {
-                    if (GameMain.NetworkMember != null && character == GameMain.NetworkMember.Character)
-                    {
-                        //ugly hack to switch the text in the mission popup to the team-specific description
-                        if (GUIMessageBox.MessageBoxes.Count > 0 && GUIMessageBox.MessageBoxes.Peek().UserData as string == "missionstartmessage")
-                        {
-                            (GUIMessageBox.MessageBoxes.Peek() as GUIMessageBox).Text = Description;
-                        }
-                    }
-
                     if (character.TeamID == 1)
                     {
                         crews[0].Add(character);
@@ -209,7 +200,7 @@ namespace Barotrauma
             }
             else
             {
-                if (subs[winner] != null && 
+                if (winner>=0 && subs[winner] != null && 
                     (winner == 0 && subs[winner].AtStartPosition) || (winner == 1 && subs[winner].AtEndPosition) &&
                     crews[winner].Any(c => !c.IsDead && c.Submarine == subs[winner]))
                 {
@@ -220,6 +211,8 @@ namespace Barotrauma
 
             if (teamDead[0] && teamDead[1])
             {
+                GameMain.GameSession.CrewManager.WinningTeam = 0;
+                winner = -1;
                 if (GameMain.Server != null) GameMain.Server.EndGame();
             }
         }
