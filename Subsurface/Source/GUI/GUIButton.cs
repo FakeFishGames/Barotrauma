@@ -191,28 +191,7 @@ namespace Barotrauma
 
             //if (!Enabled) GUI.DrawRectangle(spriteBatch, rect, Color.Gray*0.5f, true);
         }
-
-        public override void Update(float deltaTime)
-        {
-            if (!Visible) return;
-
-            base.Update(deltaTime);
-
-            //Color currColor = color;
-            //if (state == ComponentState.Hover) currColor = hoverColor;
-            //if (state == ComponentState.Selected) currColor = selectedColor;
-
-            //GUI.DrawRectangle(spriteBatch, rect, currColor * alpha, true);
-
-            ////spriteBatch.DrawString(HUD.font, text, new Vector2(rect.X+rect.Width/2, rect.Y+rect.Height/2), Color.Black, 0.0f, new Vector2(0.5f,0.5f), 1.0f, SpriteEffects.None, 0.0f);
-
-            //GUI.DrawRectangle(spriteBatch, rect, Color.Black * alpha, false);
-
-            DrawChildren(spriteBatch);
-
-            //if (!Enabled) GUI.DrawRectangle(spriteBatch, rect, Color.Gray*0.5f, true);
-        }
-
+        
         public override void Update(float deltaTime)
         {
             if (!Visible) return;

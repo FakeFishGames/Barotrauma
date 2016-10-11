@@ -324,7 +324,6 @@ namespace Barotrauma.Items.Components
 
             if (unsentChanges && sendUpdateTimer<= 0.0f)
             {
-                item.NewComponentEvent(this, true, true);
                 sendUpdateTimer = NetworkUpdateInterval;
                 unsentChanges = false;
             }            

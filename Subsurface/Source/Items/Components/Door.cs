@@ -455,11 +455,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)
         {
             if (isStuck || GameMain.Client != null) return;
 
-            if (connection.Name=="toggle")
+            if (connection.Name == "toggle")
             {
                 SetState(!isOpen, false, true);
             }
@@ -491,7 +491,7 @@ namespace Barotrauma.Items.Components
         public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg, Barotrauma.Networking.Client c)
         {
             msg.Write(isOpen);
-            msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);        
+            msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
         }
 
         public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
@@ -499,6 +499,6 @@ namespace Barotrauma.Items.Components
             SetState(msg.ReadBoolean(), true);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
         }
-        
+
     }
 }

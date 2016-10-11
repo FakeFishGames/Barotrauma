@@ -74,7 +74,6 @@ namespace Barotrauma.Items.Components
                 targetLevel = null;
                 IsActive = !IsActive;
                 if (!IsActive) currPowerConsumption = 0.0f;
-                item.NewComponentEvent(this, true, true);
 
                 return true;
             };
@@ -83,7 +82,6 @@ namespace Barotrauma.Items.Components
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 FlowPercentage -= 10.0f;
-                item.NewComponentEvent(this, true, true);
 
                 return true;
             };
@@ -92,7 +90,6 @@ namespace Barotrauma.Items.Components
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 FlowPercentage += 10.0f;
-                item.NewComponentEvent(this, true, true);
 
                 return true;
             };     

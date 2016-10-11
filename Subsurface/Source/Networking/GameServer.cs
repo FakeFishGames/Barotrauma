@@ -853,10 +853,6 @@ namespace Barotrauma.Networking
 
             if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
             
-            for (int teamID = 1; teamID <= teamCount; teamID++)
-            {
-                List<Client> teamClients = teamCount == 1 ? connectedClients : connectedClients.FindAll(c => c.TeamID == teamID);
-
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
             foreach (Client c in connectedClients)
             {

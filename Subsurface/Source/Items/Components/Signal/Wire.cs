@@ -160,9 +160,7 @@ namespace Barotrauma.Items.Components
             }
 
             Drawable = Nodes.Any();
-
-            if (!loading) Item.NewComponentEvent(this, true, true);
-
+            
             return true;
         }
 
@@ -255,8 +253,6 @@ namespace Barotrauma.Items.Components
             if (Nodes.Count > 1)
             {
                 Nodes.RemoveAt(Nodes.Count - 1);
-
-                item.NewComponentEvent(this, true, true);
             }
 
             Drawable = Nodes.Any();

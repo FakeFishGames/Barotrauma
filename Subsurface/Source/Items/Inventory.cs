@@ -400,8 +400,7 @@ namespace Barotrauma
                 subRect.Y = subRect.Y - subRect.Height - 10;
                 container.Inventory.slots[i].Rect = subRect;
             }
-        }
-
+            
             container.Inventory.isSubInventory = true;
 
             slots[slotIndex].State = GUIComponent.ComponentState.Hover;
