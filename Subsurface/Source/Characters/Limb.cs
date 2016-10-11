@@ -499,7 +499,8 @@ namespace Barotrauma
             float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
 
             AttackTimer += deltaTime;
-                body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
+
+            body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
 
             if (dist < attack.Range * 0.5f)
             {
