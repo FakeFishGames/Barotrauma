@@ -2028,15 +2028,26 @@ namespace Barotrauma
                         AnimController.Teleport(pos - SimPosition, Vector2.Zero);
                     }
 
+                    if ((pos-SimPosition).Length()>600.0f)
+                    {
+                        AnimController.Teleport(pos - SimPosition, -AnimController.RefLimb.LinearVelocity);
+                    }
+
                     if (inSub)
                     {
                         //AnimController.FindHull(ConvertUnits.ToDisplayUnits(pos) - Submarine.Loaded.WorldPosition);
+                        Submarine prevSub = Submarine;
 
                         Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
                         if (newHull != null)
                         {
                             AnimController.CurrentHull = newHull;
                             Submarine = newHull.Submarine;
+                        }
+
+                        if (prevSub != null && Submarine != null && prevSub!=Submarine)
+                        {
+                            AnimController.Teleport(pos - SimPosition, Vector2.Zero);
                         }
                     }
                     else
