@@ -763,19 +763,39 @@ namespace Barotrauma
                         attackPos,
                         AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
                         Physics.CollisionCharacter | Physics.CollisionWall);
-
+                    
                     IDamageable attackTarget = null;
                     if (body != null)
                     {
-                        if (body.UserData is IDamageable)
-                        {
-                            attackTarget = (IDamageable)body.UserData;
-                        }
-                        else if (body.UserData is Limb)
-                        {
-                            attackTarget = ((Limb)body.UserData).character;                            
-                        }
                         attackPos = Submarine.LastPickedPosition;
+
+                        if (body != null && body.UserData is Submarine)
+                        {
+                            var sub = ((Submarine)body.UserData);
+
+                            body = Submarine.PickBody(
+                                attackLimb.SimPosition - ((Submarine)body.UserData).SimPosition,
+                                attackPos - ((Submarine)body.UserData).SimPosition,
+                                AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
+                                Physics.CollisionWall);
+
+                            if (body != null)
+                            {
+                                attackPos = Submarine.LastPickedPosition + sub.SimPosition;
+                                attackTarget = body.UserData as IDamageable;
+                            }
+                        }
+                        else
+                        {
+                            if (body.UserData is IDamageable)
+                            {
+                                attackTarget = (IDamageable)body.UserData;
+                            }
+                            else if (body.UserData is Limb)
+                            {
+                                attackTarget = ((Limb)body.UserData).character;                            
+                            }                            
+                        }
                     }
 
                     attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget);
