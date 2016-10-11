@@ -26,8 +26,8 @@ namespace Barotrauma
             }
         }
 
-        public SalvageMission(XElement element)
-            : base(element)
+        public SalvageMission(XElement element, Location[] locations)
+            : base(element, locations)
         {
             string itemName = ToolBox.GetAttributeString(element, "itemname", "");
 

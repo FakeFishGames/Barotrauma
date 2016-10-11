@@ -55,7 +55,7 @@ namespace Barotrauma
 
         public Vector2 TargetPosition
         {
-            //get { return targetPosition; }
+            //get { return targetPosition.Value; }
             set
             {
                 if (!MathUtils.IsValid(value)) return;
@@ -266,16 +266,22 @@ namespace Barotrauma
         {
             Body.SetTransform(Body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
 
-            if (Character.Controlled != null)
+            bool isClosestSub = false;
+            if (Character.Controlled == null)
             {
-                Character.Controlled.CursorPosition += amount;
+                isClosestSub = Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine;
+            }
+            else
+            {
+                isClosestSub = Character.Controlled.Submarine == submarine;
 
-                if (Character.Controlled.Submarine == submarine ||
-                    (Character.Controlled == null && Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine))
-                {
-                    GameMain.GameScreen.Cam.Position += amount;
-                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += amount;
-                }
+                Character.Controlled.CursorPosition += amount;
+            }
+
+            if (isClosestSub)
+            {
+                GameMain.GameScreen.Cam.Position += amount;
+                if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += amount;
             }
         }
 

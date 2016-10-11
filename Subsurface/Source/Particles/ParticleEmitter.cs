@@ -15,6 +15,8 @@ namespace Barotrauma.Particles
 
         public readonly float VelocityMin, VelocityMax;
 
+        public readonly float ScaleMin, ScaleMax;
+
         public readonly float ParticleAmount;
 
         public ParticleEmitterPrefab(XElement element)
@@ -37,6 +39,17 @@ namespace Barotrauma.Particles
             AngleMin = MathHelper.ToRadians(AngleMin);
             AngleMax = MathHelper.ToRadians(AngleMax);
 
+            if (element.Attribute("scalemin")==null)
+            {
+                ScaleMin = 1.0f;
+                ScaleMax = 1.0f;
+            }
+            else
+            {
+                ScaleMin = ToolBox.GetAttributeFloat(element,"scalemin",1.0f);
+                ScaleMax = Math.Max(ScaleMin, ToolBox.GetAttributeFloat(element, "scalemax", 1.0f));
+            }
+
             if (element.Attribute("velocity") == null)
             {
                 VelocityMin = ToolBox.GetAttributeFloat(element, "velocitymin", 0.0f);
@@ -58,7 +71,12 @@ namespace Barotrauma.Particles
                 float angle = Rand.Range(AngleMin, AngleMax);
                 Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(VelocityMin, VelocityMax);
 
-                GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, 0.0f, hullGuess);
+                var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, 0.0f, hullGuess);
+
+                if (particle!=null)
+                {
+                    particle.Size *= Rand.Range(ScaleMin, ScaleMax);
+                }
             }
         }
     }

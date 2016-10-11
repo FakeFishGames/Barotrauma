@@ -241,12 +241,22 @@ namespace Barotrauma
             sb.DrawString(font, text, pos, color);
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f)
+        public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
         {
-            DrawRectangle(sb, new Rectangle((int)start.X, (int)start.Y, (int)size.X, (int)size.Y), clr, isFilled, depth);
+            if (size.X < 0)
+            {
+                start.X += size.X;
+                size.X = -size.X;
+            }
+            if (size.Y < 0)
+            {
+                start.Y += size.Y;
+                size.Y = -size.Y;
+            }
+            DrawRectangle(sb, new Rectangle((int)start.X, (int)start.Y, (int)size.X, (int)size.Y), clr, isFilled, depth, thickness);
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Rectangle rect, Color clr, bool isFilled = false, float depth = 0.0f)
+        public static void DrawRectangle(SpriteBatch sb, Rectangle rect, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
         {
             if (isFilled)
             {
@@ -254,10 +264,10 @@ namespace Barotrauma
             }
             else
             {
-                sb.Draw(t, new Rectangle(rect.X, rect.Y, rect.Width, 1), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X, rect.Y+rect.Height-1, rect.Width, 1), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X, rect.Y, 1, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X+rect.Width-1, rect.Y, 1, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X, rect.Y, rect.Width, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X, rect.Y+rect.Height- thickness, rect.Width, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X+rect.Width- thickness, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
             }
         }
 
@@ -439,6 +449,33 @@ namespace Barotrauma
                         "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
                         new Vector2(10, 50), Color.White);
                 }
+
+                for (int i = 1; i < Sounds.SoundManager.DefaultSourceCount; i++)
+                {
+                    Color clr = Color.White;
+
+                    string soundStr = i+": ";
+
+                    var playingSound = Sounds.SoundManager.GetPlayingSound(i);
+
+                    if (playingSound == null)
+                    {
+                        soundStr+= "none";
+                        clr *= 0.5f;
+                    }
+                    else
+                    {
+                        soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSound.FilePath);
+
+                        if (Sounds.SoundManager.IsLooping(i))
+                        {
+                            soundStr += " (looping)";
+                            clr = Color.Yellow;
+                        }
+                    }
+
+                    GUI.DrawString(spriteBatch, new Vector2(200, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
+                }
             }
             
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
@@ -472,12 +509,12 @@ namespace Barotrauma
         {
             if (pauseMenuOpen)
             {
-                pauseMenu.Update(0.016f);
+                pauseMenu.Update(deltaTime);
             }
 
             if (settingsMenuOpen)
             {
-                GameMain.Config.SettingsFrame.Update(0.016f);
+                GameMain.Config.SettingsFrame.Update(deltaTime);
             }
 
             if (GUIMessageBox.MessageBoxes.Count > 0)

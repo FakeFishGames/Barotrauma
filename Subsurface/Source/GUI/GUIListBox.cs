@@ -103,15 +103,6 @@ namespace Barotrauma
             get { return scrollBarEnabled; }
             set
             {
-                if (value)
-                {
-                    if (!scrollBarEnabled && scrollBarHidden) ShowScrollBar();
-                }
-                else
-                {
-                    if (scrollBarEnabled && !scrollBarHidden) HideScrollBar();
-                }
-
                 scrollBarEnabled = value;
             }
         }
@@ -122,7 +113,7 @@ namespace Barotrauma
         }
 
         public GUIListBox(Rectangle rect, GUIStyle style, Alignment alignment, GUIComponent parent = null)
-            : this(rect, null, style, parent)
+            : this(rect, null, alignment, style, parent, false)
         {
         }
 
@@ -185,11 +176,101 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateChildrenRect(float deltaTime)
+        {
+            int x = rect.X, y = rect.Y;
+
+            if (!scrollBarHidden)
+            {
+                if (scrollBar.IsHorizontal)
+                {
+                    x -= (int)((totalSize - rect.Width) * scrollBar.BarScroll);
+                }
+                else
+                {
+                    y -= (int)((totalSize - rect.Height) * scrollBar.BarScroll);
+                }
+            }
+
+            for (int i = 0; i < children.Count; i++)
+            {
+                GUIComponent child = children[i];
+                if (child == frame || !child.Visible) continue;
+
+                child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
+                if (scrollBar.IsHorizontal)
+                {
+                    x += child.Rect.Width + spacing;
+                }
+                else
+                {
+                    y += child.Rect.Height + spacing;
+                }
+
+
+                if (scrollBar.IsHorizontal)
+                {
+                    if (child.Rect.Right < rect.X) continue;
+                    if (child.Rect.Right > rect.Right) break;
+
+                    if (child.Rect.X < rect.X && child.Rect.Right >= rect.X)
+                    {
+                        x = rect.X;
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (child.Rect.Y + child.Rect.Height < rect.Y) continue;
+                    if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) break;
+
+                    if (child.Rect.Y < rect.Y && child.Rect.Y + child.Rect.Height >= rect.Y)
+                    {
+                        y = rect.Y;
+                        continue;
+                    }
+                }
+
+                if (deltaTime>0.0f) child.Update(deltaTime);
+                if (enabled && child.CanBeFocused &&
+                    (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
+                {
+                    child.State = ComponentState.Hover;
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        Debug.WriteLine("clicked");
+                        Select(i);
+                        //selected = child;
+                        //if (OnSelected != null)
+                        //{
+                        //    if (!OnSelected(selected, child.UserData)) selected = null;
+                        //}
+
+                    }
+                }
+                else if (selected.Contains(child))
+                {
+                    child.State = ComponentState.Selected;
+
+                    if (CheckSelected != null)
+                    {
+                        if (CheckSelected() != child.UserData) selected.Remove(child);
+                    }
+                }
+                else
+                {
+                    child.State = ComponentState.None;
+                }
+            }
+        }
+
         public override void Update(float deltaTime)
         {
             if (!Visible) return;
 
-            base.Update(deltaTime);
+            UpdateChildrenRect(deltaTime);
+            
+            //base.Update(deltaTime);
 
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.Update(deltaTime);
 
@@ -277,17 +358,28 @@ namespace Barotrauma
                 Math.Max(Math.Min((float)rect.Width / (float)totalSize, 1.0f), 5.0f / rect.Width) :
                 Math.Max(Math.Min((float)rect.Height / (float)totalSize, 1.0f), 5.0f / rect.Height);
 
-            if (scrollBar.BarSize < 1.0f && scrollBarHidden) ShowScrollBar();
-            if (scrollBar.BarSize >= 1.0f && !scrollBarHidden) HideScrollBar();
+            scrollBarHidden = scrollBar.BarSize >= 1.0f;
         }
 
         public override void AddChild(GUIComponent child)
         {
+            //temporarily reduce the size of the rect to prevent the child from expanding over the scrollbar
+            if (scrollBar.IsHorizontal)            
+                rect.Height -= scrollBar.Rect.Height;
+            else
+                rect.Width -= scrollBar.Rect.Width;
+
             base.AddChild(child);
+
+            if (scrollBar.IsHorizontal)
+                rect.Height += scrollBar.Rect.Height;
+            else
+                rect.Width += scrollBar.Rect.Width;
 
             //float oldScroll = scrollBar.BarScroll;
             //float oldSize = scrollBar.BarSize;
             UpdateScrollBarSize();
+            UpdateChildrenRect(0.0f);
 
             //if (oldSize == 1.0f && scrollBar.BarScroll == 0.0f) scrollBar.BarScroll = 1.0f;
 
@@ -312,25 +404,12 @@ namespace Barotrauma
 
             UpdateScrollBarSize();
         }
-
-        private void ShowScrollBar()
-        {
-            if (scrollBarHidden && !scrollBar.IsHorizontal) Rect = new Rectangle(rect.X, rect.Y, rect.Width - scrollBar.Rect.Width, rect.Height);
-            scrollBarHidden = false;
-
-        }
-
-        private void HideScrollBar()
-        {
-            if (!scrollBarHidden && !scrollBar.IsHorizontal) Rect = new Rectangle(rect.X, rect.Y, rect.Width + scrollBar.Rect.Width, rect.Height);
-            scrollBarHidden = true;
-        }
-
+        
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
-            base.Draw(spriteBatch);
+            //base.Draw(spriteBatch);
 
             frame.Draw(spriteBatch);
             //GUI.DrawRectangle(spriteBatch, rect, color*alpha, true);
@@ -355,7 +434,6 @@ namespace Barotrauma
                 GUIComponent child = children[i];
                 if (child == frame || !child.Visible) continue;
 
-                child.Rect = new Rectangle(x, y, child.Rect.Width, child.Rect.Height);
                 if (scrollBar.IsHorizontal)
                 {
                     x += child.Rect.Width + spacing;

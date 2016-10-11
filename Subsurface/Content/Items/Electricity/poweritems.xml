@@ -7,7 +7,7 @@
     pickdistance="150"
     description="Serves as a hub for power distribution and relaying signals between devices.">
     
-    <Sprite texture ="junctionbox.png" depth="0.8"/>
+    <Sprite texture="junctionbox.png" depth="0.8" canflipx="false"/>
 
     <fixrequirement name="Electrical repairs">
       <skill name="Electrical Engineering" level="40"/>

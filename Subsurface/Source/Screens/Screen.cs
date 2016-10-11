@@ -28,6 +28,11 @@ namespace Barotrauma
             selected = this;
         }
 
+        public virtual Camera Cam
+        {
+            get { return null; }
+        }
+
         public virtual void Update(double deltaTime)
         {
         }

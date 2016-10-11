@@ -56,10 +56,15 @@ namespace Barotrauma.Items.Components
             get
             {
                 if (linkedGap != null) return linkedGap;
+
                 foreach (MapEntity e in item.linkedTo)
                 {
-                    linkedGap = e as Gap;                    
-                    if (linkedGap != null) return linkedGap;
+                    linkedGap = e as Gap;
+                    if (linkedGap != null)
+                    {
+                        linkedGap.PassAmbientLight = window != Rectangle.Empty;
+                        return linkedGap;
+                    }
                 }
                 Rectangle rect = item.Rect;
                 if (isHorizontal)
@@ -75,6 +80,7 @@ namespace Barotrauma.Items.Components
 
                 linkedGap = new Gap(rect, Item.Submarine);
                 linkedGap.Submarine = item.Submarine;
+                linkedGap.PassAmbientLight = window != Rectangle.Empty;
                 linkedGap.Open = openState;
                 item.linkedTo.Add(linkedGap);
                 return linkedGap;
@@ -93,6 +99,11 @@ namespace Barotrauma.Items.Components
                     window = new Rectangle((int)vector.X, (int)vector.Y, (int)vector.Z, (int)vector.W);
                 }
             }
+        }
+
+        public Rectangle WindowRect
+        {
+            get { return window; }
         }
 
         [Editable, HasDefaultValue(false, true)]

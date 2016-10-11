@@ -16,7 +16,7 @@ namespace Barotrauma.Items.Components
 
         private float lastUpdate;
 
-        private Hull hull1;
+        public Hull hull1;
 
         private GUITickBox isActiveTickBox;
 

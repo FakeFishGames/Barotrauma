@@ -240,7 +240,7 @@ namespace Barotrauma
                                 break;
                             case "near":
                             case "close":
-                                float closestDist = 0.0f;
+                                float closestDist = -1.0f;
                                 foreach (WayPoint wp in WayPoint.WayPointList)
                                 {
                                     if (wp.Submarine != null) continue;
@@ -250,25 +250,27 @@ namespace Barotrauma
 
                                     float dist = Vector2.Distance(wp.WorldPosition, GameMain.GameScreen.Cam.WorldViewCenter);
 
-                                    if (spawnPoint == null || dist < closestDist)
+                                    if (closestDist < 0.0f || dist < closestDist)
                                     {
                                         spawnPoint = wp;
                                         closestDist = dist;
                                     }
                                 }
                                 break;
+                            case "cursor":
+                                spawnPosition = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                                break;
                             default:
-                                spawnPoint = WayPoint.GetRandom(commands[1].ToLowerInvariant()=="human" ? SpawnType.Human : SpawnType.Enemy);
+                                spawnPoint = WayPoint.GetRandom(commands[1].ToLowerInvariant() == "human" ? SpawnType.Human : SpawnType.Enemy);
                                 break;
                         }
-
                     }
                     else
                     {
                         spawnPoint = WayPoint.GetRandom(commands[1].ToLowerInvariant() == "human" ? SpawnType.Human : SpawnType.Enemy);
                     }
 
-                    spawnPosition = spawnPoint == null ? Vector2.Zero : spawnPoint.WorldPosition;
+                    if (spawnPoint != null) spawnPosition = spawnPoint.WorldPosition;
 
                     if (commands[1].ToLowerInvariant()=="human")
                     {

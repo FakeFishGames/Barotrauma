@@ -16,7 +16,7 @@
     linkable="true"
     pickdistance ="150">
 
-    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,0,48,64"/>
+    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,0,48,64" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable name="chem"/>
@@ -29,7 +29,7 @@
    linkable="true"
    pickdistance ="150">
 
-    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,64,48,64"/>
+    <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,64,48,64" canflipx="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
       <Containable name="chem"/>

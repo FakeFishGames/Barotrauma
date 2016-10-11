@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public BackgroundCreatureManager BackgroundCreatureManager;
 
-        public Camera Cam
+        public override Camera Cam
         {
             get { return cam; }
         }
@@ -46,13 +46,13 @@ namespace Barotrauma
 
 #if LINUX
             var blurEffect = content.Load<Effect>("blurshader_opengl");
+            damageEffect = content.Load<Effect>("damageshader_opengl");
 #else
             var blurEffect = content.Load<Effect>("blurshader");
+            damageEffect = content.Load<Effect>("damageshader");
 #endif
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
-
-            damageEffect = content.Load<Effect>("damageshader");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);
             damageEffect.Parameters["aMultiplier"].SetValue(50.0f);
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
@@ -95,6 +95,9 @@ namespace Barotrauma
 #if DEBUG
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null)
             {
+                var closestSub = Submarine.GetClosest(cam.WorldViewCenter);
+                if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
+
                 Vector2 targetMovement = Vector2.Zero;
                 if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
                 if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
@@ -102,10 +105,9 @@ namespace Barotrauma
                 if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
 
                 if (targetMovement != Vector2.Zero)
-                    GameMain.GameSession.Submarine.ApplyForce(targetMovement * GameMain.GameSession.Submarine.SubBody.Body.Mass * 100.0f);
+                    closestSub.ApplyForce(targetMovement * closestSub.SubBody.Body.Mass * 100.0f);
             }
 #endif
-
             if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
 
             if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
@@ -114,12 +116,11 @@ namespace Barotrauma
             {
                 if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
                 {
-                    Character.Controlled.SelectedConstruction.UpdateHUD(Character.Controlled);
+                    Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);
                 }
             }
             Character.UpdateAll(cam, (float)deltaTime);
             
-
             BackgroundCreatureManager.Update(cam, (float)deltaTime);
 
             GameMain.ParticleManager.Update((float)deltaTime);
@@ -130,6 +131,8 @@ namespace Barotrauma
             {
                 cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
             }
+
+            GameMain.LightManager.Update((float)deltaTime);
             cam.MoveCamera((float)deltaTime);
                 
             foreach (Submarine sub in Submarine.Loaded)
@@ -168,10 +171,6 @@ namespace Barotrauma
         {
             cam.UpdateTransform(true);
 
-            if (Hull.renderer != null)
-            {
-                Hull.renderer.ScrollWater((float)deltaTime);
-            }
             DrawMap(graphics, spriteBatch);
 
             spriteBatch.Begin();
@@ -180,7 +179,7 @@ namespace Barotrauma
             {
                 if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
                 {
-                    Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, Character.Controlled);
+                    Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
                 }
                 else if (!Character.Controlled.SelectedConstruction.IsInPickRange(Character.Controlled.WorldPosition))
                 {
@@ -211,7 +210,7 @@ namespace Barotrauma
 
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 
-            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
+            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam, lightBlur.Effect);
             if (Character.Controlled != null)
             {
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
@@ -345,8 +344,7 @@ namespace Barotrauma
                         
             spriteBatch.End();
 
-
-            GameMain.LightManager.DrawLightMap(spriteBatch, cam, lightBlur.Effect);
+            GameMain.LightManager.DrawLightMap(spriteBatch, lightBlur.Effect);
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend, SamplerState.LinearWrap,
@@ -355,13 +353,13 @@ namespace Barotrauma
 
             if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch);            
 
-            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch);
+            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch,cam);
 
             spriteBatch.End();
 
             if (Character.Controlled != null)
             {
-                GameMain.LightManager.DrawLOS(graphics, spriteBatch, cam, lightBlur.Effect);
+                GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect);
             }
 
         }

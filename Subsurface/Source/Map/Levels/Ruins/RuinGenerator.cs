@@ -301,17 +301,30 @@ namespace Barotrauma.RuinGeneration
         {
             List<RuinShape> shapes = new List<RuinShape>(rooms);
             shapes.AddRange(corridors);
-
-            //MapEntityPrefab hullPrefab = MapEntityPrefab.list.Find(m => m.Name == "Hull");
-
+            
             foreach (RuinShape leaf in shapes)
             {
+                RuinStructureType wallType = RuinStructureType.Wall;
+
+                if (!(leaf is BTRoom))
+                {
+                    wallType = RuinStructureType.CorridorWall;
+                }
+                //rooms further from the entrance are more likely to have hard-to-break walls
+                else if (Rand.Range(0.0f, leaf.DistanceFromEntrance, false) > 1.5f)
+                {
+                    wallType = RuinStructureType.HeavyWall;
+                }
+
+                //generate walls  --------------------------------------------------------------
                 foreach (Line wall in leaf.Walls)
                 {
-                    var structurePrefab = RuinStructure.GetRandom(leaf is BTRoom ? RuinStructureType.Wall : RuinStructureType.CorridorWall, leaf.GetLineAlignment(wall));
+                    var structurePrefab = RuinStructure.GetRandom(wallType, leaf.GetLineAlignment(wall));
                     if (structurePrefab == null) continue;
 
-                    float radius = (wall.A.X == wall.B.X) ? (structurePrefab.Prefab as StructurePrefab).Size.X * 0.5f : (structurePrefab.Prefab as StructurePrefab).Size.Y * 0.5f;
+                    float radius = (wall.A.X == wall.B.X) ? 
+                        (structurePrefab.Prefab as StructurePrefab).Size.X * 0.5f : 
+                        (structurePrefab.Prefab as StructurePrefab).Size.Y * 0.5f;
 
                     Rectangle rect = new Rectangle(
                         (int)(wall.A.X - radius), 
@@ -331,7 +344,7 @@ namespace Barotrauma.RuinGeneration
                     structure.SetCollisionCategory(Physics.CollisionLevel);
                 }
 
-
+                //generate backgrounds --------------------------------------------------------------
                 var background = RuinStructure.GetRandom(RuinStructureType.Back, Alignment.Center);
                 if (background == null) continue;
 
@@ -341,6 +354,7 @@ namespace Barotrauma.RuinGeneration
 
             }
 
+            //generate props --------------------------------------------------------------
             for (int i = 0; i < shapes.Count*2; i++ )
             {
                 Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
@@ -383,9 +397,11 @@ namespace Barotrauma.RuinGeneration
                 }
             }
 
+
+            //generate doors & sensors that close them -------------------------------------------------------------
+
             var sensorPrefab = ItemPrefab.list.Find(ip => ip.Name == "Alien Motion Sensor") as ItemPrefab;
-            var wirePrefab = ItemPrefab.list.Find(ip => ip.Name == "Wire") as ItemPrefab;
-           
+            var wirePrefab = ItemPrefab.list.Find(ip => ip.Name == "Wire") as ItemPrefab;           
 
             foreach (Corridor corridor in corridors)
             {

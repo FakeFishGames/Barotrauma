@@ -181,7 +181,7 @@ namespace Barotrauma
             
             backgroundColor = generationParams.BackgroundColor;
             float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
-            GameMain.LightManager.AmbientLight = new Color(backgroundColor * (60.0f / avgValue), 1.0f);
+            GameMain.LightManager.AmbientLight = new Color(backgroundColor * (10.0f / avgValue), 1.0f);
 
             float minWidth = Submarine.MainSub == null ? 0.0f : Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
             minWidth = Math.Max(minWidth, 6500.0f);
@@ -757,7 +757,7 @@ namespace Barotrauma
             int tries = 0;
             do
             {
-                Vector2 startPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType);
+                Vector2 startPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType, true);
 
                 startPos += Rand.Vector(Rand.Range(0.0f, randomSpread, false), false);
                 
@@ -784,11 +784,21 @@ namespace Barotrauma
             return position;
         }
 
-        public Vector2 GetRandomInterestingPosition(bool useSyncedRand, PositionType positionType)
+        public Vector2 GetRandomInterestingPosition(bool useSyncedRand, PositionType positionType, bool avoidSubs)
         {
             if (!positionsOfInterest.Any()) return Size * 0.5f;
 
             var matchingPositions = positionsOfInterest.FindAll(p => positionType.HasFlag(p.PositionType));
+
+            if (avoidSubs)
+            {
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    float minDist = Math.Max(sub.Borders.Width, sub.Borders.Height);
+                    matchingPositions.RemoveAll(p => Vector2.Distance(p.Position, sub.WorldPosition) < minDist);
+                }
+            }
+
             if (!matchingPositions.Any())
             {
                 return positionsOfInterest[Rand.Int(positionsOfInterest.Count, !useSyncedRand)].Position;
@@ -797,11 +807,16 @@ namespace Barotrauma
             return matchingPositions[Rand.Int(matchingPositions.Count, !useSyncedRand)].Position;
         }
 
-        public void Update (float deltaTime)
+        public void Update(float deltaTime)
         {
             if (Submarine.MainSub != null)
             {
                 WrappingWall.UpdateWallShift(Submarine.MainSub.WorldPosition, wrappingWalls);
+            }
+
+            if (Hull.renderer != null)
+            {
+                Hull.renderer.ScrollWater((float)deltaTime);
             }
 
             renderer.Update(deltaTime);
@@ -834,6 +849,11 @@ namespace Barotrauma
 
         public void DrawBack(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundSpriteManager = null)
         {
+            float brightness = MathHelper.Clamp(50.0f + (cam.Position.Y - Size.Y) / 2000.0f, 10.0f, 40.0f);
+
+            float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
+            GameMain.LightManager.AmbientLight = new Color(backgroundColor * (brightness / avgValue), 1.0f);
+
             graphics.Clear(backgroundColor);
 
             if (renderer == null) return;

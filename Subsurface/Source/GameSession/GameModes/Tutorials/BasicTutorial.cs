@@ -283,7 +283,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.MainSub.WorldPosition.Y > 24600.0f)
+            while (Submarine.MainSub.WorldPosition.Y > 31900.0f)
             {
                 yield return CoroutineStatus.Running;
             }
