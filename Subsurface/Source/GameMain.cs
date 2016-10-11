@@ -292,7 +292,7 @@ namespace Barotrauma
         {
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
 
-            bool paused = false;
+            bool paused = true;
 
             while (Timing.Accumulator >= Timing.Step)
             {
