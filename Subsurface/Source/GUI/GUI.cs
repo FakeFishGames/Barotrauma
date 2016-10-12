@@ -264,10 +264,11 @@ namespace Barotrauma
             }
             else
             {
-                sb.Draw(t, new Rectangle(rect.X, rect.Y, rect.Width, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X, rect.Y+rect.Height- thickness, rect.Width, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y + rect.Height - thickness, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+
                 sb.Draw(t, new Rectangle(rect.X, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X+rect.Width- thickness, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                sb.Draw(t, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
             }
         }
 

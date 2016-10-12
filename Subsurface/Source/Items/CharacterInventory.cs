@@ -169,7 +169,7 @@ namespace Barotrauma
                     if (allowedSlot.HasFlag(limbSlots[i]) && Items[i]!=null && Items[i]!=item)
                     {
                         free = false;
-                        break;
+                        if (slots != null) slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
                     }
                 }
 
@@ -238,10 +238,9 @@ namespace Barotrauma
                         //swapping the items failed -> move them back to where they were
                         TryPutItem(item, currentIndex, false, false);
                         TryPutItem(existingItem, index, false, false);
-                    }
-                    
+                    }                    
                 }
-
+                
                 return combined;
             }
 
@@ -293,17 +292,19 @@ namespace Barotrauma
 
         protected override void CreateSlots()
         {
-            slots = new InventorySlot[capacity];
+            if (slots == null) slots = new InventorySlot[capacity];
 
             int rectWidth = 40, rectHeight = 40;
             
             Rectangle slotRect = new Rectangle(0, 0, rectWidth, rectHeight);
             for (int i = 0; i < capacity; i++)
             {
+                slots[i].Disabled = false;
+
                 slotRect.X = (int)(SlotPositions[i].X + DrawOffset.X);
                 slotRect.Y = (int)(SlotPositions[i].Y + DrawOffset.Y);
 
-                slots[i] = new InventorySlot(slotRect);
+                slots[i].Rect = slotRect;
 
                 slots[i].Color = limbSlots[i] == InvSlotType.Any ? Color.White * 0.2f : Color.White * 0.4f;
             }
