@@ -307,15 +307,23 @@ namespace Barotrauma
                 if (MapEntity.mapEntityList[i].DrawDamageEffect)
                     MapEntity.mapEntityList[i].DrawDamage(spriteBatch, damageEffect);
             }
-            damageEffect.Parameters["aCutoff"].SetValue(0.0f);
-            damageEffect.Parameters["cCutoff"].SetValue(0.0f);
+            if (damageEffect != null)
+            {
+                damageEffect.Parameters["aCutoff"].SetValue(0.0f);
+                damageEffect.Parameters["cCutoff"].SetValue(0.0f);
+            }
         }
 
 
-        public static void DrawBack(SpriteBatch spriteBatch, bool editing = false)
+        public static void DrawBack(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
+                if (predicate != null)
+                {
+                    if (!predicate(MapEntity.mapEntityList[i])) continue;
+                }
+                
                 if (MapEntity.mapEntityList[i].DrawBelowWater)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
             }
