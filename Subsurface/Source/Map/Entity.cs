@@ -12,6 +12,7 @@ namespace Barotrauma
         private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
 
         public static EntitySpawner Spawner = new EntitySpawner();
+        public static EntityRemover Remover = new EntityRemover();
 
         private ushort id;
 

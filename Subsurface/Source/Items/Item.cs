@@ -31,9 +31,6 @@ namespace Barotrauma
         public static List<Item> ItemList = new List<Item>();
         private ItemPrefab prefab;
 
-
-        public static ItemRemover Remover = new ItemRemover();
-
         public static bool ShowLinks = true;
 
         private List<string> tags;
