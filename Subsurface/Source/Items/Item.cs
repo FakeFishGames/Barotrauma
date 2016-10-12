@@ -872,12 +872,13 @@ namespace Barotrauma
 
             prefab.sprite.effects = oldEffects;
 
-            for (int i = 0; i < drawableComponents.Count; i++ )
+            List<IDrawableComponent> staticDrawableComponents = new List<IDrawableComponent>(drawableComponents); //static list to compensate for drawable toggling
+            for (int i = 0; i < staticDrawableComponents.Count; i++ )
             {
-                drawableComponents[i].Draw(spriteBatch, editing);
+                staticDrawableComponents[i].Draw(spriteBatch, editing);
             }
 
-                //foreach (ItemComponent component in components) component.Draw(spriteBatch, editing);
+            //foreach (ItemComponent component in components) component.Draw(spriteBatch, editing);
 
             if (GameMain.DebugDraw && aiTarget!=null) aiTarget.Draw(spriteBatch);
             

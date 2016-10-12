@@ -31,9 +31,9 @@ namespace Barotrauma
         protected ConstructorInfo constructor;
 
         //is it possible to stretch the entity horizontally/vertically
-        protected bool resizeHorizontal;
-        protected bool resizeVertical;
-                
+        public bool resizeHorizontal { get; protected set; }
+        public bool resizeVertical { get; protected set; }
+
         //which prefab has been selected for placing
         protected static MapEntityPrefab selected;
 

@@ -239,7 +239,7 @@ namespace Barotrauma
                 null, null, null, null,
                 cam.Transform);
 
-            Submarine.DrawBack(spriteBatch,false,s => s is Structure);
+            Submarine.DrawBack(spriteBatch,false,s => s is Structure && ((s as Structure).resizeHorizontal || (s as Structure).resizeVertical));
 
             spriteBatch.End();
 
@@ -255,7 +255,7 @@ namespace Barotrauma
                 null, null, null, null,
                 cam.Transform);
 
-            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
+            Submarine.DrawBack(spriteBatch, false, s => (!(s is Structure)) || (!(s as Structure).resizeHorizontal && !(s as Structure).resizeHorizontal));
 
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
 
@@ -336,6 +336,8 @@ namespace Barotrauma
                 Submarine.DrawDamageable(spriteBatch, null);
                 spriteBatch.End();
 
+                GameMain.LightManager.DrawLightMap(spriteBatch, lightBlur.Effect);
+
                 GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect, true);
             }
 
@@ -398,9 +400,9 @@ namespace Barotrauma
 
                 spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.AlphaBlend);
-                float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.03f, 0.04f);
+                float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.1f);
                 spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                    new Color(0.04f + r, Math.Max(0.04f-r,0.0f), Math.Max(0.045f - r, 0.0f), 1.0f));
+                    new Color(r, Math.Max(0.07f-r*0.07f/0.1f,0.0f), Math.Max(0.1f - r, 0.0f), 1.0f));
                 spriteBatch.End();
             }
 
