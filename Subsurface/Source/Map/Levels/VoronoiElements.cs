@@ -201,6 +201,8 @@ namespace Voronoi2
 
         public bool isSolid;
 
+        public bool OutsideLevel;
+
         public Vector2 Center
         {
             get { return (point1 + point2) / 2.0f; }
@@ -216,10 +218,25 @@ namespace Voronoi2
             {
                 return cell1;
             }
-            else
+
+            return null;            
+        }
+
+        /// <summary>
+        /// Returns the normal of the edge that points outwards from the specified cell
+        /// </summary>
+        public Vector2 GetNormal(VoronoiCell cell)
+        {
+            Vector2 dir = Vector2.Normalize(point1 - point2);
+
+            Vector2 normal = new Vector2(dir.Y, -dir.X);
+
+            if (cell != null && Vector2.Dot(normal, Vector2.Normalize(Center - cell.Center)) < 0)
             {
-                return null;
+                normal = -normal;
             }
+
+            return normal;
         }
 	}
 	

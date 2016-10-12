@@ -7,6 +7,8 @@ namespace Barotrauma.Items.Components
     {
         private float maxPower;
 
+        private float lastReceivedMessage;
+
         [Editable, HasDefaultValue(1000.0f, true)]
         public float MaxPower
         {
@@ -73,13 +75,19 @@ namespace Barotrauma.Items.Components
             }
             else if (connection.Name == "toggle")
             {
-                IsOn = !IsOn;
+                SetState(!IsOn);
             }
             else if (connection.Name == "set_state")
             {
-                IsOn = signal != "0";
+                SetState(signal != "0");
             }
+        }
 
+        public void SetState(bool on)
+        {
+            //if (GameMain.Client != null && !isNetworkMessage) return;
+
+            IsOn = on;
         }
     }
 }

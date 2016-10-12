@@ -568,6 +568,7 @@ namespace Barotrauma.Networking
             string modeName         = inc.ReadString();
 
             bool respawnAllowed     = inc.ReadBoolean();
+            bool loadSecondSub      = inc.ReadBoolean();
 
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 
@@ -590,7 +591,7 @@ namespace Barotrauma.Networking
             Rand.SetSyncedSeed(seed);
 
             GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
-            GameMain.GameSession.StartShift(levelSeed);
+            GameMain.GameSession.StartShift(levelSeed,loadSecondSub);
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
             

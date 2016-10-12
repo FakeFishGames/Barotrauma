@@ -52,7 +52,10 @@ namespace Barotrauma
         List<Body> bodies;
 
         //sections of the wall that are supposed to be rendered
-        private WallSection[] sections;
+        public WallSection[] sections {
+            get;
+            private set;
+        }
 
         bool isHorizontal;
 
@@ -62,6 +65,10 @@ namespace Barotrauma
             get { return netStateID; }
         }
         
+        public SpriteEffects SpriteEffects = SpriteEffects.None;
+
+        private bool flippedX;
+
         public override Sprite Sprite
         {
             get { return prefab.sprite; }
@@ -74,7 +81,8 @@ namespace Barotrauma
 
         public Direction StairDirection
         {
-            get { return prefab.StairDirection; }
+            get;
+            private set;
         }
 
         public override string Name
@@ -139,8 +147,24 @@ namespace Barotrauma
             }
             set
             {
+                Rectangle oldRect = Rect;
                 base.Rect = value;
                 if (prefab.HasBody) CreateSections();
+                else
+                {
+                    foreach (WallSection sec in sections)
+                    {
+                        Rectangle secRect = sec.rect;
+                        secRect.X -= oldRect.X; secRect.Y -= oldRect.Y;
+                        secRect.X *= value.Width; secRect.X /= oldRect.Width;
+                        secRect.Y *= value.Height; secRect.Y /= oldRect.Height;
+                        secRect.Width *= value.Width; secRect.Width /= oldRect.Width;
+                        secRect.Height *= value.Height; secRect.Height /= oldRect.Height;
+                        secRect.X += value.X; secRect.Y += value.Y;
+                        sec.rect = secRect;
+                    }
+                }
+                
             }
         }
                 
@@ -180,6 +204,8 @@ namespace Barotrauma
             prefab = sp;
             
             isHorizontal = (rect.Width>rect.Height);
+
+            StairDirection = prefab.StairDirection;
             
             if (prefab.HasBody)
             {
@@ -211,29 +237,9 @@ namespace Barotrauma
                 sections = new WallSection[1];
                 sections[0] = new WallSection(rect);
 
-                if (StairDirection!=Direction.None)
+                if (StairDirection != Direction.None)
                 {
-                    bodies = new List<Body>();
-
-                    Body newBody = BodyFactory.CreateRectangle(GameMain.World,
-                        ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) + Submarine.GridSize.X*3.0f),
-                        ConvertUnits.ToSimUnits(10),
-                        1.5f);
-
-                    newBody.BodyType = BodyType.Static;
-                    Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
-                    stairPos += new Vector2(
-                        (StairDirection == Direction.Right) ? -Submarine.GridSize.X*1.5f : Submarine.GridSize.X*1.5f,
-                        - Submarine.GridSize.Y*2.0f);
-
-                    newBody.Position = ConvertUnits.ToSimUnits(stairPos);
-                    newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
-                    newBody.Friction = 0.8f;
-
-                    newBody.CollisionCategories = Physics.CollisionStairs;
-
-                    newBody.UserData = this;
-                    bodies.Add(newBody);
+                    CreateStairBodies();
                 }
             }
 
@@ -246,10 +252,43 @@ namespace Barotrauma
             InsertToList();
         }
 
+        private void CreateStairBodies()
+        {
+            bodies = new List<Body>();
+
+            Body newBody = BodyFactory.CreateRectangle(GameMain.World,
+                ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0) + Submarine.GridSize.X * 3.0f),
+                ConvertUnits.ToSimUnits(10),
+                1.5f);
+
+            newBody.BodyType = BodyType.Static;
+            Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
+            stairPos += new Vector2(
+                (StairDirection == Direction.Right) ? -Submarine.GridSize.X * 1.5f : Submarine.GridSize.X * 1.5f,
+                -Submarine.GridSize.Y * 2.0f);
+
+            newBody.Position = ConvertUnits.ToSimUnits(stairPos);
+            newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
+            newBody.Friction = 0.8f;
+
+            newBody.CollisionCategories = Physics.CollisionStairs;
+
+            newBody.UserData = this;
+            bodies.Add(newBody);
+        }
+
         private void CreateSections()
         {
             int xsections = 1, ysections = 1;
             int width, height;
+
+            if (!HasBody)
+            {
+                sections = new WallSection[1];
+                sections[0] = new WallSection(rect);
+                return;
+                
+            }
 
             if (isHorizontal)
             {
@@ -266,15 +305,33 @@ namespace Barotrauma
                 height = (int)wallSectionSize;
             }
 
+
             for (int x = 0; x < xsections; x++)
             {
                 for (int y = 0; y < ysections; y++)
                 {
-                    Rectangle sectionRect = new Rectangle(rect.X + x * width, rect.Y - y * height, width, height);
-                    sectionRect.Width -= (int)Math.Max((sectionRect.X + sectionRect.Width) - (rect.X + rect.Width), 0.0f);
-                    sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
+                    if (flippedX)
+                    {
+                        Rectangle sectionRect = new Rectangle(rect.Right - (x + 1) * width, rect.Y - y * height, width, height);
 
-                    sections[x + y] = new WallSection(sectionRect);
+                        int over = Math.Max(rect.X - sectionRect.X, 0);
+
+                        sectionRect.X += over;
+                        sectionRect.Width -= over;
+
+                        sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
+
+                        sections[xsections - 1 - x + y] = new WallSection(sectionRect);
+                    }
+
+                    else
+                    {
+                        Rectangle sectionRect = new Rectangle(rect.X + x * width, rect.Y - y * height, width, height);
+                        sectionRect.Width -= (int)Math.Max(sectionRect.Right - rect.Right, 0.0f);
+                        sectionRect.Height -= (int)Math.Max((rect.Y - rect.Height) - (sectionRect.Y - sectionRect.Height), 0.0f);
+
+                        sections[x + y] = new WallSection(sectionRect);
+                    }
                 }
             }
         }
@@ -428,25 +485,28 @@ namespace Barotrauma
                 if (prefab.BackgroundSprite != null)
                 {
                     prefab.BackgroundSprite.DrawTiled(
-                        spriteBatch, 
-                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)), 
-                        new Vector2(rect.Width, rect.Height), 
+                        spriteBatch,
+                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
+                        new Vector2(rect.Width, rect.Height),
                         Vector2.Zero, color, Point.Zero);
                 }
             }
-            
+
+            SpriteEffects oldEffects = prefab.sprite.effects;
+            prefab.sprite.effects ^= SpriteEffects;
+
             if (back == prefab.sprite.Depth > 0.5f || editing)
             {
-                foreach (WallSection s in sections)
+                for (int i = 0; i < sections.Length; i++)
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = Math.Min((s.damage / prefab.MaxHealth), 0.65f);
+                        float newCutoff = Math.Min((sections[i].damage / prefab.MaxHealth), 0.65f);
 
                         if (Math.Abs(newCutoff - prevCutoff) > 0.01f)
                         {
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
-                            damageEffect.Parameters["cCutoff"].SetValue(newCutoff*1.2f);
+                            damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
 
                             damageEffect.CurrentTechnique.Passes[0].Apply();
 
@@ -454,10 +514,25 @@ namespace Barotrauma
                         }
                     }
 
-                    Point offset = new Point(Math.Abs(rect.Location.X - s.rect.Location.X), Math.Abs(rect.Location.Y - s.rect.Location.Y));
-                    prefab.sprite.DrawTiled(spriteBatch, new Vector2(s.rect.X + drawOffset.X, -(s.rect.Y + drawOffset.Y)), new Vector2(s.rect.Width, s.rect.Height), Vector2.Zero, color, offset);
+                    Point textureOffset = new Point(
+                        Math.Abs(rect.Location.X - sections[i].rect.Location.X),
+                        Math.Abs(rect.Location.Y - sections[i].rect.Location.Y));
+
+                    if (flippedX && isHorizontal)
+                    {
+                        textureOffset.X = rect.Width - textureOffset.X - sections[i].rect.Width;
+                    }
+
+                    prefab.sprite.DrawTiled(
+                        spriteBatch,
+                        new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
+                        new Vector2(sections[i].rect.Width, sections[i].rect.Height),
+                        Vector2.Zero, color, 
+                        textureOffset);
                 }
             }
+
+            prefab.sprite.effects = oldEffects;
         }
 
         private bool OnWallCollision(Fixture f1, Fixture f2, Contact contact)
@@ -563,6 +638,15 @@ namespace Barotrauma
 
         public int FindSectionIndex(Vector2 displayPos)
         {
+            if (!sections.Any()) return -1;
+
+            //if the sub has been flipped horizontally, the first section may be smaller than wallSectionSize
+            //and we need to adjust the position accordingly
+            if (sections[0].rect.Width < wallSectionSize)
+            {
+                displayPos.X += wallSectionSize - sections[0].rect.Width;
+            }
+
             int index = (isHorizontal) ?
                 (int)Math.Floor((displayPos.X - rect.X) / wallSectionSize) :
                 (int)Math.Floor((rect.Y - displayPos.Y) / wallSectionSize);
@@ -757,6 +841,27 @@ namespace Barotrauma
 
                 SetDamage(i, damage);
             }
+        }
+        public override void FlipX()
+        {
+            base.FlipX();
+
+            flippedX = !flippedX;
+            
+            if (prefab.CanSpriteFlipX)
+            {
+                SpriteEffects ^= SpriteEffects.FlipHorizontally;
+            }
+
+            if (StairDirection != Direction.None)
+            {
+                StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
+                bodies.ForEach(b => GameMain.World.RemoveBody(b));
+
+                CreateStairBodies();
+            }
+
+            CreateSections();
         }
         
         public override XElement Save(XElement parentElement)

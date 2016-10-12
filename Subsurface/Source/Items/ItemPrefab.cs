@@ -58,6 +58,8 @@ namespace Barotrauma
             private set;
         }
 
+        private bool canSpriteFlipX;
+
         //if a matching itemprefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias
         //(allows changing item names while keeping backwards compatibility with older sub files)
         public string[] Aliases
@@ -116,21 +118,26 @@ namespace Barotrauma
             private set;
         }
 
+        public bool CanSpriteFlipX
+        {
+            get { return canSpriteFlipX; }
+        }
+
         public Vector2 Size
         {
             get { return size; }
         }
 
-        public override void UpdatePlacing(SpriteBatch spriteBatch, Camera cam)
+        public override void UpdatePlacing(Camera cam)
         {
-            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub); 
+            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
             if (PlayerInput.RightButtonClicked())
             {
                 selected = null;
                 return;
             }
-            
+
             if (!resizeHorizontal && !resizeVertical)
             {
                 if (PlayerInput.LeftButtonClicked())
@@ -138,16 +145,14 @@ namespace Barotrauma
                     var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)sprite.size.X, (int)sprite.size.Y), this, Submarine.MainSub);
                     //constructor.Invoke(lobject);
                     item.Submarine = Submarine.MainSub;
-                    item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub==null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
+                    item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                     item.FindHull();
 
                     placePosition = Vector2.Zero;
 
-                   // selected = null;
+                    // selected = null;
                     return;
                 }
-
-                sprite.Draw(spriteBatch, new Vector2(position.X + sprite.size.X / 2.0f, -position.Y + sprite.size.Y / 2.0f), SpriteColor);
             }
             else
             {
@@ -172,17 +177,54 @@ namespace Barotrauma
                         item.Submarine = Submarine.MainSub;
                         item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                         item.FindHull();
-                        
+
                         //selected = null;
                         return;
                     }
 
                     position = placePosition;
                 }
+            }
+
+            //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
+
+        }
+
+        public override void DrawPlacing(SpriteBatch spriteBatch,Camera cam)
+        {
+            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
+
+            if (PlayerInput.RightButtonClicked())
+            {
+                selected = null;
+                return;
+            }
+
+            if (!resizeHorizontal && !resizeVertical)
+            {
+                sprite.Draw(spriteBatch, new Vector2(position.X + sprite.size.X / 2.0f, -position.Y + sprite.size.Y / 2.0f), SpriteColor);
+            }
+            else
+            {
+                Vector2 placeSize = size;
+
+                if (placePosition == Vector2.Zero)
+                {
+                    if (PlayerInput.LeftButtonHeld()) placePosition = position;
+                }
+                else
+                {
+                    if (resizeHorizontal)
+                        placeSize.X = Math.Max(position.X - placePosition.X, size.X);
+                    if (resizeVertical)
+                        placeSize.Y = Math.Max(placePosition.Y - position.Y, size.Y);
+                    
+                    position = placePosition;
+                }
 
                 if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, SpriteColor);
             }
-            
+
             //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
 
         }
@@ -270,6 +312,9 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
 
+            tags = new List<string>();
+            tags.AddRange(ToolBox.GetAttributeString(element, "tags", "").Split(','));
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -280,6 +325,8 @@ namespace Barotrauma
                         {
                             spriteFolder = Path.GetDirectoryName(filePath);
                         }
+
+                        canSpriteFlipX = ToolBox.GetAttributeBool(subElement, "canflipx", true);
 
                         sprite = new Sprite(subElement, spriteFolder);
                         size = sprite.size;

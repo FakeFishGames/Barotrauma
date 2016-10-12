@@ -395,9 +395,7 @@ namespace Barotrauma.Items.Components
         public void Undock()
         {
             if (dockingTarget == null || !docked) return;
-
-            item.NewComponentEvent(this, false, true);
-
+            
             PlaySound(ActionType.OnUse, item.WorldPosition);
 
             dockingTarget.item.Submarine.DockedTo.Remove(item.Submarine);
@@ -512,8 +510,6 @@ namespace Barotrauma.Items.Components
                         if (!item.linkedTo.Any(e => e is Hull) && !dockingTarget.item.linkedTo.Any(e => e is Hull))
                         {
                             CreateHull();
-
-                            item.NewComponentEvent(this, false, true);
                         }
                     }
                     dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);

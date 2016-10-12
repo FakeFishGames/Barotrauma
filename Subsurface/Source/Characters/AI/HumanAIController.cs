@@ -180,8 +180,8 @@ namespace Barotrauma
         {
             if (selectedAiTarget != null)
             {
-                GUI.DrawLine(spriteBatch, 
-                    new Vector2(Character.WorldPosition.X, -Character.WorldPosition.Y), 
+                GUI.DrawLine(spriteBatch,
+                    new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y), 
                     new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);
             }
 
@@ -189,16 +189,16 @@ namespace Barotrauma
             if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode==null) return;
 
             GUI.DrawLine(spriteBatch,
-                new Vector2(Character.WorldPosition.X, -Character.WorldPosition.Y),
-                new Vector2(pathSteering.CurrentPath.CurrentNode.WorldPosition.X, -pathSteering.CurrentPath.CurrentNode.WorldPosition.Y),
+                new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
+                new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y),
                 Color.LightGreen);
 
 
             for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
             {
                 GUI.DrawLine(spriteBatch,
-                    new Vector2(pathSteering.CurrentPath.Nodes[i].WorldPosition.X, -pathSteering.CurrentPath.Nodes[i].WorldPosition.Y),
-                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].WorldPosition.X, -pathSteering.CurrentPath.Nodes[i-1].WorldPosition.Y),
+                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
+                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
                     Color.LightGreen);
             }
         }

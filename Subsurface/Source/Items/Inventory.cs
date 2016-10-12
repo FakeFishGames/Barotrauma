@@ -63,8 +63,9 @@ namespace Barotrauma
         protected int selectedSlot = -1;
 
         protected InventorySlot[] slots;
-
         public Item[] Items;
+
+        private bool isSubInventory;
 
         public bool Locked;
 
@@ -232,9 +233,13 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Update(float deltaTime)
+        public virtual void Update(float deltaTime, bool subInventory = false)
         {
-            if (slots == null) CreateSlots();
+            if (slots == null || isSubInventory != subInventory)
+            {
+                CreateSlots();
+                isSubInventory = subInventory;
+            }
 
             for (int i = 0; i < capacity; i++)
             {
@@ -259,17 +264,15 @@ namespace Barotrauma
 
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch)
+        public virtual void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
-            string toolTip = "";
-
-            if (slots == null) CreateSlots();
+            if (slots == null || isSubInventory != subInventory) return;
 
             for (int i = 0; i < capacity; i++)
             {
                 if (slots[i].Disabled) continue;
 
-                //don't draw the slot if dragged an item out of it
+                //don't draw the item if it's being dragged out of the slot
                 bool drawItem = draggingItem == null || draggingItem != Items[i] || slots[i].IsHighlighted;
 
                 DrawSlot(spriteBatch, slots[i], Items[i], drawItem);
@@ -288,8 +291,20 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i].IsHighlighted && !slots[i].Disabled)
+                if (slots[i].IsHighlighted && !slots[i].Disabled && Items[i] != null)
                 {
+                    string toolTip = "";
+                    if (GameMain.DebugDraw)
+                    {
+                        toolTip = Items[i].ToString();
+                    }
+                    else
+                    {
+                        toolTip = string.IsNullOrEmpty(Items[i].Description) ?
+                            Items[i].Name :
+                            Items[i].Name + '\n' + Items[i].Description;
+                    }
+
                     DrawToolTip(spriteBatch, toolTip, slots[i].Rect);
                     break;
                 }
@@ -371,9 +386,26 @@ namespace Barotrauma
 
             if (container.Inventory.slots == null) container.Inventory.CreateSlots();
 
+            int itemCapacity = container.Capacity;
+
+            var slot = slots[slotIndex];
+            Rectangle containerRect = new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
+                    slot.Rect.Width + 10, slot.Rect.Height + (40 + 10) * itemCapacity + 10);
+
+            Rectangle subRect = slot.Rect;
+            subRect.Height = 40;
+
+            for (int i = 0; i < itemCapacity; i++)
+            {
+                subRect.Y = subRect.Y - subRect.Height - 10;
+                container.Inventory.slots[i].Rect = subRect;
+            }
+            
+            container.Inventory.isSubInventory = true;
+
             slots[slotIndex].State = GUIComponent.ComponentState.Hover;
 
-            container.Inventory.Update(deltaTime);
+            container.Inventory.Update(deltaTime, true);
         }
 
         public void DrawSubInventory(SpriteBatch spriteBatch, int slotIndex)
@@ -384,8 +416,7 @@ namespace Barotrauma
             var container = item.GetComponent<ItemContainer>();
             if (container == null) return;
 
-            if (container.Inventory.slots == null) container.Inventory.CreateSlots();
-            
+            if (container.Inventory.slots == null || !container.Inventory.isSubInventory) return;            
 
             int itemCapacity = container.Capacity;
 
@@ -398,20 +429,11 @@ namespace Barotrauma
             var slot = slots[slotIndex];
             Rectangle containerRect = new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
                     slot.Rect.Width + 10, slot.Rect.Height + (40 + 10) * itemCapacity + 10);
-
-            Rectangle subRect = slot.Rect;
-            subRect.Height = 40;
-
+            
             GUI.DrawRectangle(spriteBatch, new Rectangle(containerRect.X, containerRect.Y, containerRect.Width, containerRect.Height - slot.Rect.Height - 5), Color.Black * 0.8f, true);
             GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
 
-            for (int i = 0; i < itemCapacity; i++)
-            {
-                subRect.Y = subRect.Y - subRect.Height - 10;
-                container.Inventory.slots[i].Rect = subRect;
-            }
-
-            container.Inventory.Draw(spriteBatch);
+            container.Inventory.Draw(spriteBatch, true);
 
             if (!containerRect.Contains(PlayerInput.MousePosition))
             {

@@ -76,8 +76,8 @@ namespace Barotrauma
 
         public void ScrollWater(float deltaTime)
         {
-            wavePos.X += 0.006f*deltaTime;
-            wavePos.Y += 0.006f*deltaTime;
+            wavePos.X += 0.006f * deltaTime;
+            wavePos.Y += 0.006f * deltaTime;
         }
 
         public void Render(GraphicsDevice graphicsDevice, Camera cam, RenderTarget2D texture, Matrix transform)

@@ -21,6 +21,9 @@ namespace Barotrauma.Items.Components
         private List<RadarBlip> radarBlips;
         private float prevPingRadius;
 
+        public static string StartMarker = "Start";
+        public static string EndMarker = "End";
+
         [HasDefaultValue(10000.0f, false)]
         public float Range
         {
@@ -57,7 +60,6 @@ namespace Barotrauma.Items.Components
             isActiveTickBox.OnSelected = (GUITickBox box) =>
             {
                 IsActive = box.Selected;
-                item.NewComponentEvent(this, true, false);
 
                 return true;
             };
@@ -100,6 +102,11 @@ namespace Barotrauma.Items.Components
             return pingState > 1.0f;
         }
 
+        public override void UpdateHUD(Character character)
+        {
+            GuiFrame.Update((float)Timing.Step);
+        }
+
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             GuiFrame.Draw(spriteBatch);
@@ -109,12 +116,7 @@ namespace Barotrauma.Items.Components
             int radius = GuiFrame.Rect.Height / 2 - 30;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
         }
-
-        public override void UpdateHUD(Character character)
-        {
-            GuiFrame.Update(1.0f / 60.0f);
-        }
-
+        
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
         {
             Vector2 center = new Vector2(rect.X + rect.Width*0.5f, rect.Center.Y);
@@ -263,11 +265,11 @@ namespace Barotrauma.Items.Components
 
 
             DrawMarker(spriteBatch,
-                (GameMain.GameSession.Map == null) ? "Start" : GameMain.GameSession.Map.CurrentLocation.Name,
+                (GameMain.GameSession.Map == null) ? StartMarker : GameMain.GameSession.Map.CurrentLocation.Name,
                 (Level.Loaded.StartPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
 
             DrawMarker(spriteBatch,
-                (GameMain.GameSession.Map == null) ? "End" : GameMain.GameSession.Map.SelectedLocation.Name,
+                (GameMain.GameSession.Map == null) ? EndMarker : GameMain.GameSession.Map.SelectedLocation.Name,
                 (Level.Loaded.EndPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
 
             if (GameMain.GameSession.Mission != null)
@@ -284,6 +286,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Submarine sub in Submarine.Loaded)
             {
+                if (!sub.OnRadar) continue;
                 if (item.Submarine == sub || sub.DockedTo.Contains(item.Submarine)) continue;
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) continue;
                 

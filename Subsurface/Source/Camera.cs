@@ -110,6 +110,8 @@ namespace Barotrauma
 
             viewMatrix = 
                 Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
+
+            UpdateTransform();
         }
 
         public Vector2 TargetPos
@@ -193,9 +195,13 @@ namespace Barotrauma
                     }
                 }
                  
-                moveCam = moveCam * deltaTime * 60.0f; 
+                moveCam = moveCam * deltaTime * 60.0f;
 
-                Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, GameMain.DebugDraw ? 0.01f : 0.1f, 2.0f); 
+                Vector2 mouseInWorld = ScreenToWorld(PlayerInput.MousePosition);
+                Vector2 diffViewCenter;
+                diffViewCenter = ((mouseInWorld - Position) * Zoom);
+                Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, GameMain.DebugDraw ? 0.01f : 0.1f, 2.0f);
+                if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
             }
             else
             {

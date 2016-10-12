@@ -160,9 +160,7 @@ namespace Barotrauma.Items.Components
             }
 
             Drawable = Nodes.Any();
-
-            if (!loading) Item.NewComponentEvent(this, true, true);
-
+            
             return true;
         }
 
@@ -255,8 +253,6 @@ namespace Barotrauma.Items.Components
             if (Nodes.Count > 1)
             {
                 Nodes.RemoveAt(Nodes.Count - 1);
-
-                item.NewComponentEvent(this, true, true);
             }
 
             Drawable = Nodes.Any();
@@ -468,6 +464,14 @@ namespace Barotrauma.Items.Components
                 new Vector2((Vector2.Distance(start, end)) / wireSprite.Texture.Width,  width),
                 SpriteEffects.None,
                 wireSprite.Depth + ((item.ID % 100) * 0.00001f));
+        }
+
+        public override void FlipX()
+        {            
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                Nodes[i] = new Vector2(-Nodes[i].X, Nodes[i].Y);
+            }            
         }
 
         public override XElement Save(XElement parentElement)

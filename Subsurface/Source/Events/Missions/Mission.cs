@@ -27,12 +27,14 @@ namespace Barotrauma
 
         private int reward;
 
+        protected string[] Locations = new string[2];
+
         public string Name
         {
             get { return name; }
         }
 
-        public string Description
+        public virtual string Description
         {
             get { return description; }
         }
@@ -57,7 +59,7 @@ namespace Barotrauma
             get { return Vector2.Zero; }
         }
 
-        public string SuccessMessage
+        virtual public string SuccessMessage
         {
             get { return successMessage; }
         }
@@ -86,7 +88,7 @@ namespace Barotrauma
             }
         }
 
-        public Mission(XElement element)
+        public Mission(XElement element, Location[] locations)
         {
             name = ToolBox.GetAttributeString(element, "name", "");
 
@@ -109,9 +111,24 @@ namespace Barotrauma
                 headers.Add(ToolBox.GetAttributeString(subElement, "header", ""));
                 messages.Add(ToolBox.GetAttributeString(subElement, "text", ""));
             }
+
+
+            for (int n = 0; n < 2; n++)
+            {
+                Locations[n] = locations[n].Name;
+                description = description.Replace("[location" + (n + 1) + "]", locations[n].Name);
+
+                successMessage = successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+
+                for (int m = 0; m < messages.Count; m++)
+                {
+                    messages[m] = messages[m].Replace("[location" + (n + 1) + "]", locations[n].Name);
+                }
+            }
         }
 
-        public static Mission LoadRandom(Location[] locations, MTRandom rand, string missionType = "")
+        public static Mission LoadRandom(Location[] locations, MTRandom rand, string missionType = "", bool isSinglePlayer = false)
         {
             missionType = missionType.ToLowerInvariant();
 
@@ -146,8 +163,15 @@ namespace Barotrauma
                 matchingElements = doc.Root.Elements().ToList().FindAll(m => m.Name.ToString().ToLowerInvariant().Replace("mission", "") == missionType);
             }
 
-
-
+            if (isSinglePlayer)
+            {
+                matchingElements.RemoveAll(m => ToolBox.GetAttributeBool(m, "multiplayeronly", false));
+            }
+            else
+            {
+                matchingElements.RemoveAll(m => ToolBox.GetAttributeBool(m, "singleplayeronly", false));
+            }
+            
             int i = 0;
             foreach (XElement element in matchingElements)
             {
@@ -182,22 +206,13 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Error in " + configFile + "! Could not find a mission class of the type \"" + type + "\".");
                         continue;
                     }
-
-                    ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
-                    object instance = constructor.Invoke(new object[] { element });
+                    
+                    ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement), typeof(Location[]) });
+                    
+                    object instance = constructor.Invoke(new object[] { element, locations });
 
                     Mission mission = (Mission)instance;
-
-                    for (int n = 0; n<2; n++)
-                    {
-                        mission.description = mission.description.Replace("[location"+(n+1)+"]", locations[n].Name);
-
-                        mission.successMessage = mission.successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                        mission.failureMessage = mission.failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                    }
-
-
-
+                    
                     return mission;
                 }
 
@@ -211,6 +226,8 @@ namespace Barotrauma
         public virtual void Start(Level level) { }
 
         public virtual void Update(float deltaTime) { }
+
+        public virtual bool AssignTeamIDs(List<Networking.Client> clients,out int hostTeam) { clients.ForEach(client => { client.TeamID = 1; }); hostTeam = 1; return false; }
 
         public void ShowMessage(int index)
         {

@@ -31,7 +31,6 @@ namespace Barotrauma
 
     class Submarine : Entity, IServerSerializable
     {
-
         public static string SavePath = "Submarines";
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 80000.0f);
@@ -53,7 +52,12 @@ namespace Barotrauma
         
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
-        public static Submarine MainSub;
+        public static Submarine[] MainSubs = new Submarine[2];
+        public static Submarine MainSub
+        {
+            get { return MainSubs[0]; }
+            set { MainSubs[0] = value; }
+        }
         private static List<Submarine> loaded = new List<Submarine>();
 
         private SubmarineBody subBody;
@@ -73,6 +77,8 @@ namespace Barotrauma
         private Vector2 prevPosition;
 
         private float lastNetworkUpdate, networkUpdateTimer;
+
+        private EntityGrid entityGrid = null;
         
         //properties ----------------------------------------------------
 
@@ -81,6 +87,8 @@ namespace Barotrauma
             get { return name; }
             set { name = value; }
         }
+
+        public bool OnRadar = true;
 
         public string Description
         {
@@ -325,7 +333,7 @@ namespace Barotrauma
 
         public void UpdateTransform()
         {
-            DrawPosition = Timing.Interpolate(prevPosition, Position);            
+            DrawPosition = Timing.Interpolate(prevPosition, Position);
         }
 
         //math/physics stuff ----------------------------------------------------
@@ -477,14 +485,97 @@ namespace Barotrauma
             lastPickedFraction = closestFraction;
             return closestBody;
         }
-                
+
         //movement ----------------------------------------------------
 
+        private bool flippedX = false;
+        public bool FlippedX
+        {
+            get { return flippedX; }
+        }
+
+        public void FlipX(List<Submarine> parents=null)
+        {
+            if (parents == null) parents = new List<Submarine>();
+            parents.Add(this);
+
+            flippedX = !flippedX;
+
+            Item.UpdateHulls();
+
+            List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
+            
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (e.MoveWithLevel || e.Submarine != this || e is Item) continue;
+                
+                if (e is LinkedSubmarine)
+                {
+                    Submarine sub = ((LinkedSubmarine)e).Sub;
+                    if (!parents.Contains(sub))
+                    {
+                        Vector2 relative1 = sub.SubBody.Position - SubBody.Position;
+                        relative1.X = -relative1.X;
+                        sub.SetPosition(relative1 + SubBody.Position);
+                        sub.FlipX(parents);
+                    }
+                }
+                else
+                {
+                    e.FlipX();
+                }
+            }
+
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            {
+                if (MapEntity.mapEntityList[i].Submarine != this) continue;
+                MapEntity.mapEntityList[i].Move(-HiddenSubPosition);
+            }
+
+            Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
+            SubmarineBody newSubBody = new SubmarineBody(this);
+            GameMain.World.RemoveBody(subBody.Body);
+            subBody = newSubBody;
+            SetPosition(pos);
+
+            if (entityGrid != null)
+            {
+                Hull.EntityGrids.Remove(entityGrid);
+                entityGrid = null;
+            }
+            entityGrid = Hull.GenerateEntityGrid(this);
+
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            {
+                if (MapEntity.mapEntityList[i].Submarine != this) continue;
+                MapEntity.mapEntityList[i].Move(HiddenSubPosition);
+            }
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (bodyItems.Contains(item))
+                {
+                    item.Submarine = this;             
+                    if (Position == Vector2.Zero) item.Move(-HiddenSubPosition);
+                }
+                else if (item.Submarine != this)
+                {
+                    continue;
+                }
+
+                item.FlipX();
+            }
+
+            Item.UpdateHulls();
+            Gap.UpdateHulls();
+        }
 
         public void Update(float deltaTime)
         {
-            if (Level.Loaded == null) return;
+            //if (PlayerInput.KeyHit(InputType.Crouch) && (this == MainSub)) FlipX();
 
+            if (Level.Loaded == null) return;
+            
             if (subBody == null) return;
             
             subBody.Update(deltaTime);
@@ -879,8 +970,13 @@ namespace Barotrauma
 
             loaded.Add(this);
 
-            Hull.GenerateEntityGrid(this);
-            
+            if (entityGrid != null)
+            {
+                Hull.EntityGrids.Remove(entityGrid);
+                entityGrid = null;
+            }
+            entityGrid = Hull.GenerateEntityGrid(this);
+
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
                 if (MapEntity.mapEntityList[i].Submarine != this) continue;
@@ -970,6 +1066,7 @@ namespace Barotrauma
             subBody = null;
 
             if (MainSub == this) MainSub = null;
+            if (MainSubs[1] == this) MainSubs[1] = null;
 
             DockedTo.Clear();
         }

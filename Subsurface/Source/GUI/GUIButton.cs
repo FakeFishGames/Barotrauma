@@ -116,6 +116,21 @@ namespace Barotrauma
             }
         }
 
+        public override Rectangle Rect
+        {
+            get
+            {
+                return rect;
+            }
+            set
+            {
+                base.Rect = value;
+
+                frame.Rect = new Rectangle(value.X, value.Y, frame.Rect.Width, frame.Rect.Height);
+                textBlock.Rect = value;
+            }
+        }
+
         public bool Selected { get; set; }
 
         public GUIButton(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null)
@@ -176,13 +191,11 @@ namespace Barotrauma
 
             //if (!Enabled) GUI.DrawRectangle(spriteBatch, rect, Color.Gray*0.5f, true);
         }
-
+        
         public override void Update(float deltaTime)
         {
             if (!Visible) return;
-
             base.Update(deltaTime);
-
             if (rect.Contains(PlayerInput.MousePosition) && CanBeSelected && Enabled && (MouseOn == null || MouseOn == this || IsParentOf(MouseOn)))
             {
                 state = ComponentState.Hover;
@@ -196,7 +209,6 @@ namespace Barotrauma
                 else if (PlayerInput.LeftButtonClicked())
                 {
                     GUI.PlayUISound(GUISoundType.Click);
-
                     if (OnClicked != null)
                     {
                         if (OnClicked(this, UserData) && CanBeSelected) state = ComponentState.Selected;
@@ -212,7 +224,6 @@ namespace Barotrauma
             {
                 state = Selected ? ComponentState.Selected : ComponentState.None;
             }
-
             frame.State = state;
         }
     }
