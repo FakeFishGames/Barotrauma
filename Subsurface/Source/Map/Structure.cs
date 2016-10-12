@@ -63,6 +63,16 @@ namespace Barotrauma
 
         public SpriteEffects SpriteEffects = SpriteEffects.None;
 
+        public bool resizeHorizontal
+        {
+            get { return prefab.resizeHorizontal; }
+        }
+
+        public bool resizeVertical
+        {
+            get { return prefab.resizeVertical; }
+        }
+
         private bool flippedX;
 
         public override Sprite Sprite
