@@ -299,6 +299,8 @@ namespace Barotrauma
             Rectangle slotRect = new Rectangle(0, 0, rectWidth, rectHeight);
             for (int i = 0; i < capacity; i++)
             {
+                if (slots[i] == null) slots[i] = new InventorySlot(slotRect);
+
                 slots[i].Disabled = false;
 
                 slotRect.X = (int)(SlotPositions[i].X + DrawOffset.X);
