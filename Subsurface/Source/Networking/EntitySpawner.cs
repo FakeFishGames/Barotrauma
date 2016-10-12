@@ -1,8 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Networking;
-using System;
 
 namespace Barotrauma
 {
@@ -75,45 +75,40 @@ namespace Barotrauma
             spawnQueue = new Queue<IEntitySpawnInfo>();
         }
 
-        public void QueueItem(ItemPrefab itemPrefab, Vector2 worldPosition, bool isNetworkMessage = false)
+        public void QueueItem(ItemPrefab itemPrefab, Vector2 worldPosition)
         {
-            //clients aren't allowed to spawn new items unless the server says so
-            if (!isNetworkMessage && GameMain.Client != null) return;
+            if (GameMain.Client != null) return;
             
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition));
         }
 
-        public void QueueItem(ItemPrefab itemPrefab, Vector2 position, Submarine sub, bool isNetworkMessage = false)
+        public void QueueItem(ItemPrefab itemPrefab, Vector2 position, Submarine sub)
         {
-            //clients aren't allowed to spawn new items unless the server says so
-            if (!isNetworkMessage && GameMain.Client != null) return;
+            if (GameMain.Client != null) return;
 
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub));
         }
 
-        public void QueueItem(ItemPrefab itemPrefab, Inventory inventory, bool isNetworkMessage = false)
+        public void QueueItem(ItemPrefab itemPrefab, Inventory inventory)
         {
-            //clients aren't allowed to spawn new items unless the server says so
-            if (!isNetworkMessage && GameMain.Client != null) return;
+            if (GameMain.Client != null) return;
 
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory));
         }
 
         public void Update()
         {
+            if (GameMain.Client != null) return;
+
             if (!spawnQueue.Any()) return;
-            //List<Inventory> inventories = new List<Inventory>();
 
             while (spawnQueue.Count>0)
             {
                 var entitySpawnInfo = spawnQueue.Dequeue();
 
                 var spawnedEntity = entitySpawnInfo.Spawn();
-
-                if (spawnedEntity!= null) AddToSpawnedList(spawnedEntity);
+                if (spawnedEntity != null) AddToSpawnedList(spawnedEntity);
             }
-
-            //if (GameMain.Server != null) GameMain.Server.SendItemSpawnMessage(items);
         }
 
         public void AddToSpawnedList(Entity entity)
@@ -134,7 +129,7 @@ namespace Barotrauma
 
             message.Write((UInt32)spawnedEntities.Count);
 
-            message.Write((byte)entities.Count);
+            message.Write((UInt16)entities.Count);
             for (int i = 0; i < entities.Count; i++)
             {
                 if (entities[i] is Item)
@@ -156,7 +151,7 @@ namespace Barotrauma
 
             UInt32 ID = message.ReadUInt32();
             
-            var entityCount = message.ReadByte();
+            var entityCount = message.ReadUInt16();
             for (int i = 0; i < entityCount; i++)
             {
                 switch (message.ReadByte())
@@ -184,86 +179,6 @@ namespace Barotrauma
 
             spawnQueue.Clear();
             spawnedEntities.Clear();
-        }
-    }
-
-    //todo: turn into a generic EntityRemover class + sync
-    class ItemRemover : IServerSerializable
-    {
-        public UInt32 NetStateID
-        {
-            get;
-            private set;
-        }
-
-        private readonly Queue<Item> removeQueue;
-        
-        public List<Item> removedItems = new List<Item>();
-
-        public ItemRemover()
-        {
-            removeQueue = new Queue<Item>();
-        }
-
-        public void QueueItem(Item item, bool isNetworkMessage = false)
-        {
-            if (!isNetworkMessage && GameMain.Client != null)
-            {
-                //clients aren't allowed to remove items unless the server says so
-                return;
-            }
-
-            removeQueue.Enqueue(item);
-        }
-
-        public void Update()
-        {
-            if (!removeQueue.Any()) return;
-
-            List<Item> items = new List<Item>();
-
-            while (removeQueue.Count > 0)
-            {
-                var item = removeQueue.Dequeue();
-                removedItems.Add(item);
-
-                item.Remove();
-
-                items.Add(item);
-            }
-
-            //if (GameMain.Server != null) GameMain.Server.SendItemRemoveMessage(items);
-        }
-
-        public void ServerWrite(Lidgren.Network.NetOutgoingMessage message, Client client)
-        {
-            //message.Write((byte)items.Count);
-            //foreach (Item item in items)
-            //{
-            //    message.Write(item.ID);
-            //}
-        }
-
-        public void ClientRead(Lidgren.Network.NetIncomingMessage message)
-        {
-            var itemCount = message.ReadByte();
-            for (int i = 0; i<itemCount; i++)
-            {
-                ushort itemId = message.ReadUInt16();
-
-                var item = MapEntity.FindEntityByID(itemId) as Item;
-                if (item == null) continue;
-
-                item.Remove();
-            }
-        }
-
-        public void Clear()
-        {
-            NetStateID = 0;
-
-            removeQueue.Clear();
-            removedItems.Clear();
         }
     }
 }

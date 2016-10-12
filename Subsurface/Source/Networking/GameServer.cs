@@ -599,10 +599,11 @@ namespace Barotrauma.Networking
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
 
-                        c.lastRecvGeneralUpdate = Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32());
-                        c.lastRecvChatMsgID     = Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32());
-                        c.lastRecvEntitySpawnID   = Math.Max(c.lastRecvEntitySpawnID, inc.ReadUInt32());
-                        
+                        c.lastRecvGeneralUpdate     = Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32());
+                        c.lastRecvChatMsgID         = Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32());
+                        c.lastRecvEntitySpawnID     = Math.Max(c.lastRecvEntitySpawnID, inc.ReadUInt32());
+                        c.lastRecvEntityRemoveID    = Math.Max(c.lastRecvEntityRemoveID, inc.ReadUInt32());
+
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
@@ -662,6 +663,14 @@ namespace Barotrauma.Networking
                 Item.Spawner.ServerWrite(outmsg, c);
                 outmsg.WritePadBits();
             }
+
+            if (Item.Remover.NetStateID > c.lastRecvEntityRemoveID)
+            {
+                outmsg.Write((byte)ServerNetObject.ENTITY_REMOVE);
+                Item.Remover.ServerWrite(outmsg, c);
+                outmsg.WritePadBits();
+            }
+
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);

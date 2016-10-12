@@ -47,7 +47,8 @@ namespace Barotrauma.Networking
         CHARACTER_POSITION,
         ITEM_STATE,
 
-        ENTITY_SPAWN
+        ENTITY_SPAWN, 
+        ENTITY_REMOVE
     }
 
     enum VoteType

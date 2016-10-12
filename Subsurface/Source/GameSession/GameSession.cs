@@ -72,10 +72,13 @@ namespace Barotrauma
             Submarine.MainSub = submarine;
 
             GameMain.GameSession = this;
-
+                        
             CrewManager = new CrewManager();
 
             TaskManager = new TaskManager(this);
+
+            Entity.Spawner.Clear();
+            Entity.Remover.Clear();
 
             this.saveFile = saveFile;
 
