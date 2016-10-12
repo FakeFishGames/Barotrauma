@@ -1894,8 +1894,11 @@ namespace Barotrauma
 
             Removed = true;
 
-            //sprite.Remove();
-            //if (body != null) body.Remove();
+            if (parentInventory != null)
+            {
+                parentInventory.RemoveItem(this);
+                parentInventory = null;
+            }
 
             foreach (ItemComponent ic in components)
             {
@@ -1903,13 +1906,19 @@ namespace Barotrauma
             }
             ItemList.Remove(this);
 
+            if (body != null)
+            {
+                body.Remove();
+                body = null;
+            }
+
             foreach (Item it in ItemList)
             {
                 if (it.linkedTo.Contains(this))
                 {
                     it.linkedTo.Remove(this);
                 }
-            }                        
+            }
         }
         
     }
