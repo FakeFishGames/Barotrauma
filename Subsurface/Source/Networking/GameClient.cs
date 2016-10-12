@@ -704,6 +704,9 @@ namespace Barotrauma.Networking
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
                         break;
+                    case ServerNetObject.ITEM_SPAWN:
+                        Item.Spawner.ClientRead(inc);
+                        break;
                 }
             }
         }
@@ -738,6 +741,7 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
+            outmsg.Write(Item.Spawner.NetStateID);
             ChatMessage removeMsg;
             while ((removeMsg = chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastSentChatMsgID)) != null)
             {

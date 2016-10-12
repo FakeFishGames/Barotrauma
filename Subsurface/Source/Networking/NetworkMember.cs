@@ -45,7 +45,9 @@ namespace Barotrauma.Networking
         CHAT_MESSAGE,
         VOTE,
         CHARACTER_POSITION,
-        ITEM_STATE
+        ITEM_STATE,
+
+        ITEM_SPAWN
     }
 
     enum VoteType

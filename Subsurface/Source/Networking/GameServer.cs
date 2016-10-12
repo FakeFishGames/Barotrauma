@@ -568,16 +568,8 @@ namespace Barotrauma.Networking
                 {
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
-                        UInt32 lastGeneralUpdID = inc.ReadUInt32();
-                        if (lastGeneralUpdID > c.lastRecvGeneralUpdate)
-                        {
-                            c.lastRecvGeneralUpdate = lastGeneralUpdID;
-                        }
-                        UInt32 lastChatID = inc.ReadUInt32();
-                        if (lastChatID > c.lastRecvChatMsgID)
-                        {
-                            c.lastRecvChatMsgID = lastChatID;
-                        }
+                        c.lastRecvGeneralUpdate = Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32());
+                        c.lastRecvChatMsgID     = Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32());
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
@@ -606,16 +598,11 @@ namespace Barotrauma.Networking
                 {
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
-                        UInt32 lastGeneralUpdID = inc.ReadUInt32();
-                        if (lastGeneralUpdID > c.lastRecvGeneralUpdate)
-                        {
-                            c.lastRecvGeneralUpdate = lastGeneralUpdID;
-                        }
-                        UInt32 lastChatID = inc.ReadUInt32();
-                        if (lastChatID > c.lastRecvChatMsgID)
-                        {
-                            c.lastRecvChatMsgID = lastChatID;
-                        }
+
+                        c.lastRecvGeneralUpdate = Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32());
+                        c.lastRecvChatMsgID     = Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32());
+                        c.lastRecvItemSpawnID   = Math.Max(c.lastRecvItemSpawnID, inc.ReadUInt32());
+                        
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
@@ -656,6 +643,7 @@ namespace Barotrauma.Networking
                 }
             }
 
+
             outmsg.Write((byte)ServerNetObject.CHARACTER_POSITION);
             if (c.Character != null && !c.Character.IsDead)
             {
@@ -665,6 +653,13 @@ namespace Barotrauma.Networking
             else
             {
                 outmsg.Write(true); //dead
+                outmsg.WritePadBits();
+            }
+
+            if (Item.Spawner.NetStateID > c.lastRecvItemSpawnID)
+            {
+                outmsg.Write((byte)ServerNetObject.ITEM_SPAWN);
+                Item.Spawner.ServerWrite(outmsg, c);
                 outmsg.WritePadBits();
             }
 
@@ -876,17 +871,13 @@ namespace Barotrauma.Networking
 
             
             WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
-
-
             for (int i = 0; i < connectedClients.Count; i++)
             {
-                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, selectedSub);
-                Vector2 spawnPosition = spawnPoint.WorldPosition;
-
-                DebugConsole.NewMessage(spawnPosition.ToString(), Color.Lime);
                 Character spawnedCharacter = Character.Create(connectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
                 spawnedCharacter.AnimController.Frozen = true;
-                connectedClients[i].Character = spawnedCharacter;
+                spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
+
+                connectedClients[i].Character = spawnedCharacter;                
                 
                 GameMain.GameSession.CrewManager.characters.Add(spawnedCharacter);
             }
@@ -894,9 +885,15 @@ namespace Barotrauma.Networking
             if (characterInfo != null)
             {
                 myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
+                myCharacter.GiveJobItems(assignedWayPoints.Last());
 
                 Character.Controlled = myCharacter;
                 GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+            }
+
+            foreach (Character c in GameMain.GameSession.CrewManager.characters)
+            {
+                Item.Spawner.AddToSpawnedList(c.SpawnItems);
             }
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
@@ -947,8 +944,8 @@ namespace Barotrauma.Networking
 
                 msg.Write(selectedMode.Name);
 
-            msg.Write(AllowRespawn);
-            msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
+                msg.Write(AllowRespawn);
+                msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
                 var clientsWithCharacter = clients.FindAll(c => c.Character != null);
 
@@ -1321,7 +1318,7 @@ namespace Barotrauma.Networking
                 if (jobPrefab != null) jobPreferences.Add(jobPrefab);
             }
 
-            sender.characterInfo = new CharacterInfo(Character.HumanConfigFile, name, gender);
+            sender.characterInfo = new CharacterInfo(Character.HumanConfigFile, sender.name, gender);
             sender.characterInfo.HeadSpriteId = headSpriteId;
             sender.jobPreferences = jobPreferences;
         }
