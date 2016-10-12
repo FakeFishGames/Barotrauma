@@ -378,7 +378,12 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
 
-            GameMain.World.RemoveBody(body.FarseerBody);
+            if (body != null)
+            {                
+                body.Remove();
+                body = null;
+            }
+
 
             if (linkedGap!=null) linkedGap.Remove();
 

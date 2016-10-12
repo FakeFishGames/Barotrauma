@@ -28,6 +28,9 @@ namespace Barotrauma
 
         public Color Color;
 
+        public Color BorderHighlightColor;
+        private CoroutineHandle BorderHighlightCoroutine;
+
         public InventorySlot(Rectangle rect)
         {
             Rect = rect;
@@ -35,6 +38,33 @@ namespace Barotrauma
             State = GUIComponent.ComponentState.None;
 
             Color = Color.White * 0.4f;
+        }
+
+        public void ShowBorderHighlight(Color color, float fadeInDuration, float fadeOutDuration)
+        {
+            if (BorderHighlightCoroutine != null)
+            {
+                BorderHighlightCoroutine = null;
+            }
+
+            BorderHighlightCoroutine = CoroutineManager.StartCoroutine(UpdateBorderHighlight(color, fadeInDuration, fadeOutDuration));
+        }
+
+        private IEnumerable<object> UpdateBorderHighlight(Color color, float fadeInDuration, float fadeOutDuration)
+        {
+            float t = 0.0f;
+            while (t < fadeInDuration + fadeOutDuration)
+            {
+                BorderHighlightColor = (t < fadeInDuration) ?
+                    Color.Lerp(Color.Transparent, color, t / fadeInDuration) :
+                    Color.Lerp(color, Color.Transparent, (t - fadeInDuration) / fadeOutDuration);
+
+                t += CoroutineManager.DeltaTime;
+
+                yield return CoroutineStatus.Running;
+            }
+
+            yield return CoroutineStatus.Success;
         }
     }
 
@@ -163,6 +193,7 @@ namespace Barotrauma
             }
             else
             {
+                if (slots != null) slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
                 return false;
             }
         }
@@ -179,6 +210,9 @@ namespace Barotrauma
 
             Items[i] = item;
             item.ParentInventory = this;
+
+            if (slots != null) slots[i].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+
             if (item.body != null)
             {
                 item.body.Enabled = false;
@@ -321,7 +355,7 @@ namespace Barotrauma
             Vector2 rectSize = textSize * 1.2f;
 
             Vector2 pos = new Vector2(highlightedSlot.Right, highlightedSlot.Y-rectSize.Y);
-            pos.X = (int)pos.X;
+            pos.X = (int)(pos.X + 3);
             pos.Y = (int)pos.Y;
             
             GUI.DrawRectangle(spriteBatch, pos, rectSize, Color.Black * 0.8f, true);
@@ -368,10 +402,20 @@ namespace Barotrauma
                         doubleClickedItem = item;
                     }
 
-                    //selectedSlot = slotIndex;
-                    TryPutItem(draggingItem, slotIndex, true);
-                    draggingItem = null;
-                    draggingSlot = null;
+                    if (draggingItem != Items[slotIndex])
+                    {
+                        //selectedSlot = slotIndex;
+                        if (TryPutItem(draggingItem, slotIndex, true))
+                        {
+                            if (slots != null) slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                        }
+                        else
+                        {
+                            if (slots != null) slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        }
+                        draggingItem = null;
+                        draggingSlot = null;
+                    }
                 }
             }
         }
@@ -468,6 +512,14 @@ namespace Barotrauma
             }
 
             GUI.DrawRectangle(spriteBatch, rect, (slot.IsHighlighted ? Color.Red * 0.4f : slot.Color), false);
+
+            if (slot.BorderHighlightColor != Color.Transparent)
+            {
+                Rectangle highlightRect = slot.Rect;
+                highlightRect.Inflate(3,3);
+                
+                GUI.DrawRectangle(spriteBatch, highlightRect, slot.BorderHighlightColor, false, 0, 5);
+            }
 
             if (item == null || !drawItem) return;
 
