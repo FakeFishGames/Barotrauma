@@ -366,15 +366,15 @@ namespace Barotrauma.Lights
             spriteBatch.End();
         }
 
-        public void DrawLOS(SpriteBatch spriteBatch, Effect effect)
+        public void DrawLOS(SpriteBatch spriteBatch, Effect effect,bool renderingBackground)
         {
             if (!LosEnabled || ViewTarget == null) return;
-
-            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative, null, null, null, effect);
+            
+            spriteBatch.Begin(SpriteSortMode.Deferred, renderingBackground ? CustomBlendStates.LOS : CustomBlendStates.Multiplicative, null, null, null, effect);
             spriteBatch.Draw(losTexture, Vector2.Zero, Color.White);
             spriteBatch.End();
 
-            ObstructVision = false;
+            if (!renderingBackground) ObstructVision = false;
         }
 
         public void ClearLights()
@@ -399,10 +399,16 @@ namespace Barotrauma.Lights
             MultiplyWithAlpha = new BlendState();
             MultiplyWithAlpha.ColorDestinationBlend = MultiplyWithAlpha.AlphaDestinationBlend = Blend.One;
             MultiplyWithAlpha.ColorSourceBlend = MultiplyWithAlpha.AlphaSourceBlend = Blend.DestinationAlpha;
+
+            LOS = new BlendState();
+            LOS.ColorSourceBlend = LOS.AlphaSourceBlend = Blend.Zero;
+            LOS.ColorDestinationBlend = LOS.AlphaDestinationBlend = Blend.InverseSourceColor;
+            LOS.ColorBlendFunction = LOS.AlphaBlendFunction = BlendFunction.Add;
         }
         public static BlendState Multiplicative { get; private set; }
         public static BlendState WriteToAlpha { get; private set; }
         public static BlendState MultiplyWithAlpha { get; private set; }
+        public static BlendState LOS { get; private set; }
     }
 
 }

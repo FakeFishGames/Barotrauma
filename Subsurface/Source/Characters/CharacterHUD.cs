@@ -18,7 +18,7 @@ namespace Barotrauma
 
         private static GUIProgressBar drowningBar, healthBar;
 
-        private static float damageOverlayTimer;
+        public static float damageOverlayTimer { get; private set; }
 
         public static void Reset()
         {
