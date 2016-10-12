@@ -49,8 +49,6 @@ namespace Barotrauma
             }
         }
 
-        public bool SpawnedMidRound;
-
         public List<Item> SpawnItems = new List<Item>();
 
         private bool enabled;
@@ -1846,7 +1844,7 @@ namespace Barotrauma
             msg.Write(Info.Job == null ? "" : Info.Job.Name);            
         }
 
-        public static Character ReadSpawnData(NetIncomingMessage inc)
+        public static Character ReadSpawnData(NetIncomingMessage inc, bool spawn=true)
         {
             if (GameMain.Server != null) return null;
 
@@ -1862,6 +1860,8 @@ namespace Barotrauma
 
             if (noInfo)
             {
+                if (!spawn) return null;
+
                 character = Character.Create(configPath, position, null, true);
                 character.ID = id;
             }
@@ -1877,6 +1877,8 @@ namespace Barotrauma
                 int headSpriteID    = inc.ReadByte();
                 string jobName      = inc.ReadString();
 
+                if (!spawn) return null;
+
                 JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
 
                 CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
@@ -1884,6 +1886,12 @@ namespace Barotrauma
 
                 character = Character.Create(configPath, position, ch, true, hasAi);
                 character.ID = id;
+
+                if (GameMain.Client.MyCharacterID == id)
+                {
+                    GameMain.Client.Character = character;
+                    Controlled = character;
+                }
 
                 if (configPath == Character.HumanConfigFile)
                 {

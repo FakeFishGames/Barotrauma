@@ -294,7 +294,7 @@ namespace Barotrauma
 
                     if (spawnedCharacter != null && GameMain.Server != null)
                     {
-                        spawnedCharacter.SpawnedMidRound = true;
+                        Entity.Spawner.AddToSpawnedList(spawnedCharacter);
                     }
 
                     break;

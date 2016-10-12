@@ -31,7 +31,7 @@ namespace Barotrauma
         public static List<Item> ItemList = new List<Item>();
         private ItemPrefab prefab;
 
-        public static ItemSpawner Spawner = new ItemSpawner();
+
         public static ItemRemover Remover = new ItemRemover();
 
         public static bool ShowLinks = true;
@@ -1556,7 +1556,120 @@ namespace Barotrauma
         }
         
         public void ServerWrite(NetOutgoingMessage msg, Client c) { }
-        public void ClientRead(NetIncomingMessage msg) { }        
+        public void ClientRead(NetIncomingMessage msg) { }
+
+        public void WriteSpawnData(NetOutgoingMessage msg)
+        {
+            if (GameMain.Server == null) return;
+            
+            msg.Write(Prefab.Name);
+            msg.Write(ID);
+
+            if (ParentInventory == null || ParentInventory.Owner == null)
+            {
+                msg.Write((ushort)0);
+
+                msg.Write(Position.X);
+                msg.Write(Position.Y);
+                msg.Write(Submarine != null ? Submarine.ID : (ushort)0);
+            }
+            else
+            {
+                msg.Write(ParentInventory.Owner.ID);
+
+                int index = ParentInventory.FindIndex(this);
+                msg.Write(index < 0 ? (byte)255 : (byte)index);
+            }
+
+            if (Name == "ID Card") msg.Write(Tags);            
+        }
+
+        public static Item ReadSpawnData(NetIncomingMessage msg, bool spawn = true)
+        {
+            if (GameMain.Server != null) return null;
+
+            string itemName     = msg.ReadString();
+            ushort itemId       = msg.ReadUInt16();
+
+            ushort inventoryId  = msg.ReadUInt16();
+
+            Vector2 pos = Vector2.Zero;
+            Submarine sub = null;
+            int inventorySlotIndex = -1;
+
+            if (inventoryId > 0)
+            {
+                inventorySlotIndex = msg.ReadByte();
+            }
+            else
+            {
+                pos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+
+                ushort subID = msg.ReadUInt16();
+                if (subID > 0)
+                {
+                    sub = Submarine.Loaded.Find(s => s.ID == subID);
+                }
+            }
+
+            string tags = "";
+            if (itemName == "ID Card")
+            {
+                tags = msg.ReadString();
+            }
+
+            if (!spawn) return null;
+
+            //----------------------------------------
+
+            var prefab = MapEntityPrefab.list.Find(me => me.Name == itemName);
+            if (prefab == null) return null;
+
+            var itemPrefab = prefab as ItemPrefab;
+            if (itemPrefab == null) return null;
+
+            Inventory inventory = null;
+
+            var inventoryOwner = Entity.FindEntityByID(inventoryId);
+            if (inventoryOwner != null)
+            {
+                if (inventoryOwner is Character)
+                {
+                    inventory = (inventoryOwner as Character).Inventory;
+                }
+                else if (inventoryOwner is Item)
+                {
+                    var containers = (inventoryOwner as Item).GetComponents<Items.Components.ItemContainer>();
+                    if (containers != null && containers.Any())
+                    {
+                        inventory = containers.Last().Inventory;
+                    }
+                }
+            }
+
+            var item = new Item(itemPrefab, pos, sub);
+
+            item.ID = itemId;
+            if (sub != null)
+            {
+                item.CurrentHull = Hull.FindHull(pos + sub.Position, null, true);
+                item.Submarine = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
+            }
+
+            if (!string.IsNullOrEmpty(tags)) item.Tags = tags;
+
+            if (inventory != null)
+            {
+                if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
+                    inventory.TryPutItem(item, inventorySlotIndex, false))
+                {
+                    return null;
+                }
+                inventory.TryPutItem(item, item.AllowedSlots);
+            }
+
+            return item;
+        }
 
         public static void Load(XElement element, Submarine submarine)
         {          

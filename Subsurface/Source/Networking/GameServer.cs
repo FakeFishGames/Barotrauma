@@ -601,7 +601,7 @@ namespace Barotrauma.Networking
 
                         c.lastRecvGeneralUpdate = Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32());
                         c.lastRecvChatMsgID     = Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32());
-                        c.lastRecvItemSpawnID   = Math.Max(c.lastRecvItemSpawnID, inc.ReadUInt32());
+                        c.lastRecvEntitySpawnID   = Math.Max(c.lastRecvEntitySpawnID, inc.ReadUInt32());
                         
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
@@ -656,9 +656,9 @@ namespace Barotrauma.Networking
                 outmsg.WritePadBits();
             }
 
-            if (Item.Spawner.NetStateID > c.lastRecvItemSpawnID)
+            if (Item.Spawner.NetStateID > c.lastRecvEntitySpawnID)
             {
-                outmsg.Write((byte)ServerNetObject.ITEM_SPAWN);
+                outmsg.Write((byte)ServerNetObject.ENTITY_SPAWN);
                 Item.Spawner.ServerWrite(outmsg, c);
                 outmsg.WritePadBits();
             }
@@ -893,7 +893,9 @@ namespace Barotrauma.Networking
 
             foreach (Character c in GameMain.GameSession.CrewManager.characters)
             {
-                Item.Spawner.AddToSpawnedList(c.SpawnItems);
+                Entity.Spawner.AddToSpawnedList(c);
+
+                c.SpawnItems.ForEach(item => Entity.Spawner.AddToSpawnedList(item));
             }
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
@@ -947,23 +949,7 @@ namespace Barotrauma.Networking
                 msg.Write(AllowRespawn);
                 msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
-                var clientsWithCharacter = clients.FindAll(c => c.Character != null);
-
-                int characterCount = clientsWithCharacter.Count;
-                if (myCharacter != null) characterCount++;
-
-                msg.Write((byte)characterCount);
-                foreach (Client c in clientsWithCharacter)
-                {
-                    c.Character.WriteSpawnData(msg);
-                    msg.Write(c == client);
-                }
-                
-                if (myCharacter != null)
-                {
-                    myCharacter.WriteSpawnData(msg);
-                    msg.Write(false);
-                }
+                msg.Write(client.Character.ID);
 
                 server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
             }
