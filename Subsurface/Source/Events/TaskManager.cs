@@ -65,12 +65,12 @@ namespace Barotrauma
             while (tries < 5)
             {
                 ScriptedEvent scriptedEvent = ScriptedEvent.LoadRandom(rand);
-                DebugConsole.Log("Created scripted event "+scriptedEvent.ToString());
                 if (scriptedEvent==null || scriptedEvent.Difficulty > totalDifficulty)
                 {
                     tries++;
                     continue;
                 }
+                DebugConsole.Log("Created scripted event " + scriptedEvent.ToString());
 
                 AddTask(new ScriptedTask(scriptedEvent));
                 totalDifficulty -= scriptedEvent.Difficulty;

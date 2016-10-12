@@ -1,6 +1,8 @@
 ﻿using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -14,6 +16,8 @@ namespace Barotrauma
 
         private bool spawnDeep;
 
+        private bool disallowed;
+        
         private Level.PositionType spawnPosType;
 
         public override string ToString()
@@ -38,6 +42,16 @@ namespace Barotrauma
             }
 
             spawnDeep = ToolBox.GetAttributeBool(element, "spawndeep", false);
+
+            if (GameMain.Server != null)
+            {
+                List<string> monsterNames = GameMain.Server.monsterEnabled.Keys.ToList();
+                string tryKey = monsterNames.Find(s => characterFile.ToLower().Contains(s.ToLower()));
+                if (!string.IsNullOrWhiteSpace(tryKey))
+                {
+                    if (!GameMain.Server.monsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
+                }
+            }
         }
 
         protected override void Start()
@@ -47,29 +61,18 @@ namespace Barotrauma
 
         private void SpawnMonsters()
         {
-            float minDist = Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
-
-            //find a random spawnpos that isn't too close to the main sub
-            int tries = 0;
-            Vector2 spawnPos = Vector2.Zero;
-            do
-            {
-                spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType);
-                tries++;
-            } while (tries < 50 && Vector2.Distance(spawnPos, Submarine.MainSub.WorldPosition) < minDist);
-
+            if (disallowed) return;
+            
+            Vector2 spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType, true);
             
             int amount = Rand.Range(minAmount, maxAmount, false);
 
             monsters = new Character[amount];
 
+            if (spawnDeep) spawnPos.Y -= Level.Loaded.Size.Y;
+                
             for (int i = 0; i < amount; i++)
             {
-                if (spawnDeep)
-                {
-                    spawnPos.Y -= Level.Loaded.Size.Y;
-                }
-
                 spawnPos.X += Rand.Range(-0.5f, 0.5f, false);
                 spawnPos.Y += Rand.Range(-0.5f, 0.5f, false);
                 monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null);
@@ -78,6 +81,11 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            if (disallowed)
+            {
+                Finished();
+                return;
+            }
             if (monsters == null) SpawnMonsters();
 
             //base.Update(deltaTime);

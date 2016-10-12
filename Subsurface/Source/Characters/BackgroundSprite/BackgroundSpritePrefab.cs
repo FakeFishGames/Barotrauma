@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -16,13 +17,20 @@ namespace Barotrauma
 
         public readonly Vector2 RandomRotation;
 
+        public readonly float SwingAmount;
+
         public readonly int Commonness;
+
+        public Dictionary<string, int> OverrideCommonness;
 
         public BackgroundSpritePrefab(XElement element)
         {
-            string alignmentStr = ToolBox.GetAttributeString(element, "alignment", "BottomCenter");
+            string alignmentStr = ToolBox.GetAttributeString(element, "alignment", "");
 
-            if (!Enum.TryParse(alignmentStr, out Alignment)) Alignment = Alignment.BottomCenter;
+            if (string.IsNullOrEmpty(alignmentStr) || !Enum.TryParse(alignmentStr, out Alignment))
+            {
+                Alignment = Alignment.Top | Alignment.Bottom | Alignment.Left | Alignment.Right;
+            }
 
             Commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
 
@@ -35,13 +43,38 @@ namespace Barotrauma
             RandomRotation.X = MathHelper.ToRadians(RandomRotation.X);
             RandomRotation.Y = MathHelper.ToRadians(RandomRotation.Y);
 
+            SwingAmount = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "swingamount", 0.0f));
+
+            OverrideCommonness = new Dictionary<string, int>();
+
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
+                switch(subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "sprite":
+                        Sprite = new Sprite(subElement);
+                        break;
+                    case "overridecommonness":
+                        string levelType = ToolBox.GetAttributeString(subElement, "leveltype", "");
+                        if (!OverrideCommonness.ContainsKey(levelType))
+                        {
+                            OverrideCommonness.Add(levelType, ToolBox.GetAttributeInt(subElement, "commonness", 1));
+                        }
+                        break;
 
-                Sprite = new Sprite(subElement);
-                break;
+                }
             }
+        }
+
+        public int GetCommonness(string levelType)
+        {
+            int commonness = 0;
+            if (!OverrideCommonness.TryGetValue(levelType, out commonness))
+            {
+                return Commonness;
+            }
+
+            return commonness;
         }
 
     }

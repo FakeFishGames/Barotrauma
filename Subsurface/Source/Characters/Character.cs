@@ -72,6 +72,9 @@ namespace Barotrauma
             }
         }
 
+        public Hull PreviousHull = null;
+        public Hull CurrentHull = null;
+
         public readonly bool IsNetworkPlayer;
 
         private bool networkUpdateSent;
@@ -92,7 +95,9 @@ namespace Barotrauma
         
         private Item selectedConstruction;
         private Item[] selectedItems;
-        
+
+        public byte TeamID = 0;
+
         public AnimController AnimController;
 
         private Vector2 cursorPosition;
@@ -833,19 +838,39 @@ namespace Barotrauma
                         attackPos,
                         AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
                         Physics.CollisionCharacter | Physics.CollisionWall);
-
+                    
                     IDamageable attackTarget = null;
                     if (body != null)
                     {
-                        if (body.UserData is IDamageable)
-                        {
-                            attackTarget = (IDamageable)body.UserData;
-                        }
-                        else if (body.UserData is Limb)
-                        {
-                            attackTarget = ((Limb)body.UserData).character;                            
-                        }
                         attackPos = Submarine.LastPickedPosition;
+
+                        if (body != null && body.UserData is Submarine)
+                        {
+                            var sub = ((Submarine)body.UserData);
+
+                            body = Submarine.PickBody(
+                                attackLimb.SimPosition - ((Submarine)body.UserData).SimPosition,
+                                attackPos - ((Submarine)body.UserData).SimPosition,
+                                AnimController.Limbs.Select(l => l.body.FarseerBody).ToList(),
+                                Physics.CollisionWall);
+
+                            if (body != null)
+                            {
+                                attackPos = Submarine.LastPickedPosition + sub.SimPosition;
+                                attackTarget = body.UserData as IDamageable;
+                            }
+                        }
+                        else
+                        {
+                            if (body.UserData is IDamageable)
+                            {
+                                attackTarget = (IDamageable)body.UserData;
+                            }
+                            else if (body.UserData is Limb)
+                            {
+                                attackTarget = ((Limb)body.UserData).character;                            
+                            }                            
+                        }
                     }
 
                     attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget);
@@ -1195,6 +1220,10 @@ namespace Barotrauma
         {
             if (!Enabled) return;
 
+            PreviousHull = CurrentHull;
+            CurrentHull = Hull.FindHull(WorldPosition, CurrentHull, true);
+            //if (PreviousHull != CurrentHull && Character.Controlled == this) Hull.DetectItemVisibility(this); //WIP item culling
+
             speechBubbleTimer = Math.Max(0.0f, speechBubbleTimer - deltaTime);
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
@@ -1406,7 +1435,7 @@ namespace Barotrauma
             CharacterHUD.Draw(spriteBatch, this, cam);
         }
 
-        public virtual void DrawFront(SpriteBatch spriteBatch)
+        public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
             if (!Enabled) return;
 
@@ -1424,9 +1453,15 @@ namespace Barotrauma
 
             if (info != null)
             {
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 120.0f) - GUI.Font.MeasureString(Info.Name) * 0.5f;
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos - new Vector2(1.0f, 1.0f), Color.Black);
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, Color.White);
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f/cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                Color nameColor = Color.White;
+                
+                if (Character.Controlled != null && TeamID!=Character.Controlled.TeamID)
+                {
+                    nameColor = Color.Red;
+                }
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos + new Vector2(1.0f/cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f,Vector2.Zero, 1.0f / cam.Zoom,SpriteEffects.None,0.001f);
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f/cam.Zoom, SpriteEffects.None, 0.0f);
 
                 if (GameMain.DebugDraw)
                 {

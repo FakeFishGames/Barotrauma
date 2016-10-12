@@ -16,6 +16,13 @@ namespace Barotrauma
     {
         public static List<Hull> hullList = new List<Hull>();
         private static List<EntityGrid> entityGrids = new List<EntityGrid>();
+        public static List<EntityGrid> EntityGrids
+        {
+            get
+            {
+                return entityGrids;
+            }
+        }
 
         public static bool ShowHulls = true;
 
@@ -53,6 +60,8 @@ namespace Barotrauma
 
         private bool update;
 
+        public bool Visible = true;
+
         private Sound currentFlowSound;
         private int soundIndex;
         private float soundVolume;
@@ -65,7 +74,7 @@ namespace Barotrauma
 
         private float lastSentVolume, lastSentOxygen;
         private float lastNetworkUpdate;
-
+        
         public List<Gap> ConnectedGaps;
 
         public override string Name
@@ -91,6 +100,9 @@ namespace Barotrauma
                     Item.UpdateHulls();
                     Gap.UpdateHulls();
                 }
+
+                surface = rect.Y - rect.Height + Volume / rect.Width;
+                Pressure = surface;
             }
         }
 
@@ -248,8 +260,8 @@ namespace Barotrauma
 
             return rect;
         }
-
-        public static void GenerateEntityGrid(Submarine submarine)
+        
+        public static EntityGrid GenerateEntityGrid(Submarine submarine)
         {
             var newGrid = new EntityGrid(submarine, 200.0f);
 
@@ -259,6 +271,7 @@ namespace Barotrauma
             {
                 if (hull.Submarine == submarine) newGrid.InsertEntity(hull);
             }
+            return newGrid;
         }
 
         public void AddToGrid(Submarine submarine)
@@ -306,6 +319,9 @@ namespace Barotrauma
                 Item.UpdateHulls();
                 Gap.UpdateHulls();
             }
+
+            surface = rect.Y - rect.Height + Volume / rect.Width;
+            Pressure = surface;
         }
 
         public override void Remove()
@@ -388,26 +404,21 @@ namespace Barotrauma
             float strongestFlow = 0.0f;
             foreach (Gap gap in ConnectedGaps)
             {
-                float gapFlow = gap.LerpedFlowForce.Length();
-
-#if DEBUG
-                var asd = MapEntity.FindEntityByID(gap.ID);
-
-                if (asd != gap)
+                if (gap.IsRoomToRoom)
                 {
-                    int adslkmfdlasfk = 9;
+                    //only the first linked hull plays the flow sound
+                    if (gap.linkedTo[1] == this) continue;
                 }
-#endif
 
-
+                float gapFlow = gap.LerpedFlowForce.Length();
+                
                 if (gapFlow > strongestFlow)
                 {
                     strongestFlow = gapFlow;
                 }
             }
-
-
-            if (strongestFlow>0.1f)
+            
+            if (strongestFlow > 1.0f)
             {
                 soundVolume = soundVolume + ((strongestFlow < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
                 soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
@@ -424,8 +435,7 @@ namespace Barotrauma
                 }
 
                 currentFlowSound = flowSound;
-
-                soundIndex = currentFlowSound.Loop(soundIndex, soundVolume, WorldPosition, 2000.0f);
+                soundIndex = currentFlowSound.Loop(soundIndex, soundVolume, WorldPosition, Math.Min(strongestFlow*5.0f, 2000.0f));
             }
             else
             {
@@ -478,11 +488,9 @@ namespace Barotrauma
                     waveVel[i] = waveVel[i] * -0.5f;
                 }
 
-
                 //acceleration
                 float a = -WaveStiffness * waveY[i] - waveVel[i] * WaveDampening;
                 waveVel[i] = waveVel[i] + a;
-
             }
 
             for (int j = 0; j < 2; j++)
@@ -503,15 +511,21 @@ namespace Barotrauma
                 }
             }
 
+            //interpolate the position of the rendered surface towards the "target surface"
+            surface = Math.Max(MathHelper.Lerp(surface, surfaceY, deltaTime*10.0f), rect.Y - rect.Height);
+
             if (volume < FullVolume)
             {
                 LethalPressure -= 10.0f * deltaTime;
                 if (Volume == 0.0f)
                 {
+                    //wait for the surface to be lerped back to bottom and the waves to settle until disabling update
+                    if (surface > rect.Y - rect.Height + 1) return;
                     for (int i = 1; i < waveY.Length - 1; i++)
                     {
                         if (waveY[i] > 0.1f) return;
                     }
+
                     update = false;
                 }
             }
@@ -546,6 +560,18 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             //if (back) return;
+            Rectangle drawRect;
+            if (!Visible)
+            {
+                drawRect =
+                    Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+
+                GUI.DrawRectangle(spriteBatch,
+                    new Vector2(drawRect.X, -drawRect.Y),
+                    new Vector2(rect.Width, rect.Height),
+                    Color.Black,true,
+                    0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+            }
 
             if (!ShowHulls && !GameMain.DebugDraw) return;
 
@@ -553,17 +579,17 @@ namespace Barotrauma
             
             if (aiTarget != null) aiTarget.Draw(spriteBatch);
 
-            Rectangle drawRect =
+            drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(drawRect.X, -drawRect.Y),
                 new Vector2(rect.Width, rect.Height),
-                Color.Blue);
+                Color.Blue, false, 0, (int)Math.Max((1.5f / Screen.Selected.Cam.Zoom), 1.0f));
 
             GUI.DrawRectangle(spriteBatch,
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
-                Color.Red*((100.0f-OxygenPercentage)/400.0f), true);
+                Color.Red * ((100.0f - OxygenPercentage) / 400.0f), true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
 
             if (GameMain.DebugDraw)
             {
@@ -578,18 +604,10 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X + 5, -drawRect.Y + 5),
                     new Vector2(rect.Width - 10, rect.Height - 10),
-                    isHighlighted ? Color.LightBlue*0.5f : Color.Red*0.5f, true);
+                    isHighlighted ? Color.LightBlue * 0.5f : Color.Red * 0.5f, true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
         }
-
-        private float GetSurfaceY()
-        {            
-            float top = rect.Y + Submarine.DrawPosition.Y;
-            float bottom = top - rect.Height;
-
-            return  bottom + Volume / rect.Width;
-        }
-
+        
         public void Render(GraphicsDevice graphicsDevice, Camera cam)
         {
             if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
@@ -599,10 +617,7 @@ namespace Barotrauma
             //calculate where the surface should be based on the water volume
             float top = rect.Y + submarinePos.Y;
             float bottom = top - rect.Height;
-            float surfaceY = bottom + Volume / rect.Width;
 
-            //interpolate the position of the rendered surface towards the "target surface"
-            surface = surface + ((surfaceY - submarinePos.Y) - surface) / 10.0f;
             float drawSurface = surface + submarinePos.Y;
 
             Matrix transform =  cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
@@ -703,7 +718,6 @@ namespace Barotrauma
             }
 
             var entities = EntityGrid.GetEntities(entityGrids, position, useWorldCoordinates);
-
             foreach (Hull hull in entities)
             {
                 if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position)) return hull;
@@ -711,7 +725,7 @@ namespace Barotrauma
 
             return null;
         }
-
+        
         //returns the water block which contains the point (or null if it isn't inside any)
         public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
         {
@@ -731,6 +745,65 @@ namespace Barotrauma
             }
 
             return null;
+        }
+
+        public static void DetectItemVisibility(Character c=null)
+        {
+            if (c==null)
+            {
+                foreach (Item it in Item.ItemList)
+                {
+                    it.Visible = true;
+                }
+            }
+            else
+            {
+                Hull h = c.CurrentHull;
+                hullList.ForEach(j => j.Visible = false);
+                List<Hull> visibleHulls;
+                if (h == null || c.Submarine == null)
+                {
+                    visibleHulls = hullList.FindAll(j => j.CanSeeOther(null, false));
+                }
+                else
+                {
+                    visibleHulls = hullList.FindAll(j => h.CanSeeOther(j, true));
+                }
+                visibleHulls.ForEach(j => j.Visible = true);
+                foreach (Item it in Item.ItemList)
+                {
+                    if (it.CurrentHull == null || visibleHulls.Contains(it.CurrentHull)) it.Visible = true;
+                    else it.Visible = false;
+                }
+            }
+        }
+
+        private bool CanSeeOther(Hull other,bool allowIndirect=true)
+        {
+            if (other == this) return true;
+            
+            if (other != null && other.Submarine==Submarine)
+            {
+                bool retVal = false;
+                foreach (Gap g in ConnectedGaps)
+                {
+                    if (g.ConnectedWall != null && g.ConnectedWall.CastShadow) continue;
+                    List<Hull> otherHulls = Hull.hullList.FindAll(h => h.ConnectedGaps.Contains(g) && h!=this);
+                    retVal = otherHulls.Any(h => h == other);
+                    if (!retVal && allowIndirect) retVal = otherHulls.Any(h => h.CanSeeOther(other, false));
+                    if (retVal) return true;
+                }
+            }
+            else
+            {
+                foreach (Gap g in ConnectedGaps)
+                {
+                    if (g.ConnectedDoor != null && !hullList.Any(h => h.ConnectedGaps.Contains(g) && h!=this)) return true;
+                }
+                List<MapEntity> structures = MapEntity.mapEntityList.FindAll(me => me is Structure && me.Rect.Intersects(Rect));
+                return structures.Any(st => !(st as Structure).CastShadow);
+            }
+            return false;
         }
 
         //public List<Gap> FindGaps()

@@ -78,7 +78,7 @@ namespace Barotrauma
 
         //private Stopwatch renderTimer;
         //public static int renderTimeElapsed;
-                        
+
         public Camera Cam
         {
             get { return GameScreen.Cam; }
@@ -217,6 +217,7 @@ namespace Barotrauma
 
             Mission.Init();
             MapEntityPrefab.Init();
+            LevelGenerationParams.LoadPresets();
             TitleScreen.LoadState = 10.0f;
         yield return CoroutineStatus.Running;
 
@@ -294,21 +295,25 @@ namespace Barotrauma
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
             PlayerInput.UpdateVariable();
 
+            bool paused = true;
+
             while (Timing.Accumulator >= Timing.Step)
             {
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
-                TimeSpan addTime = new TimeSpan(0,0,0,0,16);
+                TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
                 fixedTime.ElapsedGameTime = addTime;
                 fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
 
                 PlayerInput.Update(Timing.Step);
 
-                bool paused = false;
-
                 if (titleScreenOpen)
                 {
-                    //TitleScreen.Update();
+                    if (TitleScreen.LoadState >= 100.0f && 
+                        (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
+                    {
+                        titleScreenOpen = false;
+                    }
                 }
                 else if (hasLoaded)
                 {
@@ -320,7 +325,7 @@ namespace Barotrauma
 
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
-
+                    
                     if (!paused)
                     {
                         Screen.Selected.Update(Timing.Step);
@@ -333,13 +338,14 @@ namespace Barotrauma
 
                     GUI.Update((float)Timing.Step);
                 }
+                
 
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
                 Timing.Accumulator -= Timing.Step;
             }
 
-            Timing.Alpha = Timing.Accumulator / Timing.Step;
+            if (!paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
         }
 
 
@@ -348,8 +354,6 @@ namespace Barotrauma
         /// </summary>
         protected override void Draw(GameTime gameTime)
         {
-            //renderTimer.Restart();
-
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
             FrameCounter.Update(deltaTime);
@@ -357,22 +361,11 @@ namespace Barotrauma
             if (titleScreenOpen)
             {
                 TitleScreen.Draw(spriteBatch, GraphicsDevice, (float)deltaTime);
-                if (TitleScreen.LoadState>=100.0f && 
-                    (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
-                {
-                    titleScreenOpen = false;
-                }
             }
             else if (hasLoaded)
             {
                 Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
             }
-
-            //double elapsed = sw.Elapsed.TotalSeconds;
-            //if (elapsed < Physics.step)
-            //{
-            //    System.Threading.Thread.Sleep((int)((Physics.step - elapsed) * 1000.0));
-            //}
         }
 
         static bool waitForKeyHit = true;

@@ -185,20 +185,24 @@ namespace Barotrauma
 
             foreach (GraphEdge ge in graphEdges)
             {
+                if (ge.point1 == ge.point2) continue;
+
                 for (int i = 0; i < 2; i++)
                 {
                     Site site = (i == 0) ? ge.site1 : ge.site2;
 
-                    VoronoiCell cell = cellGrid[
-                        (int)Math.Floor((site.coord.x-borders.X) / gridCellSize),
-                        (int)Math.Floor((site.coord.y-borders.Y) / gridCellSize)].Find(c => c.site == site);
+                    int x = (int)(Math.Floor((site.coord.x-borders.X) / gridCellSize));
+                    int y = (int)(Math.Floor((site.coord.y-borders.Y) / gridCellSize));
+
+                    x = MathHelper.Clamp(x, 0, cellGrid.GetLength(0)-1);
+                    y = MathHelper.Clamp(y, 0, cellGrid.GetLength(1)-1);
+                        
+                    VoronoiCell cell = cellGrid[x,y].Find(c => c.site == site);
 
                     if (cell == null)
                     {
                         cell = new VoronoiCell(site);
-                        cellGrid[
-                            (int)Math.Floor((cell.Center.X-borders.X) / gridCellSize),
-                            (int)Math.Floor((cell.Center.Y - borders.Y) / gridCellSize)].Add(cell);
+                        cellGrid[x, y].Add(cell);
                         cells.Add(cell);
                     }
 
@@ -406,31 +410,29 @@ namespace Barotrauma
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
 
+
                 if (cell.CellType == CellType.Empty) continue;
 
-                triangles = MathUtils.TriangulateConvexHull(bodyPoints, cell.Center);
+                triangles = MathUtils.TriangulateConvexHull(bodyPoints, ConvertUnits.ToSimUnits(cell.Center));
 
-                Body edgeBody = new Body(GameMain.World);
+                Body cellBody = new Body(GameMain.World);
 
                 for (int i = 0; i < triangles.Count; i++)
                 {
                     if (triangles[i][0].Y == triangles[i][1].Y && triangles[i][0].Y == triangles[i][2].Y) continue;
                     if (triangles[i][0].X == triangles[i][1].X && triangles[i][0].X == triangles[i][2].X) continue;
 
-                    if (Vector2.DistanceSquared(triangles[i][0], triangles[i][1]) < 0.1f) continue;
-                    if (Vector2.DistanceSquared(triangles[i][1], triangles[i][2]) < 0.1f) continue;
-
                     Vertices bodyVertices = new Vertices(triangles[i]);
-                    FixtureFactory.AttachPolygon(bodyVertices, 5.0f, edgeBody);
+                    FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
                 }
                 
-                edgeBody.UserData = cell;
-                edgeBody.SleepingAllowed = false;
-                edgeBody.BodyType = BodyType.Kinematic;
-                edgeBody.CollisionCategories = Physics.CollisionLevel;
+                cellBody.UserData = cell;
+                cellBody.SleepingAllowed = false;
+                cellBody.BodyType = BodyType.Kinematic;
+                cellBody.CollisionCategories = Physics.CollisionLevel;
 
-                cell.body = edgeBody;
-                bodies.Add(edgeBody);
+                cell.body = cellBody;
+                bodies.Add(cellBody);
             }
 
             return bodies;
@@ -487,7 +489,7 @@ namespace Barotrauma
                     if (!MathUtils.IsValid(leftNormal))
                     {
 #if DEBUG
-                        DebugConsole.ThrowError("Invalid right normal");
+                        DebugConsole.ThrowError("Invalid left normal");
 #endif
                         if (cell.body != null)
                         {

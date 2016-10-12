@@ -8,7 +8,7 @@
     pickthroughwalls="true"
     pickdistance="150">
 
-    <Sprite texture ="engine.png" depth="0.8" sourcerect="0,0,373,113"/>
+    <Sprite texture ="engine.png" depth="0.8" sourcerect="0,0,373,113" canflipx="true"/>
 
     <fixrequirement name="Mechanical repairs">
       <skill name="Construction" level="40"/>
@@ -36,7 +36,7 @@
     pickthroughwalls="true"
     pickdistance="150">
 
-    <Sprite texture ="engine.png" depth="0.8" sourcerect="0,115,224,73"/>
+    <Sprite texture ="engine.png" depth="0.8" sourcerect="0,115,224,73" canflipx="true"/>
 
     <fixrequirement name="Mechanical repairs">
       <skill name="Construction" level="30"/>

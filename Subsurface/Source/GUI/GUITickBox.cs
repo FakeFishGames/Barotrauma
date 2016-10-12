@@ -40,6 +40,21 @@ namespace Barotrauma
             }
         }
 
+        public override Rectangle Rect
+        {
+            get
+            {
+                return rect;
+            }
+            set
+            {
+                base.Rect = value;
+
+                box.Rect = new Rectangle(value.X,value.Y,box.Rect.Width,box.Rect.Height);
+                text.Rect = new Rectangle(box.Rect.Right + 10, box.Rect.Y + 2, 20, box.Rect.Height);
+            }
+        }
+
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
             : this(rect, label, alignment, GUI.Font, parent)
         {

@@ -128,7 +128,6 @@ namespace Barotrauma.Items.Components
                 networkUpdateTimer -= deltaTime;
                 if (networkUpdateTimer <= 0.0f)
                 {
-                    item.NewComponentEvent(this, true, false);
                     networkUpdateTimer = 0.5f;
                     valueChanged = false;
                 }

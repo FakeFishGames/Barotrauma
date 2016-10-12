@@ -53,8 +53,7 @@ namespace Barotrauma.Items.Components
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 targetForce -= 1.0f;
-                item.NewComponentEvent(this, true, false);
-
+                
                 return true;
             };
 
@@ -62,8 +61,7 @@ namespace Barotrauma.Items.Components
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 targetForce += 1.0f;
-                item.NewComponentEvent(this, true, false);
-
+                
                 return true;
             };   
         }

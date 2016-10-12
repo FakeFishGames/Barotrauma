@@ -192,8 +192,8 @@ namespace Barotrauma.Networking
             if (string.IsNullOrWhiteSpace(message)) return false;
 
             SendChatMessage(message);
-
-            textBox.Deselect();
+                        
+            if (textBox == chatMsgBox) textBox.Deselect();
 
             return true;
         }

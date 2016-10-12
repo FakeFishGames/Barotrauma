@@ -11,6 +11,12 @@ namespace Barotrauma.Items.Components
     {
         public LimbType limbType;
         public Vector2 position;
+
+        public LimbPos(LimbType limbType, Vector2 position)
+        {
+            this.limbType = limbType;
+            this.position = position;
+        }
     }
 
     class Controller : ItemComponent
@@ -241,6 +247,32 @@ namespace Barotrauma.Items.Components
 
             item.SendSignal(0, "1", "signal_out");
             return true;
+        }
+
+        public override void FlipX()
+        {
+            if (dir != Direction.None)
+            {
+                dir = dir == Direction.Left ? Direction.Right : Direction.Left;
+            }
+
+            if (userPos != 0.0f)
+            {
+                float diff = (item.Rect.X + UserPos) - item.Rect.Center.X;
+                userPos = item.Rect.Center.X - diff - item.Rect.X;
+            }
+
+            for (int i = 0; i < limbPositions.Count; i++)
+            {
+                float diff = (item.Rect.X + limbPositions[i].position.X) - item.Rect.Center.X;
+
+                Vector2 flippedPos =
+                    new Vector2(
+                        item.Rect.Center.X - diff - item.Rect.X,
+                        limbPositions[i].position.Y);
+
+                limbPositions[i] = new LimbPos(limbPositions[i].limbType, flippedPos);
+            }
         }
 
     }

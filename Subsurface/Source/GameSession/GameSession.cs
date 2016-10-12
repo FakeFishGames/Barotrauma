@@ -107,14 +107,14 @@ namespace Barotrauma
             }
         }
 
-        public void StartShift(string levelSeed)
+        public void StartShift(string levelSeed, bool loadSecondSub = true)
         {
             Level level = Level.CreateRandom(levelSeed);
 
-            StartShift(level);
+            StartShift(level,true,loadSecondSub);
         }
 
-        public void StartShift(Level level, bool reloadSub = true)
+        public void StartShift(Level level, bool reloadSub = true, bool loadSecondSub = false)
         {
             GameMain.LightManager.LosEnabled = (GameMain.Server==null || GameMain.Server.CharacterInfo!=null);
                         
@@ -128,6 +128,18 @@ namespace Barotrauma
             
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
             Submarine.MainSub = submarine;
+            if (loadSecondSub)
+            {
+                if (Submarine.MainSubs[1] == null)
+                {
+                    Submarine.MainSubs[1] = new Submarine(Submarine.MainSub.FilePath,Submarine.MainSub.MD5Hash.Hash,true);
+                    Submarine.MainSubs[1].Load(false);
+                }
+                else if (reloadSub)
+                {
+                    Submarine.MainSubs[1].Load(false);
+                }
+            }
 
             //var secondSub = new Submarine(submarine.FilePath, submarine.MD5Hash.Hash);
             //secondSub.Load(false);
@@ -152,9 +164,13 @@ namespace Barotrauma
 
             if (gameMode!=null) gameMode.Start();
 
+            Items.Components.Radar.StartMarker = "Start";
+            Items.Components.Radar.EndMarker = "End";
             if (gameMode.Mission != null) Mission.Start(Level.Loaded);
-                        
+            
             TaskManager.StartShift(level);
+
+            if (gameMode != null) gameMode.MsgBox();
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
             SoundPlayer.SwitchMusic();
@@ -303,19 +319,15 @@ namespace Barotrauma
 
             if (gameMode != null)   gameMode.Update(deltaTime);
             if (Mission != null)    Mission.Update(deltaTime);
+            if (infoFrame != null)  infoFrame.Update(deltaTime);
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            //guiRoot.Draw(spriteBatch);
             infoButton.Draw(spriteBatch);
             
             if (gameMode != null)   gameMode.Draw(spriteBatch);
-            if (infoFrame != null)
-            {
-                infoFrame.Update(0.016f);
-                infoFrame.Draw(spriteBatch);
-            }
+            if (infoFrame != null)  infoFrame.Draw(spriteBatch);            
         }
 
         public void Save(string filePath)
@@ -324,9 +336,11 @@ namespace Barotrauma
                 new XElement("Gamesession"));
 
             var now = DateTime.Now;
-            doc.Root.Add(new XAttribute("savetime", now.Hour + ":" + now.Minute + ", " + now.ToShortDateString()));
+            doc.Root.Add(new XAttribute("savetime", now.ToShortTimeString() + ", " + now.ToShortDateString()));
 
             doc.Root.Add(new XAttribute("submarine", submarine==null ? "" : submarine.Name));
+
+            doc.Root.Add(new XAttribute("mapseed", Map.Seed));
 
             ((SinglePlayerMode)gameMode).Save(doc.Root);
 

@@ -310,10 +310,10 @@ namespace Barotrauma
             MergeSlots();
         }
 
-        public override void Update(float deltaTime)
+        public override void Update(float deltaTime, bool subInventory = false)
         {
             base.Update(deltaTime);
-            
+
             if (doubleClickedItem != null)
             {
                 if (doubleClickedItem.ParentInventory != this)
@@ -349,7 +349,7 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
             if (selectedSlot > -1)
             {
                 UpdateSubInventory(deltaTime, selectedSlot);
@@ -467,7 +467,7 @@ namespace Barotrauma
                     (draggingItem == null || draggingItem.Container != Items[selectedSlot]))
                 {
                     selectedSlot = -1;
-                }                   
+                }
             }
         }
         

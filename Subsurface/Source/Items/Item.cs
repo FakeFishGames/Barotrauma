@@ -39,7 +39,11 @@ namespace Barotrauma
         private List<string> tags;
         
         public Hull CurrentHull;
+        
+        public bool Visible = true;
 
+        public SpriteEffects SpriteEffects = SpriteEffects.None;
+        
         //components that determine the functionality of the item
         public List<ItemComponent> components;
         public List<IDrawableComponent> drawableComponents;
@@ -703,6 +707,8 @@ namespace Barotrauma
             inWater = IsInWater();
             if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
             
+			isHighlighted = false;
+			
             if (body == null || !body.Enabled) return;
 
             if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
@@ -803,10 +809,29 @@ namespace Barotrauma
             return true;
         }
 
+        public override void FlipX()
+        {
+            base.FlipX();
+
+            if (prefab.CanSpriteFlipX)
+            {
+                SpriteEffects ^= SpriteEffects.FlipHorizontally;
+            }
+
+            foreach (ItemComponent component in components)
+            {
+                component.FlipX();
+            }
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
+            if (!Visible) return;
             Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
+
+            SpriteEffects oldEffects = prefab.sprite.effects;
+            prefab.sprite.effects ^= SpriteEffects;
 
             if (prefab.sprite != null)
             {
@@ -815,7 +840,7 @@ namespace Barotrauma
 
                 if (body == null)
                 {
-                    if (prefab.ResizeHorizontal || prefab.ResizeVertical)
+                    if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
                     {
                         prefab.sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X-rect.Width/2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), color);
                     }
@@ -848,6 +873,8 @@ namespace Barotrauma
                 }
             }
 
+            prefab.sprite.effects = oldEffects;
+
             for (int i = 0; i < drawableComponents.Count; i++ )
             {
                 drawableComponents[i].Draw(spriteBatch, editing);
@@ -859,13 +886,12 @@ namespace Barotrauma
             
             if (!editing || (body != null && !body.Enabled))
             {
-                isHighlighted = false;
                 return;
             }
 
             if (isSelected || isHighlighted)
             {
-                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green);
+                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green,false,0,(int)Math.Max((1.5f/GameScreen.Selected.Cam.Zoom),1.0f));
 
                 foreach (Rectangle t in prefab.Triggers)
                 {
@@ -878,7 +904,10 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, 
                         rectWorldPos,
                         new Vector2(transformedTrigger.Width, transformedTrigger.Height), 
-                        Color.Green);
+                        Color.Green,
+                        false,
+                        0,
+                        (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
                 }
             }
             
@@ -893,15 +922,16 @@ namespace Barotrauma
             }
         }
 
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        public override void UpdateEditing(Camera cam)
         {
-            if (editingHUD==null || editingHUD.UserData as Item != this)
+            if (editingHUD == null || editingHUD.UserData as Item != this)
             {
-                editingHUD = CreateEditingHUD();            
+                editingHUD = CreateEditingHUD(Screen.Selected != GameMain.EditMapScreen);
             }
 
-            editingHUD.Draw(spriteBatch);
             editingHUD.Update((float)Timing.Step);
+
+            if (Screen.Selected != GameMain.EditMapScreen) return;
 
             if (!prefab.IsLinkable) return;
 
@@ -920,18 +950,9 @@ namespace Barotrauma
             }
         }
 
-        public void DrawInGameEditing(SpriteBatch spriteBatch)
+        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD == null || editingHUD.UserData as Item != this)
-            {
-                editingHUD = CreateEditingHUD(true);
-            }
-
-            if (editingHUD.Rect.Height > 60)
-            {
-                editingHUD.Update((float)Timing.Step);
-                editingHUD.Draw(spriteBatch);
-            }
+            if (editingHUD != null) editingHUD.Draw(spriteBatch);
         }
 
         private GUIComponent CreateEditingHUD(bool inGame=false)
@@ -1038,7 +1059,7 @@ namespace Barotrauma
             return editingHUD;
         }
 
-        public virtual void DrawHUD(SpriteBatch spriteBatch, Character character)
+        public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
             if (condition <= 0.0f)
             {
@@ -1048,7 +1069,7 @@ namespace Barotrauma
 
             if (HasInGameEditableProperties)
             {
-                DrawInGameEditing(spriteBatch);
+                DrawEditing(spriteBatch, cam);
             }
 
             foreach (ItemComponent ic in components)
@@ -1057,12 +1078,17 @@ namespace Barotrauma
             }
         }
 
-        public virtual void UpdateHUD(Character character)
+        public virtual void UpdateHUD(Camera cam, Character character)
         {
             if (condition <= 0.0f)
             {
                 FixRequirement.UpdateHud(this, character);
                 return;
+            }
+
+            if (HasInGameEditableProperties)
+            {
+                UpdateEditing(cam);
             }
 
             foreach (ItemComponent ic in components)

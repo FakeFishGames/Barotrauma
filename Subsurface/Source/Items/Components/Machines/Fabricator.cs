@@ -240,14 +240,10 @@ namespace Barotrauma.Items.Components
             if (fabricatedItem == null)
             {
                 StartFabricating(obj as FabricableItem);
-
-                item.NewComponentEvent(this, true, true);
             }
             else
             {
                 CancelFabricating();
-
-                item.NewComponentEvent(this, true, true);
             }
             
             return true;

@@ -95,9 +95,7 @@ namespace Barotrauma.Items.Components
             SetActive(!IsActive);
 
             currPowerConsumption = IsActive ? powerConsumption : 0.0f;
-
-            item.NewComponentEvent(this, true, true);
-
+            
             return true;
         }
 

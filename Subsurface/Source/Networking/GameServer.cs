@@ -199,22 +199,23 @@ namespace Barotrauma.Networking
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
 
             // execute the request
-            RestResponse response = (RestResponse)restClient.Execute(request);
-
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            restClient.ExecuteAsync(request, response =>
             {
-                DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
-                return;
-            }
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    DebugConsole.ThrowError("Error while connecting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")");
+                    return;
+                }
 
-            if (response != null && !string.IsNullOrWhiteSpace(response.Content))
-            {
-                DebugConsole.ThrowError("Error while connecting to master server (" +response.Content+")");
-                return;
-            }
+                if (response != null && !string.IsNullOrWhiteSpace(response.Content))
+                {
+                    DebugConsole.ThrowError("Error while connecting to master server (" + response.Content + ")");
+                    return;
+                }
 
-            registeredToMaster = true;
-            refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+                registeredToMaster = true;
+                refreshMasterTimer = DateTime.Now + refreshMasterInterval;
+            });
         }
 
         private IEnumerable<object> RefreshMaster()
@@ -285,6 +286,8 @@ namespace Barotrauma.Networking
         {
             if (ShowNetStats) netStats.Update(deltaTime);
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
+            if (log.LogFrame != null) log.LogFrame.Update(deltaTime);
+            
 
             if (!started) return;
 
@@ -303,8 +306,6 @@ namespace Barotrauma.Networking
             
             if (gameStarted)
             {
-                inGameHUD.Update((float)Timing.Step);
-
                 if (respawnManager != null) respawnManager.Update(deltaTime);
 
                 bool isCrewDead =  
@@ -314,7 +315,7 @@ namespace Barotrauma.Networking
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((autoRestart && isCrewDead) 
                     || 
-                    (EndRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition))
+                    (EndRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition && Submarine.MainSubs[1]==null))
                 {
                     if (AutoRestart && isCrewDead)
                     {
@@ -828,13 +829,22 @@ namespace Barotrauma.Networking
 
             GUIMessageBox.CloseAll();
 
-            //AssignJobs(connectedClients);
-
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
-
+            
             GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
-            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed);
+
+            yield return CoroutineStatus.Running;
+
+            int teamCount = 1;
+            int hostTeam = 1;
+            if (GameMain.GameSession.gameMode.Mission != null && 
+                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
+            {
+                teamCount = 2;
+            }
+
+            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
 
             GameServer.Log("Starting a new round...", Color.Cyan);
             GameServer.Log("Submarine: " + selectedSub.Name, Color.Cyan);
@@ -842,7 +852,7 @@ namespace Barotrauma.Networking
             GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
 
             if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
-
+            
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
             foreach (Client c in connectedClients)
             {
@@ -916,7 +926,8 @@ namespace Barotrauma.Networking
 
                 msg.Write(selectedMode.Name);
 
-                msg.Write(AllowRespawn);
+            msg.Write(AllowRespawn);
+            msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
                 var clientsWithCharacter = clients.FindAll(c => c.Character != null);
 
@@ -1134,7 +1145,6 @@ namespace Barotrauma.Networking
             }
             else if (log.LogFrame!=null)
             {
-                log.LogFrame.Update(0.016f);
                 log.LogFrame.Draw(spriteBatch);
             }
 
@@ -1295,13 +1305,13 @@ namespace Barotrauma.Networking
             sender.jobPreferences = jobPreferences;
         }
         
-        public void AssignJobs(List<Client> unassigned)
+        public void AssignJobs(List<Client> unassigned, bool assignHost)
         {
             unassigned = new List<Client>(unassigned);
             
             int[] assignedClientCount = new int[JobPrefab.List.Count];
 
-            if (characterInfo!=null)
+            if (characterInfo!=null && assignHost)
             {
                 assignedClientCount[JobPrefab.List.FindIndex(jp => jp == GameMain.NetLobbyScreen.JobPreferences[0])]=1;
             }
