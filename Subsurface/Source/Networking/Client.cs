@@ -36,6 +36,10 @@ namespace Barotrauma.Networking
         public UInt32 lastSentChatMsgID = 0; //last msg this client said
         public UInt32 lastRecvChatMsgID = 0; //last msg this client knows about
 
+        public UInt32 lastRecvItemSpawnID = 0;
+        public UInt32 lastRecvItemRemoveID = 0;
+
+
         public List<string> ChatMessages = new List<string>();
         public float ChatSpamSpeed;
         public float ChatSpamTimer;
@@ -58,6 +62,9 @@ namespace Barotrauma.Networking
         {
             lastSentChatMsgID = 0;
             lastRecvChatMsgID = ChatMessage.LastID;
+
+            lastRecvItemSpawnID = 0;
+            lastRecvItemRemoveID = 0;
         }
 
         public int KickVoteCount

@@ -1,11 +1,19 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Networking;
+using System;
 
 namespace Barotrauma
 {
-    class ItemSpawner
+    class ItemSpawner : IServerSerializable
     {
+        public UInt32 NetStateID
+        {
+            get;
+            private set;
+        }
+
         class ItemSpawnInfo
         {
             public readonly ItemPrefab Prefab;
@@ -99,15 +107,30 @@ namespace Barotrauma
             //if (GameMain.Server != null) GameMain.Server.SendItemSpawnMessage(items);
         }
 
+        public void AddToSpawnedList(List<Item> items)
+        {
+            foreach (Item item in items)
+            {
+                AddToSpawnedList(item);
+            }
+        }
+
         public void AddToSpawnedList(Item item)
         {
             spawnItems.Add(item);
+            NetStateID = (UInt32)spawnItems.Count;
         }
 
-        public void FillNetworkData(Lidgren.Network.NetBuffer message, List<Item> items)
+        public void ServerWrite(Lidgren.Network.NetOutgoingMessage message, Client client)
         {
-            message.Write((byte)items.Count);
+            if (GameMain.Server == null) return;
 
+            //skip items that the client already knows about
+            List<Item> items = spawnItems.Skip((int)client.lastRecvItemSpawnID).ToList();
+
+            message.Write((UInt32)spawnItems.Count);
+
+            message.Write((byte)items.Count);
             for (int i = 0; i < items.Count; i++)
             {
                 message.Write(items[i].Prefab.Name);
@@ -128,7 +151,7 @@ namespace Barotrauma
                     int index = items[i].ParentInventory.FindIndex(items[i]);
                     message.Write(index < 0 ? (byte)255 : (byte)index);
                 }
-                                
+
                 if (items[i].Name == "ID Card")
                 {
                     message.Write(items[i].Tags);
@@ -136,18 +159,22 @@ namespace Barotrauma
             }
         }
 
-        public void ReadNetworkData(Lidgren.Network.NetBuffer message)
+        public void ClientRead(Lidgren.Network.NetIncomingMessage message)
         {
+            if (GameMain.Server != null) return;
+
+            UInt32 ID = message.ReadUInt32();
+            
             var itemCount = message.ReadByte();
             for (int i = 0; i < itemCount; i++)
             {
                 string itemName = message.ReadString();
                 ushort itemId   = message.ReadUInt16();
 
-                Vector2 pos = Vector2.Zero;
-                Submarine sub = null;
                 ushort inventoryId = message.ReadUInt16();
 
+                Vector2 pos = Vector2.Zero;
+                Submarine sub = null;
                 int inventorySlotIndex = -1;
                 
                 if (inventoryId > 0)
@@ -157,6 +184,7 @@ namespace Barotrauma
                 else
                 {
                     pos = new Vector2(message.ReadSingle(), message.ReadSingle());
+
                     ushort subID = message.ReadUInt16();
                     if (subID > 0)
                     {
@@ -168,7 +196,11 @@ namespace Barotrauma
                 if (itemName == "ID Card")
                 {
                     tags = message.ReadString();
-                }    
+                }
+                                
+                if (ID - itemCount + i < NetStateID) continue;
+
+                //----------------------------------------
 
                 var prefab = MapEntityPrefab.list.Find(me => me.Name == itemName);
                 if (prefab == null) continue;
@@ -215,19 +247,28 @@ namespace Barotrauma
                     }
                     inventory.TryPutItem(item, item.AllowedSlots);
                 }
-
             }
+
+            NetStateID = Math.Max(ID, NetStateID);
         }
 
         public void Clear()
         {
+            NetStateID = 0;
+
             spawnQueue.Clear();
             spawnItems.Clear();
         }
     }
 
-    class ItemRemover
+    class ItemRemover : IServerSerializable
     {
+        public UInt32 NetStateID
+        {
+            get;
+            private set;
+        }
+
         private readonly Queue<Item> removeQueue;
         
         public List<Item> removedItems = new List<Item>();
@@ -267,16 +308,16 @@ namespace Barotrauma
             //if (GameMain.Server != null) GameMain.Server.SendItemRemoveMessage(items);
         }
 
-        public void FillNetworkData(Lidgren.Network.NetBuffer message, List<Item> items)
+        public void ServerWrite(Lidgren.Network.NetOutgoingMessage message, Client client)
         {
-            message.Write((byte)items.Count);
-            foreach (Item item in items)
-            {
-                message.Write(item.ID);
-            }
+            //message.Write((byte)items.Count);
+            //foreach (Item item in items)
+            //{
+            //    message.Write(item.ID);
+            //}
         }
 
-        public void ReadNetworkData(Lidgren.Network.NetBuffer message)
+        public void ClientRead(Lidgren.Network.NetIncomingMessage message)
         {
             var itemCount = message.ReadByte();
             for (int i = 0; i<itemCount; i++)
@@ -292,6 +333,8 @@ namespace Barotrauma
 
         public void Clear()
         {
+            NetStateID = 0;
+
             removeQueue.Clear();
             removedItems.Clear();
         }
