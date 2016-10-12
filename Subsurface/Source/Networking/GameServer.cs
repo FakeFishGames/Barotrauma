@@ -853,29 +853,50 @@ namespace Barotrauma.Networking
 
             if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
             
+            AssignJobs(connectedClients, characterInfo != null);
+            
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
-            foreach (Client c in connectedClients)
+            foreach (Client client in connectedClients)
             {
-                c.inGame = true;
-                
+                client.inGame = true;
+                if (client.characterInfo == null)
+                {
+                    client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);
+                }
+                characterInfos.Add(client.characterInfo);
+                client.characterInfo.Job = new Job(client.assignedJob);
+            }
+
+            //host's character
+            if (characterInfo != null)
+            {
+                characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
+                characterInfos.Add(characterInfo);
+            }
+
+            
+            WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
+
+
+            for (int i = 0; i < connectedClients.Count; i++)
+            {
                 WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, selectedSub);
                 Vector2 spawnPosition = spawnPoint.WorldPosition;
 
                 DebugConsole.NewMessage(spawnPosition.ToString(), Color.Lime);
-                Character spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition, c.characterInfo, true, false);
+                Character spawnedCharacter = Character.Create(connectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
                 spawnedCharacter.AnimController.Frozen = true;
-                c.Character = spawnedCharacter;
+                connectedClients[i].Character = spawnedCharacter;
                 
-                GameMain.GameSession.CrewManager.characters.Add(c.Character);
+                GameMain.GameSession.CrewManager.characters.Add(spawnedCharacter);
             }
 
-            if (characterInfo!=null)
+            if (characterInfo != null)
             {
-                WayPoint spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, selectedSub);
-                myCharacter = Character.Create(Character.HumanConfigFile, spawnPoint.WorldPosition, characterInfo, false, false);
-                
-                GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+                myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
+
                 Character.Controlled = myCharacter;
+                GameMain.GameSession.CrewManager.characters.Add(myCharacter);
             }
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
