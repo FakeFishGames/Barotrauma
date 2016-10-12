@@ -171,7 +171,7 @@ namespace Barotrauma
             
             character.Enabled = false;
 
-            husk.SpawnedMidRound = true;
+            Entity.Spawner.AddToSpawnedList(husk);
         }
     }
 }

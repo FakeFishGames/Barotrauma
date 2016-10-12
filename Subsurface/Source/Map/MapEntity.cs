@@ -269,7 +269,7 @@ namespace Barotrauma
                 item.Update(cam, deltaTime);
             }
 
-            Item.Spawner.Update();
+            Entity.Spawner.Update();
             Item.Remover.Update();
         }
 

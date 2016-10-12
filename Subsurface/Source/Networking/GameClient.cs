@@ -44,6 +44,13 @@ namespace Barotrauma.Networking
             get { return myID; }
         }
 
+        public ushort MyCharacterID
+        {
+            get;
+            private set;
+        }
+
+
         public override List<Client> ConnectedClients
         {
             get
@@ -570,6 +577,8 @@ namespace Barotrauma.Networking
             bool respawnAllowed     = inc.ReadBoolean();
             bool loadSecondSub      = inc.ReadBoolean();
 
+            MyCharacterID           = inc.ReadUInt16();
+
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 
             if (gameMode == null)
@@ -595,16 +604,16 @@ namespace Barotrauma.Networking
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
             
-            int characterCount = inc.ReadByte();
-            for (int i = 0; i < characterCount; i++)
-            {
-                var character = Character.ReadSpawnData(inc);
-                if (inc.ReadBoolean())
-                {
-                    myCharacter = character;
-                    Character.Controlled = character;
-                }
-            }
+            //int characterCount = inc.ReadByte();
+            //for (int i = 0; i < characterCount; i++)
+            //{
+            //    var character = Character.ReadSpawnData(inc);
+            //    if (inc.ReadBoolean())
+            //    {
+            //        myCharacter = character;
+            //        Character.Controlled = character;
+            //    }
+            //}
             
             gameStarted = true;
 
@@ -704,7 +713,7 @@ namespace Barotrauma.Networking
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
                         break;
-                    case ServerNetObject.ITEM_SPAWN:
+                    case ServerNetObject.ENTITY_SPAWN:
                         Item.Spawner.ClientRead(inc);
                         break;
                 }
