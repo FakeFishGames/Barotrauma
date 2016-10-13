@@ -293,19 +293,21 @@ namespace Barotrauma
                         Structure structure = fixture.Body.UserData as Structure;
                         if (stairs == null && structure != null)
                         {
-                            if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
-                            {
-                                return -1;
-                            }
-                            else
-                            {
-                                stairs = structure;
-                            }
+                            //TODO: fix
+                            //if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
+                            //{
+                            //    return -1;
+                            //}
+                            //else
+                            //{
+                            //    stairs = structure;
+                            //}
                         }
                         break;
                     case Physics.CollisionPlatform:
                         Structure platform = fixture.Body.UserData as Structure;
-                        if (IgnorePlatforms || LowestLimb.Position.Y < platform.Rect.Y) return -1;
+                    //TODO: fix
+                        //if (IgnorePlatforms || LowestLimb.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:
                         break;

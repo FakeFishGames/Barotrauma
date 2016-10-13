@@ -1,6 +1,7 @@
 ﻿using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -8,8 +9,6 @@ namespace Barotrauma
     {
         public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
         public Animation Anim;
-
-        public Direction TargetDir;
 
         protected Character character;
 
@@ -24,6 +23,8 @@ namespace Barotrauma
 
         protected readonly Vector2 stepSize;
         protected readonly float legTorque;
+
+
 
         public float StunTimer
         {
@@ -52,6 +53,8 @@ namespace Barotrauma
             //impactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 10.0f);
 
             legTorque = ToolBox.GetAttributeFloat(element, "legtorque", 0.0f);
+
+
         }
 
         public virtual void UpdateAnim(float deltaTime) { }
@@ -59,5 +62,7 @@ namespace Barotrauma
         public virtual void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle) { }
 
         public virtual void DragCharacter(Character target, LimbType rightHandTarget = LimbType.RightHand, LimbType leftHandTarget = LimbType.LeftHand) { }
+
+
    }
 }

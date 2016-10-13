@@ -76,6 +76,10 @@
       <sound file ="Content/step.ogg"/>
     </limb>
 
+    <limb id = "13" height="100" radius="15" mass = "6" type="Controller" attackpriority="2" impacttolerance="5000.0">
+      <sprite texture="Content/Characters/Human/[GENDER]head[HEADID].png" sourcerect="1,1,1,1" depth="0.0" origin="0.5,0.5"/>
+    </limb>
+
     <!-- head to body -->
     <joint limb1="0" limb1anchor="0,-7" limb2="1" limb2anchor="-1,26" lowerlimit="-90" upperlimit="45"/>
     <joint limb1="1" limb1anchor="0,-17" limb2="12" limb2anchor="0,7" lowerlimit="-10" upperlimit="10"/>

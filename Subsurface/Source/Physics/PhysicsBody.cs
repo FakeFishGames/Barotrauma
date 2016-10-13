@@ -383,9 +383,16 @@ namespace Barotrauma
 
             float angle = MathUtils.GetShortestAngle(nextAngle, targetRotation);
 
-            float torque = body.Mass * angle * 60.0f * (force/100.0f);
+            float torque = angle * 60.0f * (force/100.0f);
 
-            body.ApplyTorque(torque);
+            if (body.IsKinematic)
+            {
+                body.AngularVelocity = torque;
+            }
+            else
+            {
+                body.ApplyTorque(body.Mass * torque);
+            }
         }
         
         public void Remove()
