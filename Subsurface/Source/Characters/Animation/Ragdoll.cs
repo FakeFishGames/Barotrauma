@@ -361,20 +361,30 @@ namespace Barotrauma
             }
             else if (structure.StairDirection != Direction.None)
             {
+                stairs = null;
                 
+                //---------------
+
                 float stairBottomPos = ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height + 10);
-                if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f)
-                {
-                    stairs = null;
-                    return false;
-                }
+                if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f) return false;
 
-                if (targetMovement.Y >= 0.0f && colliderBottom.Y > ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 8.0f))
-                {
-                    stairs = null;
-                    return false;
-                }
+                //---------------
 
+                if (targetMovement.Y >= 0.0f && colliderBottom.Y >= ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y*5)) return false;
+
+                //---------------
+
+                if (contact.Manifold.LocalNormal.Y < 0.0f) return false;
+
+                //---------------
+
+                Vector2 normal; FarseerPhysics.Common.FixedArray2<Vector2> points;
+
+                contact.GetWorldManifold(out normal, out points);
+                if (points[0].Y > collider.SimPosition.Y) return false;
+                
+                //---------------
+                
                 stairs = structure;
 
                 //float stairPosY = structure.StairDirection == Direction.Right ? 
