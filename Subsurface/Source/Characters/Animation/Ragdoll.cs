@@ -57,18 +57,15 @@ namespace Barotrauma
         public bool onGround;
         private bool ignorePlatforms;
 
-        private Limb refLimb;
+        protected Limb refLimb;
 
         protected Structure stairs;
                 
         protected Direction dir;
 
-        //private byte ID;
-        
-        public Limb LowestLimb
-        {
-            get { return lowestLimb; }
-        }
+        public Direction TargetDir;
+
+        protected Limb collider;
 
         public Limb RefLimb
         {
@@ -278,7 +275,13 @@ namespace Barotrauma
                 limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
             }
 
-            FindLowestLimb();
+
+            collider = GetLimb(LimbType.Controller);
+            if (collider == null) return;
+
+            collider.body.FarseerBody.FixedRotation = true;
+            collider.pullJoint = null;
+            refLimb = collider;
         }
 
         public void AddJoint(XElement subElement, float scale = 1.0f)
@@ -345,57 +348,72 @@ namespace Barotrauma
                 CalculateImpact(f1, f2, contact);
                 return true;
             }
+
+            Vector2 colliderBottom = GetColliderBottom();
             
             if (structure.IsPlatform)
             {
                 if (ignorePlatforms) return false;
 
                 //the collision is ignored if the lowest limb is under the platform
-                if (lowestLimb==null || lowestLimb.Position.Y < structure.Rect.Y) return false; 
+                //if (lowestLimb==null || lowestLimb.Position.Y < structure.Rect.Y) return false;
+                if (colliderBottom.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) return false; 
             }
-            else if (structure.StairDirection != Direction.None && lowestLimb != null)
+            else if (structure.StairDirection != Direction.None)
             {
-                float stairPosY = structure.StairDirection == Direction.Right ? 
-                    lowestLimb.Position.X - structure.Rect.X : structure.Rect.Width - (lowestLimb.Position.X - structure.Rect.X);
-
                 
-                if (lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + stairPosY - 10.0f) return false;
-                
-
-                
-                if (targetMovement.Y < 0.5f)
+                float stairBottomPos = ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height + 10);
+                if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f)
                 {
-                    if (inWater || lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + 50.0f)
-                    {
-                        stairs = null;
-                        return false;
-                    }
+                    stairs = null;
+                    return false;
                 }
+
+                if (targetMovement.Y >= 0.0f && colliderBottom.Y > ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 8.0f))
+                {
+                    stairs = null;
+                    return false;
+                }
+
+                stairs = structure;
+
+                //float stairPosY = structure.StairDirection == Direction.Right ? 
+                //    lowestLimb.Position.X - structure.Rect.X : structure.Rect.Width - (lowestLimb.Position.X - structure.Rect.X);
+
                 
-                //if (targetMovement.Y >= 0.0f && lowestLimb.SimPosition.Y > ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 8.0f))
+                //if (lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + stairPosY - 10.0f) return false;
+                
+
+                
+                //if (targetMovement.Y < 0.5f)
                 //{
-                //    //stairs = null;
-                //    //return false;
+                //    if (inWater || lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + 50.0f)
+                //    {
+                //        stairs = null;
+                //        return false;
+                //    }
                 //}
                 
-                Limb limb = f1.Body.UserData as Limb;
-                if (limb != null)// && (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot))
-                {
-                    if (contact.Manifold.LocalNormal.Y >= 0.0f)
-                    { 
-                        if (limb.SimPosition.Y < lowestLimb.SimPosition.Y+0.2f)
-                        {
-                            stairs = structure;
-                            return true;
-                        }
 
-                    }
-                    else
-                    {
-                        stairs = null;
-                        return false;
-                    }                    
-                }
+                
+                //Limb limb = f1.Body.UserData as Limb;
+                //if (limb != null)// && (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot))
+                //{
+                //    if (contact.Manifold.LocalNormal.Y >= 0.0f)
+                //    { 
+                //        if (limb.SimPosition.Y < lowestLimb.SimPosition.Y+0.2f)
+                //        {
+                //            stairs = structure;
+                //            return true;
+                //        }
+
+                //    }
+                //    else
+                //    {
+                //        stairs = null;
+                //        return false;
+                //    }                    
+                //}
             }
                 
 
@@ -717,7 +735,7 @@ namespace Barotrauma
             
             Vector2 flowForce = Vector2.Zero;
 
-            FindLowestLimb();
+            //FindLowestLimb();
 
             FindHull();
 
@@ -1010,19 +1028,24 @@ namespace Barotrauma
             limbDictionary.TryGetValue(limbType, out limb);
             return limb;
         }
-        
-        public void FindLowestLimb()
+
+
+        public Vector2 GetColliderBottom()
         {
-            //find the lowest limb
-            lowestLimb = null;
-            foreach (Limb limb in Limbs)
-            {
-                if (lowestLimb == null)
-                    lowestLimb = limb;
-                else if (limb.SimPosition.Y < lowestLimb.SimPosition.Y)
-                    lowestLimb = limb;
-            }
+            return collider == null ? Vector2.Zero : collider.SimPosition - Vector2.UnitY * (collider.body.height / 2 + collider.body.radius);
         }
+        
+        //public void FindLowestLimb()
+        //{            //find the lowest limb
+        //    lowestLimb = null;
+        //    foreach (Limb limb in Limbs)
+        //    {
+        //        if (lowestLimb == null)
+        //            lowestLimb = limb;
+        //        else if (limb.SimPosition.Y < lowestLimb.SimPosition.Y)
+        //            lowestLimb = limb;
+        //    }
+        //}
 
         public void Remove()
         {

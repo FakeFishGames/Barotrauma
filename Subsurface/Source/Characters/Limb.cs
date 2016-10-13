@@ -16,7 +16,8 @@ namespace Barotrauma
     public enum LimbType
     {
         None, LeftHand, RightHand, LeftArm, RightArm,
-        LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist
+        LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist, 
+        Controller
     };
 
     class Limb

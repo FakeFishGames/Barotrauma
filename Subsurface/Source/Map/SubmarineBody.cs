@@ -556,7 +556,6 @@ namespace Barotrauma
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (c.AnimController.LowestLimb == limb) continue;
                     limb.body.ApplyLinearImpulse(limb.Mass * impulse);
                 }
             }

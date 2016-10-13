@@ -154,9 +154,9 @@ namespace Barotrauma
                 {
                     x = 0.0f;                    
                 }
-                else if (character.AnimController.LowestLimb != null && hull != null)
+                else if (hull != null)
                 {
-                    if (character.AnimController.LowestLimb.Position.Y < hull.Rect.Y - hull.Rect.Height + 10.0f) x = 0.0f;
+                    if (character.AnimController.GetColliderBottom().Y < hull.Rect.Y - hull.Rect.Height + 10.0f) x = 0.0f;
                 }
 
                 character.AnimController.IgnorePlatforms = false;
