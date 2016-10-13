@@ -348,12 +348,12 @@ namespace Barotrauma
                     TargetMovement.X < 0.0f && stairs.StairDirection == Direction.Left)
                 {
                     TargetMovement *= 1.7f;
-                    walkCycleSpeed *= 1.7f;
+                    walkCycleSpeed *= 2.0f;
                 }
                 else
                 {
                     TargetMovement /= 1.0f;
-                    walkCycleSpeed *= 1.5f;
+                    walkCycleSpeed *= 2.0f;
                 }
             }
 
@@ -414,7 +414,12 @@ namespace Barotrauma
 
             //if (LowestLimb == null) return;
 
-            if (onGround) collider.body.LinearVelocity = new Vector2(movement.X * 1.5f, collider.LinearVelocity.Y);
+            if (onGround)
+            {
+                collider.body.LinearVelocity = new Vector2(
+                    movement.X * 1.5f,
+                    collider.LinearVelocity.Y > 0.0f ? collider.LinearVelocity.Y * 0.5f : collider.LinearVelocity.Y);
+            }
 
             //float? ceilingY = null;
             //if (Submarine.PickBody(head.SimPosition, head.SimPosition + Vector2.UnitY, null, Physics.CollisionWall)!=null)
@@ -826,14 +831,18 @@ namespace Barotrauma
                 ladderSimPos += character.SelectedConstruction.Submarine.SimPosition - currentHull.Submarine.SimPosition;
             }
 
-            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, head.SimPosition.Y + 0.05f), 10.5f);
-            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, torso.SimPosition.Y), 10.5f);
-            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, waist.SimPosition.Y), 10.5f);
 
+
+            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, collider.SimPosition.Y + 0.7f), 10.5f);
+            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, collider.SimPosition.Y+0.5f), 10.5f);
+            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, collider.SimPosition.Y+0.4f), 10.5f);
+
+
+            MoveLimb(collider, new Vector2(ladderSimPos.X - 0.2f * Dir, collider.SimPosition.Y), 10.5f);
 
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
-                head.SimPosition.Y + movement.Y * 0.1f - ladderSimPos.Y);
+                collider.SimPosition.Y + 0.6f + movement.Y * 0.1f - ladderSimPos.Y);
 
             handPos.Y = Math.Min(-0.5f, handPos.Y);
 
@@ -852,7 +861,7 @@ namespace Barotrauma
 
             Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
-                head.SimPosition.Y - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
+                collider.SimPosition.Y + 0.7f - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
 
             //if (movement.Y < 0) footPos.Y += 0.05f;
 
@@ -880,11 +889,12 @@ namespace Barotrauma
             Vector2 subSpeed = currentHull != null || character.SelectedConstruction.Submarine == null
                 ? Vector2.Zero : character.SelectedConstruction.Submarine.Velocity;
 
-            Vector2 climbForce = new Vector2(0.0f, movement.Y + (inWater ? -0.05f : 0.6f)) * movementFactor;
-            if (climbForce.Y > 0.5f) climbForce.Y = Math.Max(climbForce.Y, 1.3f);
-            torso.body.ApplyForce((climbForce * 40.0f + subSpeed * 50.0f) * torso.Mass);
-            head.body.SmoothRotate(0.0f);
+            Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.3f) * movementFactor;
+            //if (climbForce.Y > 0.5f) climbForce.Y = Math.Max(climbForce.Y, 1.3f);
 
+            collider.body.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * collider.Mass);
+            head.body.SmoothRotate(0.0f);
+            
             if (!character.SelectedConstruction.Prefab.Triggers.Any())
             {
                 character.SelectedConstruction = null;
