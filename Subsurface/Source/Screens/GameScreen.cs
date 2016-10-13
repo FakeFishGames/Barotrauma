@@ -321,7 +321,7 @@ namespace Barotrauma
             GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
 
-            if (Character.Controlled != null)
+            if (Character.Controlled != null && GameMain.LightManager.LosEnabled)
             {
                 graphics.SetRenderTarget(renderTarget);
                 spriteBatch.Begin(SpriteSortMode.Deferred,
@@ -394,15 +394,16 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            if (Character.Controlled != null)
+            if (Character.Controlled != null && GameMain.LightManager.LosEnabled)
             {
                 GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect,false);
 
                 spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.AlphaBlend);
-                float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.1f);
+                float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
                 spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                    new Color(r, Math.Max(0.07f-r*0.07f/0.1f,0.0f), Math.Max(0.1f - r, 0.0f), 1.0f));
+                    Color.Lerp(new Color(0.1f, 0.1f, 0.1f), Color.Red, r));
+
                 spriteBatch.End();
             }
 
