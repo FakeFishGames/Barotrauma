@@ -82,20 +82,20 @@ namespace Barotrauma
                     Character.AnimController.IgnorePlatforms = true;
                 }
 
-                if (Character.AnimController.Stairs != null)
-                {
-                    float yDiff = currPath.CurrentNode.WorldPosition.Y - Character.WorldPosition.Y;
+                //if (Character.AnimController.Stairs != null)
+                //{
+                //    float yDiff = currPath.CurrentNode.WorldPosition.Y - Character.WorldPosition.Y;
 
-                    if (Math.Abs(yDiff)>10.0f)
-                    {
-                        int dir = Math.Sign(yDiff);
+                //    if (Math.Abs(yDiff) > 20.0f)
+                //    {
+                //        int dir = Math.Sign(yDiff);
 
-                        float movement = Character.AnimController.Stairs.StairDirection == Direction.Right ?
-                            dir * Character.AnimController.TargetMovement.Length() : -dir * Character.AnimController.TargetMovement.Length();
+                //        float movement = Character.AnimController.Stairs.StairDirection == Direction.Right ?
+                //            dir * Character.AnimController.TargetMovement.Length() : -dir * Character.AnimController.TargetMovement.Length();
 
-                        Character.AnimController.TargetMovement = new Vector2(movement, 0.0f);
-                    }  
-                }
+                //        steeringManager.SteeringManual(deltaTime, new Vector2(movement*2, 0.0f));
+                //    }
+                //}
             }
 
             (Character.AnimController as HumanoidAnimController).Crouching = false;

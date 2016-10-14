@@ -111,7 +111,7 @@ namespace Barotrauma
             if (canOpenDoors && !character.LockHands) CheckDoorsInPath();
 
             float allowedDistance = character.AnimController.InWater ? 1.0f : 0.6f;
-            if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
+            //if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
 
             Vector2 pos = host.SimPosition;
 
@@ -139,7 +139,16 @@ namespace Barotrauma
                 }
             }
 
-            currentPath.CheckProgress(pos, allowedDistance);
+            //currentPath.CheckProgress(pos, allowedDistance);
+            var collider = character.AnimController.GetLimb(LimbType.Collider);
+            Vector2 colliderBottom = character.AnimController.GetColliderBottom();
+
+            if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.body.radius*2 &&
+                currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y && 
+                currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + collider.body.height + collider.body.radius*2)
+            {
+                currentPath.SkipToNextNode();
+            }
 
             if (currentPath.CurrentNode == null) return Vector2.Zero;
 

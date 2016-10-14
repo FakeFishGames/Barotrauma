@@ -1196,7 +1196,7 @@ namespace Barotrauma
         {
             foreach (Character c in CharacterList)
             {
-                if (c.isDead || c.health <= 0.0f || !c.Enabled) continue;
+                if (!c.Enabled) continue;
                 c.AnimController.UpdateAnim(deltaTime);
             }
         }

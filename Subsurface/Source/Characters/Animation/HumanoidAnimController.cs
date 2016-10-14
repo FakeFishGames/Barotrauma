@@ -61,13 +61,24 @@ namespace Barotrauma
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (character.IsDead) return;
-            if (Frozen) return;
+            if (character.IsDead || Frozen || character.IsUnconscious || stunTimer > 0.0f)
+            {
+                collider.Disabled = true;
+                collider.body.PhysEnabled = false;
+
+                var lowestLimb = FindLowestLimb(true);
+                collider.body.SetTransform(GetLimb(LimbType.Torso).SimPosition, 0.0f);
+
+                if (stunTimer > 0)
+                {
+                    stunTimer -= deltaTime;
+                }
+
+                return;
+            }
 
             if (collider == null) return;
-
-            Vector2 colliderPos = GetColliderBottom();
-
+            
             //if (inWater) stairs = null;
 
             //if (onFloorTimer <= 0.0f && !SimplePhysicsEnabled)
@@ -143,7 +154,7 @@ namespace Barotrauma
             stairs = null;
 
             var contacts = collider.body.FarseerBody.ContactList;
-            while (contacts != null && contacts.Contact != null)
+            while (collider.body.PhysEnabled && contacts != null && contacts.Contact != null)
             {
                 if (contacts.Contact.Enabled && contacts.Contact.IsTouching)
                 {
@@ -215,12 +226,11 @@ namespace Barotrauma
             }
             strongestImpact = 0.0f;
 
-
-            if (stunTimer > 0)
+            if (collider.Disabled && !swimming)
             {
-                collider.Disabled = true;
-                stunTimer -= deltaTime;
-                return;
+                var lowestLimb = FindLowestLimb(true);
+                collider.body.SetTransform(lowestLimb.SimPosition + Vector2.UnitY * (collider.body.radius + collider.body.height / 2), 0.0f);
+                collider.Disabled = false;
             }
 
             if (character.LockHands)
@@ -265,8 +275,11 @@ namespace Barotrauma
                 return;
             }
 
-            inWater = false;
 
+            collider.body.PhysEnabled = true;
+            collider.body.Enabled = true;
+
+            
             switch (Anim)
             {
                 case Animation.Climbing:
@@ -311,6 +324,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
+                if (limb == collider) continue;
                 limb.Disabled = false;
             }
 
@@ -339,7 +353,7 @@ namespace Barotrauma
             Limb rightLeg = GetLimb(LimbType.RightLeg);
 
             float getUpSpeed = 0.3f;
-            float walkCycleSpeed = head.LinearVelocity.X * walkAnimSpeed;
+            float walkCycleSpeed = collider.LinearVelocity.X * walkAnimSpeed;
             if (stairs != null)
             {
                 TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.5f, 1.5f), TargetMovement.Y);
@@ -619,6 +633,11 @@ namespace Barotrauma
             float surfaceLimiter = 1.0f;
 
             Limb head = GetLimb(LimbType.Head);
+            Limb torso = GetLimb(LimbType.Torso);
+            
+            collider.body.PhysEnabled = false;
+            collider.Disabled = true;
+            collider.body.SetTransform(torso.SimPosition, 0.0f);
 
             if (currentHull != null && (currentHull.Rect.Y - currentHull.Surface > 50.0f) && !head.inWater)
             {
@@ -627,12 +646,12 @@ namespace Barotrauma
                 if (surfaceLimiter > 20.0f) return;
             }
 
-            Limb torso = GetLimb(LimbType.Torso);
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 
             Limb leftFoot = GetLimb(LimbType.LeftFoot);
             Limb rightFoot = GetLimb(LimbType.RightFoot);
+
 
             float rotation = MathHelper.WrapAngle(torso.Rotation);
             rotation = MathHelper.ToDegrees(rotation);

@@ -30,8 +30,6 @@ namespace Barotrauma
 
         private Character character;
 
-        private Limb lowestLimb;
-
         protected float strongestImpact;
 
         public float headPosition, headAngle;
@@ -275,8 +273,7 @@ namespace Barotrauma
                 limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
             }
 
-
-            collider = GetLimb(LimbType.Controller);
+            collider = GetLimb(LimbType.Collider);
             if (collider == null) return;
 
             collider.body.FarseerBody.FixedRotation = true;
@@ -384,6 +381,10 @@ namespace Barotrauma
                 if (points[0].Y > collider.SimPosition.Y) return false;
                 
                 //---------------
+
+                if (inWater && targetMovement.Y < 0.5f) return false;
+
+                //---------------
                 
                 stairs = structure;
 
@@ -406,7 +407,6 @@ namespace Barotrauma
                 
 
                 
-                //Limb limb = f1.Body.UserData as Limb;
                 //if (limb != null)// && (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot))
                 //{
                 //    if (contact.Manifold.LocalNormal.Y >= 0.0f)
@@ -425,9 +425,9 @@ namespace Barotrauma
                 //    }                    
                 //}
             }
-                
 
             CalculateImpact(f1, f2, contact);
+
             return true;
         }
 
@@ -437,39 +437,39 @@ namespace Barotrauma
 
             Vector2 normal = contact.Manifold.LocalNormal;
 
-            Vector2 avgVelocity = Vector2.Zero;
-            foreach (Limb limb in Limbs)
-            {
-                avgVelocity += limb.LinearVelocity;
-            }
+            //Vector2 avgVelocity = Vector2.Zero;
+            //foreach (Limb limb in Limbs)
+            //{
+            //    avgVelocity += limb.LinearVelocity;
+            //}
 
-            avgVelocity = avgVelocity / Limbs.Count();
+            Limb limb = (Limb)f1.Body.UserData;
+            Vector2 velocity = limb.LinearVelocity;
 
-            if (character.Submarine == null && f2.Body.UserData is Submarine) avgVelocity -= ((Submarine)f2.Body.UserData).Velocity;
+            if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
                                     
-            float impact = Vector2.Dot(avgVelocity, -normal);
+            float impact = Vector2.Dot(velocity, -normal);
             
-            Limb l = (Limb)f1.Body.UserData;
 
             float volume = stairs == null ? impact / 5.0f : impact;
             volume = Math.Min(impact, 1.0f);
 
-            if (impact > 0.5f && l.HitSound != null && l.soundTimer <= 0.0f)
+            if (impact > 0.5f && limb.HitSound != null && limb.soundTimer <= 0.0f)
             {
-                l.soundTimer = Limb.SoundInterval;
-                l.HitSound.Play(volume, impact * 250.0f, l.WorldPosition);
+                limb.soundTimer = Limb.SoundInterval;
+                limb.HitSound.Play(volume, impact * 250.0f, limb.WorldPosition);
             }
 
-            if (impact > l.impactTolerance)
+            if (impact > limb.impactTolerance && limb == collider)
             {
                 if (!character.IsNetworkPlayer || GameMain.Server != null)
                 {
-                    character.AddDamage(CauseOfDeath.Damage, impact - l.impactTolerance * 0.1f, null);
+                    character.AddDamage(CauseOfDeath.Damage, impact - limb.impactTolerance * 0.1f, null);
 
-                    strongestImpact = Math.Max(strongestImpact, impact - l.impactTolerance);
+                    strongestImpact = Math.Max(strongestImpact, impact - limb.impactTolerance);
                 }
 
-                SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, l.body);                
+                SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, limb.body);                
 
                 if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
             }
@@ -765,7 +765,7 @@ namespace Barotrauma
                 headInWater = false;
 
                 if (currentHull.Volume > currentHull.FullVolume * 0.95f || 
-                    ConvertUnits.ToSimUnits(currentHull.Surface) - floorY > HeadPosition * 0.95f)
+                    ConvertUnits.ToSimUnits(currentHull.Surface) - GetColliderBottom().Y > HeadPosition * 0.95f)
                     inWater = true;                
             }
                        
@@ -1044,18 +1044,21 @@ namespace Barotrauma
         {
             return collider == null ? Vector2.Zero : collider.SimPosition - Vector2.UnitY * (collider.body.height / 2 + collider.body.radius);
         }
-        
-        //public void FindLowestLimb()
-        //{            //find the lowest limb
-        //    lowestLimb = null;
-        //    foreach (Limb limb in Limbs)
-        //    {
-        //        if (lowestLimb == null)
-        //            lowestLimb = limb;
-        //        else if (limb.SimPosition.Y < lowestLimb.SimPosition.Y)
-        //            lowestLimb = limb;
-        //    }
-        //}
+
+        public Limb FindLowestLimb(bool ignoreCollider)
+        {
+            Limb lowestLimb = null;
+            foreach (Limb limb in Limbs)
+            {
+                if (ignoreCollider && limb == collider) continue;
+                if (lowestLimb == null)
+                    lowestLimb = limb;
+                else if (limb.SimPosition.Y < lowestLimb.SimPosition.Y)
+                    lowestLimb = limb;
+            }
+
+            return lowestLimb;
+        }
 
         public void Remove()
         {

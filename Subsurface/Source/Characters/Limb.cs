@@ -17,7 +17,7 @@ namespace Barotrauma
     {
         None, LeftHand, RightHand, LeftArm, RightArm,
         LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist, 
-        Controller
+        Collider
     };
 
     class Limb
