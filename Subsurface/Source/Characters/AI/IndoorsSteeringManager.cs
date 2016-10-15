@@ -139,13 +139,12 @@ namespace Barotrauma
                 }
             }
 
-            //currentPath.CheckProgress(pos, allowedDistance);
-            var collider = character.AnimController.GetLimb(LimbType.Collider);
-            Vector2 colliderBottom = character.AnimController.GetColliderBottom();
+            var collider = character.AnimController.Collider;
 
-            if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.body.radius*2 &&
+            Vector2 colliderBottom = character.AnimController.GetColliderBottom();
+            if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius*2 &&
                 currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y && 
-                currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + collider.body.height + collider.body.radius*2)
+                currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + collider.height + collider.radius*2)
             {
                 currentPath.SkipToNextNode();
             }

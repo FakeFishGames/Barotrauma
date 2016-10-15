@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
 
             if (userPos != 0.0f)
             {
-                float torsoX = ConvertUnits.ToDisplayUnits(character.AnimController.RefLimb.SimPosition.X);
+                float torsoX = character.Position.X;
 
                 Vector2 diff = new Vector2(item.Rect.X + UserPos - torsoX, 0.0f);
 

@@ -73,7 +73,7 @@ namespace Barotrauma
             }
             else
             {
-                if (inWater || RefLimb.inWater)
+                if (inWater)// || RefLimb.inWater)
                 {
                     UpdateSineAnim(deltaTime);
                 }
@@ -224,25 +224,27 @@ namespace Barotrauma
 
         void UpdateSimpleAnim()
         {
-            movement = MathUtils.SmoothStep(movement, TargetMovement*swimSpeed, 1.0f);
-            if (movement == Vector2.Zero) return;
+            //todo: reimplement
 
-            float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
+            //movement = MathUtils.SmoothStep(movement, TargetMovement*swimSpeed, 1.0f);
+            //if (movement == Vector2.Zero) return;
+
+            //float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
             
-            RefLimb.body.SmoothRotate(
-                (rotateTowardsMovement) ?
-                RefLimb.body.Rotation + MathUtils.GetShortestAngle(RefLimb.body.Rotation, movementAngle) :
-                HeadAngle*Dir);
+            //RefLimb.body.SmoothRotate(
+            //    (rotateTowardsMovement) ?
+            //    RefLimb.body.Rotation + MathUtils.GetShortestAngle(RefLimb.body.Rotation, movementAngle) :
+            //    HeadAngle*Dir);
 
-            RefLimb.body.LinearVelocity = movement;
+            //collider.LinearVelocity = movement;
 
-            //RefLimb.body.SmoothRotate(0.0f);
+            ////RefLimb.body.SmoothRotate(0.0f);
 
-            foreach (Limb l in Limbs)
-            {
-                if (l == RefLimb) continue;
-                l.body.SetTransform(RefLimb.SimPosition, RefLimb.Rotation);
-            }
+            //foreach (Limb l in Limbs)
+            //{
+            //    if (l == RefLimb) continue;
+            //    l.body.SetTransform(RefLimb.SimPosition, RefLimb.Rotation);
+            //}
         }
     
         void UpdateWalkAnim(float deltaTime)
@@ -344,7 +346,7 @@ namespace Barotrauma
 
             if (Math.Abs(colliderPos.Y - floorY) < colliderHeight * 1.2f)
             {
-                colliderLimb.Move(new Vector2(colliderPos.X + movement.X * 0.2f, floorY + colliderHeight), 5.0f);
+                colliderLimb.MoveToPos(new Vector2(colliderPos.X + movement.X * 0.2f, floorY + colliderHeight), 5.0f);
             }
 
             float walkCycleSpeed = head.LinearVelocity.X * 0.05f;
@@ -373,14 +375,14 @@ namespace Barotrauma
 
                         if (limb.type == LimbType.LeftFoot)
                         {
-                            limb.Move(footPos +new Vector2(
+                            limb.MoveToPos(footPos +new Vector2(
                                 transformedStepSize.X + movement.X * 0.1f,
                                 (transformedStepSize.Y > 0.0f) ? transformedStepSize.Y : 0.0f),
                             8.0f);
                         }
                         else if (limb.type == LimbType.RightFoot)
                         {
-                            limb.Move(footPos +new Vector2(
+                            limb.MoveToPos(footPos +new Vector2(
                                 -transformedStepSize.X + movement.X * 0.1f,
                                 (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f),
                             8.0f);
