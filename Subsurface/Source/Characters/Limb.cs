@@ -16,8 +16,7 @@ namespace Barotrauma
     public enum LimbType
     {
         None, LeftHand, RightHand, LeftArm, RightArm,
-        LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist, 
-        Collider
+        LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist
     };
 
     class Limb
@@ -29,7 +28,6 @@ namespace Barotrauma
         
         //the physics body of the limb
         public PhysicsBody body;
-        private Texture2D bodyShapeTexture;
 
         private readonly int refJointIndex;
 
@@ -74,11 +72,6 @@ namespace Barotrauma
         private List<WearableSprite> wearingItems;
 
         private Vector2 animTargetPos;
-
-        public Texture2D BodyShapeTexture
-        {
-            get { return bodyShapeTexture; }
-        }
         
         public bool DoesFlip
         {
@@ -335,7 +328,7 @@ namespace Barotrauma
             }
         }
 
-        public void Move(Vector2 pos, float amount, bool pullFromCenter=false)
+        public void MoveToPos(Vector2 pos, float force, bool pullFromCenter=false)
         {
             Vector2 pullPos = body.SimPosition;
             if (pullJoint!=null && !pullFromCenter)
@@ -345,10 +338,7 @@ namespace Barotrauma
 
             animTargetPos = pos;
 
-            Vector2 vel = body.LinearVelocity;
-            Vector2 deltaPos = pos - pullPos;
-            deltaPos *= amount;
-            body.ApplyLinearImpulse((deltaPos - vel * 0.5f) * body.Mass, pullPos);
+            body.MoveToPos(pos, force, pullPos);
         }
 
         public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, bool playSound)
@@ -446,7 +436,7 @@ namespace Barotrauma
             {
                 //DebugConsole.ThrowError("CHARACTER EXPLODED");
                 body.ResetDynamics();
-                body.SetTransform(character.AnimController.RefLimb.SimPosition, 0.0f);           
+                body.SetTransform(character.SimPosition, 0.0f);           
             }
 
             if (inWater)
@@ -586,34 +576,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
             }
 
-            if (bodyShapeTexture == null)
-            {
-                switch (body.BodyShape)
-                {
-                    case PhysicsBody.Shape.Rectangle:
-                        bodyShapeTexture = GUI.CreateRectangle(
-                            (int)ConvertUnits.ToDisplayUnits(body.width), 
-                            (int)ConvertUnits.ToDisplayUnits(body.height));
-                        break;
-
-                    case PhysicsBody.Shape.Capsule:
-                        bodyShapeTexture = GUI.CreateCapsule(
-                            (int)ConvertUnits.ToDisplayUnits(body.radius),
-                            (int)ConvertUnits.ToDisplayUnits(body.height));
-                        break;
-                    case PhysicsBody.Shape.Circle:
-                        bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(body.radius));
-                        break;
-                }
-            }
-
-            spriteBatch.Draw(
-                bodyShapeTexture,
-                new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                null,
-                character.Submarine!=null ? Color.White : Color.Cyan,
-                -body.DrawRotation,
-                new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
+           
         }
         
 
@@ -624,11 +587,6 @@ namespace Barotrauma
             if (damagedSprite != null) damagedSprite.Remove();
 
             body.Remove();
-
-            if (bodyShapeTexture != null)
-            {
-                bodyShapeTexture.Dispose();
-            }
 
             if (hitSound != null) hitSound.Remove();
         }

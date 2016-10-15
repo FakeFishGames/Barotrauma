@@ -63,11 +63,10 @@ namespace Barotrauma
         {
             if (character.IsDead || Frozen || character.IsUnconscious || stunTimer > 0.0f)
             {
-                collider.Disabled = true;
-                collider.body.PhysEnabled = false;
+                collider.PhysEnabled = false;
 
-                var lowestLimb = FindLowestLimb(true);
-                collider.body.SetTransform(GetLimb(LimbType.Torso).SimPosition, 0.0f);
+                var lowestLimb = FindLowestLimb();
+                collider.SetTransform(GetLimb(LimbType.Torso).SimPosition, 0.0f);
 
                 if (stunTimer > 0)
                 {
@@ -77,7 +76,14 @@ namespace Barotrauma
                 return;
             }
 
-            if (collider == null) return;
+
+            //stun (= disable the animations) if the ragdoll receives a large enough impact
+            if (strongestImpact > 0.0f)
+            {
+                character.StartStun(MathHelper.Min(strongestImpact * 0.5f, 5.0f));
+                strongestImpact = 0.0f;
+                return;
+            }
             
             //if (inWater) stairs = null;
 
@@ -153,8 +159,8 @@ namespace Barotrauma
             bool onStairs = stairs != null;
             stairs = null;
 
-            var contacts = collider.body.FarseerBody.ContactList;
-            while (collider.body.PhysEnabled && contacts != null && contacts.Contact != null)
+            var contacts = collider.FarseerBody.ContactList;
+            while (collider.FarseerBody.Enabled && contacts != null && contacts.Contact != null)
             {
                 if (contacts.Contact.Enabled && contacts.Contact.IsTouching)
                 {
@@ -219,18 +225,13 @@ namespace Barotrauma
                 onFloorTimer -= deltaTime;
             }
 
-            //stun (= disable the animations) if the ragdoll receives a large enough impact
-            if (strongestImpact > 0.0f)
-            {
-                character.StartStun(MathHelper.Min(strongestImpact * 0.5f, 5.0f));
-            }
-            strongestImpact = 0.0f;
 
-            if (collider.Disabled && !swimming)
+            //re-enable collider (unless swimming)
+            if (!collider.FarseerBody.Enabled && !swimming)
             {
-                var lowestLimb = FindLowestLimb(true);
-                collider.body.SetTransform(lowestLimb.SimPosition + Vector2.UnitY * (collider.body.radius + collider.body.height / 2), 0.0f);
-                collider.Disabled = false;
+                var lowestLimb = FindLowestLimb();
+                collider.SetTransform(lowestLimb.SimPosition + Vector2.UnitY * (collider.radius + collider.height / 2), 0.0f);
+                collider.FarseerBody.Enabled = true;
             }
 
             if (character.LockHands)
@@ -274,12 +275,8 @@ namespace Barotrauma
                 UpdateStandingSimple();
                 return;
             }
-
-
-            collider.body.PhysEnabled = true;
-            collider.body.Enabled = true;
-
             
+                                   
             switch (Anim)
             {
                 case Animation.Climbing:
@@ -324,7 +321,6 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb == collider) continue;
                 limb.Disabled = false;
             }
 
@@ -430,7 +426,7 @@ namespace Barotrauma
 
             if (onGround)
             {
-                collider.body.LinearVelocity = new Vector2(
+                collider.LinearVelocity = new Vector2(
                     movement.X * 1.5f,
                     collider.LinearVelocity.Y > 0.0f ? collider.LinearVelocity.Y * 0.5f : collider.LinearVelocity.Y);
             }
@@ -483,7 +479,6 @@ namespace Barotrauma
 
                 foreach (Limb limb in Limbs)
                 {
-                    if (limb == collider) continue;
                     MoveLimb(limb, limb.SimPosition+move, 15.0f, true);
                 }
 
@@ -635,9 +630,8 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
             
-            collider.body.PhysEnabled = false;
-            collider.Disabled = true;
-            collider.body.SetTransform(torso.SimPosition, 0.0f);
+            collider.FarseerBody.Enabled = false;
+            collider.SetTransform(torso.SimPosition, 0.0f);
 
             if (currentHull != null && (currentHull.Rect.Y - currentHull.Surface > 50.0f) && !head.inWater)
             {
@@ -856,9 +850,8 @@ namespace Barotrauma
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, collider.SimPosition.Y+0.5f), 10.5f);
             MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, collider.SimPosition.Y+0.4f), 10.5f);
 
-
-            MoveLimb(collider, new Vector2(ladderSimPos.X - 0.2f * Dir, collider.SimPosition.Y), 10.5f);
-
+            collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, collider.SimPosition.Y), 10.5f);
+            
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
                 collider.SimPosition.Y + 0.6f + movement.Y * 0.1f - ladderSimPos.Y);
@@ -901,7 +894,6 @@ namespace Barotrauma
             leftLeg.body.ApplyTorque(Dir * -8.0f);
             rightLeg.body.ApplyTorque(Dir * -8.0f);
 
-            //apply forces to the head and the torso to move the Character up/down
             float movementFactor = (handPos.Y / stepHeight) * (float)Math.PI;
             movementFactor = 0.8f + (float)Math.Abs(Math.Sin(movementFactor));
 
@@ -911,7 +903,8 @@ namespace Barotrauma
             Vector2 climbForce = new Vector2(0.0f, movement.Y + 0.3f) * movementFactor;
             //if (climbForce.Y > 0.5f) climbForce.Y = Math.Max(climbForce.Y, 1.3f);
 
-            collider.body.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * collider.Mass);
+            //apply forces to the collider to move the Character up/down
+            collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * collider.Mass);
             head.body.SmoothRotate(0.0f);
             
             if (!character.SelectedConstruction.Prefab.Triggers.Any())
@@ -1313,7 +1306,7 @@ namespace Barotrauma
                 float angle = flipAngle ? -limb.body.Rotation : limb.body.Rotation;
                 if (wrapAngle) angle = MathUtils.WrapAnglePi(angle);
 
-                TrySetLimbPosition(limb, RefLimb.SimPosition, position);
+                TrySetLimbPosition(limb, collider.SimPosition, position);
 
                 limb.body.SetTransform(limb.body.SimPosition, angle);
             }

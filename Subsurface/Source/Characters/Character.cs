@@ -428,17 +428,17 @@ namespace Barotrauma
 
         public override Vector2 SimPosition
         {
-            get { return AnimController.RefLimb.SimPosition; }
+            get { return AnimController.Collider.SimPosition; }
         }
 
         public override Vector2 Position
         {
-            get { return AnimController.RefLimb.Position; }
+            get { return ConvertUnits.ToDisplayUnits(SimPosition); }
         }
 
         public override Vector2 DrawPosition
         {
-            get { return AnimController.RefLimb.body.DrawPosition; }
+            get { return AnimController.Collider.DrawPosition; }
         }
 
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
@@ -560,12 +560,12 @@ namespace Barotrauma
                 //FishAnimController fishAnim = (FishAnimController)animController;
             }
 
+            AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
             foreach (Limb limb in AnimController.Limbs)
             {
                 limb.body.SetTransform(ConvertUnits.ToSimUnits(position)+limb.SimPosition, 0.0f);
-                //limb.prevPosition = ConvertUnits.ToDisplayUnits(position);
             }
-
+            
             maxHealth = ToolBox.GetAttributeFloat(doc.Root, "health", 100.0f);
             health = maxHealth;
 
@@ -1197,6 +1197,7 @@ namespace Barotrauma
             foreach (Character c in CharacterList)
             {
                 if (!c.Enabled) continue;
+                
                 c.AnimController.UpdateAnim(deltaTime);
             }
         }
@@ -1412,7 +1413,7 @@ namespace Barotrauma
 
             aiTarget.SightRange = 0.0f;
 
-            aiTarget.SightRange = Mass*10.0f + AnimController.RefLimb.LinearVelocity.Length()*500.0f;
+            aiTarget.SightRange = Mass*10.0f + AnimController.Collider.LinearVelocity.Length()*500.0f;
         }
         
         public void ShowSpeechBubble(float duration, Color color)
@@ -1622,7 +1623,7 @@ namespace Barotrauma
                 // limb.Damage = 100.0f;
             }
 
-            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body);
+            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.Collider);
 
             for (int i = 0; i < 10; i++)
             {

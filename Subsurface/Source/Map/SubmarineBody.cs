@@ -495,8 +495,8 @@ namespace Barotrauma
             FixedArray2<Vector2> points;
             contact.GetWorldManifold(out normal2, out points);
 
-            Vector2 normalizedVel = limb.character.AnimController.RefLimb.LinearVelocity == Vector2.Zero ?
-                Vector2.Zero : Vector2.Normalize(limb.character.AnimController.RefLimb.LinearVelocity);
+            Vector2 normalizedVel = limb.character.AnimController.Collider.LinearVelocity == Vector2.Zero ?
+                Vector2.Zero : Vector2.Normalize(limb.character.AnimController.Collider.LinearVelocity);
 
             Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - normal2);
 

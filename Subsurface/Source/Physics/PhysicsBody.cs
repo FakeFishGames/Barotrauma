@@ -201,6 +201,12 @@ namespace Barotrauma
             set { body.CollidesWith = value; }
         }
 
+        private Texture2D bodyShapeTexture;
+        public Texture2D BodyShapeTexture
+        {
+            get { return bodyShapeTexture; }
+        }
+
         public PhysicsBody(XElement element, float scale = 1.0f)
             : this(element, Vector2.Zero, scale)
         {
@@ -336,6 +342,15 @@ namespace Barotrauma
             targetPosition = Vector2.Zero;
         }
         
+        public void MoveToPos(Vector2 pos, float force, Vector2? pullPos = null)
+        {
+            if (pullPos==null) pullPos = body.Position;
+
+            Vector2 vel = body.LinearVelocity;
+            Vector2 deltaPos = pos - (Vector2)pullPos;
+            deltaPos *= force;
+            body.ApplyLinearImpulse((deltaPos - vel * 0.5f) * body.Mass, (Vector2)pullPos);
+        }
 
         public void UpdateDrawPosition()
         {
@@ -370,9 +385,42 @@ namespace Barotrauma
                 color = Color.Blue;
             }
             
-            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);
-            
+            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);            
         }
+
+        public void DebugDraw(SpriteBatch spriteBatch, Color color)
+        {
+            if (bodyShapeTexture == null)
+            {
+                switch (BodyShape)
+                {
+                    case PhysicsBody.Shape.Rectangle:
+                        bodyShapeTexture = GUI.CreateRectangle(
+                            (int)ConvertUnits.ToDisplayUnits(width),
+                            (int)ConvertUnits.ToDisplayUnits(height));
+                        break;
+
+                    case PhysicsBody.Shape.Capsule:
+                        bodyShapeTexture = GUI.CreateCapsule(
+                            (int)ConvertUnits.ToDisplayUnits(radius),
+                            (int)ConvertUnits.ToDisplayUnits(height));
+                        break;
+                    case PhysicsBody.Shape.Circle:
+                        bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(radius));
+                        break;
+                }
+            }
+
+            spriteBatch.Draw(
+                bodyShapeTexture,
+                new Vector2(DrawPosition.X, -DrawPosition.Y),
+                null,
+                color,
+                -DrawRotation,
+                new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2), 
+                1.0f, SpriteEffects.None, 0.0f);
+        }
+        
 
         /// <summary>
         /// rotate the body towards the target rotation in the "shortest direction"
@@ -399,6 +447,12 @@ namespace Barotrauma
         {
             list.Remove(this);
             GameMain.World.RemoveBody(body);
+
+            if (bodyShapeTexture != null)
+            {
+                bodyShapeTexture.Dispose();
+                bodyShapeTexture = null;
+            }
         }
 
     }
