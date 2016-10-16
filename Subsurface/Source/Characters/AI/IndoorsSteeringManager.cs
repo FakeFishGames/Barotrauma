@@ -88,6 +88,13 @@ namespace Barotrauma
                         
             Vector2 diff = DiffToCurrentNode();
             
+            var collider = character.AnimController.Collider;
+            //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
+            if (!character.AnimController.InWater && diff.Y < collider.height / 2 + collider.radius)
+            {
+                diff.Y = 0.0f;
+            }
+
             if (diff == Vector2.Zero) return -host.Steering;
 
             return Vector2.Normalize(diff) * speed;          
@@ -95,7 +102,7 @@ namespace Barotrauma
 
         private Vector2 DiffToCurrentNode()
         {
-            if (currentPath == null || currentPath.Finished) return Vector2.Zero;
+            if (currentPath == null || currentPath.Finished || currentPath.Unreachable) return Vector2.Zero;
 
             if (currentPath.Finished)
             {

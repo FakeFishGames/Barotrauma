@@ -215,7 +215,7 @@ namespace Barotrauma
             if (onFloorTimer <= 0.0f)
             {
                 onGround = false;
-                if (GetLimb(LimbType.Torso).inWater) inWater = true;
+                //if (GetLimb(LimbType.Torso).inWater) inWater = true;
                 //TODO: joku järkevämpi systeemi
                 //if (!inWater && lastTimeOnFloor + 200 < gameTime.TotalGameTime.Milliseconds)
                 //    stunTimer = Math.Max(stunTimer, (float)gameTime.TotalGameTime.TotalMilliseconds + 100.0f);
@@ -227,12 +227,33 @@ namespace Barotrauma
 
 
             //re-enable collider (unless swimming)
-            if (!collider.FarseerBody.Enabled && !swimming)
+            if (!collider.FarseerBody.Enabled)
             {
                 var lowestLimb = FindLowestLimb();
-                collider.SetTransform(lowestLimb.SimPosition + Vector2.UnitY * (collider.radius + collider.height / 2), 0.0f);
+                collider.SetTransform(new Vector2(
+                    collider.SimPosition.X,
+                    Math.Max(lowestLimb.SimPosition.Y + (collider.radius + collider.height / 2), collider.SimPosition.Y)), 
+                    0.0f);
                 collider.FarseerBody.Enabled = true;
             }
+
+            if (swimming)
+            {
+                collider.FarseerBody.FixedRotation =  false;
+            }
+            else if (!collider.FarseerBody.FixedRotation)
+            {
+                if (Math.Abs(MathUtils.GetShortestAngle(collider.Rotation, 0.0f)) > 0.001f)
+                {
+                    collider.AngularVelocity = MathUtils.GetShortestAngle(collider.Rotation, 0.0f) * 60.0f;
+                    collider.FarseerBody.FixedRotation = false;
+                }
+                else
+                {
+                    collider.FarseerBody.FixedRotation = true;
+                }
+            }
+
 
             if (character.LockHands)
             {
@@ -368,7 +389,6 @@ namespace Barotrauma
             }
 
             Vector2 colliderPos = GetColliderBottom();
-
             if (Math.Abs(TargetMovement.X) > 1.0f)
             {
                 int limbsInWater = 0;
@@ -630,14 +650,16 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
             
-            collider.FarseerBody.Enabled = false;
-            collider.SetTransform(torso.SimPosition, 0.0f);
+            //collider.FarseerBody.Enabled = false;
+            //collider.SetTransform(torso.SimPosition, 0.0f);
 
-            if (currentHull != null && (currentHull.Rect.Y - currentHull.Surface > 50.0f) && !head.inWater)
+           // float colliderTop = collider.SimPosition.Y + (float)Math.Cos(collider.Rotation) * (collider.radius + collider.height / 2);
+
+            if (currentHull != null && (currentHull.Rect.Y - currentHull.Surface > 50.0f))
             {
-                surfaceLimiter = (ConvertUnits.ToDisplayUnits(head.SimPosition.Y) - surfaceY);
+                surfaceLimiter = (ConvertUnits.ToDisplayUnits(collider.SimPosition.Y + 0.4f) - surfaceY);
                 surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
-                if (surfaceLimiter > 20.0f) return;
+                if (surfaceLimiter > 50.0f) return;
             }
 
             Limb leftHand = GetLimb(LimbType.LeftHand);
@@ -645,9 +667,8 @@ namespace Barotrauma
 
             Limb leftFoot = GetLimb(LimbType.LeftFoot);
             Limb rightFoot = GetLimb(LimbType.RightFoot);
-
-
-            float rotation = MathHelper.WrapAngle(torso.Rotation);
+            
+            float rotation = MathHelper.WrapAngle(collider.Rotation);
             rotation = MathHelper.ToDegrees(rotation);
             if (rotation < 0.0f) rotation += 360;
 
@@ -666,7 +687,10 @@ namespace Barotrauma
             {
                 if (!aiming)
                 {
-                    torso.body.SmoothRotate(MathUtils.VectorToAngle(TargetMovement) - MathHelper.PiOver2);
+                    float newRotation = MathUtils.VectorToAngle(TargetMovement) - MathHelper.PiOver2;
+                    collider.SmoothRotate(newRotation, 5.0f);
+                    //torso.body.SmoothRotate(newRotation);
+                    
                 }
             }
             else
@@ -678,23 +702,34 @@ namespace Barotrauma
 
                     TargetMovement = new Vector2(0.0f, -0.1f);
 
-                    torso.body.SmoothRotate(MathUtils.VectorToAngle(diff));
+                    float newRotation = MathUtils.VectorToAngle(diff);
+                    collider.SmoothRotate(newRotation, 5.0f);
                 }
             }
 
+            torso.body.SmoothRotate(collider.Rotation);
+            torso.body.MoveToPos(collider.SimPosition + new Vector2((float)Math.Sin(-collider.Rotation), (float)Math.Cos(-collider.Rotation))*0.4f, 5.0f);
+            
             if (TargetMovement == Vector2.Zero) return;
 
-            movement = MathUtils.SmoothStep(movement, TargetMovement * swimSpeed, 0.3f);
+            movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
 
             //dont try to move upwards if head is already out of water
             if (surfaceLimiter > 1.0f && TargetMovement.Y > 0.0f)
             {
                 if (TargetMovement.X == 0.0f)
                 {
-                    head.body.ApplyForce(head.Mass * new Vector2(-Dir * 5.1f, -5.0f));
-                    torso.body.ApplyForce(torso.Mass * new Vector2(-Dir * 5.1f, -15.0f));
-                    leftFoot.body.ApplyForce(leftFoot.Mass * new Vector2(0.0f, -80.0f));
-                    rightFoot.body.ApplyForce(rightFoot.Mass * new Vector2(0.0f, -80.0f));
+                    //pull head above water
+                    head.body.SmoothRotate(0.0f, 5.0f);
+
+
+                    walkPos += 0.05f;
+
+                    //push feet downwards
+                    //leftFoot.body.ApplyForce(leftFoot.Mass * new Vector2(0.0f, -50.0f));
+                   // rightFoot.body.ApplyForce(rightFoot.Mass * new Vector2(0.0f, -50.0f));
+
+
                 }
                 else
                 {
@@ -703,23 +738,17 @@ namespace Barotrauma
                         * Math.Sign(TargetMovement.X),
                         Math.Max(TargetMovement.Y, TargetMovement.Y * 0.2f));
 
-                    head.body.ApplyTorque(Dir * 0.1f);
+                    //turn head above the water
+                    head.body.ApplyTorque(Dir);
                 }
 
                 movement.Y = movement.Y - (surfaceLimiter - 1.0f) * 0.01f;
             }
 
-            movement.Y -= 0.05f;
-
-            head.body.ApplyForce((new Vector2(movement.X,
-                    movement.Y / surfaceLimiter + 0.2f) - head.body.LinearVelocity * 0.2f) *
-                    30.0f * head.body.Mass);
-
-            torso.body.ApplyForce((new Vector2(movement.X,
-                    movement.Y / surfaceLimiter + 0.2f) - torso.body.LinearVelocity * 0.2f) * 10.0f * torso.body.Mass);
-
+            collider.LinearVelocity = Vector2.Lerp(collider.LinearVelocity, movement * swimSpeed, movementLerp);
+                        
             walkPos += movement.Length() * 0.15f;
-            footPos = (leftFoot.SimPosition + rightFoot.SimPosition) / 2.0f;
+            footPos = collider.SimPosition - new Vector2((float)Math.Sin(-collider.Rotation), (float)Math.Cos(-collider.Rotation)) * 0.4f;
 
             var rightThigh = GetLimb(LimbType.RightThigh);
             var leftThigh = GetLimb(LimbType.LeftThigh);
@@ -730,41 +759,32 @@ namespace Barotrauma
             Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * 0.5f, 0.0f);
             transformedFootPos = Vector2.Transform(
                 transformedFootPos,
-                Matrix.CreateRotationZ(torso.body.Rotation));
+                Matrix.CreateRotationZ(collider.Rotation));
 
-            if (Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, rightThigh.Rotation)) < 0.3f)
-            {
-                MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
-            }
-            if (Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, leftThigh.Rotation)) < 0.3f)
-            {
-                MoveLimb(leftFoot, footPos + transformedFootPos, 1.0f);
-            }
+            MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
+            MoveLimb(leftFoot, footPos + transformedFootPos, 1.0f);            
 
             handPos = (torso.SimPosition + head.SimPosition) / 2.0f;
-
-            //if (!rightHand.Disabled) rightHand.body.ApplyTorque(leftHand.body.Mass * Dir);
-            //if (!leftHand.Disabled) leftHand.body.ApplyTorque(leftHand.body.Mass * Dir);
 
             //at the surface, not moving sideways -> hands just float around
             if (!headInWater && TargetMovement.X == 0.0f && TargetMovement.Y > 0)
             {
                 handPos.X = handPos.X + Dir * 0.6f;
 
-                float wobbleAmount = 0.05f;
+                float wobbleAmount = 0.1f;
 
                 if (!rightHand.Disabled)
                 {
                     MoveLimb(rightHand, new Vector2(
                         handPos.X + (float)Math.Sin(walkPos / 1.5f) * wobbleAmount,
-                        handPos.Y + (float)Math.Sin(walkPos / 3.5f) * wobbleAmount - 0.0f), 1.5f);
+                        handPos.Y + (float)Math.Sin(walkPos / 3.5f) * wobbleAmount - 0.25f), 1.5f);
                 }
 
                 if (!leftHand.Disabled)
                 {
                     MoveLimb(leftHand, new Vector2(
                         handPos.X + (float)Math.Sin(walkPos / 2.0f) * wobbleAmount,
-                        handPos.Y + (float)Math.Sin(walkPos / 3.0f) * wobbleAmount - 0.0f), 1.5f);
+                        handPos.Y + (float)Math.Sin(walkPos / 3.0f) * wobbleAmount - 0.25f), 1.5f);
                 }
 
                 return;
@@ -772,8 +792,8 @@ namespace Barotrauma
 
             handPos += head.LinearVelocity * 0.1f;
 
-            float handCyclePos = walkPos / 2.0f;
-            float handPosX = (float)Math.Cos(handCyclePos * Dir) * 0.4f;
+            float handCyclePos = walkPos / 3.0f * -Dir;
+            float handPosX = (float)Math.Cos(handCyclePos) * 0.4f;
             float handPosY = (float)Math.Sin(handCyclePos) * 1.0f;
             handPosY = MathHelper.Clamp(handPosY, -0.8f, 0.8f);
 
@@ -782,10 +802,8 @@ namespace Barotrauma
             if (!rightHand.Disabled)
             {
                 Vector2 rightHandPos = new Vector2(-handPosX, -handPosY);
-                rightHandPos.X = (Dir == 1.0f) ? Math.Max(0.2f, rightHandPos.X) : Math.Min(-0.2f, rightHandPos.X);
+                rightHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, rightHandPos.X) : Math.Min(-0.3f, rightHandPos.X);
                 rightHandPos = Vector2.Transform(rightHandPos, rotationMatrix);
-
-                //MoveLimb(rightHand, handPos + rightHandPos, 1.5f);
 
                 HandIK(rightHand, handPos + rightHandPos, 0.5f);
             }
@@ -793,10 +811,9 @@ namespace Barotrauma
             if (!leftHand.Disabled)
             {
                 Vector2 leftHandPos = new Vector2(handPosX, handPosY);
-                leftHandPos.X = (Dir == 1.0f) ? Math.Max(0.2f, leftHandPos.X) : Math.Min(-0.2f, leftHandPos.X);
+                leftHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, leftHandPos.X) : Math.Min(-0.3f, leftHandPos.X);
                 leftHandPos = Vector2.Transform(leftHandPos, rotationMatrix);
 
-                //MoveLimb(leftHand, handPos + leftHandPos,1.5f);
                 HandIK(leftHand, handPos + leftHandPos, 0.5f);
             }
         }
@@ -813,10 +830,6 @@ namespace Barotrauma
             IgnorePlatforms = true;
 
             Vector2 tempTargetMovement = TargetMovement;
-            //if (TargetMovement.Y != 0.0f)
-            //{
-            //    tempTargetMovement.Y = Math.Max(Math.Abs(TargetMovement.Y), 0.6f) * Math.Sign(TargetMovement.Y);
-            //}
             movement = MathUtils.SmoothStep(movement, tempTargetMovement, 0.3f);
 
             Limb leftFoot = GetLimb(LimbType.LeftFoot);

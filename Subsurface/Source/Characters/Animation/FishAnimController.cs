@@ -430,6 +430,7 @@ namespace Barotrauma
                 l.body.SetTransform(l.SimPosition,
                     -l.body.Rotation);                
             }
+
         }
 
         public override Vector2 EstimateCurrPosition(Vector2 prevPosition, float timePassed)
@@ -443,38 +444,14 @@ namespace Barotrauma
 
         private void Mirror()
         {
-            //float leftX = Limbs[0].SimPosition.X, rightX = Limbs[0].SimPosition.X;
-            //for (int i = 1; i < Limbs.Count(); i++ )
-            //{
-            //    if (Limbs[i].SimPosition.X < leftX)
-            //    {
-            //        leftX = Limbs[i].SimPosition.X;
-            //    }
-            //    else if (Limbs[i].SimPosition.X > rightX)
-            //    {
-            //        rightX = Limbs[i].SimPosition.X;
-            //    }
-            //}
-
-            float midX = GetCenterOfMass().X;
+            Vector2 centerOfMass = GetCenterOfMass();
 
             foreach (Limb l in Limbs)
             {
-                Vector2 newPos = new Vector2(midX - (l.SimPosition.X - midX), l.SimPosition.Y);
-
-                if (Submarine.CheckVisibility(l.SimPosition, newPos) != null)
-                {
-                    Vector2 diff = newPos - l.SimPosition;
-
-                    l.body.SetTransform(
-                        l.SimPosition + Submarine.LastPickedFraction * diff * 0.8f, l.body.Rotation);
-                }
-                else
-                {
-                    l.body.SetTransform(newPos, l.body.Rotation);
-                }
-
-                
+                TrySetLimbPosition(l,
+                    centerOfMass,
+                    new Vector2(centerOfMass.X - (l.SimPosition.X - centerOfMass.X), l.SimPosition.Y),
+                    true);
             }
         }
   
