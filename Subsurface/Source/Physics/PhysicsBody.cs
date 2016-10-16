@@ -242,7 +242,6 @@ namespace Barotrauma
             body.Restitution = 0.05f;
             
             body.BodyType = BodyType.Dynamic;
-            //body.AngularDamping = Limb.LimbAngularDamping;
 
             body.UserData = this;
 
@@ -259,6 +258,11 @@ namespace Barotrauma
             {
                 body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
                 bodyShape = Shape.Rectangle;
+            }
+            else if (radius != 0.0f && width != 0.0f)
+            {
+                body = BodyFactory.CreateCapsuleHorizontal(GameMain.World, width, radius, density);
+                bodyShape = Shape.Capsule;
             }
             else if (radius != 0.0f && height != 0.0f)
             {
@@ -436,7 +440,7 @@ namespace Barotrauma
                     case PhysicsBody.Shape.Capsule:
                         bodyShapeTexture = GUI.CreateCapsule(
                             (int)ConvertUnits.ToDisplayUnits(radius),
-                            (int)ConvertUnits.ToDisplayUnits(height));
+                            (int)ConvertUnits.ToDisplayUnits(Math.Max(height,width)));
                         break;
                     case PhysicsBody.Shape.Circle:
                         bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(radius));
@@ -444,12 +448,18 @@ namespace Barotrauma
                 }
             }
 
+            float rot = -DrawRotation;
+            if (bodyShape == PhysicsBody.Shape.Capsule && width > height)
+            {
+                rot -= MathHelper.PiOver2;
+            }
+
             spriteBatch.Draw(
                 bodyShapeTexture,
                 new Vector2(DrawPosition.X, -DrawPosition.Y),
                 null,
                 color,
-                -DrawRotation,
+                rot,
                 new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2), 
                 1.0f, SpriteEffects.None, 0.0f);
         }
