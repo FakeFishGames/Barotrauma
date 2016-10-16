@@ -192,6 +192,29 @@ namespace FarseerPhysics.Factories
             return body;
         }
 
+        public static Body CreateCapsuleHorizontal(World world, float width, float endRadius, float density,
+                                         object userData = null)
+        {
+            //Create the middle rectangle
+            Vertices rectangle = PolygonTools.CreateRectangle(width / 2, endRadius);
+
+            List<Vertices> list = new List<Vertices>();
+            list.Add(rectangle);
+
+            Body body = CreateCompoundPolygon(world, list, density, userData);
+            body.UserData = userData;
+
+            //Create the two circles
+            CircleShape topCircle = new CircleShape(endRadius, density);
+            topCircle.Position = new Vector2(width / 2, 0);
+            body.CreateFixture(topCircle);
+
+            CircleShape bottomCircle = new CircleShape(endRadius, density);
+            bottomCircle.Position = new Vector2(-(width / 2), 0);
+            body.CreateFixture(bottomCircle);
+            return body;
+        }
+
         /// <summary>
         /// Creates a rounded rectangle.
         /// Note: Automatically decomposes the capsule if it contains too many vertices (controlled by Settings.MaxPolygonVertices)

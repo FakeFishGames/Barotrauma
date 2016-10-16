@@ -63,13 +63,8 @@ namespace Barotrauma
 
             if (stunTimer>0.0f)
             {
-                //UpdateStruggling(deltaTime);
                 stunTimer -= deltaTime;
                 return;
-            }
-            else if (SimplePhysicsEnabled)
-            {
-                UpdateSimpleAnim();
             }
             else
             {
@@ -128,7 +123,7 @@ namespace Barotrauma
                 if (flipTimer>1.0f || character.IsNetworkPlayer)
                 {
                     Flip();
-                    if (mirror) Mirror();
+                    if (mirror || !inWater) Mirror();
                     flipTimer = 0.0f;
                 }              
             }
@@ -137,11 +132,25 @@ namespace Barotrauma
         void UpdateSineAnim(float deltaTime)
         {
             movement = TargetMovement*swimSpeed;
+
+            Limb torso = GetLimb(LimbType.Torso);
+            Limb head = GetLimb(LimbType.Head);
+
+            Limb mainLimb = torso == null ? head : torso;
+
+            mainLimb.pullJoint.Enabled = true;
+            mainLimb.pullJoint.WorldAnchorB = collider.SimPosition;
+
             if (movement.LengthSquared() < 0.00001f) return;
 
-            if (!inWater) movement.Y = Math.Min(0.0f, movement.Y);
-
             float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
+
+            float angle = (rotateTowardsMovement) ?
+                mainLimb.body.Rotation + MathUtils.GetShortestAngle(mainLimb.body.Rotation, movementAngle) :
+                HeadAngle * Dir;
+            
+            collider.SmoothRotate(angle, 25.0f);
+            mainLimb.body.SmoothRotate(angle, 25.0f);
 
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null && waveAmplitude > 0.0f)
@@ -151,102 +160,30 @@ namespace Barotrauma
                 float waveRotation = (float)Math.Sin(walkPos / waveLength);
 
                 tail.body.ApplyTorque(waveRotation * tail.Mass * 100.0f * waveAmplitude);
-                
-                //limbs[tailIndex].body.ApplyTorque((Math.Sign(angle) + Math.Max(Math.Min(angle * 10.0f, 10.0f), -10.0f)) * limbs[tailIndex].body.Mass);
-                //limbs[tailIndex].body.ApplyTorque(-limbs[tailIndex].body.AngularVelocity * 0.5f * limbs[tailIndex].body.Mass);
             }
 
-            Vector2 steerForce = Vector2.Zero;
-
-            Limb head = GetLimb(LimbType.Head);
-            if (head == null) head = GetLimb(LimbType.Torso);
-
-            if (head != null)
-            {
-                float angle = (rotateTowardsMovement) ?
-                    head.body.Rotation+ MathUtils.GetShortestAngle(head.body.Rotation, movementAngle) :
-                    HeadAngle*Dir;                    
-
-
-                head.body.SmoothRotate(angle, 25.0f);
-                //rotate head towards the angle of movement
-                //float torque = (Math.Sign(angle)*10.0f + MathHelper.Clamp(angle * 10.0f, -10.0f, 10.0f));
-                //angular drag
-                //torque -= head.body.AngularVelocity * 0.5f;
-                //head.body.ApplyTorque(torque * head.body.Mass);
-                
-
-                //the movement vector if going to the direction of the head
-                //Vector2 headMovement = new Vector2(
-                //    (float)Math.Cos(head.body.Rotation - MathHelper.PiOver2),
-                //    (float)Math.Sin(head.body.Rotation - MathHelper.PiOver2));
-                //headMovement *= movement.Length();
-
-                //the movement angle is between direction of the head and the direction 
-                //where the Character is actually trying to go
-                
-                //current * (float)alpha + previous * (1.0f - (float)alpha);
-
-
-                steerForce = (movement+correctionMovement) * 50.0f - head.LinearVelocity * 30.0f;
-               // force += (headMovement - movement) * Math.Min(head.LinearVelocity.Length()/movement.Length(), 1.0f);
-
-                if (!inWater) steerForce.Y = 0.0f;
-            }
 
             for (int i = 0; i < Limbs.Count(); i++)
             {
-                if (steerForce != Vector2.Zero)
-                {
-                    Vector2 pullPos = Limbs[i].pullJoint == null ? Limbs[i].SimPosition : Limbs[i].pullJoint.WorldAnchorA;
-                    Limbs[i].body.ApplyForce(steerForce * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
+                Vector2 pullPos = Limbs[i].pullJoint == null ? Limbs[i].SimPosition : Limbs[i].pullJoint.WorldAnchorA;
+                Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
 
-                }
-                    
-                if (Limbs[i].type != LimbType.Torso) continue;
+                
 
-                float dist = (Limbs[0].SimPosition - Limbs[i].SimPosition).Length();
+                if (Limbs[i] == mainLimb) continue;
 
-                Vector2 limbPos = Limbs[0].SimPosition - Vector2.Normalize(movement) * dist;
+                float dist = (mainLimb.SimPosition - Limbs[i].SimPosition).Length();
+
+                Vector2 limbPos = mainLimb.SimPosition - Vector2.Normalize(movement) * dist;
 
                 Limbs[i].body.ApplyForce(((limbPos - Limbs[i].SimPosition) * 3.0f - Limbs[i].LinearVelocity * 3.0f) * Limbs[i].Mass);
             }
-
-            if (!inWater)
-            {
-                UpdateWalkAnim(deltaTime);
-            }
-            else
-            {
-                floorY = Limbs[0].SimPosition.Y;
-            }
-        }
-
-        void UpdateSimpleAnim()
-        {
-            //todo: reimplement
-
-            //movement = MathUtils.SmoothStep(movement, TargetMovement*swimSpeed, 1.0f);
-            //if (movement == Vector2.Zero) return;
-
-            //float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
             
-            //RefLimb.body.SmoothRotate(
-            //    (rotateTowardsMovement) ?
-            //    RefLimb.body.Rotation + MathUtils.GetShortestAngle(RefLimb.body.Rotation, movementAngle) :
-            //    HeadAngle*Dir);
-
-            //collider.LinearVelocity = movement;
-
-            ////RefLimb.body.SmoothRotate(0.0f);
-
-            //foreach (Limb l in Limbs)
-            //{
-            //    if (l == RefLimb) continue;
-            //    l.body.SetTransform(RefLimb.SimPosition, RefLimb.Rotation);
-            //}
+            collider.LinearVelocity = Vector2.Lerp(collider.LinearVelocity, movement, 0.5f);
+                
+            floorY = Limbs[0].SimPosition.Y;            
         }
-    
+            
         void UpdateWalkAnim(float deltaTime)
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
@@ -254,104 +191,38 @@ namespace Barotrauma
 
             IgnorePlatforms = (TargetMovement.Y < -Math.Abs(TargetMovement.X));
 
-            Limb colliderLimb;
-            float colliderHeight;
+            Limb mainLimb;
+            float mainLimbHeight, mainLimbAngle;
 
             Limb torso  = GetLimb(LimbType.Torso);
             Limb head   = GetLimb(LimbType.Head);
 
             if (torso != null)
             {
-                colliderLimb = torso;
-                colliderHeight = TorsoPosition;
-
-                colliderLimb.body.SmoothRotate(TorsoAngle * Dir, 10.0f);
+                mainLimb = torso;
+                mainLimbHeight = TorsoPosition;
+                mainLimbAngle = torsoAngle;
             }
             else
             {
-                colliderLimb = head;
-                colliderHeight = HeadPosition;
-
-                if (onGround) colliderLimb.body.SmoothRotate(HeadAngle * Dir, 100.0f);
+                mainLimb = head;
+                mainLimbHeight = HeadPosition;
+                mainLimbAngle = headAngle;
             }
+
+            //collider.SmoothRotate(TorsoAngle * Dir, 10.0f);
+            mainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);
             
-            Vector2 colliderPos = colliderLimb.SimPosition;
+            collider.LinearVelocity = new Vector2(
+                movement.X,
+                collider.LinearVelocity.Y > 0.0f ? collider.LinearVelocity.Y * 0.5f : collider.LinearVelocity.Y);
 
-            Vector2 rayStart = colliderPos;
-            Vector2 rayEnd = rayStart - new Vector2(0.0f, colliderHeight);
-            if (stairs != null) rayEnd.Y -= 0.5f;
+            mainLimb.MoveToPos(GetColliderBottom() + Vector2.UnitY * mainLimbHeight, 10.0f);
+            
+            mainLimb.pullJoint.Enabled = true;
+            mainLimb.pullJoint.WorldAnchorB = GetColliderBottom() + Vector2.UnitY * mainLimbHeight;
 
-            //do a raytrace straight down from the torso to figure 
-            //out whether the  ragdoll is standing on ground
-            float closestFraction = 1;
-            //Structure closestStructure = null;
-
-            GameMain.World.RayCast((fixture, point, normal, fraction) =>
-            {
-                switch (fixture.CollisionCategories)
-                {
-                    case Physics.CollisionStairs:
-                        if (inWater && TargetMovement.Y < 0.5f) return -1;
-                        Structure structure = fixture.Body.UserData as Structure;
-                        if (stairs == null && structure != null)
-                        {
-                            //TODO: fix
-                            //if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
-                            //{
-                            //    return -1;
-                            //}
-                            //else
-                            //{
-                            //    stairs = structure;
-                            //}
-                        }
-                        break;
-                    case Physics.CollisionPlatform:
-                        Structure platform = fixture.Body.UserData as Structure;
-                    //TODO: fix
-                        //if (IgnorePlatforms || LowestLimb.Position.Y < platform.Rect.Y) return -1;
-                        break;
-                    case Physics.CollisionWall:
-                        break;
-                    default:
-                        return -1;
-                }
-
-                onGround = true;
-                if (fraction < closestFraction)
-                {
-                    closestFraction = fraction;
-                }
-                onFloorTimer = 0.05f;
-                return closestFraction;
-            } , rayStart, rayEnd);
-
-            //the ragdoll "stays on ground" for 50 millisecs after separation
-            if (onFloorTimer <= 0.0f)
-            {
-                onGround = false;
-            }
-            else
-            {
-                onFloorTimer -= deltaTime;
-            }
-
-            if (!onGround) return;
-
-            if (closestFraction == 1) //raycast didn't hit anything
-                floorY = (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
-            else
-                floorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-
-
-            if (Math.Abs(colliderPos.Y - floorY) < colliderHeight * 1.2f)
-            {
-                colliderLimb.MoveToPos(new Vector2(colliderPos.X + movement.X * 0.2f, floorY + colliderHeight), 5.0f);
-            }
-
-            float walkCycleSpeed = head.LinearVelocity.X * 0.05f;
-
-            walkPos -= walkCycleSpeed;
+            walkPos -= mainLimb.LinearVelocity.X * 0.05f;
 
             Vector2 transformedStepSize = new Vector2(
                 (float)Math.Cos(walkPos) * stepSize.X * 3.0f,
@@ -363,7 +234,7 @@ namespace Barotrauma
                 {
                     case LimbType.LeftFoot:
                     case LimbType.RightFoot:
-                        Vector2 footPos = new Vector2(limb.SimPosition.X, colliderPos.Y - colliderHeight);
+                        Vector2 footPos = new Vector2(limb.SimPosition.X, mainLimb.SimPosition.Y - mainLimbHeight);
 
                         if (limb.RefJointIndex>-1)
                         {
@@ -382,18 +253,18 @@ namespace Barotrauma
                         }
                         else if (limb.type == LimbType.RightFoot)
                         {
-                            limb.MoveToPos(footPos +new Vector2(
+                            limb.MoveToPos(footPos + new Vector2(
                                 -transformedStepSize.X + movement.X * 0.1f,
                                 (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f),
                             8.0f);
                         }
 
-                        if (footRotation!=null) limb.body.SmoothRotate((float)footRotation*Dir, 50.0f);
+                        if (footRotation != null) limb.body.SmoothRotate((float)footRotation * Dir, 50.0f);
 
                         break;
                     case LimbType.LeftLeg:
                     case LimbType.RightLeg:
-                        if (legTorque!=0.0f) limb.body.ApplyTorque(limb.Mass*legTorque*Dir);                        
+                        if (legTorque != 0.0f) limb.body.ApplyTorque(limb.Mass * legTorque * Dir);
                         break;
                 }
             }

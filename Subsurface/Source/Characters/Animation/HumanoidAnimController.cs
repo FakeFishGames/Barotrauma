@@ -76,6 +76,18 @@ namespace Barotrauma
                 return;
             }
 
+            //re-enable collider
+            if (!collider.FarseerBody.Enabled)
+            {
+                var lowestLimb = FindLowestLimb();
+
+                collider.SetTransform(new Vector2(
+                    collider.SimPosition.X,
+                    Math.Max(lowestLimb.SimPosition.Y + (collider.radius + collider.height / 2), collider.SimPosition.Y)),
+                    0.0f);
+
+                collider.FarseerBody.Enabled = true;
+            }
 
             //stun (= disable the animations) if the ragdoll receives a large enough impact
             if (strongestImpact > 0.0f)
@@ -85,157 +97,6 @@ namespace Barotrauma
                 return;
             }
             
-            //if (inWater) stairs = null;
-
-            //if (onFloorTimer <= 0.0f && !SimplePhysicsEnabled)
-            //{
-            //    Vector2 rayStart = colliderPos; // at the bottom of the player sprite
-            //    Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
-            //    if (stairs != null) rayEnd.Y -= 0.5f;
-            //    //do a raytrace straight down from the torso to figure 
-            //    //out whether the  ragdoll is standing on ground
-            //    float closestFraction = 1;
-            //    Structure closestStructure = null;
-            //    GameMain.World.RayCast((fixture, point, normal, fraction) =>
-            //    {
-            //        switch (fixture.CollisionCategories)
-            //        {
-            //            case Physics.CollisionStairs:
-            //                if (inWater && TargetMovement.Y < 0.5f) return -1;
-            //                Structure structure = fixture.Body.UserData as Structure;
-            //                if (stairs == null && structure != null)
-            //                {
-            //                    if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
-            //                    {
-            //                        return -1;
-            //                    }
-            //                    else
-            //                    {
-            //                        stairs = structure;
-            //                    }
-            //                }
-            //                break;
-            //            case Physics.CollisionPlatform:
-            //                Structure platform = fixture.Body.UserData as Structure;
-            //                if (IgnorePlatforms || LowestLimb.Position.Y < platform.Rect.Y) return -1;
-            //                break;
-            //            case Physics.CollisionWall:
-            //                break;
-            //            default:
-            //                return -1;
-            //        }
-
-            //        onGround = true;
-            //        if (fraction < closestFraction)
-            //        {
-            //            closestFraction = fraction;
-
-            //            Structure structure = fixture.Body.UserData as Structure;
-            //            if (structure != null) closestStructure = structure;
-            //        }
-            //        onFloorTimer = 0.05f;
-            //        return closestFraction;
-            //    }
-            //    , rayStart, rayEnd);
-
-            //    if (closestStructure != null && closestStructure.StairDirection != Direction.None)
-            //    {
-            //        stairs = closestStructure;
-            //    }
-            //    else
-            //    {
-            //        stairs = null;
-            //    }
-
-            //    if (closestFraction == 1) //raycast didn't hit anything
-            //    {
-            //        floorY = (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
-            //    }
-            //    else
-            //    {
-            //        floorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-            //    }
-            //}
-            bool onStairs = stairs != null;
-            stairs = null;
-
-            var contacts = collider.FarseerBody.ContactList;
-            while (collider.FarseerBody.Enabled && contacts != null && contacts.Contact != null)
-            {
-                if (contacts.Contact.Enabled && contacts.Contact.IsTouching)
-                {
-                    Vector2 normal;
-                    FarseerPhysics.Common.FixedArray2<Vector2> points;
-
-                    contacts.Contact.GetWorldManifold(out normal, out points);
-
-                    switch (contacts.Contact.FixtureA.CollisionCategories)
-                    {
-                        case Physics.CollisionStairs:
-                            Structure structure = contacts.Contact.FixtureA.Body.UserData as Structure;
-                            if (structure != null && onStairs)
-                            {
-                                stairs = structure;
-                            }
-                            break;
-                    }
-                    //    case Physics.CollisionPlatform:
-                    //        Structure platform = contacts.Contact.FixtureA.Body.UserData as Structure;
-                    //        if (IgnorePlatforms || colliderBottom.Y < ConvertUnits.ToSimUnits(platform.Rect.Y - 15))
-                    //        {
-                    //            contacts = contacts.Next;
-                    //            continue;
-                    //        }
-                    //        break;
-                    //    case Physics.CollisionWall:
-                    //        break;
-                    //    default:
-                    //            contacts = contacts.Next;
-                    //            continue;
-                    //}
-
-
-                    if (points[0].Y < collider.SimPosition.Y)
-                    {
-
-                        floorY = Math.Max(floorY, points[0].Y);
-
-                        onGround = true;
-                        onFloorTimer = 0.1f;
-                    }
-
-
-                }
-
-                contacts = contacts.Next;
-
-            }  
-
-            //the ragdoll "stays on ground" for 50 millisecs after separation
-            if (onFloorTimer <= 0.0f)
-            {
-                onGround = false;
-                //if (GetLimb(LimbType.Torso).inWater) inWater = true;
-                //TODO: joku järkevämpi systeemi
-                //if (!inWater && lastTimeOnFloor + 200 < gameTime.TotalGameTime.Milliseconds)
-                //    stunTimer = Math.Max(stunTimer, (float)gameTime.TotalGameTime.TotalMilliseconds + 100.0f);
-            }
-            else
-            {
-                onFloorTimer -= deltaTime;
-            }
-
-
-            //re-enable collider (unless swimming)
-            if (!collider.FarseerBody.Enabled)
-            {
-                var lowestLimb = FindLowestLimb();
-                collider.SetTransform(new Vector2(
-                    collider.SimPosition.X,
-                    Math.Max(lowestLimb.SimPosition.Y + (collider.radius + collider.height / 2), collider.SimPosition.Y)), 
-                    0.0f);
-                collider.FarseerBody.Enabled = true;
-            }
 
             if (swimming)
             {
