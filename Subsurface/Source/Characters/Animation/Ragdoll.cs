@@ -279,10 +279,11 @@ namespace Barotrauma
             if (collider == null)
             {
                 DebugConsole.ThrowError("No collider configured for ''"+character.Name+"''!");
-                collider = new PhysicsBody(0.0f, 0.0f, 16.0f, 5.0f);                
+                collider = new PhysicsBody(0.0f, 0.0f, 0.1f, 5.0f);                
             }
 
             collider.CollisionCategories = Physics.CollisionCharacter;
+            collider.FarseerBody.AngularDamping = 5.0f;
             collider.FarseerBody.FixedRotation = true;
             collider.FarseerBody.OnCollision += OnLimbCollision;
 
@@ -388,71 +389,30 @@ namespace Barotrauma
             else if (structure.StairDirection != Direction.None)
             {
                 stairs = null;
-                
-                //---------------
 
+                //don't collider with stairs if
+                
+                //1. bottom of the collider is at the bottom of the stairs and the character isn't trying to move upwards
                 float stairBottomPos = ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height + 10);
                 if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f) return false;
 
-                //---------------
-
+                //2. bottom of the collider is at the top of the stairs and the character isn't trying to move downwards
                 if (targetMovement.Y >= 0.0f && colliderBottom.Y >= ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y*5)) return false;
-
-                //---------------
-
+                
+                //3. collided with the stairs from below
                 if (contact.Manifold.LocalNormal.Y < 0.0f) return false;
 
-                //---------------
-
+                //4. contact points is above the bottom half of the collider
                 Vector2 normal; FarseerPhysics.Common.FixedArray2<Vector2> points;
-
                 contact.GetWorldManifold(out normal, out points);
                 if (points[0].Y > collider.SimPosition.Y) return false;
                 
-                //---------------
-
+                //5. in water
                 if (inWater && targetMovement.Y < 0.5f) return false;
 
                 //---------------
                 
                 stairs = structure;
-
-                //float stairPosY = structure.StairDirection == Direction.Right ? 
-                //    lowestLimb.Position.X - structure.Rect.X : structure.Rect.Width - (lowestLimb.Position.X - structure.Rect.X);
-
-                
-                //if (lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + stairPosY - 10.0f) return false;
-                
-
-                
-                //if (targetMovement.Y < 0.5f)
-                //{
-                //    if (inWater || lowestLimb.Position.Y < structure.Rect.Y - structure.Rect.Height + 50.0f)
-                //    {
-                //        stairs = null;
-                //        return false;
-                //    }
-                //}
-                
-
-                
-                //if (limb != null)// && (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot))
-                //{
-                //    if (contact.Manifold.LocalNormal.Y >= 0.0f)
-                //    { 
-                //        if (limb.SimPosition.Y < lowestLimb.SimPosition.Y+0.2f)
-                //        {
-                //            stairs = structure;
-                //            return true;
-                //        }
-
-                //    }
-                //    else
-                //    {
-                //        stairs = null;
-                //        return false;
-                //    }                    
-                //}
             }
 
             CalculateImpact(f1, f2, contact);
@@ -478,13 +438,11 @@ namespace Barotrauma
                                     
             float impact = Vector2.Dot(velocity, -normal);
 
+            float volume = Math.Min(impact, 1.0f);
             if (f1.Body.UserData is Limb)
             {
                 Limb limb = (Limb)f1.Body.UserData;
-
-                float volume = stairs == null ? impact / 5.0f : impact;
-                volume = Math.Min(impact, 1.0f);
-
+                
                 if (impact > 0.5f && limb.HitSound != null && limb.soundTimer <= 0.0f)
                 {
                     limb.soundTimer = Limb.SoundInterval;
@@ -496,11 +454,11 @@ namespace Barotrauma
                 if (!character.IsNetworkPlayer || GameMain.Server != null)
                 {
                     character.AddDamage(CauseOfDeath.Damage, impact - 8.0f, null);
-                    
+                    if (impact > 8.0f) SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, collider);  
                     strongestImpact = Math.Max(strongestImpact, impact - 8.0f);
                 }
 
-                SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, collider);                
+                              
 
                 if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
             }
@@ -532,21 +490,11 @@ namespace Barotrauma
                     if (currentHull != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
-
-                    //if (limb.AnimTargetPos == Vector2.Zero) continue;
-
-                    //Vector2 pos2 = ConvertUnits.ToDisplayUnits(limb.AnimTargetPos);
-                    //pos2.Y = -pos2.Y;
-                    //GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos2.X, (int)pos2.Y, 5, 5), Color.Blue, true, 0.01f);
-
-                    //GUI.DrawLine(spriteBatch, pos, pos2, Color.Green);
                 }
 
                 limb.body.DebugDraw(spriteBatch, character.Submarine == null ? Color.Cyan : Color.White);
             }
-
-
-
+            
             collider.DebugDraw(spriteBatch, character.Submarine == null ? Color.Cyan : Color.White);
 
             foreach (RevoluteJoint joint in limbJoints)
@@ -765,8 +713,6 @@ namespace Barotrauma
             
             Vector2 flowForce = Vector2.Zero;
 
-            //FindLowestLimb();
-
             FindHull();
 
             splashSoundTimer -= deltaTime;
@@ -784,10 +730,26 @@ namespace Barotrauma
                 inWater = false;
                 headInWater = false;
 
+                var colliderB = GetColliderBottom().Y;
+                float surf = ConvertUnits.ToSimUnits(currentHull.Surface);
+
                 if (currentHull.Volume > currentHull.FullVolume * 0.95f || 
-                    ConvertUnits.ToSimUnits(currentHull.Surface) - GetColliderBottom().Y > HeadPosition * 0.95f)
+                    ConvertUnits.ToSimUnits(currentHull.Surface) - GetFloorY() > HeadPosition * 0.95f)
                     inWater = true;                
             }
+
+            if (flowForce.LengthSquared() > 0.001f)
+            {
+                collider.ApplyForce(flowForce);
+            }
+
+            if (currentHull==null || 
+                currentHull.Volume > currentHull.FullVolume * 0.95f || 
+                ConvertUnits.ToSimUnits(currentHull.Surface) > collider.SimPosition.Y)
+            {
+                collider.ApplyWaterForces();
+            }
+            
                        
             foreach (Limb limb in Limbs)
             {
@@ -809,10 +771,9 @@ namespace Barotrauma
                     {
                         limb.inWater = true;
 
-                        if (flowForce.Length() > 0.01f)
+                        if (flowForce.LengthSquared() > 0.001f)
                         {
                             limb.body.ApplyForce(flowForce);
-                            if (flowForce.Length() > 15.0f) surfaceY = limbHull.Surface;
                         }
 
                         surfaceY = limbHull.Surface;
@@ -820,7 +781,6 @@ namespace Barotrauma
                         if (limb.type == LimbType.Head)
                         {
                             headInWater = true;
-                            surfaceY = limbHull.Surface;
                         }
                     }
                         //the limb has gone through the surface of the water
@@ -828,9 +788,9 @@ namespace Barotrauma
                     {
 
                         //create a splash particle
-                        GameMain.ParticleManager.CreateParticle("watersplash",
+                        var p = GameMain.ParticleManager.CreateParticle("watersplash",
                             new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
-                            new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 10.0f)),
+                            new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 20.0f)),
                             0.0f, limbHull);
                                                 
                         GameMain.ParticleManager.CreateParticle("bubbles",
@@ -860,7 +820,65 @@ namespace Barotrauma
                 }
 
                 limb.Update(deltaTime);
-            }            
+            }  
+        }
+
+        private float GetFloorY()
+        {
+            Vector2 rayStart = collider.SimPosition; 
+            Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
+
+            var lowestLimb = FindLowestLimb();
+
+            float closestFraction = 1;
+            GameMain.World.RayCast((fixture, point, normal, fraction) =>
+            {
+                switch (fixture.CollisionCategories)
+                {
+                    case Physics.CollisionStairs:
+                        if (inWater && TargetMovement.Y < 0.5f) return -1;
+                        //Structure structure = fixture.Body.UserData as Structure;
+                        //if (stairs == null && structure != null)
+                        //{
+                        //    if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
+                        //    {
+                        //        return -1;
+                        //    }
+                        //    else
+                        //    {
+                        //        stairs = structure;
+                        //    }
+                        //}
+                        break;
+                    case Physics.CollisionPlatform:
+                        Structure platform = fixture.Body.UserData as Structure;
+                        if (IgnorePlatforms || lowestLimb.Position.Y < platform.Rect.Y) return -1;
+                        break;
+                    case Physics.CollisionWall:
+                        break;
+                    default:
+                        return -1;
+                }
+
+                if (fraction < closestFraction)
+                {
+                    closestFraction = fraction;
+                }
+
+                return closestFraction;
+            } 
+            , rayStart, rayEnd);
+
+
+            if (closestFraction == 1) //raycast didn't hit anything
+            {
+                return (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
+            }
+            else
+            {
+                return rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
+            }
+            
         }
 
         public void SetPosition(Vector2 simPosition, bool lerp = false)

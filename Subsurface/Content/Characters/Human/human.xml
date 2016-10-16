@@ -8,10 +8,10 @@
            walkanimspeed="4.58"
            movementlerp="0.4"
            legtorque="15.0"
-           thightorque="-5.0">
+           thightorque="-5.0"
+           swimspeed="2.0">
 
-
-    <collider height="100" radius="15" mass = "70"/>
+    <collider height="100" radius="15"/>
     
     <!-- head -->
     <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" impacttolerance="5.0">

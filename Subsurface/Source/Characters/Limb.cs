@@ -441,31 +441,7 @@ namespace Barotrauma
 
             if (inWater)
             {
-                //buoyancy
-                Vector2 buoyancy = new Vector2(0, Mass * 9.6f);
-
-                //drag
-                Vector2 velDir = Vector2.Normalize(LinearVelocity);
-
-                Vector2 line = new Vector2((float)Math.Cos(body.Rotation), (float)Math.Sin(body.Rotation));
-                line *= ConvertUnits.ToSimUnits(sprite.size.Y);
-
-                Vector2 normal = new Vector2(-line.Y, line.X);
-                normal = Vector2.Normalize(-normal);
-
-                float dragDot = Math.Abs(Vector2.Dot(normal, velDir));
-                Vector2 dragForce = Vector2.Zero;
-                if (dragDot > 0)
-                {
-                    float vel = LinearVelocity.Length()*2.0f;
-                    float drag = dragDot * vel * vel
-                        * ConvertUnits.ToSimUnits(sprite.size.Y);
-                    dragForce = Math.Min(drag, Mass*1000.0f) * -velDir;
-                    //if (dragForce.Length() > 100.0f) { }
-                }
-
-                body.ApplyForce(dragForce + buoyancy);
-                body.ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
+                body.ApplyWaterForces();
             }
 
             if (character.IsDead) return;

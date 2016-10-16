@@ -558,6 +558,8 @@ namespace Barotrauma
                 {
                     limb.body.ApplyLinearImpulse(limb.Mass * impulse);
                 }
+
+                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse);
             }
 
             foreach (Item item in Item.ItemList)

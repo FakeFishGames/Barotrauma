@@ -62,6 +62,13 @@ namespace Barotrauma
 
         public virtual void Update(float speed = 1.0f)
         {
+            if (steering == Vector2.Zero || !MathUtils.IsValid(steering))
+            {
+                steering = Vector2.Zero;
+                host.Steering = Vector2.Zero;
+                return;
+            }
+
             float steeringSpeed = steering.Length();
             if (steeringSpeed>speed)
             {

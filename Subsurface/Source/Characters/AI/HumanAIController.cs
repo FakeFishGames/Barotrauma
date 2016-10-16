@@ -71,35 +71,20 @@ namespace Barotrauma
             
             steeringManager.Update(moveSpeed);
 
-            Character.AnimController.IgnorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&
+            bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&
                 (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
             var currPath = (steeringManager as IndoorsSteeringManager).CurrentPath;
             if (currPath != null && currPath.CurrentNode != null)
             {
-                if (currPath.CurrentNode.WorldPosition.Y < Character.WorldPosition.Y - 200)
+                if (currPath.CurrentNode.SimPosition.Y < Character.AnimController.GetColliderBottom().Y)
                 {
-                    Character.AnimController.IgnorePlatforms = true;
+                    ignorePlatforms = true;
                 }
-
-                //if (Character.AnimController.Stairs != null)
-                //{
-                //    float yDiff = currPath.CurrentNode.WorldPosition.Y - Character.WorldPosition.Y;
-
-                //    if (Math.Abs(yDiff) > 20.0f)
-                //    {
-                //        int dir = Math.Sign(yDiff);
-
-                //        float movement = Character.AnimController.Stairs.StairDirection == Direction.Right ?
-                //            dir * Character.AnimController.TargetMovement.Length() : -dir * Character.AnimController.TargetMovement.Length();
-
-                //        steeringManager.SteeringManual(deltaTime, new Vector2(movement*2, 0.0f));
-                //    }
-                //}
             }
 
+            Character.AnimController.IgnorePlatforms = ignorePlatforms;
             (Character.AnimController as HumanoidAnimController).Crouching = false;
-
 
             if (!Character.AnimController.InWater)
             {
