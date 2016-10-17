@@ -9,6 +9,7 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
+using Lidgren.Network;
 
 namespace Barotrauma
 {
@@ -61,7 +62,7 @@ namespace Barotrauma
 
         //a movement vector that overrides targetmovement if trying to steer
         //a Character to the position sent by server in multiplayer mode
-        protected Vector2 correctionMovement;
+        protected Vector2 overrideTargetMovement;
         
         protected float floorY;
         protected float surfaceY;
@@ -140,7 +141,7 @@ namespace Barotrauma
         {
             get 
             { 
-                return (correctionMovement == Vector2.Zero) ? targetMovement : correctionMovement; 
+                return (overrideTargetMovement == Vector2.Zero) ? targetMovement : overrideTargetMovement; 
             }
             set 
             {
@@ -465,9 +466,7 @@ namespace Barotrauma
                         SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, collider);
                         strongestImpact = Math.Max(strongestImpact, impact - 8.0f);
                     }
-                }
-
-                              
+                }                              
 
                 if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
             }
@@ -525,6 +524,25 @@ namespace Barotrauma
 
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
                     GUI.DrawLine(spriteBatch, pos, new Vector2(limb.WorldPosition.X, -limb.WorldPosition.Y), Color.Cyan);
+                }
+            }
+
+            if (character.MemPos.Count > 1)
+            {
+                Vector2 prevPos = ConvertUnits.ToDisplayUnits(character.MemPos[0].Position);
+                if (currentHull != null) prevPos += currentHull.Submarine.DrawPosition;
+                prevPos.Y = -prevPos.Y;
+
+                for (int i = 1; i < character.MemPos.Count; i++ )
+                {
+                    Vector2 currPos = ConvertUnits.ToDisplayUnits(character.MemPos[i].Position);
+                    if (currentHull != null) currPos += currentHull.Submarine.DrawPosition;
+                    currPos.Y = -currPos.Y;
+
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)currPos.X - 3, (int)currPos.Y - 3, 6, 6), Color.Cyan*0.6f, true, 0.01f);
+                    GUI.DrawLine(spriteBatch, prevPos, currPos, Color.Cyan*0.6f, 0, 3);
+
+                    prevPos = currPos;
                 }
             }
 
@@ -718,7 +736,7 @@ namespace Barotrauma
 
             if (Frozen) return;
 
-            UpdateNetPlayerPosition();
+            UpdateNetPlayerPosition(deltaTime);
             
             Vector2 flowForce = Vector2.Zero;
 
@@ -1027,8 +1045,46 @@ namespace Barotrauma
         //    }
         //}
 
-        private void UpdateNetPlayerPosition()
+        float t = 0.0f;
+
+        private void UpdateNetPlayerPosition(float deltaTime)
         {
+            if (character.MemPos.Count < 2) return;
+            
+            PosInfo prev = character.MemPos[0];
+            PosInfo next = character.MemPos[1];
+            
+            Vector2 currPos = collider.SimPosition;
+
+            //interpolate the position of the collider from the first position in the buffer towards the second
+            if (prev.Timestamp < next.Timestamp)
+            {
+                //if there are more than 2 positions in the buffer, 
+                //increase the interpolation speed to catch up with the server
+                float speedMultiplier = 1.0f + (float)Math.Pow((character.MemPos.Count - 2) / 2.0f, 2.0f);
+
+                t += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
+                currPos = Vector2.Lerp(prev.Position, next.Position, t);
+
+                //override the targetMovement to make the character play the walking/running animation
+                overrideTargetMovement = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
+            }
+            else
+            {
+                currPos = next.Position;
+                t = 1.0f;
+
+                return;
+            }            
+            
+            collider.SetTransform(currPos, collider.Rotation);
+
+            if (t >= 1.0f)
+            {
+                t = 0.0f;
+                character.MemPos.RemoveAt(0);
+            }
+
             //if (refLimb.body.TargetPosition == Vector2.Zero)
             //{
             //    correctionMovement = Vector2.Zero;
@@ -1051,7 +1107,7 @@ namespace Barotrauma
             //}
 
 
-            //float dist = Vector2.Distance(refLimb.body.SimPosition, refLimb.body.TargetPosition);
+            //float dist = Vector2.Distance(collider.SimPosition, character.MemPos[0].Position);
             
             ////if the limb is further away than resetdistance, all limbs are immediately snapped to their targetpositions
             //bool resetAll = dist > NetConfig.ResetRagdollDistance;
