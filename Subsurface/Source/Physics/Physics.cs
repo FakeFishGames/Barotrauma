@@ -6,8 +6,6 @@ namespace Barotrauma
 {
     static class Physics
     {
-        private static double alpha;
-
         public const Category CollisionNone         = Category.None;
         public const Category CollisionAll          = Category.All;
         public const Category CollisionWall         = Category.Cat1;

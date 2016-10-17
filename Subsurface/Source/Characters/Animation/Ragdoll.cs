@@ -459,9 +459,12 @@ namespace Barotrauma
             {
                 if (!character.IsNetworkPlayer || GameMain.Server != null)
                 {
-                    character.AddDamage(CauseOfDeath.Damage, impact - 8.0f, null);
-                    if (impact > 8.0f) SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, collider);  
-                    strongestImpact = Math.Max(strongestImpact, impact - 8.0f);
+                    if (impact > 8.0f)
+                    {
+                        character.AddDamage(CauseOfDeath.Damage, impact - 8.0f, null);
+                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, collider);
+                        strongestImpact = Math.Max(strongestImpact, impact - 8.0f);
+                    }
                 }
 
                               
