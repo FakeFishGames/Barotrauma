@@ -691,6 +691,9 @@ namespace Barotrauma
             IgnorePlatforms = true;
 
             Vector2 tempTargetMovement = TargetMovement;
+
+            tempTargetMovement.Y = Math.Min(tempTargetMovement.Y, 1.0f);
+
             movement = MathUtils.SmoothStep(movement, tempTargetMovement, 0.3f);
 
             Limb leftFoot = GetLimb(LimbType.LeftFoot);
@@ -717,15 +720,15 @@ namespace Barotrauma
             {
                 ladderSimPos += character.SelectedConstruction.Submarine.SimPosition - currentHull.Submarine.SimPosition;
             }
-
-
-
+            
             MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, collider.SimPosition.Y + 0.7f), 10.5f);
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, collider.SimPosition.Y+0.5f), 10.5f);
             MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, collider.SimPosition.Y+0.4f), 10.5f);
 
             collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, collider.SimPosition.Y), 10.5f);
-            
+
+            bool slide = targetMovement.Y < -1.1f;
+
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
                 collider.SimPosition.Y + 0.6f + movement.Y * 0.1f - ladderSimPos.Y);
@@ -734,12 +737,12 @@ namespace Barotrauma
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
-                MathUtils.Round(handPos.Y - stepHeight, stepHeight * 2.0f) + stepHeight + ladderSimPos.Y),
+                (slide ? handPos.Y : MathUtils.Round(handPos.Y - stepHeight, stepHeight * 2.0f) + stepHeight) + ladderSimPos.Y),
                 5.2f);
 
             MoveLimb(rightHand,
                 new Vector2(handPos.X,
-                MathUtils.Round(handPos.Y, stepHeight * 2.0f) + ladderSimPos.Y),
+                (slide ? handPos.Y : MathUtils.Round(handPos.Y, stepHeight * 2.0f)) + ladderSimPos.Y),
                 5.2f);
 
             leftHand.body.ApplyTorque(Dir * 2.0f);
@@ -753,12 +756,12 @@ namespace Barotrauma
 
             MoveLimb(leftFoot,
                 new Vector2(footPos.X,
-                MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight + ladderSimPos.Y),
+                (slide ? footPos.Y : MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight) + ladderSimPos.Y),
                 15.5f, true);
 
             MoveLimb(rightFoot,
                 new Vector2(footPos.X,
-                MathUtils.Round(footPos.Y, stepHeight * 2.0f) + ladderSimPos.Y),
+                (slide ? footPos.Y : MathUtils.Round(footPos.Y, stepHeight * 2.0f)) + ladderSimPos.Y),
                 15.5f, true);
 
             //apply torque to the legs to make the knees bend

@@ -49,19 +49,11 @@ namespace Barotrauma.Items.Components
         {
             IgnoredBodies = new List<Body>();
 
-            //launchImpulse = ToolBox.GetAttributeFloat(element, "launchimpulse", 10.0f);
-            //characterUsable = ToolBox.GetAttributeBool(element, "characterusable", false);
-
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "attack") continue;
                 attack = new Attack(subElement);
             }
-
-            //bleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
-            //bluntDamage = ToolBox.GetAttributeFloat(element, "bluntdamage", 0.0f);
-
-            //doesStick = ToolBox.GetAttributeBool(element, "doesstick", false);
         }
 
         public override bool Use(float deltaTime, Character character = null)
@@ -149,6 +141,11 @@ namespace Barotrauma.Items.Components
         private bool OnProjectileCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (IgnoredBodies.Contains(f2.Body)) return false;
+
+            if (f2.CollisionCategories == Physics.CollisionCharacter && !(f2.Body.UserData is Limb))
+            {
+                return false;
+            }
 
             AttackResult attackResult = new AttackResult(0.0f, 0.0f);
             if (attack != null)
