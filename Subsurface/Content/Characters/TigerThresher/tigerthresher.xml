@@ -5,8 +5,10 @@
   <sound file="Content/Characters/Scorpion/scorpionidle1.ogg" state="None" />
   <sound file="Content/Characters/Scorpion/scorpionidle2.ogg" state="None" />
 
-  <ragdoll waveamplitude="50.0" wavelength="2500" swimspeed="4.0" walkspeed="3.5">
+  <ragdoll waveamplitude="50.0" wavelength="2500" swimspeed="4.0" walkspeed="3.5" canentersubmarine="false">
 
+    <collider radius="50" height="320"/>
+    
     <!-- head -->
     <limb id = "0" radius="12" height="100" type="Head" steerforce="1.0" impacttolerance="50.0">
       <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="371,15,66,136" depth="0.02" origin ="0.5,0.5"/>

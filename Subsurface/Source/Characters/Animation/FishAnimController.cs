@@ -15,6 +15,8 @@ namespace Barotrauma
         private float waveAmplitude;
         private float waveLength;
 
+        private Limb mainLimb;
+
         private bool rotateTowardsMovement;
 
         private bool mirror, flip;
@@ -43,14 +45,39 @@ namespace Barotrauma
             }
 
             rotateTowardsMovement = ToolBox.GetAttributeBool(element, "rotatetowardsmovement", true);
+
+            Limb torso = GetLimb(LimbType.Torso);
+            Limb head = GetLimb(LimbType.Head);
+
+            mainLimb = torso == null ? head : torso;
         }
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (character.IsDead)
+            if (character.IsDead || Frozen || character.IsUnconscious || stunTimer > 0.0f)
             {
-                UpdateDying(deltaTime);
+                collider.PhysEnabled = false;
+                collider.SetTransform(mainLimb.SimPosition, 0.0f);
+
+                if (stunTimer > 0.0f)
+                {
+                    stunTimer -= deltaTime;
+                }
+
                 return;
+            }
+
+            //re-enable collider
+            if (!collider.FarseerBody.Enabled)
+            {
+                var lowestLimb = FindLowestLimb();
+
+                collider.SetTransform(new Vector2(
+                    collider.SimPosition.X,
+                    Math.Max(lowestLimb.SimPosition.Y + (collider.radius + collider.height / 2), collider.SimPosition.Y)),
+                    0.0f);
+
+                collider.FarseerBody.Enabled = true;
             }
 
             ResetPullJoints();
@@ -61,22 +88,28 @@ namespace Barotrauma
                 strongestImpact = 0.0f;
             }
 
-            if (stunTimer>0.0f)
+
+            if (inWater)
             {
-                stunTimer -= deltaTime;
-                return;
+                collider.FarseerBody.FixedRotation = false;
+                UpdateSineAnim(deltaTime);
             }
-            else
+            else if (currentHull != null && CanEnterSubmarine)
             {
-                if (inWater)// || RefLimb.inWater)
+                if (Math.Abs(MathUtils.GetShortestAngle(collider.Rotation, 0.0f)) > 0.001f)
                 {
-                    UpdateSineAnim(deltaTime);
+                    //rotate collider back upright
+                    collider.AngularVelocity = MathUtils.GetShortestAngle(collider.Rotation, 0.0f) * 60.0f;
+                    collider.FarseerBody.FixedRotation = false;
                 }
-                else if (currentHull != null && CanEnterSubmarine)
+                else
                 {
-                    UpdateWalkAnim(deltaTime);
+                    collider.FarseerBody.FixedRotation = true;
                 }
+
+                UpdateWalkAnim(deltaTime);
             }
+            
 
             if (mirror || !inWater)
             {
@@ -136,8 +169,6 @@ namespace Barotrauma
             Limb torso = GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
 
-            Limb mainLimb = torso == null ? head : torso;
-
             mainLimb.pullJoint.Enabled = true;
             mainLimb.pullJoint.WorldAnchorB = collider.SimPosition;
 
@@ -145,12 +176,24 @@ namespace Barotrauma
 
             float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
 
-            float angle = (rotateTowardsMovement) ?
-                mainLimb.body.Rotation + MathUtils.GetShortestAngle(mainLimb.body.Rotation, movementAngle) :
-                HeadAngle * Dir;
+
+            if (rotateTowardsMovement)
+            {
+                collider.SmoothRotate(movementAngle, 25.0f);
+                mainLimb.body.SmoothRotate(movementAngle, 25.0f);
+            }
+            else
+            {
+                collider.SmoothRotate(HeadAngle * Dir, 25.0f);
+                mainLimb.body.SmoothRotate(HeadAngle * Dir, 25.0f);
+            }
+
+            //float angle = (rotateTowardsMovement) ?
+            //    mainLimb.body.Rotation + MathUtils.GetShortestAngle(mainLimb.body.Rotation, movementAngle) :
+            //    HeadAngle * Dir;
             
-            collider.SmoothRotate(angle, 25.0f);
-            mainLimb.body.SmoothRotate(angle, 25.0f);
+            //collider.SmoothRotate(angle, 25.0f);
+            //mainLimb.body.SmoothRotate(angle, 25.0f);
 
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null && waveAmplitude > 0.0f)
@@ -166,9 +209,7 @@ namespace Barotrauma
             for (int i = 0; i < Limbs.Count(); i++)
             {
                 Vector2 pullPos = Limbs[i].pullJoint == null ? Limbs[i].SimPosition : Limbs[i].pullJoint.WorldAnchorA;
-                Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
-
-                
+                Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);                
 
                 if (Limbs[i] == mainLimb) continue;
 
@@ -191,26 +232,18 @@ namespace Barotrauma
 
             IgnorePlatforms = (TargetMovement.Y < -Math.Abs(TargetMovement.X));
 
-            Limb mainLimb;
             float mainLimbHeight, mainLimbAngle;
-
-            Limb torso  = GetLimb(LimbType.Torso);
-            Limb head   = GetLimb(LimbType.Head);
-
-            if (torso != null)
+            if (mainLimb.type == LimbType.Torso)
             {
-                mainLimb = torso;
                 mainLimbHeight = TorsoPosition;
                 mainLimbAngle = torsoAngle;
             }
             else
             {
-                mainLimb = head;
                 mainLimbHeight = HeadPosition;
                 mainLimbAngle = headAngle;
             }
 
-            //collider.SmoothRotate(TorsoAngle * Dir, 10.0f);
             mainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);
             
             collider.LinearVelocity = new Vector2(

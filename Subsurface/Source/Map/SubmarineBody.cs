@@ -432,7 +432,7 @@ namespace Barotrauma
                 {
                     Vector2 normal = Vector2.Normalize(Body.Position - limb.SimPosition);
 
-                    float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 5.0f);
+                    float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f;
 
                     ApplyImpact(impact * Math.Min(limb.Mass / 200.0f, 1), -normal, contact);
                 }

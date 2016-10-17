@@ -9,6 +9,7 @@
            movementlerp="0.4"
            legtorque="15.0"
            thightorque="-5.0"
+           walkspeed="1.5"
            swimspeed="2.0">
 
     <collider height="100" radius="15"/>

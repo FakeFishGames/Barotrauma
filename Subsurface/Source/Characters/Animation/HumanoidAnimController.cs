@@ -65,7 +65,6 @@ namespace Barotrauma
             {
                 collider.PhysEnabled = false;
 
-                var lowestLimb = FindLowestLimb();
                 collider.SetTransform(GetLimb(LimbType.Torso).SimPosition, 0.0f);
 
                 if (stunTimer > 0)
@@ -106,6 +105,7 @@ namespace Barotrauma
             {
                 if (Math.Abs(MathUtils.GetShortestAngle(collider.Rotation, 0.0f)) > 0.001f)
                 {
+                    //rotate collider back upright
                     collider.AngularVelocity = MathUtils.GetShortestAngle(collider.Rotation, 0.0f) * 60.0f;
                     collider.FarseerBody.FixedRotation = false;
                 }
@@ -308,7 +308,7 @@ namespace Barotrauma
             if (onGround)
             {
                 collider.LinearVelocity = new Vector2(
-                    movement.X * 1.5f,
+                    movement.X,
                     collider.LinearVelocity.Y > 0.0f ? collider.LinearVelocity.Y * 0.5f : collider.LinearVelocity.Y);
             }
 
@@ -329,12 +329,12 @@ namespace Barotrauma
             if (stairs != null)
             {
                 torso.pullJoint.WorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * 0.35f, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * 0.25f, getUpSpeed * 0.8f),
                     MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
 
                 head.pullJoint.WorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * (Crouching ? 1.0f : 0.4f), getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * (Crouching ? 0.6f : 0.25f), getUpSpeed * 0.8f),
                     MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition;// +movement * 0.3f;
@@ -345,13 +345,13 @@ namespace Barotrauma
 
                 torso.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
-                    new Vector2(footMid + movement.X * 0.3f, colliderPos.Y + TorsoPosition), getUpSpeed);
+                    new Vector2(footMid + movement.X * 0.2f, colliderPos.Y + TorsoPosition), getUpSpeed);
 
                 head.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
-                    new Vector2(footMid + movement.X * (Crouching && Math.Sign(movement.X) == Math.Sign(Dir) ? 1.0f : 0.3f), colliderPos.Y + HeadPosition), getUpSpeed * 1.2f);
+                    new Vector2(footMid + movement.X * (Crouching && Math.Sign(movement.X) == Math.Sign(Dir) ? 0.6f : 0.2f), colliderPos.Y + HeadPosition), getUpSpeed * 1.2f);
 
-                waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.1f;
+                waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.06f;
             }
 
             if (!onGround)

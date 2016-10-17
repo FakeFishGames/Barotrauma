@@ -32,9 +32,9 @@ namespace Barotrauma
 
                 foreach (Limb l in Limbs)
                 {
-                    l.body.PhysEnabled = frozen;
+                    l.body.PhysEnabled = !frozen;
                 }
-                collider.PhysEnabled = frozen;
+                collider.PhysEnabled = !frozen;
             }
         }
 
@@ -238,18 +238,17 @@ namespace Barotrauma
 
             float scale = ToolBox.GetAttributeFloat(element, "scale", 1.0f);
             
-            //int limbAmount = ;
             Limbs = new Limb[element.Elements("limb").Count()];
             limbJoints = new RevoluteJoint[element.Elements("joint").Count()];
             limbDictionary = new Dictionary<LimbType, Limb>();
 
-            headPosition = ToolBox.GetAttributeFloat(element, "headposition", 50.0f);
-            headPosition = ConvertUnits.ToSimUnits(headPosition);
-            headAngle = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "headangle", 0.0f));
+            headPosition    = ToolBox.GetAttributeFloat(element, "headposition", 50.0f);
+            headPosition    = ConvertUnits.ToSimUnits(headPosition);
+            headAngle       = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "headangle", 0.0f));
 
-            torsoPosition = ToolBox.GetAttributeFloat(element, "torsoposition", 50.0f);
-            torsoPosition = ConvertUnits.ToSimUnits(torsoPosition);
-            torsoAngle = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "torsoangle", 0.0f));
+            torsoPosition   = ToolBox.GetAttributeFloat(element, "torsoposition", 50.0f);
+            torsoPosition   = ConvertUnits.ToSimUnits(torsoPosition);
+            torsoAngle      = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "torsoangle", 0.0f));
 
             CanEnterSubmarine = ToolBox.GetAttributeBool(element, "canentersubmarine", true);
                        
@@ -499,10 +498,10 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
                 }
 
-                limb.body.DebugDraw(spriteBatch, character.Submarine == null ? Color.Cyan : Color.White);
+                limb.body.DebugDraw(spriteBatch, inWater ? Color.Cyan : Color.White);
             }
-            
-            collider.DebugDraw(spriteBatch, character.Submarine == null ? Color.Cyan : Color.White);
+
+            collider.DebugDraw(spriteBatch, inWater ? Color.SkyBlue : Color.Gray);
 
             foreach (RevoluteJoint joint in limbJoints)
             {
@@ -737,11 +736,12 @@ namespace Barotrauma
                 inWater = false;
                 headInWater = false;
 
-                var colliderB = GetColliderBottom().Y;
-                float surf = ConvertUnits.ToSimUnits(currentHull.Surface);
+                float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
+
+                float floorY = GetFloorY();
 
                 if (currentHull.Volume > currentHull.FullVolume * 0.95f || 
-                    ConvertUnits.ToSimUnits(currentHull.Surface) - GetFloorY() > HeadPosition * 0.95f)
+                    (waterSurface - floorY > HeadPosition * 0.95f && collider.SimPosition.Y < waterSurface))
                     inWater = true;                
             }
 

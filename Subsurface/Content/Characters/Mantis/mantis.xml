@@ -15,7 +15,7 @@
            footrotation ="180.0"
            flip="true">
 
-    <collider radius="70"/>
+    <collider radius="60"/>
     
     <!-- head -->
     <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armor="10.0">

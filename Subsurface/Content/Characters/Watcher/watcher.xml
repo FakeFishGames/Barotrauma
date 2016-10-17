@@ -3,30 +3,27 @@
 
   <ragdoll waveamplitude="0.0" swimspeed="0.5" walkspeed="0.3" mirror="true" rotatetowardsmovement="false" headangle="-90">
 
+    <collider radius="100"/>
+    
     <!-- head -->
-    <limb id = "0" width="350" height="320" type="Head" steerforce="1.0" flip="true" armorsector="0.0,360.0" armorvalue="100.0">
+    <limb id = "0" type="Head" width="350" height="320" steerforce="1.0" flip="true" armorsector="0.0,360.0" armorvalue="100.0">
       <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="0,0,369,348" depth="0.02" origin ="0.5,0.6"/>
-      <attack range="150" duration="0.2" damage="200" stun="5" force="10" damagetype="blunt" targetforce="100"/>
+      <attack range="150" duration="0.05" damage="200" stun="5" force="20" damagetype="blunt" targetforce="100"/>
     </limb>
 
-    
     <limb id = "1" radius="50" height="120" flip="true">
       <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="395,0,117,239" depth="0.025" origin="0.5,0.5"/>
       <lightsource range="200.0" color="0.8,0.8,1.0,1.0">
         <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="391,282,121,230" depth="0.025" origin="0.5,0.5"/>
-      </lightsource>      
+      </lightsource>
     </limb>
 
     <limb id = "2" width="300" height="119" flip="true">
       <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="0,370,302,142" depth="0.025" origin="0.5,0.5"/>
-    </limb>
-    
+    </limb>    
 
     <joint limb1="0" limb1anchor="60,130" limb2="1" limb2anchor="-30,100" lowerlimit="70" upperlimit="80"/>
-
     <joint limb1="0" limb1anchor="72,110" limb2="2" limb2anchor="120,-20" lowerlimit="90" upperlimit="180"/>
-    
-
   </ragdoll>
 
   <ai attackhumans="0.0" attackrooms="0.0" sight="1.0" hearing="0.0" attackwhenprovoked="true"/>
