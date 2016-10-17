@@ -557,14 +557,9 @@ namespace Barotrauma
             {
                 AnimController = new FishAnimController(this, doc.Root.Element("ragdoll"));
                 PressureProtection = 100.0f;
-                //FishAnimController fishAnim = (FishAnimController)animController;
             }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
-            foreach (Limb limb in AnimController.Limbs)
-            {
-                limb.body.SetTransform(ConvertUnits.ToSimUnits(position)+limb.SimPosition, 0.0f);
-            }
             
             maxHealth = ToolBox.GetAttributeFloat(doc.Root, "health", 100.0f);
             health = maxHealth;
@@ -766,7 +761,7 @@ namespace Barotrauma
                 if (length > 0.0f) targetMovement = targetMovement / length;
             }
 
-            if (Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir) && IsKeyDown(InputType.Run))
+            if (Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir) && IsKeyDown(InputType.Run))
                 targetMovement *= 3.0f;
 
             targetMovement *= SpeedMultiplier;
