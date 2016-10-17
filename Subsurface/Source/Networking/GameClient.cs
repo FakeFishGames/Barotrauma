@@ -705,13 +705,14 @@ namespace Barotrauma.Networking
                         lastSentChatMsgID = inc.ReadUInt32();
                         break;
                     case ServerNetObject.CHARACTER_POSITION:
-                        bool dead = inc.ReadBoolean();
+                        //bool dead = inc.ReadBoolean();
+                        Character.ClientReadStatic(inc);
                         inc.ReadPadBits();
-                        if (Character.Controlled != null)
-                        {
-                            if (dead && !Character.Controlled.IsDead)
-                                Character.Controlled.Kill(CauseOfDeath.Damage);
-                        }
+                        //if (Character.Controlled != null)
+                        //{
+                        //    if (dead && !Character.Controlled.IsDead)
+                        //        Character.Controlled.Kill(CauseOfDeath.Damage);
+                        //}
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);

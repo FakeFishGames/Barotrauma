@@ -644,16 +644,12 @@ namespace Barotrauma.Networking
                 }
             }
 
+            foreach (Character character in Character.CharacterList)
+            {
+                if (character is AICharacter || character == c.Character) continue;
 
-            outmsg.Write((byte)ServerNetObject.CHARACTER_POSITION);
-            if (c.Character != null && !c.Character.IsDead)
-            {
-                outmsg.Write(false); //not dead
-                outmsg.WritePadBits();
-            }
-            else
-            {
-                outmsg.Write(true); //dead
+                outmsg.Write((byte)ServerNetObject.CHARACTER_POSITION);
+                character.ServerWrite(outmsg, c);
                 outmsg.WritePadBits();
             }
 

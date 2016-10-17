@@ -14,7 +14,20 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-   
+    struct PosInfo
+    {
+        public readonly Vector2 Position;
+        public Direction Direction;
+        public readonly float Timestamp;
+
+        public PosInfo(Vector2 pos, Direction dir, float time)
+        {
+            Position = pos;
+            Direction = dir;
+            Timestamp = time;
+        }
+    }
+
     class Character : Entity, IDamageable, IPropertyObject, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
@@ -29,12 +42,10 @@ namespace Barotrauma
 
         byte dequeuedInput = 0; byte prevDequeuedInput = 0;
         List<byte> memInput = new List<byte>();
-        List<float> memMouseX = new List<float>();
-        List<float> memMouseY = new List<float>();
+        List<Vector2> memMousePos = new List<Vector2>();
 
-        List<float> memPosX = new List<float>();
-        List<float> memPosY = new List<float>();
-
+        List<PosInfo> memPos = new List<PosInfo>();
+        
         //the Character that the player is currently controlling
         private static Character controlled;
 
@@ -74,8 +85,6 @@ namespace Barotrauma
         public Hull CurrentHull = null;
 
         public readonly bool IsNetworkPlayer;
-
-        private bool networkUpdateSent;
 
         private CharacterInventory inventory;
 
@@ -211,6 +220,11 @@ namespace Barotrauma
             get { return Submarine == null ? cursorPosition : cursorPosition + Submarine.Position; }
         }
 
+        public List<PosInfo> MemPos
+        {
+            get { return memPos; }
+        }
+
         public Character ClosestCharacter
         {
             get { return closestCharacter; }
@@ -301,6 +315,7 @@ namespace Barotrauma
             set
             {
                 if (!MathUtils.IsValid(value)) return;
+
                 health = MathHelper.Clamp(value, minHealth, maxHealth);
             }
         }
@@ -761,8 +776,13 @@ namespace Barotrauma
                 if (length > 0.0f) targetMovement = targetMovement / length;
             }
 
-            if (Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir) && IsKeyDown(InputType.Run))
+            if (AnimController is HumanoidAnimController &&
+                !((HumanoidAnimController)AnimController).Crouching &&
+                Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir) && 
+                IsKeyDown(InputType.Run))
+            {
                 targetMovement *= 3.0f;
+            }
 
             targetMovement *= SpeedMultiplier;
             SpeedMultiplier = 1.0f;
@@ -810,6 +830,13 @@ namespace Barotrauma
                 else
                 {
                     AnimController.TargetDir = Direction.Right;
+                }
+            }
+            else if (GameMain.Client != null && Character.controlled != this)
+            {
+                if (memPos.Count > 0)
+                {
+                    AnimController.TargetDir = memPos[0].Direction;
                 }
             }
 
@@ -1770,10 +1797,10 @@ namespace Barotrauma
             UInt32 networkUpdateID = msg.ReadUInt32();
             byte inputCount = msg.ReadByte();
 
-            for (int i=0;i<inputCount;i++)
+            for (int i = 0; i < inputCount; i++)
             {
                 byte newInput = msg.ReadByte();
-                if ((i < ((long)networkUpdateID-(long)LastNetworkUpdateID)) && (i<60))
+                if ((i < ((long)networkUpdateID - (long)LastNetworkUpdateID)) && (i < 60))
                 {
                     memInput.Insert(i, newInput);
                 }
@@ -1792,12 +1819,52 @@ namespace Barotrauma
 
         public virtual void ServerWrite(NetOutgoingMessage msg, Client c) 
         {
-            //TODO: write position, health, etc
+            msg.Write(ID);
+            //todo: only write this once in each packet, not for each character
+            msg.Write((float)NetTime.Now);
+
+            msg.Write(AnimController.Dir > 0.0f);
+
+            msg.Write(SimPosition.X);
+            msg.Write(SimPosition.Y);
+        }
+
+        public static void ClientReadStatic(NetIncomingMessage msg)
+        {
+            UInt16 id = msg.ReadUInt16();
+            var character = Entity.FindEntityByID(id) as Character;
+
+            if (character == null)
+            {
+                //skip through the rest of the message
+                //todo: a better way to skip through the message?
+                msg.Position += 32 + 1 + 32 + 32;
+            }
+            else
+            {
+                character.ClientRead(msg);
+            }
         }
 
         public virtual void ClientRead(NetIncomingMessage msg) 
-        { 
-            //TODO: read positions health, etc
+        {
+            float sendingTime = msg.ReadSingle();
+            bool facingRight = msg.ReadBoolean();
+            Vector2 pos = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+
+
+            var posInfo = new PosInfo(
+                pos,  
+                facingRight ? Direction.Right : Direction.Left,
+                sendingTime - msg.SenderConnection.RemoteTimeOffset);
+
+            int index = 0;
+            while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp)
+            {
+                index++;
+            }
+
+            memPos.Insert(index, posInfo);
         }
 
         public void WriteSpawnData(NetOutgoingMessage msg)
