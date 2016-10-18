@@ -113,7 +113,7 @@ namespace Barotrauma
 
             if (mirror || !inWater)
             {
-                if (!character.IsNetworkPlayer)
+                if (!character.IsRemotePlayer)
                 {
                     //targetDir = (movement.X > 0.0f) ? Direction.Right : Direction.Left;
                     if (targetMovement.X > 0.1f && targetMovement.X > Math.Abs(targetMovement.Y) * 0.5f)
@@ -153,7 +153,7 @@ namespace Barotrauma
             
             if (TargetDir != dir) 
             {   
-                if (flipTimer>1.0f || character.IsNetworkPlayer)
+                if (flipTimer>1.0f || character.IsRemotePlayer)
                 {
                     Flip();
                     if (mirror || !inWater) Mirror();

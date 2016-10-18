@@ -458,7 +458,7 @@ namespace Barotrauma
             }
             else if (f1.Body == collider.FarseerBody)
             {
-                if (!character.IsNetworkPlayer || GameMain.Server != null)
+                if (!character.IsRemotePlayer || GameMain.Server != null)
                 {
                     if (impact > 8.0f)
                     {
@@ -1050,6 +1050,47 @@ namespace Barotrauma
         private void UpdateNetPlayerPosition(float deltaTime)
         {
             if (character.MemPos.Count < 2) return;
+
+            if (character == GameMain.NetworkMember.Character)
+            {
+                PosInfo serverPos = character.MemPos.Last();
+
+                //this doesn't work correctly, because the delay caused by the 150ms update interval isn't taken into account
+                //and the server may have unprocessed inputs in memInput (causing a 0-1s delay)
+                float localizedTimestamp = serverPos.Timestamp - GameMain.Client.ServerConnection.AverageRoundtripTime / 2;
+
+                int index = 0;
+                for (index = 0; index < character.MemLocalPos.Count; index++)
+                {
+                    if (character.MemLocalPos[index].Timestamp > localizedTimestamp)
+                    {
+                        break;
+                    }
+                }
+                
+                if (index > character.MemLocalPos.Count-1 || index < 1) return;
+
+                //local positions before and after the timestamp
+                PosInfo prevLocalPos = character.MemLocalPos[index - 1];
+                PosInfo nextLocalPos = character.MemLocalPos[index];
+
+                Vector2 localPos = Vector2.Lerp(
+                    prevLocalPos.Position,
+                    nextLocalPos.Position,
+                    (localizedTimestamp - prevLocalPos.Timestamp) / (nextLocalPos.Timestamp - prevLocalPos.Timestamp));
+
+
+                if (Vector2.Distance(localPos, serverPos.Position) > 0.5f)
+                {
+                    //collider.SetTransform(collider.SimPosition + (pos.Position - remotePos), collider.Rotation);
+                    collider.SetTransform(serverPos.Position, collider.Rotation);
+                }
+
+                if (character.MemLocalPos.Count > 120) character.MemLocalPos.RemoveRange(0, character.MemLocalPos.Count - 120);
+                character.MemPos.Clear();
+
+                return;
+            }
             
             PosInfo prev = character.MemPos[0];
             PosInfo next = character.MemPos[1];
@@ -1082,89 +1123,6 @@ namespace Barotrauma
                 t = 0.0f;
                 character.MemPos.RemoveAt(0);
             }
-
-            //if (refLimb.body.TargetPosition == Vector2.Zero)
-            //{
-            //    correctionMovement = Vector2.Zero;
-            //    return;
-            //}
-
-            ////if the limb is closer than alloweddistance, just ignore the difference
-            //float allowedDistance = NetConfig.AllowedRagdollDistance * ((inWater) ? 2.0f : 1.0f);
-
-            //if (currentHull == null)
-            //{
-            //    var overLappingHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(refLimb.body.TargetPosition), null, true);
-
-            //    if (overLappingHull != null)
-            //    {
-            //        Submarine.PickBody(refLimb.SimPosition, refLimb.body.TargetPosition, null, Physics.CollisionWall);
-
-            //        refLimb.body.TargetPosition = refLimb.SimPosition + (refLimb.body.TargetPosition - refLimb.SimPosition) * Submarine.LastPickedFraction * 0.9f;
-            //    }
-            //}
-
-
-            //float dist = Vector2.Distance(collider.SimPosition, character.MemPos[0].Position);
-            
-            ////if the limb is further away than resetdistance, all limbs are immediately snapped to their targetpositions
-            //bool resetAll = dist > NetConfig.ResetRagdollDistance;
-
-            //Vector2 diff = (refLimb.body.TargetPosition - refLimb.body.SimPosition);
-
-            //if (diff == Vector2.Zero || diff.Length() < allowedDistance)
-            //{
-            //    refLimb.body.TargetPosition = Vector2.Zero;
-            //    foreach (Limb limb in Limbs)
-            //    {
-            //        limb.body.TargetPosition = Vector2.Zero;
-            //    }
-
-            //    correctionMovement = Vector2.Zero;
-            //    return;
-            //}
-          
-            //if (resetAll)
-            //{
-            //    System.Diagnostics.Debug.WriteLine("reset ragdoll limb positions");
-
-            //    SetPosition(refLimb.body.TargetPosition, dist < 10.0f);
-
-            //    return;
-            //}
-
-            //if (inWater)
-            //{
-            //    if (targetMovement.LengthSquared() > 0.01f)
-            //    {
-            //        correctionMovement =
-            //            Vector2.Lerp(targetMovement, Vector2.Normalize(diff) * MathHelper.Clamp(dist * 5.0f, 0.1f, 5.0f), 0.2f);
-
-            //    }
-            //    else
-            //    {
-            //        refLimb.body.LinearVelocity = Vector2.Lerp(
-            //            refLimb.LinearVelocity,
-            //            Vector2.Normalize(diff) * MathHelper.Clamp(dist, 0.0f, 5.0f),
-            //            0.2f);
-            //    }
-            //}
-            //else
-            //{
-            //    //clamp the magnitude of the correction movement between 0.5f - 5.0f
-            //    Vector2 newCorrectionMovement = Vector2.Normalize(diff) * MathHelper.Clamp(dist * 2.0f, 0.5f, 5.0f);
-
-            //    //heading in the right direction -> use the \"normal\" movement if it's faster than correctionMovement
-            //    //i.e. the character is close to the targetposition but the character is still running
-            //    if (Math.Sign(targetMovement.X) == Math.Sign(newCorrectionMovement.X))
-            //    {
-            //        newCorrectionMovement.X = Math.Max(Math.Abs(targetMovement.X), Math.Abs(newCorrectionMovement.X)) * Math.Sign(targetMovement.X);
-            //    }
-
-            //    correctionMovement = Vector2.Lerp(correctionMovement, newCorrectionMovement, 0.5f);
-
-            //    if (Math.Abs(correctionMovement.Y) < 0.1f) correctionMovement.Y = 0.0f;
-            //}            
         }
 
         public virtual Vector2 EstimateCurrPosition(Vector2 prevPosition, float timePassed)

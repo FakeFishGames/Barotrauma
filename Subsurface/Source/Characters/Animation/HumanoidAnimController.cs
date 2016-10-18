@@ -84,7 +84,7 @@ namespace Barotrauma
             }
 
 
-            if (!character.IsNetworkPlayer || true)
+            if (!character.IsRemotePlayer || true)
             {
                 //re-enable collider
                 if (!collider.FarseerBody.Enabled)
@@ -215,7 +215,7 @@ namespace Barotrauma
             }
 
             aiming = false;
-            if (character.IsNetworkPlayer) collider.LinearVelocity = Vector2.Zero;
+            if (character.IsRemotePlayer && GameMain.Server == null) collider.LinearVelocity = Vector2.Zero;
         }
 
 
@@ -312,7 +312,7 @@ namespace Barotrauma
 
             //if (LowestLimb == null) return;
 
-            if (onGround && !character.IsNetworkPlayer)
+            if (onGround && (!character.IsRemotePlayer || GameMain.Server != null))
             {
                 collider.LinearVelocity = new Vector2(
                     movement.X,
@@ -535,7 +535,7 @@ namespace Barotrauma
             rotation = MathHelper.ToDegrees(rotation);
             if (rotation < 0.0f) rotation += 360;
 
-            if (!character.IsNetworkPlayer && !aiming)
+            if (!character.IsRemotePlayer && !aiming)
             {
                 if (rotation > 20 && rotation < 170)
                     TargetDir = Direction.Left;
@@ -608,7 +608,7 @@ namespace Barotrauma
                 movement.Y = movement.Y - (surfaceLimiter - 1.0f) * 0.01f;
             }
 
-            if (!character.IsNetworkPlayer)
+            if (!character.IsRemotePlayer || GameMain.Server != null)
             {
                 collider.LinearVelocity = Vector2.Lerp(collider.LinearVelocity, movement * swimSpeed, movementLerp);
             }
@@ -730,7 +730,7 @@ namespace Barotrauma
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, collider.SimPosition.Y+0.5f), 10.5f);
             MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, collider.SimPosition.Y+0.4f), 10.5f);
 
-            if (!character.IsNetworkPlayer)
+            if (!character.IsRemotePlayer)
             {
                 collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, collider.SimPosition.Y), 10.5f);
             }
@@ -802,7 +802,7 @@ namespace Barotrauma
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
             bool notClimbing = false;
-            if (character.IsNetworkPlayer)
+            if (character.IsRemotePlayer)
             {
                 notClimbing = character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right);
             }
