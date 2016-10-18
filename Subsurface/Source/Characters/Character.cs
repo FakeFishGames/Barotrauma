@@ -45,6 +45,9 @@ namespace Barotrauma
         List<Vector2> memMousePos = new List<Vector2>();
 
         List<PosInfo> memPos = new List<PosInfo>();
+
+        List<PosInfo> memLocalPos = new List<PosInfo>();
+
         
         //the Character that the player is currently controlling
         private static Character controlled;
@@ -84,7 +87,7 @@ namespace Barotrauma
         public Hull PreviousHull = null;
         public Hull CurrentHull = null;
 
-        public readonly bool IsNetworkPlayer;
+        public readonly bool IsRemotePlayer;
 
         private CharacterInventory inventory;
 
@@ -223,6 +226,12 @@ namespace Barotrauma
         public List<PosInfo> MemPos
         {
             get { return memPos; }
+        }
+
+
+        public List<PosInfo> MemLocalPos
+        {
+            get { return memLocalPos; }
         }
 
         public Character ClosestCharacter
@@ -459,12 +468,12 @@ namespace Barotrauma
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
         public OnDeathHandler OnDeath;
         
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false, bool hasAi=true)
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isRemotePlayer = false, bool hasAi=true)
         {
-            return Create(characterInfo.File, position, characterInfo, isNetworkPlayer, hasAi);
+            return Create(characterInfo.File, position, characterInfo, isRemotePlayer, hasAi);
         }
 
-        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, bool hasAi=true)
+        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi=true)
         {
 #if LINUX            
             if (!System.IO.File.Exists(file)) 
@@ -497,7 +506,7 @@ namespace Barotrauma
 
             if (file != humanConfigFile)
             {
-                var enemyCharacter = new AICharacter(file, position, characterInfo, isNetworkPlayer);
+                var enemyCharacter = new AICharacter(file, position, characterInfo, isRemotePlayer);
                 var ai = new EnemyAIController(enemyCharacter, file);
                 enemyCharacter.SetAI(ai);
 
@@ -507,7 +516,7 @@ namespace Barotrauma
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(file, position, characterInfo, isNetworkPlayer);
+                var aiCharacter = new AICharacter(file, position, characterInfo, isRemotePlayer);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
 
@@ -516,13 +525,13 @@ namespace Barotrauma
                 return aiCharacter;
             }
 
-            var character = new Character(file, position, characterInfo, isNetworkPlayer);
+            var character = new Character(file, position, characterInfo, isRemotePlayer);
             character.minHealth = -100.0f;
 
             return character;
         }
 
-        protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
+        protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
             : base(null)
         {
 
@@ -539,7 +548,7 @@ namespace Barotrauma
 
             hudProgressBars = new Dictionary<object, HUDProgressBar>();
 
-            IsNetworkPlayer = isNetworkPlayer;
+            IsRemotePlayer = isRemotePlayer;
 
             oxygen = 100.0f;
             oxygenAvailable = 100.0f;
@@ -927,7 +936,7 @@ namespace Barotrauma
             }
 
                   
-            if (IsNetworkPlayer)
+            if (IsRemotePlayer)
             {
                 foreach (Key key in keys)
                 {
@@ -1122,6 +1131,18 @@ namespace Barotrauma
                         (AnimController.CurrentHull.LethalPressure - 50.0f) / 50.0f);
                 }
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (Submarine == null ? 400.0f : 250.0f)+pressureEffect, 0.05f);
+            }
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == this)
+            {
+                if (memLocalPos.Count == 0 || NetTime.Now > memLocalPos.Last().Timestamp + 0.1f)
+                {
+                    memLocalPos.Add(
+                        new PosInfo(
+                            SimPosition,
+                            AnimController.Dir > 0.0f ? Direction.Right : Direction.Left,
+                            (float)NetTime.Now));
+                }
             }
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -1944,7 +1965,7 @@ namespace Barotrauma
                 CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
                 ch.HeadSpriteId = headSpriteID;
 
-                character = Character.Create(configPath, position, ch, true, hasAi);
+                character = Character.Create(configPath, position, ch, GameMain.Client.MyCharacterID != id, hasAi);
                 character.ID = id;
 
                 if (GameMain.Client.MyCharacterID == id)
