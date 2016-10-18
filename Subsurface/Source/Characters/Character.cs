@@ -1820,8 +1820,6 @@ namespace Barotrauma
         public virtual void ServerWrite(NetOutgoingMessage msg, Client c) 
         {
             msg.Write(ID);
-            //todo: only write this once in each packet, not for each character
-            msg.Write((float)NetTime.Now);
 
             msg.Write(AnimController.Dir > 0.0f);
 
@@ -1829,7 +1827,7 @@ namespace Barotrauma
             msg.Write(SimPosition.Y);
         }
 
-        public static void ClientReadStatic(NetIncomingMessage msg)
+        public static void ClientReadStatic(NetIncomingMessage msg, float sendingTime)
         {
             UInt16 id = msg.ReadUInt16();
             var character = Entity.FindEntityByID(id) as Character;
@@ -1838,25 +1836,24 @@ namespace Barotrauma
             {
                 //skip through the rest of the message
                 //todo: a better way to skip through the message?
-                msg.Position += 32 + 1 + 32 + 32;
+                msg.Position += 1 + 32 + 32;
             }
             else
             {
-                character.ClientRead(msg);
+                character.ClientRead(msg, sendingTime);
             }
         }
 
-        public virtual void ClientRead(NetIncomingMessage msg) 
+        public virtual void ClientRead(NetIncomingMessage msg, float sendingTime) 
         {
-            float sendingTime = msg.ReadSingle();
+            //float sendingTime = msg.ReadSingle();
             bool facingRight = msg.ReadBoolean();
             Vector2 pos = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-
 
             var posInfo = new PosInfo(
                 pos,  
                 facingRight ? Direction.Right : Direction.Left,
-                sendingTime - msg.SenderConnection.RemoteTimeOffset);
+                sendingTime);
 
             int index = 0;
             while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp)

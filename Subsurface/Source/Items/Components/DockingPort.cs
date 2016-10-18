@@ -662,7 +662,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             bool isDocked = msg.ReadBoolean();
 

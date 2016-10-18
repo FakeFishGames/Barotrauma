@@ -22,6 +22,6 @@ namespace Barotrauma.Networking
         UInt32 NetStateID { get; }
 
         void ServerWrite(NetOutgoingMessage msg, Client c);
-        void ClientRead(NetIncomingMessage msg);
+        void ClientRead(NetIncomingMessage msg, float sendingTime);
     }
 }

@@ -427,7 +427,7 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             IsActive = msg.ReadBoolean();
             isActiveTickBox.Selected = IsActive;

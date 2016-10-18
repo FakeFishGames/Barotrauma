@@ -1079,7 +1079,7 @@ namespace Barotrauma
             msg.Write(Velocity.Y);
         }
 
-        public void ClientRead(NetIncomingMessage msg)
+        public void ClientRead(NetIncomingMessage msg, float sendingTime)
         {
             subBody.TargetPosition  = new Vector2(msg.ReadSingle(), msg.ReadSingle());
             subBody.Velocity        = new Vector2(msg.ReadSingle(), msg.ReadSingle());

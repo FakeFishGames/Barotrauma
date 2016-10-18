@@ -568,7 +568,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
         }
 
-        public override void ClientRead(NetIncomingMessage msg)
+        public override void ClientRead(NetIncomingMessage msg, float sendingTime)
         {
             Temperature = msg.ReadRangedSingle(0.0f, 10000.0f, 16);
 
