@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             IsActive = msg.ReadBoolean();

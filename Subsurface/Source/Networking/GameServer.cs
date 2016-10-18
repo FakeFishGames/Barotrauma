@@ -625,6 +625,8 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)ServerPacketHeader.UPDATE_INGAME);
+            
+            outmsg.Write((float)NetTime.Now);
 
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server

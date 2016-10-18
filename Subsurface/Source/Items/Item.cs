@@ -1553,7 +1553,7 @@ namespace Barotrauma
         }
         
         public void ServerWrite(NetOutgoingMessage msg, Client c) { }
-        public void ClientRead(NetIncomingMessage msg) { }
+        public void ClientRead(NetIncomingMessage msg, float sendingTime) { }
 
         public void WriteSpawnData(NetOutgoingMessage msg)
         {

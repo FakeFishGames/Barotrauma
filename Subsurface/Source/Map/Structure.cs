@@ -833,7 +833,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(NetIncomingMessage msg) 
+        public void ClientRead(NetIncomingMessage msg, float sendingTime) 
         {
             for (int i = 0; i < sections.Count(); i++)
             {

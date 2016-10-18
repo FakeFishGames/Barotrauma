@@ -58,7 +58,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(Lidgren.Network.NetIncomingMessage message)
+        public void ClientRead(Lidgren.Network.NetIncomingMessage message, float sendingTime)
         {
             if (GameMain.Server != null) return;
 

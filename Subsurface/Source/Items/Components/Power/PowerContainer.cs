@@ -269,7 +269,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(chargeRatio, 0.0f, 1.0f, 8);
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             RechargeSpeed = msg.ReadRangedSingle(0.0f, 1.0f, 8) * maxRechargeSpeed;
 

@@ -499,7 +499,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg)
+        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             SetState(msg.ReadBoolean(), true);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);

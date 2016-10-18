@@ -696,6 +696,8 @@ namespace Barotrauma.Networking
 
         private void ReadIngameUpdate(NetIncomingMessage inc)
         {
+            float sendingTime = inc.ReadFloat() - inc.SenderConnection.RemoteTimeOffset;
+
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
@@ -705,24 +707,18 @@ namespace Barotrauma.Networking
                         lastSentChatMsgID = inc.ReadUInt32();
                         break;
                     case ServerNetObject.CHARACTER_POSITION:
-                        //bool dead = inc.ReadBoolean();
-                        Character.ClientReadStatic(inc);
+                        Character.ClientReadStatic(inc, sendingTime);
                         inc.ReadPadBits();
-                        //if (Character.Controlled != null)
-                        //{
-                        //    if (dead && !Character.Controlled.IsDead)
-                        //        Character.Controlled.Kill(CauseOfDeath.Damage);
-                        //}
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
                         break;
                     case ServerNetObject.ENTITY_SPAWN:
-                        Item.Spawner.ClientRead(inc);
+                        Item.Spawner.ClientRead(inc, sendingTime);
                         inc.ReadPadBits();
                         break;
                     case ServerNetObject.ENTITY_REMOVE:
-                        Item.Remover.ClientRead(inc);
+                        Item.Remover.ClientRead(inc, sendingTime);
                         inc.ReadPadBits();
                         break;
                     default:
