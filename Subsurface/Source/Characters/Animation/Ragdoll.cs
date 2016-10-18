@@ -1073,8 +1073,6 @@ namespace Barotrauma
             {
                 currPos = next.Position;
                 t = 1.0f;
-
-                return;
             }            
             
             collider.SetTransform(currPos, collider.Rotation);
