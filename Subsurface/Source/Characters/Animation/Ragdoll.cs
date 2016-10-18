@@ -1055,32 +1055,12 @@ namespace Barotrauma
             {
                 PosInfo serverPos = character.MemPos.Last();
 
-                //this doesn't work correctly, because the delay caused by the 150ms update interval isn't taken into account
-                //and the server may have unprocessed inputs in memInput (causing a 0-1s delay)
-                float localizedTimestamp = serverPos.Timestamp - GameMain.Client.ServerConnection.AverageRoundtripTime / 2;
+                int localPosIndex = character.MemLocalPos.FindIndex(m => m.ID == serverPos.ID);
+                if (localPosIndex == -1) return;
 
-                int index = 0;
-                for (index = 0; index < character.MemLocalPos.Count; index++)
-                {
-                    if (character.MemLocalPos[index].Timestamp > localizedTimestamp)
-                    {
-                        break;
-                    }
-                }
-                
-                if (index > character.MemLocalPos.Count-1 || index < 1) return;
+                PosInfo localPos = character.MemLocalPos[localPosIndex];
 
-                //local positions before and after the timestamp
-                PosInfo prevLocalPos = character.MemLocalPos[index - 1];
-                PosInfo nextLocalPos = character.MemLocalPos[index];
-
-                Vector2 localPos = Vector2.Lerp(
-                    prevLocalPos.Position,
-                    nextLocalPos.Position,
-                    (localizedTimestamp - prevLocalPos.Timestamp) / (nextLocalPos.Timestamp - prevLocalPos.Timestamp));
-
-
-                if (Vector2.Distance(localPos, serverPos.Position) > 0.5f)
+                if (Vector2.Distance(localPos.Position, serverPos.Position) > 0.1f)
                 {
                     //collider.SetTransform(collider.SimPosition + (pos.Position - remotePos), collider.Rotation);
                     collider.SetTransform(serverPos.Position, collider.Rotation);

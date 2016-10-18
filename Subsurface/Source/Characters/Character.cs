@@ -17,14 +17,27 @@ namespace Barotrauma
     struct PosInfo
     {
         public readonly Vector2 Position;
-        public Direction Direction;
+        public readonly Direction Direction;
+
         public readonly float Timestamp;
+        public readonly UInt32 ID;
 
         public PosInfo(Vector2 pos, Direction dir, float time)
         {
             Position = pos;
             Direction = dir;
             Timestamp = time;
+
+            ID = 0;
+        }
+
+        public PosInfo(Vector2 pos, Direction dir, UInt32 ID)
+        {
+            Position = pos;
+            Direction = dir;
+            this.ID = ID;
+
+            Timestamp = 0.0f;
         }
     }
 
@@ -1132,19 +1145,7 @@ namespace Barotrauma
                 }
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (Submarine == null ? 400.0f : 250.0f)+pressureEffect, 0.05f);
             }
-
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == this)
-            {
-                if (memLocalPos.Count == 0 || NetTime.Now > memLocalPos.Last().Timestamp + 0.1f)
-                {
-                    memLocalPos.Add(
-                        new PosInfo(
-                            SimPosition,
-                            AnimController.Dir > 0.0f ? Direction.Right : Direction.Left,
-                            (float)NetTime.Now));
-                }
-            }
-            
+                        
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
             if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
             {
@@ -1310,6 +1311,8 @@ namespace Barotrauma
             {
                 if (GameMain.Client != null)
                 {
+                    memLocalPos.Add(new PosInfo(SimPosition, AnimController.TargetDir, LastNetworkUpdateID));
+                    
                     byte newInput = 0;
                     newInput |= IsKeyDown(InputType.Left) ? (byte)0x1 : (byte)0;
                     newInput |= IsKeyDown(InputType.Right) ? (byte)0x2 : (byte)0;
@@ -1842,6 +1845,9 @@ namespace Barotrauma
         {
             msg.Write(ID);
 
+            //todo: only write this if sending for the client who's controlling the character?
+            msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count));
+
             msg.Write(AnimController.Dir > 0.0f);
 
             msg.Write(SimPosition.X);
@@ -1857,7 +1863,7 @@ namespace Barotrauma
             {
                 //skip through the rest of the message
                 //todo: a better way to skip through the message?
-                msg.Position += 1 + 32 + 32;
+                msg.Position += 32 + 1 + 32 + 32;
             }
             else
             {
@@ -1867,14 +1873,17 @@ namespace Barotrauma
 
         public virtual void ClientRead(NetIncomingMessage msg, float sendingTime) 
         {
+            UInt32 networkUpdateID = msg.ReadUInt32();
+
             //float sendingTime = msg.ReadSingle();
             bool facingRight = msg.ReadBoolean();
             Vector2 pos = new Vector2(msg.ReadFloat(), msg.ReadFloat());
 
-            var posInfo = new PosInfo(
-                pos,  
-                facingRight ? Direction.Right : Direction.Left,
-                sendingTime);
+            
+            var posInfo = 
+                GameMain.NetworkMember.Character == this ?
+                new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID) :
+                new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, sendingTime);
 
             int index = 0;
             while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp)
