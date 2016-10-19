@@ -1053,6 +1053,8 @@ namespace Barotrauma
         
         private void UpdateNetPlayerPosition(float deltaTime)
         {
+            if (GameMain.NetworkMember == null) return;
+
             if (character == GameMain.NetworkMember.Character)
             {
                 if (character.MemPos.Count < 2) return;
