@@ -475,7 +475,7 @@ namespace Barotrauma
 
         public override Vector2 DrawPosition
         {
-            get { return AnimController.Collider.DrawPosition; }
+            get { return AnimController.MainLimb.body.DrawPosition; }
         }
 
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
