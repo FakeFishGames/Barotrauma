@@ -15,8 +15,6 @@ namespace Barotrauma
         private float waveAmplitude;
         private float waveLength;
 
-        private Limb mainLimb;
-
         private bool rotateTowardsMovement;
 
         private bool mirror, flip;
@@ -45,19 +43,16 @@ namespace Barotrauma
             }
 
             rotateTowardsMovement = ToolBox.GetAttributeBool(element, "rotatetowardsmovement", true);
-
-            Limb torso = GetLimb(LimbType.Torso);
-            Limb head = GetLimb(LimbType.Head);
-
-            mainLimb = torso == null ? head : torso;
         }
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (character.IsDead || Frozen || character.IsUnconscious || stunTimer > 0.0f)
+            if (Frozen) return;
+
+            if (character.IsDead || character.IsUnconscious || stunTimer > 0.0f)
             {
                 collider.PhysEnabled = false;
-                collider.SetTransform(mainLimb.SimPosition, 0.0f);
+                collider.SetTransform(MainLimb.SimPosition, 0.0f);
 
                 if (stunTimer > 0.0f)
                 {
@@ -169,31 +164,23 @@ namespace Barotrauma
             Limb torso = GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
 
-            mainLimb.pullJoint.Enabled = true;
-            mainLimb.pullJoint.WorldAnchorB = collider.SimPosition;
+            MainLimb.pullJoint.Enabled = true;
+            MainLimb.pullJoint.WorldAnchorB = collider.SimPosition;
 
             if (movement.LengthSquared() < 0.00001f) return;
 
             float movementAngle = MathUtils.VectorToAngle(movement) - MathHelper.PiOver2;
-
-
+            
             if (rotateTowardsMovement)
             {
                 collider.SmoothRotate(movementAngle, 25.0f);
-                mainLimb.body.SmoothRotate(movementAngle, 25.0f);
+                MainLimb.body.SmoothRotate(movementAngle, 25.0f);
             }
             else
             {
                 collider.SmoothRotate(HeadAngle * Dir, 25.0f);
-                mainLimb.body.SmoothRotate(HeadAngle * Dir, 25.0f);
+                MainLimb.body.SmoothRotate(HeadAngle * Dir, 25.0f);
             }
-
-            //float angle = (rotateTowardsMovement) ?
-            //    mainLimb.body.Rotation + MathUtils.GetShortestAngle(mainLimb.body.Rotation, movementAngle) :
-            //    HeadAngle * Dir;
-            
-            //collider.SmoothRotate(angle, 25.0f);
-            //mainLimb.body.SmoothRotate(angle, 25.0f);
 
             Limb tail = GetLimb(LimbType.Tail);
             if (tail != null && waveAmplitude > 0.0f)
@@ -211,11 +198,11 @@ namespace Barotrauma
                 Vector2 pullPos = Limbs[i].pullJoint == null ? Limbs[i].SimPosition : Limbs[i].pullJoint.WorldAnchorA;
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);                
 
-                if (Limbs[i] == mainLimb) continue;
+                if (Limbs[i] == MainLimb) continue;
 
-                float dist = (mainLimb.SimPosition - Limbs[i].SimPosition).Length();
+                float dist = (MainLimb.SimPosition - Limbs[i].SimPosition).Length();
 
-                Vector2 limbPos = mainLimb.SimPosition - Vector2.Normalize(movement) * dist;
+                Vector2 limbPos = MainLimb.SimPosition - Vector2.Normalize(movement) * dist;
 
                 Limbs[i].body.ApplyForce(((limbPos - Limbs[i].SimPosition) * 3.0f - Limbs[i].LinearVelocity * 3.0f) * Limbs[i].Mass);
             }
@@ -233,7 +220,7 @@ namespace Barotrauma
             IgnorePlatforms = (TargetMovement.Y < -Math.Abs(TargetMovement.X));
 
             float mainLimbHeight, mainLimbAngle;
-            if (mainLimb.type == LimbType.Torso)
+            if (MainLimb.type == LimbType.Torso)
             {
                 mainLimbHeight = TorsoPosition;
                 mainLimbAngle = torsoAngle;
@@ -244,18 +231,18 @@ namespace Barotrauma
                 mainLimbAngle = headAngle;
             }
 
-            mainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);
+            MainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);
             
             collider.LinearVelocity = new Vector2(
                 movement.X,
                 collider.LinearVelocity.Y > 0.0f ? collider.LinearVelocity.Y * 0.5f : collider.LinearVelocity.Y);
 
-            mainLimb.MoveToPos(GetColliderBottom() + Vector2.UnitY * mainLimbHeight, 10.0f);
+            MainLimb.MoveToPos(GetColliderBottom() + Vector2.UnitY * mainLimbHeight, 10.0f);
             
-            mainLimb.pullJoint.Enabled = true;
-            mainLimb.pullJoint.WorldAnchorB = GetColliderBottom() + Vector2.UnitY * mainLimbHeight;
+            MainLimb.pullJoint.Enabled = true;
+            MainLimb.pullJoint.WorldAnchorB = GetColliderBottom() + Vector2.UnitY * mainLimbHeight;
 
-            walkPos -= mainLimb.LinearVelocity.X * 0.05f;
+            walkPos -= MainLimb.LinearVelocity.X * 0.05f;
 
             Vector2 transformedStepSize = new Vector2(
                 (float)Math.Cos(walkPos) * stepSize.X * 3.0f,
@@ -267,7 +254,7 @@ namespace Barotrauma
                 {
                     case LimbType.LeftFoot:
                     case LimbType.RightFoot:
-                        Vector2 footPos = new Vector2(limb.SimPosition.X, mainLimb.SimPosition.Y - mainLimbHeight);
+                        Vector2 footPos = new Vector2(limb.SimPosition.X, MainLimb.SimPosition.Y - mainLimbHeight);
 
                         if (limb.RefJointIndex>-1)
                         {

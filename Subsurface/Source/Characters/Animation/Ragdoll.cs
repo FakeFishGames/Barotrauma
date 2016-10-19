@@ -98,6 +98,12 @@ namespace Barotrauma
             private set;
         }
 
+        public Limb MainLimb
+        {
+            get;
+            private set;
+        }
+
         public Vector2 WorldPosition
         {
             get
@@ -313,6 +319,11 @@ namespace Barotrauma
             {
                 limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
             }
+
+            Limb torso = GetLimb(LimbType.Torso);
+            Limb head = GetLimb(LimbType.Head);
+
+            MainLimb = torso == null ? head : torso;
         }
 
         public void AddJoint(XElement subElement, float scale = 1.0f)
@@ -702,7 +713,7 @@ namespace Barotrauma
             SetPosition(collider.SimPosition + moveAmount);
             character.CursorPosition += moveAmount;
         }
-
+        
         private void UpdateCollisionCategories()
         {
             Category wall = currentHull == null ? 
@@ -732,11 +743,10 @@ namespace Barotrauma
 
         public void Update(Camera cam, float deltaTime)
         {
-            if (!character.Enabled) return;
-
-            if (Frozen) return;
+            if (!character.Enabled || Frozen) return;
 
             UpdateNetPlayerPosition(deltaTime);
+            CheckDistFromCollider();
             
             Vector2 flowForce = Vector2.Zero;
 
@@ -1025,25 +1035,30 @@ namespace Barotrauma
             }
         }
 
-        //public void SetRotation(float rotation)
-        //{
-        //    float rotateAmount = rotation - refLimb.Rotation;
 
-        //    Matrix rotationMatrix = Matrix.CreateRotationZ(rotateAmount);
+        private bool collisionsDisabled;
 
-        //    refLimb.body.SetTransform(refLimb.SimPosition, rotation);
+        protected void CheckDistFromCollider()
+        {
+            float allowedDist = Math.Max(Math.Max(collider.radius, collider.width), collider.height);
 
-        //    foreach (Limb limb in Limbs)
-        //    {
-        //        if (limb == refLimb) continue;
+            //if the ragdoll is too far from the collider, disable collisions until it's close enough
+            //(in case the ragdoll has gotten stuck somewhere)
+            if (Vector2.Distance(collider.SimPosition, MainLimb.SimPosition) > allowedDist)
+            {
+                foreach (Limb limb in Limbs)
+                {
+                    limb.body.CollidesWith = Physics.CollisionNone;
+                }
 
-        //        Vector2 newPos = limb.SimPosition - refLimb.SimPosition;
-        //        newPos = Vector2.Transform(newPos, rotationMatrix);
-
-        //        TrySetLimbPosition(limb, refLimb.SimPosition, refLimb.SimPosition + newPos);
-        //        limb.body.SetTransform(limb.SimPosition, limb.Rotation + rotateAmount);
-        //    }
-        //}
+                collisionsDisabled = true;
+            }
+            else if (collisionsDisabled)
+            {
+                UpdateCollisionCategories();
+                collisionsDisabled = false;
+            }
+        }
 
         float t = 0.0f;
 
@@ -1068,41 +1083,41 @@ namespace Barotrauma
 
                 if (character.MemLocalPos.Count > 120) character.MemLocalPos.RemoveRange(0, character.MemLocalPos.Count - 120);
                 character.MemPos.Clear();
-
-                return;
-            }
-            
-            PosInfo prev = character.MemPos[0];
-            PosInfo next = character.MemPos[1];
-            
-            Vector2 currPos = collider.SimPosition;
-
-            //interpolate the position of the collider from the first position in the buffer towards the second
-            if (prev.Timestamp < next.Timestamp)
-            {
-                //if there are more than 2 positions in the buffer, 
-                //increase the interpolation speed to catch up with the server
-                float speedMultiplier = 1.0f + (float)Math.Pow((character.MemPos.Count - 2) / 2.0f, 2.0f);
-
-                t += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
-                currPos = Vector2.Lerp(prev.Position, next.Position, t);
-
-                //override the targetMovement to make the character play the walking/running animation
-                overrideTargetMovement = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
             }
             else
             {
-                currPos = next.Position;
-                t = 1.0f;
-            }            
-            
-            collider.SetTransform(currPos, collider.Rotation);
+                PosInfo prev = character.MemPos[0];
+                PosInfo next = character.MemPos[1];
 
-            if (t >= 1.0f)
-            {
-                t = 0.0f;
-                character.MemPos.RemoveAt(0);
-            }
+                Vector2 currPos = collider.SimPosition;
+
+                //interpolate the position of the collider from the first position in the buffer towards the second
+                if (prev.Timestamp < next.Timestamp)
+                {
+                    //if there are more than 2 positions in the buffer, 
+                    //increase the interpolation speed to catch up with the server
+                    float speedMultiplier = 1.0f + (float)Math.Pow((character.MemPos.Count - 2) / 2.0f, 2.0f);
+
+                    t += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
+                    currPos = Vector2.Lerp(prev.Position, next.Position, t);
+
+                    //override the targetMovement to make the character play the walking/running animation
+                    overrideTargetMovement = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
+                }
+                else
+                {
+                    currPos = next.Position;
+                    t = 1.0f;
+                }
+
+                collider.SetTransform(currPos, collider.Rotation);
+
+                if (t >= 1.0f)
+                {
+                    t = 0.0f;
+                    character.MemPos.RemoveAt(0);
+                }
+            }            
         }
 
         public virtual Vector2 EstimateCurrPosition(Vector2 prevPosition, float timePassed)

@@ -61,10 +61,11 @@ namespace Barotrauma
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (character.IsDead || Frozen || character.IsUnconscious || stunTimer > 0.0f)
+            if (Frozen) return;
+            
+            if (character.IsDead || character.IsUnconscious || stunTimer > 0.0f)
             {
                 collider.PhysEnabled = false;
-
                 collider.SetTransform(GetLimb(LimbType.Torso).SimPosition, 0.0f);
 
                 if (stunTimer > 0)
@@ -97,9 +98,7 @@ namespace Barotrauma
                         0.0f);
 
                     collider.FarseerBody.Enabled = true;
-                }
-
-            
+                }            
 
                 if (swimming)
                 {
@@ -146,12 +145,6 @@ namespace Barotrauma
 
                 HandIK(rightHand, midPos);
                 HandIK(leftHand, midPos);
-
-                //rightHand.pullJoint.Enabled = true;
-                //rightHand.pullJoint.WorldAnchorB = midPos;
-
-                //rightHand.pullJoint.Enabled = true;
-                //rightHand.pullJoint.WorldAnchorB = midPos;
             }
             else
             {
@@ -310,8 +303,6 @@ namespace Barotrauma
                 }
             }
 
-            //if (LowestLimb == null) return;
-
             if (onGround && (!character.IsRemotePlayer || GameMain.Server != null))
             {
                 collider.LinearVelocity = new Vector2(
@@ -319,14 +310,6 @@ namespace Barotrauma
                     collider.LinearVelocity.Y > 0.0f ? collider.LinearVelocity.Y * 0.5f : collider.LinearVelocity.Y);
             }
 
-            //float? ceilingY = null;
-            //if (Submarine.PickBody(head.SimPosition, head.SimPosition + Vector2.UnitY, null, Physics.CollisionWall)!=null)
-            //{
-            //    ceilingY = Submarine.LastPickedPosition.Y;
-
-            //    if (ceilingY - floorY < HeadPosition) Crouching = true;
-            //}
-            
             getUpSpeed = getUpSpeed * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.5f);
 
             torso.pullJoint.Enabled = true;
@@ -585,14 +568,7 @@ namespace Barotrauma
                     //pull head above water
                     head.body.SmoothRotate(0.0f, 5.0f);
 
-
                     walkPos += 0.05f;
-
-                    //push feet downwards
-                    //leftFoot.body.ApplyForce(leftFoot.Mass * new Vector2(0.0f, -50.0f));
-                   // rightFoot.body.ApplyForce(rightFoot.Mass * new Vector2(0.0f, -50.0f));
-
-
                 }
                 else
                 {
