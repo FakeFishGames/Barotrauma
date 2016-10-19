@@ -419,9 +419,12 @@ namespace Barotrauma
 
                 for (int i = 0; i < triangles.Count; i++)
                 {
-                    if (triangles[i][0].Y == triangles[i][1].Y && triangles[i][0].Y == triangles[i][2].Y) continue;
-                    if (triangles[i][0].X == triangles[i][1].X && triangles[i][0].X == triangles[i][2].X) continue;
-
+                    //don't create a triangle if any of the vertices are too close to each other
+                    //(apparently Farseer doesn't like polygons with a very small area, see Shape.ComputeProperties)
+                    if (Vector2.Distance(triangles[i][0], triangles[i][1]) < 0.05f ||
+                        Vector2.Distance(triangles[i][0], triangles[i][2]) < 0.05f ||
+                        Vector2.Distance(triangles[i][1], triangles[i][2]) < 0.05f) continue;
+                    
                     Vertices bodyVertices = new Vertices(triangles[i]);
                     FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
                 }
