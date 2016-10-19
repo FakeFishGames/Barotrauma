@@ -798,13 +798,22 @@ namespace Barotrauma
                 if (length > 0.0f) targetMovement = targetMovement / length;
             }
 
-            if (AnimController is HumanoidAnimController &&
-                !((HumanoidAnimController)AnimController).Crouching &&
-                Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir) && 
-                IsKeyDown(InputType.Run))
+            if (IsKeyDown(InputType.Run))
             {
-                targetMovement *= 3.0f;
+                //can't run if
+                //  - not a humanoid
+                //  - dragging someone
+                //  - crouching
+                //  - moving backwards
+                if (AnimController is HumanoidAnimController &&
+                    selectedCharacter == null &&
+                    !((HumanoidAnimController)AnimController).Crouching &&
+                    Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir))
+                {
+                    targetMovement *= 3.0f;
+                }
             }
+
 
             targetMovement *= SpeedMultiplier;
             SpeedMultiplier = 1.0f;
@@ -1845,41 +1854,39 @@ namespace Barotrauma
         {
             msg.Write(ID);
 
-            //todo: only write this if sending for the client who's controlling the character?
-            msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count));
+            if (this == c.Character)
+            {
+                //length of the message
+                msg.Write((byte)(4+4+4+4));
+                msg.Write(true);
+                msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count));
+            }
+            else
+            {
+                //length of the message
+                msg.Write((byte)(4+4+4));
+                msg.Write(false);
+            }
 
             msg.Write(AnimController.Dir > 0.0f);
 
             msg.Write(SimPosition.X);
             msg.Write(SimPosition.Y);
-        }
 
-        public static void ClientReadStatic(NetIncomingMessage msg, float sendingTime)
-        {
-            UInt16 id = msg.ReadUInt16();
-            var character = Entity.FindEntityByID(id) as Character;
-
-            if (character == null)
-            {
-                //skip through the rest of the message
-                //todo: a better way to skip through the message?
-                msg.Position += 32 + 1 + 32 + 32;
-            }
-            else
-            {
-                character.ClientRead(msg, sendingTime);
-            }
+            msg.WritePadBits();
         }
 
         public virtual void ClientRead(NetIncomingMessage msg, float sendingTime) 
         {
-            UInt32 networkUpdateID = msg.ReadUInt32();
+            UInt32 networkUpdateID = 0;
+            if (msg.ReadBoolean())
+            {
+                networkUpdateID = msg.ReadUInt32();
+            }
 
-            //float sendingTime = msg.ReadSingle();
             bool facingRight = msg.ReadBoolean();
             Vector2 pos = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-
-            
+                        
             var posInfo = 
                 GameMain.NetworkMember.Character == this ?
                 new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID) :

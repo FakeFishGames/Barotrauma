@@ -53,6 +53,8 @@ namespace Barotrauma
 
         Vector2 offsetFromTargetPos;
 
+        private float netInterpolationState;
+
         public Shape BodyShape
         {
             get { return bodyShape; }
@@ -461,6 +463,45 @@ namespace Barotrauma
                 new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2), 
                 1.0f, SpriteEffects.None, 0.0f);
         }
+
+        public void CorrectPosition(List<PosInfo> positionBuffer, float deltaTime, out Vector2 newVelocity)
+        {
+            newVelocity = Vector2.Zero;
+            if (positionBuffer.Count < 2) return;
+
+            PosInfo prev = positionBuffer[0];
+            PosInfo next = positionBuffer[1];
+
+            Vector2 currPos = SimPosition;
+
+            //interpolate the position of the collider from the first position in the buffer towards the second
+            if (prev.Timestamp < next.Timestamp)
+            {
+                //if there are more than 2 positions in the buffer, 
+                //increase the interpolation speed to catch up with the server
+                float speedMultiplier = 1.0f + (float)Math.Pow((positionBuffer.Count - 2) / 2.0f, 2.0f);
+
+                netInterpolationState += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
+                currPos = Vector2.Lerp(prev.Position, next.Position, netInterpolationState);
+
+                //override the targetMovement to make the character play the walking/running animation
+                newVelocity = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
+            }
+            else
+            {
+                currPos = next.Position;
+                netInterpolationState = 1.0f;
+            }
+
+            SetTransform(currPos, Rotation);
+
+            if (netInterpolationState >= 1.0f)
+            {
+                netInterpolationState = 0.0f;
+                positionBuffer.RemoveAt(0);
+            }
+        }
+
         
 
         /// <summary>

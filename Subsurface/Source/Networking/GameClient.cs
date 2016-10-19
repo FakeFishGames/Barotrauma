@@ -707,7 +707,20 @@ namespace Barotrauma.Networking
                         lastSentChatMsgID = inc.ReadUInt32();
                         break;
                     case ServerNetObject.CHARACTER_POSITION:
-                        Character.ClientReadStatic(inc, sendingTime);
+                        UInt16 id = inc.ReadUInt16();
+                        byte msgLength = inc.ReadByte();
+
+                        var character = Entity.FindEntityByID(id) as Character;
+                        if (character == null)
+                        {
+                            //skip through the rest of the message
+                            inc.Position += msgLength * 8;
+                        }
+                        else
+                        {
+                            character.ClientRead(inc, sendingTime);
+                        }
+
                         inc.ReadPadBits();
                         break;
                     case ServerNetObject.CHAT_MESSAGE:

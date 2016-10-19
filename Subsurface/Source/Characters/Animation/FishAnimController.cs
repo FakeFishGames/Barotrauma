@@ -321,16 +321,6 @@ namespace Barotrauma
                 l.body.SetTransform(l.SimPosition,
                     -l.body.Rotation);                
             }
-
-        }
-
-        public override Vector2 EstimateCurrPosition(Vector2 prevPosition, float timePassed)
-        {
-            timePassed = MathHelper.Clamp(timePassed, 0.0f, 1.0f);
-
-            Vector2 currPosition = prevPosition + targetMovement * timePassed;
-
-            return currPosition;
         }
 
         private void Mirror()
