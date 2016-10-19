@@ -941,18 +941,6 @@ namespace Barotrauma
                 {
                     case Physics.CollisionStairs:
                         if (inWater && TargetMovement.Y < 0.5f) return -1;
-                        //Structure structure = fixture.Body.UserData as Structure;
-                        //if (stairs == null && structure != null)
-                        //{
-                        //    if (LowestLimb.SimPosition.Y < structure.SimPosition.Y)
-                        //    {
-                        //        return -1;
-                        //    }
-                        //    else
-                        //    {
-                        //        stairs = structure;
-                        //    }
-                        //}
                         break;
                     case Physics.CollisionPlatform:
                         Structure platform = fixture.Body.UserData as Structure;
@@ -1040,7 +1028,7 @@ namespace Barotrauma
 
         protected void CheckDistFromCollider()
         {
-            float allowedDist = Math.Max(Math.Max(collider.radius, collider.width), collider.height);
+            float allowedDist = Math.Max(Math.Max(collider.radius, collider.width), collider.height) * 2.0f;
 
             //if the ragdoll is too far from the collider, disable collisions until it's close enough
             //(in case the ragdoll has gotten stuck somewhere)
@@ -1055,19 +1043,20 @@ namespace Barotrauma
             }
             else if (collisionsDisabled)
             {
+                //set the position of the ragdoll to make sure limbs don't get stuck inside walls when re-enabling collisions
+                SetPosition(MainLimb.SimPosition, true);
+
                 UpdateCollisionCategories();
                 collisionsDisabled = false;
             }
         }
-
-        float t = 0.0f;
-
+        
         private void UpdateNetPlayerPosition(float deltaTime)
         {
-            if (character.MemPos.Count < 2) return;
-
             if (character == GameMain.NetworkMember.Character)
             {
+                if (character.MemPos.Count < 2) return;
+
                 PosInfo serverPos = character.MemPos.Last();
 
                 int localPosIndex = character.MemLocalPos.FindIndex(m => m.ID == serverPos.ID);
@@ -1086,46 +1075,10 @@ namespace Barotrauma
             }
             else
             {
-                PosInfo prev = character.MemPos[0];
-                PosInfo next = character.MemPos[1];
-
-                Vector2 currPos = collider.SimPosition;
-
-                //interpolate the position of the collider from the first position in the buffer towards the second
-                if (prev.Timestamp < next.Timestamp)
-                {
-                    //if there are more than 2 positions in the buffer, 
-                    //increase the interpolation speed to catch up with the server
-                    float speedMultiplier = 1.0f + (float)Math.Pow((character.MemPos.Count - 2) / 2.0f, 2.0f);
-
-                    t += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
-                    currPos = Vector2.Lerp(prev.Position, next.Position, t);
-
-                    //override the targetMovement to make the character play the walking/running animation
-                    overrideTargetMovement = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
-                }
-                else
-                {
-                    currPos = next.Position;
-                    t = 1.0f;
-                }
-
-                collider.SetTransform(currPos, collider.Rotation);
-
-                if (t >= 1.0f)
-                {
-                    t = 0.0f;
-                    character.MemPos.RemoveAt(0);
-                }
+                collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
             }            
         }
-
-        public virtual Vector2 EstimateCurrPosition(Vector2 prevPosition, float timePassed)
-        {
-            return prevPosition;
-        }
-
-
+        
         private Vector2 GetFlowForce()
         {
             Vector2 limbPos = ConvertUnits.ToDisplayUnits(Limbs[0].SimPosition);

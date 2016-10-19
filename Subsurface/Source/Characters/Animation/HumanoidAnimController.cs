@@ -1083,17 +1083,6 @@ namespace Barotrauma
             hand.body.SmoothRotate((ang2 + handAngle * Dir), 100.0f * force);
         }
 
-        public override Vector2 EstimateCurrPosition(Vector2 prevPosition, float timePassed)
-        {
-            timePassed = MathHelper.Clamp(timePassed, 0.0f, 1.0f);
-
-            Vector2 targetMovement = character.GetTargetMovement();
-
-            Vector2 currPosition = prevPosition + targetMovement * timePassed / 500.0f;
-
-            return currPosition;
-        }
-
         public override void Flip()
         {
             base.Flip();
