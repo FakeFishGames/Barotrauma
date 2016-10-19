@@ -49,9 +49,24 @@ namespace Barotrauma
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+
+                if (character.Inventory != null)
                 {
-                    character.Inventory.Update(deltaTime);
+                    if (!character.LockHands && character.Stun >= -0.1f)
+                    {
+                        character.Inventory.Update(deltaTime);
+                    }
+
+                    for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
+                    {
+                        var item = character.Inventory.Items[i];
+                        if (item == null || CharacterInventory.limbSlots[i] == InvSlotType.Any) continue;
+
+                        foreach (ItemComponent ic in item.components)
+                        {
+                            if (ic.DrawHudWhenEquipped) ic.UpdateHUD(character);
+                        }
+                    }
                 }
 
                 if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
@@ -80,12 +95,11 @@ namespace Barotrauma
 
             if (character.Inventory != null)
             {
-                for (int i = 0; i< character.Inventory.Items.Length-1; i++)
+                for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                 {
                     var item = character.Inventory.Items[i];
-                    if (item == null || CharacterInventory.limbSlots[i]==InvSlotType.Any) continue;
-                    //var statusHUD = item.GetComponent<StatusHUD>();
-                    //if (statusHUD == null) continue;
+                    if (item == null || CharacterInventory.limbSlots[i] == InvSlotType.Any) continue;
+
                     foreach (ItemComponent ic in item.components)
                     {
                         if (ic.DrawHudWhenEquipped) ic.DrawHUD(spriteBatch, character);
