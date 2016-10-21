@@ -412,6 +412,8 @@ namespace Barotrauma
                     }
                 }               
             }
+
+            selectedSlot = -1;
         }
                  
         public void DrawOwn(SpriteBatch spriteBatch)
