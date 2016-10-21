@@ -1044,7 +1044,7 @@ namespace Barotrauma
             else if (collisionsDisabled)
             {
                 //set the position of the ragdoll to make sure limbs don't get stuck inside walls when re-enabling collisions
-                SetPosition(MainLimb.SimPosition, true);
+                SetPosition(collider.SimPosition, true);
 
                 UpdateCollisionCategories();
                 collisionsDisabled = false;
@@ -1062,15 +1062,19 @@ namespace Barotrauma
                 PosInfo serverPos = character.MemPos.Last();
 
                 int localPosIndex = character.MemLocalPos.FindIndex(m => m.ID == serverPos.ID);
-                if (localPosIndex == -1) return;
-
-                PosInfo localPos = character.MemLocalPos[localPosIndex];
-
-                if (Vector2.Distance(localPos.Position, serverPos.Position) > 0.1f)
+                if (localPosIndex > -1)
                 {
-                    //collider.SetTransform(collider.SimPosition + (pos.Position - remotePos), collider.Rotation);
-                    collider.SetTransform(serverPos.Position, collider.Rotation);
+                    PosInfo localPos = character.MemLocalPos[localPosIndex];
+
+                    if (Vector2.Distance(localPos.Position, serverPos.Position) > 0.1f)
+                    {
+                        //collider.SetTransform(collider.SimPosition + (pos.Position - remotePos), collider.Rotation);
+                        collider.SetTransform(serverPos.Position, collider.Rotation);
+                       // character.MemLocalPos.RemoveRange(localPosIndex, character.MemLocalPos.Count - localPosIndex);
+                    }
                 }
+
+
 
                 if (character.MemLocalPos.Count > 120) character.MemLocalPos.RemoveRange(0, character.MemLocalPos.Count - 120);
                 character.MemPos.Clear();
