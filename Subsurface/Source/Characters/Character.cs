@@ -1857,14 +1857,14 @@ namespace Barotrauma
             if (this == c.Character)
             {
                 //length of the message
-                msg.Write((byte)(4+4+4+4));
+                msg.Write((byte)(4+4+4+1));
                 msg.Write(true);
                 msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count));
             }
             else
             {
                 //length of the message
-                msg.Write((byte)(4+4+4));
+                msg.Write((byte)(4+4+1));
                 msg.Write(false);
             }
 

@@ -646,15 +646,6 @@ namespace Barotrauma.Networking
                 }
             }
 
-            foreach (Character character in Character.CharacterList)
-            {
-                if (character is AICharacter) continue;
-
-                outmsg.Write((byte)ServerNetObject.CHARACTER_POSITION);
-                character.ServerWrite(outmsg, c);
-                outmsg.WritePadBits();
-            }
-
             if (Item.Spawner.NetStateID > c.lastRecvEntitySpawnID)
             {
                 outmsg.Write((byte)ServerNetObject.ENTITY_SPAWN);
@@ -669,6 +660,14 @@ namespace Barotrauma.Networking
                 outmsg.WritePadBits();
             }
 
+            foreach (Character character in Character.CharacterList)
+            {
+                if (character is AICharacter) continue;
+
+                outmsg.Write((byte)ServerNetObject.CHARACTER_POSITION);
+                character.ServerWrite(outmsg, c);
+                outmsg.WritePadBits();
+            }
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
