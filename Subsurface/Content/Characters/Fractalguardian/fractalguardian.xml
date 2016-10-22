@@ -6,10 +6,11 @@
   
   <ragdoll waveamplitude="50.0" wavelength="500" swimspeed="3.0" walkspeed="0.3" flip="false" canentersubmarine="false">
 
+    <collider radius="50"/>
     <!-- head -->
     <limb id = "0" radius="65" type="Head" steerforce="3.0" impacttolerance="100">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="0,0,129,128" depth="0.04"/>
-      <attack type="Hit" range="120" duration="0.2" damage="50" stun="2" force="20" damagetype="blunt" targetforce="80"/>
+      <attack type="Hit" range="120" duration="0.2" damage="50" stun="2" force="10" damagetype="blunt" targetforce="80"/>
     </limb>
 
     <!-- body -->

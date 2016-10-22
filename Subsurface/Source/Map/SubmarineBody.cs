@@ -434,7 +434,7 @@ namespace Barotrauma
                 {
                     Vector2 normal = Vector2.Normalize(Body.Position - limb.SimPosition);
 
-                    float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 5.0f);
+                    float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f;
 
                     ApplyImpact(impact * Math.Min(limb.Mass / 200.0f, 1), -normal, contact);
                 }
@@ -497,8 +497,8 @@ namespace Barotrauma
             FixedArray2<Vector2> points;
             contact.GetWorldManifold(out normal2, out points);
 
-            Vector2 normalizedVel = limb.character.AnimController.RefLimb.LinearVelocity == Vector2.Zero ?
-                Vector2.Zero : Vector2.Normalize(limb.character.AnimController.RefLimb.LinearVelocity);
+            Vector2 normalizedVel = limb.character.AnimController.Collider.LinearVelocity == Vector2.Zero ?
+                Vector2.Zero : Vector2.Normalize(limb.character.AnimController.Collider.LinearVelocity);
 
             Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - normal2);
 
@@ -558,9 +558,10 @@ namespace Barotrauma
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (c.AnimController.LowestLimb == limb) continue;
                     limb.body.ApplyLinearImpulse(limb.Mass * impulse);
                 }
+
+                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse);
             }
 
             foreach (Item item in Item.ItemList)

@@ -428,7 +428,7 @@ namespace Barotrauma
                         characterIndex = -1;
                     }
 
-                    var matchingCharacters = Character.CharacterList.FindAll(c => !c.IsNetworkPlayer && c.Name.ToLowerInvariant() == characterName);
+                    var matchingCharacters = Character.CharacterList.FindAll(c => !c.IsRemotePlayer && c.Name.ToLowerInvariant() == characterName);
 
                     if (!matchingCharacters.Any())
                     {

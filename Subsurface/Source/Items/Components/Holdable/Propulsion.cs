@@ -71,23 +71,18 @@ namespace Barotrauma.Items.Components
 
             if (character.AnimController.InWater) character.AnimController.TargetMovement = dir;
 
-            if (item.body.Enabled && false)
+            foreach (Limb limb in character.AnimController.Limbs)
             {
-                item.body.ApplyForce(propulsion);
+                if (limb.WearingItems.Find(w => w.WearableComponent.Item == this.item)==null) continue;
+
+                limb.body.ApplyForce(propulsion);
             }
-            else
-            {
-                foreach (Limb limb in character.AnimController.Limbs)
-                {
-                    if (limb.WearingItems.Find(w => w.WearableComponent.Item == this.item)==null) continue;
 
-                    limb.body.ApplyForce(propulsion);
-                }
+            character.AnimController.Collider.ApplyForce(propulsion);
 
-                if (character.SelectedItems[0] == item) character.AnimController.GetLimb(LimbType.RightHand).body.ApplyForce(propulsion);
-
-                if (character.SelectedItems[1] == item) character.AnimController.GetLimb(LimbType.LeftHand).body.ApplyForce(propulsion);
-            }
+            if (character.SelectedItems[0] == item) character.AnimController.GetLimb(LimbType.RightHand).body.ApplyForce(propulsion);
+            if (character.SelectedItems[1] == item) character.AnimController.GetLimb(LimbType.LeftHand).body.ApplyForce(propulsion);
+            
 
             if (!string.IsNullOrWhiteSpace(particles))
             {

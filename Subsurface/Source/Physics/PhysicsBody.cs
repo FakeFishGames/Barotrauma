@@ -53,6 +53,8 @@ namespace Barotrauma
 
         Vector2 offsetFromTargetPos;
 
+        private float netInterpolationState;
+
         public Shape BodyShape
         {
             get { return bodyShape; }
@@ -118,10 +120,17 @@ namespace Barotrauma
             set { dir = value; }
         }
 
+        private bool isEnabled = true;
+        private bool isPhysEnabled = true;
         public bool Enabled
         {
+            get { return isEnabled; }
+            set { isEnabled = value; if (isEnabled) body.Enabled = isPhysEnabled; else body.Enabled = false; }
+        }
+        public bool PhysEnabled
+        {
             get { return body.Enabled; }
-            set { body.Enabled = value; }
+            set { isPhysEnabled = value; if (Enabled) body.Enabled = value; }
         }
 
         public Vector2 SimPosition
@@ -192,6 +201,12 @@ namespace Barotrauma
             set { body.CollidesWith = value; }
         }
 
+        private Texture2D bodyShapeTexture;
+        public Texture2D BodyShapeTexture
+        {
+            get { return bodyShapeTexture; }
+        }
+
         public PhysicsBody(XElement element, float scale = 1.0f)
             : this(element, Vector2.Zero, scale)
         {
@@ -227,7 +242,6 @@ namespace Barotrauma
             body.Restitution = 0.05f;
             
             body.BodyType = BodyType.Dynamic;
-            //body.AngularDamping = Limb.LimbAngularDamping;
 
             body.UserData = this;
 
@@ -244,6 +258,11 @@ namespace Barotrauma
             {
                 body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
                 bodyShape = Shape.Rectangle;
+            }
+            else if (radius != 0.0f && width != 0.0f)
+            {
+                body = BodyFactory.CreateCapsuleHorizontal(GameMain.World, width, radius, density);
+                bodyShape = Shape.Capsule;
             }
             else if (radius != 0.0f && height != 0.0f)
             {
@@ -322,11 +341,51 @@ namespace Barotrauma
             }
 
             body.SetTransform(targetPosition, targetRotation == 0.0f ? body.Rotation : targetRotation);
-            //body.LinearVelocity = targetVelocity;
-            //body.AngularVelocity = targetAngularVelocity;
             targetPosition = Vector2.Zero;
         }
         
+        public void MoveToPos(Vector2 pos, float force, Vector2? pullPos = null)
+        {
+            if (pullPos==null) pullPos = body.Position;
+
+            Vector2 vel = body.LinearVelocity;
+            Vector2 deltaPos = pos - (Vector2)pullPos;
+            deltaPos *= force;
+            body.ApplyLinearImpulse((deltaPos - vel * 0.5f) * body.Mass, (Vector2)pullPos);
+        }
+
+        /// <summary>
+        /// Applies buoyancy, drag and angular drag caused by water
+        /// </summary>
+        public void ApplyWaterForces()
+        {
+            //buoyancy
+            Vector2 buoyancy = new Vector2(0, Mass * 9.6f);
+
+            //drag
+            Vector2 velDir = Vector2.Normalize(LinearVelocity);
+
+            Vector2 line = new Vector2((float)Math.Cos(body.Rotation), (float)Math.Sin(body.Rotation));
+            line *= Math.Max(height + radius*2, height);
+
+            Vector2 normal = new Vector2(-line.Y, line.X);
+            normal = Vector2.Normalize(-normal);
+
+            float dragDot = Math.Abs(Vector2.Dot(normal, velDir));
+            Vector2 dragForce = Vector2.Zero;
+            if (dragDot > 0)
+            {
+                float vel = LinearVelocity.Length() * 2.0f;
+                float drag = dragDot * vel * vel
+                    * Math.Max(height + radius * 2, height);
+                dragForce = Math.Min(drag, Mass * 1000.0f) * -velDir;
+                //if (dragForce.Length() > 100.0f) { }
+            }
+
+            body.ApplyForce(dragForce + buoyancy);
+            body.ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
+        }
+
 
         public void UpdateDrawPosition()
         {
@@ -361,9 +420,87 @@ namespace Barotrauma
                 color = Color.Blue;
             }
             
-            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);
-            
+            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);            
         }
+
+        public void DebugDraw(SpriteBatch spriteBatch, Color color)
+        {
+            if (bodyShapeTexture == null)
+            {
+                switch (BodyShape)
+                {
+                    case PhysicsBody.Shape.Rectangle:
+                        bodyShapeTexture = GUI.CreateRectangle(
+                            (int)ConvertUnits.ToDisplayUnits(width),
+                            (int)ConvertUnits.ToDisplayUnits(height));
+                        break;
+
+                    case PhysicsBody.Shape.Capsule:
+                        bodyShapeTexture = GUI.CreateCapsule(
+                            (int)ConvertUnits.ToDisplayUnits(radius),
+                            (int)ConvertUnits.ToDisplayUnits(Math.Max(height,width)));
+                        break;
+                    case PhysicsBody.Shape.Circle:
+                        bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(radius));
+                        break;
+                }
+            }
+
+            float rot = -DrawRotation;
+            if (bodyShape == PhysicsBody.Shape.Capsule && width > height)
+            {
+                rot -= MathHelper.PiOver2;
+            }
+
+            spriteBatch.Draw(
+                bodyShapeTexture,
+                new Vector2(DrawPosition.X, -DrawPosition.Y),
+                null,
+                color,
+                rot,
+                new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2), 
+                1.0f, SpriteEffects.None, 0.0f);
+        }
+
+        public void CorrectPosition(List<PosInfo> positionBuffer, float deltaTime, out Vector2 newVelocity)
+        {
+            newVelocity = Vector2.Zero;
+            if (positionBuffer.Count < 2) return;
+
+            PosInfo prev = positionBuffer[0];
+            PosInfo next = positionBuffer[1];
+
+            Vector2 currPos = SimPosition;
+
+            //interpolate the position of the collider from the first position in the buffer towards the second
+            if (prev.Timestamp < next.Timestamp)
+            {
+                //if there are more than 2 positions in the buffer, 
+                //increase the interpolation speed to catch up with the server
+                float speedMultiplier = 1.0f + (float)Math.Pow((positionBuffer.Count - 2) / 2.0f, 2.0f);
+
+                netInterpolationState += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
+                currPos = Vector2.Lerp(prev.Position, next.Position, netInterpolationState);
+
+                //override the targetMovement to make the character play the walking/running animation
+                newVelocity = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
+            }
+            else
+            {
+                currPos = next.Position;
+                netInterpolationState = 1.0f;
+            }
+
+            SetTransform(currPos, Rotation);
+
+            if (netInterpolationState >= 1.0f)
+            {
+                netInterpolationState = 0.0f;
+                positionBuffer.RemoveAt(0);
+            }
+        }
+
+        
 
         /// <summary>
         /// rotate the body towards the target rotation in the "shortest direction"
@@ -374,9 +511,16 @@ namespace Barotrauma
 
             float angle = MathUtils.GetShortestAngle(nextAngle, targetRotation);
 
-            float torque = body.Mass * angle * 60.0f * (force/100.0f);
+            float torque = angle * 60.0f * (force/100.0f);
 
-            body.ApplyTorque(torque);
+            if (body.IsKinematic)
+            {
+                body.AngularVelocity = torque;
+            }
+            else
+            {
+                body.ApplyTorque(body.Mass * torque);
+            }
         }
 
 
@@ -440,6 +584,12 @@ namespace Barotrauma
         {
             list.Remove(this);
             GameMain.World.RemoveBody(body);
+
+            if (bodyShapeTexture != null)
+            {
+                bodyShapeTexture.Dispose();
+                bodyShapeTexture = null;
+            }
         }
 
     }

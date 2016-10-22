@@ -95,8 +95,8 @@ namespace Barotrauma
                     return true;
                 case NetworkEventType.ImportantEntityUpdate:
 
-                    message.Write(AnimController.RefLimb.SimPosition.X);
-                    message.Write(AnimController.RefLimb.SimPosition.Y);
+                    message.Write(AnimController.MainLimb.SimPosition.X);
+                    message.Write(AnimController.MainLimb.SimPosition.Y);
 
                     //message.Write(AnimController.RefLimb.Rotation);
 
@@ -129,9 +129,9 @@ namespace Barotrauma
                     message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -1.0f, 1.0f), -1.0f, 1.0f, 4);
                     
                     if (AnimController.CanEnterSubmarine) message.Write(Submarine != null);
-                                        
-                    message.Write(AnimController.RefLimb.SimPosition.X);
-                    message.Write(AnimController.RefLimb.SimPosition.Y);
+
+                    message.Write(AnimController.MainLimb.SimPosition.X);
+                    message.Write(AnimController.MainLimb.SimPosition.Y);
 
                     return true;
                 case NetworkEventType.InventoryUpdate:
@@ -162,8 +162,8 @@ namespace Barotrauma
                     return base.ReadNetworkData(type, message, sendingTime, out data);
                 case NetworkEventType.ImportantEntityUpdate:
 
-                    Vector2 limbPos = AnimController.RefLimb.SimPosition;
-                    float rotation = AnimController.RefLimb.Rotation;
+                    Vector2 limbPos = AnimController.MainLimb.SimPosition;
+                    float rotation = AnimController.MainLimb.Rotation;
 
                     try
                     {
@@ -180,9 +180,9 @@ namespace Barotrauma
                         return false;
                     }
 
-                    if (AnimController.RefLimb.body != null)
+                    if (AnimController.MainLimb.body != null)
                     {
-                        AnimController.RefLimb.body.TargetPosition = limbPos;
+                        AnimController.MainLimb.body.TargetPosition = limbPos;
                         //AnimController.RefLimb.body.TargetRotation = rotation;
                     }
 
@@ -255,7 +255,7 @@ namespace Barotrauma
                     AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
                     AnimController.TargetMovement = targetMovement;
 
-                    AnimController.RefLimb.body.TargetPosition = pos;
+                    AnimController.MainLimb.body.TargetPosition = pos;
                         //AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);                            
 
                     if (inSub)

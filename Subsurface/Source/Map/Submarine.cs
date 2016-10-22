@@ -420,7 +420,6 @@ namespace Barotrauma
                 Structure structure = fixture.Body.UserData as Structure;                
                 if (structure != null)
                 {
-                    if (!structure.HasBody) return -1;
                     if (structure.IsPlatform && collisionCategory != null && !((Category)collisionCategory).HasFlag(Physics.CollisionPlatform)) return -1;
                 }                    
 

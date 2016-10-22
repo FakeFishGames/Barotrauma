@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
 
             if (userPos != 0.0f)
             {
-                float torsoX = ConvertUnits.ToDisplayUnits(character.AnimController.RefLimb.SimPosition.X);
+                float torsoX = character.Position.X;
 
                 Vector2 diff = new Vector2(item.Rect.X + UserPos - torsoX, 0.0f);
 
@@ -191,7 +191,7 @@ namespace Barotrauma.Items.Components
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected, deltaTime*10.0f);
             }
             
-            if (!character.IsNetworkPlayer || character.ViewTarget == focusTarget)
+            if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)
             {
                 item.SendSignal(0, ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out");
             }
