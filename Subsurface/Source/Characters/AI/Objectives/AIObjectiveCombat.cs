@@ -90,11 +90,12 @@ namespace Barotrauma
 
             escapeObjective.TryComplete(deltaTime);
 
-            if (Vector2.Distance(character.SimPosition, enemy.SimPosition) < 3.0f)
-            {
-                character.AIController.SteeringManager.SteeringManual(deltaTime, (character.SimPosition - enemy.SimPosition)*0.1f);            
-                coolDownTimer = CoolDown;
-            }
+            //if (Vector2.Distance(character.SimPosition, enemy.SimPosition) < 3.0f)
+            //{
+            //    character.AIController.SteeringManager.SteeringManual(deltaTime, 
+            //        new Vector2(Math.Sign(character.SimPosition.X - enemy.SimPosition.X), 0.0f));            
+            //    coolDownTimer = CoolDown;
+            //}
         }
 
         public override bool IsCompleted()

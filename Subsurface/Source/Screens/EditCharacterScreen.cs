@@ -173,12 +173,12 @@ namespace Barotrauma
                     
                     DrawJoints(spriteBatch, limb, limbBodyPos);
 
-                    if (limb.BodyShapeTexture == null) continue;
+                    //if (limb.BodyShapeTexture == null) continue;
 
-                    spriteBatch.Draw(limb.BodyShapeTexture, limbBodyPos,
-                        null, Color.White, 0.0f,
-                        new Vector2(limb.BodyShapeTexture.Width, limb.BodyShapeTexture.Height) / 2,
-                        1.0f, SpriteEffects.None, 0.0f);
+                    //spriteBatch.Draw(limb.BodyShapeTexture, limbBodyPos,
+                    //    null, Color.White, 0.0f,
+                    //    new Vector2(limb.BodyShapeTexture.Width, limb.BodyShapeTexture.Height) / 2,
+                    //    1.0f, SpriteEffects.None, 0.0f);
 
                     GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitY * 5.0f, limbBodyPos - Vector2.UnitY * 5.0f, Color.White);
                     GUI.DrawLine(spriteBatch, limbBodyPos + Vector2.UnitX * 5.0f, limbBodyPos - Vector2.UnitX * 5.0f, Color.White);

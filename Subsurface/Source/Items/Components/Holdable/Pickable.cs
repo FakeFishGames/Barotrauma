@@ -151,7 +151,7 @@ namespace Barotrauma.Items.Components
 
             StopPicking(picker);
 
-            if (!picker.IsNetworkPlayer) OnPicked(picker);
+            if (!picker.IsRemotePlayer) OnPicked(picker);
 
             yield return CoroutineStatus.Success;
         }

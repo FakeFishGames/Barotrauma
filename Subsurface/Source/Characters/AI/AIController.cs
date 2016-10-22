@@ -41,7 +41,7 @@ namespace Barotrauma
 
         public Vector2 Velocity
         {
-            get { return Character.AnimController.RefLimb.LinearVelocity; }
+            get { return Character.AnimController.Collider.LinearVelocity; }
         }
 
         public AiState State

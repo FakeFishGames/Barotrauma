@@ -88,6 +88,15 @@ namespace Barotrauma
                         
             Vector2 diff = DiffToCurrentNode();
             
+            var collider = character.AnimController.Collider;
+            //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
+            if (!character.AnimController.InWater && 
+                character.AnimController.Anim != AnimController.Animation.Climbing &&
+                diff.Y < collider.height / 2 + collider.radius)
+            {
+                diff.Y = 0.0f;
+            }
+
             if (diff == Vector2.Zero) return -host.Steering;
 
             return Vector2.Normalize(diff) * speed;          
@@ -95,7 +104,7 @@ namespace Barotrauma
 
         private Vector2 DiffToCurrentNode()
         {
-            if (currentPath == null || currentPath.Finished) return Vector2.Zero;
+            if (currentPath == null || currentPath.Finished || currentPath.Unreachable) return Vector2.Zero;
 
             if (currentPath.Finished)
             {
@@ -111,7 +120,7 @@ namespace Barotrauma
             if (canOpenDoors && !character.LockHands) CheckDoorsInPath();
 
             float allowedDistance = character.AnimController.InWater ? 1.0f : 0.6f;
-            if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
+            //if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
 
             Vector2 pos = host.SimPosition;
 
@@ -139,7 +148,15 @@ namespace Barotrauma
                 }
             }
 
-            currentPath.CheckProgress(pos, allowedDistance);
+            var collider = character.AnimController.Collider;
+
+            Vector2 colliderBottom = character.AnimController.GetColliderBottom();
+            if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius*2 &&
+                currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y && 
+                currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + collider.height + collider.radius*2)
+            {
+                currentPath.SkipToNextNode();
+            }
 
             if (currentPath.CurrentNode == null) return Vector2.Zero;
 
@@ -147,20 +164,31 @@ namespace Barotrauma
 
             if (character.AnimController.Anim == AnimController.Animation.Climbing)
             {
-                float x = currentPath.CurrentNode.SimPosition.X - pos.X;
-                float y = (currentPath.CurrentNode.SimPosition.Y) - pos.Y;
+                Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
                 
-                if (Math.Abs(x) < Math.Abs(y) * 10.0f)                    
+                if (currentPath.CurrentNode.Ladders != null)
                 {
-                    x = 0.0f;                    
-                }
-                else if (character.AnimController.LowestLimb != null && hull != null)
-                {
-                    if (character.AnimController.LowestLimb.Position.Y < hull.Rect.Y - hull.Rect.Height + 10.0f) x = 0.0f;
+                    //climbing ladders -> don't move horizontally
+                    diff.X = 0.0f;
+
+                    //at the same height as the waypoint
+                    if (currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y &&
+                        currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + collider.height + collider.radius * 2)
+                    {
+                        float heightFromFloor = character.AnimController.GetColliderBottom().Y - character.AnimController.FloorY;
+
+                        //we can safely skip to the next waypoint if the character is at a safe height above the floor,
+                        //or if the next waypoint in the path is also on ladders
+                        if ((heightFromFloor > 0.0f && heightFromFloor < collider.height) || 
+                            (currentPath.NextNode != null && currentPath.NextNode.Ladders != null))
+                        {
+                            currentPath.SkipToNextNode();
+                        }
+                    }
                 }
 
                 character.AnimController.IgnorePlatforms = false;
-                return new Vector2(x,y);
+                return diff;
             }
 
             return currentPath.CurrentNode.SimPosition - pos;

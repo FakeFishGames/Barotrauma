@@ -14,13 +14,50 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-   
+    struct PosInfo
+    {
+        public readonly Vector2 Position;
+        public readonly Direction Direction;
+
+        public readonly float Timestamp;
+        public readonly UInt32 ID;
+
+        public PosInfo(Vector2 pos, Direction dir, float time)
+        {
+            Position = pos;
+            Direction = dir;
+            Timestamp = time;
+
+            ID = 0;
+        }
+
+        public PosInfo(Vector2 pos, Direction dir, UInt32 ID)
+        {
+            Position = pos;
+            Direction = dir;
+            this.ID = ID;
+
+            Timestamp = 0.0f;
+        }
+    }
+
     class Character : Entity, IDamageable, IPropertyObject
     {
         public static List<Character> CharacterList = new List<Character>();
         
         public static bool DisableControls;
 
+        private UInt32 netStateID;
+        public UInt32 NetStateID
+        {
+            get { return netStateID; }
+        }
+
+        List<PosInfo> memPos = new List<PosInfo>();
+
+        private bool networkUpdateSent;
+        List<PosInfo> memLocalPos = new List<PosInfo>();
+        
         //the Character that the player is currently controlling
         private static Character controlled;
 
@@ -61,9 +98,7 @@ namespace Barotrauma
         public Hull PreviousHull = null;
         public Hull CurrentHull = null;
 
-        public readonly bool IsNetworkPlayer;
-
-        private bool networkUpdateSent;
+        public readonly bool IsRemotePlayer;
 
         private CharacterInventory inventory;
 
@@ -199,6 +234,17 @@ namespace Barotrauma
             get { return Submarine == null ? cursorPosition : cursorPosition + Submarine.Position; }
         }
 
+        public List<PosInfo> MemPos
+        {
+            get { return memPos; }
+        }
+
+
+        public List<PosInfo> MemLocalPos
+        {
+            get { return memLocalPos; }
+        }
+
         public Character ClosestCharacter
         {
             get { return closestCharacter; }
@@ -289,6 +335,7 @@ namespace Barotrauma
             set
             {
                 if (!MathUtils.IsValid(value)) return;
+
                 health = MathHelper.Clamp(value, minHealth, maxHealth);
             }
         }
@@ -416,28 +463,28 @@ namespace Barotrauma
 
         public override Vector2 SimPosition
         {
-            get { return AnimController.RefLimb.SimPosition; }
+            get { return AnimController.Collider.SimPosition; }
         }
 
         public override Vector2 Position
         {
-            get { return AnimController.RefLimb.Position; }
+            get { return ConvertUnits.ToDisplayUnits(SimPosition); }
         }
 
         public override Vector2 DrawPosition
         {
-            get { return AnimController.RefLimb.body.DrawPosition; }
+            get { return AnimController.MainLimb.body.DrawPosition; }
         }
 
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
         public OnDeathHandler OnDeath;
         
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isNetworkPlayer = false, bool hasAi=true)
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isRemotePlayer = false, bool hasAi=true)
         {
-            return Create(characterInfo.File, position, characterInfo, isNetworkPlayer, hasAi);
+            return Create(characterInfo.File, position, characterInfo, isRemotePlayer, hasAi);
         }
 
-        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, bool hasAi=true)
+        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi=true)
         {
 #if LINUX            
             if (!System.IO.File.Exists(file)) 
@@ -470,7 +517,7 @@ namespace Barotrauma
 
             if (file != humanConfigFile)
             {
-                var enemyCharacter = new AICharacter(file, position, characterInfo, isNetworkPlayer);
+                var enemyCharacter = new AICharacter(file, position, characterInfo, isRemotePlayer);
                 var ai = new EnemyAIController(enemyCharacter, file);
                 enemyCharacter.SetAI(ai);
 
@@ -480,7 +527,7 @@ namespace Barotrauma
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(file, position, characterInfo, isNetworkPlayer);
+                var aiCharacter = new AICharacter(file, position, characterInfo, isRemotePlayer);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
 
@@ -489,13 +536,13 @@ namespace Barotrauma
                 return aiCharacter;
             }
 
-            var character = new Character(file, position, characterInfo, isNetworkPlayer);
+            var character = new Character(file, position, characterInfo, isRemotePlayer);
             character.minHealth = -100.0f;
 
             return character;
         }
 
-        protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
+        protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
             : base(null)
         {
 
@@ -512,7 +559,7 @@ namespace Barotrauma
 
             hudProgressBars = new Dictionary<object, HUDProgressBar>();
 
-            IsNetworkPlayer = isNetworkPlayer;
+            IsRemotePlayer = isRemotePlayer;
 
             oxygen = 100.0f;
             oxygenAvailable = 100.0f;
@@ -545,15 +592,10 @@ namespace Barotrauma
             {
                 AnimController = new FishAnimController(this, doc.Root.Element("ragdoll"));
                 PressureProtection = 100.0f;
-                //FishAnimController fishAnim = (FishAnimController)animController;
             }
 
-            foreach (Limb limb in AnimController.Limbs)
-            {
-                limb.body.SetTransform(ConvertUnits.ToSimUnits(position)+limb.SimPosition, 0.0f);
-                //limb.prevPosition = ConvertUnits.ToDisplayUnits(position);
-            }
-
+            AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
+            
             maxHealth = ToolBox.GetAttributeFloat(doc.Root, "health", 100.0f);
             health = maxHealth;
 
@@ -705,8 +747,13 @@ namespace Barotrauma
                 if (length > 0.0f) targetMovement = targetMovement / length;
             }
 
-            if (Math.Sign(targetMovement.X) == Math.Sign(AnimController.Dir) && IsKeyDown(InputType.Run))
+            if (AnimController is HumanoidAnimController &&
+                !((HumanoidAnimController)AnimController).Crouching &&
+                Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir) && 
+                IsKeyDown(InputType.Run))
+            {
                 targetMovement *= 3.0f;
+            }
 
             targetMovement *= SpeedMultiplier;
             SpeedMultiplier = 1.0f;
@@ -744,6 +791,25 @@ namespace Barotrauma
                     AnimController.TargetDir = Direction.Right;
                 }
             }
+
+            //if (GameMain.Server != null && Character.Controlled != this)
+            //{
+            //    if ((dequeuedInput & 0x10) > 0)
+            //    {
+            //        AnimController.TargetDir = Direction.Left;
+            //    }
+            //    else
+            //    {
+            //        AnimController.TargetDir = Direction.Right;
+            //    }
+            //}
+            //else if (GameMain.Client != null && Character.controlled != this)
+            //{
+            //    if (memPos.Count > 0)
+            //    {
+            //        AnimController.TargetDir = memPos[0].Direction;
+            //    }
+            //}
 
             if (attackCoolDown >0.0f)
             {
@@ -832,7 +898,7 @@ namespace Barotrauma
             }
 
                   
-            if (IsNetworkPlayer)
+            if (IsRemotePlayer)
             {
                 foreach (Key key in keys)
                 {
@@ -1032,6 +1098,18 @@ namespace Barotrauma
                 }
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (Submarine == null ? 400.0f : 250.0f)+pressureEffect, 0.05f);
             }
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == this)
+            {
+                if (memLocalPos.Count == 0 || NetTime.Now > memLocalPos.Last().Timestamp + 0.1f)
+                {
+                    memLocalPos.Add(
+                        new PosInfo(
+                            SimPosition,
+                            AnimController.Dir > 0.0f ? Direction.Right : Direction.Left,
+                            (float)NetTime.Now));
+                }
+            }
             
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
             if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
@@ -1133,7 +1211,8 @@ namespace Barotrauma
         {
             foreach (Character c in CharacterList)
             {
-                if (c.isDead || c.health <= 0.0f || !c.Enabled) continue;
+                if (!c.Enabled) continue;
+                
                 c.AnimController.UpdateAnim(deltaTime);
             }
         }
@@ -1309,7 +1388,7 @@ namespace Barotrauma
 
             aiTarget.SightRange = 0.0f;
 
-            aiTarget.SightRange = Mass*10.0f + AnimController.RefLimb.LinearVelocity.Length()*500.0f;
+            aiTarget.SightRange = Mass*10.0f + AnimController.Collider.LinearVelocity.Length()*500.0f;
         }
         
         public void ShowSpeechBubble(float duration, Color color)
@@ -1519,7 +1598,7 @@ namespace Barotrauma
                 // limb.Damage = 100.0f;
             }
 
-            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.RefLimb.body);
+            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.Collider);
 
             for (int i = 0; i < 10; i++)
             {
@@ -1988,7 +2067,6 @@ namespace Barotrauma
 
                     keys[(int)InputType.Crouch].Held    = crouchState;
 
-
                     float dir = 1.0f;
                     Vector2 pos = Vector2.Zero;
 
@@ -2023,38 +2101,41 @@ namespace Barotrauma
                     pos.X = message.ReadFloat();
                     pos.Y = message.ReadFloat();
 
-                    if (inSub != (Submarine != null))
-                    {
-                        AnimController.Teleport(pos - SimPosition, Vector2.Zero);
-                    }
+                     if (inSub != (Submarine != null))
+                     {
+                         AnimController.Teleport(pos - SimPosition, Vector2.Zero);
+                         memPos.Clear();
+                     }
 
-                    if ((pos-SimPosition).Length()>600.0f)
-                    {
-                        AnimController.Teleport(pos - SimPosition, -AnimController.RefLimb.LinearVelocity);
-                    }
+                     if ((pos-SimPosition).Length()>600.0f)
+                     {
+                         AnimController.Teleport(pos - SimPosition, -AnimController.MainLimb.LinearVelocity);
+                         memPos.Clear();
+                     }
 
-                    if (inSub)
-                    {
-                        //AnimController.FindHull(ConvertUnits.ToDisplayUnits(pos) - Submarine.Loaded.WorldPosition);
-                        Submarine prevSub = Submarine;
+                     if (inSub)
+                     {
+                         //AnimController.FindHull(ConvertUnits.ToDisplayUnits(pos) - Submarine.Loaded.WorldPosition);
+                         Submarine prevSub = Submarine;
 
-                        Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
-                        if (newHull != null)
-                        {
-                            AnimController.CurrentHull = newHull;
-                            Submarine = newHull.Submarine;
-                        }
+                         Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
+                         if (newHull != null)
+                         {
+                             AnimController.CurrentHull = newHull;
+                             Submarine = newHull.Submarine;
+                         }
 
-                        if (prevSub != null && Submarine != null && prevSub!=Submarine)
-                        {
-                            AnimController.Teleport(pos - SimPosition, Vector2.Zero);
-                        }
-                    }
-                    else
-                    {
-                        AnimController.CurrentHull = null;
-                        Submarine = null;
-                    }
+                         if (prevSub != null && Submarine != null && prevSub!=Submarine)
+                         {
+                             AnimController.Teleport(pos - SimPosition, Vector2.Zero);
+                             memPos.Clear();
+                         }
+                     }
+                     else
+                     {
+                         AnimController.CurrentHull = null;
+                         Submarine = null;
+                     }
 
                     if (secondaryKeyState)
                     {
@@ -2068,11 +2149,13 @@ namespace Barotrauma
                     {
                         cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
 
-                        AnimController.TargetDir = dir < 0 ? Direction.Left : Direction.Right;
+                        //AnimController.TargetDir = dir < 0 ? Direction.Left : Direction.Right;
                     }
 
-                    AnimController.RefLimb.body.TargetPosition = 
-                        AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);
+                    //AnimController.RefLimb.body.TargetPosition = 
+                    //    AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);
+
+                    memPos.Add(new PosInfo(pos, dir < 0 ? Direction.Left : Direction.Right, sendingTime));
 
                     LastNetworkUpdate = sendingTime;
 

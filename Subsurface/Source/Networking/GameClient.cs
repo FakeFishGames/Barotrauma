@@ -664,7 +664,7 @@ namespace Barotrauma.Networking
                         List<Character> crew = new List<Character>();
                         foreach (Character c in Character.CharacterList)
                         {
-                            if (!c.IsNetworkPlayer || !c.IsHumanoid || c.Info==null) continue;
+                            if (!c.IsRemotePlayer || !c.IsHumanoid || c.Info==null) continue;
                             crew.Add(c);
                         }
 
