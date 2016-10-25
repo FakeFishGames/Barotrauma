@@ -97,7 +97,8 @@ namespace Barotrauma
         {
 
 #if DEBUG
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null)
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
+                !DebugConsole.IsOpen)
             {
                 var closestSub = Submarine.GetClosest(cam.WorldViewCenter);
                 if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
@@ -338,7 +339,7 @@ namespace Barotrauma
                 Submarine.DrawDamageable(spriteBatch, null);
                 spriteBatch.End();
 
-                GameMain.LightManager.DrawLightMap(spriteBatch, lightBlur.Effect);
+                //GameMain.LightManager.DrawLightMap(spriteBatch, lightBlur.Effect);
 
                 GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect, true);
             }
@@ -402,6 +403,7 @@ namespace Barotrauma
 
                 spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.AlphaBlend);
+
                 float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
                 spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                     Color.Lerp(new Color(0.1f, 0.1f, 0.1f), Color.Red, r));

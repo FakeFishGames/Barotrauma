@@ -11,9 +11,35 @@ using System;
 
 namespace Barotrauma
 {
+    struct PosInfo
+    {
+        public readonly Vector2 Position;
+        public readonly Direction Direction;
+
+        public readonly float Timestamp;
+        public readonly UInt32 ID;
+
+        public PosInfo(Vector2 pos, Direction dir, float time)
+        {
+            Position = pos;
+            Direction = dir;
+            Timestamp = time;
+
+            ID = 0;
+        }
+
+        public PosInfo(Vector2 pos, Direction dir, UInt32 ID)
+        {
+            Position = pos;
+            Direction = dir;
+            this.ID = ID;
+
+            Timestamp = 0.0f;
+        }
+    }
+
     class PhysicsBody
     {
-
         public enum Shape
         {
             Circle, Rectangle, Capsule
@@ -70,18 +96,7 @@ namespace Barotrauma
                 targetPosition.Y = MathHelper.Clamp(value.Y, -10000.0f, 10000.0f);
             }
         }
-
-        //public Vector2 TargetVelocity
-        //{
-        //    get { return targetVelocity; }
-        //    set 
-        //    {
-        //        if (!MathUtils.IsValid(value)) return;
-        //        targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
-        //        targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f); 
-        //    }
-        //}
-
+        
         public float TargetRotation
         {
             get { return targetRotation; }
@@ -91,16 +106,6 @@ namespace Barotrauma
                 targetRotation = value; 
             }
         }
-
-        //public float TargetAngularVelocity
-        //{
-        //    get { return targetAngularVelocity; }
-        //    set 
-        //    {
-        //        if (!MathUtils.IsValid(value)) return;
-        //        targetAngularVelocity = value; 
-        //    }
-        //}
 
         public Vector2 DrawPosition
         {
@@ -220,6 +225,16 @@ namespace Barotrauma
             
             dir = 1.0f;
             
+            LastSentPosition = body.Position;
+
+            list.Add(this);
+        }
+
+        public PhysicsBody(Body farseerBody)
+        {
+            body = farseerBody;
+            body.UserData = this;
+
             LastSentPosition = body.Position;
 
             list.Add(this);
@@ -466,14 +481,23 @@ namespace Barotrauma
 
         public void CorrectPosition(List<PosInfo> positionBuffer, float deltaTime, out Vector2 newVelocity)
         {
-            newVelocity = Vector2.Zero;
-            if (positionBuffer.Count < 2) return;
+            Vector2 newPosition = SimPosition;
+            CorrectPosition(positionBuffer, deltaTime, out newVelocity, out newPosition);
+            
+            SetTransform(newPosition, Rotation);
+        }
 
+
+        public void CorrectPosition(List<PosInfo> positionBuffer, float deltaTime, out Vector2 newVelocity, out Vector2 newPosition)
+        {
+            newVelocity = Vector2.Zero;
+            newPosition = SimPosition;
+
+            if (positionBuffer.Count < 2) return;
+            
             PosInfo prev = positionBuffer[0];
             PosInfo next = positionBuffer[1];
-
-            Vector2 currPos = SimPosition;
-
+            
             //interpolate the position of the collider from the first position in the buffer towards the second
             if (prev.Timestamp < next.Timestamp)
             {
@@ -482,18 +506,16 @@ namespace Barotrauma
                 float speedMultiplier = 1.0f + (float)Math.Pow((positionBuffer.Count - 2) / 2.0f, 2.0f);
 
                 netInterpolationState += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
-                currPos = Vector2.Lerp(prev.Position, next.Position, netInterpolationState);
+                newPosition = Vector2.Lerp(prev.Position, next.Position, netInterpolationState);
 
                 //override the targetMovement to make the character play the walking/running animation
                 newVelocity = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
             }
             else
             {
-                currPos = next.Position;
+                newPosition = next.Position;
                 netInterpolationState = 1.0f;
             }
-
-            SetTransform(currPos, Rotation);
 
             if (netInterpolationState >= 1.0f)
             {
@@ -501,9 +523,7 @@ namespace Barotrauma
                 positionBuffer.RemoveAt(0);
             }
         }
-
         
-
         /// <summary>
         /// rotate the body towards the target rotation in the "shortest direction"
         /// </summary>
