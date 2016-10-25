@@ -195,6 +195,8 @@ namespace Barotrauma
 
             for (int i = 0; i < Limbs.Count(); i++)
             {
+                if (Limbs[i].SteerForce <= 0.0f) continue;
+
                 Vector2 pullPos = Limbs[i].pullJoint == null ? Limbs[i].SimPosition : Limbs[i].pullJoint.WorldAnchorA;
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);                
 

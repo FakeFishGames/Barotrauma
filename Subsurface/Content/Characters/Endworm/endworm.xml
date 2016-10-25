@@ -5,7 +5,7 @@
   <sound file="Content/Characters/Endworm/endwormattack1.ogg" state="Attack" range="8000" />
   <sound file="Content/Characters/Endworm/endwormattack2.ogg" state="Attack" range="8000" />
 
-  <ragdoll waveamplitude="100.0" wavelength="1000" speed="1.5" scale ="2.0" flip="false" canentersubmarine="false">
+  <ragdoll waveamplitude="100.0" wavelength="1000" speed="2.0" scale ="2.0" flip="false" canentersubmarine="false">
 
     <collider radius="300"/>
     

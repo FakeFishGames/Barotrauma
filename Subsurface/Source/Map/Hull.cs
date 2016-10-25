@@ -201,7 +201,7 @@ namespace Barotrauma
         {
             rect = rectangle;
             
-            OxygenPercentage = Rand.Range(90.0f, 100.0f, false);
+            OxygenPercentage = 100.0f;
 
             fireSources = new List<FireSource>();
 

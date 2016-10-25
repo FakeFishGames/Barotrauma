@@ -64,14 +64,14 @@ namespace Barotrauma
                     var wayPoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine==null);
                     if (wayPoints.Any())
                     {
-                        WayPoint wp = wayPoints[Rand.Int(wayPoints.Count)];
+                        WayPoint wp = wayPoints[Rand.Int(wayPoints.Count, false)];
 
                         pos = new Vector2(wp.Rect.X, wp.Rect.Y);
-                        pos += Rand.Vector(200.0f);
+                        pos += Rand.Vector(200.0f, false);
                     }
                     else
                     {
-                        pos = Rand.Vector(2000.0f);
+                        pos = Rand.Vector(2000.0f, false);
                     } 
                 }
                 else
@@ -80,9 +80,9 @@ namespace Barotrauma
                 }
 
 
-                var prefab = prefabs[Rand.Int(prefabs.Count)];
+                var prefab = prefabs[Rand.Int(prefabs.Count, false)];
 
-                int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax);
+                int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax, false);
                 List<BackgroundCreature> swarmMembers = new List<BackgroundCreature>();
 
                 for (int n = 0; n < amount; n++)

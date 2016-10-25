@@ -32,10 +32,10 @@ namespace Barotrauma
         private float depthDamageTimer;
 
         private readonly Submarine submarine;
-        
-        public readonly Body Body;
 
-        private Vector2? targetPosition;
+        public readonly PhysicsBody Body;
+
+        List<PosInfo> memPos = new List<PosInfo>();
 
         public Rectangle Borders
         {
@@ -53,19 +53,14 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 TargetPosition
-        {
-            //get { return targetPosition.Value; }
-            set
-            {
-                if (!MathUtils.IsValid(value)) return;
-                targetPosition = value;
-            }
-        }
-
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(Body.Position); }
+            get { return ConvertUnits.ToDisplayUnits(Body.SimPosition); }
+        }
+
+        public List<PosInfo> MemPos
+        {
+            get { return memPos; }
         }
         
         public bool AtDamageDepth
@@ -77,10 +72,12 @@ namespace Barotrauma
         {
             this.submarine = sub;
 
+            Body farseerBody = null;
+
             if (!Hull.hullList.Any())
             {
-
-                Body = BodyFactory.CreateRectangle(GameMain.World, 1.0f, 1.0f, 1.0f);
+                Body = new PhysicsBody(1,1,1,1);
+                farseerBody = Body.FarseerBody;
                 DebugConsole.ThrowError("WARNING: no hulls found, generating a physics body for the submarine failed.");
             }
             else
@@ -106,21 +103,20 @@ namespace Barotrauma
                     (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.X * 2.0f),
                     (int)ConvertUnits.ToDisplayUnits(hullAABB.Extents.Y * 2.0f));
 
-                //var triangulatedVertices = Triangulate.ConvexPartition(shapevertices, TriangulationAlgorithm.Bayazit);
-
-                Body = BodyFactory.CreateBody(GameMain.World, this);
+                farseerBody = BodyFactory.CreateBody(GameMain.World, this);
 
                 foreach (Structure wall in Structure.WallList)
                 {
                     if (wall.Submarine != submarine) continue;
 
                     Rectangle rect = wall.Rect;
+
                     FixtureFactory.AttachRectangle(
                           ConvertUnits.ToSimUnits(rect.Width),
                           ConvertUnits.ToSimUnits(rect.Height),
                           50.0f,
                           ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
-                          Body, this);
+                          farseerBody, this);
                 }
 
                 foreach (Hull hull in Hull.hullList)
@@ -133,30 +129,32 @@ namespace Barotrauma
                         ConvertUnits.ToSimUnits(rect.Height),
                         5.0f,
                         ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
-                        Body, this);
+                        farseerBody, this);
                 }
             }
 
 
 
-            Body.BodyType = BodyType.Dynamic;
-            Body.CollisionCategories = Physics.CollisionWall;
-            Body.CollidesWith = 
+            farseerBody.BodyType = BodyType.Dynamic;
+            farseerBody.CollisionCategories = Physics.CollisionWall;
+            farseerBody.CollidesWith = 
                 Physics.CollisionItem | 
                 Physics.CollisionLevel | 
                 Physics.CollisionCharacter | 
                 Physics.CollisionProjectile | 
                 Physics.CollisionWall;
 
-            Body.Restitution = Restitution;
-            Body.Friction = Friction;
-            Body.FixedRotation = true;
+            farseerBody.Restitution = Restitution;
+            farseerBody.Friction = Friction;
+            farseerBody.FixedRotation = true;
             //mass = Body.Mass;
-            Body.Awake = true;
-            Body.SleepingAllowed = false;
-            Body.IgnoreGravity = true;
-            Body.OnCollision += OnCollision;
-            Body.UserData = submarine;
+            farseerBody.Awake = true;
+            farseerBody.SleepingAllowed = false;
+            farseerBody.IgnoreGravity = true;
+            farseerBody.OnCollision += OnCollision;
+            farseerBody.UserData = submarine;
+
+            Body = new PhysicsBody(farseerBody);
         }
 
 
@@ -185,59 +183,66 @@ namespace Barotrauma
         }
 
         public void Update(float deltaTime)
-        {      
-            if (targetPosition != null && targetPosition != Position)
+        {
+            if (GameMain.Client != null)
             {
-                float dist = Vector2.Distance((Vector2)targetPosition, Position);
+                //if (memPos.Count > 1 && Vector2.Distance(memPos[1].Position, Body.SimPosition) > 5.0f)
+                //{
+                //    Vector2 moveAmount = ConvertUnits.ToDisplayUnits(memPos[1].Position - Body.SimPosition);
+                    
+                //    ForceTranslate(moveAmount);
+                //    DisplaceCharacters(moveAmount);
+
+                //    foreach (Submarine sub in submarine.DockedTo)
+                //    {
+                //        sub.SubBody.ForceTranslate(moveAmount);
+                //        sub.SubBody.DisplaceCharacters(moveAmount);
+                //    }
+
+                //    memPos.RemoveRange(0, 2);
+                //}
+                //else
                 
-                if (dist > 500.0f) //immediately snap the sub to the target position if more than 500.0f units away
+                Vector2 newVelocity = Body.LinearVelocity;
+                Vector2 newPosition = Body.SimPosition;
+
+                Body.CorrectPosition(memPos, deltaTime, out newVelocity, out newPosition);
+                Vector2 moveAmount = ConvertUnits.ToDisplayUnits(newPosition - Body.SimPosition);
+
+                List<Submarine> subsToMove = new List<Submarine>() { this.submarine };
+                subsToMove.AddRange(submarine.DockedTo);
+
+                Submarine closestSub = null;
+                if (Character.Controlled == null)
                 {
-                    Vector2 moveAmount = (Vector2)targetPosition - ConvertUnits.ToDisplayUnits(Body.Position);
-
-                    List<SubmarineBody> dockedBodies = new List<SubmarineBody>() { this };
-                    submarine.DockedTo.ForEach(d => dockedBodies.Add(d.SubBody));
-
-                    foreach (SubmarineBody dockedBody in dockedBodies)
-                    {
-                        dockedBody.ForceTranslate(moveAmount);
-
-                        if ((Character.Controlled != null && Character.Controlled.Submarine == dockedBody.submarine) ||
-                            (Character.Controlled == null && Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == dockedBody.submarine))
-                        {
-                            GameMain.GameScreen.Cam.UpdateTransform(false);
-                        }
-
-                        dockedBody.submarine.SetPrevTransform(dockedBody.submarine.Position);
-                        dockedBody.submarine.UpdateTransform();
-                        targetPosition = null;
-
-                        dockedBody.DisplaceCharacters(moveAmount);
-                    }
-
-
-                }
-                else if (dist > 50.0f) //lerp the position if (50 < dist < 500)
-                {
-                    Vector2 moveAmount = Vector2.Normalize((Vector2)targetPosition - Position);
-                    moveAmount *= Math.Min(dist, 100.0f);
-
-                    ForceTranslate(moveAmount * deltaTime);
-
-                    foreach (Submarine sub in submarine.DockedTo)
-                    {
-                        sub.SubBody.ForceTranslate(moveAmount * deltaTime);
-                    }
+                    closestSub= Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter);
                 }
                 else
                 {
-                    targetPosition = null;
+                    closestSub = Character.Controlled.Submarine;
                 }
-            }
-            else
-            {
-                targetPosition = null;
-            }
 
+                bool displace = moveAmount.Length() > 100.0f;
+
+                foreach (Submarine sub in subsToMove)
+                {
+                    sub.PhysicsBody.SetTransform(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
+                    sub.PhysicsBody.LinearVelocity = newVelocity;
+
+                    if (displace) sub.SubBody.DisplaceCharacters(moveAmount);
+                }
+
+                if (closestSub != null && subsToMove.Contains(closestSub))                     
+                {
+                    GameMain.GameScreen.Cam.Position += moveAmount;
+                    if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += moveAmount;    
+            
+                    if (Character.Controlled!=null) Character.Controlled.CursorPosition += moveAmount;
+                }
+
+                return;
+            }
+            
             //-------------------------
 
             Vector2 totalForce = CalculateBuoyancy();
@@ -256,51 +261,22 @@ namespace Barotrauma
 
             UpdateDepthDamage(deltaTime);
         }
-
-
+        
         /// <summary>
-        /// Immediately translates the position of the physics body, gamescreen camera and Character.Controlled.CursorPosition
-        /// </summary>
-        /// <param name="amount">Amount to move in display units</param>
-        private void ForceTranslate(Vector2 amount)
-        {
-            Body.SetTransform(Body.Position + ConvertUnits.ToSimUnits(amount), 0.0f);
-
-            bool isClosestSub = false;
-            if (Character.Controlled == null)
-            {
-                isClosestSub = Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter) == submarine;
-            }
-            else
-            {
-                isClosestSub = Character.Controlled.Submarine == submarine;
-
-                Character.Controlled.CursorPosition += amount;
-            }
-
-            if (isClosestSub)
-            {
-                GameMain.GameScreen.Cam.Position += amount;
-                if (GameMain.GameScreen.Cam.TargetPos != Vector2.Zero) GameMain.GameScreen.Cam.TargetPos += amount;
-            }
-        }
-
-
-        /// <summary>
-        /// Moves away any character that is inside the bounding box of the sub (but not inside it)
+        /// Moves away any character that is inside the bounding box of the sub (but not inside the sub)
         /// </summary>
         /// <param name="subTranslation">The translation that was applied to the sub before doing the displacement 
         /// (used for determining where to push the characters)</param>
         private void DisplaceCharacters(Vector2 subTranslation)
         {
             Rectangle worldBorders = Borders;
-            worldBorders.Location += ConvertUnits.ToDisplayUnits(Body.Position).ToPoint();
+            worldBorders.Location += ConvertUnits.ToDisplayUnits(Body.SimPosition).ToPoint();
 
             Vector2 translateDir = Vector2.Normalize(subTranslation);
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull != null) continue;
+                if (c.AnimController.CurrentHull != null && c.AnimController.CanEnterSubmarine) continue;
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
@@ -315,7 +291,7 @@ namespace Barotrauma
                     //should never be null when casting a line out from inside the bounding box
                     Debug.Assert(intersection != null);
 
-                    //\"+ translatedir\" in order to move the character slightly away from the wall
+                    //"+ translatedir" in order to move the character slightly away from the wall
                     c.AnimController.SetPosition(ConvertUnits.ToSimUnits(c.WorldPosition + ((Vector2)intersection - limb.WorldPosition)) + translateDir);
 
                     return;
@@ -340,8 +316,6 @@ namespace Barotrauma
 
             float neutralPercentage = 0.07f;
 
-            Body.IgnoreGravity = true;
-
             float buoyancy = neutralPercentage - waterPercentage;
 
             if (buoyancy > 0.0f) buoyancy *= 2.0f;
@@ -365,58 +339,25 @@ namespace Barotrauma
 
             float depth = DamageDepth - Position.Y;
 
-           // float prevTimer = depthDamageTimer;
-
             depthDamageTimer -= deltaTime;
-
-            //if (prevTimer>5.0f && depthDamageTimer<=5.0f)
-            //{
-            //    SoundPlayer.PlayDamageSound(DamageSoundType.Pressure, 50.0f,);
-            //}
 
             if (depthDamageTimer > 0.0f) return;
 
             foreach (Structure wall in Structure.WallList)
             {
                 if (wall.Submarine != submarine) continue;
-                //if (Rand.Int(5) < 4) continue;
 
-                if (wall.Health < depth*0.01f)
+                if (wall.Health < depth * 0.01f)
                 {
-                    Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, depth*0.01f);
+                    Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, depth * 0.01f);
 
                     if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
                     {
-                        GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(depth *0.001f, 50.0f));
+                        GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(depth * 0.001f, 50.0f));
                     }
                 }
             }
 
-            //Vector2 damagePos = Vector2.Zero;
-            //if (Rand.Int(2)==0)
-            //{
-            //    damagePos = new Vector2(
-            //        (Rand.Int(2) == 0) ? Borders.X : Borders.X+Borders.Width, 
-            //        Rand.Range(Borders.Y - Borders.Height, Borders.Y));
-            //}
-            //else
-            //{
-            //    damagePos = new Vector2(
-            //        Rand.Range(Borders.X, Borders.X + Borders.Width),
-            //        (Rand.Int(2) == 0) ? Borders.Y : Borders.Y - Borders.Height);
-            //}
-
-            //damagePos += submarine.Position + submarine.HiddenSubPosition;
-            //SoundPlayer.PlayDamageSound(DamageSoundType.Pressure, 50.0f, damagePos, 10000.0f);
-
-            //if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
-            //{
-            //    GameMain.GameScreen.Cam.Shake = depth * PressureDamageMultiplier * 0.1f;
-            //}
-
-            //Explosion.RangedStructureDamage(damagePos, depth * PressureDamageMultiplier * 50.0f, depth * PressureDamageMultiplier);
-            //SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, Rand.Range(0.0f, 100.0f), damagePos, 5000.0f);
-            
             depthDamageTimer = 10.0f;
         }
 
@@ -430,7 +371,7 @@ namespace Barotrauma
 
                 if (collision && limb.Mass > 100.0f)
                 {
-                    Vector2 normal = Vector2.Normalize(Body.Position - limb.SimPosition);
+                    Vector2 normal = Vector2.Normalize(Body.SimPosition - limb.SimPosition);
 
                     float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f;
 
@@ -443,7 +384,7 @@ namespace Barotrauma
             VoronoiCell cell = f2.Body.UserData as VoronoiCell;
             if (cell != null)
             {
-                var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.Position) - cell.Center);
+                var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center);
 
                 float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
 
@@ -472,7 +413,7 @@ namespace Barotrauma
                 Vector2 normal;
                 FixedArray2<Vector2> points;
                 contact.GetWorldManifold(out normal, out points);
-                if (contact.FixtureA.Body == sub.SubBody.Body)
+                if (contact.FixtureA.Body == sub.SubBody.Body.FarseerBody)
                 {
                     normal = -normal;
                 }

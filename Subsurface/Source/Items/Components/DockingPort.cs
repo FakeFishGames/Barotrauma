@@ -214,7 +214,7 @@ namespace Barotrauma.Items.Components
             if (useWeldJoint)
             {
                 joint = JointFactory.CreateWeldJoint(GameMain.World,
-                    item.Submarine.SubBody.Body, dockingTarget.item.Submarine.SubBody.Body,
+                    item.Submarine.PhysicsBody.FarseerBody, dockingTarget.item.Submarine.PhysicsBody.FarseerBody,
                     ConvertUnits.ToSimUnits(pos1), FarseerPhysics.ConvertUnits.ToSimUnits(pos2), true);
 
                 ((WeldJoint)joint).FrequencyHz = 1.0f;
@@ -222,7 +222,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 var distanceJoint = JointFactory.CreateDistanceJoint(GameMain.World,
-                    item.Submarine.SubBody.Body, dockingTarget.item.Submarine.SubBody.Body,
+                    item.Submarine.PhysicsBody.FarseerBody, dockingTarget.item.Submarine.PhysicsBody.FarseerBody,
                     ConvertUnits.ToSimUnits(pos1), FarseerPhysics.ConvertUnits.ToSimUnits(pos2), true);
 
                 distanceJoint.Length = 0.01f;

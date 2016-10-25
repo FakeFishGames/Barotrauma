@@ -14,33 +14,6 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    struct PosInfo
-    {
-        public readonly Vector2 Position;
-        public readonly Direction Direction;
-
-        public readonly float Timestamp;
-        public readonly UInt32 ID;
-
-        public PosInfo(Vector2 pos, Direction dir, float time)
-        {
-            Position = pos;
-            Direction = dir;
-            Timestamp = time;
-
-            ID = 0;
-        }
-
-        public PosInfo(Vector2 pos, Direction dir, UInt32 ID)
-        {
-            Position = pos;
-            Direction = dir;
-            this.ID = ID;
-
-            Timestamp = 0.0f;
-        }
-    }
-
     class Character : Entity, IDamageable, IPropertyObject, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();

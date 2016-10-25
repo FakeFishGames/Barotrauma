@@ -8,7 +8,7 @@
 
   <ragdoll headposition="50" headangle="-70" 
            waveamplitude="2.0" wavelength="5000" 
-           swimspeed="2.0" walkspeed="2.0"
+           swimspeed="3.0" walkspeed="2.0"
            stepsize ="15.0,20.0"           
            legtorque="10"
            flip="true">

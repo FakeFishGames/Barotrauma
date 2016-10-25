@@ -431,7 +431,7 @@ namespace Barotrauma.Networking
                         if (!(c is AICharacter) || c.IsDead) continue;
 
                         if (Character.CharacterList.Any(
-                            c2 => c2.IsNetworkPlayer &&
+                            c2 => c2.IsRemotePlayer &&
                                 Vector2.Distance(c2.WorldPosition, c.WorldPosition) < ignoreDistance))
                         {
                             
