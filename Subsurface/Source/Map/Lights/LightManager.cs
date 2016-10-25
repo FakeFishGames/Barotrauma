@@ -328,22 +328,22 @@ namespace Barotrauma.Lights
                 hullAmbientLight.Add(hull, currColor);
             }
 
+            Color nextHullLight = currColor * AmbientLightFalloff;
+            //light getting too dark to notice -> no need to spread further
+            if (nextHullLight.A < 20) return hullAmbientLight;
+
+            //use hashset to make sure that each hull is only included once
+            HashSet<Hull> hulls = new HashSet<Hull>();
             foreach (Gap g in hull.ConnectedGaps)
             {
-                for (int i = 0; i < g.linkedTo.Count;i++ )
-                {
-                    if (g.linkedTo[i] is Hull)
-                    {
-                        if (g.linkedTo[i] == hull) continue;
+                if (!g.IsRoomToRoom || !g.PassAmbientLight || g.Open < 0.5f) continue;
+                
+                hulls.Add((g.linkedTo[0] == hull ? g.linkedTo[1] : g.linkedTo[0]) as Hull);                
+            }
 
-                        Color nextHullLight = currColor * AmbientLightFalloff;
-                        if (!g.PassAmbientLight) nextHullLight *= g.Open;                        
-
-                        if (nextHullLight.A < 10) continue;
-
-                        hullAmbientLight = AmbientLightHulls((Hull)g.linkedTo[i], hullAmbientLight, nextHullLight);
-                    }
-                }
+            foreach (Hull h in hulls)
+            {
+                hullAmbientLight = AmbientLightHulls(h, hullAmbientLight, nextHullLight); 
             }
 
             return hullAmbientLight;
