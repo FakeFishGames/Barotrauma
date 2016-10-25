@@ -1111,6 +1111,10 @@ namespace Barotrauma
 
         public void ServerWrite(NetOutgoingMessage msg, Client c)
         {
+            msg.Write(ID);
+            //length in bytes
+            msg.Write((byte)(4 + 4));
+
             msg.Write(PhysicsBody.SimPosition.X);
             msg.Write(PhysicsBody.SimPosition.Y);
         }
@@ -1119,8 +1123,7 @@ namespace Barotrauma
         {
             var newTargetPosition = new Vector2(
                 msg.ReadFloat(),
-                msg.ReadFloat());
-            
+                msg.ReadFloat());            
 
             //already interpolating with more up-to-date data -> ignore
             if (subBody.MemPos.Count > 1 && subBody.MemPos[0].Timestamp > sendingTime)

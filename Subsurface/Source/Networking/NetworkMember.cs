@@ -44,7 +44,7 @@ namespace Barotrauma.Networking
         SYNC_IDS,
         CHAT_MESSAGE,
         VOTE,
-        CHARACTER_POSITION,
+        ENTITY_POSITION,
         ITEM_STATE,
 
         ENTITY_SPAWN, 

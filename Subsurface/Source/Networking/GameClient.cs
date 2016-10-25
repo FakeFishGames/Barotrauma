@@ -121,7 +121,7 @@ namespace Barotrauma.Networking
             config.SimulatedLoss = 0.05f;
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
-            config.SimulatedRandomLatency = 0.2f;
+            config.SimulatedRandomLatency = 0.05f;
 #endif 
 
             config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
@@ -706,19 +706,19 @@ namespace Barotrauma.Networking
                     case ServerNetObject.SYNC_IDS:
                         lastSentChatMsgID = inc.ReadUInt32();
                         break;
-                    case ServerNetObject.CHARACTER_POSITION:
+                    case ServerNetObject.ENTITY_POSITION:
                         UInt16 id = inc.ReadUInt16();
                         byte msgLength = inc.ReadByte();
 
-                        var character = Entity.FindEntityByID(id) as Character;
-                        if (character == null)
+                        var entity = Entity.FindEntityByID(id) as IServerSerializable;
+                        if (entity == null)
                         {
                             //skip through the rest of the message
                             inc.Position += msgLength * 8;
                         }
                         else
                         {
-                            character.ClientRead(inc, sendingTime);
+                            entity.ClientRead(inc, sendingTime);
                         }
 
                         inc.ReadPadBits();
