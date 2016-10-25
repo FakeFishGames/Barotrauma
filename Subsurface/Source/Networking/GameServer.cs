@@ -976,7 +976,7 @@ namespace Barotrauma.Networking
 
                 var cargoRoom = cargoSpawnPos.CurrentHull;
                 Vector2 position = new Vector2(
-                    cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, false),
+                    cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f),
                     cargoRoom.Rect.Y - cargoRoom.Rect.Height);
 
                 foreach (string s in extraCargo.Keys)

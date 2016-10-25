@@ -636,7 +636,7 @@ namespace Barotrauma
             if (!wayPoint2.linkedTo.Contains(this)) wayPoint2.linkedTo.Add(this);
         }
 
-        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null, Submarine sub = null)
+        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null, Submarine sub = null, bool useSyncedRand = false)
         {
             List<WayPoint> wayPoints = new List<WayPoint>();
 
@@ -651,7 +651,7 @@ namespace Barotrauma
 
             if (!wayPoints.Any()) return null;
 
-            return wayPoints[Rand.Int(wayPoints.Count(), false)];
+            return wayPoints[Rand.Int(wayPoints.Count, !useSyncedRand)];
         }
 
         public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
