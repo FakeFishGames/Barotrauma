@@ -503,7 +503,7 @@ namespace Barotrauma
             {
                 //if there are more than 2 positions in the buffer, 
                 //increase the interpolation speed to catch up with the server
-                float speedMultiplier = 1.0f + (float)Math.Pow((positionBuffer.Count - 2) / 2.0f, 2.0f);
+                float speedMultiplier = 0.9f + (float)Math.Pow((positionBuffer.Count - 2) / 5.0f, 2.0f);
 
                 netInterpolationState += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
                 newPosition = Vector2.Lerp(prev.Position, next.Position, netInterpolationState);

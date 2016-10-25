@@ -69,7 +69,7 @@ namespace Barotrauma.Networking
 
 #if DEBUG
             config.SimulatedLoss = 0.05f;
-            config.SimulatedRandomLatency = 0.2f;
+            config.SimulatedRandomLatency = 0.05f;
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
 #endif 
@@ -664,8 +664,19 @@ namespace Barotrauma.Networking
             {
                 if (character is AICharacter) continue;
 
-                outmsg.Write((byte)ServerNetObject.CHARACTER_POSITION);
+                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
                 character.ServerWrite(outmsg, c);
+                outmsg.WritePadBits();
+            }
+
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                //if docked to a sub with a smaller ID, don't send an update
+                //  (= update is only sent for the docked sub that has the smallest ID, doesn't matter if it's the main sub or a shuttle)
+                if (sub.DockedTo.Any(s => s.ID < sub.ID)) continue;
+
+                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                sub.ServerWrite(outmsg, c);
                 outmsg.WritePadBits();
             }
 
