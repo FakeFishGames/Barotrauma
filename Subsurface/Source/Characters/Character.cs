@@ -29,7 +29,6 @@ namespace Barotrauma
         protected List<PosInfo> memPos = new List<PosInfo>();
 
         private bool networkUpdateSent;
-        List<PosInfo> memLocalPos = new List<PosInfo>();
         
         //the Character that the player is currently controlling
         private static Character controlled;
@@ -210,12 +209,6 @@ namespace Barotrauma
         public List<PosInfo> MemPos
         {
             get { return memPos; }
-        }
-
-
-        public List<PosInfo> MemLocalPos
-        {
-            get { return memLocalPos; }
         }
 
         public Character ClosestCharacter
@@ -1072,18 +1065,6 @@ namespace Barotrauma
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (Submarine == null ? 400.0f : 250.0f)+pressureEffect, 0.05f);
             }
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == this)
-            {
-                if (memLocalPos.Count == 0 || NetTime.Now > memLocalPos.Last().Timestamp + 0.1f)
-                {
-                    memLocalPos.Add(
-                        new PosInfo(
-                            SimPosition,
-                            AnimController.Dir > 0.0f ? Direction.Right : Direction.Left,
-                            (float)NetTime.Now));
-                }
-            }
-            
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
             if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
             {
