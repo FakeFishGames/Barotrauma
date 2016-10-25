@@ -14,33 +14,6 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    struct PosInfo
-    {
-        public readonly Vector2 Position;
-        public readonly Direction Direction;
-
-        public readonly float Timestamp;
-        public readonly UInt32 ID;
-
-        public PosInfo(Vector2 pos, Direction dir, float time)
-        {
-            Position = pos;
-            Direction = dir;
-            Timestamp = time;
-
-            ID = 0;
-        }
-
-        public PosInfo(Vector2 pos, Direction dir, UInt32 ID)
-        {
-            Position = pos;
-            Direction = dir;
-            this.ID = ID;
-
-            Timestamp = 0.0f;
-        }
-    }
-
     class Character : Entity, IDamageable, IPropertyObject
     {
         public static List<Character> CharacterList = new List<Character>();
@@ -53,7 +26,7 @@ namespace Barotrauma
             get { return netStateID; }
         }
 
-        List<PosInfo> memPos = new List<PosInfo>();
+        protected List<PosInfo> memPos = new List<PosInfo>();
 
         private bool networkUpdateSent;
         List<PosInfo> memLocalPos = new List<PosInfo>();
@@ -2148,14 +2121,15 @@ namespace Barotrauma
                     else
                     {
                         cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
-
-                        //AnimController.TargetDir = dir < 0 ? Direction.Left : Direction.Right;
+                    }
+                    
+                    int index = 0;
+                    while (index < memPos.Count && sendingTime > memPos[index].Timestamp)
+                    {
+                        index++;
                     }
 
-                    //AnimController.RefLimb.body.TargetPosition = 
-                    //    AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);
-
-                    memPos.Add(new PosInfo(pos, dir < 0 ? Direction.Left : Direction.Right, sendingTime));
+                    memPos.Insert(index, new PosInfo(pos, dir < 0 ? Direction.Left : Direction.Right, sendingTime));
 
                     LastNetworkUpdate = sendingTime;
 

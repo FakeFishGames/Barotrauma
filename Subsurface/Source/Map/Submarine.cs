@@ -75,7 +75,7 @@ namespace Barotrauma
 
         private Vector2 prevPosition;
 
-        private float lastNetworkUpdate, networkUpdateTimer;
+        private float networkUpdateTimer;
 
         private EntityGrid entityGrid = null;
         
@@ -138,6 +138,11 @@ namespace Barotrauma
         public SubmarineBody SubBody
         {
             get { return subBody; }
+        }
+
+        public PhysicsBody PhysicsBody
+        {
+            get { return subBody.Body; }
         }
 
         public Rectangle Borders
@@ -289,6 +294,7 @@ namespace Barotrauma
             {
                 MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
+
         }
 
         public static void DrawFront(SpriteBatch spriteBatch, bool editing = false)
@@ -297,6 +303,32 @@ namespace Barotrauma
             {
                 if (MapEntity.mapEntityList[i].DrawOverWater)
                     MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
+            }
+
+
+            if (GameMain.DebugDraw)
+            {
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    if (sub.subBody.MemPos.Count < 2) continue;
+
+                    Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.MemPos[0].Position);
+                    prevPos.Y = -prevPos.Y;
+
+                    for (int i = 1; i < sub.subBody.MemPos.Count; i++)
+                    {
+                        Vector2 currPos = ConvertUnits.ToDisplayUnits(sub.subBody.MemPos[i].Position);
+                        currPos.Y = -currPos.Y;
+
+                        GUI.DrawRectangle(spriteBatch, new Rectangle((int)currPos.X - 10, (int)currPos.Y - 10, 20, 20), Color.Blue * 0.6f, true, 0.01f);
+                        GUI.DrawLine(spriteBatch, prevPos, currPos, Color.Cyan * 0.5f, 0, 5);
+
+                        prevPos = currPos;
+                    }
+
+                }
+
+
             }
         }
 
@@ -530,9 +562,8 @@ namespace Barotrauma
             }
 
             Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
-            SubmarineBody newSubBody = new SubmarineBody(this);
-            GameMain.World.RemoveBody(subBody.Body);
-            subBody = newSubBody;
+            subBody.Body.Remove();
+            subBody = new SubmarineBody(this);
             SetPosition(pos);
 
             if (entityGrid != null)
@@ -580,7 +611,7 @@ namespace Barotrauma
             if (this != MainSub && MainSub.DockedTo.Contains(this)) return;
 
             //send updates more frequently if moving fast
-            networkUpdateTimer -= MathHelper.Clamp(Velocity.Length(), 0.1f, 5.0f) * deltaTime;
+            networkUpdateTimer -= MathHelper.Clamp(Velocity.Length()*10.0f, 0.1f, 5.0f) * deltaTime;
 
             if (networkUpdateTimer < 0.0f)
             {
@@ -651,12 +682,9 @@ namespace Barotrauma
         {
             if (subBody == null) return false;
 
-            message.Write(subBody.Position.X);
-            message.Write(subBody.Position.Y);
-
-            message.Write(Velocity.X);
-            message.Write(Velocity.Y);
-
+            message.Write(PhysicsBody.SimPosition.X);
+            message.Write(PhysicsBody.SimPosition.Y);
+            
             return true;
         }
 
@@ -666,13 +694,13 @@ namespace Barotrauma
 
             if (GameMain.Server != null) return false;
 
-            Vector2 newTargetPosition, newSpeed;
+
+            Vector2 newTargetPosition;
             try
             {
-                if (sendingTime <= lastNetworkUpdate) return false;
-
-                newTargetPosition = new Vector2(message.ReadFloat(), message.ReadFloat());
-                newSpeed = new Vector2(message.ReadFloat(), message.ReadFloat());
+                newTargetPosition = new Vector2(
+                    message.ReadFloat(), 
+                    message.ReadFloat());
             }
 
             catch (Exception e)
@@ -683,14 +711,21 @@ namespace Barotrauma
                 return false;
             }
 
-            if (!newSpeed.IsValid() || !newTargetPosition.IsValid()) return false;
+            if (!newTargetPosition.IsValid()) return false;
 
-            //newTargetPosition = newTargetPosition + newSpeed * (float)(NetTime.Now - sendingTime);
+            //already interpolating with more up-to-date data -> ignore
+            if (subBody.MemPos.Count > 1 && subBody.MemPos[0].Timestamp > sendingTime)
+            {
+                return true;
+            }
 
-            subBody.TargetPosition = newTargetPosition;
-            subBody.Velocity = newSpeed;
+            int index = 0;
+            while (index < subBody.MemPos.Count && sendingTime > subBody.MemPos[index].Timestamp)
+            {
+                index++;
+            }
 
-            lastNetworkUpdate = sendingTime;
+            subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, Direction.Right, sendingTime));
 
             return true;
         }
