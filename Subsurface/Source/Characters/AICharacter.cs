@@ -254,10 +254,7 @@ namespace Barotrauma
 
                     AnimController.TargetDir = (targetDir) ? Direction.Right : Direction.Left;
                     AnimController.TargetMovement = targetMovement;
-
-                    AnimController.MainLimb.body.TargetPosition = pos;
-                        //AnimController.EstimateCurrPosition(pos, (float)(NetTime.Now) - sendingTime);                            
-
+                    
                     if (inSub)
                     {
                         Hull newHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(pos), AnimController.CurrentHull, false);
@@ -267,7 +264,15 @@ namespace Barotrauma
                             Submarine = newHull.Submarine;
                         }
                     }
-                      
+
+                    int index = 0;
+                    while (index < memPos.Count && sendingTime > memPos[index].Timestamp)
+                    {
+                        index++;
+                    }
+
+                    memPos.Insert(index, new PosInfo(pos, (targetDir) ? Direction.Right : Direction.Left, sendingTime));
+
                     LastNetworkUpdate = sendingTime;
                     break;
             }

@@ -271,6 +271,7 @@ namespace Barotrauma.Networking
                                     GameMain.NetLobbyScreen.Select();
 
                                     new GUIMessageBox("Connection timed out", "You were disconnected for too long and your character was deleted. Please wait for another round to start.");
+                                    myCharacter = null;
                                 }
 
                                 GameMain.NetLobbyScreen.ClearPlayers();
