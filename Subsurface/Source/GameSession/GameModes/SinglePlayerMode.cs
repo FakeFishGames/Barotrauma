@@ -197,13 +197,13 @@ namespace Barotrauma
             }
             else if (leavingSub.AtEndPosition)
             {
-                endShiftButton.Text = "Enter " + Map.SelectedLocation.Name;
+                endShiftButton.Text = ToolBox.LimitString("Enter " + Map.SelectedLocation.Name, endShiftButton.Font, endShiftButton.Rect.Width - 5);
                 endShiftButton.UserData = leavingSub;
                 endShiftButton.Visible = true;
             }
             else if (leavingSub.AtStartPosition)
             {
-                endShiftButton.Text = "Enter " + Map.CurrentLocation.Name;
+                endShiftButton.Text = ToolBox.LimitString("Enter " + Map.CurrentLocation.Name, endShiftButton.Font, endShiftButton.Rect.Width - 5);
                 endShiftButton.UserData = leavingSub;
                 endShiftButton.Visible = true;
             }

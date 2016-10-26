@@ -120,17 +120,17 @@ namespace Barotrauma.Items.Components
             maintainPosTickBox = new GUITickBox(new Rectangle(5, 50, 15, 15), "Maintain position", Alignment.TopLeft, GUI.SmallFont, GuiFrame);
             maintainPosTickBox.Enabled = false;
             maintainPosTickBox.OnSelected = ToggleMaintainPosition;
-
+                       
             levelStartTickBox = new GUITickBox(
-                new Rectangle(5, 70, 15, 15), 
-                GameMain.GameSession.StartLocation.Name, 
+                new Rectangle(5, 70, 15, 15),
+                ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20), 
                 Alignment.TopLeft, GUI.SmallFont, GuiFrame);
             levelStartTickBox.Enabled = false;
             levelStartTickBox.OnSelected = SelectDestination;
 
             levelEndTickBox = new GUITickBox(
                 new Rectangle(5, 90, 15, 15),
-                GameMain.GameSession.EndLocation.Name,
+                ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
                 Alignment.TopLeft, GUI.SmallFont, GuiFrame);
             levelEndTickBox.Enabled = false;
             levelEndTickBox.OnSelected = SelectDestination;
@@ -139,8 +139,6 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            //base.Update(deltaTime, cam);
-
             if (valueChanged)
             {
                 networkUpdateTimer -= deltaTime;
