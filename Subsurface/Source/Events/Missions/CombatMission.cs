@@ -43,7 +43,7 @@ namespace Barotrauma
 
                 return successMessage
                     .Replace("[loser]", teamNames[1 - winner])
-                    .Replace("[winner]", teamNames[winner]); 
+                    .Replace("[winner]", teamNames[winner]);
             }
         }
 
@@ -57,11 +57,11 @@ namespace Barotrauma
                 ToolBox.GetAttributeString(element, "description2", "")
             };
 
-            for (int i = 0; i < descriptions.Length; i++ )
+            for (int i = 0; i < descriptions.Length; i++)
             {
-                for (int n = 0; n < 2;n++ )
+                for (int n = 0; n < 2; n++)
                 {
-                    descriptions[i] = descriptions[i].Replace("[location" + (n + 1) + "]", Locations[n]);
+                    descriptions[i] = descriptions[i].Replace("[location" + (n + 1) + "]", locations[n].Name);
                 }
             }
 
@@ -69,7 +69,7 @@ namespace Barotrauma
             {
                 ToolBox.GetAttributeString(element, "teamname1", "Team A"),
                 ToolBox.GetAttributeString(element, "teamname2", "Team B")
-            };            
+            };
         }
 
         public static string GetTeamName(int teamID)
@@ -136,10 +136,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Combat missions cannot be played in the single player mode.");
                 return;
             }
-
-            Items.Components.Radar.StartMarker = Locations[0];
-            Items.Components.Radar.EndMarker = Locations[1];
-
+            
             subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
             subs[1].SetPosition(Level.Loaded.EndPosition - new Vector2(0.0f, 2000.0f));
             subs[1].FlipX();

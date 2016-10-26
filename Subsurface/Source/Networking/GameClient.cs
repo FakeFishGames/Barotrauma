@@ -566,6 +566,13 @@ namespace Barotrauma.Networking
                         break;
                     case (byte)PacketTypes.EndGame:
                         string endMessage = inc.ReadString();
+                        bool missionSuccessful = inc.ReadBoolean();
+
+                        if (missionSuccessful && GameMain.GameSession.Mission != null)
+                        {
+                            GameMain.GameSession.Mission.Completed = true;
+                        }
+
                         CoroutineManager.StartCoroutine(EndGame(endMessage));
                         break;
                     case (byte)PacketTypes.Respawn:

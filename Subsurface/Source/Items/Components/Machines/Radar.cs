@@ -20,10 +20,7 @@ namespace Barotrauma.Items.Components
 
         private List<RadarBlip> radarBlips;
         private float prevPingRadius;
-
-        public static string StartMarker = "Start";
-        public static string EndMarker = "End";
-
+        
         [HasDefaultValue(10000.0f, false)]
         public float Range
         {
@@ -266,11 +263,11 @@ namespace Barotrauma.Items.Components
 
 
             DrawMarker(spriteBatch,
-                (GameMain.GameSession.Map == null) ? StartMarker : GameMain.GameSession.Map.CurrentLocation.Name,
+                GameMain.GameSession.StartLocation.Name,
                 (Level.Loaded.StartPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
 
             DrawMarker(spriteBatch,
-                (GameMain.GameSession.Map == null) ? EndMarker : GameMain.GameSession.Map.SelectedLocation.Name,
+                GameMain.GameSession.EndLocation.Name,
                 (Level.Loaded.EndPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
 
             if (GameMain.GameSession.Mission != null)
