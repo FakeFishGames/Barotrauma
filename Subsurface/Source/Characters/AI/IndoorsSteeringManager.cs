@@ -97,7 +97,7 @@ namespace Barotrauma
                 diff.Y = 0.0f;
             }
 
-            if (diff == Vector2.Zero) return -host.Steering;
+            if (diff.Length() < 0.01) return -host.Steering;
 
             return Vector2.Normalize(diff) * speed;          
         }
