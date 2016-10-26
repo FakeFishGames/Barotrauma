@@ -10,12 +10,12 @@
     <collider radius ="50"/>
     
     <!-- head -->
-    <limb id = "0" radius="50" height="270" type="Head" steerforce="1.0" impacttolerance="50.0">
+    <limb id = "0" radius="50" height="270" type="Head" steerforce="1.0">
       <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="267,171,162,392" depth="0.02" origin ="0.5,0.5"/>
     </limb>
 
     <!-- lower yaw -->
-    <limb id = "1" radius="20" height="240" impacttolerance="50.0">
+    <limb id = "1" radius="20" height="240">
       <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="425,1,101,309" depth="0.025" origin="0.5,0.5"/>
       <attack range="300" duration="0.5" damage="200" bleedingdamage="50" structuredamage="150" damagetype="slash" torque="100" targetforce="-50"/>
     </limb>

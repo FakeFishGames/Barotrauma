@@ -9,25 +9,25 @@
     <collider radius="80" height="30"/>
     
     <!-- head -->
-    <limb id = "0" radius="80" height="30" type="Head" steerforce="3.0" impacttolerance="100">
+    <limb id = "0" radius="80" height="30" type="Head" steerforce="3.0">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="299,0,171,208" depth="0.05"/>
       <attack type="Hit" range="120" duration="0.2" damage="50" stun="2" force="10" damagetype="blunt" targetforce="100"/>
     </limb>
 
 
-    <limb id = "1" width="30" height="178" impacttolerance="100.0">
+    <limb id = "1" width="30" height="178">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="183,60,53,178" depth="0.08" origin="0.5,0.5"/>
     </limb>
-    <limb id = "2" width="30" height="175" impacttolerance="100">
+    <limb id = "2" width="30" height="175">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
       <attack range="150" duration="0.5" damage="30" stun="1.0" torque="150" damagetype="slash"/>      
     </limb>
     
-    <limb id = "3" width="30" height="178" impacttolerance="100.0">
+    <limb id = "3" width="30" height="178">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="236,60,53,178" size="-1,1" depth="0.08" origin="0.5,0.5"/>
     </limb>
 
-    <limb id = "4" width="30" height="175" impacttolerance="100">
+    <limb id = "4" width="30" height="175">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
       <attack range="150" duration="0.5" damage="30" stun="1.0" torque="-150" damagetype="slash"/>            
     </limb>

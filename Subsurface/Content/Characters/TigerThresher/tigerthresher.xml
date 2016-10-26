@@ -10,13 +10,13 @@
     <collider radius="50" height="320"/>
     
     <!-- head -->
-    <limb id = "0" radius="12" height="100" type="Head" steerforce="1.0" impacttolerance="50.0">
+    <limb id = "0" radius="12" height="100" type="Head" steerforce="1.0">
       <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="371,15,66,136" depth="0.02" origin ="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="371,15,66,136" origin ="0.5,0.5"/>
     </limb>
 
     <!-- lower yaw -->
-    <limb id = "1" width="16" height="103" impacttolerance="50.0">
+    <limb id = "1" width="16" height="103">
       <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="391,169,28,110" depth="0.025" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="391,169,28,110" origin="0.5,0.5"/>
       <attack range="200" duration="0.5" damage="150" bleedingdamage="10" structuredamage="200" damagetype="slash" torque="80" targetforce="-50"/>      
