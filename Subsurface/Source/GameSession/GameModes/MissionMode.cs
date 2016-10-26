@@ -17,15 +17,9 @@ namespace Barotrauma
         public MissionMode(GameModePreset preset, object param)
             : base(preset, param)
         {
-            Location[] locations = new Location[2];
+            Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
 
             MTRandom rand = new MTRandom(ToolBox.StringToInt(GameMain.NetLobbyScreen.LevelSeed));
-
-            for (int i = 0; i < 2; i++)
-            {
-                locations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f));
-            }
-
             mission = Mission.LoadRandom(locations, rand, param as string);
         }
 

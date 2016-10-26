@@ -58,10 +58,9 @@ namespace Barotrauma
             }
 
             if (Submarine.MainSub != null) text = text.Replace("[sub]", Submarine.MainSub.Name);
-            if (GameMain.GameSession != null && GameMain.GameSession.Map != null)
+            if (GameMain.GameSession != null && GameMain.GameSession.StartLocation != null)
             {
-                if (GameMain.GameSession.Map.CurrentLocation!=null)
-                    text = text.Replace("[location]", GameMain.GameSession.Map.CurrentLocation.Name);
+                text = text.Replace("[location]", GameMain.GameSession.StartLocation.Name);
             }
 
             return text;

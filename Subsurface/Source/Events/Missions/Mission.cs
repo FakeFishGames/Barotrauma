@@ -26,9 +26,7 @@ namespace Barotrauma
         protected List<string> messages;
 
         private int reward;
-
-        protected string[] Locations = new string[2];
-
+        
         public string Name
         {
             get { return name; }
@@ -47,6 +45,7 @@ namespace Barotrauma
         public bool Completed
         {
             get { return completed; }
+            set { completed = value; }
         }
 
         public virtual string RadarLabel
@@ -111,11 +110,9 @@ namespace Barotrauma
                 headers.Add(ToolBox.GetAttributeString(subElement, "header", ""));
                 messages.Add(ToolBox.GetAttributeString(subElement, "text", ""));
             }
-
-
+            
             for (int n = 0; n < 2; n++)
             {
-                Locations[n] = locations[n].Name;
                 description = description.Replace("[location" + (n + 1) + "]", locations[n].Name);
 
                 successMessage = successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
@@ -227,7 +224,12 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime) { }
 
-        public virtual bool AssignTeamIDs(List<Networking.Client> clients,out int hostTeam) { clients.ForEach(client => { client.TeamID = 1; }); hostTeam = 1; return false; }
+        public virtual bool AssignTeamIDs(List<Networking.Client> clients, out int hostTeam)
+        {
+            clients.ForEach(c => c.TeamID = 1);
+            hostTeam = 1; 
+            return false; 
+        }
 
         public void ShowMessage(int index)
         {

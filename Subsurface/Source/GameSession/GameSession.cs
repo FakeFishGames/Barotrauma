@@ -13,6 +13,9 @@ namespace Barotrauma
         
         public readonly GameMode gameMode;
 
+        //two locations used as the start and end in the MP mode
+        private Location[] dummyLocations;
+
         private InfoFrameTab selectedTab;
         private GUIButton infoButton;
         private GUIFrame infoFrame;
@@ -50,7 +53,37 @@ namespace Barotrauma
                 return (mode == null) ? null : mode.Map;
             }
         }
-                
+
+        public Location StartLocation
+        {
+            get 
+            {
+                if (Map != null) return Map.CurrentLocation;
+
+                if (dummyLocations==null)
+                {
+                    CreateDummyLocations();
+                }
+
+                return dummyLocations[0]; 
+            }
+        }
+         
+        public Location EndLocation
+        {
+            get
+            {
+                if (Map != null) return Map.SelectedLocation;
+
+                if (dummyLocations == null)
+                {
+                    CreateDummyLocations();
+                }
+
+                return dummyLocations[1];
+            }
+        }  
+     
         public Submarine Submarine
         {
             get { return submarine; }
@@ -79,12 +112,10 @@ namespace Barotrauma
 
             this.saveFile = saveFile;
 
-            //guiRoot = new GUIFrame(new Rectangle(0,0,GameMain.GraphicsWidth,GameMain.GraphicsWidth), Color.Transparent);
-
             infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", GUI.Style, null);
             infoButton.OnClicked = ToggleInfoFrame;
 
-            if (gameModePreset!=null) gameMode = gameModePreset.Instantiate(missionType);
+            if (gameModePreset != null) gameMode = gameModePreset.Instantiate(missionType);
             this.submarine = submarine;
         }
         
@@ -104,6 +135,17 @@ namespace Barotrauma
                 if (subElement.Name.ToString().ToLowerInvariant() != "gamemode") continue;
 
                 gameMode = new SinglePlayerMode(subElement);
+            }
+        }
+
+        private void CreateDummyLocations()
+        {
+            dummyLocations = new Location[2];
+
+            MTRandom rand = new MTRandom(ToolBox.StringToInt(GameMain.NetLobbyScreen.LevelSeed));
+            for (int i = 0; i < 2; i++)
+            {
+                dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f));
             }
         }
 
@@ -164,8 +206,6 @@ namespace Barotrauma
 
             if (gameMode!=null) gameMode.Start();
 
-            Items.Components.Radar.StartMarker = "Start";
-            Items.Components.Radar.EndMarker = "End";
             if (gameMode.Mission != null) Mission.Start(Level.Loaded);
             
             TaskManager.StartShift(level);
