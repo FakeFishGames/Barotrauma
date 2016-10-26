@@ -395,12 +395,15 @@ namespace Barotrauma.Items.Components
 
             if (dir.X < 0.0f) markerPos.X -= GUI.SmallFont.MeasureString(label).X+10;
 
-            GUI.DrawString(spriteBatch, new Vector2(markerPos.X + 10, markerPos.Y), label, Color.LightGreen * textAlpha, Color.Black * textAlpha*0.5f, 2, GUI.SmallFont);
+            string wrappedLabel = ToolBox.WrapText(label, 150, GUI.SmallFont);
 
-            GUI.DrawString(spriteBatch, new Vector2(markerPos.X + 10, markerPos.Y + 15), (int)(dist * Physics.DisplayToRealWorldRatio) + " m",
-                Color.LightGreen * textAlpha, 
-                Color.Black * textAlpha, 2, GUI.SmallFont);
-              
+            wrappedLabel += "\n"+((int)(dist * Physics.DisplayToRealWorldRatio) + " m");
+
+            GUI.DrawString(spriteBatch, 
+                new Vector2(markerPos.X + 10, markerPos.Y), 
+                wrappedLabel, 
+                Color.LightGreen * textAlpha, Color.Black * textAlpha * 0.5f, 
+                2, GUI.SmallFont);              
         }
 
         protected override void RemoveComponentSpecific()

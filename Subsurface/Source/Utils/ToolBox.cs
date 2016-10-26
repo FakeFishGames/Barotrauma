@@ -343,8 +343,6 @@ namespace Barotrauma
         {
             if (maxWidth <= 0 || string.IsNullOrWhiteSpace(str)) return "";
 
-            StringBuilder sb = new StringBuilder();
-            
             float currWidth = font.MeasureString("...").X;
             for (int i = 0; i < str.Length; i++ )
             {
@@ -352,7 +350,7 @@ namespace Barotrauma
 
                 if (currWidth > maxWidth)
                 {
-                    return str.Substring(0, i + 1) + "...";
+                    return str.Substring(0, Math.Max(i - 2, 1)) + "...";
                 }
             }
 
