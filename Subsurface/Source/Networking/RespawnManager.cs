@@ -325,7 +325,7 @@ namespace Barotrauma.Networking
 
                 if (item.body != null && item.body.Enabled && item.ParentInventory == null)
                 {
-                    Item.Remover.QueueItem(item);
+                    Item.Spawner.AddToRemoveQueue(item);
                 }
 
                 item.Condition = 100.0f;

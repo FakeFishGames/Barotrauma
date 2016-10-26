@@ -68,11 +68,11 @@ namespace Barotrauma.Items.Components
                         DebugConsole.ThrowError("Tried to deconstruct item \""+targetItem.Name+"\" but couldn't find item prefab \""+deconstructProduct+"\"!");
                         continue;
                     }
-                    Item.Spawner.QueueItem(itemPrefab, containers[1].Inventory);
+                    Item.Spawner.AddToSpawnQueue(itemPrefab, containers[1].Inventory);
                 }
 
                 container.Inventory.RemoveItem(targetItem);
-                Item.Remover.QueueItem(targetItem);
+                Item.Spawner.AddToRemoveQueue(targetItem);
 
                 activateButton.Text = "Deconstruct";
                 progressBar.BarSize = 0.0f;

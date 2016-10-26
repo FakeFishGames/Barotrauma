@@ -321,14 +321,12 @@ namespace Barotrauma.Items.Components
                     var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1);
                     if (requiredItem == null) continue;
 
-                    Item.Remover.QueueItem(requiredItem);
+                    Item.Spawner.AddToRemoveQueue(requiredItem);
                     containers[0].Inventory.RemoveItem(requiredItem);
-
-
                 }
             }
                         
-            Item.Spawner.QueueItem(fabricatedItem.TargetItem, containers[1].Inventory);
+            Item.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory);
 
             CancelFabricating();
         }
