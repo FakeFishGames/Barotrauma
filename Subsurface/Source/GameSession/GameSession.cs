@@ -78,7 +78,6 @@ namespace Barotrauma
             TaskManager = new TaskManager(this);
 
             Entity.Spawner.Clear();
-            Entity.Remover.Clear();
 
             this.saveFile = saveFile;
 

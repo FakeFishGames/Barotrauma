@@ -270,7 +270,6 @@ namespace Barotrauma
             }
 
             Entity.Spawner.Update();
-            Entity.Remover.Update();
         }
 
         public virtual void Update(Camera cam, float deltaTime) { }

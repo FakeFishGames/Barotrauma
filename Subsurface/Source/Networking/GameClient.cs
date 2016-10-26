@@ -560,7 +560,6 @@ namespace Barotrauma.Networking
             if (Character != null) Character.Remove();
 
             Entity.Spawner.Clear();
-            Entity.Remover.Clear();
 
             endVoteTickBox.Selected = false;
 
@@ -730,10 +729,6 @@ namespace Barotrauma.Networking
                         Item.Spawner.ClientRead(inc, sendingTime);
                         inc.ReadPadBits();
                         break;
-                    case ServerNetObject.ENTITY_REMOVE:
-                        Item.Remover.ClientRead(inc, sendingTime);
-                        inc.ReadPadBits();
-                        break;
                     default:
                         DebugConsole.ThrowError("Error while reading update from server (unknown object header \""+objHeader+"\"!)");
                         break;
@@ -772,7 +767,6 @@ namespace Barotrauma.Networking
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(Entity.Spawner.NetStateID);
-            outmsg.Write(Entity.Remover.NetStateID);
 
             ChatMessage removeMsg;
             while ((removeMsg = chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastSentChatMsgID)) != null)

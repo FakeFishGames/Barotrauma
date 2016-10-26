@@ -67,33 +67,55 @@ namespace Barotrauma
         }
 
         private readonly Queue<IEntitySpawnInfo> spawnQueue;
+        private readonly Queue<Entity> removeQueue;
+
+        class SpawnOrRemove
+        {
+            public readonly Entity Entity;
+
+            public readonly bool Remove = false;
+
+            public SpawnOrRemove(Entity entity, bool remove)
+            {
+                Entity = entity;
+                Remove = remove;
+            }
+        }
         
-        private List<Entity> spawnedEntities = new List<Entity>();
+        private List<SpawnOrRemove> spawnHistory = new List<SpawnOrRemove>();
         
         public EntitySpawner()
         {
             spawnQueue = new Queue<IEntitySpawnInfo>();
+            removeQueue = new Queue<Entity>();
         }
 
-        public void QueueItem(ItemPrefab itemPrefab, Vector2 worldPosition)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition)
         {
             if (GameMain.Client != null) return;
             
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition));
         }
 
-        public void QueueItem(ItemPrefab itemPrefab, Vector2 position, Submarine sub)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub)
         {
             if (GameMain.Client != null) return;
 
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub));
         }
 
-        public void QueueItem(ItemPrefab itemPrefab, Inventory inventory)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory)
         {
             if (GameMain.Client != null) return;
 
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory));
+        }
+
+        public void AddToRemoveQueue(Item item)
+        {
+            if (GameMain.Client != null) return;
+
+            removeQueue.Enqueue(item);
         }
 
         public void Update()
@@ -109,6 +131,15 @@ namespace Barotrauma
                 var spawnedEntity = entitySpawnInfo.Spawn();
                 if (spawnedEntity != null) AddToSpawnedList(spawnedEntity);
             }
+
+            while (removeQueue.Count > 0)
+            {
+                var entity = removeQueue.Dequeue();
+                spawnHistory.Add(new SpawnOrRemove(entity, true));
+
+                entity.Remove();
+                NetStateID = (UInt32)spawnHistory.Count;
+            }
         }
 
         public void AddToSpawnedList(Entity entity)
@@ -116,8 +147,9 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
             if (entity == null) return;
 
-            spawnedEntities.Add(entity);
-            NetStateID = (UInt32)spawnedEntities.Count;
+            spawnHistory.Add(new SpawnOrRemove(entity, false));
+
+            NetStateID = (UInt32)spawnHistory.Count;
         }
 
         public void ServerWrite(Lidgren.Network.NetOutgoingMessage message, Client client)
@@ -125,22 +157,31 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
 
             //skip items that the client already knows about
-            List<Entity> entities = spawnedEntities.Skip((int)client.lastRecvEntitySpawnID).ToList();
+            List<SpawnOrRemove> entities = spawnHistory.Skip((int)client.lastRecvEntitySpawnID).ToList();
 
-            message.Write((UInt32)spawnedEntities.Count);
+            message.Write((UInt32)spawnHistory.Count);
 
             message.Write((UInt16)entities.Count);
             for (int i = 0; i < entities.Count; i++)
             {
-                if (entities[i] is Item)
+                message.Write(entities[i].Remove);
+
+                if (entities[i].Remove)
                 {
-                    message.Write((byte)SpawnableType.Item);
-                    ((Item)entities[i]).WriteSpawnData(message);
+                    message.Write(entities[i].Entity.ID);
                 }
-                else if (entities[i] is Character)
+                else
                 {
-                    message.Write((byte)SpawnableType.Character);
-                    ((Character)entities[i]).WriteSpawnData(message);
+                    if (entities[i].Entity is Item)
+                    {
+                        message.Write((byte)SpawnableType.Item);
+                        ((Item)entities[i].Entity).WriteSpawnData(message);
+                    }
+                    else if (entities[i].Entity is Character)
+                    {
+                        message.Write((byte)SpawnableType.Character);
+                        ((Character)entities[i].Entity).WriteSpawnData(message);
+                    }
                 }
             }
         }
@@ -154,19 +195,32 @@ namespace Barotrauma
             var entityCount = message.ReadUInt16();
             for (int i = 0; i < entityCount; i++)
             {
-                switch (message.ReadByte())
-                {
-                    case (byte)SpawnableType.Item:
-                        Item.ReadSpawnData(message, ID - entityCount + i >= NetStateID);
-                        break;
-                    case (byte)SpawnableType.Character:
-                        Character.ReadSpawnData(message, ID - entityCount + i >= NetStateID);
-                        break;
-                    default:
-                        DebugConsole.ThrowError("Received invalid entity spawn message (unknown spawnable type)");
-                        break;
-                }
+                bool remove = message.ReadBoolean();
 
+                if (remove)
+                {
+                    ushort entityId = message.ReadUInt16();
+
+                    var entity = Entity.FindEntityByID(entityId);
+                    if (entity == null || ID - entityCount + i < NetStateID) continue; //already removed
+
+                    entity.Remove();
+                }
+                else
+                {
+                    switch (message.ReadByte())
+                    {
+                        case (byte)SpawnableType.Item:
+                            Item.ReadSpawnData(message, ID - entityCount + i >= NetStateID);
+                            break;
+                        case (byte)SpawnableType.Character:
+                            Character.ReadSpawnData(message, ID - entityCount + i >= NetStateID);
+                            break;
+                        default:
+                            DebugConsole.ThrowError("Received invalid entity spawn message (unknown spawnable type)");
+                            break;
+                    }
+                }
             }
 
             NetStateID = Math.Max(ID, NetStateID);
@@ -178,7 +232,8 @@ namespace Barotrauma
             NetStateID = 0;
 
             spawnQueue.Clear();
-            spawnedEntities.Clear();
+            removeQueue.Clear();
+            spawnHistory.Clear();
         }
     }
 }

@@ -337,12 +337,12 @@ namespace Barotrauma
 
                     if (spawnPos != null)
                     {
-                        Item.Spawner.QueueItem(itemPrefab, (Vector2)spawnPos);
+                        Item.Spawner.AddToSpawnQueue(itemPrefab, (Vector2)spawnPos);
 
                     }
                     else if (spawnInventory != null)
                     {
-                        Item.Spawner.QueueItem(itemPrefab, (Inventory)spawnInventory);
+                        Item.Spawner.AddToSpawnQueue(itemPrefab, (Inventory)spawnInventory);
                     }
 
                     break;

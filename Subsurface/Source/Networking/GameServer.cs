@@ -602,7 +602,6 @@ namespace Barotrauma.Networking
                         c.lastRecvGeneralUpdate     = Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32());
                         c.lastRecvChatMsgID         = Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32());
                         c.lastRecvEntitySpawnID     = Math.Max(c.lastRecvEntitySpawnID, inc.ReadUInt32());
-                        c.lastRecvEntityRemoveID    = Math.Max(c.lastRecvEntityRemoveID, inc.ReadUInt32());
 
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
@@ -652,14 +651,7 @@ namespace Barotrauma.Networking
                 Item.Spawner.ServerWrite(outmsg, c);
                 outmsg.WritePadBits();
             }
-
-            if (Item.Remover.NetStateID > c.lastRecvEntityRemoveID)
-            {
-                outmsg.Write((byte)ServerNetObject.ENTITY_REMOVE);
-                Item.Remover.ServerWrite(outmsg, c);
-                outmsg.WritePadBits();
-            }
-
+            
             foreach (Character character in Character.CharacterList)
             {
                 if (character is AICharacter) continue;
@@ -835,7 +827,6 @@ namespace Barotrauma.Networking
         private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
         {
             Item.Spawner.Clear();
-            Item.Remover.Clear();
 
             GameMain.NetLobbyScreen.StartButton.Enabled = false;
 
@@ -996,7 +987,6 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosEnabled = false;
 
             Item.Spawner.Clear();
-            Item.Remover.Clear();
 
 #if DEBUG
             messageCount.Clear();
