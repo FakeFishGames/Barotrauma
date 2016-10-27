@@ -61,6 +61,8 @@ namespace Barotrauma
 
         public float lastUpdate;
 
+        private bool takenDamage;
+
         public SpriteEffects SpriteEffects = SpriteEffects.None;
 
         public bool resizeHorizontal
@@ -141,7 +143,7 @@ namespace Barotrauma
         {
             get
             {
-                return prefab.HasBody;
+                return takenDamage && prefab.HasBody;
             }
         }
 
@@ -753,6 +755,8 @@ namespace Barotrauma
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.MaxHealth);
 
+            takenDamage = sections.Any(s => s.damage > 0.0f);
+
             bool hasHole = SectionBodyDisabled(sectionIndex);
 
             if (hadHole == hasHole) return;
@@ -927,6 +931,8 @@ namespace Barotrauma
 
                         s.sections[index].damage = 
                             ToolBox.GetAttributeFloat(subElement, "damage", 0.0f);
+
+                        s.takenDamage = s.takenDamage || s.sections[index].damage > 0.0f;
 
                         s.sections[index].GapID = ToolBox.GetAttributeInt(subElement, "gap", -1);
 
