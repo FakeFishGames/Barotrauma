@@ -11,7 +11,7 @@
       <Item name="Steel Bar"/>
     </Deconstruct>
 
-    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="39,31,12,33" depth="0.5"/>
+    <Sprite texture ="Content/Items/Tools/tools.png" sourcerect="39,31,12,33" depth="0.55"/>
 
     <Body width="12" height="33" density="5"/>
 
@@ -34,7 +34,7 @@
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
     
-    <Sprite texture ="DivingMask.png" depth="0.5"/>
+    <Sprite texture ="DivingMask.png" depth="0.55"/>
   
     <Body radius="18" density="15"/>
 
@@ -123,7 +123,7 @@
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
     
-    <Sprite texture ="DivingSuit.png" depth="0.5" sourcerect="22,98,59,32" origin="0.6,0.66"/>
+    <Sprite texture ="DivingSuit.png" depth="0.55" sourcerect="22,98,59,32" origin="0.6,0.66"/>
 
     <Body width="55" height="30" density="15"/>
 

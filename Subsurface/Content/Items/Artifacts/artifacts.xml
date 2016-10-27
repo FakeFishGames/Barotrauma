@@ -118,7 +118,7 @@
       <Item name="Fulgurium Bar"/>
     </Deconstruct>
 
-    <Sprite texture ="alientools.png" depth="0.5" sourcerect="0,0,95,50" origin="0.5,0.4"/>
+    <Sprite texture ="alientools.png" depth="0.55" sourcerect="0,0,95,50" origin="0.5,0.4"/>
 
     <Body width="85" height="40" density="15"/>
 
