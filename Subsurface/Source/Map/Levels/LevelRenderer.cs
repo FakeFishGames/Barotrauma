@@ -126,21 +126,32 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.Additive,
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
                 cam.Transform);
 
-            for (int i = 1; i < 2; i++)
+            for (int i = 1; i < 4; i++)
             {
-                Vector2 offset = new Vector2(cam.WorldView.X, cam.WorldView.Y);
+                float scale = 1.0f - i * 0.2f;
 
-                dustParticles.SourceRect = new Rectangle((int)(offset.X), (int)(-offset.Y), (int)(1024), (int)(1024));
+                //alpha goes from 1.0 to 0.0 when scale is in the range of 0.2-0.1
+                float alpha = (cam.Zoom * scale) < 0.2f ? (cam.Zoom * scale - 0.1f) * 10.0f : 1.0f;
+                if (alpha <= 0.0f) continue;
+                
+                Vector2 offset = (new Vector2(cam.WorldViewCenter.X, cam.WorldViewCenter.Y) + dustOffset) * scale;
+                Vector3 origin = new Vector3(cam.WorldView.Width, cam.WorldView.Height, 0.0f) * 0.5f;
 
-                dustParticles.DrawTiled(spriteBatch, new Vector2(cam.WorldView.X, -cam.WorldView.Y),
-                    new Vector2(cam.WorldView.Width, cam.WorldView.Height),
-                    Vector2.Zero, Color.White);
+                dustParticles.SourceRect = new Rectangle(
+                    (int)((offset.X - origin.X + (i * 256)) / scale),
+                    (int)((-offset.Y - origin.Y + (i * 256)) / scale),
+                    (int)((cam.WorldView.Width) / scale),
+                    (int)((cam.WorldView.Height) / scale));
+
+                spriteBatch.Draw(dustParticles.Texture,
+                    new Vector2(cam.WorldViewCenter.X, -cam.WorldViewCenter.Y),
+                    dustParticles.SourceRect, Color.White * alpha, 0.0f,
+                    new Vector2(cam.WorldView.Width, cam.WorldView.Height) * 0.5f / scale, scale, SpriteEffects.None, 0);
             }
 
             spriteBatch.End();
