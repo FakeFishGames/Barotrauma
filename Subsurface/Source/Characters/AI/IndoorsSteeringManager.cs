@@ -258,6 +258,12 @@ namespace Barotrauma
 
                     if (closestButton != null)
                     {
+                        if (!closestButton.HasRequiredItems(character, false) && shouldBeOpen)
+                        {
+                            currentPath.Unreachable = true;
+                            return;
+                        }
+
                         closestButton.Item.Pick(character, false, true);
                         break;
                     }

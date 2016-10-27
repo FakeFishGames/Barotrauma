@@ -437,11 +437,11 @@ namespace Barotrauma
                 WayPoint[] stairPoints = new WayPoint[2];
 
                 stairPoints[0] = new WayPoint(
-                    new Vector2(stairs.Rect.X - 75.0f,
+                    new Vector2(stairs.Rect.X - 32.0f,
                         stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? 80 : stairs.Rect.Height) + heightFromFloor), SpawnType.Path, submarine);
 
                 stairPoints[1] = new WayPoint(
-                  new Vector2(stairs.Rect.Right + 75.0f,
+                  new Vector2(stairs.Rect.Right + 32.0f,
                       stairs.Rect.Y - (stairs.StairDirection == Direction.Left ? stairs.Rect.Height : 80) + heightFromFloor), SpawnType.Path, submarine);
 
                 for (int i = 0; i < 2; i++ )
@@ -536,11 +536,11 @@ namespace Barotrauma
 
                 //ladderPoints[0].ConnectTo(ladderPoints[1]);
             }
-            
+                        
             foreach (Gap gap in Gap.GapList)
             {
                 if (!gap.isHorizontal) continue;
-
+                
                 //too small to walk through
                 if (gap.Rect.Height < 150.0f) continue;
 
@@ -550,9 +550,15 @@ namespace Barotrauma
                 for (int dir = -1; dir <= 1; dir += 2)
                 {
                     float tolerance = gap.IsRoomToRoom ? 50.0f : outSideWaypointInterval / 2.0f;
-                    WayPoint closest = wayPoint.FindClosest(dir, true, new Vector2(-tolerance, tolerance));
-                    if (closest == null) continue;
-                    wayPoint.ConnectTo(closest);
+
+                    WayPoint closest = wayPoint.FindClosest(
+                        dir, true, new Vector2(-tolerance, tolerance), 
+                        gap.ConnectedDoor == null ? null : gap.ConnectedDoor.Body.FarseerBody);
+
+                    if (closest != null)
+                    {
+                        wayPoint.ConnectTo(closest);
+                    }
                 }
             }
 
@@ -582,7 +588,7 @@ namespace Barotrauma
             }
         }
 
-        private WayPoint FindClosest(int dir, bool horizontalSearch, Vector2 tolerance)
+        private WayPoint FindClosest(int dir, bool horizontalSearch, Vector2 tolerance, Body ignoredBody = null)
         {
             if (dir != -1 && dir != 1) return null;
 
@@ -614,9 +620,9 @@ namespace Barotrauma
                 if (closest == null || dist < closestDist)
                 {
                     var body = Submarine.CheckVisibility(SimPosition, wp.SimPosition, true);
-                    if (body != null)
+                    if (body != null && body != ignoredBody && !(body.UserData is Submarine))
                     {
-                        if (body.UserData is Structure) continue;
+                        if (body.UserData is Structure || body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
                     }
 
                     closestDist = dist;
