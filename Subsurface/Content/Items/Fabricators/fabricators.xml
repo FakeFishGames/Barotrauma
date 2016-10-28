@@ -102,6 +102,10 @@
       <fabricableitem name="Compound N" requireditems="Aluminium, Potassium, Sulphuric Acid" requiredtime="20">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
+      <fabricableitem name="Volatile Compound N" requireditems="Compound N, Flash Powder" requiredtime="20">
+        <RequiredSkill name="Medical" level="40"/>
+      </fabricableitem>
+      
       
       <fabricableitem name="Corrigodone" requireditems="Stabilozine, Chloral Hydrate" requiredtime="20">
         <RequiredSkill name="Medical" level="50"/>
@@ -134,7 +138,11 @@
 
       <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Corrigodone" requiredtime="30">
         <RequiredSkill name="Medical" level="60"/>
-      </fabricableitem>      
+      </fabricableitem>
+
+      <fabricableitem name="Liquid Oxygenite" requireditems="Stabilozine, Oxygenite Shard" requiredtime="30">
+        <RequiredSkill name="Medical" level="60"/>
+      </fabricableitem>
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">
