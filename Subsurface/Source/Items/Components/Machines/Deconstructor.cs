@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
         public Deconstructor(Item item, XElement element) 
             : base(item, element)
         {
-            progressBar = new GUIProgressBar(new Rectangle(0,0,200,20), Color.Green, 0.0f, Alignment.BottomCenter, GuiFrame);
+            progressBar = new GUIProgressBar(new Rectangle(0,0,200,20), Color.Green, GUI.Style, 0.0f, Alignment.BottomCenter, GuiFrame);
 
             activateButton = new GUIButton(new Rectangle(0, 0, 200, 20), "Deconstruct", Alignment.TopCenter, GUI.Style, GuiFrame);
             activateButton.OnClicked = ToggleActive;
