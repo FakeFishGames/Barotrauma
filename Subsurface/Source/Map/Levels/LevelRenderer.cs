@@ -124,21 +124,15 @@ namespace Barotrauma
 
             if (backgroundCreatureManager!=null) backgroundCreatureManager.Draw(spriteBatch);
 
-            spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.Additive,
-                SamplerState.LinearWrap, DepthStencilState.Default, null, null,
-                cam.Transform);
-
-            for (int i = 1; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 float scale = 1.0f - i * 0.2f;
 
                 //alpha goes from 1.0 to 0.0 when scale is in the range of 0.2-0.1
                 float alpha = (cam.Zoom * scale) < 0.2f ? (cam.Zoom * scale - 0.1f) * 10.0f : 1.0f;
                 if (alpha <= 0.0f) continue;
-                
+
                 Vector2 offset = (new Vector2(cam.WorldViewCenter.X, cam.WorldViewCenter.Y) + dustOffset) * scale;
                 Vector3 origin = new Vector3(cam.WorldView.Width, cam.WorldView.Height, 0.0f) * 0.5f;
 
@@ -151,11 +145,11 @@ namespace Barotrauma
                 spriteBatch.Draw(dustParticles.Texture,
                     new Vector2(cam.WorldViewCenter.X, -cam.WorldViewCenter.Y),
                     dustParticles.SourceRect, Color.White * alpha, 0.0f,
-                    new Vector2(cam.WorldView.Width, cam.WorldView.Height) * 0.5f / scale, scale, SpriteEffects.None, 0);
+                    new Vector2(cam.WorldView.Width, cam.WorldView.Height) * 0.5f / scale, scale, SpriteEffects.None, 1.0f - scale);
             }
 
             spriteBatch.End();
-            
+
             RenderWalls(GameMain.CurrGraphicsDevice, cam);
         }
 
