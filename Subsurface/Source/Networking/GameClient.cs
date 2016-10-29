@@ -998,21 +998,21 @@ namespace Barotrauma.Networking
                 switch (receiver.FileType)
                 {
                     case FileTransferMessageType.Submarine:
-                            Submarine.SavedSubmarines.RemoveAll(s => s.Name + ".sub" == receiver.FileName);
+                        Submarine.SavedSubmarines.RemoveAll(s => s.Name + ".sub" == receiver.FileName);
 
                         for (int i = 0; i<2; i++)
                         {
-
-                            var textBlock = (i == 0) ?
+                            var textBlock = ((i == 0) ?
                                 GameMain.NetLobbyScreen.ShuttleList.ListBox.children.Find(c => (c.UserData as Submarine).Name+".sub" == receiver.FileName) :
-                                GameMain.NetLobbyScreen.SubList.children.Find(c => (c.UserData as Submarine).Name+".sub" == receiver.FileName);
+                                GameMain.NetLobbyScreen.SubList.children.Find(c => (c.UserData as Submarine).Name+".sub" == receiver.FileName)) as GUITextBlock;
                             if (textBlock == null) continue;                            
 
-                            (textBlock as GUITextBlock).TextColor = Color.White;
+                            textBlock.TextColor = Color.White;
 
                             var newSub = new Submarine(receiver.FilePath);
                             Submarine.SavedSubmarines.Add(newSub);
                             textBlock.UserData = newSub;
+                            textBlock.ToolTip = newSub.Description;
                         }
 
                         break;
