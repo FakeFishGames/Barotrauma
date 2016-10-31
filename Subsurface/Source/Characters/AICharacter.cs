@@ -94,12 +94,6 @@ namespace Barotrauma
                 case NetworkEventType.KillCharacter:
                     return true;
                 case NetworkEventType.ImportantEntityUpdate:
-
-                    message.Write(AnimController.MainLimb.SimPosition.X);
-                    message.Write(AnimController.MainLimb.SimPosition.Y);
-
-                    //message.Write(AnimController.RefLimb.Rotation);
-
                     message.Write((byte)((health / maxHealth) * 255.0f));
 
                     message.Write(AnimController.StunTimer > 0.0f);
@@ -125,8 +119,8 @@ namespace Barotrauma
                     }
 
                     message.Write(AnimController.Dir > 0.0f);
-                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 4);
-                    message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -1.0f, 1.0f), -1.0f, 1.0f, 4);
+                    //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.X, -1.0f, 1.0f), -1.0f, 1.0f, 4);
+                    //message.WriteRangedSingle(MathHelper.Clamp(AnimController.TargetMovement.Y, -1.0f, 1.0f), -1.0f, 1.0f, 4);
                     
                     if (AnimController.CanEnterSubmarine) message.Write(Submarine != null);
 
@@ -161,30 +155,6 @@ namespace Barotrauma
                 case NetworkEventType.InventoryUpdate:
                     return base.ReadNetworkData(type, message, sendingTime, out data);
                 case NetworkEventType.ImportantEntityUpdate:
-
-                    Vector2 limbPos = AnimController.MainLimb.SimPosition;
-
-                    try
-                    {
-                        limbPos.X = message.ReadFloat();
-                        limbPos.Y = message.ReadFloat();
-                            
-                        //rotation = message.ReadFloat();
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        DebugConsole.ThrowError("Failed to read AICharacter update message", e);
-#endif
-                        return false;
-                    }
-
-                    if (AnimController.MainLimb.body != null)
-                    {
-                        AnimController.MainLimb.body.TargetPosition = limbPos;
-                        //AnimController.RefLimb.body.TargetRotation = rotation;
-                    }
-
                     float newStunTimer = 0.0f, newHealth = 0.0f, newBleeding = 0.0f;
 
                     try
@@ -235,8 +205,8 @@ namespace Barotrauma
                     try
                     {
                         targetDir = message.ReadBoolean();
-                        targetMovement.X = message.ReadRangedSingle(-1.0f, 1.0f, 4);
-                        targetMovement.Y = message.ReadRangedSingle(-1.0f, 1.0f, 4);
+                        //targetMovement.X = message.ReadRangedSingle(-1.0f, 1.0f, 4);
+                        //targetMovement.Y = message.ReadRangedSingle(-1.0f, 1.0f, 4);
 
                         if (AnimController.CanEnterSubmarine) inSub = message.ReadBoolean();
 
