@@ -484,8 +484,8 @@ namespace Barotrauma.Items.Components
 
             if (Nodes == null || Nodes.Count == 0) return componentElement;
 
-            string[] nodeCoords = new string[Nodes.Count() * 2];
-            for (int i = 0; i < Nodes.Count(); i++)
+            string[] nodeCoords = new string[Nodes.Count * 2];
+            for (int i = 0; i < Nodes.Count; i++)
             {
                 nodeCoords[i * 2] = Nodes[i].X.ToString(CultureInfo.InvariantCulture);
                 nodeCoords[i * 2 + 1] = Nodes[i].Y.ToString(CultureInfo.InvariantCulture);

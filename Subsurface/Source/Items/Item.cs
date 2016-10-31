@@ -507,11 +507,11 @@ namespace Barotrauma
             {
                 if (parentInventory.Owner is Character)
                 {
-                    CurrentHull = (parentInventory.Owner as Character).AnimController.CurrentHull;
+                    CurrentHull = ((Character)parentInventory.Owner).AnimController.CurrentHull;
                 }
                 else if (parentInventory.Owner is Item)
                 {
-                    CurrentHull = (parentInventory.Owner as Item).CurrentHull;
+                    CurrentHull = ((Item)parentInventory.Owner).CurrentHull;
                 }
 
                 Submarine = parentInventory.Owner.Submarine;
@@ -969,7 +969,7 @@ namespace Barotrauma
                 }
             }
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 70 + (editableProperties.Count() + requiredItemCount) * 30), GUI.Style);
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, 70 + (editableProperties.Count + requiredItemCount) * 30), GUI.Style);
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
             

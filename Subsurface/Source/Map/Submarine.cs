@@ -162,7 +162,7 @@ namespace Barotrauma
         {
             get
             {
-                return subBody ==null ? Vector2.Zero : subBody.Position;
+                return subBody == null ? Vector2.Zero : subBody.Position;
             }
         }
 
@@ -481,7 +481,7 @@ namespace Barotrauma
 
             if (Vector2.Distance(rayStart, rayEnd) < 0.01f)
             {
-                closestFraction = 0.01f;
+                lastPickedPosition = rayEnd;
                 return null;
             }
             
@@ -517,7 +517,7 @@ namespace Barotrauma
 
         //movement ----------------------------------------------------
 
-        private bool flippedX = false;
+        private bool flippedX;
         public bool FlippedX
         {
             get { return flippedX; }
@@ -634,9 +634,7 @@ namespace Barotrauma
         public void SetPosition(Vector2 position)
         {
             if (!MathUtils.IsValid(position)) return;
-
-            Vector2 prevPos = subBody.Position;
-
+            
             subBody.SetPosition(position);
 
             foreach (Submarine sub in loaded)
@@ -665,7 +663,7 @@ namespace Barotrauma
         {
             Submarine closest = null;
             float closestDist = 0.0f;
-            foreach (Submarine sub in Submarine.loaded)
+            foreach (Submarine sub in loaded)
             {
                 float dist = Vector2.Distance(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)

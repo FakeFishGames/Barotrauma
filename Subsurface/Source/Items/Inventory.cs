@@ -435,7 +435,7 @@ namespace Barotrauma
             int itemCapacity = container.Capacity;
 
             var slot = slots[slotIndex];
-            Rectangle containerRect = new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
+            new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
                     slot.Rect.Width + 10, slot.Rect.Height + (40 + 10) * itemCapacity + 10);
 
             Rectangle subRect = slot.Rect;

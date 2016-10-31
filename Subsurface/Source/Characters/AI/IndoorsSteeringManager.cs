@@ -118,10 +118,7 @@ namespace Barotrauma
             }
 
             if (canOpenDoors && !character.LockHands) CheckDoorsInPath();
-
-            float allowedDistance = character.AnimController.InWater ? 1.0f : 0.6f;
-            //if (currentPath.CurrentNode!=null && currentPath.CurrentNode.SimPosition.Y > character.SimPosition.Y+1.0f) allowedDistance*=0.5f;
-
+            
             Vector2 pos = host.SimPosition;
 
             if (character != null && currentPath.CurrentNode != null)
@@ -159,9 +156,7 @@ namespace Barotrauma
             }
 
             if (currentPath.CurrentNode == null) return Vector2.Zero;
-
-            var hull = character.AnimController.CurrentHull;
-
+            
             if (character.AnimController.Anim == AnimController.Animation.Climbing)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;

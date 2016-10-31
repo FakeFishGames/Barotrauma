@@ -163,7 +163,6 @@ namespace Barotrauma
                 case NetworkEventType.ImportantEntityUpdate:
 
                     Vector2 limbPos = AnimController.MainLimb.SimPosition;
-                    float rotation = AnimController.MainLimb.Rotation;
 
                     try
                     {

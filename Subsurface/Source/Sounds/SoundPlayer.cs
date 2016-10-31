@@ -138,7 +138,7 @@ namespace Barotrauma
             
             if (xDamageSounds.Any())
             {
-                damageSounds = new DamageSound[xDamageSounds.Count()];
+                damageSounds = new DamageSound[xDamageSounds.Count];
                 int i = 0;
                 foreach (XElement element in xDamageSounds)
                 {
@@ -249,7 +249,7 @@ namespace Barotrauma
 
             if (suitableMusic.Count > 0 && !suitableMusic.Contains(currentMusic))
             {
-                int index = Rand.Int(suitableMusic.Count());
+                int index = Rand.Int(suitableMusic.Count);
 
                 if (currentMusic == null || suitableMusic[index].file != currentMusic.file)
                 {
@@ -355,7 +355,7 @@ namespace Barotrauma
             var sounds = damageSounds.Where(x => damage >= x.damageRange.X && damage <= x.damageRange.Y && x.damageType == damageType).ToList();
             if (!sounds.Any()) return;
 
-            int selectedSound = Rand.Int(sounds.Count());
+            int selectedSound = Rand.Int(sounds.Count);
 
             sounds[selectedSound].sound.Play(1.0f, range, position);
             Debug.WriteLine("playing: " + sounds[selectedSound].sound);
