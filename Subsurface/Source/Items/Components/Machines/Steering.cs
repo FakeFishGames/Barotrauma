@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
 
             levelEndTickBox = new GUITickBox(
                 new Rectangle(5, 90, 15, 15),
-                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
+                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
                 Alignment.TopLeft, GUI.SmallFont, GuiFrame);
             levelEndTickBox.Enabled = false;
             levelEndTickBox.OnSelected = SelectDestination;

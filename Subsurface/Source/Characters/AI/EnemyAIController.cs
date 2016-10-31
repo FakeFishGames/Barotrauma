@@ -531,7 +531,6 @@ namespace Barotrauma
             if (GameMain.Server != null) return;
 
             AiState newState = AiState.None;
-            Vector2 newWallAttackPos = Vector2.Zero;
             float wanderAngle;
 
             ushort targetID;
@@ -575,6 +574,8 @@ namespace Barotrauma
 
             steeringManager.WanderAngle = wanderAngle;
 
+            state = newState;
+                
             if (targetID > 0) targetEntity = Entity.FindEntityByID(targetID) as IDamageable;
             //updateTargetsTimer = UpdateTargetsInterval;
             
