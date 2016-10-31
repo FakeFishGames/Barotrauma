@@ -180,7 +180,7 @@ namespace Barotrauma
         {
             base.Move(amount);
 
-            for (int i = 0; i < sections.Count(); i++)
+            for (int i = 0; i < sections.Length; i++)
             {
                 Rectangle r = sections[i].rect;
                 r.X += (int)amount.X;
@@ -867,7 +867,7 @@ namespace Barotrauma
                     (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
                     rect.Width + "," + rect.Height));
             
-            for (int i = 0; i < sections.Count(); i++)
+            for (int i = 0; i < sections.Length; i++)
             {
                 if (sections[i].damage == 0.0f) continue;
 
@@ -985,7 +985,7 @@ namespace Barotrauma
 
            // int sectionCount = message.ReadByte();
 
-            for (int i = 0; i<sections.Count(); i++)
+            for (int i = 0; i<sections.Length; i++)
             {
                 //byte sectionIndex = message.ReadByte();
                 float damage = message.ReadRangedSingle(0.0f, 1.0f, 8) * Health;

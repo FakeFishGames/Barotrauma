@@ -186,18 +186,21 @@ namespace Barotrauma
                         foreach (XAttribute attribute in subElement.Attributes())
                         {
                             InputType inputType;
-                            Keys key;
-                            int mouseButton;
                             if (Enum.TryParse(attribute.Name.ToString(), true, out inputType))
                             {
+                                int mouseButton;
                                 if (int.TryParse(attribute.Value.ToString(), out mouseButton))
                                 {
                                     keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
                                 }
-                                else if  (Enum.TryParse(attribute.Value.ToString(), true, out key))
+                                else
                                 {
-                                    keyMapping[(int)inputType] = new KeyOrMouse(key);
-                                }                                
+                                    Keys key;
+                                    if  (Enum.TryParse(attribute.Value.ToString(), true, out key))
+                                    {
+                                        keyMapping[(int)inputType] = new KeyOrMouse(key);
+                                    }
+                                }
                             }
                         }
                         break;

@@ -182,7 +182,7 @@ namespace Barotrauma.Lights
         {
             ClearCachedShadows();
 
-            for (int i = 0; i < vertices.Count(); i++)
+            for (int i = 0; i < vertices.Length; i++)
             {
                 vertices[i] += amount;
                 losVertices[i] += amount;

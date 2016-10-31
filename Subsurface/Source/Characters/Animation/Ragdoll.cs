@@ -578,7 +578,7 @@ namespace Barotrauma
         {
             dir = (dir == Direction.Left) ? Direction.Right : Direction.Left;
 
-            for (int i = 0; i < limbJoints.Count(); i++)
+            for (int i = 0; i < limbJoints.Length; i++)
             {
                 float lowerLimit = -limbJoints[i].UpperLimit;
                 float upperLimit = -limbJoints[i].LowerLimit;
@@ -591,7 +591,7 @@ namespace Barotrauma
             }
 
 
-            for (int i = 0; i < Limbs.Count(); i++)
+            for (int i = 0; i < Limbs.Length; i++)
             {
                 if (Limbs[i] == null) continue;
 
@@ -834,7 +834,7 @@ namespace Barotrauma
                     {
 
                         //create a splash particle
-                        var p = GameMain.ParticleManager.CreateParticle("watersplash",
+                        GameMain.ParticleManager.CreateParticle("watersplash",
                             new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
                             new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 20.0f)),
                             0.0f, limbHull);

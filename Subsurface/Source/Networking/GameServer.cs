@@ -1130,7 +1130,7 @@ namespace Barotrauma.Networking
         {            
             float endPreviewLength = 10.0f;
 
-            var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+            new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
             
             float secondsLeft = endPreviewLength;
 
@@ -1217,18 +1217,10 @@ namespace Barotrauma.Networking
 
         private void UpdateCrewFrame()
         {
-            List<Character> crew = new List<Character>();
-
             foreach (Client c in connectedClients)
             {
                 if (c.Character == null || !c.inGame) continue;
-
-                crew.Add(c.Character);
             }
-
-            if (myCharacter != null) crew.Add(myCharacter);
-
-            //if (GameMain.GameSession!=null) GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
         }
 
         public override void KickPlayer(string playerName, bool ban, bool range = false)
@@ -1376,7 +1368,7 @@ namespace Barotrauma.Networking
 
             int resentMessages = 0;
 
-            int clientListHeight = connectedClients.Count() * 40;
+            int clientListHeight = connectedClients.Count * 40;
             float scrollBarHeight = (height - 110) / (float)Math.Max(clientListHeight, 110);
 
             if (clientListScrollBar.BarSize != scrollBarHeight)

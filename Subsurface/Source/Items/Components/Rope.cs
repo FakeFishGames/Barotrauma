@@ -92,7 +92,7 @@ namespace Barotrauma.Items.Components
             
             List<Body>ropeList = PathManager.EvenlyDistributeShapesAlongPath(GameMain.World, ropePath, shape, BodyType.Dynamic, (int)(length/sectionLength));
             
-            ropeBodies = new PhysicsBody[ropeList.Count()];
+            ropeBodies = new PhysicsBody[ropeList.Count];
             for (int i = 0; i<ropeBodies.Length; i++)
             {
                 ropeList[i].Mass = 0.01f;

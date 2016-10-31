@@ -108,9 +108,7 @@ namespace Barotrauma.Items.Components
             connectedList.Add(this);
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-
-            List<Connection> alreadyChecked = new List<Connection>();
-
+            
             List<Connection> connections = item.Connections;
             if (connections == null) return;
 
@@ -151,8 +149,6 @@ namespace Barotrauma.Items.Components
                         {
                             fullPower += powerContainer.CurrPowerOutput;
                         }
-
-                        alreadyChecked.Add(recipient);
                     }
                     else
                     {

@@ -117,8 +117,6 @@ namespace Barotrauma.Items.Components
 
             foreach (FabricableItem fi in fabricableItems)
             {
-                Color color = ((itemList.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.3f;
-                
                 GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, null, itemList)
                 {
                     UserData = fi,
@@ -435,7 +433,7 @@ namespace Barotrauma.Items.Components
             ItemContainer container = item.GetComponent<ItemContainer>();
             foreach (Tuple<ItemPrefab, int> ip in fabricableItem.RequiredItems)
             {
-                if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1).Count() < ip.Item2) return false;
+                if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1).Length < ip.Item2) return false;
             }
 
             return true;

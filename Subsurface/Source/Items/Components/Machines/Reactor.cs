@@ -434,13 +434,12 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
             
-            int width = GuiFrame.Rect.Width, height = GuiFrame.Rect.Height;
             int x = GuiFrame.Rect.X;
             int y = GuiFrame.Rect.Y;
 
             GuiFrame.Draw(spriteBatch);
 
-            float xOffset = (graphTimer / (float)updateGraphInterval);
+            float xOffset = graphTimer / updateGraphInterval;
 
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 

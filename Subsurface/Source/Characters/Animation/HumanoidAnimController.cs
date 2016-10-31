@@ -23,15 +23,7 @@ namespace Barotrauma
 
         private float inWaterTimer;
         private bool swimming;
-
-        protected override float HeadPosition
-        {
-            get
-            {
-                return Crouching ? base.HeadPosition : base.HeadPosition;
-            }
-        }
-
+        
         protected override float TorsoPosition
         {
             get
@@ -255,7 +247,7 @@ namespace Barotrauma
                     if (limb.inWater) limbsInWater++;
                 }
 
-                float slowdownFactor = (float)limbsInWater / (float)Limbs.Count();
+                float slowdownFactor = (float)limbsInWater / (float)Limbs.Length;
 
                 float maxSpeed = Math.Max(TargetMovement.Length() - slowdownFactor, 1.0f);
                 // if (character.SelectedCharacter!=null) maxSpeed = Math.Min(maxSpeed, 1.0f);
@@ -430,7 +422,7 @@ namespace Barotrauma
             }
             else
             {
-                float movementFactor = (movement.X / 4.0f) * movement.X * Math.Sign(movement.X);
+                //float movementFactor = (movement.X / 4.0f) * movement.X * Math.Sign(movement.X);
 
                 for (int i = -1; i < 2; i += 2)
                 {

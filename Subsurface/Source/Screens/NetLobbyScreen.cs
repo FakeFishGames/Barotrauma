@@ -9,12 +9,10 @@ using FarseerPhysics.Dynamics;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using System.Reflection;
-using System.ComponentModel;
 
 namespace Barotrauma
 {
-    partial class NetLobbyScreen : Screen
+    class NetLobbyScreen : Screen
     {
         private GUIFrame menu;
         private GUIFrame infoFrame;
@@ -1062,10 +1060,10 @@ namespace Barotrauma
             //}
 
             GameModePreset modePreset = obj as GameModePreset;
-            missionTypeBlock.Visible = modePreset.Name == "Mission";
-
             if (modePreset == null) return false;
 
+            missionTypeBlock.Visible = modePreset.Name == "Mission";
+            
             valueChanged = true;
 
             return true;

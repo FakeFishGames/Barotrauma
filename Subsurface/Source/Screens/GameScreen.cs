@@ -242,7 +242,7 @@ namespace Barotrauma
                 null, null, null, null,
                 cam.Transform);
 
-            Submarine.DrawBack(spriteBatch,false,s => s is Structure && ((s as Structure).resizeHorizontal || (s as Structure).resizeVertical));
+            Submarine.DrawBack(spriteBatch,false,s => s is Structure && (((Structure)s).resizeHorizontal || ((Structure)s).resizeVertical));
 
             spriteBatch.End();
 
@@ -258,7 +258,7 @@ namespace Barotrauma
                 null, null, null, null,
                 cam.Transform);
 
-            Submarine.DrawBack(spriteBatch, false, s => (!(s is Structure)) || (!(s as Structure).resizeHorizontal && !(s as Structure).resizeHorizontal));
+            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure) || (!((Structure)s).resizeHorizontal && !((Structure)s).resizeHorizontal));
 
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
 

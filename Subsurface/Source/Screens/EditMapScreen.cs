@@ -304,7 +304,7 @@ namespace Barotrauma
 
             for (int i = 0; i<dummyCharacter.Inventory.SlotPositions.Length; i++)
             {
-                dummyCharacter.Inventory.SlotPositions[i].X += false ? -1000 : leftPanel.Rect.Width+10;
+                dummyCharacter.Inventory.SlotPositions[i].X += leftPanel.Rect.Width+10;
             }
 
             Character.Controlled = dummyCharacter;
@@ -472,16 +472,14 @@ namespace Barotrauma
             var deleteButton = new GUIButton(new Rectangle(0, 0, 70, 20), "Delete", Alignment.BottomLeft, GUI.Style, loadFrame);
             deleteButton.Enabled = false;
             deleteButton.UserData = "delete";
-            deleteButton.OnClicked = (GUIButton btn, object userdata) =>
+            deleteButton.OnClicked = (btn, userdata) =>
             {
-                var subListBox = loadFrame.GetChild<GUIListBox>();
-
                 if (subList.Selected!=null)
                 {
                     Submarine sub = subList.Selected.UserData as Submarine;
                     try
                     {
-                        System.IO.File.Delete(sub.FilePath);
+                        File.Delete(sub.FilePath);
                     }
                     catch (Exception e)
                     {

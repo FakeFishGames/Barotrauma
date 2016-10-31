@@ -510,7 +510,7 @@ namespace Barotrauma
                 StreamReader file = new StreamReader(filePath);                
 
                 var lines = File.ReadLines(filePath).ToList();
-                int lineCount = lines.Count();
+                int lineCount = lines.Count;
 
                 if (lineCount == 0)
                 {

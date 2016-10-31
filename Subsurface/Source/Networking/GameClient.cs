@@ -668,12 +668,10 @@ namespace Barotrauma.Networking
                         }
                         
                         if (!gameStarted) return;
-
-                        List<Character> crew = new List<Character>();
+                        
                         foreach (Character c in Character.CharacterList)
                         {
                             if (!c.IsRemotePlayer || !c.IsHumanoid || c.Info==null) continue;
-                            crew.Add(c);
                         }
 
                         //GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
@@ -772,13 +770,7 @@ namespace Barotrauma.Networking
             GameMain.GameSession.StartShift(levelSeed,loadSecondSub);
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
-
-
-            //myCharacter = ReadCharacterData(inc);
-            //Character.Controlled = myCharacter;                       
-
-            List<Character> crew = new List<Character>();
-
+            
             byte characterCount = inc.ReadByte();
             for (int i = 0; i < characterCount; i++)
             {
@@ -819,7 +811,7 @@ namespace Barotrauma.Networking
 
             if (Screen.Selected == GameMain.GameScreen)
             {
-                var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+                new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
 
                 float secondsLeft = endPreviewLength;
 
@@ -1053,9 +1045,7 @@ namespace Barotrauma.Networking
             if (votedClient == null) return false;
 
             votedClient.AddKickVote(new Client(name, ID));
-
-            if (votedClient == null) return false;
-
+            
             Vote(VoteType.Kick, votedClient);
 
             button.Enabled = false;

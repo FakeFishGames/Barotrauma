@@ -39,7 +39,7 @@ namespace Barotrauma
                 LoadItemAsChild(subElement, null);
             }
 
-            if (requiredDeliveryAmount == 0) requiredDeliveryAmount = items.Count();
+            if (requiredDeliveryAmount == 0) requiredDeliveryAmount = items.Count;
         }
 
         private void LoadItemAsChild(XElement element, Item parent)
