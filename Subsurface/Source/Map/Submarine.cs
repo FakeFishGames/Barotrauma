@@ -477,7 +477,7 @@ namespace Barotrauma
         /// check visibility between two points (in sim units)
         /// </summary>
         /// <returns>a physics body that was between the points (or null)</returns>
-        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false)
+        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false)
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
@@ -494,6 +494,7 @@ namespace Barotrauma
                     (!fixture.CollisionCategories.HasFlag(Physics.CollisionWall) && !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel))) return -1;
 
                 if (ignoreLevel && fixture.CollisionCategories == Physics.CollisionLevel) return -1;
+                if (ignoreSubs && fixture.Body.UserData is Submarine) return -1;
 
                 Structure structure = fixture.Body.UserData as Structure;
                 if (structure != null)
