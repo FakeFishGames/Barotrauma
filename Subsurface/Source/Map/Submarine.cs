@@ -294,17 +294,22 @@ namespace Barotrauma
             {
                 MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
-
         }
 
-        public static void DrawFront(SpriteBatch spriteBatch, bool editing = false)
+        public static void DrawFront(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
-                if (MapEntity.mapEntityList[i].DrawOverWater)
-                    MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
-            }
+                if (!MapEntity.mapEntityList[i].DrawOverWater) continue;
 
+
+                if (predicate != null)
+                {
+                    if (!predicate(MapEntity.mapEntityList[i])) continue;
+                }
+
+                MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
+            }
 
             if (GameMain.DebugDraw)
             {
@@ -325,10 +330,7 @@ namespace Barotrauma
 
                         prevPos = currPos;
                     }
-
                 }
-
-
             }
         }
 
@@ -351,13 +353,14 @@ namespace Barotrauma
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
+                if (!MapEntity.mapEntityList[i].DrawBelowWater) continue;
+
                 if (predicate != null)
                 {
                     if (!predicate(MapEntity.mapEntityList[i])) continue;
                 }
                 
-                if (MapEntity.mapEntityList[i].DrawBelowWater)
-                    MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
+                MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
             }
         }
 

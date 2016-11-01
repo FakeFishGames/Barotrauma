@@ -65,7 +65,7 @@ namespace Barotrauma
         public static World World;
 
         public static LoadingScreen TitleScreen;
-        private static bool titleScreenOpen;
+        private static bool loadingScreenOpen;
 
         public static GameSettings Config;
 
@@ -187,7 +187,7 @@ namespace Barotrauma
             spriteBatch = new SpriteBatch(GraphicsDevice);
             TextureLoader.Init(GraphicsDevice);
 
-            titleScreenOpen = true;
+            loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
             CoroutineManager.StartCoroutine(Load());
@@ -304,12 +304,17 @@ namespace Barotrauma
 
                 PlayerInput.Update(Timing.Step);
 
-                if (titleScreenOpen)
+                if (loadingScreenOpen)
                 {
+                    //reset accumulator if loading
+                    // -> less choppy loading screens because the screen is rendered after each update
+                    // -> no pause caused by leftover time in the accumulator when starting a new shift
+                    Timing.Accumulator = 0.0f;
+
                     if (TitleScreen.LoadState >= 100.0f && 
                         (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
                     {
-                        titleScreenOpen = false;
+                        loadingScreenOpen = false;
                     }
                 }
                 else if (hasLoaded)
@@ -334,8 +339,7 @@ namespace Barotrauma
                     }
 
                     GUI.Update((float)Timing.Step);
-                }
-                
+                }               
 
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
@@ -355,7 +359,7 @@ namespace Barotrauma
 
             FrameCounter.Update(deltaTime);
 
-            if (titleScreenOpen)
+            if (loadingScreenOpen)
             {
                 TitleScreen.Draw(spriteBatch, GraphicsDevice, (float)deltaTime);
             }
@@ -369,7 +373,7 @@ namespace Barotrauma
         public static CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             waitForKeyHit = waitKeyHit;
-            titleScreenOpen = true;
+            loadingScreenOpen = true;
             TitleScreen.LoadState = null;
             return CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
         }
