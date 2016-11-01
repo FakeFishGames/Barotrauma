@@ -63,7 +63,7 @@ namespace Barotrauma
         Sound hitSound;
         //a timer for delaying when a hitsound/attacksound can be played again
         public float soundTimer;
-        public const float SoundInterval = 0.2f;
+        public const float SoundInterval = 0.4f;
 
         public readonly Attack attack;
 

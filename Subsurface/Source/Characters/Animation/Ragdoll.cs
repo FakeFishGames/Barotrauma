@@ -464,15 +464,15 @@ namespace Barotrauma
                                     
             float impact = Vector2.Dot(velocity, -normal);
 
-            float volume = Math.Min(impact, 1.0f);
+            float volume = Math.Min(impact-3.0f, 1.0f);
             if (f1.Body.UserData is Limb)
             {
                 Limb limb = (Limb)f1.Body.UserData;
                 
-                if (impact > 0.5f && limb.HitSound != null && limb.soundTimer <= 0.0f)
+                if (impact > 3.0f && limb.HitSound != null && limb.soundTimer <= 0.0f)
                 {
                     limb.soundTimer = Limb.SoundInterval;
-                    limb.HitSound.Play(volume, impact * 250.0f, limb.WorldPosition);
+                    limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
                 }
             }
             else if (f1.Body == collider.FarseerBody)
