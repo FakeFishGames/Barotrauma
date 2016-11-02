@@ -103,7 +103,7 @@ namespace Barotrauma
         {
             get { return NetworkMember as GameClient; }
         }
-                
+                        
         public GameMain()
         {
             Graphics = new GraphicsDeviceManager(this);
@@ -119,20 +119,10 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save("config.xml");
             }
-            
-            graphicsWidth = Config.GraphicsWidth;
-            graphicsHeight = Config.GraphicsHeight;
-            Graphics.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
 
-            Graphics.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+            ApplyGraphicsSettings();
 
-            Graphics.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
-            Graphics.PreferredBackBufferWidth = graphicsWidth;
-            Graphics.PreferredBackBufferHeight = graphicsHeight;
             Content.RootDirectory = "Content";
-
-            //graphics.SynchronizeWithVerticalRetrace = false;
-            //graphics.ApplyChanges();
 
             FrameCounter = new FrameCounter();
 
@@ -150,6 +140,20 @@ namespace Barotrauma
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
 
+        }
+
+        public void ApplyGraphicsSettings()
+        {
+            graphicsWidth = Config.GraphicsWidth;
+            graphicsHeight = Config.GraphicsHeight;
+            Graphics.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
+            
+            Graphics.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+
+            Graphics.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
+            Graphics.PreferredBackBufferWidth = graphicsWidth;
+            Graphics.PreferredBackBufferHeight = graphicsHeight;
+            
             Graphics.ApplyChanges();
         }
 
