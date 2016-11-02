@@ -149,10 +149,11 @@ namespace Barotrauma
             if (GameMain.Server != null)
             {
                 if (!GameMain.Server.AutoRestart) return "";
-                return "Restarting in " + ToolBox.SecondsToReadableTime(GameMain.Server.AutoRestartTimer);
+                return "Restarting in " + ToolBox.SecondsToReadableTime(Math.Max(GameMain.Server.AutoRestartTimer, 0));
             }
+
             if (autoRestartTimer == 0.0f) return "";            
-            return "Restarting in " + ToolBox.SecondsToReadableTime(autoRestartTimer);
+            return "Restarting in " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
         }
                
         public NetLobbyScreen()

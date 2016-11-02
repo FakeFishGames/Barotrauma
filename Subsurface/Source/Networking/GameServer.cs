@@ -899,7 +899,25 @@ namespace Barotrauma.Networking
                 teamCount = 2;
             }
 
-            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
+            bool couldNotStart = false;
+            try
+            {
+                GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
+            }
+
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to start a new round", e);
+
+                //try again in >5 seconds
+                if (autoRestart) AutoRestartTimer = Math.Max(AutoRestartInterval, 5.0f);
+                GameMain.NetLobbyScreen.StartButton.Enabled = true;
+
+                couldNotStart = true;
+
+            }
+
+            if (couldNotStart) yield return CoroutineStatus.Failure;
 
             GameServer.Log("Starting a new round...", Color.Cyan);
             GameServer.Log("Submarine: " + selectedSub.Name, Color.Cyan);

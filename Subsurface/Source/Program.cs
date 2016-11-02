@@ -63,9 +63,10 @@ namespace Barotrauma
             sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version);
+            sb.AppendLine("Graphics mode: " + GameMain.Config.WindowMode + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
             sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);
-            sb.AppendLine("Level seed: "+ ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
-            sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "none" : Submarine.MainSub.Name +" ("+Submarine.MainSub.MD5Hash+")"));
+            sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
+            sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
 
             if (GameMain.Server != null)
