@@ -64,6 +64,15 @@ namespace Barotrauma
             textBox = new GUITextBox(new Rectangle(0,0,0,20), Color.Black, Color.White, Alignment.BottomLeft, Alignment.Left, GUI.Style, frame);
             textBox.Color = Color.Black * 0.7f;
 
+            //messages already added before initialization -> add them to the listbox
+            List<ColoredText> unInitializedMessages = new List<ColoredText>(Messages);
+            Messages.Clear();
+
+            foreach (ColoredText msg in unInitializedMessages)
+            {
+                NewMessage(msg.Text, msg.Color);
+            }
+
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
             NewMessage("Enter \"help\" for a list of available console commands", Color.Cyan);
 
@@ -752,6 +761,14 @@ namespace Barotrauma
 
             Messages.Add(new ColoredText(msg, color));
 
+            if (Messages.Count > MaxMessages)
+            {
+                Messages.RemoveRange(0, Messages.Count - MaxMessages);
+            }
+
+            //listbox not created yet, don't attempt to add
+            if (listBox == null) return;
+
             try
             {
                 var textBlock = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 0), msg, GUI.Style, Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
@@ -765,14 +782,7 @@ namespace Barotrauma
             {
                 return;
             }
-
-            if (Messages.Count > MaxMessages)
-            {
-                Messages.RemoveRange(0, Messages.Count - MaxMessages);
-            }
-
-            //messages.Add(new ColoredText(msg, color));
-
+            
             selectedIndex = listBox.children.Count;
         }
 
