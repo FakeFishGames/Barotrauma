@@ -280,6 +280,18 @@ namespace Barotrauma.Items.Components
                 }
             }
             
+            if (draggingConnected != null)
+            {
+                DrawWire(spriteBatch, draggingConnected, draggingConnected.Item, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height), mouseInRect, false);
+
+                if (!PlayerInput.LeftButtonHeld())
+                {
+                    panel.Item.NewComponentEvent(panel, true, true);
+                    //draggingConnected.Drop(Character);
+                    draggingConnected = null;
+                }
+            }
+
             //if the Character using the panel has a wire item equipped
             //and the wire hasn't been connected yet, draw it on the panel
             if (equippedWire!=null)
@@ -299,17 +311,6 @@ namespace Barotrauma.Items.Components
             //stop dragging a wire item if cursor is outside the panel
             if (mouseInRect) Inventory.draggingItem = null;
 
-            if (draggingConnected != null)
-            {
-                DrawWire(spriteBatch, draggingConnected, draggingConnected.Item, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height), mouseInRect, false);
-
-                if (!PlayerInput.LeftButtonHeld())
-                {
-                    panel.Item.NewComponentEvent(panel, true, true);
-                    //draggingConnected.Drop(Character);
-                    draggingConnected = null;
-                }
-            }
 
             spriteBatch.Draw(panelTexture, panelRect, new Rectangle(0, 0, width, height), Color.White);
 
