@@ -934,9 +934,11 @@ namespace Barotrauma
 
         }
 
-        private float GetFloorY()
+        protected float GetFloorY(Limb refLimb = null)
         {
-            Vector2 rayStart = collider.SimPosition; 
+            PhysicsBody refBody = refLimb == null ? collider : refLimb.body;
+
+            Vector2 rayStart = refBody.SimPosition; 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
 
             var lowestLimb = FindLowestLimb();
