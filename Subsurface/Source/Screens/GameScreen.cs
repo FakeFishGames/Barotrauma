@@ -37,10 +37,10 @@ namespace Barotrauma
             cam = new Camera();
             cam.Translate(new Vector2(-10.0f, 50.0f));
 
-            renderTargetBackground = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTargetAir = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetBackground  = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTarget            = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetWater       = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetAir         = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundCreaturePrefabs);
             if(files.Count > 0)
@@ -405,7 +405,7 @@ namespace Barotrauma
                 GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect,false);
 
                 spriteBatch.Begin(SpriteSortMode.Immediate,
-                BlendState.AlphaBlend);
+                    BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, RasterizerState.CullNone, null);
 
                 float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
                 spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
