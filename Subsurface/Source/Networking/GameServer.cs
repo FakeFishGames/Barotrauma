@@ -886,22 +886,22 @@ namespace Barotrauma.Networking
 
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
-            
-            GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
 
-            yield return CoroutineStatus.Running;
+            bool couldNotStart = false;
 
             int teamCount = 1;
             int hostTeam = 1;
-            if (GameMain.GameSession.gameMode.Mission != null && 
-                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
-            {
-                teamCount = 2;
-            }
 
-            bool couldNotStart = false;
             try
-            {
+            {            
+                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
+
+                if (GameMain.GameSession.gameMode.Mission != null && 
+                    GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
+                {
+                    teamCount = 2;
+                }
+
                 GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
             }
 
@@ -914,7 +914,6 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen.StartButton.Enabled = true;
 
                 couldNotStart = true;
-
             }
 
             if (couldNotStart) yield return CoroutineStatus.Failure;

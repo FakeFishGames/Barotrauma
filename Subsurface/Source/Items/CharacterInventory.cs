@@ -184,6 +184,11 @@ namespace Barotrauma
                         placed = true;
                     }
                 }
+
+                if (placed)
+                {
+                    return true;
+                }
             }
 
 
