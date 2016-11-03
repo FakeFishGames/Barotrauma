@@ -28,12 +28,16 @@ namespace Barotrauma
 
         public WallSection(Rectangle rect)
         {
+            System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
+
             this.rect = rect;
             damage = 0.0f;
         }
 
         public WallSection(Rectangle rect, float damage)
         {
+            System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
+
             this.rect = rect;
             this.damage = 0.0f;
         }
@@ -207,6 +211,7 @@ namespace Barotrauma
             : base(sp, submarine)
         {
             if (rectangle.Width == 0 || rectangle.Height == 0) return;
+            System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
 
             rect = rectangle;
             prefab = sp;
@@ -317,7 +322,7 @@ namespace Barotrauma
                 {
                     ysections = (int)Math.Ceiling((float)rect.Height / wallSectionSize);
                     sections = new WallSection[ysections];
-                    width = rect.Width;
+                    height = (int)wallSectionSize;
                 }
             }
 
