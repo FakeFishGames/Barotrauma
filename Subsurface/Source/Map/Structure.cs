@@ -288,31 +288,38 @@ namespace Barotrauma
         private void CreateSections()
         {
             int xsections = 1, ysections = 1;
-            int width, height;
+            int width = rect.Width, height = rect.Height;
 
             if (!HasBody)
-            {
-                sections = new WallSection[1];
-                sections[0] = new WallSection(rect);
-                return;
-                
-            }
+            {          
+                if (flippedX && isHorizontal)
+                {
+                    xsections = (int)Math.Ceiling((float)rect.Width / prefab.sprite.SourceRect.Width);
+                    width = prefab.sprite.SourceRect.Width;
 
-            if (isHorizontal)
-            {
-                xsections = (int)Math.Ceiling((float)rect.Width / wallSectionSize);
+                }
+                else
+                {
+                    xsections = 1;
+                    ysections = 1;
+                }
                 sections = new WallSection[xsections];
-                width = (int)wallSectionSize;
-                height = rect.Height;
             }
             else
             {
-                ysections = (int)Math.Ceiling((float)rect.Height / wallSectionSize);
-                sections = new WallSection[ysections];
-                width = rect.Width;
-                height = (int)wallSectionSize;
+                if (isHorizontal)
+                {
+                    xsections = (int)Math.Ceiling((float)rect.Width / wallSectionSize);
+                    sections = new WallSection[xsections];
+                    width = (int)wallSectionSize;
+                }
+                else
+                {
+                    ysections = (int)Math.Ceiling((float)rect.Height / wallSectionSize);
+                    sections = new WallSection[ysections];
+                    width = rect.Width;
+                }
             }
-
 
             for (int x = 0; x < xsections; x++)
             {
