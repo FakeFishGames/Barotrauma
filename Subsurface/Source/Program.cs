@@ -63,6 +63,8 @@ namespace Barotrauma
 
         private static bool CheckException(GameMain game, Exception e)
         {
+#if WINDOWS
+
             if (e is SharpDX.SharpDXException)
             {
                 switch ((uint)((SharpDX.SharpDXException)e).ResultCode.Code)
@@ -104,6 +106,8 @@ namespace Barotrauma
                         return false;
                 }
             }
+
+#endif
                 
             return false;            
         }
