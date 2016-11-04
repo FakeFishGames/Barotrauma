@@ -1,4 +1,58 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.3.1
+---------------------------------------------------------------------------------------------------------
+- fixed monster movement!
+
+---------------------------------------------------------------------------------------------------------
+v0.5.3.0
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- submarine vs submarine missions
+	- server hosts can disable spawning of certain characters
+	- server hosts can have subs spawn with additional items
+
+Changes to ragdoll movement/animation logic:
+	- movement is now controlled by a single invisible physics body which the rest of the ragdoll follows
+	- character position syncing is now more accurate and there's less "teleporting"
+	- characters are less likely to take impact damage by stumbling in stairs
+	- (+ makes working on the new improved netcode much easier)
+	- ladders can be slid down by holding the sprint key
+	
+Submarine Editor:
+	- zoom now works relative to the mouse's position rather than the center of the screen
+	- fixed selection rectangle not being visible when dragging from bottom right to top left
+	- rectangles now have line widths dependent on the camera zoom (lines are still visible after zooming out)
+
+Items:
+	- added a particle trail to railgun shells
+	- added dim emergency lights which require no power
+	- a "glow effect" when moving items between inventory slots
+	- option to select which location the autopilot should navigate to
+	- fabricator UI shows item descriptions and items that can't be fabricated are grayed out
+	
+Bugfixes:
+	- attempt to fix "DXGI_ERROR_NOT_CURRENTLY_AVAILABLE" errors on startup
+	- fixed water flow sounds taking up all the audio channels and preventing other sounds from playing
+	when the sub is heavily flooded
+	- the start button in the server lobby is re-enabled and autorestart countdown is reset if starting
+	a new round fails for whatever reason
+	- the colliders of the ice walls match the shape of the walls more accurately
+	- player-controlled monsters can damage the submarine from the outside
+	- waypoint generation and pathfinding bugfixes
+
+Misc:
+	- improved line of sight effect (instead of a solid black "fog of war", a faint image of the 
+	surrounding rooms can be seen through walls)
+	- less ambient light, and it gets darker when diving deeper
+	- a hull-specific ambient light system: light sources increase the amount of light inside rooms, 
+	preventing shadows from looking unnaturally dark in fully lit submarines
+	- option to disable vsync
+	- added a near-indestructible alien ruin wall variant - breaking through the walls with a railgun 
+	or a plasma cutter is not always an option anymore
+	- added a parallax effect to the particles floating in the ocean
+
+---------------------------------------------------------------------------------------------------------
 v0.5.2.0
 ---------------------------------------------------------------------------------------------------------
 

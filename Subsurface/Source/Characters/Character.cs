@@ -2102,6 +2102,8 @@ namespace Barotrauma
                     else
                     {
                         cursorPosition = Position + new Vector2(1000.0f, 0.0f) * dir;
+
+                        AnimController.TargetDir = dir < 0 ? Direction.Left : Direction.Right;
                     }
                     
                     int index = 0;

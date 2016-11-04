@@ -211,7 +211,7 @@ namespace Barotrauma
             : base(sp, submarine)
         {
             if (rectangle.Width == 0 || rectangle.Height == 0) return;
-            System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
+            System.Diagnostics.Debug.Assert(rectangle.Width > 0 && rectangle.Height > 0);
 
             rect = rectangle;
             prefab = sp;

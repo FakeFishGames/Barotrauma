@@ -1094,7 +1094,11 @@ namespace Barotrauma
             }
             else
             {
-                collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
+                if (character.MemPos.Count > 0)
+                {
+                    collider.LinearVelocity = Vector2.Zero;
+                    collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
+                }
             }            
         }
         
