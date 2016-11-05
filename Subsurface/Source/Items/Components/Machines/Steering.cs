@@ -456,15 +456,14 @@ namespace Barotrauma.Items.Components
             else
             {
                 msg.Write(posToMaintain != null);
-                message.Write(posToMaintain != null);
                 if (posToMaintain != null)
                 {
-                    message.Write(((Vector2)posToMaintain).X);
-                    message.Write(((Vector2)posToMaintain).Y);
+                    msg.Write(((Vector2)posToMaintain).X);
+                    msg.Write(((Vector2)posToMaintain).Y);
                 }
                 else
                 {
-                    message.Write(levelStartTickBox.Selected);
+                    msg.Write(levelStartTickBox.Selected);
                 }
             }
         }
@@ -489,16 +488,16 @@ namespace Barotrauma.Items.Components
                 {
                     posToMaintain = null;
                     maintainPosTickBox.Selected = false;
-                    bool maintainPos = message.ReadBoolean();
-                    if (maintainPos)
+                    bool maintainPoss = msg.ReadBoolean();
+                    if (maintainPoss)
                     {
-                        newPosToMaintain = new Vector2(
-                            message.ReadFloat(), 
-                            message.ReadFloat());
+                        Vector2 newPosToMaintain = new Vector2(
+                            msg.ReadFloat(), 
+                            msg.ReadFloat());
                     }
                     else
                     {
-                        headingToStart = message.ReadBoolean();
+                        bool headingToStart = msg.ReadBoolean();
                     }
                 }
             }
@@ -547,13 +546,13 @@ namespace Barotrauma.Items.Components
                     maintainPosTickBox.Selected = false;
                 }
             }
-            maintainPosTickBox.Selected = newPosToMaintain != null;
-            posToMaintain = newPosToMaintain;
+            maintainPosTickBox.Selected = posToMaintain != null;
+            //posToMaintain = newPosToMaintain;
 
             if (posToMaintain == null && autoPilot)
             {
-                levelStartTickBox.Selected = headingToStart;
-                levelEndTickBox.Selected = !headingToStart;
+                levelStartTickBox.Selected = false;//headingToStart;
+                levelEndTickBox.Selected = true;//!headingToStart;
 
                 UpdatePath();
             }
