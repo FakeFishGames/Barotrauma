@@ -8,31 +8,31 @@
 
     <collider radius="50"/>
     <!-- head -->
-    <limb id = "0" radius="65" type="Head" steerforce="3.0" impacttolerance="100">
+    <limb id = "0" radius="65" type="Head" steerforce="3.0">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="0,0,129,128" depth="0.04"/>
       <attack type="Hit" range="120" duration="0.2" damage="50" stun="2" force="10" damagetype="blunt" targetforce="80"/>
     </limb>
 
     <!-- body -->
-    <limb id = "1" radius="50" type="Torso" impacttolerance="100">
+    <limb id = "1" radius="50">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="0,125,108,105" depth="0.03" origin="0.5,0.5"/>
     </limb>
 
     <!-- body -->
-    <limb id = "2" radius="45" height="75" type="Torso" impacttolerance="100">
+    <limb id = "2" radius="45" height="75">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="0,239,90,136" depth="0.02" origin="0.5,0.5"/>
     </limb>
 
-    <limb id = "3" width="30" height="175" type="Tail" impacttolerance="100">
+    <limb id = "3" width="30" height="175" type="Tail">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.01" origin="0.5,0.5"/>
     </limb>
 
-    <limb id = "4" width="30" height="239" impacttolerance="100.0">
+    <limb id = "4" width="30" height="239">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="183,0,53,238" depth="0.05" origin="0.5,0.5"/>
       <attack range="150" duration="0.5" damage="30" stun="1.0" torque="-150" damagetype="slash"/>
     </limb>
 
-    <limb id = "5" width="30" height="239" impacttolerance="100.0">
+    <limb id = "5" width="30" height="239">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="236,0,53,238" size="-1,1" depth="0.05" origin="0.5,0.5"/>
       <attack range="150" duration="0.5" damage="30" stun="1.0" torque="150" damagetype="slash"/>
     </limb>

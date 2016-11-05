@@ -20,10 +20,7 @@ namespace Barotrauma.Items.Components
 
         private List<RadarBlip> radarBlips;
         private float prevPingRadius;
-
-        public static string StartMarker = "Start";
-        public static string EndMarker = "End";
-
+        
         [HasDefaultValue(10000.0f, false)]
         public float Range
         {
@@ -265,11 +262,11 @@ namespace Barotrauma.Items.Components
 
 
             DrawMarker(spriteBatch,
-                (GameMain.GameSession.Map == null) ? StartMarker : GameMain.GameSession.Map.CurrentLocation.Name,
+                GameMain.GameSession.StartLocation.Name,
                 (Level.Loaded.StartPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
 
             DrawMarker(spriteBatch,
-                (GameMain.GameSession.Map == null) ? EndMarker : GameMain.GameSession.Map.SelectedLocation.Name,
+                GameMain.GameSession.EndLocation.Name,
                 (Level.Loaded.EndPosition - item.WorldPosition), displayScale, center, (rect.Width * 0.5f));
 
             if (GameMain.GameSession.Mission != null)
@@ -397,12 +394,15 @@ namespace Barotrauma.Items.Components
 
             if (dir.X < 0.0f) markerPos.X -= GUI.SmallFont.MeasureString(label).X+10;
 
-            GUI.DrawString(spriteBatch, new Vector2(markerPos.X + 10, markerPos.Y), label, Color.LightGreen * textAlpha, Color.Black * textAlpha*0.5f, 2, GUI.SmallFont);
+            string wrappedLabel = ToolBox.WrapText(label, 150, GUI.SmallFont);
 
-            GUI.DrawString(spriteBatch, new Vector2(markerPos.X + 10, markerPos.Y + 15), (int)(dist * Physics.DisplayToRealWorldRatio) + " m",
-                Color.LightGreen * textAlpha, 
-                Color.Black * textAlpha, 2, GUI.SmallFont);
-              
+            wrappedLabel += "\n"+((int)(dist * Physics.DisplayToRealWorldRatio) + " m");
+
+            GUI.DrawString(spriteBatch, 
+                new Vector2(markerPos.X + 10, markerPos.Y), 
+                wrappedLabel, 
+                Color.LightGreen * textAlpha, Color.Black * textAlpha * 0.5f, 
+                2, GUI.SmallFont);              
         }
 
         protected override void RemoveComponentSpecific()

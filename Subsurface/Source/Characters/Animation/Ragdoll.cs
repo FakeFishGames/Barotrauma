@@ -224,6 +224,12 @@ namespace Barotrauma
             }
         }
 
+        public float ImpactTolerance
+        {
+            get;
+            private set;
+        }
+
         public float StrongestImpact
         {
             get { return strongestImpact; }
@@ -256,6 +262,8 @@ namespace Barotrauma
             torsoPosition   = ToolBox.GetAttributeFloat(element, "torsoposition", 50.0f);
             torsoPosition   = ConvertUnits.ToSimUnits(torsoPosition);
             torsoAngle      = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "torsoangle", 0.0f));
+
+            ImpactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 50.0f);
 
             CanEnterSubmarine = ToolBox.GetAttributeBool(element, "canentersubmarine", true);
                        
@@ -471,11 +479,11 @@ namespace Barotrauma
             {
                 if (!character.IsRemotePlayer || GameMain.Server != null)
                 {
-                    if (impact > 8.0f)
+                    if (impact > ImpactTolerance)
                     {
-                        character.AddDamage(CauseOfDeath.Damage, impact - 8.0f, null);
+                        character.AddDamage(CauseOfDeath.Damage, impact - ImpactTolerance, null);
                         SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, collider);
-                        strongestImpact = Math.Max(strongestImpact, impact - 8.0f);
+                        strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                     }
                 }                              
 
@@ -852,7 +860,6 @@ namespace Barotrauma
                             //limb.body.ApplyLinearImpulse(impulse);
                             int n = (int)((limb.Position.X - limbHull.Rect.X) / Hull.WaveWidth);
                             limbHull.WaveVel[n] = Math.Min(impulse.Y * 1.0f, 5.0f);
-                            StrongestImpact = ((impulse.Length() * 0.5f) - limb.impactTolerance);
                         }
                     }
                 }

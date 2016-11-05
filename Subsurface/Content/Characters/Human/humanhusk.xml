@@ -13,16 +13,16 @@
            swimspeed="2.0">
     
     <!-- head -->
-    <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" impacttolerance="5.0">
+    <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2">
       <sprite texture="Content/Characters/Human/[GENDER]head[HEADID].png" sourcerect="1,1,37,38" depth="0.04" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedhead.png" sourcerect="1,1,37,38" origin="0.5,0.5"/>
     </limb>
     <!-- body -->
-    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3" impacttolerance="10.0">
+    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3">
       <sprite texture="Content/Characters/Human/[GENDER]torso.png" sourcerect="0,0,29,58" depth="0.05" origin="0.5,0.6"/>
       <damagedsprite texture="Content/Characters/Human/damagedtorso.png" sourcerect="0,0,29,58" origin="0.5,0.6"/>
     </limb>
-    <limb id = "12" radius="13" mass = "20" type="Waist" impacttolerance="10.0">
+    <limb id = "12" radius="13" mass = "20" type="Waist">
       <sprite texture="Content/Characters/Human/[GENDER]legs.png" sourcerect="0,0,32,29" depth="0.045" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Human/damagedlegs.png" sourcerect="0,0,32,29" origin="0.5,0.5"/>
     </limb>
@@ -78,7 +78,7 @@
     </limb>
 
 
-    <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" flip="true" impacttolerance="5.0" pullpos="0.0,25.0">
+    <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" flip="true" pullpos="0.0,25.0">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.5" origin="0.5,0.5"/>
       <attack range="70" duration="0.1" bleedingdamage="3" damage="10" stun="0.5" torque="-50" damagetype="slash" targetforce="10">
         <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01" disabledeltatime="true"/>

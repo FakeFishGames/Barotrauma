@@ -437,7 +437,26 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
+
+  <Item
+     name="Liquid Oxygenite"
+     category="Material"
+     spritecolor="0.6,0.8,1.0,1.0"
+     Tags="smallitem,chem,medical"
+     pickdistance="150"
+     canuseonself="true"
+     description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
+
+    <Body width="8" height="16" density="20"/>
+
+    <Holdable slots="Any,RightHand,LeftHand">
+      <StatusEffect type="OnUse" target="Character" Health="-0.1" Oxygen="10.0" duration="60">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Holdable>
+  </Item>
 </Items>
 
   

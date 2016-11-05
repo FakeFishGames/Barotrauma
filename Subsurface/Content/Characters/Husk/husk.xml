@@ -17,13 +17,13 @@
     <collider height="100" radius="15"/>
 
     <!-- head -->
-    <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2" impacttolerance="5.0">
+    <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="95,0,33,25" depth="0.04" origin="0.5,0.5"/>
     </limb>
 
 
     <!-- spike/tentacle thingy -->
-    <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" impacttolerance="5.0" flip="true" pullpos="0.0,25.0">
+    <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" flip="true" pullpos="0.0,25.0">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.05" origin="0.5,0.5"/>
       <attack range="70" duration="0.2" bleedingdamage="0.5" damage="10" stun="0.5" torque="-50" damagetype="slash" targetforce="10">
         <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01" disabledeltatime="true"/>
@@ -32,10 +32,10 @@
     </limb>
 
     <!-- body -->
-    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3" impacttolerance="10.0">
+    <limb id = "1" radius="14" height="21" mass = "20" type="Torso" attackpriority="3">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" limb="Torso" sourcerect="41,1,42,96" origin="0.5,0.55"/>
     </limb>
-    <limb id = "12" radius="13" mass = "20" type="Waist" impacttolerance="10.0">
+    <limb id = "12" radius="13" mass = "20" type="Waist">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="0,0,1,1" depth="0.045" origin="0.5,0.5"/>
     </limb>
     

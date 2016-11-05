@@ -16,7 +16,7 @@
     <collider width="45" radius="22"/>
 
     <!-- head -->
-    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="30.0" impacttolerance="50.0">
+    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="30.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63"/>
     </limb>
 
@@ -30,7 +30,7 @@
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="6,141,60,95" depth="0.022" origin="0.37,0.43"/>
     </limb>
       
-    <limb id = "3" width="13" height="45" ignorecollisions="true" flip="true" impacttolerance="50.0">
+    <limb id = "3" width="13" height="45" ignorecollisions="true" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="65,131,36,50" depth="0.15" origin="0.4,0.5"/>
       <attack range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="3" structuredamage="50" damagetype="slash" force="20" torque="-20" targetforce="-30"/>
     </limb>
@@ -38,7 +38,7 @@
     <limb id = "4" width="11" height="34" type="RightLeg" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
     </limb>
-    <limb id = "5" width="5" height="40" type="RightFoot" flip="true" pullpos="0.0,15.0" refjoint="3" stepoffset="20.0,0.0" impacttolerance="50.0">
+    <limb id = "5" width="5" height="40" type="RightFoot" flip="true" pullpos="0.0,15.0" refjoint="3" stepoffset="20.0,0.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
@@ -46,7 +46,7 @@
     <limb id = "6" width="13" height="35" type="LeftLeg" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
     </limb>
-    <limb id = "7" width="5" height="40" type="LeftFoot" flip="true" pullpos="0.0,15.0" refjoint="5" stepoffset="20.0,0.0" impacttolerance="50.0">
+    <limb id = "7" width="5" height="40" type="LeftFoot" flip="true" pullpos="0.0,15.0" refjoint="5" stepoffset="20.0,0.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
@@ -54,7 +54,7 @@
     <limb id = "8" width="13" height="35" type="RightLeg" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5"/>
     </limb>
-    <limb id = "9" width="5" height="40" type="RightFoot" flip="true" pullpos="0.0,15.0"  refjoint="7" stepoffset="20.0,0.0" impacttolerance="50.0">
+    <limb id = "9" width="5" height="40" type="RightFoot" flip="true" pullpos="0.0,15.0"  refjoint="7" stepoffset="20.0,0.0">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>

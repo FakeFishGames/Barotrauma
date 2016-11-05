@@ -91,6 +91,10 @@ namespace Barotrauma.Items.Components
         private FabricableItem fabricatedItem;
         private float timeUntilReady;
 
+        //used for checking if contained items have changed 
+        //(in which case we need to recheck which items can be fabricated)
+        private Item[] prevContainedItems;
+
         private float lastNetworkUpdate;
 
         public Fabricator(Item item, XElement element) 
@@ -110,7 +114,6 @@ namespace Barotrauma.Items.Components
 
             itemList = new GUIListBox(new Rectangle(0,0,GuiFrame.Rect.Width/2-20,0), GUI.Style, GuiFrame);
             itemList.OnSelected = SelectItem;
-            //structureList.CheckSelected = MapEntityPrefab.GetSelected;
 
             foreach (FabricableItem fi in fabricableItems)
             {
@@ -131,6 +134,7 @@ namespace Barotrauma.Items.Components
                     Color.Transparent, Color.White,
                     Alignment.Left, Alignment.Left,
                     null, frame);
+                textBlock.ToolTip = fi.TargetItem.Description;
                 textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
                 if (fi.TargetItem.sprite != null)
@@ -138,6 +142,7 @@ namespace Barotrauma.Items.Components
                     GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), fi.TargetItem.sprite, Alignment.Left, frame);
                     img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
                     img.Color = fi.TargetItem.SpriteColor;
+                    img.ToolTip = fi.TargetItem.Description; 
                 }
 
             }
@@ -151,7 +156,7 @@ namespace Barotrauma.Items.Components
             if (selectedItemFrame != null) GuiFrame.RemoveChild(selectedItemFrame);
 
             //int width = 200, height = 150;
-            selectedItemFrame = new GUIFrame(new Rectangle(0, 0, (int)(GuiFrame.Rect.Width * 0.4f), 250), Color.Black * 0.8f, Alignment.CenterY | Alignment.Right, null, GuiFrame);
+            selectedItemFrame = new GUIFrame(new Rectangle(0, 0, (int)(GuiFrame.Rect.Width * 0.4f), 300), Color.Black * 0.8f, Alignment.CenterY | Alignment.Right, null, GuiFrame);
 
             selectedItemFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
@@ -160,6 +165,8 @@ namespace Barotrauma.Items.Components
 
             if (targetItem.TargetItem.sprite != null)
             {
+                int y = 0;
+
                 GUIImage img = new GUIImage(new Rectangle(10, 0, 40, 40), targetItem.TargetItem.sprite, Alignment.TopLeft, selectedItemFrame);
                 img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
                 img.Color = targetItem.TargetItem.SpriteColor;
@@ -172,12 +179,24 @@ namespace Barotrauma.Items.Components
                     Alignment.TopLeft, null,
                     selectedItemFrame, true);
 
+                y += 40;
+
+                if (!string.IsNullOrWhiteSpace(targetItem.TargetItem.Description))
+                {
+                    var description = new GUITextBlock(
+                        new Rectangle(0, y, 0, 0),
+                        targetItem.TargetItem.Description, 
+                        GUI.Style, Alignment.TopLeft, Alignment.TopLeft, 
+                        selectedItemFrame, true, GUI.SmallFont);
+
+                    y += description.Rect.Height + 10;
+                }
+
 
                 List<Skill> inadequateSkills = new List<Skill>();
 
                 if (Character.Controlled != null)
                 {
-
                     inadequateSkills = targetItem.RequiredSkills.FindAll(skill => Character.Controlled.GetSkillLevel(skill.Name) < skill.Level);
                 }
 
@@ -204,7 +223,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 new GUITextBlock(
-                    new Rectangle(0, 50, 0, 25),
+                    new Rectangle(0, y, 0, 25),
                     text,
                     Color.Transparent, textColor,
                     Alignment.TopLeft,
@@ -222,10 +241,12 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
+            CheckFabricableItems(character);
             if (itemList.Selected != null)
             {
-                SelectItem(itemList.Selected, itemList.Selected.UserData);
+                SelectItem(itemList.Selected, itemList.Selected.UserData);                
             }
+
 
             return base.Select(character);
         }
@@ -233,6 +254,30 @@ namespace Barotrauma.Items.Components
         public override bool Pick(Character picker)
         {
             return (picker != null);
+        }
+
+        /// <summary>
+        /// check which of the items can be fabricated by the character
+        /// and update the text colors of the item list accordingly
+        /// </summary>
+        private void CheckFabricableItems(Character character)
+        {
+            foreach (GUIComponent child in itemList.children)
+            {
+                var itemPrefab = child.UserData as FabricableItem;
+                if (itemPrefab == null) continue;
+
+                bool canBeFabricated = CanBeFabricated(itemPrefab, character);
+
+
+                child.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
+                child.GetChild<GUIImage>().Color = itemPrefab.TargetItem.SpriteColor * (canBeFabricated ? 1.0f : 0.5f);
+
+            }
+
+            var itemContainer = item.GetComponent<ItemContainer>();
+            prevContainedItems = new Item[itemContainer.Inventory.Items.Length];
+            itemContainer.Inventory.Items.CopyTo(prevContainedItems, 0);
         }
 
         private bool StartButtonClicked(GUIButton button, object obj)
@@ -343,6 +388,30 @@ namespace Barotrauma.Items.Components
             {
                 activateButton.Enabled = CanBeFabricated(targetItem, character);
             }
+
+            if (character != null)
+            {
+                bool itemsChanged = false;
+                if (prevContainedItems == null)
+                {
+                    itemsChanged = true;
+                }
+                else
+                {
+                    var itemContainer = item.GetComponent<ItemContainer>();
+                    for (int i = 0; i < itemContainer.Inventory.Items.Length; i++)
+                    {
+                        if (prevContainedItems[i] != itemContainer.Inventory.Items[i])
+                        {
+                            itemsChanged = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (itemsChanged) CheckFabricableItems(character);
+            }
+
 
             GuiFrame.Update((float)Timing.Step);
         }

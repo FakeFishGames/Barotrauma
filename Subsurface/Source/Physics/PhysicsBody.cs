@@ -233,7 +233,7 @@ namespace Barotrauma
         public PhysicsBody(Body farseerBody)
         {
             body = farseerBody;
-            body.UserData = this;
+            if (body.UserData == null) body.UserData = this;
 
             LastSentPosition = body.Position;
 

@@ -15,8 +15,8 @@ namespace Barotrauma
         {
             this.gameSession = gameSession;
 
-            startLocation   = gameSession.Map==null ? null : gameSession.Map.CurrentLocation;
-            endLocation     = gameSession.Map==null ? null : gameSession.Map.SelectedLocation;
+            startLocation   = gameSession.StartLocation;
+            endLocation     = gameSession.EndLocation;
             
             selectedMission = gameSession.Mission;
         }
