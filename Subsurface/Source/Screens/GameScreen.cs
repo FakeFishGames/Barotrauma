@@ -37,10 +37,10 @@ namespace Barotrauma
             cam = new Camera();
             cam.Translate(new Vector2(-10.0f, 50.0f));
 
-            renderTargetBackground = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTargetAir = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetBackground  = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTarget            = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetWater       = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetAir         = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundCreaturePrefabs);
             if(files.Count > 0)
@@ -244,7 +244,7 @@ namespace Barotrauma
                 null, null, null, null,
                 cam.Transform);
 
-            Submarine.DrawBack(spriteBatch,false,s => s is Structure && ((s as Structure).resizeHorizontal || (s as Structure).resizeVertical));
+            Submarine.DrawBack(spriteBatch, false, s => s is Structure);
 
             spriteBatch.End();
 
@@ -260,7 +260,7 @@ namespace Barotrauma
                 null, null, null, null,
                 cam.Transform);
 
-            Submarine.DrawBack(spriteBatch, false, s => (!(s is Structure)) || (!(s as Structure).resizeHorizontal && !(s as Structure).resizeHorizontal));
+            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
 
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
 
@@ -330,19 +330,22 @@ namespace Barotrauma
             {
                 graphics.SetRenderTarget(renderTarget);
                 spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Opaque, null, null, null, lightBlur.Effect);
+                    BlendState.Opaque, null, null, null, lightBlur.Effect);
+
                 spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+
                 spriteBatch.End();
 
                 spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend, SamplerState.LinearWrap,
-                null, null, null,
-                cam.Transform);
+                    BlendState.AlphaBlend, SamplerState.LinearWrap,
+                    null, null, null,
+                    cam.Transform);
+
                 Submarine.DrawDamageable(spriteBatch, null);
+                Submarine.DrawFront(spriteBatch, false, s => s is Structure);
+
                 spriteBatch.End();
-
-                //GameMain.LightManager.DrawLightMap(spriteBatch, lightBlur.Effect);
-
+                
                 GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect, true);
             }
 
@@ -404,7 +407,7 @@ namespace Barotrauma
                 GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect,false);
 
                 spriteBatch.Begin(SpriteSortMode.Immediate,
-                BlendState.AlphaBlend);
+                    BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, RasterizerState.CullNone, null);
 
                 float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
                 spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),

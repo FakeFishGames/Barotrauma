@@ -585,9 +585,9 @@ namespace Barotrauma
             var soundElements = doc.Root.Elements("sound").ToList();
             if (soundElements.Any())
             {
-                sounds = new Sound[soundElements.Count()];
-                soundStates = new AIController.AiState[soundElements.Count()];
-                soundRange = new float[soundElements.Count()];
+                sounds = new Sound[soundElements.Count];
+                soundStates = new AIController.AiState[soundElements.Count];
+                soundRange = new float[soundElements.Count];
                 int i = 0;
                 foreach (XElement soundElement in soundElements)
                 {
@@ -868,7 +868,7 @@ namespace Barotrauma
                     {
                         attackPos = Submarine.LastPickedPosition;
 
-                        if (body != null && body.UserData is Submarine)
+                        if (body.UserData is Submarine)
                         {
                             var sub = ((Submarine)body.UserData);
 
@@ -1538,10 +1538,10 @@ namespace Barotrauma
             if (sounds == null || !sounds.Any()) return;
             var matchingSoundStates = soundStates.Where(x => x == state).ToList();
 
-            int selectedSound = Rand.Int(matchingSoundStates.Count());
+            int selectedSound = Rand.Int(matchingSoundStates.Count);
 
             int n = 0;
-            for (int i = 0; i < sounds.Count(); i++)
+            for (int i = 0; i < sounds.Length; i++)
             {
                 if (soundStates[i] != state) continue;
                 if (n == selectedSound && sounds[i]!=null)

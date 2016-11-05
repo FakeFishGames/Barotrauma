@@ -92,8 +92,8 @@ namespace Barotrauma
                             type = (ActionType)Enum.Parse(typeof(ActionType), split[0], true);
 
                             string[] containingNames = split[1].Split(',');
-                            onContainingNames = new string[containingNames.Count()];
-                            for (int i =0; i < containingNames.Count(); i++)
+                            onContainingNames = new string[containingNames.Length];
+                            for (int i =0; i < containingNames.Length; i++)
                             {
                                 onContainingNames[i] = containingNames[i].Trim();
                             }
@@ -116,8 +116,8 @@ namespace Barotrauma
                         break;
                     case "targetnames":
                         string[] names = attribute.Value.Split(',');
-                        targetNames = new string[names.Count()];
-                        for (int i=0; i < names.Count(); i++ )
+                        targetNames = new string[names.Length];
+                        for (int i=0; i < names.Length; i++ )
                         {
                             targetNames[i] = names[i].Trim();
                         }
@@ -134,7 +134,7 @@ namespace Barotrauma
                 }
             }
 
-            int count = propertyAttributes.Count();
+            int count = propertyAttributes.Count;
             propertyNames = new string[count];
             propertyEffects = new object[count];
 
@@ -227,7 +227,7 @@ namespace Barotrauma
 
             foreach (IPropertyObject target in targets)
             {
-                for (int i = 0; i < propertyNames.Count(); i++)
+                for (int i = 0; i < propertyNames.Length; i++)
                 {
                     ObjectProperty property;
 

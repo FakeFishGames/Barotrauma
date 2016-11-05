@@ -397,7 +397,7 @@ namespace Barotrauma
                 int particleAmount = (int)(wallImpact*10.0f);
                 for (int i = 0; i < particleAmount; i++)
                 {
-                    var particle = GameMain.ParticleManager.CreateParticle("iceshards",
+                    GameMain.ParticleManager.CreateParticle("iceshards",
                         ConvertUnits.ToDisplayUnits(particlePos[0]) + Rand.Vector(Rand.Range(1.0f, 50.0f)), 
                         Rand.Vector(Rand.Range(50.0f,500.0f)) + Velocity);
                 }

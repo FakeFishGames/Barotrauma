@@ -119,8 +119,9 @@ namespace Barotrauma.Networking
 
             text = text.ToLower();
 
-            foreach (GUITextBlock textBlock in listBox.children)
+            foreach (GUIComponent child in listBox.children)
             {
+                var textBlock = child as GUITextBlock;
                 if (textBlock == null) continue;
 
                 textBlock.Visible = textBlock.Text.ToLower().Contains(text);

@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
             this.item = item;
 
             var sprites = element.Elements().Where(x => x.Name.ToString() == "sprite").ToList();
-            int spriteCount = sprites.Count();
+            int spriteCount = sprites.Count;
             wearableSprites = new WearableSprite[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
@@ -171,19 +171,10 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
 
             item.SetTransform(picker.SimPosition, 0.0f);
-
-            Item[] containedItems = item.ContainedItems;
-
+            
             ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
             PlaySound(ActionType.OnWearing, picker.WorldPosition);
-
-            //if (containedItems == null) return;
-            //for (int j = 0; j < containedItems.Length; j++)
-            //{
-            //    if (containedItems[j] == null) continue;
-            //    containedItems[j].ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
-            //} 
         }
 
         protected override void RemoveComponentSpecific()

@@ -124,7 +124,7 @@ namespace Barotrauma
 
         public int CountChildren
         {
-            get { return children.Count(); }
+            get { return children.Count; }
         }
 
         public virtual Color Color

@@ -464,15 +464,15 @@ namespace Barotrauma
                                     
             float impact = Vector2.Dot(velocity, -normal);
 
-            float volume = Math.Min(impact, 1.0f);
+            float volume = Math.Min(impact-3.0f, 1.0f);
             if (f1.Body.UserData is Limb)
             {
                 Limb limb = (Limb)f1.Body.UserData;
                 
-                if (impact > 0.5f && limb.HitSound != null && limb.soundTimer <= 0.0f)
+                if (impact > 3.0f && limb.HitSound != null && limb.soundTimer <= 0.0f)
                 {
                     limb.soundTimer = Limb.SoundInterval;
-                    limb.HitSound.Play(volume, impact * 250.0f, limb.WorldPosition);
+                    limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
                 }
             }
             else if (f1.Body == collider.FarseerBody)
@@ -578,7 +578,7 @@ namespace Barotrauma
         {
             dir = (dir == Direction.Left) ? Direction.Right : Direction.Left;
 
-            for (int i = 0; i < limbJoints.Count(); i++)
+            for (int i = 0; i < limbJoints.Length; i++)
             {
                 float lowerLimit = -limbJoints[i].UpperLimit;
                 float upperLimit = -limbJoints[i].LowerLimit;
@@ -591,7 +591,7 @@ namespace Barotrauma
             }
 
 
-            for (int i = 0; i < Limbs.Count(); i++)
+            for (int i = 0; i < Limbs.Length; i++)
             {
                 if (Limbs[i] == null) continue;
 
@@ -834,7 +834,7 @@ namespace Barotrauma
                     {
 
                         //create a splash particle
-                        var p = GameMain.ParticleManager.CreateParticle("watersplash",
+                        GameMain.ParticleManager.CreateParticle("watersplash",
                             new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
                             new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 20.0f)),
                             0.0f, limbHull);
@@ -934,9 +934,11 @@ namespace Barotrauma
 
         }
 
-        private float GetFloorY()
+        protected float GetFloorY(Limb refLimb = null)
         {
-            Vector2 rayStart = collider.SimPosition; 
+            PhysicsBody refBody = refLimb == null ? collider : refLimb.body;
+
+            Vector2 rayStart = refBody.SimPosition; 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
 
             var lowestLimb = FindLowestLimb();
@@ -1088,7 +1090,11 @@ namespace Barotrauma
             }
             else
             {
-                collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
+                if (character.MemPos.Count > 0)
+                {
+                    collider.LinearVelocity = Vector2.Zero;
+                    collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
+                }
             }            
         }
         

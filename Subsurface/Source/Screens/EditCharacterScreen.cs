@@ -152,10 +152,10 @@ namespace Barotrauma
             EditLimb(spriteBatch);
 
 
-            int x = 0, y = 0;
+            int y = 0;
             for (int i = 0; i < textures.Count; i++ )
             {
-                x = GameMain.GraphicsWidth - textures[i].Width;
+                int x = GameMain.GraphicsWidth - textures[i].Width;
                 spriteBatch.Draw(textures[i], new Vector2(x, y), Color.White);
 
                 foreach (Limb limb in editingCharacter.AnimController.Limbs)

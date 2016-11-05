@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
     {
         private static Texture2D panelTexture;
         private static Sprite connector;
-        private static Sprite wireCorner, wireVertical, wireHorizontal;
+        private static Sprite wireVertical;
 
         //how many wires can be linked to a single connector
         public const int MaxLinked = 5;
@@ -67,9 +67,7 @@ namespace Barotrauma.Items.Components
                 connector       = new Sprite(panelTexture, new Rectangle(470, 102, 19,43), Vector2.Zero, 0.0f);
                 connector.Origin = new Vector2(9.5f, 10.0f);
 
-                wireCorner      = new Sprite(panelTexture, new Rectangle(448, 0, 64, 64), new Vector2(-32.0f, -32.0f), 0.0f);
                 wireVertical    = new Sprite(panelTexture, new Rectangle(408, 1, 11, 102), Vector2.Zero, 0.0f);
-                wireHorizontal  = new Sprite(panelTexture, new Rectangle(496, 64, 16, 16), new Vector2(-8.0f, -8.0f), 0.0f);
             }
 
             this.item = item;
@@ -242,9 +240,7 @@ namespace Barotrauma.Items.Components
             Vector2 leftWirePos = new Vector2(x+5, y + 30);
 
             int wireInterval = (height - 20) / Math.Max(totalWireCount,1);
-
-            float rightWireX = x + width;
-            float leftWireX = x;
+            
             foreach (Connection c in panel.Connections)
             {
                 //if dragging a wire, let the Inventory know so that the wire can be
@@ -284,6 +280,18 @@ namespace Barotrauma.Items.Components
                 }
             }
             
+            if (draggingConnected != null)
+            {
+                DrawWire(spriteBatch, draggingConnected, draggingConnected.Item, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height), mouseInRect, false);
+
+                if (!PlayerInput.LeftButtonHeld())
+                {
+                    panel.Item.NewComponentEvent(panel, true, true);
+                    //draggingConnected.Drop(Character);
+                    draggingConnected = null;
+                }
+            }
+
             //if the Character using the panel has a wire item equipped
             //and the wire hasn't been connected yet, draw it on the panel
             if (equippedWire!=null)

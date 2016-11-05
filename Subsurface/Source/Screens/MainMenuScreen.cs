@@ -94,7 +94,7 @@ namespace Barotrauma
 
             var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
 
-            foreach (Submarine sub in Submarine.SavedSubmarines)
+            foreach (Submarine sub in subsToShow)
             {
                 var textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),

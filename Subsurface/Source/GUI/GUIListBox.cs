@@ -412,38 +412,14 @@ namespace Barotrauma
             //base.Draw(spriteBatch);
 
             frame.Draw(spriteBatch);
-            //GUI.DrawRectangle(spriteBatch, rect, color*alpha, true);
 
-            int x = rect.X, y = rect.Y;
-
-            if (!scrollBarHidden)
-            {
-                scrollBar.Draw(spriteBatch);
-                if (scrollBar.IsHorizontal)
-                {
-                    x -= (int)((totalSize - rect.Width) * scrollBar.BarScroll);
-                }
-                else
-                {
-                    y -= (int)((totalSize - rect.Height) * scrollBar.BarScroll);
-                }
-            }
-
+            if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
+            
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
                 if (child == frame || !child.Visible) continue;
-
-                if (scrollBar.IsHorizontal)
-                {
-                    x += child.Rect.Width + spacing;
-                }
-                else
-                {
-                    y += child.Rect.Height + spacing;
-                }
-
-
+                
                 if (scrollBar.IsHorizontal)
                 {
                     if (child.Rect.Right < rect.X) continue;
@@ -451,7 +427,6 @@ namespace Barotrauma
 
                     if (child.Rect.X < rect.X && child.Rect.Right >= rect.X)
                     {
-                        x = rect.X;
                         continue;
                     }
                 }
@@ -462,7 +437,6 @@ namespace Barotrauma
 
                     if (child.Rect.Y < rect.Y && child.Rect.Y + child.Rect.Height >= rect.Y)
                     {
-                        y = rect.Y;
                         continue;
                     }
                 }

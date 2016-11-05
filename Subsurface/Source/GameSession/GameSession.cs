@@ -144,7 +144,17 @@ namespace Barotrauma
         {
             dummyLocations = new Location[2];
 
-            MTRandom rand = new MTRandom(ToolBox.StringToInt(GameMain.NetLobbyScreen.LevelSeed));
+            string seed = "";
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+            {
+                seed = GameMain.GameSession.Level.Seed;
+            }
+            else if (GameMain.NetLobbyScreen != null)
+            {
+                seed = GameMain.NetLobbyScreen.LevelSeed;
+            }
+
+            MTRandom rand = new MTRandom(ToolBox.StringToInt(seed));
             for (int i = 0; i < 2; i++)
             {
                 dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f));

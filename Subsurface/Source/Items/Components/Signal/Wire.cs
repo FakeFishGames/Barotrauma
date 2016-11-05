@@ -211,10 +211,11 @@ namespace Barotrauma.Items.Components
             if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
             if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
 
-            if (item.Submarine != null && item.Submarine != sub)
+            if (item.Submarine != sub)
             {
                 ClearConnections();
                 Nodes.Clear();
+                return;
             }
 
             newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
@@ -480,8 +481,8 @@ namespace Barotrauma.Items.Components
 
             if (Nodes == null || Nodes.Count == 0) return componentElement;
 
-            string[] nodeCoords = new string[Nodes.Count() * 2];
-            for (int i = 0; i < Nodes.Count(); i++)
+            string[] nodeCoords = new string[Nodes.Count * 2];
+            for (int i = 0; i < Nodes.Count; i++)
             {
                 nodeCoords[i * 2] = Nodes[i].X.ToString(CultureInfo.InvariantCulture);
                 nodeCoords[i * 2 + 1] = Nodes[i].Y.ToString(CultureInfo.InvariantCulture);

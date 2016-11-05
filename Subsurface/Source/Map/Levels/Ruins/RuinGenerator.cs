@@ -271,8 +271,6 @@ namespace Barotrauma.RuinGeneration
 
             foreach (Corridor corridor in corridors)
             {
-                List<Line> corridorWalls = new List<Line>();
-                
                 corridor.CreateWalls();
 
                 foreach (BTRoom leaf in rooms)
@@ -361,7 +359,7 @@ namespace Barotrauma.RuinGeneration
 
                 var prop = RuinStructure.GetRandom(RuinStructureType.Prop, alignments[Rand.Int(alignments.Length, false)]);
 
-                Vector2 size = (prop.Prefab is StructurePrefab) ? (prop.Prefab as StructurePrefab).Size : Vector2.Zero;
+                Vector2 size = (prop.Prefab is StructurePrefab) ? ((StructurePrefab)prop.Prefab).Size : Vector2.Zero;
 
                 var shape = shapes[Rand.Int(shapes.Count, false)];
 
@@ -385,7 +383,7 @@ namespace Barotrauma.RuinGeneration
 
                 if (prop.Prefab is ItemPrefab)
                 {
-                    var item = new Item(prop.Prefab as ItemPrefab, position, null);
+                    var item = new Item((ItemPrefab)prop.Prefab, position, null);
                     item.MoveWithLevel = true;
                 }
                 else

@@ -169,26 +169,16 @@ namespace Barotrauma
 
         private void MoveButton()
         {
-            //if (!enabled) return false;
-            //if (barSize == 1.0f) return false;
-
-            int newX = bar.Rect.X - frame.Rect.X, newY = bar.Rect.Y - frame.Rect.Y;
             float moveAmount;
             if (isHorizontal)
             {
                 moveAmount = PlayerInput.MouseSpeed.X;
                 barScroll += moveAmount / (frame.Rect.Width - bar.Rect.Width);
-                //newX = Math.Min(Math.Max(newX + moveAmount, 0), frame.Rect.Width - bar.Rect.Width);
-
-                //barScroll = (float)newX / ((float)frame.Rect.Width - (float)bar.Rect.Width);
             }
             else
             {
                 moveAmount = PlayerInput.MouseSpeed.Y;
                 barScroll += moveAmount / (frame.Rect.Height - bar.Rect.Height);
-                //newY = Math.Min(Math.Max(newY+moveAmount, 0), frame.Rect.Height - bar.Rect.Height);
-
-                //barScroll = (float)newY / ((float)frame.Rect.Height - (float)bar.Rect.Height);
             }
 
             BarScroll = barScroll;
