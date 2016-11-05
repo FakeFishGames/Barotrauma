@@ -19,7 +19,8 @@ namespace Barotrauma.Items.Components
         private Vector2 targetVelocity;
 
         private GUITickBox autopilotTickBox, maintainPosTickBox;
-
+        private GUITickBox levelEndTickBox, levelStartTickBox;
+        
         private bool autoPilot;
 
         private Vector2? posToMaintain;
@@ -47,21 +48,23 @@ namespace Barotrauma.Items.Components
                 if (value == autoPilot) return;
 
                 autoPilot = value;
-
                 autopilotTickBox.Selected = value;
 
                 maintainPosTickBox.Enabled = autoPilot;
-                
+                levelEndTickBox.Enabled = autoPilot;
+                levelStartTickBox.Enabled = autoPilot;
+
                 if (autoPilot)
                 {
-                    if (pathFinder==null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
-                    steeringPath = pathFinder.FindPath(
-                        ConvertUnits.ToSimUnits(item.WorldPosition),
-                        TargetPosition == null ? ConvertUnits.ToSimUnits(Level.Loaded.EndPosition) : (Vector2)TargetPosition);
+                    if (pathFinder == null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
+                    ToggleMaintainPosition(maintainPosTickBox);
                 }
                 else
                 {
                     maintainPosTickBox.Selected = false;
+                    levelEndTickBox.Selected    = false;
+                    levelStartTickBox.Selected  = false;
+
                     posToMaintain = null;
                 }
             }
@@ -114,15 +117,28 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            maintainPosTickBox = new GUITickBox(new Rectangle(0, 50, 20, 20), "Maintain position", Alignment.TopLeft, GuiFrame);
+            maintainPosTickBox = new GUITickBox(new Rectangle(5, 50, 15, 15), "Maintain position", Alignment.TopLeft, GUI.SmallFont, GuiFrame);
             maintainPosTickBox.Enabled = false;
             maintainPosTickBox.OnSelected = ToggleMaintainPosition;
+                       
+            levelStartTickBox = new GUITickBox(
+                new Rectangle(5, 70, 15, 15),
+                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20), 
+                Alignment.TopLeft, GUI.SmallFont, GuiFrame);
+            levelStartTickBox.Enabled = false;
+            levelStartTickBox.OnSelected = SelectDestination;
+
+            levelEndTickBox = new GUITickBox(
+                new Rectangle(5, 90, 15, 15),
+                GameMain.GameSession == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
+                Alignment.TopLeft, GUI.SmallFont, GuiFrame);
+            levelEndTickBox.Enabled = false;
+            levelEndTickBox.OnSelected = SelectDestination;
+
         }
         
         public override void Update(float deltaTime, Camera cam)
         {
-            //base.Update(deltaTime, cam);
-
             if (valueChanged)
             {
                 networkUpdateTimer -= deltaTime;
@@ -331,6 +347,28 @@ namespace Barotrauma.Items.Components
 
         }
 
+        private void UpdatePath()
+        {
+            Vector2 target;
+            if (TargetPosition != null)
+            {
+                target = (Vector2)TargetPosition;
+            }
+            else
+            {
+                if (levelEndTickBox.Selected)
+                {
+                    target = ConvertUnits.ToSimUnits(Level.Loaded.EndPosition);
+                }
+                else
+                {
+                    target = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
+                }
+            }
+
+            steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(item.WorldPosition), target);
+        }
+
         private void SteerTowardsPosition(Vector2 worldPosition)
         {
             float prediction = 10.0f;
@@ -345,7 +383,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                TargetVelocity = targetSpeed/5.0f;
+                TargetVelocity = targetSpeed / 5.0f;
             }
         }
         
@@ -353,21 +391,42 @@ namespace Barotrauma.Items.Components
         {
             valueChanged = true;
 
-            if (tickBox.Selected)
-            {
-                if (item.Submarine == null)
-                {
-                    posToMaintain = null;
-                }
-                else
-                {
-                    posToMaintain = item.Submarine.WorldPosition;
-                }
-            }
-            else
+            levelStartTickBox.Selected = false;
+            levelEndTickBox.Selected = false;
+
+            if (item.Submarine == null)
             {
                 posToMaintain = null;
             }
+            else
+            {
+                posToMaintain = item.Submarine.WorldPosition;
+            }
+            
+            tickBox.Selected = true;
+
+            return true;
+        }
+
+        private bool SelectDestination(GUITickBox tickBox)
+        {
+            valueChanged = true;
+
+            if (tickBox == levelStartTickBox)
+            {
+                levelEndTickBox.Selected = false;
+            }
+            else
+            {
+                levelStartTickBox.Selected = false;
+            }
+
+            maintainPosTickBox.Selected = false;
+            posToMaintain = null;
+
+            UpdatePath();
+            
+            tickBox.Selected = true;
 
             return true;
         }
@@ -397,6 +456,16 @@ namespace Barotrauma.Items.Components
             else
             {
                 msg.Write(posToMaintain != null);
+                message.Write(posToMaintain != null);
+                if (posToMaintain != null)
+                {
+                    message.Write(((Vector2)posToMaintain).X);
+                    message.Write(((Vector2)posToMaintain).Y);
+                }
+                else
+                {
+                    message.Write(levelStartTickBox.Selected);
+                }
             }
         }
 
@@ -420,6 +489,17 @@ namespace Barotrauma.Items.Components
                 {
                     posToMaintain = null;
                     maintainPosTickBox.Selected = false;
+                    bool maintainPos = message.ReadBoolean();
+                    if (maintainPos)
+                    {
+                        newPosToMaintain = new Vector2(
+                            message.ReadFloat(), 
+                            message.ReadFloat());
+                    }
+                    else
+                    {
+                        headingToStart = message.ReadBoolean();
+                    }
                 }
             }
         }
@@ -467,6 +547,22 @@ namespace Barotrauma.Items.Components
                     maintainPosTickBox.Selected = false;
                 }
             }
+            maintainPosTickBox.Selected = newPosToMaintain != null;
+            posToMaintain = newPosToMaintain;
+
+            if (posToMaintain == null && autoPilot)
+            {
+                levelStartTickBox.Selected = headingToStart;
+                levelEndTickBox.Selected = !headingToStart;
+
+                UpdatePath();
+            }
+            else
+            {
+                levelStartTickBox.Selected = false;
+                levelEndTickBox.Selected = false;
+            }
+
         }
     }
 }

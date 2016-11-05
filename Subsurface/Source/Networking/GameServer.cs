@@ -975,6 +975,7 @@ namespace Barotrauma.Networking
                 endMessage += TraitorManager.GetEndMessage();
             }
 
+            Mission mission = GameMain.GameSession.Mission;
             GameMain.GameSession.gameMode.End(endMessage);
 
             if (autoRestart) AutoRestartTimer = AutoRestartInterval;

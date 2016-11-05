@@ -97,7 +97,7 @@ namespace Barotrauma
                 diff.Y = 0.0f;
             }
 
-            if (diff == Vector2.Zero) return -host.Steering;
+            if (diff.Length() < 0.01) return -host.Steering;
 
             return Vector2.Normalize(diff) * speed;          
         }
@@ -258,6 +258,12 @@ namespace Barotrauma
 
                     if (closestButton != null)
                     {
+                        if (!closestButton.HasRequiredItems(character, false) && shouldBeOpen)
+                        {
+                            currentPath.Unreachable = true;
+                            return;
+                        }
+
                         closestButton.Item.Pick(character, false, true);
                         break;
                     }

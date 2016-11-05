@@ -172,7 +172,12 @@ namespace Barotrauma
                             start, node.Waypoint.SimPosition, null, 
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs | Physics.CollisionPlatform);
 
-                        if (body != null && body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
+                        if (body != null)
+                        {
+                            if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
+                            if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
+
+                        }
                     }
 
                     closestDist = dist;

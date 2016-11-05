@@ -185,6 +185,11 @@ namespace Barotrauma
                     new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
                     new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
                     Color.LightGreen);
+
+                spriteBatch.DrawString(GUI.SmallFont, 
+                    pathSteering.CurrentPath.Nodes[i].ID.ToString(), 
+                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y - 10), 
+                    Color.LightGreen);
             }
         }
     }
