@@ -134,7 +134,6 @@
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Items\Components\StatusHUD.cs" />
     <Compile Include="Source\Items\FixRequirement.cs" />
-    <Compile Include="Source\Networking\EntityRemover.cs" />
     <Compile Include="Source\Networking\EntitySpawner.cs" />
     <Compile Include="Source\Map\EntityGrid.cs" />
     <Compile Include="Source\Map\FireSource.cs" />
