@@ -65,7 +65,7 @@ namespace Barotrauma
         public static World World;
 
         public static LoadingScreen TitleScreen;
-        private static bool titleScreenOpen;
+        private static bool loadingScreenOpen;
 
         public static GameSettings Config;
 
@@ -103,7 +103,7 @@ namespace Barotrauma
         {
             get { return NetworkMember as GameClient; }
         }
-                
+                        
         public GameMain()
         {
             Graphics = new GraphicsDeviceManager(this)
@@ -122,20 +122,10 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save("config.xml");
             }
-            
-            graphicsWidth = Config.GraphicsWidth;
-            graphicsHeight = Config.GraphicsHeight;
-            Graphics.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
 
-            Graphics.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+            ApplyGraphicsSettings();
 
-            Graphics.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
-            Graphics.PreferredBackBufferWidth = graphicsWidth;
-            Graphics.PreferredBackBufferHeight = graphicsHeight;
             Content.RootDirectory = "Content";
-
-            //graphics.SynchronizeWithVerticalRetrace = false;
-            //graphics.ApplyChanges();
 
             FrameCounter = new FrameCounter();
 
@@ -153,6 +143,20 @@ namespace Barotrauma
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
 
+        }
+
+        public void ApplyGraphicsSettings()
+        {
+            graphicsWidth = Config.GraphicsWidth;
+            graphicsHeight = Config.GraphicsHeight;
+            Graphics.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
+            
+            Graphics.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+
+            Graphics.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
+            Graphics.PreferredBackBufferWidth = graphicsWidth;
+            Graphics.PreferredBackBufferHeight = graphicsHeight;
+            
             Graphics.ApplyChanges();
         }
 
@@ -190,7 +194,7 @@ namespace Barotrauma
             spriteBatch = new SpriteBatch(GraphicsDevice);
             TextureLoader.Init(GraphicsDevice);
 
-            titleScreenOpen = true;
+            loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
             CoroutineManager.StartCoroutine(Load());
@@ -237,7 +241,7 @@ namespace Barotrauma
             while (!SoundPlayer.Initialized)
             {
                 i++;
-                TitleScreen.LoadState = Math.Min((float)TitleScreen.LoadState + 40.0f / 41, 70.0f);
+                TitleScreen.LoadState = Math.Min((float)TitleScreen.LoadState + 0.5f*i, 70.0f);
                 yield return CoroutineStatus.Running;
             }
 
@@ -307,12 +311,17 @@ namespace Barotrauma
 
                 PlayerInput.Update(Timing.Step);
 
-                if (titleScreenOpen)
+                if (loadingScreenOpen)
                 {
+                    //reset accumulator if loading
+                    // -> less choppy loading screens because the screen is rendered after each update
+                    // -> no pause caused by leftover time in the accumulator when starting a new shift
+                    Timing.Accumulator = 0.0f;
+
                     if (TitleScreen.LoadState >= 100.0f && 
                         (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
                     {
-                        titleScreenOpen = false;
+                        loadingScreenOpen = false;
                     }
                 }
                 else if (hasLoaded)
@@ -337,8 +346,7 @@ namespace Barotrauma
                     }
 
                     GUI.Update((float)Timing.Step);
-                }
-                
+                }               
 
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
@@ -358,7 +366,7 @@ namespace Barotrauma
 
             FrameCounter.Update(deltaTime);
 
-            if (titleScreenOpen)
+            if (loadingScreenOpen)
             {
                 TitleScreen.Draw(spriteBatch, GraphicsDevice, (float)deltaTime);
             }
@@ -372,7 +380,7 @@ namespace Barotrauma
         public static CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             waitForKeyHit = waitKeyHit;
-            titleScreenOpen = true;
+            loadingScreenOpen = true;
             TitleScreen.LoadState = null;
             return CoroutineManager.StartCoroutine(TitleScreen.DoLoading(loader));
         }

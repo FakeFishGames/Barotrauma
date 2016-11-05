@@ -160,10 +160,7 @@ namespace Barotrauma
         void UpdateSineAnim(float deltaTime)
         {
             movement = TargetMovement*swimSpeed;
-
-            Limb torso = GetLimb(LimbType.Torso);
-            Limb head = GetLimb(LimbType.Head);
-
+            
             MainLimb.pullJoint.Enabled = true;
             MainLimb.pullJoint.WorldAnchorB = collider.SimPosition;
 
@@ -193,7 +190,7 @@ namespace Barotrauma
             }
 
 
-            for (int i = 0; i < Limbs.Count(); i++)
+            for (int i = 0; i < Limbs.Length; i++)
             {
                 if (Limbs[i].SteerForce <= 0.0f) continue;
 

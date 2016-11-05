@@ -311,7 +311,7 @@ namespace Barotrauma
 
                 positionsOfInterest.Add(new InterestingPosition(tunnel.Last(), PositionType.Cave));
 
-                if (tunnel.Count() > 4) positionsOfInterest.Add(new InterestingPosition(tunnel[tunnel.Count() / 2], PositionType.Cave));
+                if (tunnel.Count > 4) positionsOfInterest.Add(new InterestingPosition(tunnel[tunnel.Count / 2], PositionType.Cave));
                 
                 pathCells.AddRange(newPathCells);
             }

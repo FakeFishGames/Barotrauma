@@ -237,7 +237,7 @@ namespace Barotrauma
 
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(40, 0, 0, 25),
-                        character.Info.Name + " (" + character.Info.Job.Name + ")",
+                        ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, frame.Rect.Width-20),
                         Color.Transparent, Color.White,
                         Alignment.Left, Alignment.Left,
                         null, frame);

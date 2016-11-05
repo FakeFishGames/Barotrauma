@@ -465,9 +465,7 @@ namespace Barotrauma
                 WayPoint[] ladderPoints = new WayPoint[2];
 
                 ladderPoints[0] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height + heightFromFloor), SpawnType.Path, submarine);
-
-                ladderPoints[1] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y-1.0f), SpawnType.Path, submarine);
-                
+                ladderPoints[1] = new WayPoint(new Vector2(item.Rect.Center.X, item.Rect.Y-1.0f), SpawnType.Path, submarine);                
 
                 WayPoint prevPoint = ladderPoints[0];
                 Vector2 prevPos = prevPoint.SimPosition;
@@ -619,12 +617,12 @@ namespace Barotrauma
                 float dist = Vector2.Distance(wp.Position, Position);
                 if (closest == null || dist < closestDist)
                 {
-                    var body = Submarine.CheckVisibility(SimPosition, wp.SimPosition, true);
+                    var body = Submarine.CheckVisibility(SimPosition, wp.SimPosition, true, true);
                     if (body != null && body != ignoredBody && !(body.UserData is Submarine))
                     {
                         if (body.UserData is Structure || body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
                     }
-
+                    
                     closestDist = dist;
                     closest = wp;
                 }

@@ -171,7 +171,7 @@ namespace Barotrauma
             }
 
             //string str = sb.ToString();
-            byte[] bytes = new byte[hashes.Count()*16];
+            byte[] bytes = new byte[hashes.Count*16];
             for (int i = 0; i < hashes.Count; i++ )
             {
                 hashes[i].CopyTo(bytes, i*16);

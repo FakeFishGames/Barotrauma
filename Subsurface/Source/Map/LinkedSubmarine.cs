@@ -95,10 +95,7 @@ namespace Barotrauma
                 (int)sl.wallVertices.Max(v => v.Y + position.Y),
                 (int)sl.wallVertices.Max(v => v.X + position.X),
                 (int)sl.wallVertices.Min(v => v.Y + position.Y));
-
-            int width = sl.rect.Width - sl.rect.X;
-            int height = sl.rect.Y - sl.rect.Height;
-
+            
             sl.rect = new Rectangle((int)position.X, (int)position.Y, 1, 1);
 
             return sl;

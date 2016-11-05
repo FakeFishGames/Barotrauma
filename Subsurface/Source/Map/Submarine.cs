@@ -172,7 +172,7 @@ namespace Barotrauma
         {
             get
             {
-                return subBody ==null ? Vector2.Zero : subBody.Position;
+                return subBody == null ? Vector2.Zero : subBody.Position;
             }
         }
 
@@ -304,17 +304,22 @@ namespace Barotrauma
             {
                 MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
-
         }
 
-        public static void DrawFront(SpriteBatch spriteBatch, bool editing = false)
+        public static void DrawFront(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
-                if (MapEntity.mapEntityList[i].DrawOverWater)
-                    MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
-            }
+                if (!MapEntity.mapEntityList[i].DrawOverWater) continue;
 
+
+                if (predicate != null)
+                {
+                    if (!predicate(MapEntity.mapEntityList[i])) continue;
+                }
+
+                MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
+            }
 
             if (GameMain.DebugDraw)
             {
@@ -335,10 +340,7 @@ namespace Barotrauma
 
                         prevPos = currPos;
                     }
-
                 }
-
-
             }
         }
 
@@ -361,13 +363,14 @@ namespace Barotrauma
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
+                if (!MapEntity.mapEntityList[i].DrawBelowWater) continue;
+
                 if (predicate != null)
                 {
                     if (!predicate(MapEntity.mapEntityList[i])) continue;
                 }
                 
-                if (MapEntity.mapEntityList[i].DrawBelowWater)
-                    MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
+                MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
             }
         }
 
@@ -484,14 +487,14 @@ namespace Barotrauma
         /// check visibility between two points (in sim units)
         /// </summary>
         /// <returns>a physics body that was between the points (or null)</returns>
-        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false)
+        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false)
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
 
             if (Vector2.Distance(rayStart, rayEnd) < 0.01f)
             {
-                closestFraction = 0.01f;
+                lastPickedPosition = rayEnd;
                 return null;
             }
             
@@ -501,6 +504,7 @@ namespace Barotrauma
                     (!fixture.CollisionCategories.HasFlag(Physics.CollisionWall) && !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel))) return -1;
 
                 if (ignoreLevel && fixture.CollisionCategories == Physics.CollisionLevel) return -1;
+                if (ignoreSubs && fixture.Body.UserData is Submarine) return -1;
 
                 Structure structure = fixture.Body.UserData as Structure;
                 if (structure != null)
@@ -527,7 +531,7 @@ namespace Barotrauma
 
         //movement ----------------------------------------------------
 
-        private bool flippedX = false;
+        private bool flippedX;
         public bool FlippedX
         {
             get { return flippedX; }
@@ -643,9 +647,7 @@ namespace Barotrauma
         public void SetPosition(Vector2 position)
         {
             if (!MathUtils.IsValid(position)) return;
-
-            Vector2 prevPos = subBody.Position;
-
+            
             subBody.SetPosition(position);
 
             foreach (Submarine sub in loaded)
@@ -674,7 +676,7 @@ namespace Barotrauma
         {
             Submarine closest = null;
             float closestDist = 0.0f;
-            foreach (Submarine sub in Submarine.loaded)
+            foreach (Submarine sub in loaded)
             {
                 float dist = Vector2.Distance(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)

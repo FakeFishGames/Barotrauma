@@ -261,7 +261,6 @@ namespace Barotrauma
             {
                 if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
                 {
-                    Submarine oldMainSub = Submarine.MainSub;
                     Submarine.MainSub = leavingSub;
 
                     GameMain.GameSession.Submarine = leavingSub;

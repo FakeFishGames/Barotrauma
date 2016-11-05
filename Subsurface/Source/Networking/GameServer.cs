@@ -834,20 +834,37 @@ namespace Barotrauma.Networking
 
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
-            
-            GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
 
-            yield return CoroutineStatus.Running;
+            bool couldNotStart = false;
 
             int teamCount = 1;
             int hostTeam = 1;
-            if (GameMain.GameSession.gameMode.Mission != null && 
-                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
-            {
-                teamCount = 2;
+
+            try
+            {            
+                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
+
+                if (GameMain.GameSession.gameMode.Mission != null && 
+                    GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
+                {
+                    teamCount = 2;
+                }
+
+                GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
             }
 
-            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to start a new round", e);
+
+                //try again in >5 seconds
+                if (autoRestart) AutoRestartTimer = Math.Max(AutoRestartInterval, 5.0f);
+                GameMain.NetLobbyScreen.StartButton.Enabled = true;
+
+                couldNotStart = true;
+            }
+
+            if (couldNotStart) yield return CoroutineStatus.Failure;
 
             GameServer.Log("Starting a new round...", Color.Cyan);
             GameServer.Log("Submarine: " + selectedSub.Name, Color.Cyan);
@@ -1014,6 +1031,7 @@ namespace Barotrauma.Networking
 
             var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
 
+            new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
             float secondsLeft = endPreviewLength;
 
             do
@@ -1119,18 +1137,10 @@ namespace Barotrauma.Networking
 
         private void UpdateCrewFrame()
         {
-            List<Character> crew = new List<Character>();
-
             foreach (Client c in connectedClients)
             {
                 if (c.Character == null || !c.inGame) continue;
-
-                crew.Add(c.Character);
             }
-
-            if (myCharacter != null) crew.Add(myCharacter);
-
-            //if (GameMain.GameSession!=null) GameMain.GameSession.CrewManager.CreateCrewFrame(crew);
         }
         
         public void NewTraitor(Character traitor, Character target)
@@ -1184,7 +1194,7 @@ namespace Barotrauma.Networking
 
             int resentMessages = 0;
 
-            int clientListHeight = connectedClients.Count() * 40;
+            int clientListHeight = connectedClients.Count * 40;
             float scrollBarHeight = (height - 110) / (float)Math.Max(clientListHeight, 110);
 
             if (clientListScrollBar.BarSize != scrollBarHeight)
