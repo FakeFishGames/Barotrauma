@@ -17,7 +17,7 @@ namespace Barotrauma
 
         private string[] descriptions;
 
-        private static string[] teamNames;
+        private static string[] teamNames = { "Team A", "Team B" };
 
         public override bool AllowRespawn
         {
