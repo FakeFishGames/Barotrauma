@@ -57,8 +57,18 @@ namespace Barotrauma
             
             if (character.IsDead || character.IsUnconscious || stunTimer > 0.0f)
             {
-                collider.PhysEnabled = false;
-                collider.SetTransform(GetLimb(LimbType.Torso).SimPosition, 0.0f);
+                collider.FarseerBody.FixedRotation = false;
+
+                if (character.IsRemotePlayer)
+                {
+                    MainLimb.pullJoint.WorldAnchorB = collider.SimPosition;
+                    MainLimb.pullJoint.Enabled = true;
+                }
+                else
+                {
+                    collider.LinearVelocity = (GetLimb(LimbType.Torso).SimPosition - collider.SimPosition) * 60.0f;
+                    collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
+                }
 
                 if (stunTimer > 0)
                 {
@@ -87,21 +97,21 @@ namespace Barotrauma
                     collider.SetTransform(new Vector2(
                         collider.SimPosition.X,
                         Math.Max(lowestLimb.SimPosition.Y + (collider.radius + collider.height / 2), collider.SimPosition.Y)),
-                        0.0f);
+                        collider.Rotation);
 
                     collider.FarseerBody.Enabled = true;
                 }            
 
                 if (swimming)
                 {
-                    collider.FarseerBody.FixedRotation =  false;
+                    collider.FarseerBody.FixedRotation = false;
                 }
                 else if (!collider.FarseerBody.FixedRotation)
                 {
                     if (Math.Abs(MathUtils.GetShortestAngle(collider.Rotation, 0.0f)) > 0.001f)
                     {
                         //rotate collider back upright
-                        collider.AngularVelocity = MathUtils.GetShortestAngle(collider.Rotation, 0.0f) * 60.0f;
+                        collider.AngularVelocity = MathUtils.GetShortestAngle(collider.Rotation, 0.0f) * 10.0f;
                         collider.FarseerBody.FixedRotation = false;
                     }
                     else
@@ -502,7 +512,8 @@ namespace Barotrauma
             float colliderBottomY = GetColliderBottom().Y;
 
             //the contact point should be higher than the bottom of the collider
-            if (((Vector2)handle).Y < colliderBottomY + 0.01f) return;
+            if (((Vector2)handle).Y < colliderBottomY + 0.01f ||
+                ((Vector2)handle).Y > collider.SimPosition.Y) return;
             
             //find the height of the floor below the torso
             //(if moving towards towards an obstacle that's low enough to climb over, the torso should be above it)
@@ -511,7 +522,7 @@ namespace Barotrauma
             if (obstacleY > colliderBottomY)
             {
                 //higher vertical velocity for taller obstacles
-                collider.LinearVelocity += Vector2.UnitY * (((Vector2)handle).Y - colliderBottomY + 0.01f) * 10;
+                collider.LinearVelocity += Vector2.UnitY * (((Vector2)handle).Y - colliderBottomY + 0.01f) * 50;
                 onGround = true;
             }
         }
@@ -891,7 +902,9 @@ namespace Barotrauma
                 }
             }
 
-
+            float dist = Vector2.Distance(target.SimPosition, collider.SimPosition);
+            targetMovement *= MathHelper.Clamp(1.5f - dist, 0.0f, 1.0f);
+            
             target.AnimController.IgnorePlatforms = IgnorePlatforms;
 
             if (target.Stun > 0.0f || target.IsDead)
