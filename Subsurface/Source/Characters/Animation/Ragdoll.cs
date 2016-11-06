@@ -1133,7 +1133,10 @@ namespace Barotrauma
 
         public Vector2 GetColliderBottom()
         {
-            return  collider.SimPosition - Vector2.UnitY * (collider.height / 2 + collider.radius);
+            float halfHeight = collider.height / 2 + collider.radius;
+
+            return collider.SimPosition +
+                new Vector2((float)Math.Sin(collider.Rotation), -(float)Math.Cos(collider.Rotation)) * halfHeight;
         }
 
         public Limb FindLowestLimb()
