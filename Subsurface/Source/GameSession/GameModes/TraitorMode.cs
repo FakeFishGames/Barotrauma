@@ -95,8 +95,8 @@ namespace Barotrauma
                 endMessage = traitorCharacter.Name + " was a traitor! ";
                 endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
                 endMessage += " task was to assassinate " + targetCharacter.Name + ". ";
-                endMessage += (Submarine.MainSub.AtEndPosition) ? 
-                    "The task was unsuccessful - the has submarine reached its destination." : 
+                endMessage += (Submarine.MainSub.AtEndPosition) ?
+                    "The task was unsuccessful - the submarine has reached its destination." : 
                     "The task was unsuccessful.";
             }
 

@@ -1075,7 +1075,7 @@ namespace Barotrauma
                 {
                     PosInfo localPos = character.MemLocalPos[localPosIndex];
 
-                    if (Vector2.Distance(localPos.Position, serverPos.Position) > 0.1f)
+                    if (Vector2.Distance(localPos.Position, serverPos.Position) > collider.LinearVelocity.Length()+0.02f)
                     {
                         //collider.SetTransform(collider.SimPosition + (pos.Position - remotePos), collider.Rotation);
                         collider.SetTransform(serverPos.Position, collider.Rotation);
