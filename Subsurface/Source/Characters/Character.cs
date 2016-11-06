@@ -26,14 +26,16 @@ namespace Barotrauma
             get { return netStateID; }
         }
 
-        byte dequeuedInput = 0; byte prevDequeuedInput = 0;
-        int isStillCountdown = 5;
-        List<byte> memInput = new List<byte>();
-        List<Vector2> memMousePos = new List<Vector2>();
+        private byte dequeuedInput = 0;
+        private byte prevDequeuedInput = 0;
+        
+        private int isStillCountdown = 5;
+        private List<byte> memInput = new List<byte>();
+        private List<Vector2> memMousePos = new List<Vector2>();
 
-        List<PosInfo> memPos = new List<PosInfo>();
+        private List<PosInfo> memPos = new List<PosInfo>();
 
-        List<PosInfo> memLocalPos = new List<PosInfo>();
+        private List<PosInfo> memLocalPos = new List<PosInfo>();
 
         
         //the Character that the player is currently controlling
@@ -673,10 +675,13 @@ namespace Barotrauma
                         //break;
                     case InputType.Down:
                         return ((dequeuedInput & 0x8) > 0) && !((prevDequeuedInput & 0x8) > 0);
-                        //break;
+                    //break;
                     case InputType.Run:
                         return ((dequeuedInput & 0x20) > 0) && !((prevDequeuedInput & 0x20) > 0);
-                        //break;
+                    //break;
+                    case InputType.Select:
+                        return ((dequeuedInput & 0x40) > 0) && !((prevDequeuedInput & 0x40) > 0);
+                    //break;
                     default:
                         return false;
                         //break;
@@ -708,6 +713,9 @@ namespace Barotrauma
                     case InputType.Run:
                         retVal = (dequeuedInput & 0x20) > 0;
                         break;
+                    case InputType.Select:
+                        retVal = (dequeuedInput & 0x40) > 0;
+                        break;
                 }
                 return retVal;
             }
@@ -719,7 +727,6 @@ namespace Barotrauma
         {
             keys[(int)inputType].Hit = hit;
             keys[(int)inputType].Held = held;
-            
         }
 
         public void ClearInput(InputType inputType)
@@ -1280,7 +1287,9 @@ namespace Barotrauma
                             AnimController.Frozen = false;
                             prevDequeuedInput = dequeuedInput;
                             dequeuedInput = memInput[memInput.Count - 1];
+                            cursorPosition = memMousePos[memMousePos.Count - 1];
                             memInput.RemoveAt(memInput.Count - 1);
+                            memMousePos.RemoveAt(memMousePos.Count - 1);
                             if (dequeuedInput == 0)
                             {
                                 if (isStillCountdown<=0)
@@ -1290,6 +1299,7 @@ namespace Barotrauma
                                         //remove inputs where the player is not moving at all
                                         //helps the server catch up, shouldn't affect final position
                                         memInput.RemoveAt(memInput.Count - 1);
+                                        memMousePos.RemoveAt(memMousePos.Count - 1);
                                     }
                                     isStillCountdown = 15;
                                 }
@@ -1324,11 +1334,14 @@ namespace Barotrauma
                     newInput |= IsKeyDown(InputType.Down) ? (byte)0x8 : (byte)0;
                     newInput |= (AnimController.TargetDir == Direction.Left) ? (byte)0x10 : (byte)0;
                     newInput |= IsKeyDown(InputType.Run) ? (byte)0x20 : (byte)0;
-                    memInput.Insert(0,newInput);
+                    newInput |= IsKeyHit(InputType.Select) ? (byte)0x40 : (byte)0;
+                    memInput.Insert(0, newInput);
+                    memMousePos.Insert(0, closestItem!=null ? closestItem.Position : cursorPosition);
                     LastNetworkUpdateID++;
-                    while (memInput.Count>60)
+                    if (memInput.Count > 60)
                     {
-                        memInput.RemoveAt(memInput.Count - 1);
+                        memInput.RemoveRange(60, memInput.Count - 60);
+                        memMousePos.RemoveRange(60, memMousePos.Count - 60);
                     }
                 }
             }
@@ -1402,6 +1415,75 @@ namespace Barotrauma
                 !((AICharacter)this).AIController.Enabled)
             {
                 Control(deltaTime, cam);
+            }
+
+            if (controlled != this && !(this is AICharacter))
+            {
+                Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
+
+                if (!LockHands)
+                {
+                    //find the closest item if selectkey has been hit, or if the Character is being
+                    //controlled by the player (in order to highlight it)
+
+                    if (findClosestTimer <= 0.0f || IsKeyHit(InputType.Select))
+                    {
+                        closestCharacter = FindClosestCharacter(mouseSimPos);
+                        if (closestCharacter != null && closestCharacter.info == null)
+                        {
+                            closestCharacter = null;
+                        }
+
+                        float closestItemDist = 0.0f;
+                        closestItem = FindClosestItem(mouseSimPos, out closestItemDist);
+
+                        if (closestCharacter != null && closestItem != null)
+                        {
+                            if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < ConvertUnits.ToSimUnits(closestItemDist))
+                            {
+                                if (selectedConstruction != closestItem) closestItem = null;
+                            }
+                            else
+                            {
+                                closestCharacter = null;
+                            }
+                        }
+
+                        findClosestTimer = 0.1f;
+                    }
+                    else
+                    {
+                        findClosestTimer -= deltaTime;
+                    }
+
+                    if (selectedCharacter == null && closestItem != null)
+                    {
+                        closestItem.IsHighlighted = true;
+                        if (!LockHands && closestItem.Pick(this))
+                        {
+
+                        }
+                    }
+
+                    if (IsKeyHit(InputType.Select))
+                    {
+                        if (selectedCharacter != null)
+                        {
+                            DeselectCharacter();
+                        }
+                        else if (closestCharacter != null && closestCharacter.IsHumanoid && closestCharacter.CanBeSelected)
+                        {
+                            SelectCharacter(closestCharacter);
+                        }
+                    }
+                }
+                else
+                {
+                    if (selectedCharacter != null) DeselectCharacter();
+                    selectedConstruction = null;
+                    closestItem = null;
+                    closestCharacter = null;
+                }
             }
 
             if (selectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
@@ -1515,6 +1597,14 @@ namespace Barotrauma
 
                 GUI.DrawLine(spriteBatch, remoteVec, localVec, Color.Yellow,0,10);
             }
+
+            Vector2 mouseDrawPos = CursorWorldPosition;
+            mouseDrawPos.Y = -mouseDrawPos.Y;
+            GUI.DrawLine(spriteBatch, mouseDrawPos - new Vector2(0, 5), mouseDrawPos + new Vector2(0, 5), Color.Red, 0, 10);
+
+            Vector2 closestItemPos = closestItem != null ? closestItem.DrawPosition : Vector2.Zero;
+            closestItemPos.Y = -closestItemPos.Y;
+            GUI.DrawLine(spriteBatch, closestItemPos - new Vector2(0, 5), closestItemPos + new Vector2(0, 5), Color.Lime, 0, 10);
 
             if (this == controlled) return;
 
@@ -1826,9 +1916,10 @@ namespace Barotrauma
 
             msg.Write((byte)ClientNetObject.CHARACTER_INPUT);
 
-            while (memInput.Count > 60)
+            if (memInput.Count > 60)
             {
-                memInput.RemoveAt(memInput.Count - 1);
+                memInput.RemoveRange(60,memInput.Count - 60);
+                memMousePos.RemoveRange(60,memMousePos.Count - 60);
             }
 
             msg.Write(LastNetworkUpdateID);
@@ -1837,6 +1928,11 @@ namespace Barotrauma
             for (int i = 0; i < inputCount; i++)
             {
                 msg.Write(memInput[i]);
+                if ((memInput[i] & 0x40) > 0)
+                {
+                    msg.Write(memMousePos[i].X);
+                    msg.Write(memMousePos[i].Y);
+                }
             }
         }
         public virtual void ServerRead(NetIncomingMessage msg, Client c) 
@@ -1849,9 +1945,16 @@ namespace Barotrauma
             for (int i = 0; i < inputCount; i++)
             {
                 byte newInput = msg.ReadByte();
+                Vector2 newMousePos = Position;
+                if ((newInput & 0x40) > 0)
+                {
+                    newMousePos.X = msg.ReadSingle();
+                    newMousePos.Y = msg.ReadSingle();
+                }
                 if ((i < ((long)networkUpdateID - (long)LastNetworkUpdateID)) && (i < 60))
                 {
                     memInput.Insert(i, newInput);
+                    memMousePos.Insert(i, newMousePos);
                 }
             }
             
@@ -1864,6 +1967,7 @@ namespace Barotrauma
                 //deleting inputs from the queue here means the server is way behind and data needs to be dropped
                 //we'll make the server drop down to 30 inputs for good measure
                 memInput.RemoveRange(30, memInput.Count - 30);
+                memMousePos.RemoveRange(30, memMousePos.Count - 30);
             }
         }
 
