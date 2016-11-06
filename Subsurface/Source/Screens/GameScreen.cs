@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using Barotrauma.Lights;
 using System.Diagnostics;
 using Microsoft.Xna.Framework.Content;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -220,7 +221,22 @@ namespace Barotrauma
             {
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }
-            
+
+            List<Submarine> visibleSubs = new List<Submarine>();
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                Rectangle worldBorders = new Rectangle(
+                    sub.Borders.X + (int)sub.WorldPosition.X - 500,
+                    sub.Borders.Y + (int)sub.WorldPosition.Y + 500,
+                    sub.Borders.Width + 1000,
+                    sub.Borders.Height + 1000);
+                    
+
+                if (Submarine.RectsOverlap(worldBorders, cam.WorldView))
+                {
+                    visibleSubs.Add(sub);
+                }
+            }          
 
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them
@@ -242,7 +258,7 @@ namespace Barotrauma
                 null, null, null, null,
                 cam.Transform);
 
-            Submarine.DrawBack(spriteBatch, false, s => s is Structure);
+            Submarine.DrawBack(spriteBatch, false, s => s is Structure, visibleSubs);
 
             spriteBatch.End();
 
@@ -258,7 +274,7 @@ namespace Barotrauma
                 null, null, null, null,
                 cam.Transform);
 
-            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
+            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure), visibleSubs);
 
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
 
@@ -339,8 +355,8 @@ namespace Barotrauma
                     null, null, null,
                     cam.Transform);
 
-                Submarine.DrawDamageable(spriteBatch, null);
-                Submarine.DrawFront(spriteBatch, false, s => s is Structure);
+                Submarine.DrawDamageable(spriteBatch, null, false, visibleSubs);
+                Submarine.DrawFront(spriteBatch, false, s => s is Structure, visibleSubs);
 
                 spriteBatch.End();
                 
@@ -373,7 +389,7 @@ namespace Barotrauma
                 null, null, null,
                 cam.Transform);
 
-            Submarine.DrawFront(spriteBatch);
+            Submarine.DrawFront(spriteBatch, false, null, visibleSubs);
                         
             spriteBatch.End();
             
@@ -383,7 +399,7 @@ namespace Barotrauma
                 damageEffect,
                 cam.Transform);
 
-            Submarine.DrawDamageable(spriteBatch, damageEffect);
+            Submarine.DrawDamageable(spriteBatch, damageEffect, false, visibleSubs);
                         
             spriteBatch.End();
 

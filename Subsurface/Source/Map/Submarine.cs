@@ -288,20 +288,29 @@ namespace Barotrauma
 
         //drawing ----------------------------------------------------
 
-        public static void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public static void Draw(SpriteBatch spriteBatch, bool editing = false, List<Submarine> visibleSubs = null)
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++ )
             {
+                if (visibleSubs!=null && MapEntity.mapEntityList[i].Submarine!=null)
+                {
+                    if (!visibleSubs.Contains(MapEntity.mapEntityList[i].Submarine)) continue;
+                }
+
                 MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
             }
         }
 
-        public static void DrawFront(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
+        public static void DrawFront(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null, List<Submarine> visibleSubs = null)
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
                 if (!MapEntity.mapEntityList[i].DrawOverWater) continue;
 
+                if (visibleSubs != null && MapEntity.mapEntityList[i].Submarine != null)
+                {
+                    if (!visibleSubs.Contains(MapEntity.mapEntityList[i].Submarine)) continue;
+                }
 
                 if (predicate != null)
                 {
@@ -315,6 +324,12 @@ namespace Barotrauma
             {
                 foreach (Submarine sub in Submarine.Loaded)
                 {
+                    Rectangle worldBorders = sub.Borders;
+                    worldBorders.Location += sub.WorldPosition.ToPoint();
+                    worldBorders.Y = -worldBorders.Y;
+
+                    GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, 5);
+
                     if (sub.subBody.MemPos.Count < 2) continue;
 
                     Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.MemPos[0].Position);
@@ -334,10 +349,16 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
+        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, List<Submarine> visibleSubs = null)
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
+                if (visibleSubs != null && MapEntity.mapEntityList[i].Submarine != null)
+                {
+                    if (!visibleSubs.Contains(MapEntity.mapEntityList[i].Submarine)) continue;
+                }
+
+
                 if (MapEntity.mapEntityList[i].DrawDamageEffect)
                     MapEntity.mapEntityList[i].DrawDamage(spriteBatch, damageEffect);
             }
@@ -349,11 +370,16 @@ namespace Barotrauma
         }
 
 
-        public static void DrawBack(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
+        public static void DrawBack(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null, List<Submarine> visibleSubs = null)
         {
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
                 if (!MapEntity.mapEntityList[i].DrawBelowWater) continue;
+
+                if (visibleSubs != null && MapEntity.mapEntityList[i].Submarine != null)
+                {
+                    if (!visibleSubs.Contains(MapEntity.mapEntityList[i].Submarine)) continue;
+                }
 
                 if (predicate != null)
                 {
