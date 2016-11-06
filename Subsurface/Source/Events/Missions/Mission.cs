@@ -48,6 +48,11 @@ namespace Barotrauma
             set { completed = value; }
         }
 
+        public virtual bool AllowRespawn
+        {
+            get { return true; }
+        }
+
         public virtual string RadarLabel
         {
             get { return radarLabel; }
