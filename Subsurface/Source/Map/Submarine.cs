@@ -612,7 +612,11 @@ namespace Barotrauma
             
             subBody.Update(deltaTime);
 
-            if (this != MainSub && MainSub.DockedTo.Contains(this)) return;
+            for (int i = 0; i < 2; i++ )
+            {
+                if (Submarine.MainSubs[i] == null) continue;
+                if (this != Submarine.MainSubs[i] && Submarine.MainSubs[i].DockedTo.Contains(this)) return;
+            }
 
             //send updates more frequently if moving fast
             networkUpdateTimer -= MathHelper.Clamp(Velocity.Length()*10.0f, 0.1f, 5.0f) * deltaTime;

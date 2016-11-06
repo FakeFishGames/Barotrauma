@@ -331,6 +331,11 @@ namespace Barotrauma
 
         public void SetTransform(Vector2 position, float rotation)
         {
+            System.Diagnostics.Debug.Assert(MathUtils.IsValid(position));
+            System.Diagnostics.Debug.Assert(Math.Abs(position.X) < 1000000.0f);
+            System.Diagnostics.Debug.Assert(Math.Abs(position.Y) < 1000000.0f);
+            
+
             body.SetTransform(position, rotation);
             SetPrevTransform(position, rotation);
         }
