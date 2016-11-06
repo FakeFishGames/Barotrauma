@@ -27,6 +27,7 @@ namespace Barotrauma
         }
 
         byte dequeuedInput = 0; byte prevDequeuedInput = 0;
+        int isStillCountdown = 5;
         List<byte> memInput = new List<byte>();
         List<Vector2> memMousePos = new List<Vector2>();
 
@@ -1280,6 +1281,27 @@ namespace Barotrauma
                             prevDequeuedInput = dequeuedInput;
                             dequeuedInput = memInput[memInput.Count - 1];
                             memInput.RemoveAt(memInput.Count - 1);
+                            if (dequeuedInput == 0)
+                            {
+                                if (isStillCountdown<=0)
+                                {
+                                    while (memInput.Count>5 && memInput[memInput.Count-1]==0)
+                                    {
+                                        //remove inputs where the player is not moving at all
+                                        //helps the server catch up, shouldn't affect final position
+                                        memInput.RemoveAt(memInput.Count - 1);
+                                    }
+                                    isStillCountdown = 15;
+                                }
+                                else
+                                {
+                                    isStillCountdown--;
+                                }
+                            } else
+                            {
+                                isStillCountdown = 15;
+                            }
+                            DebugConsole.NewMessage(Convert.ToString(memInput.Count), Color.Lime);
                         }
                         else
                         {
@@ -1472,9 +1494,30 @@ namespace Barotrauma
 
                 if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
+            
+            if (memPos != null && memPos.Count > 0)
+            {
+                PosInfo serverPos = memPos.Last();
+                Vector2 remoteVec = ConvertUnits.ToDisplayUnits(serverPos.Position);
+                if (Submarine!=null)
+                {
+                    remoteVec += Submarine.DrawPosition;
+                }
+                remoteVec.Y = -remoteVec.Y;
+
+                PosInfo localPos = memLocalPos.Find(m => m.ID == serverPos.ID);
+                Vector2 localVec = ConvertUnits.ToDisplayUnits(localPos.Position);
+                if (Submarine != null)
+                {
+                    localVec += Submarine.DrawPosition;
+                }
+                localVec.Y = -localVec.Y;
+
+                GUI.DrawLine(spriteBatch, remoteVec, localVec, Color.Yellow,0,10);
+            }
 
             if (this == controlled) return;
-            
+
             Vector2 pos = DrawPosition;
             pos.Y = -pos.Y;
 
@@ -1780,6 +1823,7 @@ namespace Barotrauma
         public virtual void ClientWrite(NetOutgoingMessage msg) 
         {
             if (GameMain.Server != null) return;
+
             msg.Write((byte)ClientNetObject.CHARACTER_INPUT);
 
             while (memInput.Count > 60)
@@ -1790,7 +1834,6 @@ namespace Barotrauma
             msg.Write(LastNetworkUpdateID);
             byte inputCount = Math.Min((byte)memInput.Count, (byte)60);
             msg.Write(inputCount);
-
             for (int i = 0; i < inputCount; i++)
             {
                 msg.Write(memInput[i]);
@@ -1802,7 +1845,7 @@ namespace Barotrauma
 
             UInt32 networkUpdateID = msg.ReadUInt32();
             byte inputCount = msg.ReadByte();
-
+            
             for (int i = 0; i < inputCount; i++)
             {
                 byte newInput = msg.ReadByte();
@@ -1816,15 +1859,18 @@ namespace Barotrauma
             {
                 LastNetworkUpdateID = networkUpdateID;
             }
-            while (memInput.Count > 60)
+            if (memInput.Count > 60)
             {
                 //deleting inputs from the queue here means the server is way behind and data needs to be dropped
-                memInput.RemoveAt(memInput.Count - 1);
+                //we'll make the server drop down to 30 inputs for good measure
+                memInput.RemoveRange(30, memInput.Count - 30);
             }
         }
 
         public virtual void ServerWrite(NetOutgoingMessage msg, Client c) 
         {
+            if (GameMain.Server == null) return;
+
             msg.Write(ID);
 
             if (this == c.Character)
@@ -1841,7 +1887,7 @@ namespace Barotrauma
                 msg.Write(false);
             }
 
-            msg.Write(AnimController.Dir > 0.0f);
+            msg.Write(AnimController.TargetDir == Direction.Right);
 
             msg.Write(SimPosition.X);
             msg.Write(SimPosition.Y);
@@ -1851,6 +1897,8 @@ namespace Barotrauma
 
         public virtual void ClientRead(NetIncomingMessage msg, float sendingTime) 
         {
+            if (GameMain.Server != null) return;
+
             UInt32 networkUpdateID = 0;
             if (msg.ReadBoolean())
             {
@@ -1866,9 +1914,19 @@ namespace Barotrauma
                 new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, sendingTime);
 
             int index = 0;
-            while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp)
+            if (GameMain.NetworkMember.Character == this)
             {
-                index++;
+                while (index < memPos.Count && posInfo.ID > memPos[index].ID)
+                {
+                    index++;
+                }
+            }
+            else
+            {
+                while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp)
+                {
+                    index++;
+                }
             }
 
             memPos.Insert(index, posInfo);
@@ -1961,6 +2019,9 @@ namespace Barotrauma
                 {
                     GameMain.Client.Character = character;
                     Controlled = character;
+                    character.memInput.Clear();
+                    character.memPos.Clear();
+                    character.memLocalPos.Clear();
                 }
 
                 if (configPath == Character.HumanConfigFile)
