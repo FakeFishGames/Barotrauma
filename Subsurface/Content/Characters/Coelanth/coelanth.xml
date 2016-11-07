@@ -7,7 +7,7 @@
 
   <ragdoll waveamplitude="50.0" wavelength="2500" swimspeed="5.0" walkspeed="3.5" canentersubmarine="false">
 
-    <collider radius ="50"/>
+    <collider radius="50" height="250"/>
     
     <!-- head -->
     <limb id = "0" radius="50" height="270" type="Head" steerforce="1.0">
