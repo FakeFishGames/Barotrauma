@@ -66,7 +66,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    collider.LinearVelocity = (GetLimb(LimbType.Torso).SimPosition - collider.SimPosition) * 60.0f;
+                    collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - collider.SimPosition) * 20.0f;
                     collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
                 }
 
@@ -307,8 +307,11 @@ namespace Barotrauma
 
             if (onGround && (!character.IsRemotePlayer || GameMain.Server != null))
             {
+                //move slower if collider isn't upright
+                float rotationFactor = (float)Math.Abs(Math.Cos(collider.Rotation));
+
                 collider.LinearVelocity = new Vector2(
-                        movement.X,
+                        movement.X * rotationFactor,
                         collider.LinearVelocity.Y > 0.0f ? collider.LinearVelocity.Y * 0.5f : collider.LinearVelocity.Y);
             }
 
@@ -899,15 +902,22 @@ namespace Barotrauma
                     targetLimb.pullJoint.Enabled = true;
                     targetLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition - diff;
                     targetLimb.pullJoint.MaxForce = 10000.0f;
+
+                    target.AnimController.movement -= diff;
                 }
             }
 
             float dist = Vector2.Distance(target.SimPosition, collider.SimPosition);
-            targetMovement *= MathHelper.Clamp(1.5f - dist, 0.0f, 1.0f);
             
+            //limit movement if moving away from the target
+            if (Vector2.Dot(target.SimPosition - collider.SimPosition, targetMovement)<0)
+            {
+                targetMovement *= MathHelper.Clamp(2.0f - dist, 0.0f, 1.0f);
+            }
+
             target.AnimController.IgnorePlatforms = IgnorePlatforms;
 
-            if (target.Stun > 0.0f || target.IsDead)
+            if (target.Stun > 0.0f || target.IsUnconscious || target.IsDead)
             {
                 target.AnimController.TargetMovement = TargetMovement;
             }

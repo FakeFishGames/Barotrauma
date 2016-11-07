@@ -60,8 +60,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    collider.LinearVelocity = (GetLimb(LimbType.Torso).SimPosition - collider.SimPosition) * 60.0f;
-                    collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
+                    collider.LinearVelocity = (MainLimb.SimPosition - collider.SimPosition) * 60.0f;
+                    collider.SmoothRotate(MainLimb.Rotation);
                 }
 
                 if (stunTimer > 0)
