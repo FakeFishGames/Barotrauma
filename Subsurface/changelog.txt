@@ -1,6 +1,19 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.3.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed character colliders occasionally getting stuck inside walls when switching from swimming to
+walking or standing up after being unconscious
+- wires can be dragged outside the sub in the editor without disconnecting them
+- easier to climb over small obstacles
+- combat missions don't reset the "allow respawn" setting
+- submarines outside the camera view aren't rendered
+- coelanth collider fix
+
+---------------------------------------------------------------------------------------------------------
 v0.5.3.1
 ---------------------------------------------------------------------------------------------------------
+
 - fixed monster movement!
 
 ---------------------------------------------------------------------------------------------------------
