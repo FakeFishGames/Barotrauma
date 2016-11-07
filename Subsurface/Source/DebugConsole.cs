@@ -27,7 +27,7 @@ namespace Barotrauma
 
     static class DebugConsole
     {
-        const int MaxMessages = 100;
+        const int MaxMessages = 200;
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
@@ -768,6 +768,11 @@ namespace Barotrauma
 
             //listbox not created yet, don't attempt to add
             if (listBox == null) return;
+
+            if (listBox.children.Count > MaxMessages)
+            {
+                listBox.children.RemoveRange(0, listBox.children.Count - MaxMessages);
+            }
 
             try
             {
