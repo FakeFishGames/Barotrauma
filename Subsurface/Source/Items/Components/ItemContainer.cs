@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -14,7 +15,7 @@ namespace Barotrauma.Items.Components
         List<RelatedItem> containableItems;
         public ItemInventory Inventory;
 
-        private bool hasStatusEffects;
+        private List<Pair<Item, StatusEffect>> itemsWithStatusEffects;
 
         //how many items can be contained
         [HasDefaultValue(5, false)]
@@ -110,24 +111,39 @@ namespace Barotrauma.Items.Components
                     case "containable":
                         RelatedItem containable = RelatedItem.Load(subElement);
                         if (containable == null) continue;
-
-                        foreach (StatusEffect effect in containable.statusEffects)
-                        {
-                            if (effect.type == ActionType.OnContaining) hasStatusEffects = true;
-                        }
-
+                        
                         containableItems.Add(containable);
 
                         break;
                 }
             }
 
-            IsActive = true;
+            itemsWithStatusEffects = new List<Pair<Item, StatusEffect>>();
         }
 
-        public void RemoveContained(Item item)
+        public void OnItemContained(Item item)
         {
-            Inventory.RemoveItem(item);
+            item.SetContainedItemPositions();
+            
+            RelatedItem ri = containableItems.Find(x => x.MatchesItem(item));
+            if (ri != null)
+            {
+                foreach (StatusEffect effect in ri.statusEffects)
+                {
+                    itemsWithStatusEffects.Add(Pair<Item, StatusEffect>.Create(item, effect));
+                }
+            }
+
+            //no need to Update() if this item has no statuseffects and no physics body
+            IsActive = itemsWithStatusEffects.Count > 0 || item.body != null;
+        }
+
+        public void OnItemRemoved(Item item)
+        {
+            itemsWithStatusEffects.RemoveAll(i => i.First == item);
+
+            //deactivate if the inventory is empty
+            IsActive = itemsWithStatusEffects.Count > 0 || item.body != null;
         }
 
         public bool CanBeContained(Item item)
@@ -138,31 +154,24 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (item.body != null && item.body.FarseerBody.Awake)
+            if (item.body != null && 
+                item.body.Enabled &&
+                item.body.FarseerBody.Awake)
             {
-                foreach (Item contained in Inventory.Items)
-                {
-                    if (contained == null) continue;
-                    contained.SetTransform(item.SimPosition, 0.0f);
-                }
+                item.SetContainedItemPositions();
             }
 
-            if (!hasStatusEffects) return;
-
-            foreach (Item contained in Inventory.Items)
+            foreach (Pair<Item, StatusEffect> itemAndEffect in itemsWithStatusEffects)
             {
-                if (contained == null || contained.Condition <= 0.0f) continue;
+                Item contained = itemAndEffect.First;
+                if (contained.Condition < 0.0f) continue;
 
-                RelatedItem ri = containableItems.Find(x => x.MatchesItem(contained));
-                if (ri == null) continue;
+                StatusEffect effect = itemAndEffect.Second;
 
-                foreach (StatusEffect effect in ri.statusEffects)
-                {
-                    if (effect.Targets.HasFlag(StatusEffect.TargetType.This)) effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
-                    if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
-                }
-
-                //contained.ApplyStatusEffects(ActionType.OnContained, deltaTime);
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))                 
+                    effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) 
+                    effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);               
             }
         }
 
@@ -232,15 +241,13 @@ namespace Barotrauma.Items.Components
 
         public override bool Combine(Item item)
         {
-            if (containableItems.Find(x => x.MatchesItem(item)) == null) return false;
+            if (!containableItems.Any(x => x.MatchesItem(item))) return false;
             
             if (Inventory.TryPutItem(item))
             {            
                 IsActive = true;
-                if (hideItems || (item.body!=null && !item.body.Enabled)) item.body.Enabled = false;
-
-                //item.Container = this.item;
-            
+                if (hideItems && item.body != null) item.body.Enabled = false;
+                            
                 return true;
             }
 

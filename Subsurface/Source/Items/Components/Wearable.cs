@@ -168,9 +168,8 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
-
             item.SetTransform(picker.SimPosition, 0.0f);
+            item.SetContainedItemPositions();
             
             ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
