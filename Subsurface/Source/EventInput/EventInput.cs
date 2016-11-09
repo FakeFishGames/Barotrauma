@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace EventInput
 {
-
+#if WINDOWS
     public class KeyboardLayout
     {
         const uint KLF_ACTIVATE = 1; //activate the layout
@@ -16,14 +16,14 @@ namespace EventInput
 
         [DllImport("user32.dll")]
         private static extern long LoadKeyboardLayout(
-              string pwszKLID,  // input locale identifier
-              uint Flags       // input locale identifier options
-              );
+        string pwszKLID,  // input locale identifier
+        uint Flags       // input locale identifier options
+        );
 
         [DllImport("user32.dll")]
         private static extern long GetKeyboardLayoutName(
-              StringBuilder pwszKLID  //[out] string that receives the name of the locale identifier
-              );
+        StringBuilder pwszKLID  //[out] string that receives the name of the locale identifier
+        );
 
         public static string getName()
         {
@@ -32,6 +32,7 @@ namespace EventInput
             return name.ToString();
         }
     }
+#endif
 
     public class CharacterEventArgs : EventArgs
     {
@@ -115,9 +116,12 @@ namespace EventInput
         /// </summary>
         public static event KeyEventHandler KeyUp;
 
+        static bool initialized;
+
+#if WINDOWS
         delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        static bool initialized;
+
         static IntPtr prevWndProc;
         static WndProc hookProcDelegate;
         static IntPtr hIMC;
@@ -145,7 +149,7 @@ namespace EventInput
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
+#endif
 
         /// <summary>
         /// Initialize the TextInput with the given GameWindow.
@@ -157,15 +161,15 @@ namespace EventInput
             {
                 return;
             }
-                //throw new InvalidOperationException("TextInput.Initialize can only be called once!");
 
-            hookProcDelegate = HookProc;
 #if WINDOWS
-			prevWndProc = (IntPtr)SetWindowLong(window.Handle, GWL_WNDPROC,
-			(int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
+            hookProcDelegate = HookProc;
 
-			hIMC = ImmGetContext(window.Handle);
-#elif LINUX
+            prevWndProc = (IntPtr)SetWindowLong(window.Handle, GWL_WNDPROC,
+            (int)Marshal.GetFunctionPointerForDelegate(hookProcDelegate));
+
+            hIMC = ImmGetContext(window.Handle);
+#else
             window.TextInput += ReceiveInput;
 #endif
 
@@ -181,50 +185,48 @@ namespace EventInput
         {
             if (CharEntered != null) CharEntered(null, new CharacterEventArgs(character, 0));
         }
-
+#if WINDOWS
         static IntPtr HookProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
-			IntPtr returnCode = CallWindowProc(prevWndProc, hWnd, msg, wParam, lParam);
+        IntPtr returnCode = CallWindowProc(prevWndProc, hWnd, msg, wParam, lParam);
 
-            switch (msg)
-            {
-                case WM_GETDLGCODE:
-                    returnCode = (IntPtr)(returnCode.ToInt32() | DLGC_WANTALLKEYS);
-                    break;
+        switch (msg)
+        {
+        case WM_GETDLGCODE:
+        returnCode = (IntPtr)(returnCode.ToInt32() | DLGC_WANTALLKEYS);
+        break;
 
-                case WM_KEYDOWN:
-                    if (KeyDown != null)
-                        KeyDown(null, new KeyEventArgs((Keys)wParam));
+        case WM_KEYDOWN:
+        if (KeyDown != null)
+        KeyDown(null, new KeyEventArgs((Keys)wParam));
 
-                    break;
+        break;
 
-                case WM_KEYUP:
-                    if (KeyUp != null)
-                        KeyUp(null, new KeyEventArgs((Keys)wParam));
-                    break;
+        case WM_KEYUP:
+        if (KeyUp != null)
+        KeyUp(null, new KeyEventArgs((Keys)wParam));
+        break;
 
-                case WM_CHAR:
-                    if (CharEntered != null)
-                        CharEntered(null, new CharacterEventArgs((char)wParam, lParam.ToInt32()));
-                    break;
+        case WM_CHAR:
+        if (CharEntered != null)
+        CharEntered(null, new CharacterEventArgs((char)wParam, lParam.ToInt32()));
+        break;
 
-                case WM_IME_SETCONTEXT:
-                    if (wParam.ToInt32() == 1)
-                        ImmAssociateContext(hWnd, hIMC);
-                    break;
+        case WM_IME_SETCONTEXT:
+        if (wParam.ToInt32() == 1)
+        ImmAssociateContext(hWnd, hIMC);
+        break;
 
-                case WM_INPUTLANGCHANGE:
-                    ImmAssociateContext(hWnd, hIMC);
-                    returnCode = (IntPtr)1;
-                    break;
-            }
-
-
-
-            return returnCode;
-
+        case WM_INPUTLANGCHANGE:
+        ImmAssociateContext(hWnd, hIMC);
+        returnCode = (IntPtr)1;
+        break;
         }
-    }
 
+        return returnCode;
+        }
+
+#endif
+    }
 
 }
