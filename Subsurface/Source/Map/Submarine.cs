@@ -60,6 +60,8 @@ namespace Barotrauma
         }
         private static List<Submarine> loaded = new List<Submarine>();
 
+        private static List<MapEntity> visibleEntities;
+
         private SubmarineBody subBody;
 
         public readonly List<Submarine> DockedTo;
@@ -297,34 +299,71 @@ namespace Barotrauma
         }
 
         //drawing ----------------------------------------------------
+        
+        public static void CullEntities(Camera cam)
+        {
+            List<Submarine> visibleSubs = new List<Submarine>();
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                Rectangle worldBorders = new Rectangle(
+                    sub.Borders.X + (int)sub.WorldPosition.X - 500,
+                    sub.Borders.Y + (int)sub.WorldPosition.Y + 500,
+                    sub.Borders.Width + 1000,
+                    sub.Borders.Height + 1000);
+
+
+                if (Submarine.RectsOverlap(worldBorders, cam.WorldView))
+                {
+                    visibleSubs.Add(sub);
+                }
+            }
+
+            visibleEntities = new List<MapEntity>();
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                if (me.Submarine == null || visibleSubs.Contains(me.Submarine))
+                {
+                    visibleEntities.Add(me);
+                }
+            }
+        }
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++ )
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+
+            foreach (MapEntity e in entitiesToRender)
             {
-                MapEntity.mapEntityList[i].Draw(spriteBatch, editing);
+                e.Draw(spriteBatch, editing);
             }
         }
 
         public static void DrawFront(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            
+            foreach (MapEntity e in entitiesToRender)
             {
-                if (!MapEntity.mapEntityList[i].DrawOverWater) continue;
-
+                if (!e.DrawOverWater) continue;
 
                 if (predicate != null)
                 {
-                    if (!predicate(MapEntity.mapEntityList[i])) continue;
+                    if (!predicate(e)) continue;
                 }
 
-                MapEntity.mapEntityList[i].Draw(spriteBatch, editing, false);
+                e.Draw(spriteBatch, editing, false);
             }
 
             if (GameMain.DebugDraw)
             {
                 foreach (Submarine sub in Submarine.Loaded)
                 {
+                    Rectangle worldBorders = sub.Borders;
+                    worldBorders.Location += sub.WorldPosition.ToPoint();
+                    worldBorders.Y = -worldBorders.Y;
+
+                    GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, 5);
+
                     if (sub.subBody.MemPos.Count < 2) continue;
 
                     Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.MemPos[0].Position);
@@ -346,10 +385,12 @@ namespace Barotrauma
 
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
         {
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+
+            foreach (MapEntity e in entitiesToRender)
             {
-                if (MapEntity.mapEntityList[i].DrawDamageEffect)
-                    MapEntity.mapEntityList[i].DrawDamage(spriteBatch, damageEffect);
+                if (e.DrawDamageEffect)
+                    e.DrawDamage(spriteBatch, damageEffect);
             }
             if (damageEffect != null)
             {
@@ -361,16 +402,18 @@ namespace Barotrauma
 
         public static void DrawBack(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+            
+            foreach (MapEntity e in entitiesToRender)
             {
-                if (!MapEntity.mapEntityList[i].DrawBelowWater) continue;
+                if (!e.DrawBelowWater) continue;
 
                 if (predicate != null)
                 {
-                    if (!predicate(MapEntity.mapEntityList[i])) continue;
+                    if (!predicate(e)) continue;
                 }
                 
-                MapEntity.mapEntityList[i].Draw(spriteBatch, editing, true);
+                e.Draw(spriteBatch, editing, true);
             }
         }
 
@@ -622,7 +665,11 @@ namespace Barotrauma
             
             subBody.Update(deltaTime);
 
-            if (this != MainSub && MainSub.DockedTo.Contains(this)) return;
+            for (int i = 0; i < 2; i++ )
+            {
+                if (Submarine.MainSubs[i] == null) continue;
+                if (this != Submarine.MainSubs[i] && Submarine.MainSubs[i].DockedTo.Contains(this)) return;
+            }
 
             //send updates more frequently if moving fast
             networkUpdateTimer -= MathHelper.Clamp(Velocity.Length()*10.0f, 0.1f, 5.0f) * deltaTime;
@@ -994,6 +1041,7 @@ namespace Barotrauma
                         {
                             wire.Nodes[i] -= center;
                         }
+                        wire.UpdateSections();
                     }
 
                     for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
@@ -1086,6 +1134,8 @@ namespace Barotrauma
 
             loaded.Clear();
 
+            visibleEntities = null;
+
             if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Entity.RemoveAll();
@@ -1104,6 +1154,8 @@ namespace Barotrauma
             base.Remove();
 
             subBody = null;
+
+            visibleEntities = null;
 
             if (MainSub == this) MainSub = null;
             if (MainSubs[1] == this) MainSubs[1] = null;

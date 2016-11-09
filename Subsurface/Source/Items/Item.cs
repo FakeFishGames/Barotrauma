@@ -32,8 +32,8 @@ namespace Barotrauma
         private ItemPrefab prefab;
 
         public static bool ShowLinks = true;
-
-        private List<string> tags;
+        
+        private HashSet<string> tags;
         
         public Hull CurrentHull;
         
@@ -52,6 +52,9 @@ namespace Barotrauma
         private bool inWater;
                 
         private Inventory parentInventory;
+        private Inventory ownInventory;
+
+        private Dictionary<string, Connection> connections;
 
         //a dictionary containing lists of the status effects in all the components of the item
         private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
@@ -276,8 +279,7 @@ namespace Barotrauma
         {
             get
             {
-                ItemContainer c = GetComponent<ItemContainer>();
-                return (c == null) ? null : Array.FindAll(c.Inventory.Items, i=>i!=null);
+                return (ownInventory == null) ? null : Array.FindAll(ownInventory.Items, i => i != null);
             }
         }
 
@@ -327,7 +329,7 @@ namespace Barotrauma
             components          = new List<ItemComponent>();
             drawableComponents  = new List<IDrawableComponent>();
             FixRequirements     = new List<FixRequirement>();
-            tags                = new List<string>();
+            tags                = new HashSet<string>();
                        
             rect = newRect;
             
@@ -402,6 +404,12 @@ namespace Barotrauma
                 if (body != null) body.FarseerBody.OnCollision += OnCollision;
             }
 
+            var itemContainer = GetComponent<ItemContainer>();
+            if (itemContainer!=null)
+            {
+                ownInventory = itemContainer.Inventory;
+            }
+
             InsertToList();
             ItemList.Add(this);
         }
@@ -429,15 +437,16 @@ namespace Barotrauma
         
         public void RemoveContained(Item contained)
         {
-            ItemContainer c = GetComponent<ItemContainer>();
-            if (c == null) return;
-            
-            c.RemoveContained(contained);
+            if (ownInventory != null)
+            {
+                ownInventory.RemoveItem(contained);
+            }
+
             contained.Container = null;            
         }
 
 
-        public void SetTransform(Vector2 simPosition, float rotation)
+        public void SetTransform(Vector2 simPosition, float rotation, bool findNewHull = true)
         {
             if (body != null)
             {
@@ -458,7 +467,7 @@ namespace Barotrauma
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
 
-            FindHull();
+            if (findNewHull) FindHull();
         }
 
         public override void Move(Vector2 amount)
@@ -545,6 +554,33 @@ namespace Barotrauma
 
             return rootContainer;
         }
+                
+        public void SetContainedItemPositions()
+        {
+            if (ownInventory == null) return;
+
+            Vector2 simPos = SimPosition;
+            Vector2 displayPos = Position;
+
+            foreach (Item contained in ownInventory.Items)
+            {
+                if (contained == null) continue;
+
+                if (contained.body != null)
+                {
+                    contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                }
+
+                contained.Rect =
+                    new Rectangle(
+                        (int)(displayPos.X - contained.Rect.Width / 2.0f),
+                        (int)(displayPos.Y + contained.Rect.Height / 2.0f),
+                        contained.Rect.Width, contained.Rect.Height);
+
+                contained.Submarine = Submarine;
+                contained.CurrentHull = CurrentHull;
+            }
+        }
         
         public void AddTag(string tag)
         {
@@ -572,7 +608,7 @@ namespace Barotrauma
                 ApplyStatusEffect(effect, type, deltaTime, character);
             }
         }
-
+        
         public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null)
         {
             if (condition == 0.0f && effect.type != ActionType.OnBroken) return;
@@ -581,16 +617,15 @@ namespace Barotrauma
             bool hasTargets = (effect.TargetNames == null);
 
             Item[] containedItems = ContainedItems;  
-            if (effect.OnContainingNames!=null)
+            if (effect.OnContainingNames != null)
             {
                 foreach (string s in effect.OnContainingNames)
                 {
-                    if (containedItems.FirstOrDefault(x => x!=null && x.Name==s && x.Condition>0.0f) == null) return;
+                    if (!containedItems.Any(x => x!=null && x.Name==s && x.Condition > 0.0f)) return;
                 }
             }
 
             List<IPropertyObject> targets = new List<IPropertyObject>();
-
             if (containedItems != null)
             {
                 if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained))
@@ -692,8 +727,7 @@ namespace Barotrauma
                 {
                     ic.Update(deltaTime, cam);
                     
-                    if (ic.IsActive) ic.PlaySound(ActionType.OnActive, WorldPosition);
-                    //ic.ApplyStatusEffects(ActionType.OnActive, deltaTime, null);                    
+                    if (ic.IsActive) ic.PlaySound(ActionType.OnActive, WorldPosition);              
                 }
                 else
                 {
@@ -704,8 +738,8 @@ namespace Barotrauma
             inWater = IsInWater();
             if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
             
-			isHighlighted = false;
-			
+            isHighlighted = false;
+
             if (body == null || !body.Enabled) return;
 
             if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
@@ -723,11 +757,11 @@ namespace Barotrauma
                     body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
                 }
                 
-                Vector2 moveAmount = body.SimPosition - body.LastSentPosition;
-                if (parentInventory == null && moveAmount != Vector2.Zero && moveAmount.Length() > NetConfig.ItemPosUpdateDistance)
-                {
-                    
-                }
+                //Vector2 moveAmount = body.SimPosition - body.LastSentPosition;
+                //if (parentInventory == null && moveAmount != Vector2.Zero && moveAmount.Length() > NetConfig.ItemPosUpdateDistance)
+                //{
+                //    new NetworkEvent(NetworkEventType.PhysicsBodyPosition, ID, false);
+                //}
 
                 Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
                 rect.X = (int)(displayPos.X - rect.Width / 2.0f);
@@ -1152,34 +1186,29 @@ namespace Barotrauma
 
         public void SendSignal(int stepsTaken, string signal, string connectionName, float power = 0.0f)
         {
+            if (connections == null) return;
+
             stepsTaken++;
 
-            ConnectionPanel panel = GetComponent<ConnectionPanel>();
-            if (panel == null) return;
-            foreach (Connection c in panel.Connections)
+            Connection c = null;
+            if (!connections.TryGetValue(connectionName, out c)) return;
+
+            if (stepsTaken > 10)
             {
-                if (c.Name != connectionName) continue;
-                
-                if (stepsTaken > 10)
-                {
-                    //use a coroutine to prevent infinite loops by creating a one 
-                    //frame delay if the "signal chain" gets too long
-                    CoroutineManager.StartCoroutine(SendSignal(signal, c, power));
-                }
-                else
-                {
-                    c.SendSignal(stepsTaken, signal, this, power);
-                }
+                //use a coroutine to prevent infinite loops by creating a one 
+                //frame delay if the "signal chain" gets too long
+                CoroutineManager.StartCoroutine(SendSignal(signal, c, power));
             }
+            else
+            {
+                c.SendSignal(stepsTaken, signal, this, power);
+            }            
         }
 
         private IEnumerable<object> SendSignal(string signal, Connection connection, float power = 0.0f)
         {
             //wait one frame
             yield return CoroutineStatus.Running;
-
-            ConnectionPanel panel = GetComponent<ConnectionPanel>();
-            if (panel == null) yield return CoroutineStatus.Success;
 
             connection.SendSignal(0, signal, this, power);
 
@@ -1760,7 +1789,18 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 ic.OnMapLoaded();
-            }            
+            }
+
+            //cache connections into a dictionary for faster lookups
+            var connectionPanel = GetComponent<ConnectionPanel>();
+            connections = new Dictionary<string, Connection>();
+            
+            if (connectionPanel == null) return;
+            foreach (Connection c in connectionPanel.Connections)
+            {
+                if (!connections.ContainsKey(c.Name))
+                    connections.Add(c.Name, c);
+            }
         }
         
 

@@ -22,7 +22,9 @@ namespace Barotrauma.Items.Components
         //affects how fast changes in power/load are carried over the grid
         static float inertia = 5.0f;
 
-        static List<Powered> connectedList = new List<Powered>();
+        static HashSet<Powered> connectedList = new HashSet<Powered>();
+
+        private List<Connection> powerConnections;
 
         private float powerLoad;
 
@@ -35,24 +37,27 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
+
+            powerConnections = new List<Connection>();
         }
 
         public override void Update(float deltaTime, Camera cam) 
         {
-            //reset and recalculate the power generated/consumed
-            //by the constructions connected to the grid
-            fullPower = 0.0f;
-            fullLoad = 0.0f;
-            connectedList.Clear();
-
             if (updateTimer > 0)
             {
+                //this junction box has already been updated this frame
                 updateTimer--;
                 return;
             }
-            
+
+            //reset and recalculate the power generated/consumed
+            //by the constructions connected to the grid
+            fullPower = 0.0f;
+            fullLoad = 0.0f;    
+            updateTimer = 0;        
+            connectedList.Clear();
+
             CheckJunctions(deltaTime);
-            updateTimer = 0;
 
             foreach (Powered p in connectedList)
             {
@@ -68,8 +73,7 @@ namespace Barotrauma.Items.Components
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
                 if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.9f,2.1f), 200.0f)) continue;
-
-                
+                                
                 float prevCondition = pt.item.Condition;
                 pt.item.Condition -= deltaTime * 10.0f;
 
@@ -109,23 +113,16 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             
-            List<Connection> connections = item.Connections;
-            if (connections == null) return;
-
-            foreach (Connection c in connections)
+            foreach (Connection c in powerConnections)
             {
-                if (!c.IsPower) continue;
-
                 var recipients = c.Recipients;
                                
                 foreach (Connection recipient in recipients)
                 {
-                    if (recipient == null || !c.IsPower) continue;
+                    if (recipient == null) continue;
 
                     Item it = recipient.Item;
                     if (it == null) continue;
-
-                    //if (it.Updated) continue;
 
                     Powered powered = it.GetComponent<Powered>();
                     if (powered == null || !powered.IsActive) continue;
@@ -133,13 +130,14 @@ namespace Barotrauma.Items.Components
                     if (connectedList.Contains(powered)) continue;
 
                     PowerTransfer powerTransfer = powered as PowerTransfer;
-                    PowerContainer powerContainer = powered as PowerContainer;
                     if (powerTransfer != null)
                     {
-                        //if (powerTransfer.updateTimer>0) continue;
                         powerTransfer.CheckJunctions(deltaTime);
+                        continue;
                     }
-                    else if (powerContainer != null)
+                    
+                    PowerContainer powerContainer = powered as PowerContainer;
+                    if (powerContainer != null)
                     {
                         if (recipient.Name == "power_in")
                         {
@@ -185,6 +183,19 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character)
         {
             GuiFrame.Update(1.0f / 60.0f);
+        }
+
+        public override void OnMapLoaded()
+        {
+            var connections = item.Connections;
+            if (connections == null)
+            {
+                IsActive = false;
+                return;
+            }
+
+            powerConnections = connections.FindAll(c => c.IsPower);
+            if (powerConnections.Count == 0) IsActive = false;
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power)

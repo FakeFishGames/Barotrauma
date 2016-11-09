@@ -380,7 +380,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            List<ItemSound> matchingSounds = null;
+            List<ItemSound> matchingSounds;
             if (!sounds.TryGetValue(type, out matchingSounds)) return;
 
             ItemSound itemSound = null;

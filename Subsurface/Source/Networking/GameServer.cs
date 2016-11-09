@@ -871,7 +871,11 @@ namespace Barotrauma.Networking
             GameServer.Log("Game mode: " + selectedMode.Name, Color.Cyan);
             GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
 
-            if (AllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
+            bool missionAllowRespawn = 
+                !(GameMain.GameSession.gameMode is MissionMode) || 
+                ((MissionMode)GameMain.GameSession.gameMode).Mission.AllowRespawn;
+
+            if (AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
             
             AssignJobs(connectedClients, characterInfo != null);
             
@@ -971,7 +975,11 @@ namespace Barotrauma.Networking
 
                 msg.Write(selectedMode.Name);
 
-                msg.Write(AllowRespawn);
+                bool missionAllowRespawn =
+                    !(GameMain.GameSession.gameMode is MissionMode) ||
+                    ((MissionMode)GameMain.GameSession.gameMode).Mission.AllowRespawn;
+
+                msg.Write(AllowRespawn && missionAllowRespawn);
                 msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
                 msg.Write(client.Character.ID);
