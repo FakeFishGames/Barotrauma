@@ -1085,6 +1085,7 @@ namespace Barotrauma
                         {
                             wire.Nodes[i] -= center;
                         }
+                        wire.UpdateSections();
                     }
 
                     for (int i = 0; i < MapEntity.mapEntityList.Count; i++)

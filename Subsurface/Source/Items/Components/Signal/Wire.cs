@@ -278,7 +278,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void UpdateSections()
+        public void UpdateSections()
         {
             sections.Clear();
 
