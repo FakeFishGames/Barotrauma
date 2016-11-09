@@ -1066,7 +1066,7 @@ namespace Barotrauma
 
             if (character == GameMain.NetworkMember.Character)
             {
-                if (character.MemPos.Count < 2) return;
+                if (character.MemPos.Count < 1) return;
 
                 PosInfo serverPos = character.MemPos.Last();
 
@@ -1075,15 +1075,26 @@ namespace Barotrauma
                 {
                     PosInfo localPos = character.MemLocalPos[localPosIndex];
 
-                    if (Vector2.Distance(localPos.Position, serverPos.Position) > collider.LinearVelocity.Length()+0.02f)
+                    Vector2 positionError = serverPos.Position - localPos.Position;
+
+                    if (positionError.Length() > collider.LinearVelocity.Length()+0.02f)
                     {
-                        //collider.SetTransform(collider.SimPosition + (pos.Position - remotePos), collider.Rotation);
-                        collider.SetTransform(serverPos.Position, collider.Rotation);
-                       // character.MemLocalPos.RemoveRange(localPosIndex, character.MemLocalPos.Count - localPosIndex);
+                        //our prediction differs from the server position
+                        //-> we need to move the saved local position and all the positions saved after it
+
+                        //(a better way to do this would be to move the character back to
+                        //serverPos and "replay" inputs to see where the character should be now)
+                        for (int i = localPosIndex; i < character.MemLocalPos.Count; i++ )
+                        {
+                            character.MemLocalPos[i] =
+                                new PosInfo(
+                                    character.MemLocalPos[i].Position + positionError,
+                                    character.MemLocalPos[i].Direction,
+                                    character.MemLocalPos[i].ID);
+                        }
+                        collider.SetTransform(character.MemLocalPos.Last().Position, collider.Rotation);
                     }
                 }
-
-
 
                 if (character.MemLocalPos.Count > 120) character.MemLocalPos.RemoveRange(0, character.MemLocalPos.Count - 120);
                 character.MemPos.Clear();
