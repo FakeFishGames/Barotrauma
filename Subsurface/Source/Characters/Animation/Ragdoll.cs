@@ -1077,7 +1077,16 @@ namespace Barotrauma
 
                     Vector2 positionError = serverPos.Position - localPos.Position;
 
-                    if (positionError.Length() > collider.LinearVelocity.Length()+0.02f)
+                    float errorMagnitude = positionError.Length();
+
+                    if (errorMagnitude > 2.0f)
+                    {
+                        //predicted position was way off, reset completely
+                        collider.SetTransform(serverPos.Position, collider.Rotation);
+                        //local positions are incorrect now -> just clear the list
+                        character.MemLocalPos.Clear();
+                    }
+                    else if (errorMagnitude > collider.LinearVelocity.Length()/10.0f + 0.02f)
                     {
                         //our prediction differs from the server position
                         //-> we need to move the saved local position and all the positions saved after it
