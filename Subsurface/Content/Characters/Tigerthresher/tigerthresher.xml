@@ -11,45 +11,45 @@
     
     <!-- head -->
     <limb id = "0" radius="12" height="100" type="Head" steerforce="1.0">
-      <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="371,15,66,136" depth="0.02" origin ="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="371,15,66,136" origin ="0.5,0.5"/>
+      <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="371,15,66,136" depth="0.02" origin ="0.5,0.5"/>
+      <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="371,15,66,136" origin ="0.5,0.5"/>
     </limb>
 
     <!-- lower yaw -->
     <limb id = "1" width="16" height="103">
-      <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="391,169,28,110" depth="0.025" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="391,169,28,110" origin="0.5,0.5"/>
+      <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="391,169,28,110" depth="0.025" origin="0.5,0.5"/>
+      <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="391,169,28,110" origin="0.5,0.5"/>
       <attack range="200" duration="0.5" damage="150" bleedingdamage="10" structuredamage="200" damagetype="slash" torque="80" targetforce="-50"/>      
     </limb>
 
     <!-- body -->
     <limb id = "2" radius="50" height="320" type="Torso" steerforce="0.1">
-      <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="230,0,136,442" depth="0.015" origin="0.6,0.5"/>
-      <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="230,0,136,442" origin="0.6,0.5"/>
+      <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="230,0,136,442" depth="0.015" origin="0.6,0.5"/>
+      <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="230,0,136,442" origin="0.6,0.5"/>
     </limb>
 
     <!-- tail -->
     <limb id = "3" radius="10" height="320" type="Tail">
-      <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="9,0,79,344" depth="0.02" origin="0.35,0.5"/>
-      <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="9,0,79,344" origin="0.35,0.5"/>
+      <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="9,0,79,344" depth="0.02" origin="0.35,0.5"/>
+      <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="9,0,79,344" origin="0.35,0.5"/>
     </limb>
 
     <!-- front fins -->    
     <limb id = "4" width="50" height="200">
-      <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="133,5,91,202" depth="0.008" origin="0.7,0.5"/>
-      <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="133,5,91,202" origin="0.7,0.5"/>
+      <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="133,5,91,202" depth="0.008" origin="0.7,0.5"/>
+      <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="133,5,91,202" origin="0.7,0.5"/>
     </limb>
 
     <!-- back fins -->
     <limb id = "5" width="25" height="100">
-      <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="387,304,38,128" depth="0.01" origin="0.7,0.5"/>
-      <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="387,304,38,128" origin="0.7,0.5"/>
+      <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="387,304,38,128" depth="0.01" origin="0.7,0.5"/>
+      <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="387,304,38,128" origin="0.7,0.5"/>
     </limb>
 
     <!-- long "fins" -->
     <limb id = "6" width="10" height="270" ignorecollisions="true">
-      <sprite texture="Content/Characters/TigerThresher/tigerthresher.png" sourcerect="96,2,23,277" depth="0.01" origin="0.5,0.5"/>
-      <damagedsprite texture="Content/Characters/TigerThresher/damagedtigerthresher.png" sourcerect="96,2,23,277" origin="0.5,0.5"/>
+      <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="96,2,23,277" depth="0.01" origin="0.5,0.5"/>
+      <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="96,2,23,277" origin="0.5,0.5"/>
     </limb>
 
 
