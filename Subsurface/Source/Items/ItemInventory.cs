@@ -44,6 +44,28 @@ namespace Barotrauma
             return (item!=null && Items[i]==null && container.CanBeContained(item));
         }
 
+
+        public override bool TryPutItem(Item item, System.Collections.Generic.List<InvSlotType> allowedSlots = null)
+        {
+            bool wasPut = base.TryPutItem(item, allowedSlots);
+
+            if (wasPut)
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (!c.HasSelectedItem(item)) continue;
+
+                    item.Unequip(c);
+                    break;
+                }
+
+                container.IsActive = true;
+                container.OnItemContained(item);
+            }
+
+            return wasPut;
+        }
+
         public override bool TryPutItem(Item item, int i, bool allowSwapping)
         {
             bool wasPut = base.TryPutItem(item, i, allowSwapping);
@@ -57,11 +79,18 @@ namespace Barotrauma
                     item.Unequip(c);
                     break;                    
                 }
-                //item.Container = container.Item;
+
                 container.IsActive = true;
+                container.OnItemContained(item);
             }
+
             return wasPut;
         }
 
+        public override void RemoveItem(Item item)
+        {
+            base.RemoveItem(item);
+            container.OnItemRemoved(item);
+        }
     }
 }

@@ -16,7 +16,7 @@ namespace Barotrauma
         }
 
         private TargetType targetTypes;
-        private string[] targetNames;
+        private HashSet<string> targetNames;
 
         private List<RelatedItem> requiredItems;
 
@@ -26,8 +26,8 @@ namespace Barotrauma
         private bool setValue;
         
         private bool disableDeltaTime;
-        
-        private string[] onContainingNames;
+
+        private HashSet<string> onContainingNames;
         
         private readonly float duration;
 
@@ -48,12 +48,12 @@ namespace Barotrauma
             get { return targetTypes; }
         }
 
-        public string[] TargetNames
+        public HashSet<string> TargetNames
         {
             get { return targetNames; }
         }
 
-        public string[] OnContainingNames
+        public HashSet<string> OnContainingNames
         {
             get { return onContainingNames; }
         }
@@ -92,10 +92,10 @@ namespace Barotrauma
                             type = (ActionType)Enum.Parse(typeof(ActionType), split[0], true);
 
                             string[] containingNames = split[1].Split(',');
-                            onContainingNames = new string[containingNames.Length];
-                            for (int i =0; i < containingNames.Length; i++)
+                            onContainingNames = new HashSet<string>();
+                            for (int i = 0; i < containingNames.Length; i++)
                             {
-                                onContainingNames[i] = containingNames[i].Trim();
+                                onContainingNames.Add(containingNames[i].Trim());
                             }
                         }
 
@@ -116,10 +116,10 @@ namespace Barotrauma
                         break;
                     case "targetnames":
                         string[] names = attribute.Value.Split(',');
-                        targetNames = new string[names.Length];
+                        targetNames = new HashSet<string>();
                         for (int i=0; i < names.Length; i++ )
                         {
-                            targetNames[i] = names[i].Trim();
+                            targetNames.Add(names[i].Trim());
                         }
                         break;
                     case "sound":

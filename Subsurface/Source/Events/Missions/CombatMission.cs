@@ -17,7 +17,12 @@ namespace Barotrauma
 
         private string[] descriptions;
 
-        private static string[] teamNames;
+        private static string[] teamNames = { "Team A", "Team B" };
+
+        public override bool AllowRespawn
+        {
+            get { return false; }
+        }
 
         public override string Description
         {
@@ -126,11 +131,6 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.AllowRespawn = false;
-            }
-
             if (GameMain.NetworkMember == null)
             {
                 DebugConsole.ThrowError("Combat missions cannot be played in the single player mode.");
@@ -154,11 +154,6 @@ namespace Barotrauma
         {
             if (crews[0].Count == 0 && crews[1].Count == 0)
             {
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.AllowRespawn = false;
-                }
-
                 foreach (Character character in Character.CharacterList)
                 {
                     if (character.TeamID == 1)
