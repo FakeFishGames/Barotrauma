@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.3.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed a bug that caused crashes after a husk-infected player died
+- disabled the "zoom effect" when under pressure as a huskified human
+- only a limited number of messages are kept in the debug console (prevents performance issues if large 
+amounts of messages are added)
+- some item and electricity logic optimization
+- fixed "sprite tigerthresher not found" errors in the Linux version
+
+---------------------------------------------------------------------------------------------------------
 v0.5.3.2
 ---------------------------------------------------------------------------------------------------------
 

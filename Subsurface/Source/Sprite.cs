@@ -379,7 +379,11 @@ namespace Barotrauma
             }
 
             //if not, free the texture
-            texture.Dispose();
+            if (texture != null)
+            {
+                texture.Dispose();
+                texture = null;
+            }
         }
         
     }
