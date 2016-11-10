@@ -845,6 +845,7 @@ namespace Barotrauma
                         {
                             limb.body.SetTransform(mouseSimPos, 0.0f);
                         }
+                        dummyCharacter.AnimController.Collider.SetTransform(mouseSimPos, 0.0f);
                     }
 
                     dummyCharacter.ControlLocalPlayer((float)deltaTime, cam, false);
