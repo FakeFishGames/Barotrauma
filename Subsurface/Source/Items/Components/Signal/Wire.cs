@@ -58,7 +58,6 @@ namespace Barotrauma.Items.Components
 
         public List<Vector2> Nodes;
 
-        private bool sectionsDirty;
         private List<WireSection> sections;
 
         Connection[] connections;
@@ -463,6 +462,7 @@ namespace Barotrauma.Items.Components
                     //if (item.Submarine != null) nodeWorldPos += item.Submarine.Position;
 
                     Nodes[(int)selectedNodeIndex] = nodeWorldPos;
+                    UpdateSections();
 
                     MapEntity.SelectEntity(item);
                 }
