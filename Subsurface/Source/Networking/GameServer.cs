@@ -187,8 +187,8 @@ namespace Barotrauma.Networking
             {
                 restClient = new RestClient(NetConfig.MasterServerUrl);            
             }
-                        
-            var request = new RestRequest("masterserver2.php", Method.GET);            
+                
+            var request = new RestRequest("masterserver3.php", Method.GET);            
             request.AddParameter("action", "addserver");
             request.AddParameter("servername", name);
             request.AddParameter("serverport", Port);
@@ -223,7 +223,7 @@ namespace Barotrauma.Networking
                 restClient = new RestClient(NetConfig.MasterServerUrl);
             }
 
-            var request = new RestRequest("masterserver2.php", Method.GET);
+            var request = new RestRequest("masterserver3.php", Method.GET);
             request.AddParameter("action", "refreshserver");
             request.AddParameter("gamestarted", gameStarted ? 1 : 0);
             request.AddParameter("currplayers", connectedClients.Count);
@@ -262,6 +262,14 @@ namespace Barotrauma.Networking
         private void MasterServerCallBack(IRestResponse response)
         {
             masterServerResponded = true;
+
+            if (response.Content=="Error: server not found")
+            {
+                Log("Not registered to master server, re-registering...", Color.Red);
+
+                RegisterToMasterServer();
+                return;
+            }
 
             if (response.ErrorException != null)
             {
