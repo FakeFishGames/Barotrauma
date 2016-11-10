@@ -159,7 +159,7 @@ namespace Barotrauma
             }
         }
 
-        public void StartShift(string levelSeed, bool loadSecondSub = true)
+        public void StartShift(string levelSeed, bool loadSecondSub = false)
         {
             Level level = Level.CreateRandom(levelSeed);
 
