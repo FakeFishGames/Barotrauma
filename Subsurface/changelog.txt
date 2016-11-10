@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.3.4
+---------------------------------------------------------------------------------------------------------
+
+- fixed screen turning black in the tutorial
+- the moloch attack in the tutorial is now much easier to survive
+- servers readd themselves to the master server if they have been removed from the server list
+- fixed a bug that caused lights to flicker even if there's enough power
+- fixed items disappearing when dropping them in the submarine editor
+
+---------------------------------------------------------------------------------------------------------
 v0.5.3.3
 ---------------------------------------------------------------------------------------------------------
 
