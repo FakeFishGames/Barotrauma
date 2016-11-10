@@ -54,10 +54,11 @@ namespace Barotrauma.Items.Components
             //by the constructions connected to the grid
             fullPower = 0.0f;
             fullLoad = 0.0f;    
-            updateTimer = 0;        
+               
             connectedList.Clear();
 
             CheckJunctions(deltaTime);
+            updateTimer = 0;
 
             foreach (Powered p in connectedList)
             {
