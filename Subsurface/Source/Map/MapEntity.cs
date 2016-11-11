@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace Barotrauma
 {
-    class MapEntity : Entity
+    abstract class MapEntity : Entity
     {
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
         
@@ -149,7 +149,11 @@ namespace Barotrauma
                 if (aiTarget == null) return 0.0f;
                 return aiTarget.SoundRange;
             }
-            set { aiTarget.SoundRange = value; }
+            set
+            {
+                if (aiTarget == null) return;
+                aiTarget.SoundRange = value; 
+            }
         }
 
         public float SightRange
@@ -201,6 +205,22 @@ namespace Barotrauma
         public virtual bool IsMouseOn(Vector2 position)
         {
             return (Submarine.RectContains(WorldRect, position));
+        }
+
+        public virtual MapEntity Clone()
+        {
+            return null;
+        }
+
+        public static List<MapEntity> Clone(List<MapEntity> entitiesToClone)
+        {
+            List<MapEntity> clones = new List<MapEntity>();
+            foreach (MapEntity e in entitiesToClone)
+            {
+                clones.Add(e.Clone());
+            }
+
+            return clones;
         }
         
         protected void InsertToList()
@@ -341,22 +361,30 @@ namespace Barotrauma
             }
 
             //started moving selected entities
-            if (startMovingPos != Vector2.Zero)
-            { 
-                if (PlayerInput.LeftButtonReleased())
+            if (startMovingPos != Vector2.Zero && PlayerInput.LeftButtonReleased())
+            {
+                //mouse released -> move the entities to the new position of the mouse
+
+                Vector2 moveAmount = position - startMovingPos;
+                moveAmount = Submarine.VectorToWorldGrid(moveAmount);
+
+                if (moveAmount != Vector2.Zero)
                 {
-                    //mouse released -> move the entities to the new position of the mouse
+                    //clone
+                    if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                    {
+                        var clones = Clone(selectedList);
+                        clones.ForEach(c => c.Move(moveAmount));
 
-                    Vector2 moveAmount = position - startMovingPos;
-                    moveAmount = Submarine.VectorToWorldGrid(moveAmount);
-
-                    if (moveAmount != Vector2.Zero)
+                        selectedList = clones;
+                    }
+                    else // move
                     {
                         foreach (MapEntity e in selectedList) e.Move(moveAmount);
                     }
-
-                    startMovingPos = Vector2.Zero;
                 }
+
+                startMovingPos = Vector2.Zero;                
             }
             //started dragging a "selection rectangle"
             else if (selectionPos != Vector2.Zero)
