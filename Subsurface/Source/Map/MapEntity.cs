@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -16,6 +17,7 @@ namespace Barotrauma
         
         //which entities have been selected for editing
         public static List<MapEntity> selectedList = new List<MapEntity>();
+        private static List<MapEntity> copiedList = new List<MapEntity>();
         
         protected static GUIComponent editingHUD;
         
@@ -329,8 +331,38 @@ namespace Barotrauma
 
             if (PlayerInput.KeyDown(Keys.Delete))
             {
-                foreach (MapEntity e in selectedList) e.Remove();
+                selectedList.ForEach(e => e.Remove());
                 selectedList.Clear();
+            }
+
+            if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+            {
+                if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.C) &&
+                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.C))
+                {
+                    copiedList = new List<MapEntity>(selectedList);
+                }
+                else if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.X) &&
+                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.X))
+                {
+                    copiedList = new List<MapEntity>(selectedList);
+                    selectedList.ForEach(e => e.Remove());
+                    selectedList.Clear();
+                }
+                else if (copiedList.Count > 0 &&
+                    PlayerInput.GetKeyboardState.IsKeyDown(Keys.V) &&
+                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.V))
+                {
+                    var clones = Clone(copiedList);
+
+                    Vector2 center = Vector2.Zero;
+                    clones.ForEach(c => center += c.WorldPosition);
+                    center /= clones.Count;
+
+                    clones.ForEach(c => c.Move(cam.WorldViewCenter - center));
+
+                    selectedList = new List<MapEntity>(clones);
+                }
             }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
