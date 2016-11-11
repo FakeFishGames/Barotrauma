@@ -184,6 +184,7 @@ namespace Barotrauma
                 spritePath = spritePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
                 spritePath = spritePath.Replace("[HEADID]", HeadSpriteId.ToString());
 
+                ToolBox.IsProperFilenameCase(spritePath);
                 string fileName = Path.GetFileNameWithoutExtension(spritePath);
 
                 //go through the files in the directory to find a matching sprite
