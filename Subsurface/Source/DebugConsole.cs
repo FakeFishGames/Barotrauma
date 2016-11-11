@@ -749,6 +749,8 @@ namespace Barotrauma
                     }
 
                     break;
+                case "testasd":
+                    break;
                 default:
                     NewMessage("Command not found", Color.Red);
                     break;

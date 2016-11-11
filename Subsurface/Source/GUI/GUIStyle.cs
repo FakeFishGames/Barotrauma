@@ -14,7 +14,11 @@ namespace Barotrauma
             componentStyles = new Dictionary<string, GUIComponentStyle>();
 
             XDocument doc;
-            try { doc = XDocument.Load(file); }
+            try
+            {
+                ToolBox.IsProperFilenameCase(file);
+                doc = XDocument.Load(file);
+            }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Loading style \"" + file + "\" failed", e);

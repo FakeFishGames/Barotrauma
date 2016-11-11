@@ -973,6 +973,7 @@ namespace Barotrauma
             {
                 try
                 {
+                    ToolBox.IsProperFilenameCase(file);
                     doc = XDocument.Load(file);
                 }
 
