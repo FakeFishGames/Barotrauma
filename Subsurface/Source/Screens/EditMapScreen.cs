@@ -816,13 +816,7 @@ namespace Barotrauma
 
             if (GUIComponent.MouseOn == null)
             {
-                //if (nameBox.Selected && PlayerInput.LeftButtonClicked())
-                //{
-                //    ChangeSubName(nameBox, nameBox.Text);
-                //}
-
                 cam.MoveCamera((float)deltaTime);
-                //cam.Zoom = MathHelper.Clamp(cam.Zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f)*cam.Zoom, 0.1f, 2.0f);
             }
 
             if (characterMode || wiringMode)
@@ -854,7 +848,6 @@ namespace Barotrauma
                     dummyCharacter.Submarine = Submarine.MainSub;
 
                     cam.TargetPos = Vector2.Zero;
-
                 }
             }
             else
@@ -869,7 +862,7 @@ namespace Barotrauma
             {
                 if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.UpdatePlacing(cam);
 
-                MapEntity.UpdateEditor(cam);                    
+                MapEntity.UpdateEditor(cam);
             }
 
             leftPanel.Update((float)deltaTime);
@@ -907,9 +900,10 @@ namespace Barotrauma
                 foreach (Item item in dummyCharacter.SelectedItems)
                 {
                     if (item == null) continue;
-                    item.SetTransform(dummyCharacter.SimPosition, 0.0f);
 
+                    item.SetTransform(dummyCharacter.SimPosition, 0.0f);
                     item.Update(cam, (float)deltaTime);
+                    item.SetTransform(item.body.SimPosition, 0.0f);
                 }
 
                 if (dummyCharacter.SelectedConstruction != null)

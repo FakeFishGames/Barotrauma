@@ -256,13 +256,17 @@ namespace Barotrauma
                 }
             }
 
-
             if (prefab.CastShadow)
             {
                 GenerateConvexHull();
             }
 
             InsertToList();
+        }
+
+        public override MapEntity Clone()
+        {
+            return new Structure(rect, prefab, Submarine);
         }
 
         private void CreateStairBodies()

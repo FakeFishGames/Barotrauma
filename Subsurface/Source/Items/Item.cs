@@ -413,6 +413,28 @@ namespace Barotrauma
             ItemList.Add(this);
         }
 
+        public override MapEntity Clone()
+        {
+            Item clone = new Item(rect, prefab, Submarine);
+
+            foreach (KeyValuePair<string, ObjectProperty> property in properties)
+            {
+                if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
+                clone.properties[property.Key].TrySetValue(property.Value.GetValue());
+            }
+
+            if (ContainedItems!=null)
+            {
+                foreach (Item containedItem in ContainedItems)
+                {
+                    var containedClone = containedItem.Clone();
+                    clone.ownInventory.TryPutItem(containedItem);
+                }
+            }
+
+            return clone;
+        }
+
         public T GetComponent<T>()
         {
             foreach (ItemComponent ic in components)
