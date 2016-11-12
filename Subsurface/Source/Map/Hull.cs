@@ -609,7 +609,7 @@ namespace Barotrauma
 
             }
 
-            if ((isSelected || isHighlighted) && editing)
+            if ((IsSelected || isHighlighted) && editing)
             {
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X + 5, -drawRect.Y + 5),

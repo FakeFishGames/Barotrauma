@@ -602,7 +602,6 @@ namespace Barotrauma
             foreach (MapEntity me in MapEntity.mapEntityList)
             {
                 me.IsHighlighted = false;
-                me.IsSelected = false;
             }
             
             return true;

@@ -144,7 +144,7 @@ namespace Barotrauma
             drawPos.Y = -drawPos.Y;
 
             Color clr = currentHull == null ? Color.Blue : Color.White;
-            if (isSelected) clr = Color.Red;
+            if (IsSelected) clr = Color.Red;
             if (isHighlighted) clr = Color.DarkRed;
                         
             int iconX = iconIndices[(int)spawnType]*IconSize % iconTexture.Width;

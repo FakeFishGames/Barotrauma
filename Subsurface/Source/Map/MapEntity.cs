@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.ObjectModel;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -16,7 +17,7 @@ namespace Barotrauma
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
         
         //which entities have been selected for editing
-        public static List<MapEntity> selectedList = new List<MapEntity>();
+        private static List<MapEntity> selectedList = new List<MapEntity>();
         private static List<MapEntity> copiedList = new List<MapEntity>();
         
         protected static GUIComponent editingHUD;
@@ -39,7 +40,7 @@ namespace Barotrauma
         //is the mouse inside the rect
         protected bool isHighlighted;
 
-        protected bool isSelected;
+        //protected bool isSelected;
 
         private static bool disableSelect;
         public static bool DisableSelect
@@ -175,8 +176,7 @@ namespace Barotrauma
 
         public bool IsSelected
         {
-            get { return isSelected; }
-            set { isSelected = value; }
+            get { return selectedList.Contains(this); }
         }
 
         protected bool ResizeHorizontal
@@ -219,7 +219,43 @@ namespace Barotrauma
             List<MapEntity> clones = new List<MapEntity>();
             foreach (MapEntity e in entitiesToClone)
             {
+                Debug.Assert(e != null);
                 clones.Add(e.Clone());
+                Debug.Assert(clones.Last() != null);
+            }
+
+            Debug.Assert(clones.Count == entitiesToClone.Count);
+
+            //connect clone wires to the clone items
+            for (int i = 0; i < clones.Count; i++)
+            {
+                var cloneItem = clones[i] as Item;
+                if (cloneItem == null) continue;
+
+                var cloneWire = cloneItem.GetComponent<Wire>();
+                if (cloneWire == null) continue;
+
+                var originalWire = ((Item)entitiesToClone[i]).GetComponent<Wire>();
+
+                cloneWire.Nodes = new List<Vector2>(originalWire.Nodes);
+                cloneWire.UpdateSections();
+
+                for (int n = 0; n < 2; n++)
+                {
+                    if (originalWire.Connections[n] == null) continue;
+
+                    var connectedItem = originalWire.Connections[n].Item;
+                    if (connectedItem == null) continue;
+                    
+                    //index of the item the wire is connected to
+                    int itemIndex = entitiesToClone.IndexOf(connectedItem);
+                    //index of the connection in the connectionpanel of the target item
+                    int connectionIndex = connectedItem.Connections.IndexOf(originalWire.Connections[n]);
+                    
+                    (clones[itemIndex] as Item).GetComponent<ConnectionPanel>().Connections[connectionIndex].TryAddLink(cloneWire);
+                    cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
+
+                }
             }
 
             return clones;
@@ -311,7 +347,6 @@ namespace Barotrauma
             foreach (MapEntity e in mapEntityList)
             {
                 e.isHighlighted = false;
-                e.isSelected = false;
             }
 
             if (DisableSelect)
@@ -359,9 +394,8 @@ namespace Barotrauma
                     clones.ForEach(c => center += c.WorldPosition);
                     center /= clones.Count;
 
-                    clones.ForEach(c => c.Move(cam.WorldViewCenter - center));
-
                     selectedList = new List<MapEntity>(clones);
+                    selectedList.ForEach(c => c.Move(cam.WorldViewCenter - center));
                 }
             }
 
@@ -380,18 +414,12 @@ namespace Barotrauma
                     {
                         if (e.IsMouseOn(position)) highLightedEntity = e;
                     }
-                    e.isSelected = false;
                 }
 
                 if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
 
             }
-
-            foreach (MapEntity e in selectedList)
-            {
-                e.isSelected = true;
-            }
-
+            
             //started moving selected entities
             if (startMovingPos != Vector2.Zero && PlayerInput.LeftButtonReleased())
             {
@@ -406,9 +434,8 @@ namespace Barotrauma
                     if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
                     {
                         var clones = Clone(selectedList);
-                        clones.ForEach(c => c.Move(moveAmount));
-
                         selectedList = clones;
+                        selectedList.ForEach(c => c.Move(moveAmount));
                     }
                     else // move
                     {
@@ -463,6 +490,25 @@ namespace Barotrauma
                     {
                         selectedList = newSelection;
                     }
+
+                    //select wire if both items it's connected to are selected
+                    var selectedItems = selectedList.Where(e => e is Item).Cast<Item>().ToList();
+                    foreach (Item item in selectedItems)
+                    {
+                        if (item.Connections == null) continue;
+                        foreach (Connection c in item.Connections)
+                        {
+                            foreach (Wire w in c.Wires)
+                            {
+                                if (w == null || selectedList.Contains(w.Item)) continue;
+
+                                if (w.OtherConnection(c) != null && selectedList.Contains(w.OtherConnection(c).Item))
+                                {
+                                    selectedList.Add(w.Item);
+                                }
+                            }
+                        }
+                    }
                     
                     selectionPos = Vector2.Zero;
                     selectionSize = Vector2.Zero;
@@ -471,7 +517,6 @@ namespace Barotrauma
             //default, not doing anything specific yet
             else
             {
-
                 if (PlayerInput.LeftButtonHeld() &&
                     PlayerInput.KeyUp(Keys.Space))
                 {
@@ -483,11 +528,9 @@ namespace Barotrauma
 
                     selectionPos = position;
                 }
-
-
-            }
-            
+            }            
         }
+
 
         /// <summary>
         /// Draw the "selection rectangle" and outlines of entities that are being dragged (if any)
@@ -565,10 +608,6 @@ namespace Barotrauma
 
         public static void DeselectAll()
         {
-            foreach (MapEntity e in selectedList)
-            {
-                e.isSelected = false;
-            }
             selectedList.Clear();
         }
 
@@ -577,7 +616,6 @@ namespace Barotrauma
         {
             DeselectAll();
 
-            entity.isSelected = true;
             selectedList.Add(entity);
         }
 
