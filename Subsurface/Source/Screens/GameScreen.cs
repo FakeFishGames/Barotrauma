@@ -115,6 +115,11 @@ namespace Barotrauma
             }
 #endif
 
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                e.IsHighlighted = false;
+            }
+
             if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
 
             if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);

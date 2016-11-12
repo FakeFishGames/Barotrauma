@@ -768,8 +768,6 @@ namespace Barotrauma
             inWater = IsInWater();
             if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
             
-            isHighlighted = false;
-
             if (body == null || !body.Enabled) return;
 
             if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
