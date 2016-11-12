@@ -260,6 +260,11 @@ namespace Barotrauma
 
             return rect;
         }
+
+        public override MapEntity Clone()
+        {
+            return new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), rect, Submarine);
+        }
         
         public static EntityGrid GenerateEntityGrid(Submarine submarine)
         {

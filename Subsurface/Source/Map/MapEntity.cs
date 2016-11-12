@@ -211,7 +211,7 @@ namespace Barotrauma
 
         public virtual MapEntity Clone()
         {
-            return null;
+            throw new NotImplementedException();
         }
 
         public static List<MapEntity> Clone(List<MapEntity> entitiesToClone)
