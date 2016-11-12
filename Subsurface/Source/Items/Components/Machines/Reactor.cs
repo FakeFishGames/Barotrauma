@@ -538,7 +538,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ClientWrite(NetOutgoingMessage msg)
+        public override void ClientWrite(NetBuffer msg)
         {
             msg.Write(autoTemp);
             msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 8);
@@ -556,7 +556,7 @@ namespace Barotrauma.Items.Components
             FissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
         }
 
-        public override void ServerWrite(NetOutgoingMessage msg, Client c)
+        public override void ServerWrite(NetBuffer msg, Client c)
         {
             msg.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
 

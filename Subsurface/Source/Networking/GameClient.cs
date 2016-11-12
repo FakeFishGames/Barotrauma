@@ -39,6 +39,8 @@ namespace Barotrauma.Networking
         private UInt32 lastQueueChatMsgID = 0; //last message added to the queue
         private List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
 
+        public UInt32 LastSentEntityEventID;
+
         public byte ID
         {
             get { return myID; }

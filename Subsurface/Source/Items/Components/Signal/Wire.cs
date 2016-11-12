@@ -532,7 +532,7 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
         }
 
-        public override void ClientWrite(Lidgren.Network.NetOutgoingMessage msg)
+        public override void ClientWrite(Lidgren.Network.NetBuffer msg)
         {
             msg.Write((byte)Math.Min(Nodes.Count, 255));
             for (int i = 0; i < Math.Min(Nodes.Count, 255); i++)

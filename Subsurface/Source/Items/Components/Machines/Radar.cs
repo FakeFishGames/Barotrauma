@@ -411,7 +411,7 @@ namespace Barotrauma.Items.Components
             if (screenOverlay != null) screenOverlay.Remove();
         }
 
-        public override void ClientWrite(Lidgren.Network.NetOutgoingMessage msg)
+        public override void ClientWrite(Lidgren.Network.NetBuffer msg)
         {
             msg.Write(IsActive);
         }
@@ -422,7 +422,7 @@ namespace Barotrauma.Items.Components
             isActiveTickBox.Selected = IsActive;
         }
 
-        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg, Barotrauma.Networking.Client c)
+        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
         {
             msg.Write(IsActive);
         }

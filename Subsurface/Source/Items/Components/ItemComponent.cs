@@ -662,10 +662,10 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual void ClientWrite(NetOutgoingMessage msg) { }
+        public virtual void ClientWrite(NetBuffer msg) { }
         public virtual void ServerRead(NetIncomingMessage msg, Client c) { }
 
-        public virtual void ServerWrite(NetOutgoingMessage msg, Client c) { }
+        public virtual void ServerWrite(NetBuffer msg, Client c) { }
         public virtual void ClientRead(NetIncomingMessage msg, float sendingTime) { }
         
         public virtual XElement Save(XElement parentElement)
