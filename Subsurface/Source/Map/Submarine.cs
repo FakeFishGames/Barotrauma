@@ -352,7 +352,7 @@ namespace Barotrauma
                     worldBorders.Location += sub.WorldPosition.ToPoint();
                     worldBorders.Y = -worldBorders.Y;
 
-                    GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, 5);
+                    GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, false, 0, 5);
 
                     if (sub.subBody.MemPos.Count < 2) continue;
 

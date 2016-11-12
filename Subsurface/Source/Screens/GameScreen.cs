@@ -227,22 +227,6 @@ namespace Barotrauma
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }
 
-            List<Submarine> visibleSubs = new List<Submarine>();
-            foreach (Submarine sub in Submarine.Loaded)
-            {
-                Rectangle worldBorders = new Rectangle(
-                    sub.Borders.X + (int)sub.WorldPosition.X - 500,
-                    sub.Borders.Y + (int)sub.WorldPosition.Y + 500,
-                    sub.Borders.Width + 1000,
-                    sub.Borders.Height + 1000);
-                    
-
-                if (Submarine.RectsOverlap(worldBorders, cam.WorldView))
-                {
-                    visibleSubs.Add(sub);
-                }
-            }          
-
             //----------------------------------------------------------------------------------------
             //1. draw the background, characters and the parts of the submarine that are behind them
             //----------------------------------------------------------------------------------------

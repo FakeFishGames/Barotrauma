@@ -358,7 +358,7 @@ namespace Barotrauma
             }
 
             rect.Inflate(8, 8);
-            GUI.DrawRectangle(spriteBatch, rect, Color.Black, 8);
+            GUI.DrawRectangle(spriteBatch, rect, Color.Black, false, 0.0f, 8);
             GUI.DrawRectangle(spriteBatch, rect, Color.LightGray);
 
             for (int i = 0; i < locations.Count; i++)
