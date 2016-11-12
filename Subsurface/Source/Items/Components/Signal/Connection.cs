@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
         private Item item;   
 
         public readonly bool IsOutput;
-        
+
         private static Wire draggingConnected;
 
         private List<StatusEffect> effects;
@@ -423,8 +423,7 @@ namespace Barotrauma.Items.Components
             {
                 if (mouseOn)
                 {
-                    item.IsHighlighted = true;
-                    wire.Item.IsHighlighted = true;
+                    ConnectionPanel.HighlightedWire = wire;
 
                     if (!wire.Locked)
                     {

@@ -398,14 +398,14 @@ namespace Barotrauma.Items.Components
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, Color.Gold, drawOffset, depth, 0.5f);
+                    section.Draw(spriteBatch, Color.Gold, drawOffset, depth + 0.00001f, 0.7f);
                 }
             }
             else if (item.IsSelected)
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, Color.Red, drawOffset, depth, 0.5f);
+                    section.Draw(spriteBatch, Color.Red, drawOffset, depth + 0.00001f, 0.7f);
                 }
             }
 
