@@ -114,6 +114,11 @@ namespace Barotrauma
             InsertToList();
         }
 
+        public override MapEntity Clone()
+        {
+            return new Gap(rect, isHorizontal, Submarine);
+        }
+
         public override void Move(Vector2 amount)
         {
             base.Move(amount);
@@ -210,7 +215,7 @@ namespace Barotrauma
                     isHorizontal ? new Vector2(rect.Height / 16.0f, 1.0f) : new Vector2(rect.Width / 16.0f, 1.0f));
             }        
 
-            if (isSelected)
+            if (IsSelected)
             {
                 GUI.DrawRectangle(sb,
                     new Vector2(WorldRect.X - 5, -WorldRect.Y - 5),

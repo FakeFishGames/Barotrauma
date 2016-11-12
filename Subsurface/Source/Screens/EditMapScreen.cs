@@ -298,7 +298,7 @@ namespace Barotrauma
 
         private void CreateDummyCharacter()
         {
-            if (dummyCharacter != null) dummyCharacter.Remove();
+            if (dummyCharacter != null) RemoveDummyCharacter();
 
             dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero);
 
@@ -588,7 +588,7 @@ namespace Barotrauma
             characterMode = !characterMode;         
             //button.Color = (characterMode) ? Color.Gold : Color.White;
             
-                wiringMode = false;
+            wiringMode = false;
 
             if (characterMode)
             {

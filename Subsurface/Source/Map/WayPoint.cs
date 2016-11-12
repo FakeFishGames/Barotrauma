@@ -113,6 +113,16 @@ namespace Barotrauma
             currentHull = Hull.FindHull(WorldPosition);
         }
 
+        public override MapEntity Clone()
+        {
+            var clone = new WayPoint(rect, Submarine);
+            clone.idCardTags = idCardTags;
+            clone.spawnType = spawnType;
+            clone.assignedJob = assignedJob;
+
+            return clone;
+        }
+
         public override bool IsMouseOn(Vector2 position)
         {
             if (IsHidden()) return false;
