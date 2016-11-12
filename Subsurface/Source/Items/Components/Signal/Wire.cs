@@ -267,7 +267,7 @@ namespace Barotrauma.Items.Components
                 item.NewComponentEvent(this, true, true);
             }
 
-            Drawable = Nodes.Any();
+            Drawable = sections.Count > 0;
         }
 
         public override bool Pick(Character picker)
@@ -275,6 +275,20 @@ namespace Barotrauma.Items.Components
             ClearConnections();
 
             return true;
+        }
+
+        public override void Move(Vector2 amount)
+        {
+            if (item.IsSelected) MoveNodes(amount);
+        }
+
+        public void MoveNodes(Vector2 amount)
+        {
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                Nodes[i] += amount;
+            }
+            UpdateSections();
         }
 
         public void UpdateSections()
@@ -285,6 +299,7 @@ namespace Barotrauma.Items.Components
             {
                 sections.Add(new WireSection(Nodes[i], Nodes[i + 1]));
             }
+            Drawable = sections.Count > 0;
         }
 
         private void ClearConnections()
@@ -303,7 +318,7 @@ namespace Barotrauma.Items.Components
                 connections[i] = null;
             }
 
-            Drawable = false;
+            Drawable = sections.Count > 0;
         }
 
         private Vector2 RoundNode(Vector2 position, Hull hull)
@@ -365,7 +380,7 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (!Nodes.Any())
+            if (sections.Count == 0)
             {
                 Drawable = false;
                 return;
@@ -384,6 +399,13 @@ namespace Barotrauma.Items.Components
                 foreach (WireSection section in sections)
                 {
                     section.Draw(spriteBatch, Color.Gold, drawOffset, depth, 0.5f);
+                }
+            }
+            else if (item.IsSelected)
+            {
+                foreach (WireSection section in sections)
+                {
+                    section.Draw(spriteBatch, Color.Red, drawOffset, depth, 0.5f);
                 }
             }
 

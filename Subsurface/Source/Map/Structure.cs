@@ -495,7 +495,7 @@ namespace Barotrauma
             if (prefab.sprite == null) return;
 
             Color color = (isHighlighted) ? Color.Orange : Color.White;
-            if (isSelected && editing)
+            if (IsSelected && editing)
             {
                 color = Color.Red;
 

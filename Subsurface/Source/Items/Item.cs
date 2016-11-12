@@ -423,12 +423,21 @@ namespace Barotrauma
                 clone.properties[property.Key].TrySetValue(property.Value.GetValue());
             }
 
-            if (ContainedItems!=null)
+            for (int i = 0; i < components.Count; i++)
+            {
+                foreach (KeyValuePair<string, ObjectProperty> property in components[i].properties)
+                {
+                    if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
+                    clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
+                }
+            }
+
+            if (ContainedItems != null)
             {
                 foreach (Item containedItem in ContainedItems)
                 {
                     var containedClone = containedItem.Clone();
-                    clone.ownInventory.TryPutItem(containedItem);
+                    clone.ownInventory.TryPutItem(containedClone as Item);
                 }
             }
 
@@ -880,7 +889,7 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!Visible) return;
-            Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
+            Color color = (IsSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
 
             SpriteEffects oldEffects = prefab.sprite.effects;
@@ -943,7 +952,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (isSelected || isHighlighted)
+            if (IsSelected || isHighlighted)
             {
                 GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green,false,0,(int)Math.Max((1.5f/GameScreen.Selected.Cam.Zoom),1.0f));
 
