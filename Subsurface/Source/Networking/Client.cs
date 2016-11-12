@@ -35,6 +35,7 @@ namespace Barotrauma.Networking
         public bool hasLobbyData = false;
         public UInt32 lastSentChatMsgID = 0; //last msg this client said
         public UInt32 lastRecvChatMsgID = 0; //last msg this client knows about
+        public UInt32 lastRecvEntityEventID = 0;
 
         public UInt32 lastRecvEntitySpawnID = 0;
 

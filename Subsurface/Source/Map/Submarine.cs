@@ -1163,7 +1163,7 @@ namespace Barotrauma
             DockedTo.Clear();
         }
 
-        public void ServerWrite(NetOutgoingMessage msg, Client c)
+        public void ServerWrite(NetBuffer msg, Client c)
         {
             msg.Write(ID);
             //length in bytes

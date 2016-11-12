@@ -157,7 +157,10 @@
     <Compile Include="Source\Networking\INetSerializable.cs" />
     <Compile Include="Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="Source\Networking\NetConfig.cs" />
+    <Compile Include="Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
+    <Compile Include="Source\Networking\NetEntityEvent\NetEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
+    <Compile Include="Source\Networking\ServerEntityEvent.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />

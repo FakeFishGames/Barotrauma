@@ -152,7 +152,7 @@ namespace Barotrauma
             NetStateID = (UInt32)spawnHistory.Count;
         }
 
-        public void ServerWrite(Lidgren.Network.NetOutgoingMessage message, Client client)
+        public void ServerWrite(Lidgren.Network.NetBuffer message, Client client)
         {
             if (GameMain.Server == null) return;
 

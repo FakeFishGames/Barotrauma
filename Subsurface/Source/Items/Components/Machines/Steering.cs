@@ -443,7 +443,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ClientWrite(Lidgren.Network.NetOutgoingMessage msg)
+        public override void ClientWrite(Lidgren.Network.NetBuffer msg)
         {
             msg.Write(autoPilot);
 
@@ -503,7 +503,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerWrite(Lidgren.Network.NetOutgoingMessage msg, Barotrauma.Networking.Client c)
+        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
         {
             msg.Write(autoPilot);
 

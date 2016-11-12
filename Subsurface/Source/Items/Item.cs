@@ -1579,11 +1579,11 @@ namespace Barotrauma
 
             return element;
         }
-        
-        public void ServerWrite(NetOutgoingMessage msg, Client c) { }
+
+        public void ServerWrite(NetBuffer msg, Client c) { }
         public void ClientRead(NetIncomingMessage msg, float sendingTime) { }
 
-        public void WriteSpawnData(NetOutgoingMessage msg)
+        public void WriteSpawnData(NetBuffer msg)
         {
             if (GameMain.Server == null) return;
             

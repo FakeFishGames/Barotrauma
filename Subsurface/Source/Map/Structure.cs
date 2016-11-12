@@ -845,7 +845,7 @@ namespace Barotrauma
             return newBody;
         }
 
-        public void ServerWrite(NetOutgoingMessage msg, Client c) 
+        public void ServerWrite(NetBuffer msg, Client c) 
         {
             for (int i = 0; i < sections.Length; i++)
             {

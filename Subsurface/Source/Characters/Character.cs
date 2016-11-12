@@ -1911,7 +1911,7 @@ namespace Barotrauma
             if (AnimController != null) AnimController.Remove();
         }
 
-        public virtual void ClientWrite(NetOutgoingMessage msg) 
+        public virtual void ClientWrite(NetBuffer msg) 
         {
             if (GameMain.Server != null) return;
 
@@ -1972,7 +1972,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void ServerWrite(NetOutgoingMessage msg, Client c) 
+        public virtual void ServerWrite(NetBuffer msg, Client c) 
         {
             if (GameMain.Server == null) return;
 
@@ -2037,7 +2037,7 @@ namespace Barotrauma
             memPos.Insert(index, posInfo);
         }
 
-        public void WriteSpawnData(NetOutgoingMessage msg)
+        public void WriteSpawnData(NetBuffer msg)
         {
             if (GameMain.Server == null) return;
 
