@@ -12,10 +12,19 @@ namespace Barotrauma.Networking
         public readonly Entity Entity;
         public readonly UInt32 ID;
 
+        //arbitrary extra data that will be passed to the Write method of the serializable entity
+        //(the index of an itemcomponent for example)
+        protected object[] Data;
+
         protected NetEntityEvent(INetSerializable entity, UInt32 id)
         {
             this.ID = id;
             this.Entity = entity as Entity;
+        }
+
+        public void SetData(object[] data)
+        {
+            this.Data = data;
         }
     }
 
@@ -31,7 +40,7 @@ namespace Barotrauma.Networking
 
         public void Write(NetBuffer msg, Client recipient)
         {
-            serializable.ServerWrite(msg, recipient);
+            serializable.ServerWrite(msg, recipient, Data);
         } 
     }
     
@@ -47,7 +56,7 @@ namespace Barotrauma.Networking
 
         public void Write(NetBuffer msg)
         {
-            serializable.ClientWrite(msg);
+            serializable.ClientWrite(msg, Data);
         } 
     }
 

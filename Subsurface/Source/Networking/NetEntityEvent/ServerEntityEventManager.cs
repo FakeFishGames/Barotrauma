@@ -13,9 +13,12 @@ namespace Barotrauma.Networking
 
         private UInt32 ID;
 
-        public ServerEntityEventManager(GameServer server) { }
+        public ServerEntityEventManager(GameServer server) 
+        {
+            events = new List<ServerEntityEvent>();
+        }
 
-        public void CreateEvent(IServerSerializable entity)
+        public void CreateEvent(IServerSerializable entity, object[] extraData = null)
         {
             if (!(entity is Entity))
             {
@@ -24,7 +27,10 @@ namespace Barotrauma.Networking
             }
 
             ID++;
-            events.Add(new ServerEntityEvent(entity, ID));
+
+            var newEvent = new ServerEntityEvent(entity, ID);
+            if (extraData != null) newEvent.SetData(extraData);
+            events.Add(newEvent);
         }
 
         /// <summary>
@@ -32,10 +38,16 @@ namespace Barotrauma.Networking
         /// </summary>
         public void Write(Client client, NetOutgoingMessage msg)
         {
-            var eventsToSync = events.SkipWhile(e => e.ID >= client.lastRecvEntityEventID).ToList();
+            if (events.Count == 0) return;
+
+            List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
+            for (int i = events.Count - 1; i >= 0 && events[i].ID > client.lastRecvEntityEventID; i--)
+            {
+                eventsToSync.Insert(0, events[i]);
+            }
             if (eventsToSync.Count == 0) return;
 
-            Write(msg, eventsToSync.Cast<NetEntityEvent>().ToList(), client);
+            Write(msg, eventsToSync, client);
         }
 
         protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
@@ -52,6 +64,11 @@ namespace Barotrauma.Networking
             if (clientEntity == null) return;
 
             clientEntity.ServerRead(buffer, sender);
+        }
+
+        public void Clear()
+        {
+            events.Clear();
         }
     }
 }

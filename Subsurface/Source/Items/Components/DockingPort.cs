@@ -648,7 +648,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
+        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             msg.Write(docked);
 

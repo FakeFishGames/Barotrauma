@@ -12,7 +12,7 @@ namespace Barotrauma.Networking
     {
         UInt32 NetStateID { get; }
 
-        void ClientWrite(NetBuffer msg);
+        void ClientWrite(NetBuffer msg, object[] extraData = null);
         void ServerRead(NetIncomingMessage msg, Client c);        
     }
 
@@ -23,7 +23,7 @@ namespace Barotrauma.Networking
     {
         UInt32 NetStateID { get; }
 
-        void ServerWrite(NetBuffer msg, Client c);
+        void ServerWrite(NetBuffer msg, Client c, object[] extraData = null);
         void ClientRead(NetIncomingMessage msg, float sendingTime);
     }
 }

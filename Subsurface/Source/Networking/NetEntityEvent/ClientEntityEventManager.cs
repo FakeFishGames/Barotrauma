@@ -15,7 +15,10 @@ namespace Barotrauma.Networking
 
         private GameClient thisClient;
 
-        public ClientEntityEventManager(GameClient client) { }
+        public ClientEntityEventManager(GameClient client) 
+        {
+            events = new List<ClientEntityEvent>();
+        }
 
         public void CreateEvent(IClientSerializable entity)
         {
@@ -31,10 +34,16 @@ namespace Barotrauma.Networking
 
         public void Write(NetOutgoingMessage msg)
         {
-            var eventsToSync = events.SkipWhile(e => e.ID >= thisClient.LastSentEntityEventID).ToList();
+            if (events.Count == 0) return;
+
+            List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
+            for (int i = events.Count - 1; i >= 0 && events[i].ID > thisClient.LastSentEntityEventID; i--)
+            {
+                eventsToSync.Add(events[i]);
+            }
             if (eventsToSync.Count == 0) return;
 
-            Write(msg, eventsToSync.Cast<NetEntityEvent>().ToList());
+            Write(msg, eventsToSync);
         }
 
         protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
@@ -47,10 +56,15 @@ namespace Barotrauma.Networking
 
         protected override void ReadEvent(NetIncomingMessage buffer, INetSerializable entity, float sendingTime, Client sender = null)
         {
-            var clientEntity = entity as IClientSerializable;
-            if (clientEntity == null) return;
+            var serverEntity = entity as IServerSerializable;
+            if (serverEntity == null) return;
 
-            clientEntity.ServerRead(buffer, sender);
+            serverEntity.ClientRead(buffer, sendingTime);
+        }
+
+        public void Clear()
+        {
+            events.Clear();
         }
     }
 }
