@@ -1417,17 +1417,19 @@ namespace Barotrauma
             {
                 Control(deltaTime, cam);
             }
-
+                        
+            if (selectedConstruction != null && !selectedConstruction.IsInPickRange(WorldPosition))
+            {
+                selectedConstruction = null;
+            }
+            
             if (controlled != this && !(this is AICharacter))
             {
-                Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-
                 if (!LockHands)
                 {
-                    //find the closest item if selectkey has been hit, or if the Character is being
-                    //controlled by the player (in order to highlight it)
+                    Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
 
-                    if (findClosestTimer <= 0.0f || IsKeyHit(InputType.Select))
+                    if (IsKeyHit(InputType.Select))
                     {
                         closestCharacter = FindClosestCharacter(mouseSimPos);
                         if (closestCharacter != null && closestCharacter.info == null)
