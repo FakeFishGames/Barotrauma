@@ -648,7 +648,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             msg.Write(docked);
 
@@ -662,7 +662,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             bool isDocked = msg.ReadBoolean();
 

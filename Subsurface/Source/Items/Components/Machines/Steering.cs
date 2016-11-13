@@ -443,7 +443,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
             msg.Write(autoPilot);
 
@@ -468,7 +468,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             AutoPilot = msg.ReadBoolean();
 
@@ -503,7 +503,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             msg.Write(autoPilot);
 
@@ -524,7 +524,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             AutoPilot = msg.ReadBoolean();
 

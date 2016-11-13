@@ -61,6 +61,7 @@ namespace Barotrauma.Networking
                 client.entityEventLastSent[entityEvent.ID] = (float)NetTime.Now;
             }
 
+            msg.Write((byte)ServerNetObject.ENTITY_STATE);
             Write(msg, eventsToSync, client);
         }
 
@@ -78,6 +79,11 @@ namespace Barotrauma.Networking
             if (clientEntity == null) return;
 
             clientEntity.ServerRead(buffer, sender);
+        }
+
+        public void Read(NetIncomingMessage msg, Client client)
+        {
+            base.Read(msg, 0.0f, ref client.lastSentEntityEventID);
         }
 
         public void Clear()

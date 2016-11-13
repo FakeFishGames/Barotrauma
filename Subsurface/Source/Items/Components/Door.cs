@@ -7,10 +7,11 @@ using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
+using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
-    class Door : ItemComponent, IDrawableComponent
+    class Door : ItemComponent, IDrawableComponent, IServerSerializable
     {
         private Gap linkedGap;
 
@@ -493,13 +494,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             msg.Write(isOpen);
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             SetState(msg.ReadBoolean(), true);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);

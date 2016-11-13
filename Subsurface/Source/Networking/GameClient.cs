@@ -777,7 +777,7 @@ namespace Barotrauma.Networking
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(Entity.Spawner.NetStateID);
-            outmsg.Write(entityEventManager.LastReceivedEntityEventID);
+            outmsg.Write(entityEventManager.LastReceivedID);
 
             ChatMessage removeMsg;
             while ((removeMsg = chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastSentChatMsgID)) != null)
@@ -794,6 +794,8 @@ namespace Barotrauma.Networking
             {
                 Character.Controlled.ClientWrite(outmsg);
             }
+
+            entityEventManager.Write(outmsg, client.ServerConnection);
 
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
@@ -813,6 +815,11 @@ namespace Barotrauma.Networking
             chatMessage.netStateID = lastQueueChatMsgID;
 
             chatMsgQueue.Add(chatMessage);
+        }
+
+        public void CreateEntityEvent(IClientSerializable entity, object[] extraData)
+        {
+            entityEventManager.CreateEvent(entity, extraData);
         }
         
         public bool HasPermission(ClientPermissions permission)

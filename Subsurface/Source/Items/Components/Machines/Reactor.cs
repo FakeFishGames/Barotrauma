@@ -8,7 +8,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
-    class Reactor : Powered, IDrawableComponent
+    class Reactor : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         const float NetworkUpdateInterval = 3.0f;
 
@@ -324,6 +324,15 @@ namespace Barotrauma.Items.Components
 
             if (unsentChanges && sendUpdateTimer<= 0.0f)
             {
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
+                else if (GameMain.Client != null)
+                {
+                    item.CreateClientEvent(this);
+                }
+
                 sendUpdateTimer = NetworkUpdateInterval;
                 unsentChanges = false;
             }            
@@ -538,7 +547,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             msg.Write(autoTemp);
             msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 8);
@@ -547,16 +556,19 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
         }
 
-        public override void ServerRead(NetIncomingMessage msg, Client c)
+        public void ServerRead(NetIncomingMessage msg, Client c)
         {
-            autoTemp = msg.ReadBoolean();
+            AutoTemp = msg.ReadBoolean();
             ShutDownTemp = msg.ReadRangedSingle(0.0f, 10000.0f, 8);
 
             CoolingRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             FissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+
+            //need to create a server event to notify all clients of the changed state
+            unsentChanges = true;
         }
 
-        public override void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
 
@@ -567,11 +579,11 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
         }
 
-        public override void ClientRead(NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(NetIncomingMessage msg, float sendingTime)
         {
             Temperature = msg.ReadRangedSingle(0.0f, 10000.0f, 16);
 
-            autoTemp = msg.ReadBoolean();
+            AutoTemp = msg.ReadBoolean();
             ShutDownTemp = msg.ReadRangedSingle(0.0f, 10000.0f, 8);
 
             CoolingRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);

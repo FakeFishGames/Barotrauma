@@ -196,27 +196,27 @@ namespace Barotrauma.Items.Components
             if (!IsActive) currPowerConsumption = 0.0f;
         }
 
-        public override void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
             msg.Write(IsActive);
         }
 
-        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             IsActive = msg.ReadBoolean();
         }
 
-        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
             msg.Write(IsActive);
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             IsActive = msg.ReadBoolean();

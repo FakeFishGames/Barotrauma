@@ -43,7 +43,7 @@ namespace Barotrauma.Items.Components
     /// <summary>
     /// The base class for components holding the different functionalities of the item
     /// </summary>
-    class ItemComponent : IPropertyObject, IClientSerializable, IServerSerializable
+    class ItemComponent : IPropertyObject
     {
         protected Item item;
 
@@ -662,12 +662,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual void ClientWrite(NetBuffer msg, object[] extraData = null) { }
-        public virtual void ServerRead(NetIncomingMessage msg, Client c) { }
-
-        public virtual void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) { }
-        public virtual void ClientRead(NetIncomingMessage msg, float sendingTime) { }
-        
         public virtual XElement Save(XElement parentElement)
         {
             XElement componentElement = new XElement(name);

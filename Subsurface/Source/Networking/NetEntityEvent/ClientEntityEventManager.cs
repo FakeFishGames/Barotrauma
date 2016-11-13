@@ -15,12 +15,26 @@ namespace Barotrauma.Networking
 
         private GameClient thisClient;
 
+        //when was a specific entity event last sent to the client
+        //  key = event id, value = NetTime.Now when sending
+        public Dictionary<UInt32, float> eventLastSent;
+
+        public UInt32 LastReceivedID
+        {
+            get { return lastReceivedID; }
+        }
+
+        private UInt32 lastReceivedID;
+
         public ClientEntityEventManager(GameClient client) 
         {
             events = new List<ClientEntityEvent>();
+            eventLastSent = new Dictionary<uint, float>();
+
+            thisClient = client;
         }
 
-        public void CreateEvent(IClientSerializable entity)
+        public void CreateEvent(IClientSerializable entity, object[] extraData = null)
         {
             if (!(entity is Entity))
             {
@@ -29,21 +43,43 @@ namespace Barotrauma.Networking
             }
 
             ID++;
-            events.Add(new ClientEntityEvent(entity, ID));
+            var newEvent = new ClientEntityEvent(entity, ID);
+            if (extraData != null) newEvent.SetData(extraData);
+
+            events.Add(newEvent);
         }
 
-        public void Write(NetOutgoingMessage msg)
+        public void Write(NetOutgoingMessage msg, NetConnection serverConnection)
         {
             if (events.Count == 0) return;
 
             List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
             for (int i = events.Count - 1; i >= 0 && events[i].ID > thisClient.LastSentEntityEventID; i--)
             {
+                float lastSent = 0;
+                eventLastSent.TryGetValue(events[i].ID, out lastSent);
+
+                if (lastSent > NetTime.Now - serverConnection.AverageRoundtripTime)
+                {
+                    break;
+                }
+
                 eventsToSync.Add(events[i]);
             }
             if (eventsToSync.Count == 0) return;
 
+            foreach (NetEntityEvent entityEvent in eventsToSync)
+            {
+                eventLastSent[entityEvent.ID] = (float)NetTime.Now;
+            }
+
+            msg.Write((byte)ClientNetObject.ENTITY_STATE);
             Write(msg, eventsToSync);
+        }
+
+        public void Read(NetIncomingMessage msg, float sendingTime)
+        {
+            base.Read(msg, sendingTime, ref lastReceivedID);
         }
 
         protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
@@ -65,6 +101,7 @@ namespace Barotrauma.Networking
         public void Clear()
         {
             events.Clear();
+            eventLastSent.Clear();
         }
     }
 }
