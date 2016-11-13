@@ -43,6 +43,8 @@ namespace Barotrauma.Networking
 
         public TraitorManager TraitorManager;
 
+        private ServerEntityEventManager entityEventManager;
+
         public override List<Client> ConnectedClients
         {
             get
@@ -115,6 +117,8 @@ namespace Barotrauma.Networking
             GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Settings", Alignment.TopLeft, GUI.Style, inGameHUD);
             settingsButton.OnClicked = ToggleSettingsFrame;
             settingsButton.UserData = "settingsButton";
+
+            entityEventManager = new ServerEntityEventManager(this);
 
             whitelist = new WhiteList();
             banList = new BanList();
@@ -542,6 +546,11 @@ namespace Barotrauma.Networking
             sparseUpdateTimer = DateTime.Now + sparseUpdateInterval;
         }
 
+        public void CreateEntityEvent(IServerSerializable entity, object[] extraData)
+        {
+            entityEventManager.CreateEvent(entity, extraData);
+        }
+
         private byte GetNewClientID()
         {
             byte userID = 1;
@@ -602,6 +611,7 @@ namespace Barotrauma.Networking
                         c.lastRecvGeneralUpdate     = Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32());
                         c.lastRecvChatMsgID         = Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32());
                         c.lastRecvEntitySpawnID     = Math.Max(c.lastRecvEntitySpawnID, inc.ReadUInt32());
+                        c.lastRecvEntityEventID     = Math.Max(c.lastRecvEntityEventID, inc.ReadUInt32());  
 
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
@@ -629,6 +639,7 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
+            outmsg.Write(c.lastSentEntityEventID);
 
             foreach (GUIComponent gc in GameMain.NetLobbyScreen.ChatBox.children)
             {
@@ -671,6 +682,8 @@ namespace Barotrauma.Networking
                 sub.ServerWrite(outmsg, c);
                 outmsg.WritePadBits();
             }
+
+            entityEventManager.Write(c, outmsg);
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);

@@ -41,6 +41,8 @@ namespace Barotrauma.Networking
 
         public UInt32 LastSentEntityEventID;
 
+        private ClientEntityEventManager entityEventManager;
+
         public byte ID
         {
             get { return myID; }
@@ -86,6 +88,8 @@ namespace Barotrauma.Networking
             Hull.EditWater = false;
 
             name = newName;
+
+            entityEventManager = new ClientEntityEventManager(this);
             
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name);
             characterInfo.Job = null;
@@ -706,6 +710,7 @@ namespace Barotrauma.Networking
                 {
                     case ServerNetObject.SYNC_IDS:
                         lastSentChatMsgID = inc.ReadUInt32();
+                        LastSentEntityEventID = inc.ReadUInt32();
                         break;
                     case ServerNetObject.ENTITY_POSITION:
                         UInt16 id = inc.ReadUInt16();
@@ -723,6 +728,9 @@ namespace Barotrauma.Networking
                         }
 
                         inc.ReadPadBits();
+                        break;
+                    case ServerNetObject.ENTITY_STATE:
+                        entityEventManager.Read(inc, sendingTime);
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
@@ -769,6 +777,7 @@ namespace Barotrauma.Networking
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(Entity.Spawner.NetStateID);
+            outmsg.Write(entityEventManager.LastReceivedEntityEventID);
 
             ChatMessage removeMsg;
             while ((removeMsg = chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastSentChatMsgID)) != null)

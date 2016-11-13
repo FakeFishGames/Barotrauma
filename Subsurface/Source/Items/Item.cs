@@ -1580,8 +1580,22 @@ namespace Barotrauma
             return element;
         }
 
-        public void ServerWrite(NetBuffer msg, Client c) { }
-        public void ClientRead(NetIncomingMessage msg, float sendingTime) { }
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
+        {
+            if (extraData == null) return;
+
+            int componentIndex = (int)extraData[0];
+            //component index
+            msg.Write((byte)componentIndex);
+
+            components[componentIndex].ServerWrite(msg, c);
+        }
+        public void ClientRead(NetIncomingMessage msg, float sendingTime) 
+        {
+            int componentIndex = msg.ReadByte();
+
+            components[componentIndex].ClientRead(msg, sendingTime);
+        }
 
         public void WriteSpawnData(NetBuffer msg)
         {
@@ -1804,9 +1818,12 @@ namespace Barotrauma
         }
         
 
-        public void NewComponentEvent(ItemComponent ic, bool isClient, bool isImportant)
+        public void CreateServerEvent(ItemComponent ic)
         {
+            if (GameMain.Server == null) return;
+
             int index = components.IndexOf(ic);
+            GameMain.Server.CreateEntityEvent(this, new object[] { index });
         }
         
        public override void Remove()

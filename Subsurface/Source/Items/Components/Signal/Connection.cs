@@ -286,7 +286,7 @@ namespace Barotrauma.Items.Components
 
                 if (!PlayerInput.LeftButtonHeld())
                 {
-                    panel.Item.NewComponentEvent(panel, true, true);
+                    //panel.Item.CreateServerEvent(panel, true, true);
                     //draggingConnected.Drop(Character);
                     draggingConnected = null;
                 }

@@ -12,6 +12,11 @@ namespace Barotrauma.Networking
     {
         const int MaxEventsPerWrite = 255;
 
+        public UInt32 LastReceivedEntityEventID
+        {
+            get { return lastReceivedEntityEventID; }
+        }
+
         private UInt32 lastReceivedEntityEventID;
                 
         /// <summary>
@@ -62,17 +67,20 @@ namespace Barotrauma.Networking
                 byte msgLength      = msg.ReadByte();
 
                 INetSerializable entity = Entity.FindEntityByID(entityID) as INetSerializable;
-               
+
                 //skip the event if we've already received it or if the entity isn't found
-                if (thisEventID <= lastReceivedEntityEventID || entity == null)
+                if (thisEventID != lastReceivedEntityEventID+1 || entity == null)
                 {
+                    DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Red);
                     msg.Position += msgLength * 8; 
                 }
                 else
                 {
+                    DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Green);
                     ReadEvent(msg, entity, sendingTime);
                     lastReceivedEntityEventID = thisEventID;
                 }
+                msg.ReadPadBits();
             }            
         }
 

@@ -489,11 +489,11 @@ namespace Barotrauma.Items.Components
 
             if (sendNetworkMessage)
             {
-                item.NewComponentEvent(this, false, true);
+                item.CreateServerEvent(this);
             }
         }
 
-        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
+        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             msg.Write(isOpen);
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);

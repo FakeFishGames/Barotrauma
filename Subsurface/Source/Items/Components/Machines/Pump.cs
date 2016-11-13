@@ -196,7 +196,7 @@ namespace Barotrauma.Items.Components
             if (!IsActive) currPowerConsumption = 0.0f;
         }
 
-        public override void ClientWrite(Lidgren.Network.NetBuffer msg)
+        public override void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
@@ -209,7 +209,7 @@ namespace Barotrauma.Items.Components
             IsActive = msg.ReadBoolean();
         }
 
-        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
+        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
