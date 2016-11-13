@@ -26,6 +26,28 @@ namespace Barotrauma.Networking
         {
             this.Data = data;
         }
+
+        public bool IsDuplicate(NetEntityEvent other)
+        {
+            if (other.Entity != this.Entity) return false;
+
+            if (Data != null && other.Data != null)
+            {
+                if (Data.Length == other.Data.Length)
+                {
+                    for (int i = 0; i<Data.Length; i++)
+                    {
+                        if (Data[i] != other.Data[i]) return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return Data == other.Data;
+        }
     }
 
     class ServerEntityEvent : NetEntityEvent

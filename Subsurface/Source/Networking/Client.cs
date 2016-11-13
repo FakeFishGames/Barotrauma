@@ -48,6 +48,10 @@ namespace Barotrauma.Networking
 
         private List<Client> kickVoters;
 
+        //when was a specific entity event last sent to the client
+        //  key = event id, value = NetTime.Now when sending
+        public Dictionary<UInt32, float> entityEventLastSent;
+
         public bool ReadyToStart;
 
         private object[] votes;
@@ -65,6 +69,7 @@ namespace Barotrauma.Networking
             lastRecvChatMsgID = ChatMessage.LastID;
 
             lastRecvEntitySpawnID = 0;
+            lastRecvEntityEventID = 0;
         }
 
         public int KickVoteCount
@@ -88,6 +93,8 @@ namespace Barotrauma.Networking
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
             jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, 3));
+
+            entityEventLastSent = new Dictionary<UInt32, float>();
         }
 
         public static bool IsValidName(string name)

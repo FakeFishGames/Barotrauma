@@ -1026,6 +1026,7 @@ namespace Barotrauma.Networking
             GameMain.LightManager.LosEnabled = false;
 
             Item.Spawner.Clear();
+            entityEventManager.Clear();
 
 #if DEBUG
             messageCount.Clear();
