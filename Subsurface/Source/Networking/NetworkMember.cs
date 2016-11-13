@@ -25,7 +25,8 @@ namespace Barotrauma.Networking
         CHAT_MESSAGE,   //also self-explanatory
         VOTE,           //you get the idea
         CHARACTER_INPUT,
-        ITEM_INTERACTION
+        ITEM_INTERACTION,
+        ENTITY_STATE
     }
 
     enum ServerPacketHeader

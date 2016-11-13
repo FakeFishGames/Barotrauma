@@ -623,6 +623,9 @@ namespace Barotrauma.Networking
                             c.Character.ServerRead(inc, c);
                         }
                         break;
+                    case ClientNetObject.ENTITY_STATE:
+                        entityEventManager.Read(inc, c);
+                        break;
                     default:
                         return;
                         //break;
@@ -1027,6 +1030,10 @@ namespace Barotrauma.Networking
 
             Item.Spawner.Clear();
             entityEventManager.Clear();
+            foreach (Client c in connectedClients)
+            {
+                c.entityEventLastSent.Clear();
+            }
 
 #if DEBUG
             messageCount.Clear();
@@ -1418,7 +1425,6 @@ namespace Barotrauma.Networking
             }
 
             UpdateNetLobby(null);
-
         }
 
         private Client FindClientWithJobPreference(List<Client> clients, JobPrefab job, bool forceAssign = false)

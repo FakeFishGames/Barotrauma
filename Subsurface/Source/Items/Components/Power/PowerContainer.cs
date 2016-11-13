@@ -249,18 +249,18 @@ namespace Barotrauma.Items.Components
             GuiFrame.Update(1.0f / 60.0f);
         }
 
-        public override void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
         {
             float chargeSpeed = MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f);
             msg.WriteRangedSingle(chargeSpeed, 0.0f, 1.0f, 8);
         }
 
-        public override void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             RechargeSpeed = msg.ReadRangedSingle(0.0f, 1.0f, 8) * maxRechargeSpeed;
         }
 
-        public override void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
         {
             float chargeSpeed = MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f);
             msg.WriteRangedSingle(chargeSpeed, 0.0f, 1.0f, 8);
@@ -269,7 +269,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(chargeRatio, 0.0f, 1.0f, 8);
         }
 
-        public override void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             RechargeSpeed = msg.ReadRangedSingle(0.0f, 1.0f, 8) * maxRechargeSpeed;
 

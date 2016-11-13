@@ -10,15 +10,14 @@ namespace Barotrauma.Networking
 {
     abstract class NetEntityEventManager
     {
+        const int MaxEventBufferLength = 1024;
         const int MaxEventsPerWrite = 64;
 
-        public UInt32 LastReceivedEntityEventID
-        {
-            get { return lastReceivedEntityEventID; }
-        }
+        //public UInt32 LastReceivedEntityEventID
+        //{
+        //    get { return lastReceivedEntityEventID; }
+        //}
 
-        private UInt32 lastReceivedEntityEventID;
-                
         /// <summary>
         /// Write the events to the outgoing message. The recipient parameter is only needed for ServerEntityEventManager
         /// </summary>
@@ -29,8 +28,6 @@ namespace Barotrauma.Networking
             {
                 eventsToSync.RemoveRange(MaxEventsPerWrite, eventsToSync.Count - MaxEventsPerWrite);
             }
-
-            msg.Write((byte)ServerNetObject.ENTITY_STATE);
 
             msg.Write(eventsToSync[0].ID);
             msg.Write((byte)eventsToSync.Count);
@@ -55,7 +52,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received
         /// </summary>
-        public void Read(NetIncomingMessage msg, float sendingTime)
+        protected void Read(NetIncomingMessage msg, float sendingTime, ref UInt32 lastReceivedID)
         {
             UInt32 firstEventID = msg.ReadUInt32();
             int eventCount      = msg.ReadByte();
@@ -69,7 +66,7 @@ namespace Barotrauma.Networking
                 INetSerializable entity = Entity.FindEntityByID(entityID) as INetSerializable;
 
                 //skip the event if we've already received it or if the entity isn't found
-                if (thisEventID != lastReceivedEntityEventID+1 || entity == null)
+                if (thisEventID != lastReceivedID + 1 || entity == null)
                 {
                     DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Red);
                     msg.Position += msgLength * 8; 
@@ -77,8 +74,8 @@ namespace Barotrauma.Networking
                 else
                 {
                     DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Green);
+                    lastReceivedID++;
                     ReadEvent(msg, entity, sendingTime);
-                    lastReceivedEntityEventID = thisEventID;
                 }
                 msg.ReadPadBits();
             }            

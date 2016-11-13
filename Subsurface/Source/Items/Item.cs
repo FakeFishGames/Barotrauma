@@ -26,7 +26,7 @@ namespace Barotrauma
         OnImpact
     }
 
-    class Item : MapEntity, IDamageable, IPropertyObject, IServerSerializable
+    class Item : MapEntity, IDamageable, IPropertyObject, IServerSerializable, IClientSerializable
     {
         public static List<Item> ItemList = new List<Item>();
         private ItemPrefab prefab;
@@ -1585,16 +1585,33 @@ namespace Barotrauma
             if (extraData == null) return;
 
             int componentIndex = (int)extraData[0];
-            //component index
             msg.Write((byte)componentIndex);
 
-            components[componentIndex].ServerWrite(msg, c);
+            (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
         }
+
         public void ClientRead(NetIncomingMessage msg, float sendingTime) 
         {
             int componentIndex = msg.ReadByte();
 
-            components[componentIndex].ClientRead(msg, sendingTime);
+            (components[componentIndex] as IServerSerializable).ClientRead(msg, sendingTime);
+        }
+
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        {
+            if (extraData == null) return;
+
+            int componentIndex = (int)extraData[0];
+            msg.Write((byte)componentIndex);
+
+            (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
+        }
+
+        public void ServerRead(NetIncomingMessage msg, Client c) 
+        {
+            int componentIndex = msg.ReadByte();
+            
+            (components[componentIndex] as IClientSerializable).ServerRead(msg, c);
         }
 
         public void WriteSpawnData(NetBuffer msg)
@@ -1818,13 +1835,22 @@ namespace Barotrauma
         }
         
 
-        public void CreateServerEvent(ItemComponent ic)
+        public void CreateServerEvent<T>(T ic) where T : ItemComponent, IServerSerializable
         {
             if (GameMain.Server == null) return;
 
             int index = components.IndexOf(ic);
             GameMain.Server.CreateEntityEvent(this, new object[] { index });
         }
+
+        public void CreateClientEvent<T>(T ic) where T : ItemComponent, IClientSerializable
+        {
+            if (GameMain.Client == null) return;
+            
+            int index = components.IndexOf(ic);
+            GameMain.Client.CreateEntityEvent(this, new object[] { index });
+        }
+
         
        public override void Remove()
         {
