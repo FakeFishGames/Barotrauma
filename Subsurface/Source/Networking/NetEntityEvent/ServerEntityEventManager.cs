@@ -30,6 +30,7 @@ namespace Barotrauma.Networking
 
             var newEvent = new ServerEntityEvent(entity, ID);
             if (extraData != null) newEvent.SetData(extraData);
+
             events.Add(newEvent);
         }
 
@@ -43,9 +44,22 @@ namespace Barotrauma.Networking
             List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
             for (int i = events.Count - 1; i >= 0 && events[i].ID > client.lastRecvEntityEventID; i--)
             {
+                float lastSent = 0;
+                client.entityEventLastSent.TryGetValue(events[i].ID, out lastSent);
+
+                if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime)
+                {
+                    break;
+                }
+
                 eventsToSync.Insert(0, events[i]);
             }
             if (eventsToSync.Count == 0) return;
+            
+            foreach (NetEntityEvent entityEvent in eventsToSync)
+            {
+                client.entityEventLastSent[entityEvent.ID] = (float)NetTime.Now;
+            }
 
             Write(msg, eventsToSync, client);
         }

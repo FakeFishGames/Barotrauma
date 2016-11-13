@@ -10,7 +10,7 @@ namespace Barotrauma.Networking
 {
     abstract class NetEntityEventManager
     {
-        const int MaxEventsPerWrite = 255;
+        const int MaxEventsPerWrite = 64;
 
         public UInt32 LastReceivedEntityEventID
         {
@@ -58,7 +58,7 @@ namespace Barotrauma.Networking
         public void Read(NetIncomingMessage msg, float sendingTime)
         {
             UInt32 firstEventID = msg.ReadUInt32();
-            byte eventCount = msg.ReadByte();
+            int eventCount      = msg.ReadByte();
 
             for (int i = 0; i < eventCount; i++)
             {
@@ -83,7 +83,7 @@ namespace Barotrauma.Networking
                 msg.ReadPadBits();
             }            
         }
-
+        
         protected virtual void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
         {
             throw new NotImplementedException();
