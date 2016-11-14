@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -11,7 +12,7 @@ using Voronoi2;
 
 namespace Barotrauma.Items.Components
 {
-    class Steering : Powered
+    class Steering : Powered, IServerSerializable, IClientSerializable
     {
         private const float AutopilotRayCastInterval = 0.5f;
 
@@ -30,7 +31,7 @@ namespace Barotrauma.Items.Components
         private PathFinder pathFinder;
 
         private float networkUpdateTimer;
-        private bool valueChanged;
+        private bool unsentChanges;
 
         private float autopilotRayCastTimer;
 
@@ -112,7 +113,7 @@ namespace Barotrauma.Items.Components
             autopilotTickBox.OnSelected = (GUITickBox box) =>
             {
                 AutoPilot = box.Selected;
-                valueChanged = true;
+                unsentChanges = true;
 
                 return true;
             };
@@ -139,13 +140,22 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            if (valueChanged)
+            if (unsentChanges)
             {
                 networkUpdateTimer -= deltaTime;
                 if (networkUpdateTimer <= 0.0f)
                 {
+                    if (GameMain.Client != null)
+                    {
+                        item.CreateClientEvent(this);
+                    }
+                    else if (GameMain.Server != null)
+                    {
+                        item.CreateServerEvent(this);
+                    }
+
                     networkUpdateTimer = 0.5f;
-                    valueChanged = false;
+                    unsentChanges = false;
                 }
             }
      
@@ -219,7 +229,7 @@ namespace Barotrauma.Items.Components
                     TargetVelocity = PlayerInput.MousePosition - new Vector2(velRect.Center.X, velRect.Center.Y);
                     targetVelocity.Y = -targetVelocity.Y;
 
-                    valueChanged = true;
+                    unsentChanges = true;
                 }
             }
         }
@@ -389,7 +399,7 @@ namespace Barotrauma.Items.Components
         
         private bool ToggleMaintainPosition(GUITickBox tickBox)
         {
-            valueChanged = true;
+            unsentChanges = true;
 
             levelStartTickBox.Selected = false;
             levelEndTickBox.Selected = false;
@@ -410,7 +420,7 @@ namespace Barotrauma.Items.Components
 
         private bool SelectDestination(GUITickBox tickBox)
         {
-            valueChanged = true;
+            unsentChanges = true;
 
             if (tickBox == levelStartTickBox)
             {
@@ -501,6 +511,9 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+            //notify all clients of the changed state
+            unsentChanges = true;
         }
 
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)

@@ -546,7 +546,7 @@ namespace Barotrauma.Networking
             sparseUpdateTimer = DateTime.Now + sparseUpdateInterval;
         }
 
-        public void CreateEntityEvent(IServerSerializable entity, object[] extraData)
+        public void CreateEntityEvent(IServerSerializable entity, object[] extraData = null)
         {
             entityEventManager.CreateEvent(entity, extraData);
         }

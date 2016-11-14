@@ -12,7 +12,7 @@ namespace Barotrauma.Networking
         private List<ServerEntityEvent> events;
 
         private UInt32 ID;
-
+        
         public ServerEntityEventManager(GameServer server) 
         {
             events = new List<ServerEntityEvent>();
@@ -26,10 +26,17 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            ID++;
-
-            var newEvent = new ServerEntityEvent(entity, ID);
+            var newEvent = new ServerEntityEvent(entity, ID + 1);
             if (extraData != null) newEvent.SetData(extraData);
+
+            for (int i = events.Count - 1; i >= 0 && !events[i].Sent; i--)
+            {
+                //we already have an identical event that's waiting to be sent
+                // -> no need to add a new one
+                if (events[i].IsDuplicate(newEvent)) return;
+            }
+
+            ID++;
 
             events.Add(newEvent);
         }
@@ -51,13 +58,14 @@ namespace Barotrauma.Networking
                 {
                     break;
                 }
-
+                
                 eventsToSync.Insert(0, events[i]);
             }
             if (eventsToSync.Count == 0) return;
             
             foreach (NetEntityEvent entityEvent in eventsToSync)
             {
+                (entityEvent as ServerEntityEvent).Sent = true;
                 client.entityEventLastSent[entityEvent.ID] = (float)NetTime.Now;
             }
 
