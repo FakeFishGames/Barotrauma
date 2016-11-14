@@ -8,11 +8,12 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Lidgren.Network;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
 
-    class Hull : MapEntity, IPropertyObject
+    class Hull : MapEntity, IPropertyObject, IServerSerializable
     {
         public static List<Hull> hullList = new List<Hull>();
         private static List<EntityGrid> entityGrids = new List<EntityGrid>();
@@ -362,6 +363,8 @@ namespace Barotrauma
         public void AddFireSource(FireSource fireSource)
         {
             fireSources.Add(fireSource);
+
+            if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this);
         }
 
         public override void Update(Camera cam, float deltaTime)
@@ -446,20 +449,21 @@ namespace Barotrauma
                     soundIndex = -1;
                 }
             }
-            
+                        
             //update client hulls if the amount of water has changed by >10%
             //or if oxygen percentage has changed by 5%
             if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
             {
-          
+                if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this); 
             }
-            
+
             if (!update)
             {
                 lethalPressure = 0.0f;
                 return;
             }
+
 
             float surfaceY = rect.Y - rect.Height + Volume / rect.Width;
             for (int i = 0; i < waveY.Length; i++)
@@ -555,6 +559,8 @@ namespace Barotrauma
         public void RemoveFire(FireSource fire)
         {
             fireSources.Remove(fire);
+
+            if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this);
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
@@ -806,19 +812,82 @@ namespace Barotrauma
             return false;
         }
 
-        //public List<Gap> FindGaps()
-        //{
-        //    List<Gap> gaps = new List<Gap>();
-            
-        //    foreach (Gap gap in Gap.GapList)
-        //    {
-        //        if (gap.Open < 0.01f) continue;
+        public void ServerWrite(NetBuffer message, Client c, object[] extraData = null)
+        {
+            message.WriteRangedSingle(MathHelper.Clamp(volume / FullVolume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(OxygenPercentage, 0.0f, 100.0f), 0.0f, 100.0f, 8);
 
-        //        if (gap.linkedTo.Contains(this)) gaps.Add(gap);
-        //    }
+            message.Write(fireSources.Count > 0);
+            if (fireSources.Count > 0)
+            {
+                message.WriteRangedInteger(0, 16, Math.Min(fireSources.Count, 16));
+                for (int i = 0; i < Math.Min(fireSources.Count, 16); i++)
+                {
+                    var fireSource = fireSources[i];
+                    Vector2 normalizedPos = new Vector2(
+                        (fireSource.Position.X - rect.X) / rect.Width,
+                        (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
 
-        //    return gaps;
-        //}
+                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 4);
+                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 4);
+                    message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 6);
+                }
+            }
+
+            lastSentVolume = volume;
+            lastSentOxygen = OxygenPercentage;
+        }
+
+        public void ClientRead(NetIncomingMessage message, float sendingTime)
+        {
+            Volume = message.ReadRangedSingle(0.0f, 1.5f, 8) * FullVolume;
+            OxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
+
+            bool hasFireSources = message.ReadBoolean();
+
+            List<FireSource> newFireSources = new List<FireSource>();
+            if (hasFireSources)
+            {
+                int fireSourceCount = message.ReadRangedInteger(0, 16);
+                for (int i = 0; i < fireSourceCount; i++)
+                {
+                    Vector2 pos = Vector2.Zero;
+                    float size = 0.0f;
+                    pos.X = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 4), 0.05f, 0.95f);
+                    pos.Y = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 4), 0.05f, 0.95f);
+                    size = message.ReadRangedSingle(0.0f, 1.0f, 6);
+
+                    pos = new Vector2(
+                        rect.X + rect.Width * pos.X, 
+                        rect.Y - rect.Height + (rect.Height * pos.Y));
+
+                    var existingFire = fireSources.Find(fs => fs.Contains(pos));
+                    if (existingFire != null)
+                    {
+                        newFireSources.Add(existingFire);
+                        existingFire.Position = pos;
+                        existingFire.Size = new Vector2(
+                            existingFire.Hull == null ? size : size * existingFire.Hull.rect.Width,
+                            existingFire.Size.Y);
+                    }
+                    else
+                    {
+                        var newFire = new FireSource(pos + Submarine.Position);
+                        newFire.Size = new Vector2(
+                            newFire.Hull == null ? size : size * newFire.Hull.rect.Width,
+                            newFire.Size.Y);
+                        //ignore if the fire wasn't added to this room (invalid position)?
+                        if (!fireSources.Contains(newFire)) continue;
+                        newFireSources.Add(newFire);
+                    }
+                }
+            }
+
+            var toBeRemoved = fireSources.FindAll(fs => !newFireSources.Contains(fs));
+            toBeRemoved.ForEach(tbr => tbr.Remove());
+
+            fireSources = newFireSources;
+        }
 
         public override XElement Save(XElement parentElement)
         {

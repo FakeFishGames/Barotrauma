@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -8,7 +9,7 @@ using Voronoi2;
 
 namespace Barotrauma.Items.Components
 {
-    class Radar : Powered
+    class Radar : Powered, IServerSerializable, IClientSerializable
     {
         private float range;
 
@@ -56,6 +57,14 @@ namespace Barotrauma.Items.Components
             isActiveTickBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Sonar", Alignment.TopLeft, GuiFrame);
             isActiveTickBox.OnSelected = (GUITickBox box) =>
             {
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
+                else if (GameMain.Client != null)
+                {
+                    item.CreateClientEvent(this);
+                }
                 IsActive = box.Selected;
 
                 return true;
@@ -420,6 +429,8 @@ namespace Barotrauma.Items.Components
         {
             IsActive = msg.ReadBoolean();
             isActiveTickBox.Selected = IsActive;
+
+            item.CreateServerEvent(this);
         }
 
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)

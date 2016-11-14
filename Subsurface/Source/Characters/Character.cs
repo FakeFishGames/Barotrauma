@@ -1451,12 +1451,6 @@ namespace Barotrauma
                                 closestCharacter = null;
                             }
                         }
-
-                        findClosestTimer = 0.1f;
-                    }
-                    else
-                    {
-                        findClosestTimer -= deltaTime;
                     }
 
                     if (selectedCharacter == null && closestItem != null)

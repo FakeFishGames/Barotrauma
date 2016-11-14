@@ -10,8 +10,6 @@ namespace Barotrauma.Networking
     /// </summary>
     interface IClientSerializable : INetSerializable
     {
-        UInt32 NetStateID { get; }
-
         void ClientWrite(NetBuffer msg, object[] extraData = null);
         void ServerRead(NetIncomingMessage msg, Client c);        
     }
@@ -21,8 +19,6 @@ namespace Barotrauma.Networking
     /// </summary>
     interface IServerSerializable : INetSerializable
     {
-        UInt32 NetStateID { get; }
-
         void ServerWrite(NetBuffer msg, Client c, object[] extraData = null);
         void ClientRead(NetIncomingMessage msg, float sendingTime);
     }

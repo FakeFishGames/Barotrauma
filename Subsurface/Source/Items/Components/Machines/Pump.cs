@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Specialized;
@@ -7,15 +8,13 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Pump : Powered
+    class Pump : Powered, IServerSerializable, IClientSerializable
     {
         private float flowPercentage;
         private float maxFlow;
 
         private float? targetLevel;
-
-        private float lastUpdate;
-
+        
         public Hull hull1;
 
         private GUITickBox isActiveTickBox;
@@ -75,6 +74,15 @@ namespace Barotrauma.Items.Components
                 IsActive = !IsActive;
                 if (!IsActive) currPowerConsumption = 0.0f;
 
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
+                else if (GameMain.Client != null)
+                {
+                    item.CreateClientEvent(this);
+                }
+
                 return true;
             };
 
@@ -83,6 +91,15 @@ namespace Barotrauma.Items.Components
             {
                 FlowPercentage -= 10.0f;
 
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
+                else if (GameMain.Client != null)
+                {
+                    item.CreateClientEvent(this);
+                }
+
                 return true;
             };
 
@@ -90,6 +107,15 @@ namespace Barotrauma.Items.Components
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 FlowPercentage += 10.0f;
+
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
+                else if (GameMain.Client != null)
+                {
+                    item.CreateClientEvent(this);
+                }
 
                 return true;
             };     

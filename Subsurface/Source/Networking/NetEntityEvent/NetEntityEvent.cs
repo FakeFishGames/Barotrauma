@@ -54,6 +54,8 @@ namespace Barotrauma.Networking
     {
         private IServerSerializable serializable;
 
+        public bool Sent;
+
         public ServerEntityEvent(IServerSerializable entity, UInt32 id)
             : base(entity, id)
         { 
