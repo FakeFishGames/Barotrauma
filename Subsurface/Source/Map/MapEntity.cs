@@ -421,29 +421,33 @@ namespace Barotrauma
             }
             
             //started moving selected entities
-            if (startMovingPos != Vector2.Zero && PlayerInput.LeftButtonReleased())
+            if (startMovingPos != Vector2.Zero)
             {
-                //mouse released -> move the entities to the new position of the mouse
-
-                Vector2 moveAmount = position - startMovingPos;
-                moveAmount = Submarine.VectorToWorldGrid(moveAmount);
-
-                if (moveAmount != Vector2.Zero)
+                if (PlayerInput.LeftButtonReleased())
                 {
-                    //clone
-                    if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
-                    {
-                        var clones = Clone(selectedList);
-                        selectedList = clones;
-                        selectedList.ForEach(c => c.Move(moveAmount));
-                    }
-                    else // move
-                    {
-                        foreach (MapEntity e in selectedList) e.Move(moveAmount);
-                    }
-                }
+                    //mouse released -> move the entities to the new position of the mouse
 
-                startMovingPos = Vector2.Zero;                
+                    Vector2 moveAmount = position - startMovingPos;
+                    moveAmount = Submarine.VectorToWorldGrid(moveAmount);
+
+                    if (moveAmount != Vector2.Zero)
+                    {
+                        //clone
+                        if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                        {
+                            var clones = Clone(selectedList);
+                            selectedList = clones;
+                            selectedList.ForEach(c => c.Move(moveAmount));
+                        }
+                        else // move
+                        {
+                            foreach (MapEntity e in selectedList) e.Move(moveAmount);
+                        }
+                    }
+
+                    startMovingPos = Vector2.Zero;    
+                }
+                           
             }
             //started dragging a "selection rectangle"
             else if (selectionPos != Vector2.Zero)
