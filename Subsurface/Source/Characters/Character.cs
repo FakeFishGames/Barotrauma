@@ -2142,6 +2142,8 @@ namespace Barotrauma
 
             if (aiTarget != null) aiTarget.Remove();
 
+            if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
+            
             if (AnimController!=null) AnimController.Remove();
         }
 

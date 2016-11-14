@@ -334,7 +334,7 @@ namespace Barotrauma
             base.Remove();
             hullList.Remove(this);
 
-            if (Submarine == null || !Submarine.Loading)
+            if (Submarine == null || (!Submarine.Loading && !Submarine.Unloading))
             {
                 Item.UpdateHulls();
                 Gap.UpdateHulls();

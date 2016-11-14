@@ -1155,11 +1155,22 @@ namespace Barotrauma
 
         public void Remove()
         {
-            foreach (Limb l in Limbs) l.Remove();
+            foreach (Limb l in Limbs)
+            {
+                l.Remove();
+            }
+            Limbs = null;
+
+            collider.Remove();
+            collider = null;
+
             foreach (RevoluteJoint joint in limbJoints)
             {
                 GameMain.World.RemoveJoint(joint);
             }
+            limbJoints = null;
+
+            list.Remove(this);
         }
 
     }
