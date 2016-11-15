@@ -54,7 +54,7 @@ namespace Barotrauma
         public const int GridCellSize = 2000;
         private List<VoronoiCell>[,] cellGrid;
 
-        private WrappingWall[,] wrappingWalls;
+        //private WrappingWall[,] wrappingWalls;
 
         //private float shaftHeight;
 
@@ -97,10 +97,10 @@ namespace Barotrauma
             get { return ruins; }
         }
         
-        public WrappingWall[,] WrappingWalls
-        {
-            get { return wrappingWalls; }
-        }
+        //public WrappingWall[,] WrappingWalls
+        //{
+        //    get { return wrappingWalls; }
+        //}
 
         public string Seed
         {
@@ -440,6 +440,7 @@ namespace Barotrauma
 
             renderer.PlaceSprites(generationParams.BackgroundSpriteAmount);
             
+            /*
             wrappingWalls = new WrappingWall[2, 2];
 
             Rectangle ignoredArea = new Rectangle((int)startPosition.X, 0, (int)(endPosition.X - startPosition.X), borders.Height);
@@ -465,7 +466,7 @@ namespace Barotrauma
                 {
                     cells.AddRange(wrappingWalls[side, i].Cells);
                 }
-            }
+            }*/
             
             ShaftBody = BodyFactory.CreateEdge(GameMain.World, 
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
@@ -809,10 +810,11 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            /*
             if (Submarine.MainSub != null)
             {
                 WrappingWall.UpdateWallShift(Submarine.MainSub.WorldPosition, wrappingWalls);
-            }
+            }*/
 
             if (Hull.renderer != null)
             {
@@ -884,6 +886,7 @@ namespace Barotrauma
                 }
             }
 
+            /*
             if (wrappingWalls == null) return cells;
 
             for (int side = 0; side < 2; side++)
@@ -899,7 +902,7 @@ namespace Barotrauma
                         cells.Add(cell);
                     }
                 }
-            }
+            }*/
 
             return cells;
         }
@@ -918,6 +921,7 @@ namespace Barotrauma
                 ruins = null;
             }
 
+            /*
             if (wrappingWalls!=null)
             {
                 for (int side = 0; side < 2; side++)
@@ -929,7 +933,7 @@ namespace Barotrauma
                 }
 
                 wrappingWalls = null;
-            }
+            }*/
 
 
             cells = null;
