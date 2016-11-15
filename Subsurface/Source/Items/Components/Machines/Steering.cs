@@ -424,10 +424,10 @@ namespace Barotrauma.Items.Components
 
             maintainPosTickBox.Selected = false;
             posToMaintain = null;
+            tickBox.Selected = true;
 
             UpdatePath();
             
-            tickBox.Selected = true;
 
             return true;
         }

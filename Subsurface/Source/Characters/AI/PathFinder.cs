@@ -61,6 +61,7 @@ namespace Barotrauma
             }
 
             var nodeList = nodes.Values.ToList();
+            nodeList.RemoveAll(n => n.connections.Count == 0);
             foreach (PathNode node in nodeList)
             {
                 node.distances = new List<float>();
@@ -69,6 +70,7 @@ namespace Barotrauma
                     node.distances.Add(Vector2.Distance(node.position, node.connections[i].position));
                 }                
             }
+
             return nodeList;            
         }
     }
@@ -197,12 +199,6 @@ namespace Barotrauma
             foreach (PathNode node in nodes)
             {
                 Vector2 nodePos = node.Position;
-
-                //if node waypoint is one of submarine waypoints outside the sub, transform position
-                //if (node.Waypoint!=null && node.Waypoint.Submarine != null && node.Waypoint.CurrentHull==null)
-                //{
-                //    nodePos -= node.Waypoint.Submarine.Position;
-                //}
 
                 float dist = Vector2.Distance(end, nodePos);
                 if (dist < closestDist || endNode == null)
