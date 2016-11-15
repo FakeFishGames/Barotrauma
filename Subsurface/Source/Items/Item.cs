@@ -770,6 +770,8 @@ namespace Barotrauma
             
             if (body == null || !body.Enabled) return;
 
+            System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
+
             if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
             {
                 Submarine prevSub = Submarine;
