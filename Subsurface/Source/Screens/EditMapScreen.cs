@@ -250,8 +250,8 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            
-            GUIComponent.MouseOn = null;
+
+            GUIComponent.ForceMouseOn(null);
             characterMode = false;
 
             if (Submarine.MainSub != null)
@@ -278,7 +278,7 @@ namespace Barotrauma
         {
             base.Deselect();
 
-            GUIComponent.MouseOn = null;
+            GUIComponent.ForceMouseOn(null);
 
             MapEntityPrefab.Selected = null;
 
@@ -768,7 +768,7 @@ namespace Barotrauma
 
             MapEntityPrefab.SelectPrefab(obj);
             selectedTab = -1;
-            GUIComponent.MouseOn = null;
+            GUIComponent.ForceMouseOn(null);
             return false;
         }
 
@@ -803,6 +803,43 @@ namespace Barotrauma
             previouslyUsedList.children.Insert(0, textBlock);
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            if (tutorial != null) tutorial.AddToGUIUpdateList();
+
+            if (MapEntity.SelectedList.Count == 1)
+            {
+                MapEntity.SelectedList[0].AddToGUIUpdateList();
+            }
+
+            leftPanel.AddToGUIUpdateList();
+            topPanel.AddToGUIUpdateList();
+
+            if (wiringMode)
+            {
+                wiringToolPanel.AddToGUIUpdateList();
+            }
+
+            if (loadFrame != null)
+            {
+                loadFrame.AddToGUIUpdateList();
+            }
+            else if (saveFrame != null)
+            {
+                saveFrame.AddToGUIUpdateList();
+            }
+            else if (selectedTab > -1)
+            {
+                GUItabs[selectedTab].AddToGUIUpdateList();
+            }
+
+            if ((characterMode || wiringMode) && dummyCharacter != null)
+            {
+                CharacterHUD.AddToGUIUpdateList(dummyCharacter);
+            }
+
+            GUI.AddToGUIUpdateList();
+        }
 
         /// <summary>
         /// Allows the game to run logic such as updating the world,
@@ -851,16 +888,15 @@ namespace Barotrauma
             }
             else
             {
-
                 MapEntity.UpdateSelecting(cam);
             }
 
-            GUIComponent.MouseOn = null;
+            //GUIComponent.ForceMouseOn(null);
 
             if (!characterMode && !wiringMode)
             {
                 if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.UpdatePlacing(cam);
-
+                
                 MapEntity.UpdateEditor(cam);
             }
 

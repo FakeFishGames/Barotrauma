@@ -181,6 +181,11 @@ namespace Barotrauma.Items.Components
             spriteBatch.DrawString(GUI.Font, "Load: " + (int)powerLoad + " kW", new Vector2(x + 30, y + 100), Color.White);
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
+        }
+
         public override void UpdateHUD(Character character)
         {
             GuiFrame.Update(1.0f / 60.0f);

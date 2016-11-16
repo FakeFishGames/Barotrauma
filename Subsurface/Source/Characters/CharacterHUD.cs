@@ -32,6 +32,31 @@ namespace Barotrauma
             damageOverlayTimer = MathHelper.Clamp(amount * 0.1f, 0.2f, 5.0f);
         }
 
+        public static void AddToGUIUpdateList(Character character)
+        {
+            if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
+
+            if (suicideButton != null && suicideButton.Visible) suicideButton.AddToGUIUpdateList();
+            
+            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            {
+
+                if (character.Inventory != null)
+                {
+                    for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
+                    {
+                        var item = character.Inventory.Items[i];
+                        if (item == null || CharacterInventory.limbSlots[i] == InvSlotType.Any) continue;
+
+                        foreach (ItemComponent ic in item.components)
+                        {
+                            if (ic.DrawHudWhenEquipped) ic.AddToGUIUpdateList();
+                        }
+                    }
+                }
+            }
+        }
+
         public static void Update(float deltaTime, Character character)
         {
             if (drowningBar != null)
@@ -228,7 +253,7 @@ namespace Barotrauma
 
                     suicideButton.OnClicked = (button, userData) =>
                     {
-                        GUIComponent.MouseOn = null;
+                        GUIComponent.ForceMouseOn(null);
                         if (Character.Controlled != null)
                         {
                             Character.Controlled.Kill(Character.Controlled.CauseOfDeath);

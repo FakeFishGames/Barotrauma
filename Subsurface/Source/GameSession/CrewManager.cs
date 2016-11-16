@@ -157,6 +157,13 @@ namespace Barotrauma
             //new GUIImage(new Rectangle(-10, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
         }
 
+        public void AddToGUIUpdateList()
+        {
+            guiFrame.AddToGUIUpdateList();
+            if (commander.Frame != null) commander.Frame.AddToGUIUpdateList();
+            if (crewFrameOpen) crewFrame.AddToGUIUpdateList();
+        }
+
         public void Update(float deltaTime)
         {
             guiFrame.Update(deltaTime);

@@ -338,6 +338,16 @@ namespace Barotrauma.Networking
 
         public virtual void KickPlayer(string kickedName, bool ban, bool range = false) { }
 
+        public virtual void AddToGUIUpdateList()
+        {
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
+            {
+                inGameHUD.AddToGUIUpdateList();
+
+                GameMain.GameSession.CrewManager.AddToGUIUpdateList();
+            }
+        }
+
         public virtual void Update(float deltaTime) 
         {
             if (gameStarted && Screen.Selected == GameMain.GameScreen)

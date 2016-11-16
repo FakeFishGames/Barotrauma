@@ -1141,6 +1141,27 @@ namespace Barotrauma
             }
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            if (condition <= 0.0f)
+            {
+                FixRequirement.AddToGUIUpdateList();
+                return;
+            }
+
+            if (HasInGameEditableProperties)
+            {
+                if (editingHUD != null) editingHUD.AddToGUIUpdateList();
+            }
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.AddToGUIUpdateList();
+            }
+
+            if (Screen.Selected is EditMapScreen && editingHUD != null) editingHUD.AddToGUIUpdateList();
+        }
+
         public virtual void UpdateHUD(Camera cam, Character character)
         {
             if (condition <= 0.0f)
@@ -1390,7 +1411,7 @@ namespace Barotrauma
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
                     ic.PlaySound(ActionType.OnPicked, picker.WorldPosition);
 
-                    if (picker==Character.Controlled) GUIComponent.MouseOn = null;
+                    if (picker==Character.Controlled) GUIComponent.ForceMouseOn(null);
 
                     if (ic.CanBeSelected) selected = true;
                 }

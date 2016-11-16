@@ -327,10 +327,26 @@ namespace Barotrauma
 
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
-                    DebugConsole.Update(this, (float)Timing.Step);
+                    GUIComponent.ClearUpdateList();
+                    DebugConsole.AddToGUIUpdateList();
 
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
+
+                    if (!paused)
+                    {
+                        Screen.Selected.AddToGUIUpdateList();
+                    }
+
+                    if (NetworkMember != null)
+                    {
+                        NetworkMember.AddToGUIUpdateList();
+                    }
+
+                    GUI.AddToGUIUpdateList();
+                    GUIComponent.UpdateMouseOn();
+
+                    DebugConsole.Update(this, (float)Timing.Step);
                     
                     if (!paused)
                     {
@@ -370,6 +386,14 @@ namespace Barotrauma
             else if (hasLoaded)
             {
                 Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
+            }
+
+            if (!DebugDraw) return;
+            if (GUIComponent.MouseOn!=null)
+            {
+                spriteBatch.Begin();
+                GUI.DrawRectangle(spriteBatch, GUIComponent.MouseOn.MouseRect, Color.Lime);
+                spriteBatch.End();
             }
         }
 

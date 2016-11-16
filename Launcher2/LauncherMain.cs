@@ -196,7 +196,7 @@ namespace Launcher2
                 var messageBox = GUIMessageBox.MessageBoxes.Peek();
                 if (messageBox != null)
                 {
-                    GUIComponent.MouseOn = messageBox;
+                    GUIComponent.ForceMouseOn(messageBox);
                     messageBox.Update(deltaTime);
                     return;
                 }

@@ -366,6 +366,11 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            menu.AddToGUIUpdateList();
+        }
+
         public override void Update(double deltaTime)
         {
             menu.Update((float)deltaTime);

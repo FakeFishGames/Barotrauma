@@ -1019,7 +1019,7 @@ namespace Barotrauma
             if (lerp)
             {
                 limb.body.TargetPosition = movePos;
-                limb.body.MoveToTargetPosition(Vector2.Distance(limb.SimPosition, movePos) < 10.0f);                
+                limb.body.MoveToTargetPosition(Vector2.DistanceSquared(limb.SimPosition, movePos) < 100.0f);                
             }
             else
             {
@@ -1041,7 +1041,7 @@ namespace Barotrauma
 
             //if the ragdoll is too far from the collider, disable collisions until it's close enough
             //(in case the ragdoll has gotten stuck somewhere)
-            if (Vector2.Distance(collider.SimPosition, MainLimb.SimPosition) > allowedDist)
+            if (Vector2.DistanceSquared(collider.SimPosition, MainLimb.SimPosition) > allowedDist*allowedDist)
             {
                 if (!collisionsDisabled)
                 {
