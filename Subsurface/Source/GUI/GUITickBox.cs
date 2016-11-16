@@ -55,6 +55,11 @@ namespace Barotrauma
             }
         }
 
+        public override Rectangle MouseRect
+        {
+            get { return box.Rect; }
+        }
+
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
             : this(rect, label, alignment, GUI.Font, parent)
         {
@@ -69,6 +74,7 @@ namespace Barotrauma
             box = new GUIFrame(rect, Color.DarkGray, null, this);
             box.HoverColor = Color.Gray;
             box.SelectedColor = Color.DarkGray;
+            box.CanBeFocused = false;
             
             text = new GUITextBlock(new Rectangle(rect.Right + 10, rect.Y+2, 20, rect.Height), label, GUI.Style, this, font);
 
@@ -76,19 +82,19 @@ namespace Barotrauma
 
             Enabled = true;
         }
-
+        
         public override void Update(float deltaTime)
         {
             if (!Visible || !Enabled) return;
 
-            if (MouseOn != null && MouseOn != this && !MouseOn.IsParentOf(this)) return;
+            //if (MouseOn != null && MouseOn != this && !MouseOn.IsParentOf(this)) return;
 
-            if (text.Rect.Contains(PlayerInput.MousePosition)) MouseOn = this;
+            //if (text.Rect.Contains(PlayerInput.MousePosition)) MouseOn = this;
 
-            if (box.Rect.Contains(PlayerInput.MousePosition))
+            if (MouseOn==this)//box.Rect.Contains(PlayerInput.MousePosition))
             {
                 //ToolTip = this.ToolTip;
-                MouseOn = this;
+                //MouseOn = this;
 
                 box.State = ComponentState.Hover;
 

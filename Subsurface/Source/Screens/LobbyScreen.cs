@@ -341,6 +341,14 @@ namespace Barotrauma
             return false;
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            base.AddToGUIUpdateList();
+
+            topPanel.AddToGUIUpdateList();
+            bottomPanel[selectedRightPanel].AddToGUIUpdateList();
+        }
+
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);

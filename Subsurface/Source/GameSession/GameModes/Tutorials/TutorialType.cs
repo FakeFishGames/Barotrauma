@@ -75,6 +75,11 @@ namespace Barotrauma.Tutorials
             CoroutineManager.StartCoroutine(UpdateState());
         }
 
+        public virtual void AddToGUIUpdateList()
+        {
+            if (infoBox != null) infoBox.AddToGUIUpdateList();
+        }
+
         public virtual void Update(float deltaTime)
         {
             if (character!=null)

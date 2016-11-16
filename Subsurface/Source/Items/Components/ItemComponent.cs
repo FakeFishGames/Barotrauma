@@ -469,6 +469,8 @@ namespace Barotrauma.Items.Components
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
 
+        public virtual void AddToGUIUpdateList() { }
+
         public virtual void UpdateHUD(Character character) { }
 
         /// <returns>true if the operation was completed</returns>

@@ -77,6 +77,8 @@ namespace Barotrauma
 
         public virtual void MsgBox() { }
 
+        public virtual void AddToGUIUpdateList() { }
+
         public virtual void Update(float deltaTime)
         {
             //if (!isRunning) return;
