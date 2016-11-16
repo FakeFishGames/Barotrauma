@@ -1965,6 +1965,7 @@ namespace Barotrauma.Networking
         public override void Disconnect()
         {
             banList.Save();
+            SaveSettings();
 
             if (registeredToMaster && restClient != null)
             {

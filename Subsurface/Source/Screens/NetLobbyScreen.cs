@@ -51,6 +51,11 @@ namespace Barotrauma
 
         private GUITextBox serverMessage;
 
+        public GUITextBox ServerMessage
+        {
+            get { return serverMessage; }
+        }
+
         public GUIListBox SubList
         {
             get { return subList; }
