@@ -78,6 +78,14 @@ namespace Barotrauma
 
         }
 
+        public static void AddToGUIUpdateList()
+        {
+            if (isOpen)
+            {
+                frame.AddToGUIUpdateList();
+            }
+        }
+
         public static void Update(GameMain game, float deltaTime)
         {
             if (PlayerInput.KeyHit(Keys.F3))
@@ -89,7 +97,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GUIComponent.MouseOn = null;
+                    GUIComponent.ForceMouseOn(null);
                     textBox.Deselect();
                 }
 

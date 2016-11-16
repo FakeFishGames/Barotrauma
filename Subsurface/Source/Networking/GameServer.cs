@@ -288,6 +288,14 @@ namespace Barotrauma.Networking
             Log("Master server responded", Color.Cyan);
         }
         
+        public override void AddToGUIUpdateList()
+        {
+            if (started) base.AddToGUIUpdateList();
+
+            if (settingsFrame != null) settingsFrame.AddToGUIUpdateList();
+            if (log.LogFrame != null) log.LogFrame.AddToGUIUpdateList();
+        }
+
         public override void Update(float deltaTime)
         {
             if (ShowNetStats) netStats.Update(deltaTime);

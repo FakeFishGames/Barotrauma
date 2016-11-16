@@ -36,7 +36,7 @@ namespace Barotrauma
 
             //if (style != null) ApplyStyle(style);
         }
-                
+
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (!Visible) return;

@@ -246,6 +246,11 @@ namespace Barotrauma.Items.Components
             spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
+        }
+
         public override void UpdateHUD(Character character)
         {
             GuiFrame.Update(1.0f / 60.0f);

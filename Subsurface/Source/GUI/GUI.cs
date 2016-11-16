@@ -499,6 +499,28 @@ namespace Barotrauma
             cursor.Draw(spriteBatch, PlayerInput.MousePosition);            
         }
 
+        public static void AddToGUIUpdateList()
+        {
+            if (pauseMenuOpen)
+            {
+                pauseMenu.AddToGUIUpdateList();
+            }
+
+            if (settingsMenuOpen)
+            {
+                GameMain.Config.SettingsFrame.AddToGUIUpdateList();
+            }
+
+            if (GUIMessageBox.MessageBoxes.Count > 0)
+            {
+                var messageBox = GUIMessageBox.MessageBoxes.Peek();
+                if (messageBox != null)
+                {
+                    messageBox.AddToGUIUpdateList();
+                }
+            }
+        }
+
         public static void Update(float deltaTime)
         {
             if (pauseMenuOpen)
@@ -516,7 +538,6 @@ namespace Barotrauma
                 var messageBox = GUIMessageBox.MessageBoxes.Peek();
                 if (messageBox != null)
                 {
-                    GUIComponent.MouseOn = messageBox;
                     messageBox.Update(deltaTime);
                 }
             }

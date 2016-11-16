@@ -10,9 +10,47 @@ namespace Barotrauma
     public abstract class GUIComponent
     {
         const float FlashDuration = 1.5f;
-
-        public static GUIComponent MouseOn;
         
+        public static GUIComponent MouseOn
+        {
+            get;
+            private set;
+        }
+        public static void ForceMouseOn(GUIComponent c)
+        {
+            MouseOn = c;
+        }
+
+        protected static List<GUIComponent> ComponentsToUpdate = new List<GUIComponent>();
+
+        public virtual void AddToGUIUpdateList()
+        {
+            if (!Visible) return;
+            if (ComponentsToUpdate.Contains(this)) return;
+            ComponentsToUpdate.Add(this);
+            children.ForEach(c => c.AddToGUIUpdateList());
+        }
+
+        public static void ClearUpdateList()
+        {
+            ComponentsToUpdate.Clear();
+        }
+
+        public static GUIComponent UpdateMouseOn()
+        {
+            MouseOn = null;
+            for (int i=ComponentsToUpdate.Count-1;i>=0;i--)
+            {
+                GUIComponent c = ComponentsToUpdate[i];
+                if (c.MouseRect.Contains(PlayerInput.MousePosition))
+                {
+                    MouseOn = c;
+                    break;
+                }
+            }
+            return MouseOn;
+        }
+
         protected static KeyboardDispatcher keyboardDispatcher;
 
         public enum ComponentState { None, Hover, Selected};
@@ -96,6 +134,11 @@ namespace Barotrauma
                         Math.Max(child.rect.Height + (rect.Height - prevHeight),0));
                 }                
             }
+        }
+        
+        public virtual Rectangle MouseRect
+        {
+            get { return CanBeFocused ? rect : Rectangle.Empty; }
         }
 
         public List<UISprite> sprites;
@@ -304,7 +347,7 @@ namespace Barotrauma
 
             if (flashTimer>0.0f) flashTimer -= deltaTime;
 
-            if (CanBeFocused)
+            /*if (CanBeFocused)
             {
                 if (rect.Contains(PlayerInput.MousePosition))
                 {
@@ -315,7 +358,7 @@ namespace Barotrauma
                     if (MouseOn == this) MouseOn = null;
                 }
 
-            }
+            }*/
 
             //use a fixed list since children can change their order in the main children list
             //TODO: maybe find a more efficient way of handling changes in list order
