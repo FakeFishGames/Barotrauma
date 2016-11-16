@@ -364,7 +364,7 @@ namespace Barotrauma
         {
             if (gameMode != null) gameMode.AddToGUIUpdateList();
 
-            if (infoFrame != null)  infoButton.AddToGUIUpdateList();
+            if (infoFrame != null) infoFrame.AddToGUIUpdateList();
         }
 
         public void Update(float deltaTime)

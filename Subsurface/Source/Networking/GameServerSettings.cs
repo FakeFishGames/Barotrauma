@@ -264,6 +264,7 @@ namespace Barotrauma.Networking
 
             var traitorsEnabled = TraitorsEnabled;
             Enum.TryParse<YesNoMaybe>(ToolBox.GetAttributeString(doc.Root, "TraitorsEnabled", "No"), out traitorsEnabled);
+            TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
             
             FileStreamSender.MaxTransferDuration = new TimeSpan(0,0,ToolBox.GetAttributeInt(doc.Root, "MaxFileTransferDuration", 150));
