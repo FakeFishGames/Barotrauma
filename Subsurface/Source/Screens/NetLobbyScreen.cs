@@ -916,6 +916,24 @@ namespace Barotrauma
             playerList.ClearChildren();
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            base.AddToGUIUpdateList();
+
+            if (jobInfoFrame != null)
+            {
+                jobInfoFrame.AddToGUIUpdateList();
+            }
+            else if (playerFrame != null)
+            {
+                playerFrame.AddToGUIUpdateList();
+            }
+            else
+            {
+                menu.AddToGUIUpdateList();
+            }
+        }
+
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
@@ -944,9 +962,7 @@ namespace Barotrauma
             }
             else
             {
-
-            menu.Update((float)deltaTime);
-
+                menu.Update((float)deltaTime);
             }
 
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)

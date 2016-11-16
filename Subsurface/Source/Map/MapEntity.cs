@@ -18,10 +18,24 @@ namespace Barotrauma
         
         //which entities have been selected for editing
         private static List<MapEntity> selectedList = new List<MapEntity>();
+        public static List<MapEntity> SelectedList
+        {
+            get
+            {
+                return selectedList;
+            }
+        }
         private static List<MapEntity> copiedList = new List<MapEntity>();
         
         protected static GUIComponent editingHUD;
-        
+        public static GUIComponent EditingHUD
+        {
+            get
+            {
+                return editingHUD;
+            }
+        }
+
         protected static Vector2 selectionPos = Vector2.Zero;
         protected static Vector2 selectionSize = Vector2.Zero;
 
@@ -635,6 +649,11 @@ namespace Barotrauma
             relative.Y = 0.0f;
 
             Move(-relative * 2.0f);
+        }
+        
+        public virtual void AddToGUIUpdateList()
+        {
+            if (editingHUD != null) editingHUD.AddToGUIUpdateList();
         }
 
         public virtual void UpdateEditing(Camera cam) { }

@@ -62,6 +62,7 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
+            GuiFrame.CanBeFocused = false;
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -98,6 +99,11 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             return pingState > 1.0f;
+        }
+
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
         }
 
         public override void UpdateHUD(Character character)

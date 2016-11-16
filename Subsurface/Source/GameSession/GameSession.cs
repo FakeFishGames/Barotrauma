@@ -360,6 +360,13 @@ namespace Barotrauma
             
         }
         
+        public void AddToGUIUpdateList()
+        {
+            if (gameMode != null) gameMode.AddToGUIUpdateList();
+
+            if (infoFrame != null)  infoButton.AddToGUIUpdateList();
+        }
+
         public void Update(float deltaTime)
         {
             TaskManager.Update(deltaTime);

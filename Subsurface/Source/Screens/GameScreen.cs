@@ -88,7 +88,21 @@ namespace Barotrauma
 
             Sounds.SoundManager.LowPassHFGain = 1.0f;
         }
-        
+
+        public override void AddToGUIUpdateList()
+        {
+            if (GameMain.GameSession != null) GameMain.GameSession.AddToGUIUpdateList();
+
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
+            {
+                if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
+                {
+                    Character.Controlled.SelectedConstruction.AddToGUIUpdateList();
+                }
+            }
+            Character.AddAllToGUIUpdateList();
+        }
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -132,7 +146,7 @@ namespace Barotrauma
                 }
             }
             Character.UpdateAll(cam, (float)deltaTime);
-            
+
             BackgroundCreatureManager.Update(cam, (float)deltaTime);
 
             GameMain.ParticleManager.Update((float)deltaTime);
