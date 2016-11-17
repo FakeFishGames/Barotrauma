@@ -200,6 +200,8 @@ namespace Barotrauma
                 GameMain.NetworkMember = null;
             }
 
+            CoroutineManager.StopCoroutines("EndCinematic");
+
             GameMain.GameSession = null;
 
             GameMain.MainMenuScreen.Select();
