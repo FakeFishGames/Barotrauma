@@ -114,6 +114,7 @@ namespace Barotrauma
                 collider[value].SetTransform(pos, collider[colliderIndex].Rotation);
                 collider[value].PhysEnabled = !frozen;
                 collider[value].Enabled = !simplePhysicsEnabled;
+                collider[value].Submarine = collider[colliderIndex].Submarine;
                 collider[colliderIndex].PhysEnabled = false;
                 colliderIndex = value;
             }
