@@ -71,7 +71,7 @@ namespace Barotrauma
         public bool onGround;
         private bool ignorePlatforms;
 
-        private float colliderHeightFromFloor;
+        protected float colliderHeightFromFloor;
         
         protected Structure stairs;
                 
@@ -978,7 +978,7 @@ namespace Barotrauma
 
             Vector2 rayStart = Collider.SimPosition;
             Vector2 rayEnd = rayStart;
-            rayEnd.Y -= Collider.height * 0.5f + Collider.radius + ConvertUnits.ToSimUnits(55.0f);
+            rayEnd.Y -= Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor*1.2f;
 
             var lowestLimb = FindLowestLimb();
 
@@ -1037,7 +1037,7 @@ namespace Barotrauma
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && Collider.SimPosition.Y<targetY && !forceImmediate)
                     {
                         Vector2 newSpeed = Collider.LinearVelocity;
-                        newSpeed.Y = (targetY - Collider.SimPosition.Y)*2.0f;
+                        newSpeed.Y = (targetY - Collider.SimPosition.Y)*5.0f;
                         Collider.LinearVelocity = newSpeed;
                     }
                     else
@@ -1255,7 +1255,7 @@ namespace Barotrauma
             float halfHeight = Collider.height * 0.5f + Collider.radius;
 
             Vector2 offset = Vector2.Zero;
-            offset.Y = ConvertUnits.ToSimUnits(-45.0f);
+            offset.Y = -colliderHeightFromFloor;
             return Collider.SimPosition + offset +
                 new Vector2((float)Math.Sin(Collider.Rotation), -(float)Math.Cos(Collider.Rotation)) * halfHeight;
         }
