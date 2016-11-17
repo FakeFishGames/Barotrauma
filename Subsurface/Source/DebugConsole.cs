@@ -627,7 +627,7 @@ namespace Barotrauma
                             var wire = item.GetComponent<Wire>();
                             if (wire == null) continue;
 
-                            if (wire.Nodes.Any() && !wire.Connections.Any(c => c != null))
+                            if (wire.GetNodes().Count > 0 && !wire.Connections.Any(c => c != null))
                             {
                                 wire.Item.Drop(null);
                                 DebugConsole.NewMessage("Dropped wire (ID: "+wire.Item.ID+") - attached on wall but no connections found", Color.Orange);

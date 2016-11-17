@@ -362,6 +362,8 @@ namespace Barotrauma
         
         public void AddToGUIUpdateList()
         {
+            if (CrewManager != null) CrewManager.AddToGUIUpdateList();
+
             if (gameMode != null) gameMode.AddToGUIUpdateList();
 
             infoButton.AddToGUIUpdateList();

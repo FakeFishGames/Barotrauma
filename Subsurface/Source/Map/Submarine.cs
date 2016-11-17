@@ -1080,7 +1080,10 @@ namespace Barotrauma
                         if (item.Submarine != this) continue;
 
                         var wire = item.GetComponent<Items.Components.Wire>();
-                        if (wire != null) wire.MoveNodes(-center);
+                        if (wire != null)
+                        {
+                            wire.MoveNodes(-center);
+                        }
                     }
 
                     for (int i = 0; i < MapEntity.mapEntityList.Count; i++)

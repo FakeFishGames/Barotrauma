@@ -91,8 +91,6 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            if (GameMain.GameSession != null) GameMain.GameSession.AddToGUIUpdateList();
-
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
             {
                 if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
@@ -100,6 +98,9 @@ namespace Barotrauma
                     Character.Controlled.SelectedConstruction.AddToGUIUpdateList();
                 }
             }
+
+            if (GameMain.GameSession != null) GameMain.GameSession.AddToGUIUpdateList();
+
             Character.AddAllToGUIUpdateList();
         }
 
