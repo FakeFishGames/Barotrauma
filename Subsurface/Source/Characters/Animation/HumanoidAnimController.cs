@@ -747,9 +747,9 @@ namespace Barotrauma
                 ladderSimPos += character.SelectedConstruction.Submarine.SimPosition - currentHull.Submarine.SimPosition;
             }
             
-            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.7f), 10.5f);
-            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y+0.5f), 10.5f);
-            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y+0.4f), 10.5f);
+            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.7f + ConvertUnits.ToSimUnits(-45.0f)), 10.5f);
+            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y+ 0.5f + ConvertUnits.ToSimUnits(-45.0f)), 10.5f);
+            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y+ 0.4f + ConvertUnits.ToSimUnits(-45.0f)), 10.5f);
 
             if (!character.IsRemotePlayer)
             {
@@ -762,7 +762,7 @@ namespace Barotrauma
                 ladderSimPos.X,
                 Collider.SimPosition.Y + 0.6f + movement.Y * 0.1f - ladderSimPos.Y);
 
-            handPos.Y = Math.Min(-0.5f, handPos.Y);
+            handPos.Y = Math.Min(-0.5f, handPos.Y) + ConvertUnits.ToSimUnits(-45.0f);
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
@@ -779,7 +779,7 @@ namespace Barotrauma
 
             Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
-                Collider.SimPosition.Y + 0.7f - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
+                Collider.SimPosition.Y + 0.7f + ConvertUnits.ToSimUnits(-45.0f) - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
 
             //if (movement.Y < 0) footPos.Y += 0.05f;
 
