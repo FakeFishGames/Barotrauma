@@ -981,7 +981,7 @@ namespace Barotrauma
             rayEnd.Y -= Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor*1.2f;
 
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
-            if (!inWater && levitatingCollider)
+            if (!inWater && !character.IsDead && !character.IsUnconscious && levitatingCollider && Collider.LinearVelocity.Y>-ImpactTolerance)
             {
                 float closestFraction = 1.0f;
                 Fixture closestFixture = null;
