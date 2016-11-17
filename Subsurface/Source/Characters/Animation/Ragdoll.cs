@@ -980,11 +980,7 @@ namespace Barotrauma
             Vector2 rayEnd = rayStart;
             rayEnd.Y -= Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor*1.2f;
 
-            var lowestLimb = FindLowestLimb();
-
-            //TODO: use something like this instead of lowest limb, whenever we get to that
-            //float footY = Collider.SimPosition.Y + Collider.height * 0.5f + Collider.radius + ConvertUnits.ToSimUnits(45.0f);
-
+            Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
             if (!inWater && levitatingCollider)
             {
                 float closestFraction = 1.0f;
@@ -995,11 +991,11 @@ namespace Barotrauma
                     {
                         case Physics.CollisionStairs:
                             Structure structure = fixture.Body.UserData as Structure;
-                            if (lowestLimb.Position.Y<structure.Rect.Y-structure.Rect.Height+30 && TargetMovement.Y < 0.5f) return -1;
+                            if (colliderBottomDisplay.Y < structure.Rect.Y - structure.Rect.Height + 30 && TargetMovement.Y < 0.5f) return -1;
                             break;
                         case Physics.CollisionPlatform:
                             Structure platform = fixture.Body.UserData as Structure;
-                            if (IgnorePlatforms || lowestLimb.Position.Y < platform.Rect.Y-16) return -1;
+                            if (IgnorePlatforms || colliderBottomDisplay.Y < platform.Rect.Y - 16) return -1;
                             break;
                         case Physics.CollisionWall:
                             break;
