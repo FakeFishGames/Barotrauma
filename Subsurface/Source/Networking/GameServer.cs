@@ -1165,7 +1165,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            CoroutineManager.StartCoroutine(EndCinematic());
+            CoroutineManager.StartCoroutine(EndCinematic(),"EndCinematic");
         }
 
         public IEnumerable<object> EndCinematic()

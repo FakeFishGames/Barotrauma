@@ -54,21 +54,25 @@ namespace Barotrauma
         public override void UpdateAnim(float deltaTime)
         {
             if (Frozen) return;
-            
+
+            levitatingCollider = true;
+            ColliderIndex = Crouching ? 1 : 0;
+            if (!Crouching && ColliderIndex == 1) Crouching = true;
+
             if (character.IsDead || character.IsUnconscious || stunTimer > 0.0f)
             {
-                collider.FarseerBody.FixedRotation = false;
+                Collider.FarseerBody.FixedRotation = false;
 
-                if (character.IsRemotePlayer)
+                /*if (character.IsRemotePlayer)
                 {
-                    MainLimb.pullJoint.WorldAnchorB = collider.SimPosition;
+                    MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
                     MainLimb.pullJoint.Enabled = true;
                 }
                 else
-                {
-                    collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - collider.SimPosition) * 20.0f;
-                    collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
-                }
+                {*/
+                Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;
+                Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
+                //}
 
                 if (stunTimer > 0)
                 {
@@ -90,39 +94,39 @@ namespace Barotrauma
             if (!character.IsRemotePlayer || true)
             {
                 //re-enable collider
-                if (!collider.FarseerBody.Enabled)
+                if (!Collider.FarseerBody.Enabled)
                 {
                     var lowestLimb = FindLowestLimb();
 
-                    collider.SetTransform(new Vector2(
-                        collider.SimPosition.X,
-                        Math.Max(lowestLimb.SimPosition.Y + (collider.radius + collider.height / 2), collider.SimPosition.Y)),
-                        collider.Rotation);
+                    Collider.SetTransform(new Vector2(
+                        Collider.SimPosition.X,
+                        Math.Max(lowestLimb.SimPosition.Y + (Collider.radius + Collider.height / 2), Collider.SimPosition.Y)),
+                        Collider.Rotation);
 
-                    collider.FarseerBody.Enabled = true;
+                    Collider.FarseerBody.Enabled = true;
                 }            
 
                 if (swimming)
                 {
-                    collider.FarseerBody.FixedRotation = false;
+                    Collider.FarseerBody.FixedRotation = false;
                 }
-                else if (!collider.FarseerBody.FixedRotation)
+                else if (!Collider.FarseerBody.FixedRotation)
                 {
-                    if (Math.Abs(MathUtils.GetShortestAngle(collider.Rotation, 0.0f)) > 0.001f)
+                    if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, 0.0f)) > 0.001f)
                     {
                         //rotate collider back upright
-                        collider.AngularVelocity = MathUtils.GetShortestAngle(collider.Rotation, 0.0f) * 10.0f;
-                        collider.FarseerBody.FixedRotation = false;
+                        Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 10.0f;
+                        Collider.FarseerBody.FixedRotation = false;
                     }
                     else
                     {
-                        collider.FarseerBody.FixedRotation = true;
+                        Collider.FarseerBody.FixedRotation = true;
                     }
                 }
             }
             else
             {
-                collider.FarseerBody.Enabled = false;
+                Collider.FarseerBody.Enabled = false;
             }
 
             if (character.LockHands)
@@ -165,6 +169,7 @@ namespace Barotrauma
             switch (Anim)
             {
                 case Animation.Climbing:
+                    levitatingCollider = false;
                     UpdateClimbing();
                     break;
                 case Animation.UsingConstruction:
@@ -210,7 +215,7 @@ namespace Barotrauma
             }
 
             aiming = false;
-            if (character.IsRemotePlayer && GameMain.Server == null) collider.LinearVelocity = Vector2.Zero;
+            if (character.IsRemotePlayer && GameMain.Server == null) Collider.LinearVelocity = Vector2.Zero;
         }
 
 
@@ -240,12 +245,12 @@ namespace Barotrauma
             {
                 TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.5f, 1.5f), TargetMovement.Y);
 
-                if ((TargetMovement.X > 0.0f && stairs.StairDirection == Direction.Right) ||
+                /*if ((TargetMovement.X > 0.0f && stairs.StairDirection == Direction.Right) ||
                     TargetMovement.X < 0.0f && stairs.StairDirection == Direction.Left)
                 {
                     TargetMovement *= 1.7f;
                     //walkCycleSpeed *= 1.0f;
-                }
+                }*/
             }
 
             Vector2 colliderPos = GetColliderBottom();
@@ -308,14 +313,14 @@ namespace Barotrauma
             if (onGround && (!character.IsRemotePlayer || GameMain.Server != null))
             {
                 //move slower if collider isn't upright
-                float rotationFactor = (float)Math.Abs(Math.Cos(collider.Rotation));
+                float rotationFactor = (float)Math.Abs(Math.Cos(Collider.Rotation));
 
-                collider.LinearVelocity = new Vector2(
+                Collider.LinearVelocity = new Vector2(
                         movement.X * rotationFactor,
-                        collider.LinearVelocity.Y > 0.0f ? collider.LinearVelocity.Y * 0.5f : collider.LinearVelocity.Y);
+                        Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
             }
 
-            ClimbOverObstacles();
+            //ClimbOverObstacles();
 
             getUpSpeed = getUpSpeed * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.5f);
 
@@ -323,8 +328,8 @@ namespace Barotrauma
             head.pullJoint.Enabled = true;
             waist.pullJoint.Enabled = true;
 
-            collider.FarseerBody.Friction = 0.05f;
-            collider.FarseerBody.Restitution = 0.05f;
+            Collider.FarseerBody.Friction = 0.05f;
+            Collider.FarseerBody.Restitution = 0.05f;
 
             if (stairs != null)
             {
@@ -486,11 +491,11 @@ namespace Barotrauma
 
         private void ClimbOverObstacles()
         {
-            if (collider.FarseerBody.ContactList == null || Math.Abs(movement.X) < 0.01f) return;
+            if (Collider.FarseerBody.ContactList == null || Math.Abs(movement.X) < 0.01f) return;
 
             //check if the collider is touching a suitable obstacle to climb over
             Vector2? handle = null;
-            FarseerPhysics.Dynamics.Contacts.ContactEdge ce = collider.FarseerBody.ContactList;
+            FarseerPhysics.Dynamics.Contacts.ContactEdge ce = Collider.FarseerBody.ContactList;
             while (ce != null && ce.Contact != null)
             {
                 if (ce.Contact.Enabled && ce.Contact.IsTouching && ce.Contact.FixtureA.CollisionCategories.HasFlag(Physics.CollisionWall))
@@ -500,7 +505,7 @@ namespace Barotrauma
                     ce.Contact.GetWorldManifold(out contactNormal, out contactPos);
 
                     //only climb if moving towards the obstacle
-                    if (Math.Sign(contactPos[0].X - collider.SimPosition.X) == Math.Sign(movement.X) &&
+                    if (Math.Sign(contactPos[0].X - Collider.SimPosition.X) == Math.Sign(movement.X) &&
                         (handle == null || contactPos[0].Y > ((Vector2)handle).Y))
                     {
                         handle = contactPos[0];
@@ -516,7 +521,7 @@ namespace Barotrauma
 
             //the contact point should be higher than the bottom of the collider
             if (((Vector2)handle).Y < colliderBottomY + 0.01f ||
-                ((Vector2)handle).Y > collider.SimPosition.Y) return;
+                ((Vector2)handle).Y > Collider.SimPosition.Y) return;
             
             //find the height of the floor below the torso
             //(if moving towards towards an obstacle that's low enough to climb over, the torso should be above it)
@@ -525,7 +530,7 @@ namespace Barotrauma
             if (obstacleY > colliderBottomY)
             {
                 //higher vertical velocity for taller obstacles
-                collider.LinearVelocity += Vector2.UnitY * (((Vector2)handle).Y - colliderBottomY + 0.01f) * 50;
+                Collider.LinearVelocity += Vector2.UnitY * (((Vector2)handle).Y - colliderBottomY + 0.01f) * 50;
                 onGround = true;
             }
         }
@@ -543,7 +548,7 @@ namespace Barotrauma
             
             if (currentHull != null && (currentHull.Rect.Y - currentHull.Surface > 50.0f))
             {
-                surfaceLimiter = (ConvertUnits.ToDisplayUnits(collider.SimPosition.Y + 0.4f) - surfaceY);
+                surfaceLimiter = (ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 0.4f) - surfaceY);
                 surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
                 if (surfaceLimiter > 50.0f) return;
             }
@@ -554,7 +559,7 @@ namespace Barotrauma
             Limb leftFoot = GetLimb(LimbType.LeftFoot);
             Limb rightFoot = GetLimb(LimbType.RightFoot);
             
-            float rotation = MathHelper.WrapAngle(collider.Rotation);
+            float rotation = MathHelper.WrapAngle(Collider.Rotation);
             rotation = MathHelper.ToDegrees(rotation);
             if (rotation < 0.0f) rotation += 360;
 
@@ -574,7 +579,7 @@ namespace Barotrauma
                 if (!aiming)
                 {
                     float newRotation = MathUtils.VectorToAngle(TargetMovement) - MathHelper.PiOver2;
-                    collider.SmoothRotate(newRotation, 5.0f);
+                    Collider.SmoothRotate(newRotation, 5.0f);
                     //torso.body.SmoothRotate(newRotation);
                     
                 }
@@ -589,12 +594,12 @@ namespace Barotrauma
                     TargetMovement = new Vector2(0.0f, -0.1f);
 
                     float newRotation = MathUtils.VectorToAngle(diff);
-                    collider.SmoothRotate(newRotation, 5.0f);
+                    Collider.SmoothRotate(newRotation, 5.0f);
                 }
             }
 
-            torso.body.SmoothRotate(collider.Rotation);
-            torso.body.MoveToPos(collider.SimPosition + new Vector2((float)Math.Sin(-collider.Rotation), (float)Math.Cos(-collider.Rotation))*0.4f, 5.0f);
+            torso.body.SmoothRotate(Collider.Rotation);
+            torso.body.MoveToPos(Collider.SimPosition + new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation))*0.4f, 5.0f);
             
             if (TargetMovement == Vector2.Zero) return;
 
@@ -626,11 +631,11 @@ namespace Barotrauma
 
             if (!character.IsRemotePlayer || GameMain.Server != null)
             {
-                collider.LinearVelocity = Vector2.Lerp(collider.LinearVelocity, movement * swimSpeed, movementLerp);
+                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement * swimSpeed, movementLerp);
             }
                         
             walkPos += movement.Length() * 0.15f;
-            footPos = collider.SimPosition - new Vector2((float)Math.Sin(-collider.Rotation), (float)Math.Cos(-collider.Rotation)) * 0.4f;
+            footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
 
             var rightThigh = GetLimb(LimbType.RightThigh);
             var leftThigh = GetLimb(LimbType.LeftThigh);
@@ -641,7 +646,7 @@ namespace Barotrauma
             Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * 0.5f, 0.0f);
             transformedFootPos = Vector2.Transform(
                 transformedFootPos,
-                Matrix.CreateRotationZ(collider.Rotation));
+                Matrix.CreateRotationZ(Collider.Rotation));
 
             MoveLimb(rightFoot, footPos - transformedFootPos, 1.0f);
             MoveLimb(leftFoot, footPos + transformedFootPos, 1.0f);            
@@ -742,20 +747,20 @@ namespace Barotrauma
                 ladderSimPos += character.SelectedConstruction.Submarine.SimPosition - currentHull.Submarine.SimPosition;
             }
             
-            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, collider.SimPosition.Y + 0.7f), 10.5f);
-            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, collider.SimPosition.Y+0.5f), 10.5f);
-            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, collider.SimPosition.Y+0.4f), 10.5f);
+            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.7f), 10.5f);
+            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y+0.5f), 10.5f);
+            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y+0.4f), 10.5f);
 
             if (!character.IsRemotePlayer)
             {
-                collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, collider.SimPosition.Y), 10.5f);
+                Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, Collider.SimPosition.Y), 10.5f);
             }
 
             bool slide = targetMovement.Y < -1.1f;
 
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
-                collider.SimPosition.Y + 0.6f + movement.Y * 0.1f - ladderSimPos.Y);
+                Collider.SimPosition.Y + 0.6f + movement.Y * 0.1f - ladderSimPos.Y);
 
             handPos.Y = Math.Min(-0.5f, handPos.Y);
 
@@ -774,7 +779,7 @@ namespace Barotrauma
 
             Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
-                collider.SimPosition.Y + 0.7f - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
+                Collider.SimPosition.Y + 0.7f - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
 
             //if (movement.Y < 0) footPos.Y += 0.05f;
 
@@ -805,7 +810,7 @@ namespace Barotrauma
             //if (climbForce.Y > 0.5f) climbForce.Y = Math.Max(climbForce.Y, 1.3f);
 
             //apply forces to the collider to move the Character up/down
-            collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * collider.Mass);
+            Collider.ApplyForce((climbForce * 20.0f + subSpeed * 50.0f) * Collider.Mass);
             head.body.SmoothRotate(0.0f);
             
             if (!character.SelectedConstruction.Prefab.Triggers.Any())
@@ -907,10 +912,10 @@ namespace Barotrauma
                 }
             }
 
-            float dist = Vector2.Distance(target.SimPosition, collider.SimPosition);
+            float dist = Vector2.Distance(target.SimPosition, Collider.SimPosition);
             
             //limit movement if moving away from the target
-            if (Vector2.Dot(target.SimPosition - collider.SimPosition, targetMovement)<0)
+            if (Vector2.Dot(target.SimPosition - Collider.SimPosition, targetMovement)<0)
             {
                 targetMovement *= MathHelper.Clamp(2.0f - dist, 0.0f, 1.0f);
             }
@@ -1148,8 +1153,8 @@ namespace Barotrauma
 
                 float angle = flipAngle ? -limb.body.Rotation : limb.body.Rotation;
                 if (wrapAngle) angle = MathUtils.WrapAnglePi(angle);
-
-                TrySetLimbPosition(limb, collider.SimPosition, position);
+                
+                TrySetLimbPosition(limb, Collider.SimPosition, position);
 
                 limb.body.SetTransform(limb.body.SimPosition, angle);
             }
