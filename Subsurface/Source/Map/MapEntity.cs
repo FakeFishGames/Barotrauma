@@ -251,8 +251,7 @@ namespace Barotrauma
 
                 var originalWire = ((Item)entitiesToClone[i]).GetComponent<Wire>();
 
-                cloneWire.Nodes = new List<Vector2>(originalWire.Nodes);
-                cloneWire.UpdateSections();
+                cloneWire.SetNodes(originalWire.GetNodes());
 
                 for (int n = 0; n < 2; n++)
                 {

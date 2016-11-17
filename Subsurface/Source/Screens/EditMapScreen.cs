@@ -657,7 +657,7 @@ namespace Barotrauma
 
         private GUIFrame CreateWiringPanel()
         {
-            GUIFrame frame = new GUIFrame(new Rectangle(0,0,50,300), null, Alignment.Right | Alignment.CenterY, GUI.Style);
+            GUIFrame frame = new GUIFrame(new Rectangle(0,0,65,300), null, Alignment.Right | Alignment.CenterY, GUI.Style);
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
             GUIListBox listBox = new GUIListBox(Rectangle.Empty, GUI.Style, frame);

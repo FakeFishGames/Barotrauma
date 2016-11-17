@@ -56,8 +56,7 @@ namespace Barotrauma.Items.Components
 
         static Sprite wireSprite;
 
-        public List<Vector2> Nodes;
-
+        private List<Vector2> nodes;
         private List<WireSection> sections;
 
         Connection[] connections;
@@ -83,7 +82,7 @@ namespace Barotrauma.Items.Components
                 wireSprite.Depth = 0.85f;
             }
             
-            Nodes = new List<Vector2>();
+            nodes = new List<Vector2>();
             sections = new List<WireSection>();
 
             connections = new Connection[2];
@@ -159,17 +158,17 @@ namespace Barotrauma.Items.Components
 
                 if (newConnection.Item.Submarine == null) continue;
 
-                if (Nodes.Count > 0 && Nodes[0] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
-                if (Nodes.Count > 1 && Nodes[Nodes.Count-1] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
+                if (nodes.Count > 0 && nodes[0] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
+                if (nodes.Count > 1 && nodes[nodes.Count-1] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
                                
 
                 if (i == 0)
                 {
-                    Nodes.Insert(0, newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition);                    
+                    nodes.Insert(0, newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition);                    
                 }
                 else
                 {
-                    Nodes.Add(newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition);
+                    nodes.Add(newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition);
                 }
 
                 
@@ -192,7 +191,7 @@ namespace Barotrauma.Items.Components
                 CleanNodes();
             }
 
-            Drawable = Nodes.Any();
+            Drawable = nodes.Any();
 
             if (!loading) Item.NewComponentEvent(this, true, true);
 
@@ -225,7 +224,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (Nodes.Count == 0) return;
+            if (nodes.Count == 0) return;
 
             Submarine sub = null;
             if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
@@ -234,7 +233,6 @@ namespace Barotrauma.Items.Components
             if (item.Submarine != sub && Screen.Selected != GameMain.EditMapScreen)
             {
                 ClearConnections();
-                Nodes.Clear();
                 return;
             }
 
@@ -245,9 +243,9 @@ namespace Barotrauma.Items.Components
         {
             if (character == Character.Controlled && character.SelectedConstruction != null) return false;
 
-            if (newNodePos!= Vector2.Zero && Nodes.Count>0 && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
+            if (newNodePos!= Vector2.Zero && nodes.Count>0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
-                Nodes.Add(newNodePos);
+                nodes.Add(newNodePos);
                 UpdateSections();
 
                 Drawable = true;
@@ -259,9 +257,9 @@ namespace Barotrauma.Items.Components
 
         public override void SecondaryUse(float deltaTime, Character character = null)
         {
-            if (Nodes.Count > 1)
+            if (nodes.Count > 1)
             {
-                Nodes.RemoveAt(Nodes.Count - 1);
+                nodes.RemoveAt(nodes.Count - 1);
                 UpdateSections();
 
                 item.NewComponentEvent(this, true, true);
@@ -282,11 +280,22 @@ namespace Barotrauma.Items.Components
             if (item.IsSelected) MoveNodes(amount);
         }
 
+        public List<Vector2> GetNodes()
+        {
+            return new List<Vector2>(nodes);
+        }
+
+        public void SetNodes(List<Vector2> nodes)
+        {
+            this.nodes = new List<Vector2>(nodes);
+            UpdateSections();
+        }
+
         public void MoveNodes(Vector2 amount)
         {
-            for (int i = 0; i < Nodes.Count; i++)
+            for (int i = 0; i < nodes.Count; i++)
             {
-                Nodes[i] += amount;
+                nodes[i] += amount;
             }
             UpdateSections();
         }
@@ -295,16 +304,16 @@ namespace Barotrauma.Items.Components
         {
             sections.Clear();
 
-            for (int i = 0; i < Nodes.Count-1; i++)
+            for (int i = 0; i < nodes.Count-1; i++)
             {
-                sections.Add(new WireSection(Nodes[i], Nodes[i + 1]));
+                sections.Add(new WireSection(nodes[i], nodes[i + 1]));
             }
             Drawable = sections.Count > 0;
         }
 
         private void ClearConnections()
         {
-            Nodes.Clear();
+            nodes.Clear();
             sections.Clear();
 
             for (int i = 0; i < 2; i++)
@@ -348,14 +357,14 @@ namespace Barotrauma.Items.Components
 
         private void CleanNodes()
         {
-            for (int i = Nodes.Count - 2; i > 0; i--)
+            for (int i = nodes.Count - 2; i > 0; i--)
             {
-                if ((Nodes[i - 1].X == Nodes[i].X || Nodes[i - 1].Y == Nodes[i].Y) &&
-                    (Nodes[i + 1].X == Nodes[i].X || Nodes[i + 1].Y == Nodes[i].Y))
+                if ((nodes[i - 1].X == nodes[i].X || nodes[i - 1].Y == nodes[i].Y) &&
+                    (nodes[i + 1].X == nodes[i].X || nodes[i + 1].Y == nodes[i].Y))
                 {
-                    if (Vector2.Distance(Nodes[i - 1], Nodes[i]) == Vector2.Distance(Nodes[i + 1], Nodes[i]))
+                    if (Vector2.Distance(nodes[i - 1], nodes[i]) == Vector2.Distance(nodes[i + 1], nodes[i]))
                     {
-                        Nodes.RemoveAt(i);
+                        nodes.RemoveAt(i);
                     }
                 }
             }
@@ -364,12 +373,12 @@ namespace Barotrauma.Items.Components
             do
             {
                 removed = false;
-                for (int i = Nodes.Count - 2; i > 0; i--)
+                for (int i = nodes.Count - 2; i > 0; i--)
                 {
-                    if ((Nodes[i - 1].X == Nodes[i].X && Nodes[i + 1].X == Nodes[i].X)
-                        || (Nodes[i - 1].Y == Nodes[i].Y && Nodes[i + 1].Y == Nodes[i].Y))
+                    if ((nodes[i - 1].X == nodes[i].X && nodes[i + 1].X == nodes[i].X)
+                        || (nodes[i - 1].Y == nodes[i].Y && nodes[i + 1].Y == nodes[i].Y))
                     {
-                        Nodes.RemoveAt(i);
+                        nodes.RemoveAt(i);
                         removed = true;
                     }
                 }
@@ -414,11 +423,11 @@ namespace Barotrauma.Items.Components
                 section.Draw(spriteBatch, item.Color, drawOffset, depth, 0.3f);
             }
             
-            if (IsActive && Vector2.Distance(newNodePos, Nodes[Nodes.Count - 1]) > nodeDistance)
+            if (IsActive && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
                 WireSection.Draw(
                     spriteBatch,
-                    new Vector2(Nodes[Nodes.Count - 1].X, Nodes[Nodes.Count - 1].Y) + drawOffset, 
+                    new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset, 
                     new Vector2(newNodePos.X, newNodePos.Y) + drawOffset, 
                     item.Color * 0.5f,
                     depth, 
@@ -428,9 +437,9 @@ namespace Barotrauma.Items.Components
             if (!editing || !PlayerInput.MouseInsideWindow || !GameMain.EditMapScreen.WiringMode) return;
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null) return;
 
-            for (int i = 0; i < Nodes.Count; i++)
+            for (int i = 0; i < nodes.Count; i++)
             {
-                Vector2 worldPos = Nodes[i];
+                Vector2 worldPos = nodes[i];
                 if (item.Submarine != null) worldPos += item.Submarine.Position + item.Submarine.HiddenSubPosition;
                 worldPos.Y = -worldPos.Y;
 
@@ -458,7 +467,7 @@ namespace Barotrauma.Items.Components
                     }
                     else if (PlayerInput.RightButtonClicked())
                     {
-                        Nodes.RemoveAt(i);
+                        nodes.RemoveAt(i);
                         break;
                     }
                 }
@@ -483,7 +492,7 @@ namespace Barotrauma.Items.Components
 
                     //if (item.Submarine != null) nodeWorldPos += item.Submarine.Position;
 
-                    Nodes[(int)selectedNodeIndex] = nodeWorldPos;
+                    nodes[(int)selectedNodeIndex] = nodeWorldPos;
                     UpdateSections();
 
                     MapEntity.SelectEntity(item);
@@ -498,23 +507,24 @@ namespace Barotrauma.Items.Components
 
         public override void FlipX()
         {            
-            for (int i = 0; i < Nodes.Count; i++)
+            for (int i = 0; i < nodes.Count; i++)
             {
-                Nodes[i] = new Vector2(-Nodes[i].X, Nodes[i].Y);
-            }            
+                nodes[i] = new Vector2(-nodes[i].X, nodes[i].Y);
+            }
+            UpdateSections();
         }
 
         public override XElement Save(XElement parentElement)
         {
             XElement componentElement = base.Save(parentElement);
 
-            if (Nodes == null || Nodes.Count == 0) return componentElement;
+            if (nodes == null || nodes.Count == 0) return componentElement;
 
-            string[] nodeCoords = new string[Nodes.Count * 2];
-            for (int i = 0; i < Nodes.Count; i++)
+            string[] nodeCoords = new string[nodes.Count * 2];
+            for (int i = 0; i < nodes.Count; i++)
             {
-                nodeCoords[i * 2] = Nodes[i].X.ToString(CultureInfo.InvariantCulture);
-                nodeCoords[i * 2 + 1] = Nodes[i].Y.ToString(CultureInfo.InvariantCulture);
+                nodeCoords[i * 2] = nodes[i].X.ToString(CultureInfo.InvariantCulture);
+                nodeCoords[i * 2 + 1] = nodes[i].Y.ToString(CultureInfo.InvariantCulture);
             }
 
             componentElement.Add(new XAttribute("nodes", string.Join(";", nodeCoords)));
@@ -546,10 +556,10 @@ namespace Barotrauma.Items.Components
                 }
                 catch { y = 0.0f; }
 
-                Nodes.Add(new Vector2(x, y));
+                nodes.Add(new Vector2(x, y));
             }
 
-            Drawable = Nodes.Any();
+            Drawable = nodes.Any();
 
         }
 
@@ -562,11 +572,11 @@ namespace Barotrauma.Items.Components
 
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {
-            message.Write((byte)Math.Min(Nodes.Count, 10));
-            for (int i = 0; i < Math.Min(Nodes.Count,10); i++)
+            message.Write((byte)Math.Min(nodes.Count, 10));
+            for (int i = 0; i < Math.Min(nodes.Count,10); i++)
             {
-                message.Write(Nodes[i].X);
-                message.Write(Nodes[i].Y);
+                message.Write(nodes[i].X);
+                message.Write(nodes[i].Y);
             }
 
             return true;
@@ -574,7 +584,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReadNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetIncomingMessage message, float sendingTime)
         {
-            Nodes.Clear();
+            nodes.Clear();
 
             List<Vector2> newNodes = new List<Vector2>();
             int nodeCount = message.ReadByte();
@@ -585,9 +595,8 @@ namespace Barotrauma.Items.Components
                 newNodes.Add(newNode);
             }
 
-            Nodes = newNodes;
-
-            Drawable = Nodes.Any();
+            SetNodes(newNodes);
+            Drawable = nodes.Any();
         }
     }
 }

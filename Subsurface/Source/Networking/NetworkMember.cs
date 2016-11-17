@@ -343,8 +343,6 @@ namespace Barotrauma.Networking
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 inGameHUD.AddToGUIUpdateList();
-
-                GameMain.GameSession.CrewManager.AddToGUIUpdateList();
             }
         }
 

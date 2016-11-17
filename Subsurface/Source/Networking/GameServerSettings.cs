@@ -189,7 +189,8 @@ namespace Barotrauma.Networking
         {
             get { return banList; }
         }
-        
+
+        [HasDefaultValue(true, true)]
         public bool AllowVoteKick
         {
             get;
@@ -218,9 +219,16 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
+            
+            doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
 
             doc.Root.SetAttributeValue("MaxFileTransferDuration", FileStreamSender.MaxTransferDuration.TotalSeconds);
-            
+
+            if (GameMain.NetLobbyScreen != null && GameMain.NetLobbyScreen.ServerMessage != null)
+            {
+                doc.Root.SetAttributeValue("ServerMessage", GameMain.NetLobbyScreen.ServerMessage.Text);
+            }
+                        
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;
             settings.NewLineOnAttributes = true;
@@ -253,9 +261,18 @@ namespace Barotrauma.Networking
             modeSelectionMode = SelectionMode.Manual;
             Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
+
+            var traitorsEnabled = TraitorsEnabled;
+            Enum.TryParse<YesNoMaybe>(ToolBox.GetAttributeString(doc.Root, "TraitorsEnabled", "No"), out traitorsEnabled);
+            TraitorsEnabled = traitorsEnabled;
+            GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
             
             FileStreamSender.MaxTransferDuration = new TimeSpan(0,0,ToolBox.GetAttributeInt(doc.Root, "MaxFileTransferDuration", 150));
-
+            
+            if (GameMain.NetLobbyScreen != null && GameMain.NetLobbyScreen.ServerMessage != null)
+            {
+                GameMain.NetLobbyScreen.ServerMessage.Text = ToolBox.GetAttributeString(doc.Root, "ServerMessage", "");
+            }
             showLogButton.Visible = SaveServerLogs;
 
             List<string> monsterNames = Directory.GetDirectories("Content/Characters").ToList();
