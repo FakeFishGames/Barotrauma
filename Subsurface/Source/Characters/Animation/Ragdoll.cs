@@ -70,6 +70,8 @@ namespace Barotrauma
         protected bool inWater, headInWater;
         public bool onGround;
         private bool ignorePlatforms;
+
+        private float colliderHeightFromFloor;
         
         protected Structure stairs;
                 
@@ -101,7 +103,7 @@ namespace Barotrauma
                 if (collider[colliderIndex].height<collider[value].height)
                 {
                     Vector2 pos1 = collider[colliderIndex].SimPosition;
-                    pos1.Y -= collider[colliderIndex].height * 0.45f;
+                    pos1.Y -= collider[colliderIndex].height * colliderHeightFromFloor;
                     Vector2 pos2 = pos1;
                     pos2.Y += collider[value].height * 1.1f;
                     if (GameMain.World.RayCast(pos1, pos2).Any(f => f.CollisionCategories.HasFlag(Physics.CollisionWall))) return;
@@ -299,6 +301,9 @@ namespace Barotrauma
             ImpactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 50.0f);
 
             CanEnterSubmarine = ToolBox.GetAttributeBool(element, "canentersubmarine", true);
+
+            colliderHeightFromFloor = ToolBox.GetAttributeFloat(element, "colliderheightfromfloor", 45.0f);
+            colliderHeightFromFloor = ConvertUnits.ToSimUnits(colliderHeightFromFloor);
 
             collider = new List<PhysicsBody>();
              
@@ -994,7 +999,7 @@ namespace Barotrauma
                             break;
                         case Physics.CollisionPlatform:
                             Structure platform = fixture.Body.UserData as Structure;
-                            if (IgnorePlatforms || lowestLimb.Position.Y < platform.Rect.Y) return -1;
+                            if (IgnorePlatforms || lowestLimb.Position.Y < platform.Rect.Y-16) return -1;
                             break;
                         case Physics.CollisionWall:
                             break;
@@ -1027,7 +1032,7 @@ namespace Barotrauma
                     }
 
                     float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-                    float targetY = tfloorY + Collider.height * 0.5f + Collider.radius + ConvertUnits.ToSimUnits(45.0f);
+                    float targetY = tfloorY + Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor;
                     
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && Collider.SimPosition.Y<targetY && !forceImmediate)
                     {
