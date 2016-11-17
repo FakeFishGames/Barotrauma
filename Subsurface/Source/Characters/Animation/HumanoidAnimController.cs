@@ -256,17 +256,15 @@ namespace Barotrauma
             Vector2 colliderPos = GetColliderBottom();
             if (Math.Abs(TargetMovement.X) > 1.0f)
             {
-                int limbsInWater = 0;
-                foreach (Limb limb in Limbs)
+                float slowdownAmount = 0.0f;
+                if (currentHull != null)
                 {
-                    if (limb.inWater) limbsInWater++;
+                    //full slowdown (1.0f) when water is up to the torso
+                    surfaceY = ConvertUnits.ToSimUnits(currentHull.Surface);
+                    slowdownAmount = MathHelper.Clamp((surfaceY - colliderPos.Y) / torsoPosition, 0.0f, 1.0f);
                 }
 
-                float slowdownFactor = (float)limbsInWater / (float)Limbs.Length;
-
-                float maxSpeed = Math.Max(TargetMovement.Length() - slowdownFactor, 1.0f);
-                // if (character.SelectedCharacter!=null) maxSpeed = Math.Min(maxSpeed, 1.0f);
-
+                float maxSpeed = Math.Max(TargetMovement.Length() - slowdownAmount, 1.0f);
                 TargetMovement = Vector2.Normalize(TargetMovement) * maxSpeed;
             }
 
