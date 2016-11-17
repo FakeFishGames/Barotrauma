@@ -97,7 +97,7 @@ namespace Barotrauma
                 diff.Y = 0.0f;
             }
 
-            if (diff.Length() < 0.01) return -host.Steering;
+            if (diff.LengthSquared() < 0.001f) return -host.Steering;
 
             return Vector2.Normalize(diff) * speed;          
         }
@@ -147,10 +147,8 @@ namespace Barotrauma
 
             var collider = character.AnimController.Collider;
 
-            Vector2 colliderBottom = character.AnimController.GetColliderBottom();
-            if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius*2 &&
-                currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y && 
-                currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + collider.height + collider.radius*2)
+            if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius * 2 &&
+                Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < collider.height / 2 + collider.radius)
             {
                 currentPath.SkipToNextNode();
             }
@@ -167,8 +165,7 @@ namespace Barotrauma
                     diff.X = 0.0f;
 
                     //at the same height as the waypoint
-                    if (currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y &&
-                        currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + collider.height + collider.radius * 2)
+                    if (Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < collider.height / 2 + collider.radius)
                     {
                         float heightFromFloor = character.AnimController.GetColliderBottom().Y - character.AnimController.FloorY;
 
