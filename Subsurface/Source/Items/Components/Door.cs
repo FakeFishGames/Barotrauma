@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -7,6 +8,7 @@ using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
+using System.Collections.Generic;
 
 namespace Barotrauma.Items.Components
 {
@@ -409,50 +411,53 @@ namespace Barotrauma.Items.Components
             {
                 int dir = isHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
 
-                foreach (Limb l in c.AnimController.Limbs)
+                List<PhysicsBody> bodies = c.AnimController.Limbs.Select(l => l.body).ToList();
+                bodies.Add(c.AnimController.Collider);
+
+                foreach (PhysicsBody body in bodies)
                 {
                     float diff = 0.0f;
 
                     if (isHorizontal)
                     {
-                        if (l.SimPosition.X < simPos.X || l.SimPosition.X > simPos.X + simSize.X) continue;
+                        if (body.SimPosition.X < simPos.X || body.SimPosition.X > simPos.X + simSize.X) continue;
 
-                        diff = l.SimPosition.Y - item.SimPosition.Y;
+                        diff = body.SimPosition.Y - item.SimPosition.Y;
                     }
                     else
                     {
-                        if (l.SimPosition.Y > simPos.Y || l.SimPosition.Y < simPos.Y - simSize.Y) continue;
+                        if (body.SimPosition.Y > simPos.Y || body.SimPosition.Y < simPos.Y - simSize.Y) continue;
 
-                        diff = l.SimPosition.X - item.SimPosition.X;
+                        diff = body.SimPosition.X - item.SimPosition.X;
                     }
                    
                     if (Math.Sign(diff) != dir)
                     {
-                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, l.body);
+                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, body);
 
                         if (isHorizontal)
                         {
-                            l.body.SetTransform(new Vector2(l.SimPosition.X, item.SimPosition.Y + dir * simSize.Y * 2.0f), l.body.Rotation);
-                            l.body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 2.0f));
+                            body.SetTransform(new Vector2(body.SimPosition.X, item.SimPosition.Y + dir * simSize.Y * 2.0f), body.Rotation);
+                            body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 2.0f));
                         }
                         else
                         {
-                            l.body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X * 1.2f, l.SimPosition.Y), l.body.Rotation);
-                            l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
+                            body.SetTransform(new Vector2(item.SimPosition.X + dir * simSize.X * 1.2f, body.SimPosition.Y), body.Rotation);
+                            body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
                         }
                     }
 
                     if (isHorizontal)
                     {
-                        if (Math.Abs(l.SimPosition.Y - item.SimPosition.Y) > simSize.Y * 0.5f) continue;
+                        if (Math.Abs(body.SimPosition.Y - item.SimPosition.Y) > simSize.Y * 0.5f) continue;
 
-                        l.body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 0.5f));
+                        body.ApplyLinearImpulse(new Vector2(isOpen ? 0.0f : 1.0f, dir * 0.5f));
                     }
                     else
                     {
-                        if (Math.Abs(l.SimPosition.X - item.SimPosition.X) > simSize.X * 0.5f) continue;
+                        if (Math.Abs(body.SimPosition.X - item.SimPosition.X) > simSize.X * 0.5f) continue;
 
-                        l.body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
+                        body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
                     }
 
                     c.StartStun(0.2f);

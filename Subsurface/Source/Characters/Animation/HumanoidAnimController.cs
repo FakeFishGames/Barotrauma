@@ -318,16 +318,11 @@ namespace Barotrauma
                         Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
             }
 
-            //ClimbOverObstacles();
-
             getUpSpeed = getUpSpeed * Math.Max(head.SimPosition.Y - colliderPos.Y, 0.5f);
 
             torso.pullJoint.Enabled = true;
             head.pullJoint.Enabled = true;
             waist.pullJoint.Enabled = true;
-
-            Collider.FarseerBody.Friction = 0.05f;
-            Collider.FarseerBody.Restitution = 0.05f;
 
             if (stairs != null)
             {
@@ -447,9 +442,19 @@ namespace Barotrauma
 
                 for (int i = -1; i < 2; i += 2)
                 {
-                    Vector2 footPos = new Vector2(
-                        Crouching ? waist.SimPosition.X + Math.Sign(stepSize.X * i) * Dir * 0.3f : GetCenterOfMass().X,
-                        colliderPos.Y - 0.1f);
+                    Vector2 footPos = colliderPos;
+                    
+                    if (Crouching)
+                    {
+                        footPos = new Vector2(
+                            waist.SimPosition.X + Math.Sign(stepSize.X * i) * Dir * 0.3f,
+                            colliderPos.Y - 0.1f);
+                    }
+                    else
+                    {
+                        footPos = new Vector2(GetCenterOfMass().X + stepSize.X * i * 0.2f, colliderPos.Y - 0.1f);
+                    }
+                    
 
                     var foot = i == -1 ? rightFoot : leftFoot;
 
