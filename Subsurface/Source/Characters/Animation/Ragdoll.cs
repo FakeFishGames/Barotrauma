@@ -328,6 +328,9 @@ namespace Barotrauma
                         break;
                     case "collider":
                         collider.Add(new PhysicsBody(subElement, scale));
+
+                        collider[collider.Count - 1].FarseerBody.Friction = 0.05f;
+                        collider[collider.Count - 1].FarseerBody.Restitution = 0.05f;
                         collider[collider.Count - 1].FarseerBody.FixedRotation = true;
                         collider[collider.Count - 1].CollisionCategories = Physics.CollisionCharacter;
                         collider[collider.Count - 1].FarseerBody.AngularDamping = 5.0f;
