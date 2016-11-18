@@ -61,6 +61,7 @@ namespace Barotrauma
 
             if (character.IsDead || character.IsUnconscious || stunTimer > 0.0f)
             {
+                levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
 
                 /*if (character.IsRemotePlayer)
