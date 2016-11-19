@@ -3,6 +3,7 @@
   <Item
     name="Skyholder Artifact"
     category="Alien"
+    Tags="alien"
     pickdistance="150">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="59,0,60,61"/>
@@ -24,6 +25,7 @@
   <Item
     name="Thermal Artifact"
     category="Alien"
+    Tags="alien"
     pickdistance="150">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,0,58,56"/>
@@ -46,6 +48,7 @@
 
   <Item
     name="Faraday Artifact"
+    Tags="alien"
     pickdistance="150">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49"/>
@@ -66,7 +69,7 @@
     name="Oxygenite Shard"
     category="Alien"
     pickdistance="150"
-    tags="smallitem"
+    tags="alien,smallitem"
     impacttolerance="8">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="119,96,9,32"/>
@@ -86,7 +89,7 @@
    name="Sulphurite Shard"
    category="Alien"
    pickdistance="150"
-   tags="smallitem"
+   tags="alien,smallitem"
    impacttolerance="8"
    spritecolor="1.0,0.0,0.0,1.0">
 
@@ -109,7 +112,7 @@
   <Item
    name="Ancient Weapon"
    category="Alien"
-   Tags="smallitem"
+   Tags="alien,smallitem"
    pickdistance="200">
 
     <Deconstruct time="20">
@@ -147,6 +150,7 @@
   <Item
     name="Alien Hatch"
     category="Alien"
+    Tags="alien"
     linkable="true"
     pickdistance="150.0">
 
@@ -169,6 +173,7 @@
    name="Alien Door"
    category="Alien"
    linkable="true"
+   Tags="alien"
    pickdistance="150.0">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.8" origin="0.5,0.5"/>
@@ -190,6 +195,7 @@
    name="Alien Motion Sensor"
    linkable="true"
    category="Alien"
+   Tags="alien"
    pickdistance="150.0">
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="55,608,81,103" depth="0.8" origin="0.5,0.5"/>
@@ -199,6 +205,37 @@
     <ConnectionPanel selectkey="Action" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver" type="Equipped"/>
       <output name="state_out"/>
+    </ConnectionPanel>
+  </Item>
+
+  <Item
+   name="Artifact Holder"
+   linkable="true"
+   category="Alien"
+   Tags="alien"
+   pickdistance="150.0">
+
+    <Sprite texture="artifactholder.png" depth="0.8"/>
+
+    <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128">
+      <Containable name="Alien"/>
+      <Containable name="Thermal Artifact">
+        <StatusEffect type="OnContaining" target="This" Charge="1000.0"/>        
+      </Containable>
+      <Containable name="Faraday Artifact">
+        <StatusEffect type="OnContaining" target="This" Charge="10.0"/>
+      </Containable>
+    </ItemContainer>
+
+    <LightComponent lightcolor="0.6,0.8,1.0,1.0" range="800.0" IsOn="true"/>
+
+    <PowerContainer capacity="20000.0" maxrechargespeed="10000.0" maxoutput="10000.0">
+      <StatusEffect type="OnActive" target="Contained" targetnames="loadable" Condition="2.0"/>
+    </PowerContainer>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <output name="power_out"/>
     </ConnectionPanel>
   </Item>
 </Items>
