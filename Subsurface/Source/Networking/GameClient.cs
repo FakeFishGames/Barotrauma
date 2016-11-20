@@ -1117,7 +1117,7 @@ namespace Barotrauma.Networking
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)PacketTypes.CharacterInfo);
 
-            msg.Write(characterInfo.Name);
+            //msg.Write(characterInfo.Name);
             msg.Write(characterInfo.Gender == Gender.Male);
             msg.Write((byte)characterInfo.HeadSpriteId);
 

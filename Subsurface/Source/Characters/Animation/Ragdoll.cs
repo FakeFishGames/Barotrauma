@@ -343,7 +343,7 @@ namespace Barotrauma
 
             if (collider[0] == null)
             {
-                DebugConsole.ThrowError("No collider configured for ''"+character.Name+"''!");
+                DebugConsole.ThrowError("No collider configured for \""+character.Name+"\"!");
                 collider[0] = new PhysicsBody(0.0f, 0.0f, 0.5f, 5.0f);
                 collider[0].BodyType = BodyType.Dynamic;
                 collider[0].CollisionCategories = Physics.CollisionCharacter;
@@ -624,7 +624,7 @@ namespace Barotrauma
         public virtual void Flip()
         {
             dir = (dir == Direction.Left) ? Direction.Right : Direction.Left;
-
+            
             for (int i = 0; i < limbJoints.Length; i++)
             {
                 float lowerLimit = -limbJoints[i].UpperLimit;
@@ -647,6 +647,11 @@ namespace Barotrauma
                 Limbs[i].sprite.Origin = spriteOrigin;
 
                 Limbs[i].Dir = Dir;
+
+                if (Limbs[i].LightSource != null)
+                {
+                    Limbs[i].LightSource.SpriteEffect = (dir == Direction.Left) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                }
 
                 if (Limbs[i].pullJoint == null) continue;
 
@@ -913,6 +918,10 @@ namespace Barotrauma
                     }
                 }
 
+                if (limb.LightSource != null)
+                {
+                    limb.LightSource.Rotation = limb.Rotation;
+                }
                 limb.Update(deltaTime);
             }
             
