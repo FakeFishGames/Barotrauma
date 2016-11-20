@@ -320,7 +320,7 @@ namespace Barotrauma
             if (components.Length!=3)
             {
                 if (!errorMessages) return vector;
-                DebugConsole.ThrowError("Failed to parse the string ''"+stringVector3+"'' to Vector3");
+                DebugConsole.ThrowError("Failed to parse the string \""+stringVector3+"\" to Vector3");
                 return vector;
             }
 

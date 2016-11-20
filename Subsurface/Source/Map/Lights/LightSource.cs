@@ -18,6 +18,8 @@ namespace Barotrauma.Lights
 
         private float range;
 
+        public SpriteEffects SpriteEffect = SpriteEffects.None;
+
         private Texture2D texture;
 
         public Sprite LightSprite;
@@ -312,13 +314,14 @@ namespace Barotrauma.Lights
                     overrideLightTexture.Draw(spriteBatch,
                         drawPos, color * (color.A / 255.0f),
                         overrideLightTexture.Origin, -Rotation,
-                        new Vector2(overrideLightTexture.size.X / overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y / overrideLightTexture.SourceRect.Height));
+                        new Vector2(overrideLightTexture.size.X / overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y / overrideLightTexture.SourceRect.Height),
+                        SpriteEffect);
                 }
             }
 
             if (LightSprite != null)
             {
-                LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin);
+                LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1, SpriteEffect);
 
             } 
         }

@@ -1719,24 +1719,25 @@ namespace Barotrauma.Networking
             Gender gender = Gender.Male;
             int headSpriteId = 0;
 
+            name = sender.name;
             try
             {
-                name            = message.ReadString();
+                //name            = message.ReadString();
                 gender          = message.ReadBoolean() ? Gender.Male : Gender.Female;
                 headSpriteId    = message.ReadByte();
             }
             catch
             {
-                name = "";
+                //name = "";
                 gender = Gender.Male;
                 headSpriteId = 0;
             }
 
-            if (sender.characterInfo != null)
+            /*if (sender.characterInfo != null)
             {
                 //clients can't change their character's name once it's been set
                 name = sender.characterInfo.Name;
-            }
+            }*/
 
             List<JobPrefab> jobPreferences = new List<JobPrefab>();
             int count = message.ReadByte();
