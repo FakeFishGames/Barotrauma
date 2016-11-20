@@ -90,6 +90,7 @@ namespace Barotrauma.Networking
 
         public static string SanitizeName(string name)
         {
+            name = name.Trim();
             if (name.Length > 20)
             {
                 name = name.Substring(0, 20);
