@@ -119,12 +119,12 @@ namespace Barotrauma.Networking
 
         public void GivePermission(ClientPermissions permission)
         {
-            this.Permissions |= permission;
+            if (!this.Permissions.HasFlag(permission)) this.Permissions |= permission;
         }
 
         public void RemovePermission(ClientPermissions permission)
         {
-            this.Permissions &= ~permission;
+            if (this.Permissions.HasFlag(permission)) this.Permissions &= ~permission;
         }
 
         public bool HasPermission(ClientPermissions permission)
