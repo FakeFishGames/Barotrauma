@@ -198,6 +198,10 @@ namespace Barotrauma.Networking
             {
                 newClient.SetPermissions(savedPermissions.Permissions);
             }
+            else
+            {
+                newClient.SetPermissions(ClientPermissions.None);
+            }
 
             connectedClients.Add(newClient);
 

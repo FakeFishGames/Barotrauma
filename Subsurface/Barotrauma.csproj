@@ -1488,7 +1488,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
-    <None Include="Submarines\Aegir Mark II.sub" />
     <None Include="Submarines\Nehalennia.sub" />
     <None Include="Submarines\TutorialSub.sub" />
     <None Include="Submarines\Vellamo.sub" />

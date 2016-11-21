@@ -63,6 +63,20 @@ namespace Barotrauma.Networking
 
         private string password;
 
+        private string adminAuthPass = "";
+        public string AdminAuthPass
+        {
+            set
+            {
+                DebugConsole.NewMessage("Admin auth pass changed!",Color.Yellow);
+                adminAuthPass = "";
+                if (value.Length > 0)
+                {
+                    adminAuthPass = Encoding.UTF8.GetString(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(value)));
+                }
+            }
+        }
+
         private GUIFrame settingsFrame;
         private GUIFrame[] settingsTabs;
         private int settingsTabIndex;

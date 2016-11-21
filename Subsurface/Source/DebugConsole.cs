@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Barotrauma.Networking;
 using Barotrauma.Items.Components;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -123,7 +124,6 @@ namespace Barotrauma
 
                 if (PlayerInput.KeyDown(Keys.Enter) && textBox.Text != "")
                 {
-                    NewMessage(textBox.Text, Color.White);
                     ExecuteCommand(textBox.Text, game);
                     textBox.Text = "";
 
@@ -165,6 +165,7 @@ namespace Barotrauma
                 case "netstats":
                 case "help":
                 case "dumpids":
+                case "admin":
                     return true;
                 default:
                     return false;
@@ -175,7 +176,11 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(command)) return;
             string[] commands = command.Split(' ');
-
+            
+            if (!commands[0].ToLowerInvariant().Equals("admin"))
+            {
+                NewMessage(textBox.Text, Color.White);
+            }
 
 #if !DEBUG
             if (GameMain.Client != null && !IsCommandPermitted(commands[0].ToLowerInvariant(), GameMain.Client))
@@ -369,6 +374,19 @@ namespace Barotrauma
                     break;
                 case "enablecrewai":
                     HumanAIController.DisableCrewAI = false;
+                    break;
+                case "admin":
+                    if (commands.Length < 2) break;
+
+                    if (GameMain.Server != null)
+                    {
+                        GameMain.Server.AdminAuthPass = commands[1];
+
+                    }
+                    else if (GameMain.Client != null)
+                    {
+                        GameMain.Client.RequestAdminAuth(commands[1]);
+                    }
                     break;
                 case "kick":
                     if (GameMain.NetworkMember == null || commands.Length < 2) break;

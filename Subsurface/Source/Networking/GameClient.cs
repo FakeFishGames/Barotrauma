@@ -26,7 +26,7 @@ namespace Barotrauma.Networking
         private GUIButton endRoundButton;
         private GUITickBox endVoteTickBox;
 
-        private ClientPermissions permissions;
+        private ClientPermissions permissions = ClientPermissions.None;
 
         private bool connected;
 
@@ -839,7 +839,7 @@ namespace Barotrauma.Networking
 
         public bool HasPermission(ClientPermissions permission)
         {
-            return false;// permissions.HasFlag(permission);
+            return permissions.HasFlag(permission);
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
@@ -1026,6 +1026,15 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
+        public void RequestAdminAuth(string pass)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)PacketTypes.RequestAdminAuth);
+            msg.Write(Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(pass))));
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
         public override void KickPlayer(string kickedName, bool ban, bool range = false)
         {
             if (!permissions.HasFlag(ClientPermissions.Kick) && !ban) return;
@@ -1036,7 +1045,7 @@ namespace Barotrauma.Networking
             msg.Write(ban);
             msg.Write(kickedName);
 
-            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);            
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
         public bool VoteForKick(GUIButton button, object userdata)
@@ -1117,7 +1126,7 @@ namespace Barotrauma.Networking
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)PacketTypes.CharacterInfo);
 
-            msg.Write(characterInfo.Name);
+            //msg.Write(characterInfo.Name);
             msg.Write(characterInfo.Gender == Gender.Male);
             msg.Write((byte)characterInfo.HeadSpriteId);
 

@@ -63,6 +63,41 @@ namespace Barotrauma
             return "Structures: " + (MapEntity.mapEntityList.Count - Item.ItemList.Count);
         }
 
+        private string GetTotalHullVolume()
+        {
+            float totalVol = 0.0f;
+            Hull.hullList.ForEach(h => { totalVol += h.FullVolume; });
+            return "Total Hull Volume:\n" + totalVol;
+        }
+
+        private string GetSelectedHullVolume()
+        {
+            float buoyancyVol = 0.0f;
+            float selectedVol = 0.0f;
+            float neutralPercentage = 0.07f;
+            Hull.hullList.ForEach(h => {
+                buoyancyVol += h.FullVolume;
+                if (h.IsSelected)
+                {
+                    selectedVol += h.FullVolume;
+                }
+            });
+            buoyancyVol *= neutralPercentage;
+            string retVal = "Selected Hull Volume:\n" + selectedVol;
+            if (selectedVol>0.0f && buoyancyVol>0.0f)
+            {
+                if (buoyancyVol / selectedVol < 1.0f)
+                {
+                    retVal += " (optimal NeutralBallastLevel is " + (buoyancyVol / selectedVol) + ")";
+                }
+                else
+                {
+                    retVal += " (insufficient volume for buoyancy control)";
+                }
+            }
+            return retVal;
+        }
+
         private string GetPhysicsBodyCount()
         {
             return "Physics bodies: " + GameMain.World.BodyList.Count;
@@ -88,6 +123,15 @@ namespace Barotrauma
 
             topPanel = new GUIFrame(new Rectangle(0, 0, 0, 31), GUI.Style);
             topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+
+            GUIFrame hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 400, 100), GUI.Style, topPanel);
+            hullVolumeFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
+
+            GUITextBlock totalHullVolume = new GUITextBlock(new Rectangle(0, 0, 0, 20), "", GUI.Style, hullVolumeFrame);
+            totalHullVolume.TextGetter = GetTotalHullVolume;
+
+            GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 50, 0, 20), "", GUI.Style, hullVolumeFrame);
+            selectedHullVolume.TextGetter = GetSelectedHullVolume;
 
             var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", GUI.Style, topPanel);
             button.OnClicked = CreateLoadScreen;

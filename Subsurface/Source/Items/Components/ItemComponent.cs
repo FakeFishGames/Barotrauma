@@ -119,7 +119,7 @@ namespace Barotrauma.Items.Components
                 if (value == drawable) return;
                 if (!(this is IDrawableComponent))
                 {
-                    DebugConsole.ThrowError("Couldn't make ''"+this+"'' drawable (the component doesn't implement the IDrawableComponent interface)");
+                    DebugConsole.ThrowError("Couldn't make \""+this+"\" drawable (the component doesn't implement the IDrawableComponent interface)");
                     return;
                 }  
               
