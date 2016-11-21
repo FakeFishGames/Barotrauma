@@ -256,7 +256,7 @@ namespace Barotrauma.Networking
                                 bool hasCharacter = inc.ReadBoolean();
                                 bool allowSpectating = inc.ReadBoolean();
                                 
-                                endRoundButton.Visible = permissions.HasFlag(ClientPermissions.EndRound);
+                                endRoundButton.Visible = HasPermission(ClientPermissions.EndRound);
 
                                 if (gameStarted && Screen.Selected != GameMain.GameScreen)
                                 {                           
@@ -613,7 +613,7 @@ namespace Barotrauma.Networking
                                 msg = "Your current permissions:\n";
                                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                                 {
-                                    if (!newPermissions.HasFlag(permissions) || permission == ClientPermissions.None) continue;
+                                    if (!HasPermission(permissions) || permission == ClientPermissions.None) continue;
 
                                     System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
                                     DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
@@ -625,7 +625,7 @@ namespace Barotrauma.Networking
                             new GUIMessageBox("Permissions changed", msg).UserData = "permissions";
                         }
 
-                        endRoundButton.Visible = permissions.HasFlag(ClientPermissions.EndRound);
+                        endRoundButton.Visible = HasPermission(ClientPermissions.EndRound);
 
                         break;
                     case (byte)PacketTypes.RequestFile:
@@ -1037,8 +1037,8 @@ namespace Barotrauma.Networking
 
         public override void KickPlayer(string kickedName, bool ban, bool range = false)
         {
-            if (!permissions.HasFlag(ClientPermissions.Kick) && !ban) return;
-            if (!permissions.HasFlag(ClientPermissions.Ban) && ban) return;
+            if (!HasPermission(ClientPermissions.Kick) && !ban) return;
+            if (!HasPermission(ClientPermissions.Ban) && ban) return;
 
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)PacketTypes.KickPlayer);
