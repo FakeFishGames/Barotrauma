@@ -25,6 +25,8 @@ namespace Barotrauma
 
         private GUITextBox nameBox;
 
+        private GUIFrame hullVolumeFrame;
+
         const int PreviouslyUsedCount = 10;
         private GUIListBox previouslyUsedList;
 
@@ -88,7 +90,7 @@ namespace Barotrauma
             {
                 if (buoyancyVol / selectedVol < 1.0f)
                 {
-                    retVal += " (optimal NeutralBallastLevel is " + (buoyancyVol / selectedVol) + ")";
+                    retVal += " (optimal NeutralBallastLevel is " + (buoyancyVol / selectedVol).ToString("0.00") + ")";
                 }
                 else
                 {
@@ -124,13 +126,14 @@ namespace Barotrauma
             topPanel = new GUIFrame(new Rectangle(0, 0, 0, 31), GUI.Style);
             topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            GUIFrame hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 400, 100), GUI.Style, topPanel);
+            hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 280, 70), GUI.Style, topPanel);
             hullVolumeFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
 
-            GUITextBlock totalHullVolume = new GUITextBlock(new Rectangle(0, 0, 0, 20), "", GUI.Style, hullVolumeFrame);
+            GUITextBlock totalHullVolume = new GUITextBlock(new Rectangle(0, 0, 0, 20), "", GUI.Style, hullVolumeFrame, GUI.SmallFont);
+            totalHullVolume.Visible = false;
             totalHullVolume.TextGetter = GetTotalHullVolume;
 
-            GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 50, 0, 20), "", GUI.Style, hullVolumeFrame);
+            GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", GUI.Style, hullVolumeFrame, GUI.SmallFont);
             selectedHullVolume.TextGetter = GetSelectedHullVolume;
 
             var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", GUI.Style, topPanel);
@@ -893,6 +896,8 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             if (tutorial != null) tutorial.Update((float)deltaTime);
+
+            hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
 
             if (GUIComponent.MouseOn == null)
             {
