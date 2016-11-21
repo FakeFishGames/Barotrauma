@@ -127,10 +127,10 @@ namespace Barotrauma
             topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
             hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 280, 70), GUI.Style, topPanel);
+            hullVolumeFrame.Visible = false;
             hullVolumeFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
 
-            GUITextBlock totalHullVolume = new GUITextBlock(new Rectangle(0, 0, 0, 20), "", GUI.Style, hullVolumeFrame, GUI.SmallFont);
-            totalHullVolume.Visible = false;
+            GUITextBlock totalHullVolume = new GUITextBlock(new Rectangle(0, 0, 0, 20), "", GUI.Style, hullVolumeFrame, GUI.SmallFont);            
             totalHullVolume.TextGetter = GetTotalHullVolume;
 
             GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", GUI.Style, hullVolumeFrame, GUI.SmallFont);
