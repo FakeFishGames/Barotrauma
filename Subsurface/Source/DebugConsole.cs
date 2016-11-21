@@ -376,6 +376,8 @@ namespace Barotrauma
                     HumanAIController.DisableCrewAI = false;
                     break;
                 case "admin":
+                    if (commands.Length < 2) break;
+
                     if (GameMain.Server != null)
                     {
                         GameMain.Server.AdminAuthPass = commands[1];
