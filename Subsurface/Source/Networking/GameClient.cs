@@ -613,7 +613,7 @@ namespace Barotrauma.Networking
                                 msg = "Your current permissions:\n";
                                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                                 {
-                                    if (!HasPermission(permissions) || permission == ClientPermissions.None) continue;
+                                    if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
 
                                     System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
                                     DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
@@ -622,6 +622,7 @@ namespace Barotrauma.Networking
                                 }
                             }
 
+                            permissions = newPermissions;
                             new GUIMessageBox("Permissions changed", msg).UserData = "permissions";
                         }
 
