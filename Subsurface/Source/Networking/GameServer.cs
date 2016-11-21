@@ -55,6 +55,8 @@ namespace Barotrauma.Networking
             name = name.Replace(":", "");
             name = name.Replace(";", "");
 
+            AdminAuthPass = "";
+
             this.name = name;
             this.password = "";
             if (password.Length>0)
@@ -551,6 +553,32 @@ namespace Barotrauma.Networking
                                 EndGame();
                             }
                             break;
+                        case (byte)PacketTypes.RequestAdminAuth:
+                            string pass = inc.ReadString();
+                            if (adminAuthPass.Length == 0)
+                            {
+                                Log(sender.name + " tried to become admin!", Color.Red);
+                                return;
+                            }
+                            if (adminAuthPass==pass)
+                            {
+                                if (sender.Permissions == ClientPermissions.None)
+                                {
+                                    Log(sender.name + " is now an admin.", Color.Yellow);
+                                    sender.SetPermissions(ClientPermissions.Kick | ClientPermissions.Ban | ClientPermissions.EndRound);
+                                }
+                                else
+                                {
+                                    Log(sender.name + " is no longer an admin.", Color.Yellow);
+                                    sender.SetPermissions(ClientPermissions.None);
+                                }
+                                UpdateClientPermissions(sender);
+                            }
+                            else
+                            {
+                                Log(sender.name + " has failed admin authentication!", Color.Red);
+                            }
+                            break;
                         case (byte)PacketTypes.KickPlayer:                            
                             bool ban = inc.ReadBoolean();
                             string kickedName = inc.ReadString();
@@ -561,7 +589,6 @@ namespace Barotrauma.Networking
                             if (ban && !sender.HasPermission(ClientPermissions.Ban))
                             {
                                 Log(sender.name + " attempted to ban " + kickedClient.name + " (insufficient permissions)", Color.Red);
-
                             }
                             else if (!sender.HasPermission(ClientPermissions.Kick))
                             {
