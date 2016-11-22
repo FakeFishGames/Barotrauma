@@ -292,6 +292,8 @@ namespace Barotrauma
                         spawnPoint = WayPoint.GetRandom(commands[1].ToLowerInvariant() == "human" ? SpawnType.Human : SpawnType.Enemy);
                     }
 
+                    if (string.IsNullOrWhiteSpace(commands[1])) return;
+
                     if (spawnPoint != null) spawnPosition = spawnPoint.WorldPosition;
 
                     if (commands[1].ToLowerInvariant()=="human")
@@ -311,7 +313,10 @@ namespace Barotrauma
                     }
                     else
                     {
-                        spawnedCharacter = Character.Create("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", spawnPosition);
+                        spawnedCharacter = Character.Create(
+                            "Content/Characters/" 
+                            + commands[1].First().ToString().ToUpper() + commands[1].Substring(1) 
+                            + "/" + commands[1].ToLower() + ".xml", spawnPosition);
                     }
 
                     if (spawnedCharacter != null && GameMain.Server != null)
