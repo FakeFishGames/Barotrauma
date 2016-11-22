@@ -600,7 +600,7 @@ namespace Barotrauma
                 {
                     contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
                 }
-
+                
                 contained.Rect =
                     new Rectangle(
                         (int)(displayPos.X - contained.Rect.Width / 2.0f),
@@ -609,6 +609,8 @@ namespace Barotrauma
 
                 contained.Submarine = Submarine;
                 contained.CurrentHull = CurrentHull;
+
+                contained.SetContainedItemPositions();
             }
         }
                 
