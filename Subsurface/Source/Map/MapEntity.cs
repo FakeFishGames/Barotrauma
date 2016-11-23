@@ -240,6 +240,17 @@ namespace Barotrauma
 
             Debug.Assert(clones.Count == entitiesToClone.Count);
 
+            //clone links between the entities
+            for (int i = 0; i < clones.Count; i++)            
+            {
+                foreach (MapEntity linked in entitiesToClone[i].linkedTo)
+                {
+                    if (!entitiesToClone.Contains(linked)) continue;
+
+                    clones[i].linkedTo.Add(clones[entitiesToClone.IndexOf(linked)]);
+                }
+            }
+
             //connect clone wires to the clone items
             for (int i = 0; i < clones.Count; i++)
             {
@@ -299,6 +310,18 @@ namespace Barotrauma
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back=true) {}
 
         public virtual void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect) {}
+
+        /// <summary>
+        /// Remove the entity from the entity list without removing links to other entities
+        /// </summary>
+        public virtual void ShallowRemove()
+        {
+            base.Remove();
+
+            mapEntityList.Remove(this);
+
+            if (aiTarget != null) aiTarget.Remove();
+        }
 
         public override void Remove()
         {
@@ -388,12 +411,13 @@ namespace Barotrauma
                 if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.C) &&
                     PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.C))
                 {
-                    copiedList = new List<MapEntity>(selectedList);
+                    CopyEntities(selectedList);
                 }
                 else if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.X) &&
                     PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.X))
                 {
-                    copiedList = new List<MapEntity>(selectedList);
+                    CopyEntities(selectedList);
+
                     selectedList.ForEach(e => e.Remove());
                     selectedList.Clear();
                 }
@@ -636,6 +660,24 @@ namespace Barotrauma
             selectedList.Add(entity);
         }
 
+
+        /// <summary>
+        /// copies a list of entities to the "clipboard" (copiedList)
+        /// </summary>
+        private static void CopyEntities(List<MapEntity> entities)
+        {
+            List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+
+            copiedList = Clone(entities);
+
+            //find all new entities created during cloning
+            var newEntities = mapEntityList.Except(prevEntities).ToList();
+
+            //do a "shallow remove" (removes the entities from the game without removing links between them)
+            //  -> items will stay in their containers
+            newEntities.ForEach(e => e.ShallowRemove());
+        }
+
         public virtual void FlipX()
         {
             if (Submarine == null)
@@ -752,26 +794,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        public static List<MapEntity> FindMapEntities(Vector2 pos)
-        {
-            List<MapEntity> foundEntities = new List<MapEntity>();
-            foreach (MapEntity e in mapEntityList)
-            {
-                if (Submarine.RectContains(e.rect, pos)) foundEntities.Add(e);
-            }
-            return foundEntities;
-        }
-
-        public static MapEntity FindMapEntity(Vector2 pos)
-        {
-            foreach (MapEntity e in mapEntityList)
-            {
-                if (Submarine.RectContains(e.rect, pos)) return e;
-            }
-            return null;
-        }
-
+        
         /// <summary>
         /// Find entities whose rect intersects with the "selection rect"
         /// </summary>
