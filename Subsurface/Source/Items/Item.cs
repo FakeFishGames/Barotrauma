@@ -1983,6 +1983,25 @@ namespace Barotrauma
             return true;
         }
 
+        public override void ShallowRemove()
+        {
+            base.ShallowRemove();
+            
+            Removed = true;
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.Remove();
+            }
+            ItemList.Remove(this);
+
+            if (body != null)
+            {
+                body.Remove();
+                body = null;
+            }
+        }
+
         public override void Remove()
         {
             base.Remove();
