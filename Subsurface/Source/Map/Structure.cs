@@ -763,11 +763,10 @@ namespace Barotrauma
 
                     if(CastShadow) GenerateConvexHull();
                 }
+
+                sections[sectionIndex].gap.Open = (damage / prefab.MaxHealth - 0.5f) * 2.0f;
             }
-
-            if (sections[sectionIndex].gap != null)
-                sections[sectionIndex].gap.Open = (damage/prefab.MaxHealth - 0.5f)*2;
-
+            
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.MaxHealth);
 
