@@ -187,11 +187,11 @@ namespace Barotrauma
             minWidth = Math.Max(minWidth, 6500.0f);
 
             startPosition = new Vector2(
-                Rand.Range(minWidth * 2, minWidth * 4, false),
+                Rand.Range(minWidth, minWidth * 2, false),
                 Rand.Range(borders.Height * 0.5f, borders.Height - minWidth * 2, false));
 
             endPosition = new Vector2(
-                borders.Width - Rand.Range(minWidth * 2, minWidth * 4, false),
+                borders.Width - Rand.Range(minWidth, minWidth * 2, false),
                 Rand.Range(borders.Height * 0.5f, borders.Height - minWidth * 2, false));
             
             List<Vector2> pathNodes = new List<Vector2>();
@@ -211,8 +211,12 @@ namespace Barotrauma
 
             pathNodes.Add(new Vector2(endPosition.X, borders.Height));
             
-            List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
+            if (pathNodes.Count <= 2)
+            {
+                pathNodes.Add((startPosition + endPosition) / 2);
+            }
 
+            List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
             for (int i = 0; i < generationParams.SmallTunnelCount; i++)
             {
                 var tunnelStartPos = pathNodes[Rand.Range(2, pathNodes.Count - 2, false)];
@@ -421,7 +425,8 @@ namespace Barotrauma
 
                 cellGrid[x, y].Add(cell);
             }
-
+            
+            ruins = new List<Ruin>();
             for (int i = 0; i<generationParams.RuinCount; i++)
             {
                 GenerateRuin(mainPath);
@@ -726,8 +731,6 @@ namespace Barotrauma
             }
 
             var ruin = new Ruin(closestPathCell, cells, new Rectangle((ruinPos - ruinSize * 0.5f).ToPoint(), ruinSize.ToPoint()));
-
-            ruins = new List<Ruin>();
             ruins.Add(ruin);
 
             ruin.RuinShapes.Sort((shape1, shape2) => shape2.DistanceFromEntrance.CompareTo(shape1.DistanceFromEntrance));
