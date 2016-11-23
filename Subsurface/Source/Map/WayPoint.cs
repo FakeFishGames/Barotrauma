@@ -444,7 +444,7 @@ namespace Barotrauma
 
             foreach (Structure stairs in stairList)
             {
-                WayPoint[] stairPoints = new WayPoint[2];
+                WayPoint[] stairPoints = new WayPoint[3];
 
                 stairPoints[0] = new WayPoint(
                     new Vector2(stairs.Rect.X - 32.0f,
@@ -463,8 +463,10 @@ namespace Barotrauma
                         stairPoints[i].ConnectTo(closest);
                     }                    
                 }
-
-                stairPoints[0].ConnectTo(stairPoints[1]);                
+                
+                stairPoints[2] = new WayPoint((stairPoints[0].Position + stairPoints[1].Position)/2, SpawnType.Path, submarine);
+                stairPoints[0].ConnectTo(stairPoints[2]);
+                stairPoints[2].ConnectTo(stairPoints[1]);
             }
 
             foreach (Item item in Item.ItemList)

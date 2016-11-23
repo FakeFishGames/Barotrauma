@@ -146,9 +146,11 @@ namespace Barotrauma
             }
 
             var collider = character.AnimController.Collider;
+            Vector2 colliderBottom = character.AnimController.GetColliderBottom();
 
             if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius * 2 &&
-                Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < collider.height / 2 + collider.radius)
+                currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y &&
+                currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + 1.5f)
             {
                 currentPath.SkipToNextNode();
             }

@@ -110,7 +110,21 @@ namespace Barotrauma
         {
             UpdateDistanceAccumulator();
 
-            Character.AnimController.IgnorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
+            bool ignorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
+
+            if (steeringManager is IndoorsSteeringManager)
+            {
+                var currPath = ((IndoorsSteeringManager)steeringManager).CurrentPath;
+                if (currPath != null && currPath.CurrentNode != null)
+                {
+                    if (currPath.CurrentNode.SimPosition.Y < Character.AnimController.GetColliderBottom().Y)
+                    {
+                        ignorePlatforms = true;
+                    }
+                }
+            }
+            
+            Character.AnimController.IgnorePlatforms = ignorePlatforms;
 
             if (Character.AnimController is HumanoidAnimController)
             {
@@ -501,13 +515,42 @@ namespace Barotrauma
                 }
 
                 spriteBatch.DrawString(GUI.Font, targetValue.ToString(), pos - Vector2.UnitY*20.0f, Color.Red);
+            }
 
+            if (selectedAiTarget != null)
+            {
+                GUI.DrawLine(spriteBatch,
+                    new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
+                    new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);
             }
 
             spriteBatch.DrawString(GUI.Font, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
 
             spriteBatch.DrawString(GUI.Font, "updatetargets: "+updateTargetsTimer, pos - Vector2.UnitY * 100.0f, Color.Red);
             spriteBatch.DrawString(GUI.Font, "cooldown: " + coolDownTimer, pos - Vector2.UnitY * 120.0f, Color.Red);
+
+
+            IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
+            if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) return;
+
+            GUI.DrawLine(spriteBatch,
+                new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
+                new Vector2(pathSteering.CurrentPath.CurrentNode.DrawPosition.X, -pathSteering.CurrentPath.CurrentNode.DrawPosition.Y),
+                Color.LightGreen);
+
+
+            for (int i = 1; i < pathSteering.CurrentPath.Nodes.Count; i++)
+            {
+                GUI.DrawLine(spriteBatch,
+                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y),
+                    new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
+                    Color.LightGreen);
+
+                spriteBatch.DrawString(GUI.SmallFont,
+                    pathSteering.CurrentPath.Nodes[i].ID.ToString(),
+                    new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y - 10),
+                    Color.LightGreen);
+            }
         }
 
         public override void FillNetworkData(NetBuffer message)

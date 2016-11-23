@@ -225,9 +225,7 @@ namespace Barotrauma
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
             if (movement == Vector2.Zero) return;
-
-            IgnorePlatforms = (TargetMovement.Y < -Math.Abs(TargetMovement.X));
-
+            
             float mainLimbHeight, mainLimbAngle;
             if (MainLimb.type == LimbType.Torso)
             {
