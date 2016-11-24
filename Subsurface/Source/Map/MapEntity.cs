@@ -1,24 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.ObjectModel;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    class MapEntity : Entity
+    abstract class MapEntity : Entity
     {
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
         
         //which entities have been selected for editing
-        public static List<MapEntity> selectedList = new List<MapEntity>();
+        private static List<MapEntity> selectedList = new List<MapEntity>();
+        public static List<MapEntity> SelectedList
+        {
+            get
+            {
+                return selectedList;
+            }
+        }
+        private static List<MapEntity> copiedList = new List<MapEntity>();
         
         protected static GUIComponent editingHUD;
-        
+        public static GUIComponent EditingHUD
+        {
+            get
+            {
+                return editingHUD;
+            }
+        }
+
         protected static Vector2 selectionPos = Vector2.Zero;
         protected static Vector2 selectionSize = Vector2.Zero;
 
@@ -37,7 +54,7 @@ namespace Barotrauma
         //is the mouse inside the rect
         protected bool isHighlighted;
 
-        protected bool isSelected;
+        //protected bool isSelected;
 
         private static bool disableSelect;
         public static bool DisableSelect
@@ -149,7 +166,11 @@ namespace Barotrauma
                 if (aiTarget == null) return 0.0f;
                 return aiTarget.SoundRange;
             }
-            set { aiTarget.SoundRange = value; }
+            set
+            {
+                if (aiTarget == null) return;
+                aiTarget.SoundRange = value; 
+            }
         }
 
         public float SightRange
@@ -169,8 +190,7 @@ namespace Barotrauma
 
         public bool IsSelected
         {
-            get { return isSelected; }
-            set { isSelected = value; }
+            get { return selectedList.Contains(this); }
         }
 
         protected bool ResizeHorizontal
@@ -202,6 +222,68 @@ namespace Barotrauma
         {
             return (Submarine.RectContains(WorldRect, position));
         }
+
+        public virtual MapEntity Clone()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static List<MapEntity> Clone(List<MapEntity> entitiesToClone)
+        {
+            List<MapEntity> clones = new List<MapEntity>();
+            foreach (MapEntity e in entitiesToClone)
+            {
+                Debug.Assert(e != null);
+                clones.Add(e.Clone());
+                Debug.Assert(clones.Last() != null);
+            }
+
+            Debug.Assert(clones.Count == entitiesToClone.Count);
+
+            //clone links between the entities
+            for (int i = 0; i < clones.Count; i++)            
+            {
+                foreach (MapEntity linked in entitiesToClone[i].linkedTo)
+                {
+                    if (!entitiesToClone.Contains(linked)) continue;
+
+                    clones[i].linkedTo.Add(clones[entitiesToClone.IndexOf(linked)]);
+                }
+            }
+
+            //connect clone wires to the clone items
+            for (int i = 0; i < clones.Count; i++)
+            {
+                var cloneItem = clones[i] as Item;
+                if (cloneItem == null) continue;
+
+                var cloneWire = cloneItem.GetComponent<Wire>();
+                if (cloneWire == null) continue;
+
+                var originalWire = ((Item)entitiesToClone[i]).GetComponent<Wire>();
+
+                cloneWire.SetNodes(originalWire.GetNodes());
+
+                for (int n = 0; n < 2; n++)
+                {
+                    if (originalWire.Connections[n] == null) continue;
+
+                    var connectedItem = originalWire.Connections[n].Item;
+                    if (connectedItem == null) continue;
+                    
+                    //index of the item the wire is connected to
+                    int itemIndex = entitiesToClone.IndexOf(connectedItem);
+                    //index of the connection in the connectionpanel of the target item
+                    int connectionIndex = connectedItem.Connections.IndexOf(originalWire.Connections[n]);
+                    
+                    (clones[itemIndex] as Item).GetComponent<ConnectionPanel>().Connections[connectionIndex].TryAddLink(cloneWire);
+                    cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
+
+                }
+            }
+
+            return clones;
+        }
         
         protected void InsertToList()
         {
@@ -228,6 +310,18 @@ namespace Barotrauma
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back=true) {}
 
         public virtual void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect) {}
+
+        /// <summary>
+        /// Remove the entity from the entity list without removing links to other entities
+        /// </summary>
+        public virtual void ShallowRemove()
+        {
+            base.Remove();
+
+            mapEntityList.Remove(this);
+
+            if (aiTarget != null) aiTarget.Remove();
+        }
 
         public override void Remove()
         {
@@ -288,7 +382,6 @@ namespace Barotrauma
             foreach (MapEntity e in mapEntityList)
             {
                 e.isHighlighted = false;
-                e.isSelected = false;
             }
 
             if (DisableSelect)
@@ -308,8 +401,38 @@ namespace Barotrauma
 
             if (PlayerInput.KeyDown(Keys.Delete))
             {
-                foreach (MapEntity e in selectedList) e.Remove();
+                selectedList.ForEach(e => e.Remove());
                 selectedList.Clear();
+            }
+
+            if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+            {
+                if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.C) &&
+                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.C))
+                {
+                    CopyEntities(selectedList);
+                }
+                else if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.X) &&
+                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.X))
+                {
+                    CopyEntities(selectedList);
+
+                    selectedList.ForEach(e => e.Remove());
+                    selectedList.Clear();
+                }
+                else if (copiedList.Count > 0 &&
+                    PlayerInput.GetKeyboardState.IsKeyDown(Keys.V) &&
+                    PlayerInput.GetOldKeyboardState.IsKeyUp(Keys.V))
+                {
+                    var clones = Clone(copiedList);
+
+                    Vector2 center = Vector2.Zero;
+                    clones.ForEach(c => center += c.WorldPosition);
+                    center /= clones.Count;
+
+                    selectedList = new List<MapEntity>(clones);
+                    selectedList.ForEach(c => c.Move(cam.WorldViewCenter - center));
+                }
             }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -327,21 +450,15 @@ namespace Barotrauma
                     {
                         if (e.IsMouseOn(position)) highLightedEntity = e;
                     }
-                    e.isSelected = false;
                 }
 
                 if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
 
             }
-
-            foreach (MapEntity e in selectedList)
-            {
-                e.isSelected = true;
-            }
-
+            
             //started moving selected entities
             if (startMovingPos != Vector2.Zero)
-            { 
+            {
                 if (PlayerInput.LeftButtonReleased())
                 {
                     //mouse released -> move the entities to the new position of the mouse
@@ -351,11 +468,22 @@ namespace Barotrauma
 
                     if (moveAmount != Vector2.Zero)
                     {
-                        foreach (MapEntity e in selectedList) e.Move(moveAmount);
+                        //clone
+                        if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                        {
+                            var clones = Clone(selectedList);
+                            selectedList = clones;
+                            selectedList.ForEach(c => c.Move(moveAmount));
+                        }
+                        else // move
+                        {
+                            foreach (MapEntity e in selectedList) e.Move(moveAmount);
+                        }
                     }
 
-                    startMovingPos = Vector2.Zero;
+                    startMovingPos = Vector2.Zero;    
                 }
+                           
             }
             //started dragging a "selection rectangle"
             else if (selectionPos != Vector2.Zero)
@@ -402,6 +530,25 @@ namespace Barotrauma
                     {
                         selectedList = newSelection;
                     }
+
+                    //select wire if both items it's connected to are selected
+                    var selectedItems = selectedList.Where(e => e is Item).Cast<Item>().ToList();
+                    foreach (Item item in selectedItems)
+                    {
+                        if (item.Connections == null) continue;
+                        foreach (Connection c in item.Connections)
+                        {
+                            foreach (Wire w in c.Wires)
+                            {
+                                if (w == null || selectedList.Contains(w.Item)) continue;
+
+                                if (w.OtherConnection(c) != null && selectedList.Contains(w.OtherConnection(c).Item))
+                                {
+                                    selectedList.Add(w.Item);
+                                }
+                            }
+                        }
+                    }
                     
                     selectionPos = Vector2.Zero;
                     selectionSize = Vector2.Zero;
@@ -410,7 +557,6 @@ namespace Barotrauma
             //default, not doing anything specific yet
             else
             {
-
                 if (PlayerInput.LeftButtonHeld() &&
                     PlayerInput.KeyUp(Keys.Space))
                 {
@@ -422,11 +568,9 @@ namespace Barotrauma
 
                     selectionPos = position;
                 }
-
-
-            }
-            
+            }            
         }
+
 
         /// <summary>
         /// Draw the "selection rectangle" and outlines of entities that are being dragged (if any)
@@ -504,10 +648,6 @@ namespace Barotrauma
 
         public static void DeselectAll()
         {
-            foreach (MapEntity e in selectedList)
-            {
-                e.isSelected = false;
-            }
             selectedList.Clear();
         }
 
@@ -516,8 +656,25 @@ namespace Barotrauma
         {
             DeselectAll();
 
-            entity.isSelected = true;
             selectedList.Add(entity);
+        }
+
+
+        /// <summary>
+        /// copies a list of entities to the "clipboard" (copiedList)
+        /// </summary>
+        private static void CopyEntities(List<MapEntity> entities)
+        {
+            List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+
+            copiedList = Clone(entities);
+
+            //find all new entities created during cloning
+            var newEntities = mapEntityList.Except(prevEntities).ToList();
+
+            //do a "shallow remove" (removes the entities from the game without removing links between them)
+            //  -> items will stay in their containers
+            newEntities.ForEach(e => e.ShallowRemove());
         }
 
         public virtual void FlipX()
@@ -532,6 +689,11 @@ namespace Barotrauma
             relative.Y = 0.0f;
 
             Move(-relative * 2.0f);
+        }
+        
+        public virtual void AddToGUIUpdateList()
+        {
+            if (editingHUD != null) editingHUD.AddToGUIUpdateList();
         }
 
         public virtual void UpdateEditing(Camera cam) { }
@@ -631,26 +793,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        public static List<MapEntity> FindMapEntities(Vector2 pos)
-        {
-            List<MapEntity> foundEntities = new List<MapEntity>();
-            foreach (MapEntity e in mapEntityList)
-            {
-                if (Submarine.RectContains(e.rect, pos)) foundEntities.Add(e);
-            }
-            return foundEntities;
-        }
-
-        public static MapEntity FindMapEntity(Vector2 pos)
-        {
-            foreach (MapEntity e in mapEntityList)
-            {
-                if (Submarine.RectContains(e.rect, pos)) return e;
-            }
-            return null;
-        }
-
+        
         /// <summary>
         /// Find entities whose rect intersects with the "selection rect"
         /// </summary>

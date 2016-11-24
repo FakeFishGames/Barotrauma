@@ -54,10 +54,11 @@ namespace Barotrauma.Items.Components
             //by the constructions connected to the grid
             fullPower = 0.0f;
             fullLoad = 0.0f;    
-            updateTimer = 0;        
+               
             connectedList.Clear();
 
             CheckJunctions(deltaTime);
+            updateTimer = 0;
 
             foreach (Powered p in connectedList)
             {
@@ -178,6 +179,11 @@ namespace Barotrauma.Items.Components
 
             spriteBatch.DrawString(GUI.Font, "Power: " + (int)(-currPowerConsumption) + " kW", new Vector2(x + 30, y + 30), Color.White);
             spriteBatch.DrawString(GUI.Font, "Load: " + (int)powerLoad + " kW", new Vector2(x + 30, y + 100), Color.White);
+        }
+
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
         }
 
         public override void UpdateHUD(Character character)

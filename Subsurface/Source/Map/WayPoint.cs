@@ -113,6 +113,16 @@ namespace Barotrauma
             currentHull = Hull.FindHull(WorldPosition);
         }
 
+        public override MapEntity Clone()
+        {
+            var clone = new WayPoint(rect, Submarine);
+            clone.idCardTags = idCardTags;
+            clone.spawnType = spawnType;
+            clone.assignedJob = assignedJob;
+
+            return clone;
+        }
+
         public override bool IsMouseOn(Vector2 position)
         {
             if (IsHidden()) return false;
@@ -134,7 +144,7 @@ namespace Barotrauma
             drawPos.Y = -drawPos.Y;
 
             Color clr = currentHull == null ? Color.Blue : Color.White;
-            if (isSelected) clr = Color.Red;
+            if (IsSelected) clr = Color.Red;
             if (isHighlighted) clr = Color.DarkRed;
                         
             int iconX = iconIndices[(int)spawnType]*IconSize % iconTexture.Width;
@@ -434,7 +444,7 @@ namespace Barotrauma
 
             foreach (Structure stairs in stairList)
             {
-                WayPoint[] stairPoints = new WayPoint[2];
+                WayPoint[] stairPoints = new WayPoint[3];
 
                 stairPoints[0] = new WayPoint(
                     new Vector2(stairs.Rect.X - 32.0f,
@@ -453,8 +463,10 @@ namespace Barotrauma
                         stairPoints[i].ConnectTo(closest);
                     }                    
                 }
-
-                stairPoints[0].ConnectTo(stairPoints[1]);                
+                
+                stairPoints[2] = new WayPoint((stairPoints[0].Position + stairPoints[1].Position)/2, SpawnType.Path, submarine);
+                stairPoints[0].ConnectTo(stairPoints[2]);
+                stairPoints[2].ConnectTo(stairPoints[1]);
             }
 
             foreach (Item item in Item.ItemList)

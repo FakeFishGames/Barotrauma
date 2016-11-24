@@ -51,17 +51,17 @@ namespace Barotrauma
 
             if (character.IsDead || character.IsUnconscious || stunTimer > 0.0f)
             {
-                collider.FarseerBody.FixedRotation = false;
+                Collider.FarseerBody.FixedRotation = false;
 
                 if (character.IsRemotePlayer)
                 {
-                    MainLimb.pullJoint.WorldAnchorB = collider.SimPosition;
+                    MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
                     MainLimb.pullJoint.Enabled = true;
                 }
                 else
                 {
-                    collider.LinearVelocity = (MainLimb.SimPosition - collider.SimPosition) * 60.0f;
-                    collider.SmoothRotate(MainLimb.Rotation);
+                    Collider.LinearVelocity = (MainLimb.SimPosition - Collider.SimPosition) * 60.0f;
+                    Collider.SmoothRotate(MainLimb.Rotation);
                 }
 
                 if (stunTimer > 0)
@@ -73,16 +73,16 @@ namespace Barotrauma
             }
 
             //re-enable collider
-            if (!collider.FarseerBody.Enabled)
+            if (!Collider.FarseerBody.Enabled)
             {
                 var lowestLimb = FindLowestLimb();
 
-                collider.SetTransform(new Vector2(
-                    collider.SimPosition.X,
-                    Math.Max(lowestLimb.SimPosition.Y + (collider.radius + collider.height / 2), collider.SimPosition.Y)),
+                Collider.SetTransform(new Vector2(
+                    Collider.SimPosition.X,
+                    Math.Max(lowestLimb.SimPosition.Y + (Collider.radius + Collider.height / 2), Collider.SimPosition.Y)),
                     0.0f);
 
-                collider.FarseerBody.Enabled = true;
+                Collider.FarseerBody.Enabled = true;
             }
 
             ResetPullJoints();
@@ -96,20 +96,20 @@ namespace Barotrauma
 
             if (inWater)
             {
-                collider.FarseerBody.FixedRotation = false;
+                Collider.FarseerBody.FixedRotation = false;
                 UpdateSineAnim(deltaTime);
             }
             else if (currentHull != null && CanEnterSubmarine)
             {
-                if (Math.Abs(MathUtils.GetShortestAngle(collider.Rotation, 0.0f)) > 0.001f)
+                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, 0.0f)) > 0.001f)
                 {
                     //rotate collider back upright
-                    collider.AngularVelocity = MathUtils.GetShortestAngle(collider.Rotation, 0.0f) * 60.0f;
-                    collider.FarseerBody.FixedRotation = false;
+                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 60.0f;
+                    Collider.FarseerBody.FixedRotation = false;
                 }
                 else
                 {
-                    collider.FarseerBody.FixedRotation = true;
+                    Collider.FarseerBody.FixedRotation = true;
                 }
 
                 UpdateWalkAnim(deltaTime);
@@ -172,7 +172,7 @@ namespace Barotrauma
             movement = TargetMovement*swimSpeed;
             
             MainLimb.pullJoint.Enabled = true;
-            MainLimb.pullJoint.WorldAnchorB = collider.SimPosition;
+            MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
 
             if (movement.LengthSquared() < 0.00001f) return;
 
@@ -180,12 +180,12 @@ namespace Barotrauma
             
             if (rotateTowardsMovement)
             {
-                collider.SmoothRotate(movementAngle, 25.0f);
+                Collider.SmoothRotate(movementAngle, 25.0f);
                 MainLimb.body.SmoothRotate(movementAngle, 25.0f);
             }
             else
             {
-                collider.SmoothRotate(HeadAngle * Dir, 25.0f);
+                Collider.SmoothRotate(HeadAngle * Dir, 25.0f);
                 MainLimb.body.SmoothRotate(HeadAngle * Dir, 25.0f);
             }
 
@@ -216,7 +216,7 @@ namespace Barotrauma
                 Limbs[i].body.ApplyForce(((limbPos - Limbs[i].SimPosition) * 3.0f - Limbs[i].LinearVelocity * 3.0f) * Limbs[i].Mass);
             }
             
-            collider.LinearVelocity = Vector2.Lerp(collider.LinearVelocity, movement, 0.5f);
+            Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, 0.5f);
                 
             floorY = Limbs[0].SimPosition.Y;            
         }
@@ -225,9 +225,7 @@ namespace Barotrauma
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
             if (movement == Vector2.Zero) return;
-
-            IgnorePlatforms = (TargetMovement.Y < -Math.Abs(TargetMovement.X));
-
+            
             float mainLimbHeight, mainLimbAngle;
             if (MainLimb.type == LimbType.Torso)
             {
@@ -242,9 +240,9 @@ namespace Barotrauma
 
             MainLimb.body.SmoothRotate(mainLimbAngle * Dir, 50.0f);
             
-            collider.LinearVelocity = new Vector2(
+            Collider.LinearVelocity = new Vector2(
                 movement.X,
-                collider.LinearVelocity.Y > 0.0f ? collider.LinearVelocity.Y * 0.5f : collider.LinearVelocity.Y);
+                Collider.LinearVelocity.Y > 0.0f ? Collider.LinearVelocity.Y * 0.5f : Collider.LinearVelocity.Y);
 
             MainLimb.MoveToPos(GetColliderBottom() + Vector2.UnitY * mainLimbHeight, 10.0f);
             

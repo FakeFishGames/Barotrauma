@@ -44,13 +44,24 @@ namespace Barotrauma.Lights
 
     class ConvexHullList
     {
+        private List<ConvexHull> list;
+
         public readonly Submarine Submarine;
-        public List<ConvexHull> List;
+        public List<ConvexHull> List
+        {
+            get { return list; }
+            set
+            {
+                Debug.Assert(value != null);
+                Debug.Assert(!list.Contains(null));
+                list = value;
+            }
+        }
 
         public ConvexHullList(Submarine submarine)
         {
             Submarine = submarine;
-            List = new List<ConvexHull>();
+            list = new List<ConvexHull>();
         }
     }
 

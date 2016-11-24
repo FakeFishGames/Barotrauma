@@ -190,6 +190,13 @@ namespace Barotrauma
             frame.Draw(spriteBatch);
         }
 
+        public static void AddToGUIUpdateList()
+        {
+            if (frame == null) return;
+
+            frame.AddToGUIUpdateList();
+        }
+
         public static void UpdateHud(Item item, Character character)
         {
             if (frame == null || frame.UserData != item)

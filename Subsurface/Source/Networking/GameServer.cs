@@ -58,6 +58,8 @@ namespace Barotrauma.Networking
             name = name.Replace(":", "");
             name = name.Replace(";", "");
 
+            AdminAuthPass = "";
+
             this.name = name;
             this.password = "";
             if (password.Length>0)
@@ -193,8 +195,8 @@ namespace Barotrauma.Networking
             {
                 restClient = new RestClient(NetConfig.MasterServerUrl);            
             }
-                        
-            var request = new RestRequest("masterserver2.php", Method.GET);            
+                
+            var request = new RestRequest("masterserver3.php", Method.GET);            
             request.AddParameter("action", "addserver");
             request.AddParameter("servername", name);
             request.AddParameter("serverport", Port);
@@ -229,7 +231,7 @@ namespace Barotrauma.Networking
                 restClient = new RestClient(NetConfig.MasterServerUrl);
             }
 
-            var request = new RestRequest("masterserver2.php", Method.GET);
+            var request = new RestRequest("masterserver3.php", Method.GET);
             request.AddParameter("action", "refreshserver");
             request.AddParameter("gamestarted", gameStarted ? 1 : 0);
             request.AddParameter("currplayers", connectedClients.Count);
@@ -269,6 +271,14 @@ namespace Barotrauma.Networking
         {
             masterServerResponded = true;
 
+            if (response.Content=="Error: server not found")
+            {
+                Log("Not registered to master server, re-registering...", Color.Red);
+
+                RegisterToMasterServer();
+                return;
+            }
+
             if (response.ErrorException != null)
             {
                 DebugConsole.NewMessage("Error while registering to master server (" + response.ErrorException + ")", Color.Red);
@@ -286,6 +296,14 @@ namespace Barotrauma.Networking
             Log("Master server responded", Color.Cyan);
         }
         
+        public override void AddToGUIUpdateList()
+        {
+            if (started) base.AddToGUIUpdateList();
+
+            if (settingsFrame != null) settingsFrame.AddToGUIUpdateList();
+            if (log.LogFrame != null) log.LogFrame.AddToGUIUpdateList();
+        }
+
         public override void Update(float deltaTime)
         {
             if (ShowNetStats) netStats.Update(deltaTime);
@@ -705,7 +723,7 @@ namespace Barotrauma.Networking
                 outmsg.WritePadBits();
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
                 outmsg.Write(GameMain.NetLobbyScreen.GetServerName());
-                outmsg.Write(GameMain.NetLobbyScreen.ServerMessage);
+                outmsg.Write(GameMain.NetLobbyScreen.ServerMessage.Text);
                 var subList = GameMain.NetLobbyScreen.GetSubList();
                 if (c.lastRecvGeneralUpdate < 1)
                 {
@@ -1051,7 +1069,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            CoroutineManager.StartCoroutine(EndCinematic());
+            CoroutineManager.StartCoroutine(EndCinematic(),"EndCinematic");
         }
 
         public IEnumerable<object> EndCinematic()
@@ -1462,6 +1480,7 @@ namespace Barotrauma.Networking
         public override void Disconnect()
         {
             banList.Save();
+            SaveSettings();
 
             if (registeredToMaster && restClient != null)
             {

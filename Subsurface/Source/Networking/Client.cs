@@ -61,7 +61,7 @@ namespace Barotrauma.Networking
         
         public float deleteDisconnectedTimer;
 
-        public ClientPermissions Permissions;
+        public ClientPermissions Permissions = ClientPermissions.None;
         
         public void InitClientSync()
         {
@@ -76,7 +76,7 @@ namespace Barotrauma.Networking
         {
             get { return kickVoters.Count; }
         }
-
+        
         public Client(NetPeer server, string name, byte ID)
             : this(name, ID)
         {
@@ -110,6 +110,7 @@ namespace Barotrauma.Networking
 
         public static string SanitizeName(string name)
         {
+            name = name.Trim();
             if (name.Length > 20)
             {
                 name = name.Substring(0, 20);
@@ -138,17 +139,17 @@ namespace Barotrauma.Networking
 
         public void GivePermission(ClientPermissions permission)
         {
-            this.Permissions |= permission;
+            if (!this.Permissions.HasFlag(permission)) this.Permissions |= permission;
         }
 
         public void RemovePermission(ClientPermissions permission)
         {
-            this.Permissions &= ~permission;
+            if (this.Permissions.HasFlag(permission)) this.Permissions &= ~permission;
         }
 
         public bool HasPermission(ClientPermissions permission)
         {
-            return false; //Permissions.HasFlag(permission);
+            return this.Permissions.HasFlag(permission);
         }
 
         public T GetVote<T>(VoteType voteType)

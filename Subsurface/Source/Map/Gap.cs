@@ -114,6 +114,11 @@ namespace Barotrauma
             InsertToList();
         }
 
+        public override MapEntity Clone()
+        {
+            return new Gap(rect, isHorizontal, Submarine);
+        }
+
         public override void Move(Vector2 amount)
         {
             base.Move(amount);
@@ -210,7 +215,7 @@ namespace Barotrauma
                     isHorizontal ? new Vector2(rect.Height / 16.0f, 1.0f) : new Vector2(rect.Width / 16.0f, 1.0f));
             }        
 
-            if (isSelected)
+            if (IsSelected)
             {
                 GUI.DrawRectangle(sb,
                     new Vector2(WorldRect.X - 5, -WorldRect.Y - 5),
@@ -247,7 +252,7 @@ namespace Barotrauma
 
             lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime);
 
-            if (LerpedFlowForce.Length() > 100.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
+            if (LerpedFlowForce.LengthSquared() > 10000.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
             {
                 //UpdateFlowForce();
 
@@ -526,7 +531,7 @@ namespace Barotrauma
 
             //a variable affecting the water flow through the gap
             //the larger the gap is, the faster the water flows
-            float sizeModifier = size * open;
+            float sizeModifier = size * open * open;
 
             float delta = Hull.MaxCompress * sizeModifier * deltaTime;
             
@@ -557,12 +562,10 @@ namespace Barotrauma
                 if (hull1.Volume < hull1.FullVolume - Hull.MaxCompress &&
                     hull1.Surface < rect.Y)
                 {
-                    
-
                     if (rect.X > hull1.Rect.X + hull1.Rect.Width / 2.0f)
                     {
                         float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1])) * 0.1f;
-
+                        vel *= Math.Min(Math.Abs(flowForce.X) / 200.0f, 1.0f);
 
                         hull1.WaveVel[hull1.WaveY.Length - 1] += vel;
                         hull1.WaveVel[hull1.WaveY.Length - 2] += vel;
@@ -570,11 +573,11 @@ namespace Barotrauma
                     else
                     {
                         float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[0])) * 0.1f;
-
+                        vel *= Math.Min(Math.Abs(flowForce.X) / 200.0f, 1.0f);
 
                         hull1.WaveVel[0] += vel;
                         hull1.WaveVel[1] += vel;
-                    }
+                    } 
                 }
                 else
                 {

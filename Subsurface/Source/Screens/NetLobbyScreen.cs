@@ -9,6 +9,8 @@ using FarseerPhysics.Dynamics;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reflection;
+using System.ComponentModel;
 
 namespace Barotrauma
 {
@@ -61,10 +63,15 @@ namespace Barotrauma
         private Sprite backgroundSprite;
 
         private GUITextBox serverMessage;
-        public string ServerMessage
+        //public string ServerMessage
+        //{
+        //    get { return serverMessage.Text; }
+        //    set { if (GameMain.Server != null) return; serverMessage.Text = value; }
+        //}
+
+        public GUITextBox ServerMessage
         {
-            get { return serverMessage.Text; }
-            set { if (GameMain.Server != null) return; serverMessage.Text = value; }
+            get { return serverMessage; }
         }
 
         public GUIListBox SubList
@@ -793,12 +800,12 @@ namespace Barotrauma
                 }
             }
 
-            playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.3f);
+            playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.6f);
 
-            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 250), null, Alignment.Center, GUI.Style, playerFrame);
+            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 280), null, Alignment.Center, GUI.Style, playerFrame);
             playerFrameInner.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0,0,200,20), component.UserData.ToString(), 
+            new GUITextBlock(new Rectangle(0, 0, 200, 20), component.UserData.ToString(),
                 GUI.Style, Alignment.TopLeft, Alignment.TopLeft,
                 playerFrameInner, false, GUI.LargeFont);
 
@@ -808,50 +815,50 @@ namespace Barotrauma
 
                 new GUITextBlock(new Rectangle(0, 25, 150, 15), selectedClient.Connection.RemoteEndPoint.Address.ToString(), GUI.Style, playerFrameInner);
 
-                //var permissionsBox = new GUIFrame(new Rectangle(0, 60, 0, 85), GUI.Style, playerFrameInner);
-                //permissionsBox.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                //permissionsBox.UserData = selectedClient;
+                var permissionsBox = new GUIFrame(new Rectangle(0, 60, 0, 90), GUI.Style, playerFrameInner);
+                permissionsBox.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+                permissionsBox.UserData = selectedClient;
 
-                //new GUITextBlock(new Rectangle(0, 0, 0, 15), "Permissions:", GUI.Style, permissionsBox);
-                //int x = 0, y = 0;
-                //foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
-                //{
-                //    if (permission == ClientPermissions.None) continue;
+                new GUITextBlock(new Rectangle(0, 0, 0, 15), "Permissions:", GUI.Style, permissionsBox);
+                int x = 0, y = 0;
+                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                {
+                    if (permission == ClientPermissions.None) continue;
 
-                //    FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
-                //    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+                    FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
+                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
 
-                //    string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
-                    
-                //    var permissionTick = new GUITickBox(new Rectangle(x,y+20,15,15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
-                //    permissionTick.UserData = permission;
-                //    permissionTick.Selected = selectedClient.HasPermission(permission);
+                    string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
 
-                //    permissionTick.OnSelected = (tickBox) =>
-                //        {
-                //            var client = tickBox.Parent.UserData as Client;
-                //            if (client == null) return false;
+                    var permissionTick = new GUITickBox(new Rectangle(x, y + 20, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
+                    permissionTick.UserData = permission;
+                    permissionTick.Selected = selectedClient.HasPermission(permission);
 
-                //            var thisPermission = (ClientPermissions)tickBox.UserData;
+                    permissionTick.OnSelected = (tickBox) =>
+                        {
+                            var client = tickBox.Parent.UserData as Client;
+                            if (client == null) return false;
 
-                //            if (tickBox.Selected)
-                //                client.GivePermission(thisPermission);
-                //            else
-                //                client.RemovePermission(thisPermission);
+                            var thisPermission = (ClientPermissions)tickBox.UserData;
 
-                //            GameMain.Server.UpdateClientPermissions(client);
+                            if (tickBox.Selected)
+                                client.GivePermission(thisPermission);
+                            else
+                                client.RemovePermission(thisPermission);
 
-                //            return true;
-                //        };
+                            GameMain.Server.UpdateClientPermissions(client);
+
+                            return true;
+                        };
 
 
-                //    y += 20;
-                //    if (y >= permissionsBox.Rect.Height -20)
-                //    {
-                //        y = 0;
-                //        x += 100;
-                //    }
-                //}
+                    y += 20;
+                    if (y >= permissionsBox.Rect.Height-40)
+                    {
+                        y = 0;
+                        x += 100;
+                    }
+                }
             }
 
             if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
@@ -939,6 +946,24 @@ namespace Barotrauma
         public void ClearPlayers()
         {
             playerList.ClearChildren();
+        }
+
+        public override void AddToGUIUpdateList()
+        {
+            base.AddToGUIUpdateList();
+
+            if (jobInfoFrame != null)
+            {
+                jobInfoFrame.AddToGUIUpdateList();
+            }
+            else if (playerFrame != null)
+            {
+                playerFrame.AddToGUIUpdateList();
+            }
+            else
+            {
+                menu.AddToGUIUpdateList();
+            }
         }
 
         public override void Update(double deltaTime)

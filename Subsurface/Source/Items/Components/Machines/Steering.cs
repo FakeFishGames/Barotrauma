@@ -223,20 +223,28 @@ namespace Barotrauma.Items.Components
             if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(velRect.Center.X, velRect.Center.Y)) < 200.0f)
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)targetVelPos.X -10, (int)targetVelPos.Y - 10, 20, 20), Color.Red);
-
-                if (PlayerInput.LeftButtonHeld())
-                {
-                    TargetVelocity = PlayerInput.MousePosition - new Vector2(velRect.Center.X, velRect.Center.Y);
-                    targetVelocity.Y = -targetVelocity.Y;
-
-                    unsentChanges = true;
-                }
             }
+        }
+
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
         }
 
         public override void UpdateHUD(Character character)
         {
             GuiFrame.Update(1.0f / 60.0f);
+
+            if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(GuiFrame.Rect.Center.X, GuiFrame.Rect.Center.Y)) < 200.0f)
+            {
+                if (PlayerInput.LeftButtonHeld())
+                {
+                    TargetVelocity = PlayerInput.MousePosition - new Vector2(GuiFrame.Rect.Center.X, GuiFrame.Rect.Center.Y);
+                    targetVelocity.Y = -targetVelocity.Y;
+
+                    unsentChanges = true;
+                }
+            }
         }
 
         private void UpdateAutoPilot(float deltaTime)
@@ -433,10 +441,10 @@ namespace Barotrauma.Items.Components
 
             maintainPosTickBox.Selected = false;
             posToMaintain = null;
+            tickBox.Selected = true;
 
             UpdatePath();
             
-            tickBox.Selected = true;
 
             return true;
         }

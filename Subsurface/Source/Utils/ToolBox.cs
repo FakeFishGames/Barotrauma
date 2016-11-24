@@ -27,11 +27,55 @@ namespace Barotrauma
 
     public static class ToolBox
     {
+        public static bool IsProperFilenameCase(string filename)
+        {
+            char[] delimiters = { '/','\\' };
+            string[] subDirs = filename.Split(delimiters);
+            string originalFilename = filename;
+            filename = "";
+
+            for (int i=0;i<subDirs.Length-1;i++)
+            {
+                filename += subDirs[i] + "/";
+                
+                if (i == subDirs.Length - 2)
+                {
+                    string[] filePaths = Directory.GetFiles(filename);
+                    if (filePaths.Any(s => s.Equals(filename + subDirs[i + 1], StringComparison.Ordinal)))
+                    {
+                        return true;
+                    }
+                    else if (filePaths.Any(s => s.Equals(filename + subDirs[i + 1], StringComparison.OrdinalIgnoreCase)))
+                    {
+                        DebugConsole.ThrowError(originalFilename + " has incorrect case!");
+                        return false;
+                    }
+                }
+
+                string[] dirPaths = Directory.GetDirectories(filename);
+
+                if (!dirPaths.Any(s => s.Equals(filename+subDirs[i+1],StringComparison.Ordinal)))
+                {
+                    if (dirPaths.Any(s => s.Equals(filename + subDirs[i + 1], StringComparison.OrdinalIgnoreCase)))
+                    {
+                        DebugConsole.ThrowError(originalFilename + " has incorrect case!");
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError(originalFilename + " doesn't exist!");
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+
         public static XDocument TryLoadXml(string filePath)
         {
             XDocument doc;
             try
             {
+                IsProperFilenameCase(filePath);
                 doc = XDocument.Load(filePath);
             }
             catch (Exception e)
@@ -276,7 +320,7 @@ namespace Barotrauma
             if (components.Length!=3)
             {
                 if (!errorMessages) return vector;
-                DebugConsole.ThrowError("Failed to parse the string ''"+stringVector3+"'' to Vector3");
+                DebugConsole.ThrowError("Failed to parse the string \""+stringVector3+"\" to Vector3");
                 return vector;
             }
 

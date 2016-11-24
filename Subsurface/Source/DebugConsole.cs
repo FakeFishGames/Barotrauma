@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Barotrauma.Networking;
 using Barotrauma.Items.Components;
+using System.Text;
 
 namespace Barotrauma
 {
@@ -78,6 +79,14 @@ namespace Barotrauma
 
         }
 
+        public static void AddToGUIUpdateList()
+        {
+            if (isOpen)
+            {
+                frame.AddToGUIUpdateList();
+            }
+        }
+
         public static void Update(GameMain game, float deltaTime)
         {
             if (PlayerInput.KeyHit(Keys.F3))
@@ -89,7 +98,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GUIComponent.MouseOn = null;
+                    GUIComponent.ForceMouseOn(null);
                     textBox.Deselect();
                 }
 
@@ -115,7 +124,6 @@ namespace Barotrauma
 
                 if (PlayerInput.KeyDown(Keys.Enter) && textBox.Text != "")
                 {
-                    NewMessage(textBox.Text, Color.White);
                     ExecuteCommand(textBox.Text, game);
                     textBox.Text = "";
 
@@ -157,6 +165,7 @@ namespace Barotrauma
                 case "netstats":
                 case "help":
                 case "dumpids":
+                case "admin":
                     return true;
                 default:
                     return false;
@@ -167,7 +176,11 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(command)) return;
             string[] commands = command.Split(' ');
-
+            
+            if (!commands[0].ToLowerInvariant().Equals("admin"))
+            {
+                NewMessage(textBox.Text, Color.White);
+            }
 
 #if !DEBUG
             if (GameMain.Client != null && !IsCommandPermitted(commands[0].ToLowerInvariant(), GameMain.Client))
@@ -279,6 +292,8 @@ namespace Barotrauma
                         spawnPoint = WayPoint.GetRandom(commands[1].ToLowerInvariant() == "human" ? SpawnType.Human : SpawnType.Enemy);
                     }
 
+                    if (string.IsNullOrWhiteSpace(commands[1])) return;
+
                     if (spawnPoint != null) spawnPosition = spawnPoint.WorldPosition;
 
                     if (commands[1].ToLowerInvariant()=="human")
@@ -298,7 +313,10 @@ namespace Barotrauma
                     }
                     else
                     {
-                        spawnedCharacter = Character.Create("Content/Characters/" + commands[1] + "/" + commands[1] + ".xml", spawnPosition);
+                        spawnedCharacter = Character.Create(
+                            "Content/Characters/" 
+                            + commands[1].First().ToString().ToUpper() + commands[1].Substring(1) 
+                            + "/" + commands[1].ToLower() + ".xml", spawnPosition);
                     }
 
                     if (spawnedCharacter != null && GameMain.Server != null)
@@ -361,6 +379,19 @@ namespace Barotrauma
                 case "enablecrewai":
                     HumanAIController.DisableCrewAI = false;
                     break;
+                /*case "admin":
+                    if (commands.Length < 2) break;
+
+                    if (GameMain.Server != null)
+                    {
+                        GameMain.Server.AdminAuthPass = commands[1];
+
+                    }
+                    else if (GameMain.Client != null)
+                    {
+                        GameMain.Client.RequestAdminAuth(commands[1]);
+                    }
+                    break;*/
                 case "kick":
                     if (GameMain.NetworkMember == null || commands.Length < 2) break;
                     GameMain.NetworkMember.KickPlayer(string.Join(" ", commands.Skip(1)), false);
@@ -621,7 +652,7 @@ namespace Barotrauma
                             var wire = item.GetComponent<Wire>();
                             if (wire == null) continue;
 
-                            if (wire.Nodes.Any() && !wire.Connections.Any(c => c != null))
+                            if (wire.GetNodes().Count > 0 && !wire.Connections.Any(c => c != null))
                             {
                                 wire.Item.Drop(null);
                                 DebugConsole.NewMessage("Dropped wire (ID: "+wire.Item.ID+") - attached on wall but no connections found", Color.Orange);

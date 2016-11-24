@@ -200,6 +200,8 @@ namespace Barotrauma
                 GameMain.NetworkMember = null;
             }
 
+            CoroutineManager.StopCoroutines("EndCinematic");
+
             GameMain.GameSession = null;
 
             GameMain.MainMenuScreen.Select();
@@ -270,16 +272,6 @@ namespace Barotrauma
                 sb.Draw(t, new Rectangle(rect.X, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
                 sb.Draw(t, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
             }
-        }
-
-        public static void DrawRectangle(SpriteBatch sb, Rectangle rect, Color clr, int thickness, float depth = 0.0f)
-        {
-            DrawLine(sb, new Vector2(rect.X, rect.Y), new Vector2(rect.Right, rect.Y), clr, depth, thickness);
-            DrawLine(sb, new Vector2(rect.X, rect.Bottom-thickness), new Vector2(rect.Right, rect.Bottom-thickness), clr, depth, thickness);
-            
-            DrawLine(sb, new Vector2(rect.X+thickness, rect.Y+thickness), new Vector2(rect.X+thickness, rect.Bottom-thickness), clr, depth, thickness);
-
-            DrawLine(sb, new Vector2(rect.Right, rect.Y + thickness), new Vector2(rect.Right, rect.Bottom - thickness), clr, depth, thickness);
         }
 
         public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
@@ -428,27 +420,30 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                spriteBatch.DrawString(SmallFont,
+                DrawString(spriteBatch, new Vector2(10, 10), 
                     "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
-                    new Vector2(10, 10), Color.White);
+                    Color.White, Color.Black * 0.5f, 0, SmallFont);
 
-                spriteBatch.DrawString(SmallFont,
+                DrawString(spriteBatch, new Vector2(10, 20),
                     "Physics: " + GameMain.World.UpdateTime,
-                    new Vector2(10, 20), Color.White);
+                    Color.White, Color.Black * 0.5f, 0, SmallFont);
 
-                spriteBatch.DrawString(SmallFont,
+                DrawString(spriteBatch, new Vector2(10, 30),
                     "Bodies: " + GameMain.World.BodyList.Count + " (" + GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count + " awake)",
-                    new Vector2(10, 30), Color.White);
+                    Color.White, Color.Black * 0.5f, 0, SmallFont);
 
-                spriteBatch.DrawString(SmallFont,
-                    "Camera pos: " + GameMain.GameScreen.Cam.Position.ToPoint(),
-                    new Vector2(10, 40), Color.White);
+                if (Screen.Selected.Cam != null)
+                {
+                    DrawString(spriteBatch, new Vector2(10, 40),
+                        "Camera pos: " + Screen.Selected.Cam.Position.ToPoint(),
+                        Color.White, Color.Black * 0.5f, 0, SmallFont);
+                }
 
                 if (Submarine.MainSub != null)
                 {
-                    spriteBatch.DrawString(SmallFont,
+                    DrawString(spriteBatch, new Vector2(10, 50),
                         "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
-                        new Vector2(10, 50), Color.White);
+                        Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
                 for (int i = 1; i < Sounds.SoundManager.DefaultSourceCount; i++)
@@ -506,6 +501,28 @@ namespace Barotrauma
             cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
         }
 
+        public static void AddToGUIUpdateList()
+        {
+            if (pauseMenuOpen)
+            {
+                pauseMenu.AddToGUIUpdateList();
+            }
+
+            if (settingsMenuOpen)
+            {
+                GameMain.Config.SettingsFrame.AddToGUIUpdateList();
+            }
+
+            if (GUIMessageBox.MessageBoxes.Count > 0)
+            {
+                var messageBox = GUIMessageBox.MessageBoxes.Peek();
+                if (messageBox != null)
+                {
+                    messageBox.AddToGUIUpdateList();
+                }
+            }
+        }
+
         public static void Update(float deltaTime)
         {
             if (pauseMenuOpen)
@@ -523,7 +540,6 @@ namespace Barotrauma
                 var messageBox = GUIMessageBox.MessageBoxes.Peek();
                 if (messageBox != null)
                 {
-                    GUIComponent.MouseOn = messageBox;
                     messageBox.Update(deltaTime);
                 }
             }

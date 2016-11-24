@@ -123,17 +123,22 @@ namespace Barotrauma.Items.Components
             set 
             {
                 if (value == drawable) return;
+                if (!(this is IDrawableComponent))
+                {
+                    DebugConsole.ThrowError("Couldn't make \""+this+"\" drawable (the component doesn't implement the IDrawableComponent interface)");
+                    return;
+                }  
+              
                 drawable = value;
                 if (drawable)
                 {
-                    if (!item.drawableComponents.Contains(this as IDrawableComponent))
-                        item.drawableComponents.Add(this as IDrawableComponent);
+                    if (!item.drawableComponents.Contains((IDrawableComponent)this))
+                        item.drawableComponents.Add((IDrawableComponent)this);
                 }
                 else
                 {
-                    item.drawableComponents.Remove(this as IDrawableComponent);
-                }
-                
+                    item.drawableComponents.Remove((IDrawableComponent)this);
+                }                
             }
         }
 
@@ -469,6 +474,8 @@ namespace Barotrauma.Items.Components
         //}
 
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
+
+        public virtual void AddToGUIUpdateList() { }
 
         public virtual void UpdateHUD(Character character) { }
         

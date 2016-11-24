@@ -63,6 +63,20 @@ namespace Barotrauma.Networking
 
         private string password;
 
+        private string adminAuthPass = "";
+        public string AdminAuthPass
+        {
+            set
+            {
+                DebugConsole.NewMessage("Admin auth pass changed!",Color.Yellow);
+                adminAuthPass = "";
+                if (value.Length > 0)
+                {
+                    adminAuthPass = Encoding.UTF8.GetString(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(value)));
+                }
+            }
+        }
+
         private GUIFrame settingsFrame;
         private GUIFrame[] settingsTabs;
         private int settingsTabIndex;
@@ -189,7 +203,8 @@ namespace Barotrauma.Networking
         {
             get { return banList; }
         }
-        
+
+        [HasDefaultValue(true, true)]
         public bool AllowVoteKick
         {
             get;
@@ -219,6 +234,13 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
             
+            doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
+
+            if (GameMain.NetLobbyScreen != null && GameMain.NetLobbyScreen.ServerMessage != null)
+            {
+                doc.Root.SetAttributeValue("ServerMessage", GameMain.NetLobbyScreen.ServerMessage);
+            }
+                
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;
             settings.NewLineOnAttributes = true;
@@ -251,7 +273,17 @@ namespace Barotrauma.Networking
             modeSelectionMode = SelectionMode.Manual;
             Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
+
+            var traitorsEnabled = TraitorsEnabled;
+            Enum.TryParse<YesNoMaybe>(ToolBox.GetAttributeString(doc.Root, "TraitorsEnabled", "No"), out traitorsEnabled);
+            TraitorsEnabled = traitorsEnabled;
+            GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
             
+            if (GameMain.NetLobbyScreen != null && GameMain.NetLobbyScreen.ServerMessage != null)
+            {
+                GameMain.NetLobbyScreen.ServerMessage.Text = ToolBox.GetAttributeString(doc.Root, "ServerMessage", "");
+            }
+
             showLogButton.Visible = SaveServerLogs;
 
             List<string> monsterNames = Directory.GetDirectories("Content/Characters").ToList();

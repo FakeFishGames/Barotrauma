@@ -289,7 +289,10 @@ namespace Barotrauma.Tutorials
             }
             yield return new WaitForSeconds(1.0f);
 
-            var moloch = Character.Create("Content/Characters/Moloch/moloch.xml", steering.Item.WorldPosition + Vector2.UnitX * 3000.0f);
+            var moloch = Character.Create(
+                "Content/Characters/Moloch/moloch.xml", 
+                steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f));
+
             moloch.PlaySound(AIController.AiState.Attack);
 
             yield return new WaitForSeconds(1.0f);
@@ -304,21 +307,20 @@ namespace Barotrauma.Tutorials
                 if (s.Rect.Right > steering.Item.CurrentHull.Rect.Right) windows.Add(s);
             }
 
+            float slowdownTimer = 1.0f;
             bool broken = false;
             do
             {
-                Submarine.MainSub.Velocity = Vector2.Zero;
+                steering.TargetVelocity = Vector2.Zero;
+
+                slowdownTimer = Math.Max(0.0f, slowdownTimer - CoroutineManager.DeltaTime*0.3f);
+                Submarine.MainSub.Velocity *= slowdownTimer;
 
                 moloch.AIController.SelectTarget(steering.Item.CurrentHull.AiTarget);
                 Vector2 steeringDir = windows[0].WorldPosition - moloch.WorldPosition;
                 if (steeringDir != Vector2.Zero) steeringDir = Vector2.Normalize(steeringDir);
 
-                //foreach (Limb limb in moloch.AnimController.Limbs)
-                //{
-                //    limb.body.LinearVelocity = new Vector2(limb.LinearVelocity.X*2.0f, limb.LinearVelocity.Y + steeringDir.Y*10.0f);
-                //}
-
-                moloch.AIController.Steering = steeringDir;
+                moloch.AIController.SteeringManager.SteeringManual(CoroutineManager.DeltaTime, steeringDir*100.0f);
 
                 foreach (Structure window in windows)
                 {
@@ -332,7 +334,7 @@ namespace Barotrauma.Tutorials
                 }
 
 
-                yield return new WaitForSeconds(0.1f);
+                yield return CoroutineStatus.Running;
             } while (!broken);
 
             //fix everything except the command windows
@@ -346,13 +348,13 @@ namespace Barotrauma.Tutorials
 
                     if (isWindow)
                     {
-                        w.AddDamage(i, -w.SectionDamage(i) * 0.2f);
+                        //decrease window damage to slow down the leaking
+                        w.AddDamage(i, -w.SectionDamage(i) * 0.495f);
                     }
                     else
                     {
                         w.AddDamage(i, -100000.0f);
                     }
-
                 }
             }
 
@@ -368,10 +370,15 @@ namespace Barotrauma.Tutorials
             Door commandDoor2 = Item.ItemList.Find(i => i.HasTag("commanddoor2")).GetComponent<Door>();
             Door commandDoor3 = Item.ItemList.Find(i => i.HasTag("commanddoor3")).GetComponent<Door>();
 
-            while (commandDoor1.IsOpen || (commandDoor2.IsOpen || commandDoor3.IsOpen))
+            //wait until the player is out of the room and the doors are closed
+            while (Character.Controlled.WorldPosition.X > commandDoor1.Item.WorldPosition.X ||
+                (commandDoor1.IsOpen || (commandDoor2.IsOpen || commandDoor3.IsOpen)))
             {
+                //prevent the hull from filling up completely and crushing the player
+                steering.Item.CurrentHull.Volume = Math.Min(steering.Item.CurrentHull.Volume, steering.Item.CurrentHull.FullVolume * 0.9f);
                 yield return CoroutineStatus.Running;
             }
+
 
             infoBox = CreateInfoFrame("You should quickly find yourself a diving mask or a diving suit. " +
                 "There are some in the room next to the airlock.");
@@ -452,7 +459,7 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
-            moloch.AnimController.SetPosition(ConvertUnits.ToSimUnits(Character.Controlled.WorldPosition + Vector2.UnitY * 1000.0f));
+            moloch.AnimController.SetPosition(ConvertUnits.ToSimUnits(Character.Controlled.WorldPosition + Vector2.UnitY * 600.0f));
 
             infoBox = CreateInfoFrame("Now we're ready to shoot! Select the railgun controller.");
 
@@ -466,6 +473,7 @@ namespace Barotrauma.Tutorials
 
             while (!moloch.IsDead)
             {
+                moloch.AIController.SelectTarget(Character.Controlled.AiTarget);
                 yield return CoroutineStatus.Running;
             }
 

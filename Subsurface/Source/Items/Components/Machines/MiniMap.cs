@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
                         Color.Black * 0.5f, 2, GUI.SmallFont);                    
                 }
                                 
-                GUI.DrawRectangle(spriteBatch, hullRect, borderColor, 2);
+                GUI.DrawRectangle(spriteBatch, hullRect, borderColor, false, 0.0f, 2);
             }
         }
 

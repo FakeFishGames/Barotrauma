@@ -932,7 +932,7 @@ namespace Barotrauma
 
             if (selectedCharacter!=null)
             {
-                if (Vector2.Distance(selectedCharacter.WorldPosition, WorldPosition) > 300.0f || !selectedCharacter.CanBeSelected)
+                if (Vector2.DistanceSquared(selectedCharacter.WorldPosition, WorldPosition) > 90000.0f || !selectedCharacter.CanBeSelected)
                 {
                     DeselectCharacter();
                 }
@@ -1027,7 +1027,7 @@ namespace Barotrauma
                 maxDist = 150.0f;
             }
 
-            if (Vector2.Distance(WorldPosition, item.WorldPosition) < maxDist ||
+            if (Vector2.DistanceSquared(WorldPosition, item.WorldPosition) < maxDist*maxDist ||
                 item.IsInsideTrigger(WorldPosition))
             {
                 return true;
@@ -1069,10 +1069,10 @@ namespace Barotrauma
             {
                 if (c == this || !c.enabled) continue;
 
-                if (Vector2.Distance(SimPosition, c.SimPosition) > maxDist) continue;
+                if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist*maxDist) continue;
 
-                float dist = Vector2.Distance(mouseSimPos, c.SimPosition);
-                if (dist < maxDist && (closestCharacter==null || dist<closestDist))
+                float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
+                if (dist < maxDist*maxDist && (closestCharacter==null || dist<closestDist))
                 {
                     closestCharacter = c;
                     closestDist = dist;
@@ -1145,7 +1145,7 @@ namespace Barotrauma
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
 
-            if (Lights.LightManager.ViewTarget == this && Vector2.Distance(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+            if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
             {
                 Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
                 Structure structure = null;
@@ -1177,7 +1177,7 @@ namespace Barotrauma
 
                     if (closestCharacter != null && closestItem != null)
                     {
-                        if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < ConvertUnits.ToSimUnits(closestItemDist))
+                        if (Vector2.DistanceSquared(closestCharacter.SimPosition, mouseSimPos) < ConvertUnits.ToSimUnits(closestItemDist)*ConvertUnits.ToSimUnits(closestItemDist))
                         {
                             if (selectedConstruction != closestItem) closestItem = null;
                         }
@@ -1237,6 +1237,14 @@ namespace Barotrauma
             }
         }
         
+        public static void AddAllToGUIUpdateList()
+        {
+            for (int i = 0; i < CharacterList.Count; i++)
+            {
+                CharacterList[i].AddToGUIUpdateList();
+            }
+        }
+
         public static void UpdateAll(Camera cam, float deltaTime)
         {
             //if (NewCharacterQueue.Count>0)
@@ -1247,6 +1255,14 @@ namespace Barotrauma
             for (int i = 0; i<CharacterList.Count; i++)
             {
                 CharacterList[i].Update(cam, deltaTime);
+            }
+        }
+
+        public virtual void AddToGUIUpdateList()
+        {
+            if (controlled == this)
+            {
+                CharacterHUD.AddToGUIUpdateList(this);
             }
         }
 
@@ -1540,9 +1556,7 @@ namespace Barotrauma
         {
             if (aiTarget == null) return;
 
-            aiTarget.SightRange = 0.0f;
-
-            aiTarget.SightRange = Mass*10.0f + AnimController.Collider.LinearVelocity.Length()*500.0f;
+            aiTarget.SightRange = Mass*100.0f + AnimController.Collider.LinearVelocity.Length()*500.0f;
         }
         
         public void ShowSpeechBubble(float duration, Color color)
@@ -1853,7 +1867,6 @@ namespace Barotrauma
                 aiTarget = null;
             }
 
-
             foreach (Limb limb in AnimController.Limbs)
             {
                 if (limb.pullJoint == null) continue;
@@ -1903,6 +1916,10 @@ namespace Barotrauma
             if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
 
             if (aiTarget != null) aiTarget.Remove();
+
+            if (AnimController != null) AnimController.Remove();
+
+            if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
 
             if (AnimController != null) AnimController.Remove();
         }

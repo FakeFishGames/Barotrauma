@@ -414,6 +414,33 @@ namespace Barotrauma
             ItemList.Add(this);
         }
 
+        public override MapEntity Clone()
+        {
+            Item clone = new Item(rect, prefab, Submarine);
+            foreach (KeyValuePair<string, ObjectProperty> property in properties)
+            {
+                if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
+                clone.properties[property.Key].TrySetValue(property.Value.GetValue());
+            }
+            for (int i = 0; i < components.Count; i++)
+            {
+                foreach (KeyValuePair<string, ObjectProperty> property in components[i].properties)
+                {
+                    if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
+                    clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
+                }
+            }
+            if (ContainedItems != null)
+            {
+                foreach (Item containedItem in ContainedItems)
+                {
+                    var containedClone = containedItem.Clone();
+                    clone.ownInventory.TryPutItem(containedClone as Item);
+                }
+            }
+            return clone;
+        }
+
         public T GetComponent<T>()
         {
             foreach (ItemComponent ic in components)
@@ -579,6 +606,8 @@ namespace Barotrauma
 
                 contained.Submarine = Submarine;
                 contained.CurrentHull = CurrentHull;
+
+                contained.SetContainedItemPositions();
             }
         }
         
@@ -737,10 +766,14 @@ namespace Barotrauma
             
             inWater = IsInWater();
             if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
+
+            isHighlighted = false;
             
             isHighlighted = false;
 
             if (body == null || !body.Enabled) return;
+
+            System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
 
             if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
             {
@@ -858,7 +891,7 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!Visible) return;
-            Color color = (isSelected && editing) ? color = Color.Red : spriteColor;
+            Color color = (IsSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
 
             SpriteEffects oldEffects = prefab.sprite.effects;
@@ -919,7 +952,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (isSelected || isHighlighted)
+            if (IsSelected || isHighlighted)
             {
                 GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y+rect.Height/2)), new Vector2(rect.Width, rect.Height), Color.Green,false,0,(int)Math.Max((1.5f/GameScreen.Selected.Cam.Zoom),1.0f));
 
@@ -1106,6 +1139,24 @@ namespace Barotrauma
             {
                 ic.DrawHUD(spriteBatch, character);
             }
+        }
+
+        public override void AddToGUIUpdateList()
+        {
+            if (condition <= 0.0f)
+            {
+                FixRequirement.AddToGUIUpdateList();
+                return;
+            }
+            if (HasInGameEditableProperties)
+            {
+                if (editingHUD != null) editingHUD.AddToGUIUpdateList();
+            }
+            foreach (ItemComponent ic in components)
+            {
+                ic.AddToGUIUpdateList();
+            }
+            if (Screen.Selected is EditMapScreen && editingHUD != null) editingHUD.AddToGUIUpdateList();
         }
 
         public virtual void UpdateHUD(Camera cam, Character character)
@@ -1357,7 +1408,7 @@ namespace Barotrauma
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
                     ic.PlaySound(ActionType.OnPicked, picker.WorldPosition);
 
-                    if (picker==Character.Controlled) GUIComponent.MouseOn = null;
+                    if (picker == Character.Controlled) GUIComponent.ForceMouseOn(null);
 
                     if (ic.CanBeSelected) selected = true;
                 }
@@ -1851,8 +1902,24 @@ namespace Barotrauma
             GameMain.Client.CreateEntityEvent(this, new object[] { index });
         }
 
-        
-       public override void Remove()
+        public override void ShallowRemove()
+        {
+            base.ShallowRemove();
+
+            Removed = true;
+            foreach (ItemComponent ic in components)
+            {
+                ic.Remove();
+            }
+            ItemList.Remove(this);
+            if (body != null)
+            {
+                body.Remove();
+                body = null;
+            }
+        }
+
+        public override void Remove()
         {
             base.Remove();
 

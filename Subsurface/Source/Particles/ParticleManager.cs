@@ -109,7 +109,18 @@ namespace Barotrauma.Particles
         {
             for (int i = 0; i < particleCount; i++)
             {
-                if (!particles[i].Update(deltaTime)) RemoveParticle(i);
+                bool remove = false;
+                try
+                {
+                    remove = !particles[i].Update(deltaTime);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Particle update failed", e);
+                    remove = true;
+                }
+
+                if (remove) RemoveParticle(i);
             }
         }
 

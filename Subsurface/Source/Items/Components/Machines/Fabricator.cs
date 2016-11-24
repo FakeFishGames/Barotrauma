@@ -379,6 +379,11 @@ namespace Barotrauma.Items.Components
             GuiFrame.Draw(spriteBatch);
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
+        }
+
         public override void UpdateHUD(Character character)
         {
             FabricableItem targetItem = itemList.SelectedData as FabricableItem;

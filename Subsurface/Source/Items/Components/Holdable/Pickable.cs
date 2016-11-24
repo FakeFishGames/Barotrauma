@@ -102,10 +102,8 @@ namespace Barotrauma.Items.Components
             var leftHand = picker.AnimController.GetLimb(LimbType.LeftHand);
             var rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
 
-            Drawable = true;
-
             pickTimer = 0.0f;
-            while (pickTimer < requiredTime)
+            while (pickTimer < requiredTime && Screen.Selected != GameMain.EditMapScreen)
             {
                 if (picker.IsKeyDown(InputType.Aim) || 
                     !item.IsInPickRange(picker.WorldPosition) ||
@@ -114,7 +112,6 @@ namespace Barotrauma.Items.Components
                     StopPicking(picker);
                     yield return CoroutineStatus.Success;
                 }
-
 
                 picker.UpdateHUDProgressBar(
                     this,
@@ -148,8 +145,6 @@ namespace Barotrauma.Items.Components
 
         private void StopPicking(Character picker)
         {
-            Drawable = false;
-
             picker.AnimController.Anim = AnimController.Animation.None;
             pickTimer = 0.0f;         
         }
