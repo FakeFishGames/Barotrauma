@@ -82,21 +82,22 @@ namespace Barotrauma.Items.Components
             
             IsActive = true;
 
-            var button = new GUIButton(new Rectangle(160, 50, 30,30), "-", GUI.Style, GuiFrame);
-            button.OnClicked = (GUIButton btn, object obj) =>
+            if (canBeSelected)
             {
-                RechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);
+                var button = new GUIButton(new Rectangle(160, 50, 30,30), "-", GUI.Style, GuiFrame);
+                button.OnClicked = (GUIButton btn, object obj) =>
+                {
+                    RechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);
+                    return true;
+                };
 
-                return true;
-            };
-
-            button = new GUIButton(new Rectangle(200, 50, 30, 30), "+", GUI.Style, GuiFrame);
-            button.OnClicked = (GUIButton btn, object obj) =>
-            {
-                RechargeSpeed = Math.Max(rechargeSpeed + maxRechargeSpeed * 0.1f, 0.0f);
-
-                return true;
-            };
+                button = new GUIButton(new Rectangle(200, 50, 30, 30), "+", GUI.Style, GuiFrame);
+                button.OnClicked = (GUIButton btn, object obj) =>
+                {
+                    RechargeSpeed = Math.Max(rechargeSpeed + maxRechargeSpeed * 0.1f, 0.0f);
+                    return true;
+                };
+            }
         }
 
         public override bool Pick(Character picker)
@@ -165,28 +166,18 @@ namespace Barotrauma.Items.Components
                     return;
                 }
 
-                //currPowerConsumption = MathHelper.Lerp(
-                //   currPowerConsumption,
-                //   -maxOutput * chargeRate,
-                //   0.1f);
-
                 if (gridPower < gridLoad)
                 {
-                   // CurrPowerOutput = MathHelper.Lerp(
-                   //CurrPowerOutput, Math.Min(maxOutput * chargeRate, gridLoad), 0.05f);
-
                     CurrPowerOutput = MathHelper.Lerp(
                        CurrPowerOutput,
-                       Math.Min(maxOutput * chargeRatio, gridLoad - (gridLoad * outputVoltage)),
-                       0.05f);
+                       Math.Min(maxOutput * chargeRatio, gridLoad),
+                       deltaTime);
                 }
                 else
                 {
-                    CurrPowerOutput = MathHelper.Lerp(CurrPowerOutput, 0.0f, 0.05f);
+                    CurrPowerOutput = MathHelper.Lerp(CurrPowerOutput, 0.0f, deltaTime);
                 }
 
-
-                //powerConsumption = Math.Min(powerConsumption, 0.0f);
                 Charge -= CurrPowerOutput / 3600.0f;
             }
 
@@ -242,6 +233,11 @@ namespace Barotrauma.Items.Components
                 new Vector2(x + 30, y + 30), Color.White);
 
             spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
+        }
+
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
         }
 
         public override void UpdateHUD(Character character)

@@ -20,7 +20,7 @@ namespace Barotrauma.Networking
         private GUIButton endRoundButton;
         private GUITickBox endVoteTickBox;
 
-        private ClientPermissions permissions;
+        private ClientPermissions permissions = ClientPermissions.None;
 
         private bool connected;
 
@@ -646,7 +646,7 @@ namespace Barotrauma.Networking
                         {
                             GameMain.NetLobbyScreen.LastUpdateID = inc.ReadUInt32();
                             GameMain.NetLobbyScreen.ServerName = inc.ReadString();
-                            GameMain.NetLobbyScreen.ServerMessage = inc.ReadString();
+                            GameMain.NetLobbyScreen.ServerMessage.Text = inc.ReadString();
 
                             UInt16 subListCount = inc.ReadUInt16();
                             if (subListCount > 0)
@@ -824,7 +824,7 @@ namespace Barotrauma.Networking
         
         public bool HasPermission(ClientPermissions permission)
         {
-            return false;// permissions.HasFlag(permission);
+            return permissions.HasFlag(permission);
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
@@ -921,7 +921,7 @@ namespace Barotrauma.Networking
 
             return true;
         }
-        
+
         public bool VoteForKick(GUIButton button, object userdata)
         {
             var votedClient = otherClients.Find(c => c.Character == userdata);

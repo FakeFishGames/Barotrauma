@@ -161,7 +161,7 @@ namespace Barotrauma
             }
         }
 
-        public void StartShift(string levelSeed, bool loadSecondSub = true)
+        public void StartShift(string levelSeed, bool loadSecondSub = false)
         {
             Level level = Level.CreateRandom(levelSeed);
 
@@ -362,6 +362,17 @@ namespace Barotrauma
             
         }
         
+        public void AddToGUIUpdateList()
+        {
+            if (CrewManager != null) CrewManager.AddToGUIUpdateList();
+
+            if (gameMode != null) gameMode.AddToGUIUpdateList();
+
+            infoButton.AddToGUIUpdateList();
+
+            if (infoFrame != null) infoFrame.AddToGUIUpdateList();
+        }
+
         public void Update(float deltaTime)
         {
             TaskManager.Update(deltaTime);

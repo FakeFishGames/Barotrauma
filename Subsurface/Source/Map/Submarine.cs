@@ -362,7 +362,7 @@ namespace Barotrauma
                     worldBorders.Location += sub.WorldPosition.ToPoint();
                     worldBorders.Y = -worldBorders.Y;
 
-                    GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, 5);
+                    GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, false, 0, 5);
 
                     if (sub.subBody.MemPos.Count < 2) continue;
 
@@ -383,6 +383,9 @@ namespace Barotrauma
             }
         }
 
+
+        public static float DamageEffectCutoff;
+
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
@@ -396,6 +399,8 @@ namespace Barotrauma
             {
                 damageEffect.Parameters["aCutoff"].SetValue(0.0f);
                 damageEffect.Parameters["cCutoff"].SetValue(0.0f);
+
+                DamageEffectCutoff = 0.0f;
             }
         }
 
@@ -929,6 +934,7 @@ namespace Barotrauma
             {
                 try
                 {
+                    ToolBox.IsProperFilenameCase(file);
                     doc = XDocument.Load(file);
                 }
 
@@ -1035,13 +1041,10 @@ namespace Barotrauma
                         if (item.Submarine != this) continue;
 
                         var wire = item.GetComponent<Items.Components.Wire>();
-                        if (wire == null) continue;
-
-                        for (int i = 0; i < wire.Nodes.Count; i++)
+                        if (wire != null)
                         {
-                            wire.Nodes[i] -= center;
+                            wire.MoveNodes(-center);
                         }
-                        wire.UpdateSections();
                     }
 
                     for (int i = 0; i < MapEntity.mapEntityList.Count; i++)

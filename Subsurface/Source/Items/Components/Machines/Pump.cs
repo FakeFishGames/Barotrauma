@@ -185,6 +185,11 @@ namespace Barotrauma.Items.Components
      
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            GuiFrame.AddToGUIUpdateList();
+        }
+
         public override void UpdateHUD(Character character)
         {
             GuiFrame.Update(1.0f / 60.0f);

@@ -14,7 +14,8 @@
            walkspeed="1.2"
            swimspeed="2.5">
 
-    <collider height="100" radius="15"/>
+    <collider height="80" radius="15"/>
+	<collider height="40" radius="15"/>
 
     <!-- head -->
     <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2">

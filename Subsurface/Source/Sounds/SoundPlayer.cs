@@ -314,7 +314,7 @@ namespace Barotrauma
             {
                 return musicClips.Where(x => x != null && x.type == OverrideMusicType).ToList();
             }
-            else if (Character.Controlled != null && Level.Loaded != null && Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
+            else if (Character.Controlled != null && Level.Loaded != null && Level.Loaded.Ruins!=null && Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
             {
                 return musicClips.Where(x => x != null && x.type == "ruins").ToList();
             }

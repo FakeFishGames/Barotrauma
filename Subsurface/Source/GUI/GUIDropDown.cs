@@ -166,6 +166,13 @@ namespace Barotrauma
             return true;
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            base.AddToGUIUpdateList();
+            button.AddToGUIUpdateList();
+            if (Dropped) listBox.AddToGUIUpdateList();
+        }
+
         public override void Update(float deltaTime)
         {
             if (!Visible) return;

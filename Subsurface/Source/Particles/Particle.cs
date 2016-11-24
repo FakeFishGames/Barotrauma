@@ -226,9 +226,9 @@ namespace Barotrauma.Particles
 
         private void ApplyDrag(float dragCoefficient, float deltaTime)
         {
-            if (velocity == Vector2.Zero) return;
-
+            if (Math.Abs(velocity.X) < 0.0001f && Math.Abs(velocity.Y) < 0.0001f) return;
             float speed = velocity.Length();
+
             velocity -= (velocity / speed) * Math.Min(speed * speed * prefab.WaterDrag * deltaTime, 1.0f);
         }
 

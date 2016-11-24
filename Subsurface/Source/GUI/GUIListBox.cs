@@ -264,6 +264,20 @@ namespace Barotrauma
             }
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            base.AddToGUIUpdateList();
+            if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
+        }
+
+        public override Rectangle MouseRect
+        {
+            get
+            {
+                return Rectangle.Empty;
+            }
+        }
+
         public override void Update(float deltaTime)
         {
             if (!Visible) return;

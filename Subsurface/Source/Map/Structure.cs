@@ -258,13 +258,17 @@ namespace Barotrauma
                 }
             }
 
-
             if (prefab.CastShadow)
             {
                 GenerateConvexHull();
             }
 
             InsertToList();
+        }
+
+        public override MapEntity Clone()
+        {
+            return new Structure(rect, prefab, Submarine);
         }
 
         private void CreateStairBodies()
@@ -486,14 +490,13 @@ namespace Barotrauma
             Draw(spriteBatch, false, false, damageEffect);
         }
 
-        private static float prevCutoff;
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
             if (prefab.sprite == null) return;
 
             Color color = (isHighlighted) ? Color.Orange : Color.White;
-            if (isSelected && editing)
+            if (IsSelected && editing)
             {
                 color = Color.Red;
 
@@ -525,14 +528,14 @@ namespace Barotrauma
                     {
                         float newCutoff = Math.Min((sections[i].damage / prefab.MaxHealth), 0.65f);
 
-                        if (Math.Abs(newCutoff - prevCutoff) > 0.01f)
+                        if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f)
                         {
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
                             damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
 
                             damageEffect.CurrentTechnique.Passes[0].Apply();
 
-                            prevCutoff = newCutoff;
+                            Submarine.DamageEffectCutoff = newCutoff;
                         }
                     }
 
@@ -760,11 +763,10 @@ namespace Barotrauma
 
                     if(CastShadow) GenerateConvexHull();
                 }
+
+                sections[sectionIndex].gap.Open = (damage / prefab.MaxHealth - 0.5f) * 2.0f;
             }
-
-            if (sections[sectionIndex].gap != null)
-                sections[sectionIndex].gap.Open = (damage/prefab.MaxHealth - 0.5f)*2;
-
+            
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.MaxHealth);
 

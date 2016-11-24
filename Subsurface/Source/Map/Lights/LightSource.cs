@@ -18,6 +18,8 @@ namespace Barotrauma.Lights
 
         private float range;
 
+        public SpriteEffects SpriteEffect = SpriteEffects.None;
+
         private Texture2D texture;
 
         public Sprite LightSprite;
@@ -164,15 +166,15 @@ namespace Barotrauma.Lights
         
         private List<ConvexHull> GetHullsInRange(Submarine sub)
         {
+            //find the current list of hulls in range
             var chList = hullsInRange.Find(x => x.Submarine == sub);
 
+            //not found -> create one
             if (chList == null)
             {
                 chList = new ConvexHullList(sub);
                 hullsInRange.Add(chList);
             }
-            List<ConvexHull> list = chList.List;
-
 
             Vector2 lightPos = position;
             if (ParentSub == null)
@@ -183,15 +185,12 @@ namespace Barotrauma.Lights
                     if (NeedsHullUpdate)
                     {
                         var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
-
-                        list = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
-                        chList.List = list;
+                        chList.List = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
                     }
                 }
                 //light is outside, convexhull inside a sub
                 else
                 {
-                    //todo: check
                     lightPos -= sub.Position;
 
                     Rectangle subBorders = sub.Borders;
@@ -201,7 +200,7 @@ namespace Barotrauma.Lights
                     if (!MathUtils.CircleIntersectsRectangle(lightPos, range, subBorders)) return null;
 
                     var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
-                    list = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
+                    chList.List = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
                 }
             }
             else 
@@ -215,15 +214,13 @@ namespace Barotrauma.Lights
                     if (NeedsHullUpdate)
                     {
                         var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
-
-                        list = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
-                        chList.List = list;
+                        chList.List = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
                     }
                 }
                 //light and convexhull are inside different subs
                 else
                 {
-                    if (sub.DockedTo.Contains(ParentSub) && !NeedsHullUpdate) return list;
+                    if (sub.DockedTo.Contains(ParentSub) && !NeedsHullUpdate) return chList.List;
 
                     lightPos -= (sub.Position - ParentSub.Position);
 
@@ -234,12 +231,11 @@ namespace Barotrauma.Lights
                     if (!MathUtils.CircleIntersectsRectangle(lightPos, range, subBorders)) return null;
 
                     var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
-                    list = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
-                    chList.List = list;
+                    chList.List = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
                 }
             }
 
-            return list;
+            return chList.List;
         }
 
         public static List<ConvexHull> GetHullsInRange(Vector2 position, float range, Submarine ParentSub)
@@ -318,13 +314,14 @@ namespace Barotrauma.Lights
                     overrideLightTexture.Draw(spriteBatch,
                         drawPos, color * (color.A / 255.0f),
                         overrideLightTexture.Origin, -Rotation,
-                        new Vector2(overrideLightTexture.size.X / overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y / overrideLightTexture.SourceRect.Height));
+                        new Vector2(overrideLightTexture.size.X / overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y / overrideLightTexture.SourceRect.Height),
+                        SpriteEffect);
                 }
             }
 
             if (LightSprite != null)
             {
-                LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin);
+                LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1, SpriteEffect);
 
             } 
         }

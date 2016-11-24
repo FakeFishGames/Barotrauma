@@ -1,4 +1,60 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.4.0
+---------------------------------------------------------------------------------------------------------
+
+Submarine editor:
+	- copy, paste and cut functionality
+	- items/structures can be copied by holding ctrl while dragging
+	- it's possible to move a wire by moving both items it's connected to (without having to move each 
+	individual point of the wire separately)
+	- "hull volume helper" which makes it easier to select a suitable ballast tank size and 
+	NeutralBallastLevel setting in the navigation terminal
+	- equipped items are removed when switching from wiring mode to character mode or vice versa
+	- no need to wait when deattaching items from the walls with a wrench	
+
+
+Bugfixes:
+	- wires are now positioned correctly in mirrored subs
+	- UI elements (buttons, textboxes, etc) can't be clicked through each other anymore
+	- fixed a bug that caused crashes when deattaching items from walls
+	- fixed a game-crashing particle bug
+	- fixed respawned characters getting assigned to a different team than the rest of the characters 
+	(causing them to be displayed separately in the crew menu)
+	- pathfinding/autopilot fixes
+
+Misc:
+	- server hosts can give players special privileges (kick, ban, end round)	
+	- saving the contents of the server info box and the traitor setting
+	- changes to battery logic: they can now be used to cover the entire power consumption of the 
+	electrical grid	(assuming their maximum output is high enough)
+	- added "artifact holders" to alien ruins (which can also be used for turning artifacts into power 
+	sources if installed in a sub)
+	- changes to character collider behavior: crouching changes the size of the collider and it's 
+	easier to step over small obstacles
+
+
+---------------------------------------------------------------------------------------------------------
+v0.5.3.4
+---------------------------------------------------------------------------------------------------------
+
+- fixed screen turning black in the tutorial
+- the moloch attack in the tutorial is now much easier to survive
+- servers readd themselves to the master server if they have been removed from the server list
+- fixed a bug that caused lights to flicker even if there's enough power
+- fixed items disappearing when dropping them in the submarine editor
+
+---------------------------------------------------------------------------------------------------------
+v0.5.3.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed a bug that caused crashes after a husk-infected player died
+- disabled the "zoom effect" when under pressure as a huskified human
+- only a limited number of messages are kept in the debug console (prevents performance issues if large 
+amounts of messages are added)
+- some item and electricity logic optimization
+- fixed "sprite tigerthresher not found" errors in the Linux version
+
+---------------------------------------------------------------------------------------------------------
 v0.5.3.2
 ---------------------------------------------------------------------------------------------------------
 

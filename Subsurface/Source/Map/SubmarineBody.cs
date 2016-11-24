@@ -243,6 +243,21 @@ namespace Barotrauma
                 return;
             }
             
+            //if outside left or right edge of the level
+            if (Position.X < 0 || Position.X > Level.Loaded.Size.X)
+            {
+                Rectangle worldBorders = Borders;
+                worldBorders.Location += Position.ToPoint();
+
+                //push the sub back below the upper "barrier" of the level
+                if (worldBorders.Y > Level.Loaded.Size.Y)
+                {
+                    Body.LinearVelocity = new Vector2(
+                        Body.LinearVelocity.X,
+                        Math.Min(Body.LinearVelocity.Y, ConvertUnits.ToSimUnits(Level.Loaded.Size.Y - worldBorders.Y)));
+                }
+            }
+
             //-------------------------
 
             Vector2 totalForce = CalculateBuoyancy();

@@ -219,6 +219,7 @@ namespace Barotrauma
             
             graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(bodyVertices.VertexCount / 3.0f));
 
+            /*
             for (int side = 0; side < 2; side++)
             {
                 for (int i = 0; i < 2; i++)
@@ -234,7 +235,7 @@ namespace Barotrauma
                         PrimitiveType.TriangleList, 0,
                         (int)Math.Floor(level.WrappingWalls[side, i].BodyVertices.VertexCount / 3.0f));
                 }
-            }
+            }*/
 
 
             graphicsDevice.SetVertexBuffer(wallVertices);
@@ -243,7 +244,7 @@ namespace Barotrauma
             basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_Texture"];
             basicEffect.CurrentTechnique.Passes[0].Apply();
             graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
-            
+            /*
             for (int side = 0; side < 2; side++)
             {
                 for (int i = 0; i < 2; i++)
@@ -260,7 +261,7 @@ namespace Barotrauma
                         (int)Math.Floor(level.WrappingWalls[side, i].WallVertices.VertexCount / 3.0f));
 
                 }
-            }
+            }*/
             
         }
 

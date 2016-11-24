@@ -25,6 +25,8 @@ namespace Barotrauma
 
         private GUITextBox nameBox;
 
+        private GUIFrame hullVolumeFrame;
+
         const int PreviouslyUsedCount = 10;
         private GUIListBox previouslyUsedList;
 
@@ -63,6 +65,41 @@ namespace Barotrauma
             return "Structures: " + (MapEntity.mapEntityList.Count - Item.ItemList.Count);
         }
 
+        private string GetTotalHullVolume()
+        {
+            float totalVol = 0.0f;
+            Hull.hullList.ForEach(h => { totalVol += h.FullVolume; });
+            return "Total Hull Volume:\n" + totalVol;
+        }
+
+        private string GetSelectedHullVolume()
+        {
+            float buoyancyVol = 0.0f;
+            float selectedVol = 0.0f;
+            float neutralPercentage = 0.07f;
+            Hull.hullList.ForEach(h => {
+                buoyancyVol += h.FullVolume;
+                if (h.IsSelected)
+                {
+                    selectedVol += h.FullVolume;
+                }
+            });
+            buoyancyVol *= neutralPercentage;
+            string retVal = "Selected Hull Volume:\n" + selectedVol;
+            if (selectedVol>0.0f && buoyancyVol>0.0f)
+            {
+                if (buoyancyVol / selectedVol < 1.0f)
+                {
+                    retVal += " (optimal NeutralBallastLevel is " + (buoyancyVol / selectedVol).ToString("0.00") + ")";
+                }
+                else
+                {
+                    retVal += " (insufficient volume for buoyancy control)";
+                }
+            }
+            return retVal;
+        }
+
         private string GetPhysicsBodyCount()
         {
             return "Physics bodies: " + GameMain.World.BodyList.Count;
@@ -88,6 +125,16 @@ namespace Barotrauma
 
             topPanel = new GUIFrame(new Rectangle(0, 0, 0, 31), GUI.Style);
             topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
+
+            hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 280, 70), GUI.Style, topPanel);
+            hullVolumeFrame.Visible = false;
+            hullVolumeFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
+
+            GUITextBlock totalHullVolume = new GUITextBlock(new Rectangle(0, 0, 0, 20), "", GUI.Style, hullVolumeFrame, GUI.SmallFont);            
+            totalHullVolume.TextGetter = GetTotalHullVolume;
+
+            GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", GUI.Style, hullVolumeFrame, GUI.SmallFont);
+            selectedHullVolume.TextGetter = GetSelectedHullVolume;
 
             var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", GUI.Style, topPanel);
             button.OnClicked = CreateLoadScreen;
@@ -250,8 +297,8 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            
-            GUIComponent.MouseOn = null;
+
+            GUIComponent.ForceMouseOn(null);
             characterMode = false;
 
             if (Submarine.MainSub != null)
@@ -278,7 +325,7 @@ namespace Barotrauma
         {
             base.Deselect();
 
-            GUIComponent.MouseOn = null;
+            GUIComponent.ForceMouseOn(null);
 
             MapEntityPrefab.Selected = null;
 
@@ -298,7 +345,7 @@ namespace Barotrauma
 
         private void CreateDummyCharacter()
         {
-            if (dummyCharacter != null) dummyCharacter.Remove();
+            if (dummyCharacter != null) RemoveDummyCharacter();
 
             dummyCharacter = Character.Create(Character.HumanConfigFile, Vector2.Zero);
 
@@ -588,7 +635,7 @@ namespace Barotrauma
             characterMode = !characterMode;         
             //button.Color = (characterMode) ? Color.Gold : Color.White;
             
-                wiringMode = false;
+            wiringMode = false;
 
             if (characterMode)
             {
@@ -602,7 +649,6 @@ namespace Barotrauma
             foreach (MapEntity me in MapEntity.mapEntityList)
             {
                 me.IsHighlighted = false;
-                me.IsSelected = false;
             }
             
             return true;
@@ -658,7 +704,7 @@ namespace Barotrauma
 
         private GUIFrame CreateWiringPanel()
         {
-            GUIFrame frame = new GUIFrame(new Rectangle(0,0,50,300), null, Alignment.Right | Alignment.CenterY, GUI.Style);
+            GUIFrame frame = new GUIFrame(new Rectangle(0,0,65,300), null, Alignment.Right | Alignment.CenterY, GUI.Style);
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
             GUIListBox listBox = new GUIListBox(Rectangle.Empty, GUI.Style, frame);
@@ -769,7 +815,7 @@ namespace Barotrauma
 
             MapEntityPrefab.SelectPrefab(obj);
             selectedTab = -1;
-            GUIComponent.MouseOn = null;
+            GUIComponent.ForceMouseOn(null);
             return false;
         }
 
@@ -804,6 +850,43 @@ namespace Barotrauma
             previouslyUsedList.children.Insert(0, textBlock);
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            if (tutorial != null) tutorial.AddToGUIUpdateList();
+
+            if (MapEntity.SelectedList.Count == 1)
+            {
+                MapEntity.SelectedList[0].AddToGUIUpdateList();
+            }
+
+            leftPanel.AddToGUIUpdateList();
+            topPanel.AddToGUIUpdateList();
+
+            if (wiringMode)
+            {
+                wiringToolPanel.AddToGUIUpdateList();
+            }
+
+            if (loadFrame != null)
+            {
+                loadFrame.AddToGUIUpdateList();
+            }
+            else if (saveFrame != null)
+            {
+                saveFrame.AddToGUIUpdateList();
+            }
+            else if (selectedTab > -1)
+            {
+                GUItabs[selectedTab].AddToGUIUpdateList();
+            }
+
+            if ((characterMode || wiringMode) && dummyCharacter != null)
+            {
+                CharacterHUD.AddToGUIUpdateList(dummyCharacter);
+            }
+
+            GUI.AddToGUIUpdateList();
+        }
 
         /// <summary>
         /// Allows the game to run logic such as updating the world,
@@ -814,15 +897,11 @@ namespace Barotrauma
         {
             if (tutorial != null) tutorial.Update((float)deltaTime);
 
+            hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
+
             if (GUIComponent.MouseOn == null)
             {
-                //if (nameBox.Selected && PlayerInput.LeftButtonClicked())
-                //{
-                //    ChangeSubName(nameBox, nameBox.Text);
-                //}
-
                 cam.MoveCamera((float)deltaTime);
-                //cam.Zoom = MathHelper.Clamp(cam.Zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f)*cam.Zoom, 0.1f, 2.0f);
             }
 
             if (characterMode || wiringMode)
@@ -845,6 +924,7 @@ namespace Barotrauma
                         {
                             limb.body.SetTransform(mouseSimPos, 0.0f);
                         }
+                        dummyCharacter.AnimController.Collider.SetTransform(mouseSimPos, 0.0f);
                     }
 
                     dummyCharacter.ControlLocalPlayer((float)deltaTime, cam, false);
@@ -853,22 +933,20 @@ namespace Barotrauma
                     dummyCharacter.Submarine = Submarine.MainSub;
 
                     cam.TargetPos = Vector2.Zero;
-
                 }
             }
             else
             {
-
                 MapEntity.UpdateSelecting(cam);
             }
 
-            GUIComponent.MouseOn = null;
+            //GUIComponent.ForceMouseOn(null);
 
             if (!characterMode && !wiringMode)
             {
                 if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.UpdatePlacing(cam);
-
-                MapEntity.UpdateEditor(cam);                    
+                
+                MapEntity.UpdateEditor(cam);
             }
 
             leftPanel.Update((float)deltaTime);
@@ -906,9 +984,10 @@ namespace Barotrauma
                 foreach (Item item in dummyCharacter.SelectedItems)
                 {
                     if (item == null) continue;
-                    item.SetTransform(dummyCharacter.SimPosition, 0.0f);
 
+                    item.SetTransform(dummyCharacter.SimPosition, 0.0f);
                     item.Update(cam, (float)deltaTime);
+                    item.SetTransform(item.body.SimPosition, 0.0f);
                 }
 
                 if (dummyCharacter.SelectedConstruction != null)

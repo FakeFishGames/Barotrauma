@@ -27,4 +27,6 @@
 
   <item prefab="Alien Door" alignment="Center" type="Door"/>
   <item prefab="Alien Hatch" alignment="Center" type="Hatch"/>
+
+  <item prefab="Artifact Holder" alignment="Center" type="Prop" commonness="5"/>
 </Structures>

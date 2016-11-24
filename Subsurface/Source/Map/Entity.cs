@@ -110,7 +110,14 @@ namespace Barotrauma
             List<Entity> list = new List<Entity>(dictionary.Values);
             foreach (Entity e in list)
             {
-                e.Remove();
+                try
+                {
+                    e.Remove();
+                }
+                catch (Exception exception)
+                {
+                    DebugConsole.ThrowError("Error while removing entity \"" + e.ToString() + "\"", exception);
+                }
             }
             dictionary.Clear();
         }

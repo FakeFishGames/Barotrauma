@@ -215,6 +215,17 @@ namespace Barotrauma
             endShiftButton.Draw(spriteBatch);
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            if (!isRunning) return;
+
+            base.AddToGUIUpdateList();
+
+            CrewManager.AddToGUIUpdateList();
+
+            endShiftButton.AddToGUIUpdateList();
+        }
+
         public override void Update(float deltaTime)
         {
             if (!isRunning) return;
@@ -357,7 +368,7 @@ namespace Barotrauma
 
             SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endshift" : "crewdead";
 
-            CoroutineManager.StartCoroutine(EndCinematic(cinematic));
+            CoroutineManager.StartCoroutine(EndCinematic(cinematic),"EndCinematic");
 
             return true;
         }

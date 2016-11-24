@@ -54,7 +54,7 @@ namespace Barotrauma
         public const int GridCellSize = 2000;
         private List<VoronoiCell>[,] cellGrid;
 
-        private WrappingWall[,] wrappingWalls;
+        //private WrappingWall[,] wrappingWalls;
 
         //private float shaftHeight;
 
@@ -97,10 +97,10 @@ namespace Barotrauma
             get { return ruins; }
         }
         
-        public WrappingWall[,] WrappingWalls
-        {
-            get { return wrappingWalls; }
-        }
+        //public WrappingWall[,] WrappingWalls
+        //{
+        //    get { return wrappingWalls; }
+        //}
 
         public string Seed
         {
@@ -187,11 +187,11 @@ namespace Barotrauma
             minWidth = Math.Max(minWidth, 6500.0f);
 
             startPosition = new Vector2(
-                Rand.Range(minWidth * 2, minWidth * 4, false),
+                Rand.Range(minWidth, minWidth * 2, false),
                 Rand.Range(borders.Height * 0.5f, borders.Height - minWidth * 2, false));
 
             endPosition = new Vector2(
-                borders.Width - Rand.Range(minWidth * 2, minWidth * 4, false),
+                borders.Width - Rand.Range(minWidth, minWidth * 2, false),
                 Rand.Range(borders.Height * 0.5f, borders.Height - minWidth * 2, false));
             
             List<Vector2> pathNodes = new List<Vector2>();
@@ -211,8 +211,12 @@ namespace Barotrauma
 
             pathNodes.Add(new Vector2(endPosition.X, borders.Height));
             
-            List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
+            if (pathNodes.Count <= 2)
+            {
+                pathNodes.Add((startPosition + endPosition) / 2);
+            }
 
+            List<List<Vector2>> smallTunnels = new List<List<Vector2>>();
             for (int i = 0; i < generationParams.SmallTunnelCount; i++)
             {
                 var tunnelStartPos = pathNodes[Rand.Range(2, pathNodes.Count - 2, false)];
@@ -421,7 +425,8 @@ namespace Barotrauma
 
                 cellGrid[x, y].Add(cell);
             }
-
+            
+            ruins = new List<Ruin>();
             for (int i = 0; i<generationParams.RuinCount; i++)
             {
                 GenerateRuin(mainPath);
@@ -440,6 +445,7 @@ namespace Barotrauma
 
             renderer.PlaceSprites(generationParams.BackgroundSpriteAmount);
             
+            /*
             wrappingWalls = new WrappingWall[2, 2];
 
             Rectangle ignoredArea = new Rectangle((int)startPosition.X, 0, (int)(endPosition.X - startPosition.X), borders.Height);
@@ -465,7 +471,7 @@ namespace Barotrauma
                 {
                     cells.AddRange(wrappingWalls[side, i].Cells);
                 }
-            }
+            }*/
             
             ShaftBody = BodyFactory.CreateEdge(GameMain.World, 
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
@@ -725,8 +731,6 @@ namespace Barotrauma
             }
 
             var ruin = new Ruin(closestPathCell, cells, new Rectangle((ruinPos - ruinSize * 0.5f).ToPoint(), ruinSize.ToPoint()));
-
-            ruins = new List<Ruin>();
             ruins.Add(ruin);
 
             ruin.RuinShapes.Sort((shape1, shape2) => shape2.DistanceFromEntrance.CompareTo(shape1.DistanceFromEntrance));
@@ -809,10 +813,11 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            /*
             if (Submarine.MainSub != null)
             {
                 WrappingWall.UpdateWallShift(Submarine.MainSub.WorldPosition, wrappingWalls);
-            }
+            }*/
 
             if (Hull.renderer != null)
             {
@@ -884,6 +889,7 @@ namespace Barotrauma
                 }
             }
 
+            /*
             if (wrappingWalls == null) return cells;
 
             for (int side = 0; side < 2; side++)
@@ -899,7 +905,7 @@ namespace Barotrauma
                         cells.Add(cell);
                     }
                 }
-            }
+            }*/
 
             return cells;
         }
@@ -918,6 +924,7 @@ namespace Barotrauma
                 ruins = null;
             }
 
+            /*
             if (wrappingWalls!=null)
             {
                 for (int side = 0; side < 2; side++)
@@ -929,7 +936,7 @@ namespace Barotrauma
                 }
 
                 wrappingWalls = null;
-            }
+            }*/
 
 
             cells = null;

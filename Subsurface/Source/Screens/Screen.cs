@@ -33,6 +33,10 @@ namespace Barotrauma
             get { return null; }
         }
 
+        public virtual void AddToGUIUpdateList()
+        {
+        }
+
         public virtual void Update(double deltaTime)
         {
         }

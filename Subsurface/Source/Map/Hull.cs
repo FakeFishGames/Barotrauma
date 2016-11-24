@@ -261,6 +261,11 @@ namespace Barotrauma
 
             return rect;
         }
+
+        public override MapEntity Clone()
+        {
+            return new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), rect, Submarine);
+        }
         
         public static EntityGrid GenerateEntityGrid(Submarine submarine)
         {
@@ -330,7 +335,7 @@ namespace Barotrauma
             base.Remove();
             hullList.Remove(this);
 
-            if (Submarine == null || !Submarine.Loading)
+            if (Submarine == null || (!Submarine.Loading && !Submarine.Unloading))
             {
                 Item.UpdateHulls();
                 Gap.UpdateHulls();
@@ -605,7 +610,7 @@ namespace Barotrauma
 
             }
 
-            if ((isSelected || isHighlighted) && editing)
+            if ((IsSelected || isHighlighted) && editing)
             {
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X + 5, -drawRect.Y + 5),

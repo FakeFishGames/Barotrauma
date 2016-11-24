@@ -467,6 +467,12 @@ namespace Barotrauma
             menuTabs[(int)Tab.LoadGame].RemoveChild(prevFrame);
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            buttonsTab.AddToGUIUpdateList();
+            if (selectedTab > 0) menuTabs[selectedTab].AddToGUIUpdateList();
+        }
+
         public override void Update(double deltaTime)
         {
             //GameMain.TitleScreen.Update();
