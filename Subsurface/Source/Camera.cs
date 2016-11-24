@@ -234,7 +234,14 @@ namespace Barotrauma
         public Vector2 Position
         {
             get { return position; }
-            set { position = value; }
+            set 
+            { 
+                if (!MathUtils.IsValid(value))
+                {
+                    return;
+                }
+                position = value; 
+            }
         }
         
         public Vector2 ScreenToWorld(Vector2 coords)
