@@ -1920,8 +1920,6 @@ namespace Barotrauma
             if (AnimController != null) AnimController.Remove();
 
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
-
-            if (AnimController != null) AnimController.Remove();
         }
 
         public virtual void ClientWrite(NetBuffer msg, object[] extraData = null) 
