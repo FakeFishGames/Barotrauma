@@ -238,7 +238,7 @@ namespace Barotrauma.Networking
 
             if (GameMain.NetLobbyScreen != null && GameMain.NetLobbyScreen.ServerMessage != null)
             {
-                doc.Root.SetAttributeValue("ServerMessage", GameMain.NetLobbyScreen.ServerMessage);
+                doc.Root.SetAttributeValue("ServerMessage", GameMain.NetLobbyScreen.ServerMessage.Text);
             }
                 
             XmlWriterSettings settings = new XmlWriterSettings();
