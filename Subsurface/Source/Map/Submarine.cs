@@ -373,6 +373,9 @@ namespace Barotrauma
             }
         }
 
+
+        public static float DamageEffectCutoff;
+
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
@@ -386,6 +389,8 @@ namespace Barotrauma
             {
                 damageEffect.Parameters["aCutoff"].SetValue(0.0f);
                 damageEffect.Parameters["cCutoff"].SetValue(0.0f);
+
+                DamageEffectCutoff = 0.0f;
             }
         }
 

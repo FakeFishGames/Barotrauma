@@ -488,7 +488,6 @@ namespace Barotrauma
             Draw(spriteBatch, false, false, damageEffect);
         }
 
-        private static float prevCutoff;
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
@@ -527,14 +526,14 @@ namespace Barotrauma
                     {
                         float newCutoff = Math.Min((sections[i].damage / prefab.MaxHealth), 0.65f);
 
-                        if (Math.Abs(newCutoff - prevCutoff) > 0.01f)
+                        if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f)
                         {
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
                             damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
 
                             damageEffect.CurrentTechnique.Passes[0].Apply();
 
-                            prevCutoff = newCutoff;
+                            Submarine.DamageEffectCutoff = newCutoff;
                         }
                     }
 
