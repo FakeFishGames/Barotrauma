@@ -100,6 +100,8 @@ namespace Barotrauma.Networking
 
         public void Clear()
         {
+            ID = 0;
+
             events.Clear();
             eventLastSent.Clear();
         }

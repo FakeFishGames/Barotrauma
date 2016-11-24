@@ -96,7 +96,10 @@ namespace Barotrauma.Networking
 
         public void Clear()
         {
+            ID = 0;
             events.Clear();
+
+            server.ConnectedClients.ForEach(c => c.entityEventLastSent.Clear());
         }
     }
 }
