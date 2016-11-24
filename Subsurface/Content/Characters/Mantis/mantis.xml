@@ -9,7 +9,7 @@
 
   <ragdoll headposition="120" headangle="-90" 
            waveamplitude="50.0" wavelength="2500" 
-           swimspeed="2.0" walkspeed="1.0"
+           swimspeed="2.0" walkspeed="3.0"
            stepsize ="20.0,20.0"
            legtorque="10"
            footrotation ="180.0"
@@ -48,7 +48,7 @@
     <!-- ""claw" -->
     <limb id = "6" width="15" height="63" mass = "4" flip="true" pullpos="0.0,30.0" refjoint="0">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5"/>
-      <attack range="200" duration="0.5" damage="30" stun="0.1" bleedingdamage="5" structuredamage="50" torque="-20" damagetype="slash" targetforce="-50"/>
+      <attack range="200" duration="0.5" damage="30" stun="0.1" bleedingdamage="5" structuredamage="50" torque="-20" damagetype="slash" force="10" targetforce="-30"/>
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
 
@@ -89,6 +89,6 @@
 
   <ai attackhumans="500" attackrooms="50.0" attackweaker="50" attackstronger="-30" 
       sight="0.5" hearing="1.0"
-      attackcooldown="3.0"/>
+      attackcooldown="1.0"/>
 </Character>
 

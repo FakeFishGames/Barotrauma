@@ -251,6 +251,16 @@ namespace Barotrauma
             if (attackLimb != null)
             {
                 steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition));
+
+                if (steeringManager is IndoorsSteeringManager)
+                {
+                    var indoorsSteering = (IndoorsSteeringManager)steeringManager;
+                    if (indoorsSteering.CurrentPath!=null && (indoorsSteering.CurrentPath.Finished || indoorsSteering.CurrentPath.Unreachable))
+                    {
+                        steeringManager.SteeringManual(deltaTime, attackSimPosition - attackLimb.SimPosition);
+                    }
+                }
+
                 if (attackingLimb != null) UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
             }   
         }

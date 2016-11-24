@@ -1357,9 +1357,7 @@ namespace Barotrauma
         {
             if (aiTarget == null) return;
 
-            aiTarget.SightRange = 0.0f;
-
-            aiTarget.SightRange = Mass*10.0f + AnimController.Collider.LinearVelocity.Length()*500.0f;
+            aiTarget.SightRange = Mass*100.0f + AnimController.Collider.LinearVelocity.Length()*500.0f;
         }
         
         public void ShowSpeechBubble(float duration, Color color)
