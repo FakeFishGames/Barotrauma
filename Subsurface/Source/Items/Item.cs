@@ -1145,23 +1145,32 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            if (condition <= 0.0f)
-            {
-                FixRequirement.AddToGUIUpdateList();
-                return;
-            }
-
-            if (HasInGameEditableProperties)
+            if (Screen.Selected is EditMapScreen)
             {
                 if (editingHUD != null) editingHUD.AddToGUIUpdateList();
             }
-
-            foreach (ItemComponent ic in components)
+            else
             {
-                ic.AddToGUIUpdateList();
+                if (HasInGameEditableProperties)
+                {
+                    if (editingHUD != null) editingHUD.AddToGUIUpdateList();
+                }
             }
 
-            if (Screen.Selected is EditMapScreen && editingHUD != null) editingHUD.AddToGUIUpdateList();
+            if (Character.Controlled!=null && Character.Controlled.SelectedConstruction == this)
+            {
+
+                if (condition <= 0.0f)
+                {
+                    FixRequirement.AddToGUIUpdateList();
+                    return;
+                }
+
+                foreach (ItemComponent ic in components)
+                {
+                    ic.AddToGUIUpdateList();
+                }
+            }
         }
 
         public virtual void UpdateHUD(Camera cam, Character character)

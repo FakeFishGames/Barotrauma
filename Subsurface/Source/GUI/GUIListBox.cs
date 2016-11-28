@@ -147,7 +147,8 @@ namespace Barotrauma
                 scrollBar = new GUIScrollBar(
                     new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height), null, 1.0f, GUI.Style);
             }
-            
+
+            scrollBar.IsHorizontal = isHorizontal;            
 
             frame = new GUIFrame(Rectangle.Empty, style, this);
             if (style != null) style.Apply(frame, this);

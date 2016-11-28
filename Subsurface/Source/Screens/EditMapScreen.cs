@@ -858,6 +858,10 @@ namespace Barotrauma
             {
                 MapEntity.SelectedList[0].AddToGUIUpdateList();
             }
+            if (MapEntity.HighlightedListBox != null)
+            {
+                MapEntity.HighlightedListBox.AddToGUIUpdateList();
+            }
 
             leftPanel.AddToGUIUpdateList();
             topPanel.AddToGUIUpdateList();
@@ -899,10 +903,7 @@ namespace Barotrauma
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
 
-            if (GUIComponent.MouseOn == null)
-            {
-                cam.MoveCamera((float)deltaTime);
-            }
+            cam.MoveCamera((float)deltaTime);            
 
             if (characterMode || wiringMode)
             {

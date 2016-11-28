@@ -80,6 +80,14 @@ namespace Barotrauma
             }
         }
 
+        public override string Name
+        {
+            get
+            {
+                return "Gap";
+            }
+        }
+
         public override bool SelectableInEditor
         {
             get

@@ -25,6 +25,12 @@ namespace Barotrauma
         public bool IsHorizontal
         {
             get { return isHorizontal; }
+            set 
+            { 
+                if (isHorizontal == value) return;
+                isHorizontal = value;
+                UpdateRect();
+            }
         }
 
         public bool Enabled

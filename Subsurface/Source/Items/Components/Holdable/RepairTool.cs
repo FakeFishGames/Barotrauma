@@ -177,7 +177,7 @@ namespace Barotrauma.Items.Components
             Item targetItem;
             if ((targetStructure = (targetBody.UserData as Structure)) != null)
             {
-                if (!fixableEntities.Contains(targetStructure.Name)) return;
+                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Name)) return;
                 if (targetStructure.IsPlatform) return;
 
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
