@@ -223,12 +223,14 @@ namespace Barotrauma
             DrawTiled(spriteBatch, pos, targetSize, Vector2.Zero, color);
         }
         
-        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color, Point offset)
+        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color, Point offset, float? overrideDepth = null)
         {
             //how many times the texture needs to be drawn on the x-axis
             int xTiles = (int)Math.Ceiling((targetSize.X + startOffset.X) / sourceRect.Width);
             //how many times the texture needs to be drawn on the y-axis
             int yTiles = (int)Math.Ceiling((targetSize.Y + startOffset.Y) / sourceRect.Height);
+
+            float depth = overrideDepth == null ? this.depth : (float)overrideDepth;
             
             Rectangle texPerspective = sourceRect;
 
