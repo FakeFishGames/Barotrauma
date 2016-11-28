@@ -243,6 +243,7 @@ namespace Barotrauma
             //clone links between the entities
             for (int i = 0; i < clones.Count; i++)            
             {
+                if (entitiesToClone[i].linkedTo == null) continue;
                 foreach (MapEntity linked in entitiesToClone[i].linkedTo)
                 {
                     if (!entitiesToClone.Contains(linked)) continue;
@@ -429,10 +430,12 @@ namespace Barotrauma
 
                     Vector2 center = Vector2.Zero;
                     clones.ForEach(c => center += c.WorldPosition);
-                    center /= clones.Count;
+                    center = Submarine.VectorToWorldGrid(center / clones.Count);
+
+                    Vector2 moveAmount = Submarine.VectorToWorldGrid(cam.WorldViewCenter - center);
 
                     selectedList = new List<MapEntity>(clones);
-                    selectedList.ForEach(c => c.Move(cam.WorldViewCenter - center));
+                    selectedList.ForEach(c => c.Move(moveAmount));                    
                 }
             }
 
