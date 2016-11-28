@@ -99,7 +99,7 @@ namespace Barotrauma
 
         public override string Name
         {
-            get { return "structure"; }
+            get { return prefab.Name; }
         }
 
         public bool HasBody

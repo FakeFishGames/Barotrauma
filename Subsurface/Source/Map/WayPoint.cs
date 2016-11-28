@@ -54,13 +54,13 @@ namespace Barotrauma
             set { spawnType = value; }
         }
 
-        //public override string Name
-        //{
-        //    get
-        //    {
-        //        return spawnType == SpawnType.Path ? "WayPoint" : "SpawnPoint";
-        //    }
-        //}
+        public override string Name
+        {
+            get
+            {
+                return spawnType == SpawnType.Path ? "WayPoint" : "SpawnPoint";
+            }
+        }
 
         public string[] IdCardTags
         {
