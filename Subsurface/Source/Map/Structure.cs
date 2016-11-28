@@ -503,6 +503,9 @@ namespace Barotrauma
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
+            float depth = prefab.sprite.Depth;
+            depth -= (ID % 255) * 0.000001f;
+
             if (back && damageEffect == null)
             {
                 if (prefab.BackgroundSprite != null)
@@ -550,8 +553,8 @@ namespace Barotrauma
                         spriteBatch,
                         new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
                         new Vector2(sections[i].rect.Width, sections[i].rect.Height),
-                        Vector2.Zero, color, 
-                        textureOffset);
+                        Vector2.Zero, color,
+                        textureOffset, depth);
                 }
             }
 
