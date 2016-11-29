@@ -165,7 +165,7 @@ namespace Barotrauma
             }
         }
 
-        public void MoveCamera(float deltaTime)
+        public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true)
         {            
             prevPosition = position;
             prevZoom = zoom;
@@ -175,7 +175,7 @@ namespace Barotrauma
             Vector2 moveCam = Vector2.Zero;
             if (targetPos == Vector2.Zero)
             {
-                if (GUIComponent.KeyboardDispatcher.Subscriber == null)
+                if (allowMove && GUIComponent.KeyboardDispatcher.Subscriber == null)
                 {
                     if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
                     if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;
@@ -197,11 +197,14 @@ namespace Barotrauma
                  
                 moveCam = moveCam * deltaTime * 60.0f;
 
-                Vector2 mouseInWorld = ScreenToWorld(PlayerInput.MousePosition);
-                Vector2 diffViewCenter;
-                diffViewCenter = ((mouseInWorld - Position) * Zoom);
-                Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, GameMain.DebugDraw ? 0.01f : 0.1f, 2.0f);
-                if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
+                if (allowZoom)
+                {
+                    Vector2 mouseInWorld = ScreenToWorld(PlayerInput.MousePosition);
+                    Vector2 diffViewCenter;
+                    diffViewCenter = ((mouseInWorld - Position) * Zoom);
+                    Zoom = MathHelper.Clamp(zoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, GameMain.DebugDraw ? 0.01f : 0.1f, 2.0f);
+                    if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
+                }
             }
             else
             {

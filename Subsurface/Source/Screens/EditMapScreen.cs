@@ -304,19 +304,15 @@ namespace Barotrauma
             if (Submarine.MainSub != null)
             {
                 cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
-                //nameBox.Text = Submarine.MainSub.Name;
-                //descriptionBox.Text = ToolBox.LimitString(Submarine.MainSub.Description, 15);
             }
             else
             {
                 cam.Position = Submarine.HiddenSubStartPosition;
-                //if (nameBox != null) nameBox.Text = "";
-                //descriptionBox.Text = "";
 
                 Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, "Unnamed.sub"), "", false);
             }
 
-            //nameBox.Deselect();
+            SoundPlayer.OverrideMusicType = "none";
 
             cam.UpdateTransform();
         }
@@ -334,6 +330,8 @@ namespace Barotrauma
             if (characterMode) ToggleCharacterMode();            
 
             if (wiringMode) ToggleWiringMode();
+
+            SoundPlayer.OverrideMusicType = null;
 
             if (dummyCharacter != null)
             {
@@ -843,7 +841,11 @@ namespace Barotrauma
 
             string name = ToolBox.LimitString(mapEntityPrefab.Name,15);
 
-            var textBlock = new GUITextBlock(new Rectangle(0,0,0,15), name, GUI.Style, previouslyUsedList);
+            var textBlock = new GUITextBlock(
+                new Rectangle(0,0,0,10), 
+                ToolBox.LimitString(name, GUI.SmallFont, previouslyUsedList.Rect.Width), 
+                GUI.Style, previouslyUsedList, GUI.SmallFont);
+
             textBlock.UserData = mapEntityPrefab;
 
             previouslyUsedList.RemoveChild(textBlock);
@@ -903,7 +905,7 @@ namespace Barotrauma
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
 
-            cam.MoveCamera((float)deltaTime);            
+            cam.MoveCamera((float)deltaTime, true, GUIComponent.MouseOn == null);            
 
             if (characterMode || wiringMode)
             {
