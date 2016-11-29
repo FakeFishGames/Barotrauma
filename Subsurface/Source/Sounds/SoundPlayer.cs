@@ -247,7 +247,11 @@ namespace Barotrauma
             
             List<BackgroundMusic> suitableMusic = GetSuitableMusicClips();
 
-            if (suitableMusic.Count > 0 && !suitableMusic.Contains(currentMusic))
+            if (suitableMusic.Count == 0)
+            {
+                targetMusic = null;
+            }                
+            else if (!suitableMusic.Contains(currentMusic))
             {
                 int index = Rand.Int(suitableMusic.Count);
 
