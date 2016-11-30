@@ -888,6 +888,11 @@ namespace Barotrauma
             }
         }
 
+        public override bool IsVisible(Rectangle worldView)
+        {
+            return drawableComponents.Count > 0 || body == null || body.Enabled;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!Visible) return;
