@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -63,8 +64,11 @@ namespace Barotrauma.Items.Components
 
         private Vector2 newNodePos;
 
+
+
         private static Wire draggingWire;
         private static int? selectedNodeIndex;
+        private static int? highlightedNodeIndex;
 
         public bool Hidden, Locked;
 
@@ -191,9 +195,15 @@ namespace Barotrauma.Items.Components
                 CleanNodes();
             }
 
-            Drawable = nodes.Any();
+            if (!loading)
+            {
+                Item.NewComponentEvent(this, true, true);
+                //the wire is active if only one end has been connected
+                IsActive = connections[0] == null ^ connections[1] == null;
+            }
 
-            if (!loading) Item.NewComponentEvent(this, true, true);
+            Drawable = IsActive || nodes.Any();
+
 
             UpdateSections();
 
@@ -205,7 +215,6 @@ namespace Barotrauma.Items.Components
             ClearConnections();
 
             IsActive = true;
-            //Drawable = true;
         }
 
         public override void Unequip(Character character)
@@ -265,7 +274,7 @@ namespace Barotrauma.Items.Components
                 item.NewComponentEvent(this, true, true);
             }
 
-            Drawable = sections.Count > 0;
+            Drawable = IsActive || sections.Count > 0;
         }
 
         public override bool Pick(Character picker)
@@ -308,7 +317,7 @@ namespace Barotrauma.Items.Components
             {
                 sections.Add(new WireSection(nodes[i], nodes[i + 1]));
             }
-            Drawable = sections.Count > 0;
+            Drawable = IsActive || sections.Count > 0;
         }
 
         private void ClearConnections()
@@ -389,7 +398,7 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
-            if (sections.Count == 0)
+            if (sections.Count == 0 && !IsActive)
             {
                 Drawable = false;
                 return;
@@ -401,7 +410,7 @@ namespace Barotrauma.Items.Components
                 drawOffset = item.Submarine.DrawPosition + item.Submarine.HiddenSubPosition;
             }
 
-            float depth = wireSprite.Depth + ((item.ID % 100) * 0.00001f);
+            float depth = item.IsSelected ? 0.0f : wireSprite.Depth + ((item.ID % 100) * 0.00001f);
 
             if (item.IsHighlighted)
             {
@@ -422,7 +431,7 @@ namespace Barotrauma.Items.Components
             {
                 section.Draw(spriteBatch, item.Color, drawOffset, depth, 0.3f);
             }
-            
+
             if (IsActive && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
                 WireSection.Draw(
@@ -433,78 +442,195 @@ namespace Barotrauma.Items.Components
                     depth, 
                     0.3f);
             }
-
-            if (!editing || !PlayerInput.MouseInsideWindow || !GameMain.EditMapScreen.WiringMode) return;
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null) return;
+            
+            if (!editing || !GameMain.EditMapScreen.WiringMode) return;
 
             for (int i = 0; i < nodes.Count; i++)
             {
-                Vector2 worldPos = nodes[i];
-                if (item.Submarine != null) worldPos += item.Submarine.Position + item.Submarine.HiddenSubPosition;
-                worldPos.Y = -worldPos.Y;
+                Vector2 drawPos = nodes[i];
+                if (item.Submarine != null) drawPos += item.Submarine.Position + item.Submarine.HiddenSubPosition;
+                drawPos.Y = -drawPos.Y;
 
-                GUI.DrawRectangle(spriteBatch, worldPos + new Vector2(-3, -3), new Vector2(6, 6), item.Color, true, 0.0f);
-
-                if (IsActive) continue;
-
-                if (GUIComponent.MouseOn != null ||
-                    Vector2.Distance(GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), new Vector2(worldPos.X, -worldPos.Y)) > 10.0f)
+                if (item.IsSelected)
                 {
-                    continue;
+                    GUI.DrawRectangle(spriteBatch, drawPos + new Vector2(-5, -5), new Vector2(10, 10), item.Color, true, 0.0f);
+                    
+                    if (highlightedNodeIndex == i)
+                    {
+                        GUI.DrawRectangle(spriteBatch, drawPos + new Vector2(-10, -10), new Vector2(20, 20), Color.Red, false, 0.0f); 
+                    }                   
                 }
-
-                GUI.DrawRectangle(spriteBatch, worldPos + new Vector2(-10, -10), new Vector2(20, 20), Color.Red, false, 0.0f);
-
-                if (selectedNodeIndex == null && draggingWire == null)// && !MapEntity.SelectedAny)
+                else
                 {
-                    if (PlayerInput.LeftButtonDown())
-                    {
-                        MapEntity.DisableSelect = true;
-                        MapEntity.SelectEntity(item);
-                        draggingWire = this;
-                        selectedNodeIndex = i;
-                        break;
-                    }
-                    else if (PlayerInput.RightButtonClicked())
-                    {
-                        nodes.RemoveAt(i);
-                        break;
-                    }
+                    GUI.DrawRectangle(spriteBatch, drawPos + new Vector2(-3, -3), new Vector2(6, 6), item.Color, true, 0.0f);
                 }
             }
+        }
 
-            if (PlayerInput.LeftButtonHeld())
+        public static void UpdateEditing(List<Wire> wires)
+        {
+            //dragging a node of some wire
+            if (draggingWire != null)
             {
-                if (selectedNodeIndex != null && draggingWire == this)
+                //cancel dragging
+                if (!PlayerInput.LeftButtonHeld())
+                {
+                    draggingWire = null;
+                    selectedNodeIndex = null;
+                }
+                //update dragging
+                else
                 {
                     MapEntity.DisableSelect = true;
-                    //Nodes[(int)selectedNodeIndex] = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)-Submarine.HiddenSubPosition+Submarine.Loaded.Position;
-
 
                     Submarine sub = null;
-                    if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
-                    if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
+                    if (draggingWire.connections[0] != null && draggingWire.connections[0].Item.Submarine != null) sub = draggingWire.connections[0].Item.Submarine;
+                    if (draggingWire.connections[1] != null && draggingWire.connections[1].Item.Submarine != null) sub = draggingWire.connections[1].Item.Submarine;
 
                     Vector2 nodeWorldPos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - sub.HiddenSubPosition - sub.Position;// Nodes[(int)selectedNodeIndex];
 
                     nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X / 2.0f);
                     nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y / 2.0f);
 
-                    //if (item.Submarine != null) nodeWorldPos += item.Submarine.Position;
+                    draggingWire.nodes[(int)selectedNodeIndex] = nodeWorldPos;
+                    draggingWire.UpdateSections();
 
-                    nodes[(int)selectedNodeIndex] = nodeWorldPos;
-                    UpdateSections();
+                    MapEntity.SelectEntity(draggingWire.item);
+                }
 
-                    MapEntity.SelectEntity(item);
+                return;
+            }
+
+            //a wire has been selected -> check if we should start dragging one of the nodes
+            float nodeSelectDist = 10, sectionSelectDist = 5;
+            highlightedNodeIndex = null;
+            if (MapEntity.SelectedList.Count == 1 && MapEntity.SelectedList[0] is Item)
+            {
+                Wire selectedWire = ((Item)MapEntity.SelectedList[0]).GetComponent<Wire>();
+
+                Vector2 mousePos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                if (selectedWire.item.Submarine != null) mousePos -= (selectedWire.item.Submarine.Position + selectedWire.item.Submarine.HiddenSubPosition);
+
+                //left click while holding ctrl -> check if the cursor is on a wire section, 
+                //and add a new node if it is
+                if (PlayerInput.KeyDown(Keys.RightControl) || PlayerInput.KeyDown(Keys.LeftControl))
+                {
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        float temp = 0.0f;
+                        int closestSectionIndex = selectedWire.GetClosestSectionIndex(mousePos, sectionSelectDist, out temp);
+
+                        if (closestSectionIndex > -1)
+                        {
+                            selectedWire.nodes.Insert(closestSectionIndex+1, mousePos);
+                            selectedWire.UpdateSections();
+                        }
+                    }
+                }
+                else 
+                {
+                    //check if close enough to a node
+                    float temp = 0.0f;                    
+                    int closestIndex = selectedWire.GetClosestNodeIndex(mousePos, nodeSelectDist, out temp);
+                    if (closestIndex > -1)
+                    {
+                        highlightedNodeIndex = closestIndex;
+                        //start dragging the node
+                        if (PlayerInput.LeftButtonHeld())
+                        {
+                            draggingWire = selectedWire;
+                            selectedNodeIndex = closestIndex;
+                        }
+                        //remove the node
+                        else if (PlayerInput.RightButtonClicked() && closestIndex > 0 && closestIndex < selectedWire.nodes.Count-1)
+                        {
+                            selectedWire.nodes.RemoveAt(closestIndex);
+                            selectedWire.UpdateSections();
+                        }
+                    }
                 }
             }
-            else
+
+            //check which wire is highlighted with the cursor
+            Wire highlighted = null;
+            float closestDist = 0.0f;
+            foreach (Wire w in wires)
             {
-                selectedNodeIndex = null;
-                draggingWire = null;
+                Vector2 mousePos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                if (w.item.Submarine != null) mousePos -= (w.item.Submarine.Position + w.item.Submarine.HiddenSubPosition);
+                
+                float dist = 0.0f;
+                if (w.GetClosestNodeIndex(mousePos, highlighted == null ? nodeSelectDist : closestDist, out dist) > -1)
+                {
+                    highlighted = w;
+                    closestDist = dist;
+                }
+    
+                if (w.GetClosestSectionIndex(mousePos, highlighted == null ? sectionSelectDist : closestDist, out dist) > -1)
+                {
+                    highlighted = w;
+                    closestDist = dist;                        
+                }
+                
+            }
+
+
+            if (highlighted != null)
+            {
+                highlighted.item.IsHighlighted = true;
+
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    MapEntity.DisableSelect = true;
+                    MapEntity.SelectEntity(highlighted.item);
+                }
             }
         }
 
+        private int GetClosestNodeIndex(Vector2 pos, float maxDist, out float closestDist)
+        {
+            closestDist = 0.0f;
+            int closestIndex = -1;
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                float dist = Vector2.Distance(nodes[i], pos);
+                if (dist > maxDist) continue;
+
+                if (closestIndex == -1 || dist < closestDist)
+                {
+                    closestIndex = i;
+                    closestDist = dist;
+                }
+            }
+
+            return closestIndex;
+        }
+
+        private int GetClosestSectionIndex(Vector2 mousePos, float maxDist, out float closestDist)
+        {
+            closestDist = 0.0f;
+            int closestIndex = -1;
+
+            for (int i = 0; i < nodes.Count-1; i++)
+            {
+                if ((Math.Abs(nodes[i].X - nodes[i + 1].X)<5 || Math.Sign(mousePos.X - nodes[i].X) != Math.Sign(mousePos.X - nodes[i + 1].X)) &&
+                     (Math.Abs(nodes[i].Y - nodes[i + 1].Y)<5 || Math.Sign(mousePos.Y - nodes[i].Y) != Math.Sign(mousePos.Y - nodes[i + 1].Y)))
+                {
+                    float dist = MathUtils.LineToPointDistance(nodes[i], nodes[i + 1], mousePos);
+                    if (dist > maxDist) continue;
+
+                    if (closestIndex == -1 || dist < closestDist)
+                    {
+                        closestIndex = i;
+                        closestDist = dist;
+                    }
+                }
+            }
+
+            return closestIndex;
+        }
+        
         public override void FlipX()
         {            
             for (int i = 0; i < nodes.Count; i++)

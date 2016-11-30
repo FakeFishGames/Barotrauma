@@ -235,8 +235,11 @@ namespace Barotrauma
 
         public static float LineToPointDistance(Vector2 lineA, Vector2 lineB, Vector2 point)
         {
-            return (float)(Math.Abs((lineB.X-lineA.X)*(lineA.Y - point.Y) - (lineA.X - point.X)*(lineB.Y-lineA.Y)) /
-                Math.Sqrt(Math.Pow(lineB.X - lineA.X, 2) + Math.Pow(lineB.Y - lineA.Y, 2)));
+            float xDiff = lineB.X - lineA.X;
+            float yDiff = lineB.Y - lineA.Y;
+
+            return (float)(Math.Abs(xDiff * (lineA.Y - point.Y) - yDiff * (lineA.X - point.X)) /
+                Math.Sqrt(xDiff * xDiff + yDiff * yDiff));
         } 
 
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)

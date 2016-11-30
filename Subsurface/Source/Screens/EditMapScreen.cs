@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -918,6 +919,17 @@ namespace Barotrauma
                     foreach (MapEntity me in MapEntity.mapEntityList)
                     {
                         me.IsHighlighted = false;
+                    }
+
+                    if (wiringMode)
+                    {
+                        List<Wire> wires = new List<Wire>();
+                        foreach (Item item in Item.ItemList)
+                        {
+                            var wire = item.GetComponent<Wire>();
+                            if (wire != null) wires.Add(wire);
+                        }
+                        Wire.UpdateEditing(wires);
                     }
 
                     if (dummyCharacter.SelectedConstruction==null)
