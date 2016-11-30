@@ -289,10 +289,10 @@ namespace Barotrauma
         }
 
         //drawing ----------------------------------------------------
-        
+
         public static void CullEntities(Camera cam)
         {
-            List<Submarine> visibleSubs = new List<Submarine>();
+            HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
             foreach (Submarine sub in Submarine.Loaded)
             {
                 Rectangle worldBorders = new Rectangle(
@@ -301,19 +301,20 @@ namespace Barotrauma
                     sub.Borders.Width + 1000,
                     sub.Borders.Height + 1000);
 
-
                 if (Submarine.RectsOverlap(worldBorders, cam.WorldView))
                 {
                     visibleSubs.Add(sub);
                 }
             }
 
+            Rectangle worldView = cam.WorldView;
+
             visibleEntities = new List<MapEntity>();
             foreach (MapEntity me in MapEntity.mapEntityList)
             {
                 if (me.Submarine == null || visibleSubs.Contains(me.Submarine))
                 {
-                    visibleEntities.Add(me);
+                    if (me.IsVisible(worldView)) visibleEntities.Add(me);
                 }
             }
         }
