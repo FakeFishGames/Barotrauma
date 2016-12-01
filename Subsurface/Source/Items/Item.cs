@@ -1144,7 +1144,7 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                ic.DrawHUD(spriteBatch, character);
+                if (ic.CanBeSelected) ic.DrawHUD(spriteBatch, character);
             }
         }
 
@@ -1164,7 +1164,6 @@ namespace Barotrauma
 
             if (Character.Controlled!=null && Character.Controlled.SelectedConstruction == this)
             {
-
                 if (condition <= 0.0f)
                 {
                     FixRequirement.AddToGUIUpdateList();
@@ -1173,7 +1172,7 @@ namespace Barotrauma
 
                 foreach (ItemComponent ic in components)
                 {
-                    ic.AddToGUIUpdateList();
+                    if (ic.CanBeSelected) ic.AddToGUIUpdateList();
                 }
             }
         }
@@ -1193,7 +1192,7 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                ic.UpdateHUD(character);
+                if (ic.CanBeSelected) ic.UpdateHUD(character);
             }
         }
 

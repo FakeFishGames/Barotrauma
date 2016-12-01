@@ -91,7 +91,7 @@
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
 
-    <ItemContainer capacity="1" itempos="0,0" hideitems="false">
+    <ItemContainer canbeselected="true" capacity="1" itempos="0,0" hideitems="false">
       <Containable name="explosive"/>
     </ItemContainer>
 

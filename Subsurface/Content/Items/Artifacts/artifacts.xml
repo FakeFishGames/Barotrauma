@@ -227,11 +227,9 @@
       </Containable>
     </ItemContainer>
 
-    <LightComponent lightcolor="0.6,0.8,1.0,1.0" range="800.0" IsOn="true"/>
+    <LightComponent lightcolor="0.6,0.8,1.0,1.0" canbeselected="false" range="800.0" IsOn="true"/>
 
-    <PowerContainer capacity="20000.0" maxrechargespeed="10000.0" maxoutput="10000.0">
-      <StatusEffect type="OnActive" target="Contained" targetnames="loadable" Condition="2.0"/>
-    </PowerContainer>
+    <PowerContainer capacity="20000.0" canbeselected="false" maxrechargespeed="10000.0" maxoutput="10000.0"/>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>

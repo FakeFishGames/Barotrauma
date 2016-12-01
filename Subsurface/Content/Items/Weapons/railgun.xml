@@ -74,7 +74,7 @@
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
 
-    <Sprite texture="weapons.png" sourcerect="0,58,88,20" depth ="0.5"/>
+    <Sprite texture="weapons.png" sourcerect="0,58,88,20" depth ="0.55"/>
 
     <Body width="87" height="18" density="30"/>
 
@@ -106,7 +106,7 @@
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
 
-    <Sprite texture="weapons.png" sourcerect="0,77,88,20" depth ="0.5"/>
+    <Sprite texture="weapons.png" sourcerect="0,77,88,20" depth ="0.55"/>
 
     <Body width="87" height="18" density="35"/>
 

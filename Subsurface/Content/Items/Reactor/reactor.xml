@@ -39,7 +39,7 @@
       <input name="shutdown"/>
     </ConnectionPanel>
 
-    <ItemContainer capacity="5">
+    <ItemContainer capacity="5" canbeselected="true">
       <Containable name="Fuel Rod">
         <StatusEffect type="OnContaining" target="This" AvailableFuel="2000.0" disabledeltatime="true"/>
       </Containable>
