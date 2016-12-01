@@ -165,12 +165,12 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, 
                         new Vector2(cell.edges[0].point1.X, -cell.edges[0].point1.Y),
                         new Vector2(cell.Center.X, -cell.Center.Y), 
-                        Color.White);
+                        Color.Blue*0.5f);
                 
                     foreach (GraphEdge edge in cell.edges)
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(edge.point1.X, -edge.point1.Y),
-                            new Vector2(edge.point2.X, -edge.point2.Y), cell.body==null ? Color.Gray : Color.White);
+                            new Vector2(edge.point2.X, -edge.point2.Y), cell.body==null ? Color.Cyan*0.5f : Color.White);
                     }
 
                     foreach (Vector2 point in cell.bodyVertices)

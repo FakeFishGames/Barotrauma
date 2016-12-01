@@ -743,10 +743,18 @@ namespace Barotrauma
             {
                 var tooClose = GetTooCloseCells(ruinShape.Rect.Center.ToVector2(), Math.Max(ruinShape.Rect.Width, ruinShape.Rect.Height));
 
-                tooClose.ForEach(c =>
+                foreach (VoronoiCell cell in tooClose)
                 {
-                    if (c.edges.Any(e => ruinShape.Rect.Contains(e.point1) || ruinShape.Rect.Contains(e.point2))) c.CellType = CellType.Empty;
-                });
+                    if (cell.CellType == CellType.Empty) continue;
+                    foreach (GraphEdge e in cell.edges)
+                    {
+                        if (MathUtils.GetLineRectangleIntersection(e.point1, e.point2, ruinShape.Rect) != null)
+                        {
+                            cell.CellType = CellType.Empty;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
