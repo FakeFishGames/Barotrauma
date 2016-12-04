@@ -1,4 +1,29 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.4.1
+---------------------------------------------------------------------------------------------------------
+
+Bugfixes:
+	- copypasted items are now correctly aligned to the "grid"
+	- cabinets can be copypasted from a sub to another without the items inside disappearing
+	- placing explosives inside an item and that item inside another item doesn't prevent explosions
+	- fixed a bug that occasionally caused crashing when the game happens to generate a very small level
+
+Sub editor:
+	- structures/items that are behind something else can be selected using a listbox that appears 
+	when hovering the cursor over them	
+	- wires have to be selected by clicking before any of the points can be moved (makes it possible 
+	to move	the correct wire even if it's overlapping with other wires)
+	- the selected wire is renderer over all structures
+	- points can be added to wires by clicking while holding ctrl
+	- disabled music
+
+Misc:
+	- some rendering optimization	
+	- pathfinding and waypoint generation improvements
+	- made mantises more aggressive
+	- water flows more slowly through partially damaged walls	
+
+---------------------------------------------------------------------------------------------------------
 v0.5.4.0
 ---------------------------------------------------------------------------------------------------------
 
