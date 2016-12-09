@@ -488,7 +488,11 @@ namespace Barotrauma.Items.Components
 
         public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
-            AutoPilot = msg.ReadBoolean();
+            bool autoPilot = msg.ReadBoolean();
+
+            if (!item.CanClientAccess(c)) return; 
+
+            AutoPilot = autoPilot;
 
             if (!AutoPilot)
             {

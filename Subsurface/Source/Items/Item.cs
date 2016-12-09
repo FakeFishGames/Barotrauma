@@ -1356,6 +1356,11 @@ namespace Barotrauma
             return Vector2.Distance(WorldPosition, worldPosition) < PickDistance;
         }
 
+        public bool CanClientAccess(Client c)
+        {
+            return c != null && c.Character != null && c.Character.CanAccessItem(this);
+        }
+
         public bool Pick(Character picker, bool ignoreRequiredItems=false, bool forceSelectKey=false, bool forceActionKey=false)
         {
             bool hasRequiredSkills = true;

@@ -563,11 +563,18 @@ namespace Barotrauma.Items.Components
 
         public void ServerRead(NetIncomingMessage msg, Client c)
         {
-            AutoTemp = msg.ReadBoolean();
-            ShutDownTemp = msg.ReadRangedSingle(0.0f, 10000.0f, 8);
+            bool autoTemp       = msg.ReadBoolean();
+            float shutDownTemp  = msg.ReadRangedSingle(0.0f, 10000.0f, 8);
+            float coolingRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            float fissionRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
 
-            CoolingRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-            FissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            if (!item.CanClientAccess(c)) return; 
+
+            AutoTemp = autoTemp;
+            ShutDownTemp = shutDownTemp;
+
+            CoolingRate = coolingRate;
+            FissionRate = fissionRate;
 
             //need to create a server event to notify all clients of the changed state
             unsentChanges = true;
