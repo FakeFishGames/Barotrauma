@@ -236,8 +236,13 @@ namespace Barotrauma.Items.Components
 
         public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
-            FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
-            IsActive = msg.ReadBoolean();
+            float flowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
+            bool isActive        = msg.ReadBoolean();
+
+            if (!item.CanClientAccess(c)) return;       
+
+            FlowPercentage  = flowPercentage;
+            IsActive        = isActive;
         }
 
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
