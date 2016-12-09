@@ -432,7 +432,7 @@ namespace Barotrauma.Items.Components
                 section.Draw(spriteBatch, item.Color, drawOffset, depth, 0.3f);
             }
 
-            if (IsActive && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
+            if (IsActive && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
                 WireSection.Draw(
                     spriteBatch,
