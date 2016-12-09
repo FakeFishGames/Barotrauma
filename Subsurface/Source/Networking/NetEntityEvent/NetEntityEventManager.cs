@@ -73,9 +73,22 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
+                    long msgPosition = msg.Position;
+
                     DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Green);
                     lastReceivedID++;
-                    ReadEvent(msg, entity, sendingTime, sender);
+                    try
+                    {
+                        ReadEvent(msg, entity, sendingTime, sender);
+                    }
+
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError("Failed to read event for entity \""+entity.ToString()+"\"!", e);
+#endif
+                        msg.Position = msgPosition + msgLength * 8;
+                    }
                 }
                 msg.ReadPadBits();
             }            

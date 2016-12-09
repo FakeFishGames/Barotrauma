@@ -58,7 +58,8 @@ namespace Barotrauma.Networking
                 float lastSent = 0;
                 client.entityEventLastSent.TryGetValue(events[i].ID, out lastSent);
 
-                if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime)
+                //wait for 1.5f * roundtriptime until resending
+                if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime * 1.5f)
                 {
                     break;
                 }
