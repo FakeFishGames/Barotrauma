@@ -1328,7 +1328,7 @@ namespace Barotrauma
                             {
                                 isStillCountdown = 15;
                             }
-                            DebugConsole.NewMessage(Convert.ToString(memInput.Count), Color.Lime);
+                            //DebugConsole.NewMessage(Convert.ToString(memInput.Count), Color.Lime);
                         }
                         else
                         {

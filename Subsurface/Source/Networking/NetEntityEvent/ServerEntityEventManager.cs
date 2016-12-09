@@ -12,10 +12,14 @@ namespace Barotrauma.Networking
         private List<ServerEntityEvent> events;
 
         private UInt32 ID;
+
+        private GameServer server;
         
         public ServerEntityEventManager(GameServer server) 
         {
             events = new List<ServerEntityEvent>();
+
+            this.server = server;
         }
 
         public void CreateEvent(IServerSerializable entity, object[] extraData = null)
@@ -91,7 +95,7 @@ namespace Barotrauma.Networking
 
         public void Read(NetIncomingMessage msg, Client client)
         {
-            base.Read(msg, 0.0f, ref client.lastSentEntityEventID);
+            base.Read(msg, 0.0f, ref client.lastSentEntityEventID, client);
         }
 
         public void Clear()

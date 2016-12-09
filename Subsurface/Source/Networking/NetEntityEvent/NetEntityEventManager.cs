@@ -52,7 +52,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received
         /// </summary>
-        protected void Read(NetIncomingMessage msg, float sendingTime, ref UInt32 lastReceivedID)
+        protected void Read(NetIncomingMessage msg, float sendingTime, ref UInt32 lastReceivedID, Client sender = null)
         {
             UInt32 firstEventID = msg.ReadUInt32();
             int eventCount      = msg.ReadByte();
@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
                 {
                     DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Green);
                     lastReceivedID++;
-                    ReadEvent(msg, entity, sendingTime);
+                    ReadEvent(msg, entity, sendingTime, sender);
                 }
                 msg.ReadPadBits();
             }            
