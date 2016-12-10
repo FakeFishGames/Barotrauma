@@ -68,7 +68,7 @@ namespace Barotrauma
         }
     }
 
-    class Inventory
+    class Inventory : IServerSerializable, IClientSerializable
     {
         public static InventorySlot draggingSlot;
         public static Item draggingItem;
@@ -76,9 +76,7 @@ namespace Barotrauma
         public static Item doubleClickedItem;
 
         public readonly Entity Owner;
-
-        protected float lastUpdate;
-
+        
         private int slotsPerRow;
 
         public int SlotsPerRow
@@ -525,6 +523,95 @@ namespace Barotrauma
 
             item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.Color);
         }
-        
+
+        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        {
+            ServerWrite(msg, null);
+        }
+
+        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        {
+            List<Item> prevItems = new List<Item>(Items);
+            ushort[] newItemIDs = new ushort[capacity];
+
+            for (int i = 0; i < capacity; i++)
+            {
+                newItemIDs[i] = msg.ReadUInt16();
+            }
+
+            if (c == null || c.Character == null || !c.Character.CanAccessInventory(this))
+            {
+                return;
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (newItemIDs[i] == 0)
+                {
+                    if (Items[i] != null) Items[i].Drop();
+                }
+                else
+                {
+                    var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
+                    if (item == null) continue;
+
+                    if (GameMain.Server != null)
+                    {
+                        if (!c.Character.CanAccessItem(item)) continue;
+                    }
+                    TryPutItem(item, i, true);
+                }
+            }
+
+            foreach (Item item in Items)
+            {
+                if (item == null) continue;
+                if (!prevItems.Contains(item))
+                {
+                    GameServer.Log(c.Character + " placed " + item.Name + " in " + Owner, Color.Orange);
+                }
+            }
+            foreach (Item item in prevItems)
+            {
+                if (item == null) continue;
+                if (!Items.Contains(item))
+                {
+                    GameServer.Log(c.Character + " removed " + item.Name + " from " + Owner.ToString(), Color.Orange);
+                }
+            }
+        }
+
+        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                msg.Write((ushort)(Items[i] == null ? 0 : Items[i].ID));
+            }
+        }
+
+        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        {
+            ushort[] newItemIDs = new ushort[capacity];
+
+            for (int i = 0; i < capacity; i++)
+            {
+                newItemIDs[i] = msg.ReadUInt16();
+            }
+            
+            for (int i = 0; i < capacity; i++)
+            {
+                if (newItemIDs[i] == 0)
+                {
+                    if (Items[i] != null) Items[i].Drop();
+                }
+                else
+                {
+                    var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
+                    if (item == null) continue;
+
+                    TryPutItem(item, i, true);
+                }
+            }
+        }
     }
 }

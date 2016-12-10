@@ -733,10 +733,10 @@ namespace Barotrauma
 
             if (!MathUtils.IsValid(damage)) return;
 
-            //if (damage != sections[sectionIndex].damage && Math.Abs(sections[sectionIndex].lastSentDamage - damage) > 5.0f)
-            //{
-            //    sections[sectionIndex].lastSentDamage = damage;
-            //}
+            if (GameMain.Server != null && damage != sections[sectionIndex].damage)
+            {
+                GameMain.Server.CreateEntityEvent(this);
+            }
             
             if (damage < prefab.MaxHealth*0.5f)
             {
@@ -852,8 +852,6 @@ namespace Barotrauma
             for (int i = 0; i < sections.Length; i++)
             {
                 msg.WriteRangedSingle(sections[i].damage / Health, 0.0f, 1.0f, 8);
-
-                //sections[i].lastSentDamage = sections[i].damage;
             }
         }
 
