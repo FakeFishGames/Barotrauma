@@ -1194,6 +1194,13 @@ namespace Barotrauma
                 index++;
             }
 
+            //position with the same timestamp already in the buffer (duplicate packet?)
+            //  -> no need to add again
+            if (index < subBody.MemPos.Count && sendingTime == subBody.MemPos[index].Timestamp)
+            {
+                return;
+            }
+            
             subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, Direction.Right, sendingTime));
         }
     }
