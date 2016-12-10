@@ -724,7 +724,7 @@ namespace Barotrauma.Networking
                         }
                         else
                         {
-                            entity.ClientRead(inc, sendingTime);
+                            entity.ClientRead(objHeader, inc, sendingTime);
                         }
 
                         inc.ReadPadBits();
@@ -736,7 +736,7 @@ namespace Barotrauma.Networking
                         ChatMessage.ClientRead(inc);
                         break;
                     case ServerNetObject.ENTITY_SPAWN:
-                        Item.Spawner.ClientRead(inc, sendingTime);
+                        Item.Spawner.ClientRead(objHeader, inc, sendingTime);
                         inc.ReadPadBits();
                         break;
                     default:
