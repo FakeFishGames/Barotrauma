@@ -45,9 +45,9 @@ namespace Barotrauma
         }
 
 
-        public override bool TryPutItem(Item item, System.Collections.Generic.List<InvSlotType> allowedSlots = null)
+        public override bool TryPutItem(Item item, System.Collections.Generic.List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
-            bool wasPut = base.TryPutItem(item, allowedSlots);
+            bool wasPut = base.TryPutItem(item, allowedSlots, createNetworkEvent);
 
             if (wasPut)
             {
@@ -66,9 +66,9 @@ namespace Barotrauma
             return wasPut;
         }
 
-        public override bool TryPutItem(Item item, int i, bool allowSwapping)
+        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool createNetworkEvent = true)
         {
-            bool wasPut = base.TryPutItem(item, i, allowSwapping);
+            bool wasPut = base.TryPutItem(item, i, allowSwapping, createNetworkEvent);
 
             if (wasPut)
             {

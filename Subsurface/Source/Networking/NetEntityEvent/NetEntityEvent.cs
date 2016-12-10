@@ -9,6 +9,11 @@ namespace Barotrauma.Networking
 {
     abstract class NetEntityEvent
     {
+        public enum Type
+        {
+            Default, ComponentState, InventoryState
+        }
+
         public readonly Entity Entity;
         public readonly UInt32 ID;
 

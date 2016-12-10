@@ -638,7 +638,7 @@ namespace Barotrauma.Networking
                     case ClientNetObject.CHARACTER_INPUT:
                         if (c.Character != null && !c.Character.IsDead && !c.Character.IsUnconscious)
                         {
-                            c.Character.ServerRead(inc, c);
+                            c.Character.ServerRead(objHeader, inc, c);
                         }
                         break;
                     case ClientNetObject.ENTITY_STATE:

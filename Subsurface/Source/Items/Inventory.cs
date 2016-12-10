@@ -172,31 +172,31 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null)
+        public virtual bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
             int slot = FindAllowedSlot(item);
             if (slot < 0) return false;
 
-            PutItem(item, slot);
+            PutItem(item, slot, true, createNetworkEvent);
             return true;
         }
 
-        public virtual bool TryPutItem(Item item, int i, bool allowSwapping)
+        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool createNetworkEvent = true)
         {
             if (Owner == null) return false;
             if (CanBePut(item,i))
             {
-                PutItem(item, i);
+                PutItem(item, i, true, createNetworkEvent);
                 return true;
             }
             else
             {
-                if (slots != null) slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                if (slots != null && createNetworkEvent) slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
                 return false;
             }
         }
 
-        protected virtual void PutItem(Item item, int i, bool removeItem = true)
+        protected virtual void PutItem(Item item, int i, bool removeItem = true, bool createNetworkEvent = true)
         {
             if (Owner == null) return;
 
@@ -215,6 +215,23 @@ namespace Barotrauma
             {
                 item.body.Enabled = false;
             }
+
+            if (createNetworkEvent)
+            {
+                CreateNetworkEvent();
+            }
+        }
+
+        private void CreateNetworkEvent()
+        {
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState });
+            }
+            else if (GameMain.Client != null)
+            {
+                GameMain.Client.CreateEntityEvent(Owner as IClientSerializable, new object[] { NetEntityEvent.Type.InventoryState });
+            }
         }
 
         public Item FindItem(string itemName)
@@ -232,8 +249,9 @@ namespace Barotrauma
             for (int n = 0; n < capacity; n++)
             {
                 if (Items[n] != item) continue;
+                
                 Items[n] = null;
-                item.ParentInventory = null;
+                item.ParentInventory = null;                
             }
         }
 
@@ -285,10 +303,7 @@ namespace Barotrauma
             {
                 if (!PlayerInput.LeftButtonHeld())
                 {
-                    if (Owner != null)
-                    {
-                        
-                    }
+                    CreateNetworkEvent();
 
                     DropItem(draggingItem);
                 }
@@ -529,7 +544,7 @@ namespace Barotrauma
             ServerWrite(msg, null);
         }
 
-        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
             ushort[] newItemIDs = new ushort[capacity];
@@ -559,9 +574,11 @@ namespace Barotrauma
                     {
                         if (!c.Character.CanAccessItem(item)) continue;
                     }
-                    TryPutItem(item, i, true);
+                    TryPutItem(item, i, true, false);
                 }
             }
+
+            GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState });
 
             foreach (Item item in Items)
             {
@@ -589,7 +606,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             ushort[] newItemIDs = new ushort[capacity];
 
@@ -609,7 +626,7 @@ namespace Barotrauma
                     var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
                     if (item == null) continue;
 
-                    TryPutItem(item, i, true);
+                    TryPutItem(item, i, true, false);
                 }
             }
         }

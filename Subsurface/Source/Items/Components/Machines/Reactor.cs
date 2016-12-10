@@ -561,7 +561,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
         }
 
-        public void ServerRead(NetIncomingMessage msg, Client c)
+        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c)
         {
             bool autoTemp       = msg.ReadBoolean();
             float shutDownTemp  = msg.ReadRangedSingle(0.0f, 10000.0f, 8);
@@ -591,7 +591,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
         }
 
-        public void ClientRead(NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
         {
             Temperature = msg.ReadRangedSingle(0.0f, 10000.0f, 16);
 

@@ -486,7 +486,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             bool autoPilot              = msg.ReadBoolean();
             Vector2 newTargetVelocity   = targetVelocity;
@@ -569,7 +569,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             bool autoPilot              = msg.ReadBoolean();
             Vector2 newTargetVelocity   = targetVelocity;

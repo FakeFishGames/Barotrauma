@@ -65,7 +65,7 @@ namespace Barotrauma.Networking
                     break;
                 }
 
-                eventsToSync.Add(events[i]);
+                eventsToSync.Insert(0, events[i]);
             }
             if (eventsToSync.Count == 0) return;
 
@@ -96,7 +96,7 @@ namespace Barotrauma.Networking
             var serverEntity = entity as IServerSerializable;
             if (serverEntity == null) return;
 
-            serverEntity.ClientRead(buffer, sendingTime);
+            serverEntity.ClientRead(ServerNetObject.ENTITY_STATE, buffer, sendingTime);
         }
 
         public void Clear()

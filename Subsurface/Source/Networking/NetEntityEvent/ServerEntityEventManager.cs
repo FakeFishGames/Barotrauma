@@ -24,7 +24,7 @@ namespace Barotrauma.Networking
 
         public void CreateEvent(IServerSerializable entity, object[] extraData = null)
         {
-            if (!(entity is Entity))
+            if (entity == null || !(entity is Entity))
             {
                 DebugConsole.ThrowError("Can't create an entity event for " + entity + "!");
                 return;
@@ -91,7 +91,7 @@ namespace Barotrauma.Networking
             var clientEntity = entity as IClientSerializable;
             if (clientEntity == null) return;
 
-            clientEntity.ServerRead(buffer, sender);
+            clientEntity.ServerRead(ClientNetObject.ENTITY_STATE, buffer, sender);
         }
 
         public void Read(NetIncomingMessage msg, Client client)
