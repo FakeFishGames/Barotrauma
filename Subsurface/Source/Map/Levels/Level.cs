@@ -437,7 +437,7 @@ namespace Barotrauma
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
             
-            List<VertexPositionColor> bodyVertices;
+            List<VertexPositionTexture> bodyVertices;
             bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out bodyVertices);
 
             renderer.SetBodyVertices(bodyVertices.ToArray());
