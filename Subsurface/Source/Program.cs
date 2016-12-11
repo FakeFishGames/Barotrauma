@@ -53,6 +53,7 @@ namespace Barotrauma
                         else
                         {
                             CrashDump(game, "crashreport.txt", e);
+                            attemptRestart = false;
                         }
 
                     }
