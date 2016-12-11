@@ -156,6 +156,10 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        protected override void ShallowRemoveComponentSpecific()
+        {
+        }
         
         public override bool FillNetworkData(Networking.NetworkEventType type, Lidgren.Network.NetBuffer message)
         {

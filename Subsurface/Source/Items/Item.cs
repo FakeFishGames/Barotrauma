@@ -1996,6 +1996,10 @@ namespace Barotrauma
             return true;
         }
 
+        /// <summary>
+        /// Remove the item so that it doesn't appear to exist in the game world (stop sounds, remove bodies etc)
+        /// but don't reset anything that's required for cloning the item
+        /// </summary>
         public override void ShallowRemove()
         {
             base.ShallowRemove();
@@ -2004,7 +2008,7 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                ic.Remove();
+                ic.ShallowRemove();
             }
             ItemList.Remove(this);
 

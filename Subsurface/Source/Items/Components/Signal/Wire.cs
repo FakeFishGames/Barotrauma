@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
             
             IsActive = false;
         }
-        
+                
         public Connection OtherConnection(Connection connection)
         {
             if (connection == null) return null;
@@ -686,7 +686,20 @@ namespace Barotrauma.Items.Components
             }
 
             Drawable = nodes.Any();
+        }
 
+        protected override void ShallowRemoveComponentSpecific()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                if (connections[i] == null) continue;
+                int wireIndex = connections[i].FindWireIndex(item);
+
+                if (wireIndex > -1)
+                {
+                    connections[i].AddLink(wireIndex, null);
+                }
+            }
         }
 
         protected override void RemoveComponentSpecific()
