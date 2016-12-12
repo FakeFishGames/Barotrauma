@@ -508,44 +508,47 @@ namespace Barotrauma.Items.Components
             {
                 Wire selectedWire = ((Item)MapEntity.SelectedList[0]).GetComponent<Wire>();
 
-                Vector2 mousePos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (selectedWire.item.Submarine != null) mousePos -= (selectedWire.item.Submarine.Position + selectedWire.item.Submarine.HiddenSubPosition);
-
-                //left click while holding ctrl -> check if the cursor is on a wire section, 
-                //and add a new node if it is
-                if (PlayerInput.KeyDown(Keys.RightControl) || PlayerInput.KeyDown(Keys.LeftControl))
+                if (selectedWire != null)
                 {
-                    if (PlayerInput.LeftButtonClicked())
-                    {
-                        float temp = 0.0f;
-                        int closestSectionIndex = selectedWire.GetClosestSectionIndex(mousePos, sectionSelectDist, out temp);
+                    Vector2 mousePos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                    if (selectedWire.item.Submarine != null) mousePos -= (selectedWire.item.Submarine.Position + selectedWire.item.Submarine.HiddenSubPosition);
 
-                        if (closestSectionIndex > -1)
+                    //left click while holding ctrl -> check if the cursor is on a wire section, 
+                    //and add a new node if it is
+                    if (PlayerInput.KeyDown(Keys.RightControl) || PlayerInput.KeyDown(Keys.LeftControl))
+                    {
+                        if (PlayerInput.LeftButtonClicked())
                         {
-                            selectedWire.nodes.Insert(closestSectionIndex+1, mousePos);
-                            selectedWire.UpdateSections();
+                            float temp = 0.0f;
+                            int closestSectionIndex = selectedWire.GetClosestSectionIndex(mousePos, sectionSelectDist, out temp);
+
+                            if (closestSectionIndex > -1)
+                            {
+                                selectedWire.nodes.Insert(closestSectionIndex + 1, mousePos);
+                                selectedWire.UpdateSections();
+                            }
                         }
                     }
-                }
-                else 
-                {
-                    //check if close enough to a node
-                    float temp = 0.0f;                    
-                    int closestIndex = selectedWire.GetClosestNodeIndex(mousePos, nodeSelectDist, out temp);
-                    if (closestIndex > -1)
+                    else
                     {
-                        highlightedNodeIndex = closestIndex;
-                        //start dragging the node
-                        if (PlayerInput.LeftButtonHeld())
+                        //check if close enough to a node
+                        float temp = 0.0f;
+                        int closestIndex = selectedWire.GetClosestNodeIndex(mousePos, nodeSelectDist, out temp);
+                        if (closestIndex > -1)
                         {
-                            draggingWire = selectedWire;
-                            selectedNodeIndex = closestIndex;
-                        }
-                        //remove the node
-                        else if (PlayerInput.RightButtonClicked() && closestIndex > 0 && closestIndex < selectedWire.nodes.Count-1)
-                        {
-                            selectedWire.nodes.RemoveAt(closestIndex);
-                            selectedWire.UpdateSections();
+                            highlightedNodeIndex = closestIndex;
+                            //start dragging the node
+                            if (PlayerInput.LeftButtonHeld())
+                            {
+                                draggingWire = selectedWire;
+                                selectedNodeIndex = closestIndex;
+                            }
+                            //remove the node
+                            else if (PlayerInput.RightButtonClicked() && closestIndex > 0 && closestIndex < selectedWire.nodes.Count - 1)
+                            {
+                                selectedWire.nodes.RemoveAt(closestIndex);
+                                selectedWire.UpdateSections();
+                            }
                         }
                     }
                 }
