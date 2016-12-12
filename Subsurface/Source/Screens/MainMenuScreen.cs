@@ -92,30 +92,7 @@ namespace Barotrauma
             new GUITextBlock(new Rectangle(0, 0, 0, 30), "Selected submarine:", null, null, Alignment.Left, GUI.Style, menuTabs[(int)Tab.NewGame]);
             subList = new GUIListBox(new Rectangle(0, 30, 230, panelRect.Height-100), GUI.Style, menuTabs[(int)Tab.NewGame]);
 
-            var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
-
-            foreach (Submarine sub in subsToShow)
-            {
-                var textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width-65), GUI.Style,
-                    Alignment.Left, Alignment.Left, subList)
-                {
-                    Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
-                    ToolTip = sub.Description,
-                    UserData = sub
-                };
-
-                if (sub.HasTag(SubmarineTag.Shuttle))
-                {
-                    textBlock.TextColor = textBlock.TextColor * 0.85f;
-
-                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
-                    shuttleText.TextColor = textBlock.TextColor * 0.8f;
-                    shuttleText.ToolTip = textBlock.ToolTip;
-                }
-            }
-            if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
+            UpdateSubList();
 
             new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 0, 100, 20),
                 "Save name: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
@@ -218,8 +195,40 @@ namespace Barotrauma
 
             Submarine.Unload();
 
+            UpdateSubList();
+
             SelectTab(null, 0);
             //selectedTab = 0;
+        }
+
+        private void UpdateSubList()
+        {
+            var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
+
+            subList.ClearChildren();
+
+            foreach (Submarine sub in subsToShow)
+            {
+                var textBlock = new GUITextBlock(
+                    new Rectangle(0, 0, 0, 25),
+                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), GUI.Style,
+                    Alignment.Left, Alignment.Left, subList)
+                {
+                    Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
+                    ToolTip = sub.Description,
+                    UserData = sub
+                };
+
+                if (sub.HasTag(SubmarineTag.Shuttle))
+                {
+                    textBlock.TextColor = textBlock.TextColor * 0.85f;
+
+                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
+                    shuttleText.TextColor = textBlock.TextColor * 0.8f;
+                    shuttleText.ToolTip = textBlock.ToolTip;
+                }
+            }
+            if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
         }
         
         public bool SelectTab(GUIButton button, object obj)

@@ -95,6 +95,7 @@ namespace Barotrauma
                 if (isOpen)
                 {
                     textBox.Select();
+                    AddToGUIUpdateList();
                 }
                 else
                 {
@@ -427,6 +428,14 @@ namespace Barotrauma
                 case "mainmenuscreen":
                 case "mainmenu":
                 case "menu":
+                    GameMain.GameSession = null;
+
+                    List<Character> characters = new List<Character>(Character.CharacterList);
+                    foreach (Character c in characters)
+                    {
+                        c.Remove();
+                    }
+
                     GameMain.MainMenuScreen.Select();
                     break;
                 case "gamescreen":
