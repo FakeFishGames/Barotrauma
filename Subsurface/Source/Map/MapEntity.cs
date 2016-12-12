@@ -348,7 +348,7 @@ namespace Barotrauma
 
             if (selectedList.Contains(this))
             {
-                selectedList.Remove(this);
+                selectedList = selectedList.FindAll(e => e != this);
             }
 
             if (aiTarget != null) aiTarget.Remove();
