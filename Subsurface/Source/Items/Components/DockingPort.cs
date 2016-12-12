@@ -150,7 +150,8 @@ namespace Barotrauma.Items.Components
 
             if (target.item.Submarine == item.Submarine)
             {
-                DebugConsole.ThrowError("Error - tried to a submarine to itself");
+                DebugConsole.ThrowError("Error - tried to dock a submarine to itself");
+                dockingTarget = null;
                 return;
             }
 
@@ -493,6 +494,7 @@ namespace Barotrauma.Items.Components
                 if (!docked)
                 {
                     Dock(dockingTarget);
+                    if (dockingTarget == null) return;
                 }
 
                 if (joint is DistanceJoint)
