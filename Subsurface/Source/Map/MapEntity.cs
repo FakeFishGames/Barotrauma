@@ -346,6 +346,11 @@ namespace Barotrauma
 
             mapEntityList.Remove(this);
 
+            if (selectedList.Contains(this))
+            {
+                selectedList.Remove(this);
+            }
+
             if (aiTarget != null) aiTarget.Remove();
 
             if (linkedTo != null)
