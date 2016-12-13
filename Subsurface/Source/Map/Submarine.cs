@@ -288,6 +288,30 @@ namespace Barotrauma
             tags &= ~tag;
         }
 
+        /// <summary>
+        /// Returns a rect that contains the borders of this sub and all subs docked to it
+        /// </summary>
+        public Rectangle GetDockedBorders()
+        {
+            Rectangle dockedBorders = Borders;
+            dockedBorders.Y -= dockedBorders.Height;
+
+            foreach (Submarine dockedSub in DockedTo)
+            {
+                Vector2 diff = dockedSub.Submarine == this ? dockedSub.WorldPosition : dockedSub.WorldPosition - WorldPosition;
+                    
+
+                Rectangle dockedSubBorders = dockedSub.Borders;
+                dockedSubBorders.Y -= dockedSubBorders.Height;
+                dockedSubBorders.Location += diff.ToPoint();
+
+                dockedBorders = Rectangle.Union(dockedBorders, dockedSubBorders);
+            }
+
+            dockedBorders.Y += dockedBorders.Height;
+            return dockedBorders;
+        }
+        
         //drawing ----------------------------------------------------
 
         public static void CullEntities(Camera cam)
