@@ -692,6 +692,8 @@ namespace Barotrauma
 
             int iter = 0;
 
+            ruinPos.Y = Math.Min(borders.Y + borders.Height - ruinSize.Y/2, ruinPos.Y);
+
             while (mainPath.Any(p => Vector2.Distance(ruinPos, p.Center) < ruinRadius * 2.0f))
             {
                 Vector2 weighedPathPos = ruinPos;
@@ -711,6 +713,7 @@ namespace Barotrauma
                     //}
 
                     weighedPathPos += moveAmount;
+                    weighedPathPos.Y = Math.Min(borders.Y + borders.Height - ruinSize.Y / 2, weighedPathPos.Y);
                 }
 
                 ruinPos = weighedPathPos;
