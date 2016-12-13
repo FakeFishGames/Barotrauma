@@ -183,8 +183,12 @@ namespace Barotrauma
             float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
             GameMain.LightManager.AmbientLight = new Color(backgroundColor * (10.0f / avgValue), 1.0f);
 
-            float minWidth = Submarine.MainSub == null ? 0.0f : Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
-            minWidth = Math.Max(minWidth, 6500.0f);
+            float minWidth = 6500.0f;
+            if (Submarine.MainSub != null)
+            {
+                Rectangle dockedSubBorders = Submarine.MainSub.GetDockedBorders();
+                minWidth = Math.Max(minWidth, Math.Max(dockedSubBorders.Width, dockedSubBorders.Height));
+            }
 
             startPosition = new Vector2(
                 Rand.Range(minWidth, minWidth * 2, false),
