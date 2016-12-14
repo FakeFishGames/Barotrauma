@@ -247,7 +247,7 @@ namespace Barotrauma
 
             GameModePreset.Init();
 
-            Submarine.Preload();
+            Submarine.RefreshSavedSubs();
             TitleScreen.LoadState = 80.0f;
         yield return CoroutineStatus.Running;
 

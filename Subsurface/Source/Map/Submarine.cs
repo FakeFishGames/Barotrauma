@@ -896,11 +896,8 @@ namespace Barotrauma
             }
         }
 
-        public static void Preload()
+        public static void RefreshSavedSubs()
         {
-
-            //string[] mapFilePaths;
-            //Unload();
             SavedSubmarines.Clear();
 
             if (!Directory.Exists(SavePath))
