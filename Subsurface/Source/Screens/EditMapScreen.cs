@@ -31,6 +31,8 @@ namespace Barotrauma
         const int PreviouslyUsedCount = 10;
         private GUIListBox previouslyUsedList;
 
+        GUIDropDown linkedSubBox;
+
         //a Character used for picking up and manipulating items
         private Character dummyCharacter;
         
@@ -151,7 +153,7 @@ namespace Barotrauma
             var nameLabel = new GUITextBlock(new Rectangle(170, -4, 150, 20), "", GUI.Style, topPanel, GUI.LargeFont);
             nameLabel.TextGetter = GetSubName;
 
-            var linkedSubBox = new GUIDropDown(new Rectangle(750,0,200,20), "Add submarine", GUI.Style, topPanel);
+            linkedSubBox = new GUIDropDown(new Rectangle(750,0,200,20), "Add submarine", GUI.Style, topPanel);
             linkedSubBox.ToolTip = 
                 "Places another submarine into the current submarine file. "+
                 "Can be used for adding things such as smaller vessels, "+
@@ -319,6 +321,12 @@ namespace Barotrauma
                 Sounds.SoundManager.Pause(i);
             }
 
+            linkedSubBox.ClearChildren();
+            foreach (Submarine sub in Submarine.SavedSubmarines)
+            {
+                linkedSubBox.AddItem(sub.Name, sub);
+            }
+
             cam.UpdateTransform();
         }
 
@@ -397,6 +405,13 @@ namespace Barotrauma
             Submarine.MainSub.CheckForErrors();
 
             GUI.AddMessage("Submarine saved to " + Submarine.MainSub.FilePath, Color.Green, 3.0f);
+
+            Submarine.RefreshSavedSubs();
+            linkedSubBox.ClearChildren();
+            foreach (Submarine sub in Submarine.SavedSubmarines)
+            {
+                linkedSubBox.AddItem(sub.Name, sub);
+            }
 
             saveFrame = null;
             
@@ -489,7 +504,7 @@ namespace Barotrauma
 
         private bool CreateLoadScreen(GUIButton button, object obj)
         {
-            Submarine.Preload();
+            Submarine.RefreshSavedSubs();
 
             int width = 300, height = 400;
             loadFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style, null);
