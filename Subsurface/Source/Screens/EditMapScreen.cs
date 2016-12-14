@@ -194,7 +194,6 @@ namespace Barotrauma
                 GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), Alignment.TopRight, GUI.Style, GUItabs[i]);
                 searchBox.Font = GUI.SmallFont;
                 searchBox.OnTextChanged = FilterMessages;
-                GUIComponent.KeyboardDispatcher.Subscriber = searchBox;
 
                 var clearButton = new GUIButton(new Rectangle(0, 0, 15, 15), "x", Alignment.TopRight, GUI.Style, GUItabs[i]);
                 clearButton.OnClicked = ClearFilter;
@@ -601,9 +600,11 @@ namespace Barotrauma
         {
             selectedTab = (int)obj;
 
-            ClearFilter(GUItabs[selectedTab].GetChild<GUIButton>(), null);
-
-            GUIComponent.KeyboardDispatcher.Subscriber = GUItabs[selectedTab].GetChild<GUITextBox>();            
+            var searchBox = GUItabs[selectedTab].GetChild<GUITextBox>();  
+            ClearFilter(searchBox, null);
+            
+            searchBox.AddToGUIUpdateList();
+            searchBox.Select();
 
             return true;
         }

@@ -202,6 +202,10 @@ namespace Launcher2
                 }
             }
 
+            GUIComponent.ClearUpdateList();
+            guiRoot.AddToGUIUpdateList();
+            GUIComponent.UpdateMouseOn();
+
             guiRoot.Update(deltaTime);
         }
 
@@ -296,24 +300,30 @@ namespace Launcher2
         {
             updateInfoBox.ClearChildren();
 
-            //string wrappedText = ToolBox.WrapText(text, updateInfoBox.Rect.Width, GUI.SmallFont);
-
-            //int lineHeight = (int)GUI.SmallFont.MeasureString(" ").Y;
-
             string[] lines = text.Split('\n');
             foreach (string line in lines)
             {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
+                int indent = 10;
+                int heigth = 0;
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    if (line[0] == '-')
+                        indent = 20;
+                }
+                else
+                {
+                    heigth = 5;
+                }
+                
                 GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0,0,0,0), 
+                    new Rectangle(indent, 0, 0, heigth), 
                     line, GUI.Style, 
                     Alignment.TopLeft, Alignment.TopLeft, 
                     updateInfoBox, true, GUI.SmallFont);
+                textBlock.Padding = new Vector4(indent, 0, 0, 0);
+                textBlock.TextColor = indent > 10 ? Color.LightGray : Color.White;
                 textBlock.CanBeFocused = false;
             }
-
-
         }
 
         private bool CheckForUpdates()
@@ -410,7 +420,7 @@ namespace Launcher2
 
             if (currentVersion.CompareTo(latestVersion) >= 0)
             {
-                updateInfoText.Text =  "Game is up to date!";
+                updateInfoText.Text =  "Your game is up to date!";
                 return false;
             }
 
@@ -439,9 +449,14 @@ namespace Launcher2
                     string innerText = ToolBox.ElementInnerText(patchNote);
 
                     innerText = innerText.Replace("\r\n", "\n");
-                    sb.Append(innerText+"\n");
+                    innerText = innerText.Replace("\t", "");
+
+                    sb.AppendLine("================================");
+                    sb.AppendLine(patchNumber);
+                    sb.AppendLine("================================\n");
+
+                    sb.AppendLine(innerText);
                     
-                    sb.AppendLine("----------------------------\n");
                 }
 
                 SetUpdateInfoBox(sb.ToString());
@@ -577,7 +592,7 @@ namespace Launcher2
 
         private void Completed(object sender, AsyncCompletedEventArgs e)
         {
-            if (e.Error!=null)
+            if (e.Error != null)
             {
                 string errorMsg = "Error while downloading: " + e.Error;
 
