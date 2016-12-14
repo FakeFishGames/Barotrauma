@@ -672,6 +672,8 @@ namespace Barotrauma
             {
                 me.IsHighlighted = false;
             }
+
+            MapEntity.DeselectAll();
             
             return true;
         }
@@ -686,7 +688,6 @@ namespace Barotrauma
             wiringMode = !wiringMode;
 
             characterMode = false;
-
 
             if (wiringMode)
             {
@@ -704,6 +705,8 @@ namespace Barotrauma
             {
                 RemoveDummyCharacter();
             }
+
+            MapEntity.DeselectAll();
             
             return true;
         }
@@ -944,7 +947,7 @@ namespace Barotrauma
                         me.IsHighlighted = false;
                     }
 
-                    if (wiringMode)
+                    if (wiringMode && dummyCharacter.SelectedConstruction==null)
                     {
                         List<Wire> wires = new List<Wire>();
                         foreach (Item item in Item.ItemList)
