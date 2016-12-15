@@ -3,6 +3,8 @@
 
   <sound file="Content/Characters/Fractalguardian/guardian1.ogg" state="Attack" range="3000" />
   <sound file="Content/Characters/Fractalguardian/guardian2.ogg" state="Attack" range="3000" />
+  <sound file="Content/Characters/Fractalguardian/Die1.ogg" state="Die" range="3000" />
+  <sound file="Content/Characters/Fractalguardian/Die2.ogg" state="Die" range="3000" />
   
   <ragdoll waveamplitude="50.0" wavelength="500" swimspeed="3.0" walkspeed="0.3" flip="false" canentersubmarine="false">
 

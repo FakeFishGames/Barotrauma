@@ -57,7 +57,15 @@ namespace Barotrauma
             }
             else
             {
-                PlaySound((aiController == null) ? AIController.AiState.None : aiController.State);
+                switch (aiController.State)
+                {
+                    case AIController.AiState.Attack:
+                        PlaySound(CharacterSound.SoundType.Attack);
+                        break;
+                    default:
+                        PlaySound(CharacterSound.SoundType.Idle);
+                        break;
+                }
                 soundTimer = soundInterval;
             }
 

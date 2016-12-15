@@ -1,12 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="mantis" humanoid="false" health="200" doesbleed="false">
 
-  <sound file="Content/Characters/Crawler/attack1.ogg" state="Attack" range="500"/>
-  <sound file="Content/Characters/Crawler/attack2.ogg" state="Attack" range="500"/>
+  <sound file="Content/Characters/Mantis/attack1.ogg" state="Attack" range="500"/>
+  <sound file="Content/Characters/Mantis/attack2.ogg" state="Attack" range="500"/>
 
-  <sound file="Content/Characters/Crawler/idle1.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
-
+  <sound file="Content/Characters/Mantis/idle1.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Mantis/idle2.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Mantis/idle3.ogg" state="None" range="500"/>
+  
   <ragdoll headposition="120" headangle="-90" 
            waveamplitude="50.0" wavelength="2500" 
            swimspeed="2.0" walkspeed="3.0"

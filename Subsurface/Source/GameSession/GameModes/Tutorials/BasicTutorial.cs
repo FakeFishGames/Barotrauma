@@ -293,7 +293,7 @@ namespace Barotrauma.Tutorials
                 "Content/Characters/Moloch/moloch.xml", 
                 steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f));
 
-            moloch.PlaySound(AIController.AiState.Attack);
+            moloch.PlaySound(CharacterSound.SoundType.Attack);
 
             yield return new WaitForSeconds(1.0f);
 

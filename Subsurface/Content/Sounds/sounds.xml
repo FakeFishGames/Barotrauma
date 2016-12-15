@@ -32,14 +32,35 @@
   <damagesound file="Content/Sounds/Damage/HitArmor2.ogg" damagerange="5.0,80.0" damagesoundtype="LimbArmor"/>
   <damagesound file="Content/Sounds/Damage/HitArmor3.ogg" damagerange="40.0,100.0" damagesoundtype="LimbArmor"/>
 
-  <damagesound file="Content/Sounds/Damage/implode.ogg" damagerange="0.0,100.0" damagesoundtype="Implode"/>
-
   <damagesound file="Content/Sounds/Damage/creak1.ogg" damagesoundtype="Pressure"/>
   <damagesound file="Content/Sounds/Damage/creak2.ogg" damagesoundtype="Pressure"/>
   <damagesound file="Content/Sounds/Damage/creak3.ogg" damagesoundtype="Pressure"/>
   <damagesound file="Content/Sounds/Damage/creak4.ogg" damagesoundtype="Pressure"/>
   <damagesound file="Content/Sounds/Damage/creak5.ogg" damagesoundtype="Pressure"/>
-  
+
+  <implode file="Content/Sounds/Damage/implode.ogg"/>
+  <drown file="Content/Sounds/Water/Drown1.ogg"/>
+  <drown file="Content/Sounds/Water/Drown2.ogg"/>
+  <drown file="Content/Sounds/Water/Drown3.ogg"/>
+  <drown file="Content/Sounds/Water/Drown4.ogg"/>
+
+  <ambient file="Content/Sounds/Ambient/Ambient1.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient2.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient3.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient4.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient5.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient6.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient7.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient8.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient9.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient10.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient11.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient12.ogg"/>
+  <ambient file="Content/Sounds/Ambient/Ambient13.ogg"/>
+  <ambient file="Content/Sounds/Ambient/DistantPod1.ogg"/>
+  <ambient file="Content/Sounds/Ambient/DistantPod2.ogg"/>
+  <ambient file="Content/Sounds/Ambient/DistantPod3.ogg"/>
+  <ambient file="Content/Sounds/Ambient/GlacialMovement.ogg"/>
 
   <music file="Content/Sounds/Music/Simplex.ogg" type="default"/>
   <music file="Content/Sounds/Music/Tenebrous Brothers Carnival - Prelude.ogg" type="default"/>
