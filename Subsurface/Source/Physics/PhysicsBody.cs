@@ -425,6 +425,8 @@ namespace Barotrauma
 
             UpdateDrawPosition();
 
+            if (sprite == null) return;
+
             SpriteEffects spriteEffect = (dir == 1.0f) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             if (GameMain.DebugDraw && !body.Awake)
