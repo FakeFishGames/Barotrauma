@@ -85,7 +85,7 @@ namespace Barotrauma
             texturePaths = new List<string>();
             foreach (Limb limb in editingCharacter.AnimController.Limbs)
             {
-                if (texturePaths.Contains(limb.sprite.FilePath)) continue;
+                if (limb.sprite==null || texturePaths.Contains(limb.sprite.FilePath)) continue;
                 textures.Add(limb.sprite.Texture);
                 texturePaths.Add(limb.sprite.FilePath);
             }
@@ -160,7 +160,7 @@ namespace Barotrauma
 
                 foreach (Limb limb in editingCharacter.AnimController.Limbs)
                 {
-                    if (limb.sprite.FilePath != texturePaths[i]) continue;
+                    if (limb.sprite == null || limb.sprite.FilePath != texturePaths[i]) continue;
                     Rectangle rect = limb.sprite.SourceRect;
                     rect.X += x;
                     rect.Y += y;

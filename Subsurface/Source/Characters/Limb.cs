@@ -423,7 +423,6 @@ namespace Barotrauma
             if (LightSource != null)
             {
                 LightSource.ParentSub = body.Submarine;
-                LightSource.Position = Position;
             }
 
             if (!character.IsDead) damage = Math.Max(0.0f, damage-deltaTime*0.1f);
@@ -504,6 +503,12 @@ namespace Barotrauma
                 body.UpdateDrawPosition();
             }
 
+            if (LightSource != null)
+            {
+                LightSource.Position = body.DrawPosition;
+                LightSource.Rotation = body.DrawRotation;
+            }
+
             foreach (WearableSprite wearable in wearingItems)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
@@ -528,29 +533,27 @@ namespace Barotrauma
                     -body.DrawRotation,
                     scale, spriteEffect, depth);
             }
-            
-            if (damage>0.0f && damagedSprite!=null && !hideLimb)
+
+            if (damage > 0.0f && damagedSprite != null && !hideLimb)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-                
+
                 float depth = sprite.Depth - 0.0000015f;
-                
+
                 damagedSprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color*Math.Min(damage/50.0f,1.0f), sprite.Origin,
+                    color * Math.Min(damage / 50.0f, 1.0f), sprite.Origin,
                     -body.DrawRotation,
                     1.0f, spriteEffect, depth);
             }
-            
+
             if (!GameMain.DebugDraw) return;
 
-            if (pullJoint!=null)
+            if (pullJoint != null)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
-            }
-
-           
+            }           
         }
         
 
