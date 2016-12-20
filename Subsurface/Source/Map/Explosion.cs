@@ -142,11 +142,12 @@ namespace Barotrauma
             }
         }
 
-        public static void RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
+        /// <summary>
+        /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
+        /// </summary>
+        public static Dictionary<Structure,float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
         {
-            List<Structure> structureList = new List<Structure>();
-
-
+            List<Structure> structureList = new List<Structure>();            
             float dist = 600.0f;
             foreach (MapEntity entity in MapEntity.mapEntityList)
             {
@@ -161,14 +162,28 @@ namespace Barotrauma
                 }
             }
 
+            Dictionary<Structure, float> damagedStructures = new Dictionary<Structure, float>();
             foreach (Structure structure in structureList)
             {
                 for (int i = 0; i < structure.SectionCount; i++)
                 {
                     float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i, true), worldPosition) / worldRange);
-                    if (distFactor > 0.0f) structure.AddDamage(i, damage * distFactor);
-                }
+                    if (distFactor <= 0.0f) continue;
+                    
+                    structure.AddDamage(i, damage * distFactor);
+
+                    if (damagedStructures.ContainsKey(structure))
+                    { 
+                        damagedStructures[structure] += damage * distFactor;
+                    }
+                    else
+                    {
+                        damagedStructures.Add(structure, damage * distFactor);
+                    }
+                }                
             }
+
+            return damagedStructures;
         }
     }
 }
