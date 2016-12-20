@@ -119,15 +119,21 @@ namespace Barotrauma
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
+                    
+                    //calculate distance from the "outer surface" of the physics body
+                    //doesn't take the rotation of the limb into account, but should be accurate enough for this purpose
+                    float limbRadius = Math.Max(Math.Max(limb.body.width * 0.5f, limb.body.height * 0.5f), limb.body.radius);
+                    dist = Math.Max(0.0f, dist - FarseerPhysics.ConvertUnits.ToDisplayUnits(limbRadius));
 
                     if (dist > range) continue;
 
                     float distFactor = 1.0f - dist / range;
 
-                    if (limb.WorldPosition == worldPosition) continue;
-
                     c.AddDamage(limb.WorldPosition, DamageType.None,
                         damage / c.AnimController.Limbs.Length * distFactor, 0.0f, stun * distFactor, false);
+
+                    if (limb.WorldPosition == worldPosition) continue;
+
                     if (force > 0.0f)
                     {
                         limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.WorldPosition - worldPosition) * distFactor * force);
