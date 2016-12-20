@@ -233,6 +233,37 @@ namespace Barotrauma
                 new Vector2(rect.Right, rect.Y - rect.Height));
         }
 
+        public static List<Vector2> GetLineRectangleIntersections(Vector2 a1, Vector2 a2, Rectangle rect)
+        {
+            List<Vector2> intersections = new List<Vector2>();
+
+            Vector2? intersection = GetLineIntersection(a1, a2,
+                new Vector2(rect.X, rect.Y),
+                new Vector2(rect.Right, rect.Y));
+
+            if (intersection != null) intersections.Add((Vector2)intersection);
+
+            intersection = GetLineIntersection(a1, a2,
+                new Vector2(rect.X, rect.Y - rect.Height),
+                new Vector2(rect.Right, rect.Y - rect.Height));
+
+            if (intersection != null) intersections.Add((Vector2)intersection);
+
+            intersection = GetLineIntersection(a1, a2,
+                new Vector2(rect.X, rect.Y),
+                new Vector2(rect.X, rect.Y - rect.Height));
+
+            if (intersection != null) intersections.Add((Vector2)intersection);
+
+            intersection = GetLineIntersection(a1, a2,
+                new Vector2(rect.Right, rect.Y),
+                new Vector2(rect.Right, rect.Y - rect.Height));
+
+            if (intersection != null) intersections.Add((Vector2)intersection);
+
+            return intersections;
+        }
+
         public static float LineToPointDistance(Vector2 lineA, Vector2 lineB, Vector2 point)
         {
             float xDiff = lineB.X - lineA.X;
