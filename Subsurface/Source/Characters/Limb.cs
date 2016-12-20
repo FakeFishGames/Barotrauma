@@ -559,8 +559,11 @@ namespace Barotrauma
 
         public void Remove()
         {
-            sprite.Remove();
-            sprite = null;
+            if (sprite != null)
+            {
+                sprite.Remove();
+                sprite = null;
+            }
 
             if (LightSource != null)
             {
