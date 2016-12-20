@@ -28,11 +28,15 @@ namespace Barotrauma
 
         public readonly Sound sound;
 
-        public DamageSound(Sound sound, Vector2 damageRange, DamageSoundType damageType)
+        public readonly string requiredTag;
+
+        public DamageSound(Sound sound, Vector2 damageRange, DamageSoundType damageType, string requiredTag = "")
         {
             this.sound = sound;
             this.damageRange = damageRange;
             this.damageType = damageType;
+
+            this.requiredTag = requiredTag;
         }
     }
 
@@ -154,10 +158,13 @@ namespace Barotrauma
                         if (damageSound == null) continue;
                     
                         DamageSoundType damageSoundType = DamageSoundType.None;
-
                         Enum.TryParse<DamageSoundType>(ToolBox.GetAttributeString(subElement, "damagesoundtype", "None"), false, out damageSoundType);
+
                         damageSounds.Add(new DamageSound(
-                            damageSound, ToolBox.GetAttributeVector2(subElement, "damagerange", new Vector2(0.0f, 100.0f)), damageSoundType));
+                            damageSound, 
+                            ToolBox.GetAttributeVector2(subElement, "damagerange", new Vector2(0.0f, 100.0f)), 
+                            damageSoundType, 
+                            ToolBox.GetAttributeString(subElement, "requiredtag", "")));
 
                         break;
                     default:
@@ -390,10 +397,15 @@ namespace Barotrauma
             PlayDamageSound(damageType, damage, bodyPosition, 800.0f);
         }
 
-        public static void PlayDamageSound(DamageSoundType damageType, float damage, Vector2 position, float range = 2000.0f)
+        public static void PlayDamageSound(DamageSoundType damageType, float damage, Vector2 position, float range = 2000.0f, List<string> tags = null)
         {
             damage = MathHelper.Clamp(damage+Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
-            var sounds = damageSounds.Where(x => damage >= x.damageRange.X && damage <= x.damageRange.Y && x.damageType == damageType).ToList();
+            var sounds = damageSounds.FindAll(s => 
+                damage >= s.damageRange.X && 
+                damage <= s.damageRange.Y && 
+                s.damageType == damageType &&
+                (string.IsNullOrEmpty(s.requiredTag) || (tags != null && tags.Contains(s.requiredTag))));
+
             if (!sounds.Any()) return;
 
             int selectedSound = Rand.Int(sounds.Count);

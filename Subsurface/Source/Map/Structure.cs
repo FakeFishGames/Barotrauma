@@ -151,6 +151,11 @@ namespace Barotrauma
             }
         }
 
+        public List<string> Tags
+        {
+            get { return prefab.tags; }
+        }
+
         public override Rectangle Rect
         {
             get
