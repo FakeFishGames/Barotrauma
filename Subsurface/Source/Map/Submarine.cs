@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Voronoi2;
 
 namespace Barotrauma
 {
@@ -310,6 +311,67 @@ namespace Barotrauma
 
             dockedBorders.Y += dockedBorders.Height;
             return dockedBorders;
+        }
+
+        public Vector2 FindSpawnPos(Vector2 spawnPos)
+        {
+            Rectangle dockedBorders = GetDockedBorders();
+            
+            int iterations = 0;
+            bool wallTooClose = false;
+            do
+            {
+                Rectangle worldBorders = new Rectangle(
+                    dockedBorders.X + (int)spawnPos.X,
+                    dockedBorders.Y + (int)spawnPos.Y, 
+                    dockedBorders.Width, 
+                    dockedBorders.Height);
+
+                wallTooClose = false;
+
+                var nearbyCells = Level.Loaded.GetCells(
+                    spawnPos, (int)Math.Ceiling(Math.Max(dockedBorders.Width, dockedBorders.Height) / (float)Level.GridCellSize));
+
+                foreach (VoronoiCell cell in nearbyCells)
+                {
+                    if (cell.CellType == CellType.Empty) continue;
+
+                    foreach (GraphEdge e in cell.edges)
+                    {
+                        List<Vector2> intersections = MathUtils.GetLineRectangleIntersections(e.point1, e.point2, worldBorders);
+                        foreach (Vector2 intersection in intersections)
+                        {
+                            wallTooClose = true;
+
+                            if (intersection.X < spawnPos.X)
+                            {
+                                spawnPos.X += intersection.X - worldBorders.X;
+                            }
+                            else
+                            {
+                                spawnPos.X += intersection.X - worldBorders.Right;
+                            }
+
+                            if (intersection.Y < spawnPos.Y)
+                            {
+                                spawnPos.Y += intersection.Y - (worldBorders.Y - worldBorders.Height);
+                            }
+                            else
+                            {
+                                spawnPos.Y += intersection.Y - worldBorders.Y;
+                            }
+
+                            spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2);
+                        }
+                    }
+                }
+
+                iterations++;
+            } while (wallTooClose && iterations < 10);
+
+            return spawnPos;
+
+        
         }
         
         //drawing ----------------------------------------------------
