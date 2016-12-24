@@ -35,7 +35,7 @@ namespace Barotrauma
 
         public readonly PhysicsBody Body;
 
-        List<PosInfo> memPos = new List<PosInfo>();
+        private List<PosInfo> memPos = new List<PosInfo>();
 
         public Rectangle Borders
         {
@@ -186,22 +186,7 @@ namespace Barotrauma
         {
             if (GameMain.Client != null)
             {
-                //if (memPos.Count > 1 && Vector2.Distance(memPos[1].Position, Body.SimPosition) > 5.0f)
-                //{
-                //    Vector2 moveAmount = ConvertUnits.ToDisplayUnits(memPos[1].Position - Body.SimPosition);
-                    
-                //    ForceTranslate(moveAmount);
-                //    DisplaceCharacters(moveAmount);
-
-                //    foreach (Submarine sub in submarine.DockedTo)
-                //    {
-                //        sub.SubBody.ForceTranslate(moveAmount);
-                //        sub.SubBody.DisplaceCharacters(moveAmount);
-                //    }
-
-                //    memPos.RemoveRange(0, 2);
-                //}
-                //else
+                if (memPos.Count == 0) return;
                 
                 Vector2 newVelocity = Body.LinearVelocity;
                 Vector2 newPosition = Body.SimPosition;
@@ -212,10 +197,17 @@ namespace Barotrauma
                 List<Submarine> subsToMove = new List<Submarine>() { this.submarine };
                 subsToMove.AddRange(submarine.DockedTo);
 
+                foreach (Submarine dockedSub in submarine.DockedTo)
+                {
+                    //clear the position buffer of the docked sub to prevent unnecessary position corrections
+                    dockedSub.SubBody.memPos.Clear();
+                    subsToMove.Add(dockedSub);
+                }
+
                 Submarine closestSub = null;
                 if (Character.Controlled == null)
                 {
-                    closestSub= Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+                    closestSub = Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter);
                 }
                 else
                 {

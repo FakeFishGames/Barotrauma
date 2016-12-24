@@ -1356,6 +1356,11 @@ namespace Barotrauma
             return Vector2.Distance(WorldPosition, worldPosition) < PickDistance;
         }
 
+        public bool CanClientAccess(Client c)
+        {
+            return c != null && c.Character != null && c.Character.CanAccessItem(this);
+        }
+
         public bool Pick(Character picker, bool ignoreRequiredItems=false, bool forceSelectKey=false, bool forceActionKey=false)
         {
             bool hasRequiredSkills = true;
@@ -1633,36 +1638,78 @@ namespace Barotrauma
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
         {
-            if (extraData == null) return;
+            if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
+            {
+                return;
+            }
+            else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.ComponentState)
+            {
+                msg.Write(true);
 
-            int componentIndex = (int)extraData[0];
-            msg.Write((byte)componentIndex);
+                int componentIndex = (int)extraData[1];
+                msg.Write((byte)componentIndex);
 
-            (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
+                (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
+            }
+            else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
+            {
+                msg.Write(false);
+
+                ownInventory.ServerWrite(msg, c, extraData);
+            }
         }
 
-        public void ClientRead(NetIncomingMessage msg, float sendingTime) 
+        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime) 
         {
-            int componentIndex = msg.ReadByte();
+            bool isComponentUpdate = msg.ReadBoolean();
 
-            (components[componentIndex] as IServerSerializable).ClientRead(msg, sendingTime);
+            if (isComponentUpdate)
+            {
+                int componentIndex = msg.ReadByte();
+                (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
+            }
+            else
+            {
+                ownInventory.ClientRead(type, msg, sendingTime);
+            }
         }
 
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
-            if (extraData == null) return;
+            if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
+            {
+                return;
+            }
+            else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.ComponentState)
+            {
+                msg.Write(true);
 
-            int componentIndex = (int)extraData[0];
-            msg.Write((byte)componentIndex);
+                int componentIndex = (int)extraData[1];
+                msg.Write((byte)componentIndex);
 
-            (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
+                (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
+            }
+            else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
+            {
+                msg.Write(false);
+
+                ownInventory.ClientWrite(msg, extraData);
+            }
         }
 
-        public void ServerRead(NetIncomingMessage msg, Client c) 
+        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c) 
         {
-            int componentIndex = msg.ReadByte();
-            
-            (components[componentIndex] as IClientSerializable).ServerRead(msg, c);
+            bool isComponentUpdate = msg.ReadBoolean();
+
+            if (isComponentUpdate)
+            {
+                int componentIndex = msg.ReadByte();
+                (components[componentIndex] as IClientSerializable).ServerRead(type, msg, c);
+            }
+            else
+            {
+                ownInventory.ServerRead(type, msg, c);
+            }
         }
 
         public void WriteSpawnData(NetBuffer msg)
@@ -1768,11 +1815,11 @@ namespace Barotrauma
             if (inventory != null)
             {
                 if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
-                    inventory.TryPutItem(item, inventorySlotIndex, false))
+                    inventory.TryPutItem(item, inventorySlotIndex, false, false))
                 {
                     return null;
                 }
-                inventory.TryPutItem(item, item.AllowedSlots);
+                inventory.TryPutItem(item, item.AllowedSlots, false);
             }
 
             return item;
@@ -1891,7 +1938,7 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
 
             int index = components.IndexOf(ic);
-            GameMain.Server.CreateEntityEvent(this, new object[] { index });
+            GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
 
         public void CreateClientEvent<T>(T ic) where T : ItemComponent, IClientSerializable
@@ -1899,7 +1946,7 @@ namespace Barotrauma
             if (GameMain.Client == null) return;
             
             int index = components.IndexOf(ic);
-            GameMain.Client.CreateEntityEvent(this, new object[] { index });
+            GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
 
         public override void ShallowRemove()

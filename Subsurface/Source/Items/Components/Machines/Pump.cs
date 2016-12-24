@@ -234,10 +234,15 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
-            FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
-            IsActive = msg.ReadBoolean();
+            float flowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
+            bool isActive        = msg.ReadBoolean();
+
+            if (!item.CanClientAccess(c)) return;       
+
+            FlowPercentage  = flowPercentage;
+            IsActive        = isActive;
         }
 
         public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
@@ -247,7 +252,7 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             IsActive = msg.ReadBoolean();

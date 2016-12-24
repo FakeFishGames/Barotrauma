@@ -843,7 +843,7 @@ namespace Barotrauma
             lastSentOxygen = OxygenPercentage;
         }
 
-        public void ClientRead(NetIncomingMessage message, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetIncomingMessage message, float sendingTime)
         {
             Volume = message.ReadRangedSingle(0.0f, 1.5f, 8) * FullVolume;
             OxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);

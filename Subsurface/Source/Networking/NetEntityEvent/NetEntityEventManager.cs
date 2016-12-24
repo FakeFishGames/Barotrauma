@@ -52,7 +52,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received
         /// </summary>
-        protected void Read(NetIncomingMessage msg, float sendingTime, ref UInt32 lastReceivedID)
+        protected void Read(NetIncomingMessage msg, float sendingTime, ref UInt32 lastReceivedID, Client sender = null)
         {
             UInt32 firstEventID = msg.ReadUInt32();
             int eventCount      = msg.ReadByte();
@@ -68,14 +68,34 @@ namespace Barotrauma.Networking
                 //skip the event if we've already received it or if the entity isn't found
                 if (thisEventID != lastReceivedID + 1 || entity == null)
                 {
-                    DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Red);
+                    if (thisEventID != lastReceivedID + 1)
+                    {
+                        DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Red);
+                    }
+                    else if (entity == null)
+                    {
+                        DebugConsole.NewMessage("received msg " + thisEventID+", entity "+entityID+" not found", Microsoft.Xna.Framework.Color.Red);
+                    }
                     msg.Position += msgLength * 8; 
                 }
                 else
                 {
+                    long msgPosition = msg.Position;
+
                     DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Green);
                     lastReceivedID++;
-                    ReadEvent(msg, entity, sendingTime);
+                    try
+                    {
+                        ReadEvent(msg, entity, sendingTime, sender);
+                    }
+
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError("Failed to read event for entity \""+entity.ToString()+"\"!", e);
+#endif
+                        msg.Position = msgPosition + msgLength * 8;
+                    }
                 }
                 msg.ReadPadBits();
             }            

@@ -59,12 +59,13 @@ namespace Barotrauma.Networking
                 float lastSent = 0;
                 eventLastSent.TryGetValue(events[i].ID, out lastSent);
 
-                if (lastSent > NetTime.Now - serverConnection.AverageRoundtripTime)
+                //wait for 1.5f * roundtriptime until resending
+                if (lastSent > NetTime.Now - serverConnection.AverageRoundtripTime * 1.5f)
                 {
                     break;
                 }
 
-                eventsToSync.Add(events[i]);
+                eventsToSync.Insert(0, events[i]);
             }
             if (eventsToSync.Count == 0) return;
 
@@ -95,7 +96,7 @@ namespace Barotrauma.Networking
             var serverEntity = entity as IServerSerializable;
             if (serverEntity == null) return;
 
-            serverEntity.ClientRead(buffer, sendingTime);
+            serverEntity.ClientRead(ServerNetObject.ENTITY_STATE, buffer, sendingTime);
         }
 
         public void Clear()
