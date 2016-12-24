@@ -511,10 +511,18 @@ namespace Barotrauma
                 float speedMultiplier = 0.9f + (float)Math.Pow((positionBuffer.Count - 2) / 5.0f, 2.0f);
 
                 netInterpolationState += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
-                newPosition = Vector2.Lerp(prev.Position, next.Position, netInterpolationState);
 
-                //override the targetMovement to make the character play the walking/running animation
-                newVelocity = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
+                newPosition = Vector2.Lerp(prev.Position, next.Position, Math.Min(netInterpolationState, 1.0f));
+
+                if (next.Timestamp == prev.Timestamp)
+                {
+                    newVelocity = Vector2.Zero;
+                }
+                else
+                {
+                    //override the targetMovement to make the character play the walking/running animation
+                    newVelocity = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
+                }
             }
             else
             {

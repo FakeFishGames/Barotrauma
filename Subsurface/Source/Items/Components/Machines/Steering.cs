@@ -486,37 +486,57 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
-            AutoPilot = msg.ReadBoolean();
+            bool autoPilot              = msg.ReadBoolean();
+            Vector2 newTargetVelocity   = targetVelocity;
+            bool maintainPos            = false;
+            Vector2? newPosToMaintain   = null;
+            bool headingToStart         = false;
 
-            if (!AutoPilot)
+            if (autoPilot)
             {
-                targetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-            }
-            else
-            {
-                bool maintainPos = msg.ReadBoolean();
-                if (posToMaintain == null && maintainPos)
+                maintainPos = msg.ReadBoolean();
+                if (maintainPos)
                 {
-                    posToMaintain = item.Submarine.WorldPosition;
-                    maintainPosTickBox.Selected = true;
+                    newPosToMaintain = new Vector2(
+                        msg.ReadFloat(), 
+                        msg.ReadFloat());
                 }
                 else
                 {
-                    posToMaintain = null;
-                    maintainPosTickBox.Selected = false;
-                    bool maintainPoss = msg.ReadBoolean();
-                    if (maintainPoss)
-                    {
-                        Vector2 newPosToMaintain = new Vector2(
-                            msg.ReadFloat(), 
-                            msg.ReadFloat());
-                    }
-                    else
-                    {
-                        bool headingToStart = msg.ReadBoolean();
-                    }
+                    headingToStart = msg.ReadBoolean();
+                }
+            }
+            else
+            {
+                newTargetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+            }
+
+            if (!item.CanClientAccess(c)) return; 
+
+            AutoPilot = autoPilot;
+
+            if (!AutoPilot)
+            {
+                targetVelocity = newTargetVelocity;
+            }
+            else
+            {
+
+                maintainPosTickBox.Selected = newPosToMaintain != null;
+                posToMaintain = newPosToMaintain;
+
+                if (posToMaintain == null)
+                {
+                    levelStartTickBox.Selected = headingToStart;
+                    levelEndTickBox.Selected = !headingToStart;
+                    UpdatePath();
+                }
+                else
+                {
+                    levelStartTickBox.Selected = false;
+                    levelEndTickBox.Selected = false;
                 }
             }
 
@@ -542,47 +562,64 @@ namespace Barotrauma.Items.Components
                     msg.Write(((Vector2)posToMaintain).X);
                     msg.Write(((Vector2)posToMaintain).Y);
                 }
+                else
+                {
+                    msg.Write(levelStartTickBox.Selected);
+                }
             }
         }
 
-        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
-            AutoPilot = msg.ReadBoolean();
+            bool autoPilot              = msg.ReadBoolean();
+            Vector2 newTargetVelocity   = targetVelocity;
+            bool maintainPos            = false;
+            Vector2? newPosToMaintain   = null;
+            bool headingToStart         = false;
 
-            if (!AutoPilot)
+            if (autoPilot)
             {
-                targetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-            }
-            else
-            {
-                bool maintainPos = msg.ReadBoolean();
+                maintainPos = msg.ReadBoolean();
                 if (maintainPos)
                 {
-                    posToMaintain = new Vector2(msg.ReadSingle(), msg.ReadSingle());
-                    maintainPosTickBox.Selected = true;
+                    newPosToMaintain = new Vector2(
+                        msg.ReadFloat(),
+                        msg.ReadFloat());
                 }
                 else
                 {
-                    posToMaintain = null;
-                    maintainPosTickBox.Selected = false;
+                    headingToStart = msg.ReadBoolean();
                 }
-            }
-            maintainPosTickBox.Selected = posToMaintain != null;
-            //posToMaintain = newPosToMaintain;
-
-            if (posToMaintain == null && autoPilot)
-            {
-                levelStartTickBox.Selected = false;//headingToStart;
-                levelEndTickBox.Selected = true;//!headingToStart;
-
-                UpdatePath();
             }
             else
             {
-                levelStartTickBox.Selected = false;
-                levelEndTickBox.Selected = false;
+                newTargetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
             }
 
+            AutoPilot = autoPilot;
+
+            if (!AutoPilot)
+            {
+                targetVelocity = newTargetVelocity;
+            }
+            else
+            {
+
+                maintainPosTickBox.Selected = newPosToMaintain != null;
+                posToMaintain = newPosToMaintain;
+
+                if (posToMaintain == null)
+                {
+                    levelStartTickBox.Selected = headingToStart;
+                    levelEndTickBox.Selected = !headingToStart;
+                    UpdatePath();
+                }
+                else
+                {
+                    levelStartTickBox.Selected = false;
+                    levelEndTickBox.Selected = false;
+                }
+            }
         }
     }
 }

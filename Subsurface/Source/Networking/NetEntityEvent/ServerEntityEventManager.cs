@@ -12,15 +12,19 @@ namespace Barotrauma.Networking
         private List<ServerEntityEvent> events;
 
         private UInt32 ID;
+
+        private GameServer server;
         
         public ServerEntityEventManager(GameServer server) 
         {
             events = new List<ServerEntityEvent>();
+
+            this.server = server;
         }
 
         public void CreateEvent(IServerSerializable entity, object[] extraData = null)
         {
-            if (!(entity is Entity))
+            if (entity == null || !(entity is Entity))
             {
                 DebugConsole.ThrowError("Can't create an entity event for " + entity + "!");
                 return;
@@ -54,7 +58,8 @@ namespace Barotrauma.Networking
                 float lastSent = 0;
                 client.entityEventLastSent.TryGetValue(events[i].ID, out lastSent);
 
-                if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime)
+                //wait for 1.5f * roundtriptime until resending
+                if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime * 1.5f)
                 {
                     break;
                 }
@@ -86,12 +91,12 @@ namespace Barotrauma.Networking
             var clientEntity = entity as IClientSerializable;
             if (clientEntity == null) return;
 
-            clientEntity.ServerRead(buffer, sender);
+            clientEntity.ServerRead(ClientNetObject.ENTITY_STATE, buffer, sender);
         }
 
         public void Read(NetIncomingMessage msg, Client client)
         {
-            base.Read(msg, 0.0f, ref client.lastSentEntityEventID);
+            base.Read(msg, 0.0f, ref client.lastSentEntityEventID, client);
         }
 
         public void Clear()

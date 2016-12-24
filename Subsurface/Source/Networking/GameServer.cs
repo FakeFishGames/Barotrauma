@@ -638,7 +638,7 @@ namespace Barotrauma.Networking
                     case ClientNetObject.CHARACTER_INPUT:
                         if (c.Character != null && !c.Character.IsDead && !c.Character.IsUnconscious)
                         {
-                            c.Character.ServerRead(inc, c);
+                            c.Character.ServerRead(objHeader, inc, c);
                         }
                         break;
                     case ClientNetObject.ENTITY_STATE:
@@ -1200,8 +1200,19 @@ namespace Barotrauma.Networking
                 if (c.Character != traitor) continue;
                 traitorClient = c;
                 break;
-            }
-            
+            }           
+        }
+
+        public override void SendChatMessage(string message, ChatMessageType? type = null)
+        {
+            type = ChatMessageType.Default;
+
+            ChatMessage chatMessage = ChatMessage.Create(
+                gameStarted && myCharacter != null ? myCharacter.Name : name,
+                message, (ChatMessageType)type, gameStarted ? myCharacter : null);
+
+
+            AddChatMessage(chatMessage);        
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)

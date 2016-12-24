@@ -25,23 +25,12 @@ namespace Barotrauma
         {
             get { return netStateID; }
         }
-        
-        private enum InputNetFlags : UInt16
-        {
-            None = 0x0,
-            Left = 0x1,
-            Right = 0x2,
-            Up = 0x4,
-            Down = 0x8,
-            FacingLeft = 0x10,
-            Run = 0x20,
-            Select = 0x40,
-        }
-        private InputNetFlags dequeuedInput = 0;
-        private InputNetFlags prevDequeuedInput = 0;
 
+        private byte dequeuedInput = 0;
+        private byte prevDequeuedInput = 0;
+        
         private int isStillCountdown = 5;
-        private List<InputNetFlags> memInput = new List<InputNetFlags>();
+        private List<byte> memInput = new List<byte>();
         private List<Vector2> memMousePos = new List<Vector2>();
 
         private List<PosInfo> memPos = new List<PosInfo>();
@@ -634,7 +623,7 @@ namespace Barotrauma
                         if (item == null) continue;
 
                         item.Pick(this, true, true, true);
-                        inventory.TryPutItem(item, i, false);
+                        inventory.TryPutItem(item, i, false, false);
                     }
                 }
             }
@@ -676,22 +665,22 @@ namespace Barotrauma
                 switch (inputType)
                 {
                     case InputType.Left:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Left)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Left));
+                        return ((dequeuedInput & 0x1) > 0) && !((prevDequeuedInput & 0x1) > 0);
                         //break;
                     case InputType.Right:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Right)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Right));
+                        return ((dequeuedInput & 0x2) > 0) && !((prevDequeuedInput & 0x2) > 0);
                         //break;
                     case InputType.Up:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Up)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Up));
+                        return ((dequeuedInput & 0x4) > 0) && !((prevDequeuedInput & 0x4) > 0);
                         //break;
                     case InputType.Down:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Down)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Down));
+                        return ((dequeuedInput & 0x8) > 0) && !((prevDequeuedInput & 0x8) > 0);
                     //break;
                     case InputType.Run:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Run)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Run));
+                        return ((dequeuedInput & 0x20) > 0) && !((prevDequeuedInput & 0x20) > 0);
                     //break;
                     case InputType.Select:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Select)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Select));
+                        return ((dequeuedInput & 0x40) > 0) && !((prevDequeuedInput & 0x40) > 0);
                     //break;
                     default:
                         return false;
@@ -710,22 +699,22 @@ namespace Barotrauma
                 switch (inputType)
                 {
                     case InputType.Left:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Left);
+                        retVal = (dequeuedInput & 0x1) > 0;
                         break;
                     case InputType.Right:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Right);
+                        retVal = (dequeuedInput & 0x2) > 0;
                         break;
                     case InputType.Up:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Up);
+                        retVal = (dequeuedInput & 0x4) > 0;
                         break;
                     case InputType.Down:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Down);
+                        retVal = (dequeuedInput & 0x8) > 0;
                         break;
                     case InputType.Run:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Run);
+                        retVal = (dequeuedInput & 0x20) > 0;
                         break;
                     case InputType.Select:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Select);
+                        retVal = (dequeuedInput & 0x40) > 0;
                         break;
                 }
                 return retVal;
@@ -846,7 +835,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null && Character.Controlled != this)
             {
-                if (dequeuedInput.HasFlag(InputNetFlags.FacingLeft))
+                if ((dequeuedInput & 0x10) > 0)
                 {
                     AnimController.TargetDir = Direction.Left;
                 }
@@ -1318,7 +1307,7 @@ namespace Barotrauma
                             cursorPosition = memMousePos[memMousePos.Count - 1];
                             memInput.RemoveAt(memInput.Count - 1);
                             memMousePos.RemoveAt(memMousePos.Count - 1);
-                            if (dequeuedInput == InputNetFlags.None)
+                            if (dequeuedInput == 0)
                             {
                                 if (isStillCountdown<=0)
                                 {
@@ -1339,7 +1328,7 @@ namespace Barotrauma
                             {
                                 isStillCountdown = 15;
                             }
-                            DebugConsole.NewMessage(Convert.ToString(memInput.Count), Color.Lime);
+                            //DebugConsole.NewMessage(Convert.ToString(memInput.Count), Color.Lime);
                         }
                         else
                         {
@@ -1355,14 +1344,14 @@ namespace Barotrauma
                 {
                     memLocalPos.Add(new PosInfo(SimPosition, AnimController.TargetDir, LastNetworkUpdateID));
                     
-                    InputNetFlags newInput = InputNetFlags.None;
-                    if (IsKeyDown(InputType.Left)) newInput |= InputNetFlags.Left;
-                    if (IsKeyDown(InputType.Right)) newInput |= InputNetFlags.Right;
-                    if (IsKeyDown(InputType.Up)) newInput |= InputNetFlags.Up;
-                    if (IsKeyDown(InputType.Down)) newInput |= InputNetFlags.Down;
-                    if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
-                    if (IsKeyDown(InputType.Run)) newInput |= InputNetFlags.Run;
-                    if (IsKeyDown(InputType.Select)) newInput |= InputNetFlags.Select;
+                    byte newInput = 0;
+                    newInput |= IsKeyDown(InputType.Left) ? (byte)0x1 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Right) ? (byte)0x2 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Up) ? (byte)0x4 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Down) ? (byte)0x8 : (byte)0;
+                    newInput |= (AnimController.TargetDir == Direction.Left) ? (byte)0x10 : (byte)0;
+                    newInput |= IsKeyDown(InputType.Run) ? (byte)0x20 : (byte)0;
+                    newInput |= IsKeyHit(InputType.Select) ? (byte)0x40 : (byte)0;
                     memInput.Insert(0, newInput);
                     memMousePos.Insert(0, closestItem!=null ? closestItem.Position : cursorPosition);
                     LastNetworkUpdateID++;
@@ -1937,60 +1926,77 @@ namespace Barotrauma
         {
             if (GameMain.Server != null) return;
 
-            msg.Write((byte)ClientNetObject.CHARACTER_INPUT);
-
-            if (memInput.Count > 60)
+            if (extraData != null && (NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
             {
-                memInput.RemoveRange(60,memInput.Count - 60);
-                memMousePos.RemoveRange(60,memMousePos.Count - 60);
+                inventory.ClientWrite(msg, extraData);
             }
-
-            msg.Write(LastNetworkUpdateID);
-            byte inputCount = Math.Min((byte)memInput.Count, (byte)60);
-            msg.Write(inputCount);
-            for (int i = 0; i < inputCount; i++)
+            else
             {
-                msg.Write((byte)memInput[i]);
-                if (memInput[i].HasFlag(InputNetFlags.Select))
+                msg.Write((byte)ClientNetObject.CHARACTER_INPUT);
+
+                if (memInput.Count > 60)
                 {
-                    msg.Write(memMousePos[i].X);
-                    msg.Write(memMousePos[i].Y);
+                    memInput.RemoveRange(60,memInput.Count - 60);
+                    memMousePos.RemoveRange(60,memMousePos.Count - 60);
+                }
+
+                msg.Write(LastNetworkUpdateID);
+                byte inputCount = Math.Min((byte)memInput.Count, (byte)60);
+                msg.Write(inputCount);
+                for (int i = 0; i < inputCount; i++)
+                {
+                    msg.Write(memInput[i]);
+                    if ((memInput[i] & 0x40) > 0)
+                    {
+                        msg.Write(memMousePos[i].X);
+                        msg.Write(memMousePos[i].Y);
+                    }
                 }
             }
         }
-        public virtual void ServerRead(NetIncomingMessage msg, Client c) 
+        public virtual void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c) 
         {
             if (GameMain.Server == null) return;
 
-            UInt32 networkUpdateID = msg.ReadUInt32();
-            byte inputCount = msg.ReadByte();
+            switch (type)
+            {
+                case ClientNetObject.CHARACTER_INPUT:
+                    
+                    UInt32 networkUpdateID = msg.ReadUInt32();
+                    byte inputCount = msg.ReadByte();
+                        
+                    for (int i = 0; i < inputCount; i++)
+                    {
+                        byte newInput = msg.ReadByte();
+                        Vector2 newMousePos = Position;
+                        if ((newInput & 0x40) > 0)
+                        {
+                            newMousePos.X = msg.ReadSingle();
+                            newMousePos.Y = msg.ReadSingle();
+                        }
+                        if ((i < ((long)networkUpdateID - (long)LastNetworkUpdateID)) && (i < 60))
+                        {
+                            memInput.Insert(i, newInput);
+                            memMousePos.Insert(i, newMousePos);
+                        }
+                    }
             
-            for (int i = 0; i < inputCount; i++)
-            {
-                InputNetFlags newInput = (InputNetFlags)msg.ReadByte();
-                Vector2 newMousePos = Position;
-                if (newInput.HasFlag(InputNetFlags.Select))
-                {
-                    newMousePos.X = msg.ReadSingle();
-                    newMousePos.Y = msg.ReadSingle();
-                }
-                if ((i < ((long)networkUpdateID - (long)LastNetworkUpdateID)) && (i < 60))
-                {
-                    memInput.Insert(i, newInput);
-                    memMousePos.Insert(i, newMousePos);
-                }
-            }
-            
-            if (networkUpdateID > LastNetworkUpdateID)
-            {
-                LastNetworkUpdateID = networkUpdateID;
-            }
-            if (memInput.Count > 60)
-            {
-                //deleting inputs from the queue here means the server is way behind and data needs to be dropped
-                //we'll make the server drop down to 30 inputs for good measure
-                memInput.RemoveRange(30, memInput.Count - 30);
-                memMousePos.RemoveRange(30, memMousePos.Count - 30);
+                    if (networkUpdateID > LastNetworkUpdateID)
+                    {
+                        LastNetworkUpdateID = networkUpdateID;
+                    }
+                    if (memInput.Count > 60)
+                    {
+                        //deleting inputs from the queue here means the server is way behind and data needs to be dropped
+                        //we'll make the server drop down to 30 inputs for good measure
+                        memInput.RemoveRange(30, memInput.Count - 30);
+                        memMousePos.RemoveRange(30, memMousePos.Count - 30);
+                    }
+                    break;
+
+                case ClientNetObject.ENTITY_STATE:
+                    inventory.ServerRead(type, msg, c);
+                    break;
             }
         }
 
@@ -1998,65 +2004,80 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return;
 
-            msg.Write(ID);
-
-            if (this == c.Character)
+            if (extraData != null && (NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
             {
-                //length of the message
-                msg.Write((byte)(4+4+4+1));
-                msg.Write(true);
-                msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count));
+                inventory.ServerWrite(msg, c, extraData);
             }
             else
             {
-                //length of the message
-                msg.Write((byte)(4+4+1));
-                msg.Write(false);
+                msg.Write(ID);
+
+                if (this == c.Character)
+                {
+                    //length of the message
+                    msg.Write((byte)(4+4+4+1));
+                    msg.Write(true);
+                    msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count));
+                }
+                else
+                {
+                    //length of the message
+                    msg.Write((byte)(4+4+1));
+                    msg.Write(false);
+                }
+
+                msg.Write(AnimController.TargetDir == Direction.Right);
+
+                msg.Write(SimPosition.X);
+                msg.Write(SimPosition.Y);
+
+                msg.WritePadBits();
             }
-
-            msg.Write(AnimController.TargetDir == Direction.Right);
-
-            msg.Write(SimPosition.X);
-            msg.Write(SimPosition.Y);
-
-            msg.WritePadBits();
         }
 
-        public virtual void ClientRead(NetIncomingMessage msg, float sendingTime) 
+        public virtual void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime) 
         {
             if (GameMain.Server != null) return;
 
-            UInt32 networkUpdateID = 0;
-            if (msg.ReadBoolean())
+            switch (type)
             {
-                networkUpdateID = msg.ReadUInt32();
-            }
+                case ServerNetObject.ENTITY_POSITION:                    
+                    UInt32 networkUpdateID = 0;
+                    if (msg.ReadBoolean())
+                    {
+                        networkUpdateID = msg.ReadUInt32();
+                    }
 
-            bool facingRight = msg.ReadBoolean();
-            Vector2 pos = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                    bool facingRight = msg.ReadBoolean();
+                    Vector2 pos = new Vector2(msg.ReadFloat(), msg.ReadFloat());
                         
-            var posInfo = 
-                GameMain.NetworkMember.Character == this ?
-                new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID) :
-                new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, sendingTime);
+                    var posInfo = 
+                        GameMain.NetworkMember.Character == this ?
+                        new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID) :
+                        new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, sendingTime);
 
-            int index = 0;
-            if (GameMain.NetworkMember.Character == this)
-            {
-                while (index < memPos.Count && posInfo.ID > memPos[index].ID)
-                {
-                    index++;
-                }
-            }
-            else
-            {
-                while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp)
-                {
-                    index++;
-                }
-            }
+                    int index = 0;
+                    if (GameMain.NetworkMember.Character == this)
+                    {
+                        while (index < memPos.Count && posInfo.ID > memPos[index].ID)
+                        {
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp)
+                        {
+                            index++;
+                        }
+                    }
 
-            memPos.Insert(index, posInfo);
+                    memPos.Insert(index, posInfo);
+                    break;
+                case ServerNetObject.ENTITY_STATE:
+                    inventory.ClientRead(type, msg, sendingTime);
+                    break;
+            }
         }
 
         public void WriteSpawnData(NetBuffer msg)

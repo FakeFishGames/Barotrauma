@@ -431,9 +431,13 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
-            IsActive = msg.ReadBoolean();
+            bool isActive = msg.ReadBoolean();
+
+            if (!item.CanClientAccess(c)) return; 
+
+            IsActive = isActive;
             isActiveTickBox.Selected = IsActive;
 
             item.CreateServerEvent(this);
@@ -444,7 +448,7 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             IsActive = msg.ReadBoolean();
             isActiveTickBox.Selected = IsActive;
