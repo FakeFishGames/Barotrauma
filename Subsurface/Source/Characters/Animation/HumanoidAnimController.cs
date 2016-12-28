@@ -173,12 +173,10 @@ namespace Barotrauma
                     levitatingCollider = false;
                     UpdateClimbing();
                     break;
-                case Animation.UsingConstruction:
-                    UpdateStanding();
-                    break;
                 case Animation.CPR:
                     UpdateCPR(deltaTime);
                     break;
+                case Animation.UsingConstruction:
                 default:
 
                     if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
@@ -567,7 +565,7 @@ namespace Barotrauma
             rotation = MathHelper.ToDegrees(rotation);
             if (rotation < 0.0f) rotation += 360;
 
-            if (!character.IsRemotePlayer && !aiming)
+            if (!character.IsRemotePlayer && !aiming && Anim != Animation.UsingConstruction)
             {
                 if (rotation > 20 && rotation < 170)
                     TargetDir = Direction.Left;

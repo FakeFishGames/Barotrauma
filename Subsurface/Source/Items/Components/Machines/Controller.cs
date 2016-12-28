@@ -26,15 +26,15 @@ namespace Barotrauma.Items.Components
 
         private Direction dir;
 
-        //the x-position where the user walks to when using the controller
-        private float userPos;
+        //the position where the user walks to when using the controller 
+        //(relative to the position of the item)
+        private Vector2 userPos;
 
         private Camera cam;
 
         private Character character;
 
-        [HasDefaultValue(0.0f, false)]
-        public float UserPos
+        public Vector2 UserPos
         {
             get { return userPos; }
             set { userPos = value; }
@@ -45,13 +45,16 @@ namespace Barotrauma.Items.Components
         {
             limbPositions = new List<LimbPos>();
 
-            dir = (Direction)Enum.Parse(typeof(Direction), ToolBox.GetAttributeString(element, "direction", "None"), true);
+            userPos = ToolBox.GetAttributeVector2(element, "UserPos", Vector2.Zero);
 
+            Enum.TryParse<Direction>(ToolBox.GetAttributeString(element, "direction", "None"), out dir);
+                
             foreach (XElement el in element.Elements())
             {
                 if (el.Name != "limbposition") continue;
 
                 LimbPos lp = new LimbPos();
+
                 try
                 {
                     lp.limbType = (LimbType)Enum.Parse(typeof(LimbType), el.Attribute("limb").Value, true);
@@ -90,23 +93,34 @@ namespace Barotrauma.Items.Components
 
             character.AnimController.Anim = AnimController.Animation.UsingConstruction;
 
-            if (userPos != 0.0f)
+            if (userPos != Vector2.Zero)
             {
                 float torsoX = character.Position.X;
 
-                Vector2 diff = new Vector2(item.Rect.X + UserPos - torsoX, 0.0f);
+                Vector2 diff = (item.WorldPosition + userPos) - character.WorldPosition;
 
-                if (diff!= Vector2.Zero && diff.Length() > 10.0f)
+                if (character.AnimController.InWater)
                 {
-                    //character.AnimController.Anim = AnimController.Animation.None;
-
-                    character.AnimController.TargetMovement = new Vector2(Math.Sign(diff.X), 0.0f);
-                    character.AnimController.TargetDir = (Math.Sign(diff.X) == 1) ? Direction.Right : Direction.Left;
-                    return;
+                    if (diff.Length() > 30.0f)
+                    {
+                        character.AnimController.TargetMovement = Vector2.Clamp(diff*0.01f, -Vector2.One, Vector2.One);
+                        character.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
+                    }
+                    else
+                    {
+                        character.AnimController.TargetMovement = Vector2.Zero;
+                    }
                 }
                 else
                 {
-                    character.AnimController.TargetMovement = Vector2.Zero;
+                    diff.Y = 0.0f;
+                    if (diff != Vector2.Zero && diff.Length() > 10.0f)
+                    {
+                        character.AnimController.TargetMovement = Vector2.Normalize(diff);
+                        character.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
+                        return;
+                    }
+                    character.AnimController.TargetMovement = Vector2.Zero;                    
                 }
             }
 
@@ -115,6 +129,7 @@ namespace Barotrauma.Items.Components
             if (limbPositions.Count == 0) return;
 
             character.AnimController.Anim = AnimController.Animation.UsingConstruction;
+
             character.AnimController.ResetPullJoints();
 
             if (dir != 0) character.AnimController.TargetDir = dir;
@@ -256,10 +271,10 @@ namespace Barotrauma.Items.Components
                 dir = dir == Direction.Left ? Direction.Right : Direction.Left;
             }
 
-            if (userPos != 0.0f)
+            if (userPos.X != 0.0f)
             {
-                float diff = (item.Rect.X + UserPos) - item.Rect.Center.X;
-                userPos = item.Rect.Center.X - diff - item.Rect.X;
+                float diff = (item.Rect.X + UserPos.X) - item.Rect.Center.X;
+                userPos.X = item.Rect.Center.X - diff - item.Rect.X;
             }
 
             for (int i = 0; i < limbPositions.Count; i++)
