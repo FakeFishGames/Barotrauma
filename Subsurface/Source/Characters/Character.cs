@@ -1423,6 +1423,8 @@ namespace Barotrauma
         /// </summary>
         public HUDProgressBar UpdateHUDProgressBar(object linkedObject, Vector2 worldPosition, float progress, Color emptyColor, Color fullColor)
         {
+            if (controlled != this) return null;
+
             HUDProgressBar progressBar = null;
             if (!hudProgressBars.TryGetValue(linkedObject, out progressBar))
             {

@@ -195,7 +195,7 @@ namespace Barotrauma.Items.Components
                     1.0f - targetStructure.SectionDamage(sectionIndex) / targetStructure.Health,
                     Color.Red, Color.Green);
 
-                progressBar.Size = new Vector2(60.0f, 20.0f);
+                if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
 
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess);
 
