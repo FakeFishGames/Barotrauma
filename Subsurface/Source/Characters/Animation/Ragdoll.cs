@@ -869,6 +869,7 @@ namespace Barotrauma
                 {
                     //limb isn't in any room -> it's in the water
                     limb.inWater = true;
+                    if (limb.type == LimbType.Head) headInWater = true;
                 }
                 else if (limbHull.Volume > 0.0f && Submarine.RectContains(limbHull.Rect, limb.Position))
                 {
