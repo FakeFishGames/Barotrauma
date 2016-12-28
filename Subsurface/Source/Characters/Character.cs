@@ -26,7 +26,8 @@ namespace Barotrauma
             get { return netStateID; }
         }
         
-        private enum InputNetFlags : UInt16
+        [Flags]
+        private enum InputNetFlags : ushort
         {
             None = 0x0,
             Left = 0x1,
@@ -36,6 +37,11 @@ namespace Barotrauma
             FacingLeft = 0x10,
             Run = 0x20,
             Select = 0x40,
+            Use = 0x80,
+            Aim = 0x100,
+            //Attack = 0x200
+
+            MaxVal = 0x200
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
@@ -704,31 +710,28 @@ namespace Barotrauma
 
         public bool IsKeyDown(InputType inputType)
         {
-            if (GameMain.Server!=null && Character.Controlled!=this)
+            if (GameMain.Server != null && Character.Controlled != this)
             {
-                bool retVal = false;
                 switch (inputType)
                 {
                     case InputType.Left:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Left);
-                        break;
+                        return dequeuedInput.HasFlag(InputNetFlags.Left);
                     case InputType.Right:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Right);
-                        break;
+                        return dequeuedInput.HasFlag(InputNetFlags.Right);
                     case InputType.Up:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Up);
-                        break;
+                        return dequeuedInput.HasFlag(InputNetFlags.Up);                        
                     case InputType.Down:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Down);
-                        break;
+                        return dequeuedInput.HasFlag(InputNetFlags.Down);                        
                     case InputType.Run:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Run);
-                        break;
+                        return dequeuedInput.HasFlag(InputNetFlags.Run);                        
                     case InputType.Select:
-                        retVal = dequeuedInput.HasFlag(InputNetFlags.Select);
-                        break;
+                        return dequeuedInput.HasFlag(InputNetFlags.Select);
+                    case InputType.Aim:
+                        return dequeuedInput.HasFlag(InputNetFlags.Aim);
+                    case InputType.Use:
+                        return dequeuedInput.HasFlag(InputNetFlags.Use);
                 }
-                return retVal;
+                return false;
             }
             
             return keys[(int)inputType].Held;
@@ -1356,13 +1359,17 @@ namespace Barotrauma
                     memLocalPos.Add(new PosInfo(SimPosition, AnimController.TargetDir, LastNetworkUpdateID));
                     
                     InputNetFlags newInput = InputNetFlags.None;
-                    if (IsKeyDown(InputType.Left)) newInput |= InputNetFlags.Left;
-                    if (IsKeyDown(InputType.Right)) newInput |= InputNetFlags.Right;
-                    if (IsKeyDown(InputType.Up)) newInput |= InputNetFlags.Up;
-                    if (IsKeyDown(InputType.Down)) newInput |= InputNetFlags.Down;
+                    if (IsKeyDown(InputType.Left))      newInput |= InputNetFlags.Left;
+                    if (IsKeyDown(InputType.Right))     newInput |= InputNetFlags.Right;
+                    if (IsKeyDown(InputType.Up))        newInput |= InputNetFlags.Up;
+                    if (IsKeyDown(InputType.Down))      newInput |= InputNetFlags.Down;
+                    if (IsKeyDown(InputType.Run))       newInput |= InputNetFlags.Run;
+                    if (IsKeyDown(InputType.Select))    newInput |= InputNetFlags.Select;
+                    if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
+                    if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
+                    
                     if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
-                    if (IsKeyDown(InputType.Run)) newInput |= InputNetFlags.Run;
-                    if (IsKeyDown(InputType.Select)) newInput |= InputNetFlags.Select;
+
                     memInput.Insert(0, newInput);
                     memMousePos.Insert(0, closestItem!=null ? closestItem.Position : cursorPosition);
                     LastNetworkUpdateID++;
@@ -1956,8 +1963,8 @@ namespace Barotrauma
                 msg.Write(inputCount);
                 for (int i = 0; i < inputCount; i++)
                 {
-                    msg.Write((byte)memInput[i]);
-                    if (memInput[i].HasFlag(InputNetFlags.Select))
+                    msg.WriteRangedInteger(0, (int)InputNetFlags.MaxVal,(int)memInput[i]);
+                    if (memInput[i].HasFlag(InputNetFlags.Select) || memInput[i].HasFlag(InputNetFlags.Aim))
                     {
                         msg.Write(memMousePos[i].X);
                         msg.Write(memMousePos[i].Y);
@@ -1973,14 +1980,14 @@ namespace Barotrauma
             {
                 case ClientNetObject.CHARACTER_INPUT:
                     
-                    UInt32 networkUpdateID = msg.ReadUInt32();
-                    byte inputCount = msg.ReadByte();
+                    UInt32 networkUpdateID  = msg.ReadUInt32();
+                    byte inputCount         = msg.ReadByte();
                         
                     for (int i = 0; i < inputCount; i++)
                     {
-                        InputNetFlags newInput = (InputNetFlags)msg.ReadByte();
+                        InputNetFlags newInput = (InputNetFlags)msg.ReadRangedInteger(0, (int)InputNetFlags.MaxVal);
                         Vector2 newMousePos = Position;
-                        if (newInput.HasFlag(InputNetFlags.Select))
+                        if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Aim))
                         {
                             newMousePos.X = msg.ReadSingle();
                             newMousePos.Y = msg.ReadSingle();
