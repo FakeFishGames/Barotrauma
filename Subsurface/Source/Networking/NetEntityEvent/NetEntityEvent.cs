@@ -44,6 +44,7 @@ namespace Barotrauma.Networking
                     {
                         if (Data[i] != other.Data[i]) return false;
                     }
+                    return true;
                 }
                 else
                 {

@@ -1309,47 +1309,44 @@ namespace Barotrauma
 
             if (this != Character.Controlled)
             {
-                if (GameMain.Server != null)
+                if (GameMain.Server != null && !(this is AICharacter))
                 {
-                    if (!IsDead)
+                    if (memInput.Count > 0)
                     {
-                        if (memInput.Count > 0)
+                        AnimController.Frozen = false;
+                        prevDequeuedInput = dequeuedInput;
+                        dequeuedInput = memInput[memInput.Count - 1];
+                        cursorPosition = memMousePos[memMousePos.Count - 1];
+                        memInput.RemoveAt(memInput.Count - 1);
+                        memMousePos.RemoveAt(memMousePos.Count - 1);
+                        if (dequeuedInput == InputNetFlags.None)
                         {
-                            AnimController.Frozen = false;
-                            prevDequeuedInput = dequeuedInput;
-                            dequeuedInput = memInput[memInput.Count - 1];
-                            cursorPosition = memMousePos[memMousePos.Count - 1];
-                            memInput.RemoveAt(memInput.Count - 1);
-                            memMousePos.RemoveAt(memMousePos.Count - 1);
-                            if (dequeuedInput == InputNetFlags.None)
+                            if (isStillCountdown<=0)
                             {
-                                if (isStillCountdown<=0)
+                                while (memInput.Count>5 && memInput[memInput.Count-1]==0)
                                 {
-                                    while (memInput.Count>5 && memInput[memInput.Count-1]==0)
-                                    {
-                                        //remove inputs where the player is not moving at all
-                                        //helps the server catch up, shouldn't affect final position
-                                        memInput.RemoveAt(memInput.Count - 1);
-                                        memMousePos.RemoveAt(memMousePos.Count - 1);
-                                    }
-                                    isStillCountdown = 15;
+                                    //remove inputs where the player is not moving at all
+                                    //helps the server catch up, shouldn't affect final position
+                                    memInput.RemoveAt(memInput.Count - 1);
+                                    memMousePos.RemoveAt(memMousePos.Count - 1);
                                 }
-                                else
-                                {
-                                    isStillCountdown--;
-                                }
-                            } else
-                            {
                                 isStillCountdown = 15;
                             }
-                            //DebugConsole.NewMessage(Convert.ToString(memInput.Count), Color.Lime);
-                        }
-                        else
+                            else
+                            {
+                                isStillCountdown--;
+                            }
+                        } else
                         {
-                            AnimController.Frozen = true;
-                            return;
+                            isStillCountdown = 15;
                         }
+                        //DebugConsole.NewMessage(Convert.ToString(memInput.Count), Color.Lime);
                     }
+                    else
+                    {
+                        AnimController.Frozen = true;
+                        return;
+                    }                    
                 }
             }
             else

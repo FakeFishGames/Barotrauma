@@ -664,16 +664,13 @@ namespace Barotrauma.Networking
 
             foreach (GUIComponent gc in GameMain.NetLobbyScreen.ChatBox.children)
             {
-                if (gc is GUITextBlock)
+                if (gc is GUITextBlock && gc.UserData is ChatMessage)
                 {
-                    if (gc.UserData is ChatMessage)
+                    ChatMessage cMsg = (ChatMessage)gc.UserData;
+                    if (cMsg.NetStateID > c.lastRecvChatMsgID)
                     {
-                        ChatMessage cMsg = (ChatMessage)gc.UserData;
-                        if (cMsg.NetStateID > c.lastRecvChatMsgID)
-                        {
-                            cMsg.ServerWrite(outmsg, c);
-                        }
-                    }
+                        cMsg.ServerWrite(outmsg, c);
+                    }                    
                 }
             }
 
@@ -686,11 +683,20 @@ namespace Barotrauma.Networking
             
             foreach (Character character in Character.CharacterList)
             {
-                if (character is AICharacter) continue;
-
-                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
-                character.ServerWrite(outmsg, c);
-                outmsg.WritePadBits();
+                if (character is AICharacter)
+                {
+                    //TODO: don't send if the ai character is far from the client
+                    //(some sort of distance-based culling might be a good idea for player-controlled characters as well)
+                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                    character.ServerWrite(outmsg, c);
+                    outmsg.WritePadBits();
+                }
+                else
+                {
+                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                    character.ServerWrite(outmsg, c);
+                    outmsg.WritePadBits();
+                }
             }
 
             foreach (Submarine sub in Submarine.Loaded)
