@@ -185,7 +185,8 @@ namespace Barotrauma.Lights
                     if (NeedsHullUpdate)
                     {
                         var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
-                        chList.List = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
+                        if (fullChList != null)
+                            chList.List = fullChList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
                     }
                 }
                 //light is outside, convexhull inside a sub
@@ -299,7 +300,7 @@ namespace Barotrauma.Lights
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
 
             drawPos.Y = -drawPos.Y;
-
+            
             if (range > 1.0f)
             {
                 if (overrideLightTexture == null)
@@ -324,6 +325,24 @@ namespace Barotrauma.Lights
                 LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1, SpriteEffect);
 
             } 
+        }
+
+        public void FlipX()
+        {
+            SpriteEffect = SpriteEffect == SpriteEffects.None ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            if (LightSprite != null)
+            {
+                Vector2 lightOrigin = LightSprite.Origin;
+                lightOrigin.X = LightSprite.SourceRect.Width - lightOrigin.X;
+                LightSprite.Origin = lightOrigin;
+            }
+
+            if (overrideLightTexture != null)
+            {
+                Vector2 lightOrigin = overrideLightTexture.Origin;
+                lightOrigin.X = overrideLightTexture.SourceRect.Width - lightOrigin.X;
+                overrideLightTexture.Origin = lightOrigin;
+            }
         }
 
         public void Remove()

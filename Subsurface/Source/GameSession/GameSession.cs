@@ -202,7 +202,7 @@ namespace Barotrauma
             {
                 level.Generate();
 
-                submarine.SetPosition(level.StartPosition - new Vector2(0.0f, 2000.0f));
+                submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition - new Vector2(0.0f, 2000.0f)));
 
                 //secondSub.SetPosition(level.EndPosition - new Vector2(0.0f, 2000.0f));
 

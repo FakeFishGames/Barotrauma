@@ -372,7 +372,8 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
+                if (limb.sprite != null)
+                    limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
             }
 
             Limb torso = GetLimb(LimbType.Torso);
@@ -638,27 +639,31 @@ namespace Barotrauma
             }
 
 
-            for (int i = 0; i < Limbs.Length; i++)
+            foreach (Limb limb in Limbs)
             {
-                if (Limbs[i] == null) continue;
+                if (limb == null) continue;
 
-                Vector2 spriteOrigin = Limbs[i].sprite.Origin;
-                spriteOrigin.X = Limbs[i].sprite.SourceRect.Width - spriteOrigin.X;
-                Limbs[i].sprite.Origin = spriteOrigin;
-
-                Limbs[i].Dir = Dir;
-
-                if (Limbs[i].LightSource != null)
+                if (limb.sprite != null)
                 {
-                    Limbs[i].LightSource.SpriteEffect = (dir == Direction.Left) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                    Vector2 spriteOrigin = limb.sprite.Origin;
+                    spriteOrigin.X = limb.sprite.SourceRect.Width - spriteOrigin.X;
+                    limb.sprite.Origin = spriteOrigin;
                 }
 
-                if (Limbs[i].pullJoint == null) continue;
+                limb.Dir = Dir;
 
-                Limbs[i].pullJoint.LocalAnchorA = 
-                    new Vector2(
-                        -Limbs[i].pullJoint.LocalAnchorA.X, 
-                        Limbs[i].pullJoint.LocalAnchorA.Y);
+                if (limb.LightSource != null)
+                {
+                    limb.LightSource.FlipX();
+                }
+
+                if (limb.pullJoint != null)
+                {
+                    limb.pullJoint.LocalAnchorA = 
+                        new Vector2(
+                            -limb.pullJoint.LocalAnchorA.X,
+                            limb.pullJoint.LocalAnchorA.Y);
+                }
             }            
         }
 
@@ -864,6 +869,7 @@ namespace Barotrauma
                 {
                     //limb isn't in any room -> it's in the water
                     limb.inWater = true;
+                    if (limb.type == LimbType.Head) headInWater = true;
                 }
                 else if (limbHull.Volume > 0.0f && Submarine.RectContains(limbHull.Rect, limb.Position))
                 {

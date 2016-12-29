@@ -138,6 +138,7 @@ namespace Barotrauma
             {
                 if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
                 {
+                    character.Inventory.DrawOffset = Vector2.Zero;
                     character.Inventory.DrawOwn(spriteBatch);
                 }
 

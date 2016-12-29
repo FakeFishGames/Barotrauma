@@ -15,8 +15,7 @@ namespace Barotrauma
     { 
         None, 
         StructureBlunt, StructureSlash, 
-        LimbBlunt, LimbSlash, LimbArmor,
-        Implode, Pressure 
+        LimbBlunt, LimbSlash, LimbArmor
     }
 
     public struct DamageSound
@@ -29,11 +28,15 @@ namespace Barotrauma
 
         public readonly Sound sound;
 
-        public DamageSound(Sound sound, Vector2 damageRange, DamageSoundType damageType)
+        public readonly string requiredTag;
+
+        public DamageSound(Sound sound, Vector2 damageRange, DamageSoundType damageType, string requiredTag = "")
         {
             this.sound = sound;
             this.damageRange = damageRange;
             this.damageType = damageType;
+
+            this.requiredTag = requiredTag;
         }
     }
 
@@ -54,24 +57,29 @@ namespace Barotrauma
 
     static class SoundPlayer
     {
-        public static Sound[] flowSounds = new Sound[3];
+        private static ILookup<string, Sound> miscSounds;
 
-        public static Sound[] SplashSounds = new Sound[10];
-
+        //music
         public static float MusicVolume = 1.0f;
-
         private const float MusicLerpSpeed = 0.1f;
-
-        private static Sound[] waterAmbiences = new Sound[2];
-        private static int[] waterAmbienceIndexes = new int[2];
-
-
-        private static DamageSound[] damageSounds;
 
         private static BackgroundMusic currentMusic;
         private static BackgroundMusic targetMusic;
         private static BackgroundMusic[] musicClips;
         private static float currMusicVolume;
+
+        //ambience
+        private static Sound[] waterAmbiences = new Sound[2];
+        private static int[] waterAmbienceIndexes = new int[2];
+
+        private static float ambientSoundTimer;
+        private static Vector2 ambientSoundInterval = new Vector2(20.0f, 40.0f); //x = min, y = max
+
+        //misc
+        public static Sound[] flowSounds = new Sound[3];
+        public static Sound[] SplashSounds = new Sound[10];
+
+        private static List<DamageSound> damageSounds;
 
         private static Sound startDrone;
 
@@ -133,38 +141,45 @@ namespace Barotrauma
                     i++;
                 }
             }
+
+            List<KeyValuePair<string, Sound>> miscSoundList = new List<KeyValuePair<string, Sound>>();
+            damageSounds = new List<DamageSound>();
             
-            var xDamageSounds = doc.Root.Elements("damagesound").ToList();
-            
-            if (xDamageSounds.Any())
+            foreach (XElement subElement in doc.Root.Elements())
             {
-                damageSounds = new DamageSound[xDamageSounds.Count];
-                int i = 0;
-                foreach (XElement element in xDamageSounds)
+                yield return CoroutineStatus.Running;
+
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    yield return CoroutineStatus.Running;
-
-                    Sound sound = Sound.Load(ToolBox.GetAttributeString(element, "file", ""), false);
-                    if (sound == null) continue;
+                    case "music":
+                        continue;
+                    case "damagesound":
+                        Sound damageSound = Sound.Load(ToolBox.GetAttributeString(subElement, "file", ""), false);
+                        if (damageSound == null) continue;
                     
-                    DamageSoundType damageSoundType = DamageSoundType.None;
+                        DamageSoundType damageSoundType = DamageSoundType.None;
+                        Enum.TryParse<DamageSoundType>(ToolBox.GetAttributeString(subElement, "damagesoundtype", "None"), false, out damageSoundType);
 
-                    try
-                    {
-                       damageSoundType =  (DamageSoundType)Enum.Parse(typeof(DamageSoundType), 
-                        ToolBox.GetAttributeString(element, "damagesoundtype", "None"));
-                    }
-                    catch
-                    {
-                        damageSoundType = DamageSoundType.None;
-                    }
+                        damageSounds.Add(new DamageSound(
+                            damageSound, 
+                            ToolBox.GetAttributeVector2(subElement, "damagerange", new Vector2(0.0f, 100.0f)), 
+                            damageSoundType, 
+                            ToolBox.GetAttributeString(subElement, "requiredtag", "")));
 
+                        break;
+                    default:
+                        Sound sound = Sound.Load(ToolBox.GetAttributeString(subElement, "file", ""), false);
+                        if (sound != null)
+                        {
+                            miscSoundList.Add(new KeyValuePair<string, Sound>(subElement.Name.ToString().ToLowerInvariant(), sound));
+                        }
 
-                    damageSounds[i] = new DamageSound(
-                        sound, ToolBox.GetAttributeVector2(element, "damagerange", new Vector2(0.0f,100.0f)), damageSoundType);
-                    i++;
+                        break;
                 }
             }
+
+            miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+            
 
             Initialized = true;
 
@@ -177,7 +192,7 @@ namespace Barotrauma
         {
             UpdateMusic();
 
-            if (startDrone!=null && !startDrone.IsPlaying)
+            if (startDrone != null && !startDrone.IsPlaying)
             {
                 startDrone.Remove();
                 startDrone = null;                
@@ -229,16 +244,45 @@ namespace Barotrauma
                 movementSoundVolume = Math.Max(movementSoundVolume, movementFactor);
             }
 
-            //if (Submarine.MainSub != null)
-            //{
-            //    movementFactor = (Submarine.MainSub.Velocity == Vector2.Zero) ? 0.0f : Submarine.MainSub.Velocity.Length() / 5.0f;
-            //    movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
-            //}
+            if (ambientSoundTimer > 0.0f)
+            {
+                ambientSoundTimer -= (float)Timing.Step;
+            }
+            else
+            {
+                PlaySound(
+                    "ambient",
+                    Rand.Range(0.5f, 1.0f), 
+                    1000.0f, 
+                    new Vector2(Sound.CameraPos.X, Sound.CameraPos.Y) + Rand.Vector(100.0f));
+
+                ambientSoundTimer = Rand.Range(ambientSoundInterval.X, ambientSoundInterval.Y);
+            }
 
             SoundManager.LowPassHFGain = lowpassHFGain;
             waterAmbienceIndexes[0] = waterAmbiences[0].Loop(waterAmbienceIndexes[0], ambienceVolume * (1.0f - movementSoundVolume));
             waterAmbienceIndexes[1] = waterAmbiences[1].Loop(waterAmbienceIndexes[1], ambienceVolume * movementSoundVolume);
 
+        }
+
+        public static Sound GetSound(string soundTag)
+        {
+            var matchingSounds = miscSounds[soundTag].ToList();
+            if (matchingSounds.Count == 0) return null;
+
+            return matchingSounds[Rand.Int(matchingSounds.Count)];
+        }
+
+        public static void PlaySound(string soundTag, float volume = 1.0f)
+        {
+            var sound = GetSound(soundTag);            
+            if (sound != null) sound.Play(volume);
+        }
+
+        public static void PlaySound(string soundTag, float volume, float range, Vector2 position)
+        {
+            var sound = GetSound(soundTag);
+            if (sound != null) sound.Play(volume, range, position);
         }
 
         private static void UpdateMusic()
@@ -247,7 +291,11 @@ namespace Barotrauma
             
             List<BackgroundMusic> suitableMusic = GetSuitableMusicClips();
 
-            if (suitableMusic.Count > 0 && !suitableMusic.Contains(currentMusic))
+            if (suitableMusic.Count == 0)
+            {
+                targetMusic = null;
+            }                
+            else if (!suitableMusic.Contains(currentMusic))
             {
                 int index = Rand.Int(suitableMusic.Count);
 
@@ -272,7 +320,7 @@ namespace Barotrauma
                     }
                     catch (FileNotFoundException e)
                     {
-                        DebugConsole.ThrowError("Music clip " + targetMusic.file + " not found!");
+                        DebugConsole.ThrowError("Music clip " + targetMusic.file + " not found!", e);
                     }
 
                     currentMusic = targetMusic;
@@ -349,10 +397,15 @@ namespace Barotrauma
             PlayDamageSound(damageType, damage, bodyPosition, 800.0f);
         }
 
-        public static void PlayDamageSound(DamageSoundType damageType, float damage, Vector2 position, float range = 2000.0f)
+        public static void PlayDamageSound(DamageSoundType damageType, float damage, Vector2 position, float range = 2000.0f, List<string> tags = null)
         {
             damage = MathHelper.Clamp(damage+Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
-            var sounds = damageSounds.Where(x => damage >= x.damageRange.X && damage <= x.damageRange.Y && x.damageType == damageType).ToList();
+            var sounds = damageSounds.FindAll(s => 
+                damage >= s.damageRange.X && 
+                damage <= s.damageRange.Y && 
+                s.damageType == damageType &&
+                (string.IsNullOrEmpty(s.requiredTag) || (tags != null && tags.Contains(s.requiredTag))));
+
             if (!sounds.Any()) return;
 
             int selectedSound = Rand.Int(sounds.Count);

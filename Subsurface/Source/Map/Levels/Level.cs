@@ -183,8 +183,12 @@ namespace Barotrauma
             float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
             GameMain.LightManager.AmbientLight = new Color(backgroundColor * (10.0f / avgValue), 1.0f);
 
-            float minWidth = Submarine.MainSub == null ? 0.0f : Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height);
-            minWidth = Math.Max(minWidth, 6500.0f);
+            float minWidth = 6500.0f;
+            if (Submarine.MainSub != null)
+            {
+                Rectangle dockedSubBorders = Submarine.MainSub.GetDockedBorders();
+                minWidth = Math.Max(minWidth, Math.Max(dockedSubBorders.Width, dockedSubBorders.Height));
+            }
 
             startPosition = new Vector2(
                 Rand.Range(minWidth, minWidth * 2, false),
@@ -437,7 +441,7 @@ namespace Barotrauma
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
             
-            List<VertexPositionColor> bodyVertices;
+            List<VertexPositionTexture> bodyVertices;
             bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out bodyVertices);
 
             renderer.SetBodyVertices(bodyVertices.ToArray());
@@ -692,6 +696,8 @@ namespace Barotrauma
 
             int iter = 0;
 
+            ruinPos.Y = Math.Min(borders.Y + borders.Height - ruinSize.Y/2, ruinPos.Y);
+
             while (mainPath.Any(p => Vector2.Distance(ruinPos, p.Center) < ruinRadius * 2.0f))
             {
                 Vector2 weighedPathPos = ruinPos;
@@ -711,6 +717,7 @@ namespace Barotrauma
                     //}
 
                     weighedPathPos += moveAmount;
+                    weighedPathPos.Y = Math.Min(borders.Y + borders.Height - ruinSize.Y / 2, weighedPathPos.Y);
                 }
 
                 ruinPos = weighedPathPos;
@@ -743,10 +750,18 @@ namespace Barotrauma
             {
                 var tooClose = GetTooCloseCells(ruinShape.Rect.Center.ToVector2(), Math.Max(ruinShape.Rect.Width, ruinShape.Rect.Height));
 
-                tooClose.ForEach(c =>
+                foreach (VoronoiCell cell in tooClose)
                 {
-                    if (c.edges.Any(e => ruinShape.Rect.Contains(e.point1) || ruinShape.Rect.Contains(e.point2))) c.CellType = CellType.Empty;
-                });
+                    if (cell.CellType == CellType.Empty) continue;
+                    foreach (GraphEdge e in cell.edges)
+                    {
+                        if (MathUtils.GetLineRectangleIntersection(e.point1, e.point2, ruinShape.Rect) != null)
+                        {
+                            cell.CellType = CellType.Empty;
+                            break;
+                        }
+                    }
+                }
             }
         }
 

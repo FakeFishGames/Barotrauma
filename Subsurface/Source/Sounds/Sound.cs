@@ -247,7 +247,8 @@ namespace Barotrauma
 
             loadedSounds.Remove(this);
 
-            if (alSourceId>0 && SoundManager.IsPlaying(alSourceId))
+            if (alSourceId > 0 &&
+                (SoundManager.IsPlaying(alSourceId) || SoundManager.IsPaused(alSourceId)))
             {
                 SoundManager.Stop(alSourceId);
                 ALHelper.Check();
@@ -258,10 +259,10 @@ namespace Barotrauma
                 if (s.oggSound == oggSound) return;
             }
 
-            //System.Diagnostics.Debug.WriteLine("Removing sound " + filePath + " (buffer id" + AlBufferId + ")");
-
             SoundManager.ClearAlSource(AlBufferId);
-            if (oggSound!=null) oggSound.Dispose();
+            ALHelper.Check();
+
+            if (oggSound != null) oggSound.Dispose();
         }
 
 

@@ -173,12 +173,10 @@ namespace Barotrauma
                     levitatingCollider = false;
                     UpdateClimbing();
                     break;
-                case Animation.UsingConstruction:
-                    UpdateStanding();
-                    break;
                 case Animation.CPR:
                     UpdateCPR(deltaTime);
                     break;
+                case Animation.UsingConstruction:
                 default:
 
                     if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
@@ -260,9 +258,9 @@ namespace Barotrauma
                 float slowdownAmount = 0.0f;
                 if (currentHull != null)
                 {
-                    //full slowdown (1.0f) when water is up to the torso
+                    //full slowdown (1.5f) when water is up to the torso
                     surfaceY = ConvertUnits.ToSimUnits(currentHull.Surface);
-                    slowdownAmount = MathHelper.Clamp((surfaceY - colliderPos.Y) / torsoPosition, 0.0f, 1.0f);
+                    slowdownAmount = MathHelper.Clamp((surfaceY - colliderPos.Y) / torsoPosition, 0.0f, 1.0f) * 1.5f;
                 }
 
                 float maxSpeed = Math.Max(TargetMovement.Length() - slowdownAmount, 1.0f);
@@ -272,7 +270,7 @@ namespace Barotrauma
             float walkPosX = (float)Math.Cos(walkPos);
             float walkPosY = (float)Math.Sin(walkPos);
             float runningModifier = (float)Math.Max(Math.Min(Math.Abs(TargetMovement.X), 3.0f) / 1.5f, 1.0);
-
+            
             Vector2 stepSize = new Vector2(
                 this.stepSize.X * walkPosX * runningModifier,
                 this.stepSize.Y * walkPosY * runningModifier * runningModifier);
@@ -567,7 +565,7 @@ namespace Barotrauma
             rotation = MathHelper.ToDegrees(rotation);
             if (rotation < 0.0f) rotation += 360;
 
-            if (!character.IsRemotePlayer && !aiming)
+            if (!character.IsRemotePlayer && !aiming && Anim != Animation.UsingConstruction)
             {
                 if (rotation > 20 && rotation < 170)
                     TargetDir = Direction.Left;
@@ -751,9 +749,9 @@ namespace Barotrauma
                 ladderSimPos += character.SelectedConstruction.Submarine.SimPosition - currentHull.Submarine.SimPosition;
             }
 
-            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.7f - colliderHeightFromFloor), 10.5f);
-            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.5f - colliderHeightFromFloor), 10.5f);
-            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y + 0.4f - colliderHeightFromFloor), 10.5f);
+            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.9f - colliderHeightFromFloor), 10.5f);
+            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, Collider.SimPosition.Y + 0.7f - colliderHeightFromFloor), 10.5f);
+            MoveLimb(waist, new Vector2(ladderSimPos.X - 0.35f * Dir, Collider.SimPosition.Y + 0.6f - colliderHeightFromFloor), 10.5f);
 
             Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, Collider.SimPosition.Y), 10.5f);            
 
@@ -761,9 +759,9 @@ namespace Barotrauma
 
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
-                Collider.SimPosition.Y + 0.6f + movement.Y * 0.1f - ladderSimPos.Y);
+                Collider.SimPosition.Y + 0.8f + movement.Y * 0.1f - ladderSimPos.Y);
 
-            handPos.Y = Math.Min(-0.5f, handPos.Y) - colliderHeightFromFloor;
+            handPos.Y = Math.Min(-0.2f, handPos.Y) - colliderHeightFromFloor;
 
             MoveLimb(leftHand,
                 new Vector2(handPos.X,
@@ -780,7 +778,7 @@ namespace Barotrauma
 
             Vector2 footPos = new Vector2(
                 handPos.X - Dir * 0.05f,
-                Collider.SimPosition.Y + 0.7f - colliderHeightFromFloor - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
+                Collider.SimPosition.Y + 0.9f - colliderHeightFromFloor - stepHeight * 2.7f - ladderSimPos.Y - 0.7f);
 
             //if (movement.Y < 0) footPos.Y += 0.05f;
 

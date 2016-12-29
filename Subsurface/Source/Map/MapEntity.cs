@@ -26,7 +26,18 @@ namespace Barotrauma
             }
         }
         private static List<MapEntity> copiedList = new List<MapEntity>();
-        
+
+        private static List<MapEntity> highlightedList = new List<MapEntity>();
+
+        private static float highlightTimer;
+
+        private static GUIListBox highlightedListBox;
+        public static GUIListBox HighlightedListBox
+        {
+            get { return highlightedListBox; }
+        }        
+
+
         protected static GUIComponent editingHUD;
         public static GUIComponent EditingHUD
         {
@@ -243,6 +254,7 @@ namespace Barotrauma
             //clone links between the entities
             for (int i = 0; i < clones.Count; i++)            
             {
+                if (entitiesToClone[i].linkedTo == null) continue;
                 foreach (MapEntity linked in entitiesToClone[i].linkedTo)
                 {
                     if (!entitiesToClone.Contains(linked)) continue;
@@ -307,6 +319,11 @@ namespace Barotrauma
             mapEntityList.Insert(i, this);
         }
 
+        public virtual bool IsVisible(Rectangle worldView)
+        {
+            return true;
+        }
+
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back=true) {}
 
         public virtual void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect) {}
@@ -328,6 +345,11 @@ namespace Barotrauma
             base.Remove();
 
             mapEntityList.Remove(this);
+
+            if (selectedList.Contains(this))
+            {
+                selectedList = selectedList.FindAll(e => e != this);
+            }
 
             if (aiTarget != null) aiTarget.Remove();
 
@@ -369,7 +391,7 @@ namespace Barotrauma
         public virtual void Update(Camera cam, float deltaTime) { }
 
         /// <summary>
-        /// Update the selection logic in editmap-screen
+        /// Update the selection logic in submarine editor
         /// </summary>
         public static void UpdateSelecting(Camera cam)
         {
@@ -390,7 +412,15 @@ namespace Barotrauma
                 return;
             }
 
-            if (GUIComponent.MouseOn != null || !PlayerInput.MouseInsideWindow) return;
+            if (GUIComponent.MouseOn != null || !PlayerInput.MouseInsideWindow)
+            {
+                if (highlightedListBox == null || 
+                    (GUIComponent.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUIComponent.MouseOn)))
+                {
+                    UpdateHighlightedListBox(null);
+                    return;
+                }
+            }
             
             if (MapEntityPrefab.Selected != null)
             {
@@ -428,10 +458,12 @@ namespace Barotrauma
 
                     Vector2 center = Vector2.Zero;
                     clones.ForEach(c => center += c.WorldPosition);
-                    center /= clones.Count;
+                    center = Submarine.VectorToWorldGrid(center / clones.Count);
+
+                    Vector2 moveAmount = Submarine.VectorToWorldGrid(cam.WorldViewCenter - center);
 
                     selectedList = new List<MapEntity>(clones);
-                    selectedList.ForEach(c => c.Move(cam.WorldViewCenter - center));
+                    selectedList.ForEach(c => c.Move(moveAmount));                    
                 }
             }
 
@@ -441,19 +473,62 @@ namespace Barotrauma
 
             if (startMovingPos == Vector2.Zero)
             {
-                foreach (MapEntity e in mapEntityList)
+                List<MapEntity> highlightedEntities = new List<MapEntity>();
+                if (highlightedListBox != null && highlightedListBox.IsParentOf(GUIComponent.MouseOn))
                 {
-                    if (!e.SelectableInEditor) continue;
-
-                    if (highLightedEntity == null || e.Sprite == null ||
-                        (highLightedEntity.Sprite != null && e.Sprite.Depth < highLightedEntity.Sprite.Depth))
+                    highLightedEntity = GUIComponent.MouseOn.UserData as MapEntity;
+                }
+                else
+                {
+                    foreach (MapEntity e in mapEntityList)
                     {
-                        if (e.IsMouseOn(position)) highLightedEntity = e;
+                        if (!e.SelectableInEditor) continue;
+
+                        if (e.IsMouseOn(position))
+                        {
+                            int i = 0;
+                            while (i < highlightedEntities.Count && 
+                                e.Sprite != null &&
+                                (highlightedEntities[i].Sprite == null || highlightedEntities[i].Sprite.Depth < e.Sprite.Depth))
+                            {
+                                i++;
+                            }
+
+                            highlightedEntities.Insert(i, e);
+
+                            if (i == 0) highLightedEntity = e;                            
+                        }
+                    }
+
+                    if (PlayerInput.MouseSpeed.LengthSquared() > 10)
+                    {
+                        highlightTimer = 0.0f;
+                    }
+                    else
+                    {
+                        bool mouseNearHighlightBox = false;
+
+                        if (highlightedListBox != null)
+                        {
+                            Rectangle expandedRect = highlightedListBox.Rect;
+                            expandedRect.Inflate(20, 20);
+                            mouseNearHighlightBox = expandedRect.Contains(PlayerInput.MousePosition);
+                            if (!mouseNearHighlightBox) highlightedListBox = null;
+                        }
+
+                        highlightTimer += (float)Timing.Step;
+                        if (highlightTimer > 1.0f)
+                        {
+                            if (!mouseNearHighlightBox)
+                            {
+                                UpdateHighlightedListBox(highlightedEntities);
+                                highlightTimer = 0.0f;
+                            }
+                        }
                     }
                 }
 
                 if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
-
             }
             
             //started moving selected entities
@@ -501,11 +576,6 @@ namespace Barotrauma
                     if (highLightedEntity != null) newSelection.Add(highLightedEntity);
                 }
 
-                foreach (MapEntity e in newSelection)
-                {
-                    e.isHighlighted = true;
-                }
-
                 if (PlayerInput.LeftButtonReleased())
                 {
                     if (PlayerInput.KeyDown(Keys.LeftControl) ||
@@ -513,14 +583,7 @@ namespace Barotrauma
                     {
                         foreach (MapEntity e in newSelection)
                         {
-                            bool alreadySelected = false;
-                            
-                            foreach (MapEntity e2 in selectedList)
-                            {
-                                if (e.ID == e2.ID) alreadySelected = true;
-                            }
-
-                            if (alreadySelected)
+                            if (selectedList.Contains(e))
                                 selectedList.Remove(e);
                             else
                                 selectedList.Add(e);
@@ -558,7 +621,8 @@ namespace Barotrauma
             else
             {
                 if (PlayerInput.LeftButtonHeld() &&
-                    PlayerInput.KeyUp(Keys.Space))
+                    PlayerInput.KeyUp(Keys.Space) && 
+                    (highlightedListBox == null || (GUIComponent.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUIComponent.MouseOn))))
                 {
                     //if clicking a selected entity, start moving it
                     foreach (MapEntity e in selectedList)
@@ -569,6 +633,57 @@ namespace Barotrauma
                     selectionPos = position;
                 }
             }            
+        }
+
+        private static void UpdateHighlightedListBox(List<MapEntity> highlightedEntities)
+        {
+            if (highlightedEntities == null || highlightedEntities.Count < 2)
+            {
+                highlightedListBox = null;
+                return;
+            }
+            if (highlightedListBox != null)
+            {
+                if (GUIComponent.MouseOn == highlightedListBox || highlightedListBox.IsParentOf(GUIComponent.MouseOn)) return;
+                if (highlightedEntities.SequenceEqual(highlightedList)) return;
+            }
+
+            highlightedList = highlightedEntities;
+
+            highlightedListBox = new GUIListBox(
+                new Rectangle((int)PlayerInput.MousePosition.X+15, (int)PlayerInput.MousePosition.Y+15, 150, highlightedEntities.Count * 15), 
+                null, Alignment.TopLeft, GUI.Style, null, false);
+
+            highlightedListBox.Color = Color.Black * 0.6f;
+
+            foreach (MapEntity entity in highlightedEntities)
+            {
+                var textBlock = new GUITextBlock(
+                    new Rectangle(0,0,0,15), 
+                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), GUI.Style, highlightedListBox, GUI.SmallFont);
+
+                textBlock.UserData = entity;
+            }
+            
+            highlightedListBox.OnSelected = (GUIComponent component, object obj) =>
+            {
+                MapEntity entity = obj as MapEntity;
+
+                if (PlayerInput.KeyDown(Keys.LeftControl) ||
+                    PlayerInput.KeyDown(Keys.RightControl))
+                {
+                    if (selectedList.Contains(entity))
+                        selectedList.Remove(entity);
+                    else
+                        selectedList.Add(entity);                        
+                }
+                else
+                {
+                    SelectEntity(entity);
+                }
+
+                return true;
+            };
         }
 
 
@@ -608,6 +723,8 @@ namespace Barotrauma
 
         public static void UpdateEditor(Camera cam)
         {
+            if (highlightedListBox != null) highlightedListBox.Update((float)Timing.Step);            
+
             if (selectedList.Count == 1)
             {
                 selectedList[0].UpdateEditing(cam);
@@ -617,19 +734,21 @@ namespace Barotrauma
                     selectedList[0].UpdateResizing(cam);
                 }
             }
-            else
+
+            if (editingHUD != null)
             {
-                if (editingHUD == null) return;
-
-                foreach (GUIComponent component in editingHUD.children)
+                if (selectedList.Count == 0 || editingHUD.UserData != selectedList[0])
                 {
-                    var textBox = component as GUITextBox;
-                    if (textBox == null) continue;
+                    foreach (GUIComponent component in editingHUD.children)
+                    {
+                        var textBox = component as GUITextBox;
+                        if (textBox == null) continue;
 
-                    textBox.Deselect();
+                        textBox.Deselect();
+                    }
+
+                    editingHUD = null;
                 }
-
-                editingHUD = null;
             }
         }
 
@@ -643,6 +762,11 @@ namespace Barotrauma
                 {
                     selectedList[0].DrawResizing(spriteBatch, cam);
                 }
+            }
+
+            if (highlightedListBox != null)
+            {
+                highlightedListBox.Draw(spriteBatch);
             }
         }
 
@@ -658,8 +782,7 @@ namespace Barotrauma
 
             selectedList.Add(entity);
         }
-
-
+        
         /// <summary>
         /// copies a list of entities to the "clipboard" (copiedList)
         /// </summary>
@@ -693,7 +816,7 @@ namespace Barotrauma
         
         public virtual void AddToGUIUpdateList()
         {
-            if (editingHUD != null) editingHUD.AddToGUIUpdateList();
+            if (editingHUD != null && editingHUD.UserData == this) editingHUD.AddToGUIUpdateList();
         }
 
         public virtual void UpdateEditing(Camera cam) { }

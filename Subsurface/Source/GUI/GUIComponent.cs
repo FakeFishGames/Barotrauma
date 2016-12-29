@@ -33,6 +33,13 @@ namespace Barotrauma
 
         public static void ClearUpdateList()
         {
+            if (keyboardDispatcher != null &&
+                KeyboardDispatcher.Subscriber is GUIComponent && 
+                !ComponentsToUpdate.Contains((GUIComponent)KeyboardDispatcher.Subscriber))
+            {
+                KeyboardDispatcher.Subscriber = null;
+            }
+
             ComponentsToUpdate.Clear();
         }
 

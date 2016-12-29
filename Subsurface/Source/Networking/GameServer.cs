@@ -901,6 +901,8 @@ namespace Barotrauma.Networking
                 if (autoRestart) AutoRestartTimer = Math.Max(AutoRestartInterval, 5.0f);
                 GameMain.NetLobbyScreen.StartButton.Enabled = true;
 
+                UpdateNetLobby(null, null);
+
                 couldNotStart = true;
             }
 

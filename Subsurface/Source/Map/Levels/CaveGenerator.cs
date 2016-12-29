@@ -348,9 +348,9 @@ namespace Barotrauma
             return pathCells;
         }
 
-        public static List<Body> GeneratePolygons(List<VoronoiCell> cells, out List<VertexPositionColor> verticeList, bool setSolid=true)
+        public static List<Body> GeneratePolygons(List<VoronoiCell> cells, out List<VertexPositionTexture> verticeList, bool setSolid=true)
         {
-            verticeList = new List<VertexPositionColor>();
+            verticeList = new List<VertexPositionTexture>();
             var bodies = new List<Body>();
 
             List<Vector2> tempVertices = new List<Vector2>();
@@ -388,7 +388,12 @@ namespace Barotrauma
                 {
                     foreach (Vector2 vertex in triangles[i])
                     {
-                        verticeList.Add(new VertexPositionColor(new Vector3(vertex, 0.0f), Color.Black));
+                        //shift the coordinates around a bit to make the texture repetition less obvious
+                        Vector2 uvCoords = new Vector2(
+                            vertex.X / 2000.0f + (float)Math.Sin(vertex.X / 500.0f) * 0.15f,
+                            vertex.Y / 2000.0f + (float)Math.Sin(vertex.Y / 700.0f) * 0.15f);
+
+                        verticeList.Add(new VertexPositionTexture(new Vector3(vertex, 1.0f), uvCoords));
                     }
                 }
 
