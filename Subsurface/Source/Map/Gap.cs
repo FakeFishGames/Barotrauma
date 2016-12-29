@@ -80,6 +80,14 @@ namespace Barotrauma
             }
         }
 
+        public override string Name
+        {
+            get
+            {
+                return "Gap";
+            }
+        }
+
         public override bool SelectableInEditor
         {
             get
@@ -197,7 +205,13 @@ namespace Barotrauma
             Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
             if (isHighlighted) clr = Color.Gold;
 
-            GUI.DrawRectangle(sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), clr * 0.5f, true,0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+            float depth = (ID % 255) * 0.000001f;
+
+            GUI.DrawRectangle(
+                sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), 
+                clr * 0.5f, true,
+                depth, 
+                (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
 
             for (int i = 0; i < linkedTo.Count; i++)
             {
@@ -209,10 +223,10 @@ namespace Barotrauma
                 arrowPos += new Vector2(dir.X * (WorldRect.Width / 2 + 10), dir.Y * (WorldRect.Height / 2 + 10));
 
                 GUI.Arrow.Draw(sb,
-                    arrowPos,
-                    clr * 0.8f,
+                    arrowPos, clr * 0.8f,
                     GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
-                    isHorizontal ? new Vector2(rect.Height / 16.0f, 1.0f) : new Vector2(rect.Width / 16.0f, 1.0f));
+                    isHorizontal ? new Vector2(rect.Height / 16.0f, 1.0f) : new Vector2(rect.Width / 16.0f, 1.0f),
+                    SpriteEffects.None, depth);
             }        
 
             if (IsSelected)
@@ -222,7 +236,7 @@ namespace Barotrauma
                     new Vector2(rect.Width + 10, rect.Height + 10),
                     Color.Red,
                     false,
-                    0,
+                    depth,
                     (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
         }

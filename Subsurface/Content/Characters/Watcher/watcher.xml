@@ -1,6 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="watcher" humanoid="false" health ="1000">
 
+  <sound file="Content/Characters/Watcher/attack1.ogg" state="Attack" range="500"/>
+  <sound file="Content/Characters/Watcher/attack2.ogg" state="Attack" range="500"/>
+  <sound file="Content/Characters/Watcher/attack3.ogg" state="Attack" range="500"/>
+  
+  <sound file="Content/Characters/Watcher/watch1.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Watcher/watch2.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Watcher/watch3.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Watcher/watch4.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Watcher/watch5.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Watcher/watch6.ogg" state="None" range="500"/>
+
   <ragdoll waveamplitude="0.0" swimspeed="0.5" walkspeed="0.3" mirror="true" rotatetowardsmovement="false" headangle="-90">
 
     <collider radius="100"/>

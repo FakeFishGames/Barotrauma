@@ -103,14 +103,11 @@ namespace Barotrauma
         {
             GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, GUI.Style, listBox);
             textBlock.UserData = userData;
+        }
 
-            //int totalHeight = 0;
-            //foreach (GUIComponent child in listBox.children)
-            //{
-            //    totalHeight += child.Rect.Height;
-            //}
-
-            //listBox.Rect = new Rectangle(listBox.Rect.X,listBox.Rect.Y,listBox.Rect.Width,totalHeight);
+        public override void ClearChildren()
+        {
+            listBox.ClearChildren();
         }
 
         public List<GUIComponent> GetChildren()

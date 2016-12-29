@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="coelanth" humanoid="false" health="100.0">
 
-  <sound file="Content/Characters/Scorpion/scorpionattack1.ogg" state="Attack" />
-  <sound file="Content/Characters/Scorpion/scorpionidle1.ogg" state="None" />
-  <sound file="Content/Characters/Scorpion/scorpionidle2.ogg" state="None" />
+  <sound file="Content/Characters/Coelanth/attack1.ogg" state="Attack" />
+  <sound file="Content/Characters/Coelanth/idle1.ogg" state="None" />
+  <sound file="Content/Characters/Coelanth/idle2.ogg" state="None" />
 
   <ragdoll waveamplitude="50.0" wavelength="2500" swimspeed="5.0" walkspeed="3.5" canentersubmarine="false">
 

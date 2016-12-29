@@ -149,12 +149,18 @@ namespace Barotrauma.Sounds
             return soundsPlaying[sourceIndex];
         }
 
-
         public static bool IsPlaying(int sourceIndex)
         {
             if (sourceIndex < 1 || sourceIndex>alSources.Count-1) return false;
-            var state = AL.GetSourceState(alSources[sourceIndex]);
-            return (state == ALSourceState.Playing);
+
+            return AL.GetSourceState(alSources[sourceIndex]) == ALSourceState.Playing;
+        }
+
+        public static bool IsPaused(int sourceIndex)
+        {
+            if (sourceIndex < 1 || sourceIndex > alSources.Count - 1) return false;
+            
+            return AL.GetSourceState(alSources[sourceIndex]) == ALSourceState.Paused;
         }
 
         public static bool IsLooping(int sourceIndex)

@@ -283,7 +283,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.MainSub.WorldPosition.Y > 36500.0f)
+            while (Submarine.MainSub.WorldPosition.Y > 40000.0f)
             {
                 yield return CoroutineStatus.Running;
             }
@@ -293,7 +293,7 @@ namespace Barotrauma.Tutorials
                 "Content/Characters/Moloch/moloch.xml", 
                 steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f));
 
-            moloch.PlaySound(AIController.AiState.Attack);
+            moloch.PlaySound(CharacterSound.SoundType.Attack);
 
             yield return new WaitForSeconds(1.0f);
 
@@ -349,7 +349,7 @@ namespace Barotrauma.Tutorials
                     if (isWindow)
                     {
                         //decrease window damage to slow down the leaking
-                        w.AddDamage(i, -w.SectionDamage(i) * 0.495f);
+                        w.AddDamage(i, -w.SectionDamage(i) * 0.48f);
                     }
                     else
                     {

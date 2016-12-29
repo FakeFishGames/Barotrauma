@@ -47,14 +47,15 @@ namespace Barotrauma.Sounds
 
         public static void Check()
         {
-#if !DEBUG
-            return;
-#endif
-
             ALError error;
             if ((error = AL.GetError()) != ALError.NoError)
             {
-                DebugConsole.ThrowError("OpenAL error: "+AL.GetErrorString(error));
+#if DEBUG
+                DebugConsole.ThrowError("OpenAL error: " + AL.GetErrorString(error));
+#else
+
+                DebugConsole.NewMessage("OpenAL error: "+AL.GetErrorString(error), Microsoft.Xna.Framework.Color.Red);
+#endif
             }
         }
     }

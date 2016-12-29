@@ -177,7 +177,7 @@ namespace Barotrauma.Items.Components
             Item targetItem;
             if ((targetStructure = (targetBody.UserData as Structure)) != null)
             {
-                if (!fixableEntities.Contains(targetStructure.Name)) return;
+                if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Name)) return;
                 if (targetStructure.IsPlatform) return;
 
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
@@ -195,7 +195,7 @@ namespace Barotrauma.Items.Components
                     1.0f - targetStructure.SectionDamage(sectionIndex) / targetStructure.Health,
                     Color.Red, Color.Green);
 
-                progressBar.Size = new Vector2(60.0f, 20.0f);
+                if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
 
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess);
 

@@ -15,7 +15,7 @@
 
   <Body width="32" height="32" density="40"/>
 
-  <Controller userpos="0" direction ="None" canbepicked = "true" msg="Open [E]">
+  <Controller direction ="None" canbepicked = "true" msg="Open [E]">
     <RequiredItem name="ID Card" type="Picked" msg="UNAUTHORIZED ACCESS"/>
     <sound file="beep.ogg" type="OnUse" range="500.0"/>
   </Controller>

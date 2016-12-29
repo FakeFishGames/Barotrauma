@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Voronoi2;
 
 namespace Barotrauma
 {
@@ -298,11 +299,96 @@ namespace Barotrauma
             tags &= ~tag;
         }
 
-        //drawing ----------------------------------------------------
+        /// <summary>
+        /// Returns a rect that contains the borders of this sub and all subs docked to it
+        /// </summary>
+        public Rectangle GetDockedBorders()
+        {
+            Rectangle dockedBorders = Borders;
+            dockedBorders.Y -= dockedBorders.Height;
+
+            foreach (Submarine dockedSub in DockedTo)
+            {
+                Vector2 diff = dockedSub.Submarine == this ? dockedSub.WorldPosition : dockedSub.WorldPosition - WorldPosition;
+                    
+
+                Rectangle dockedSubBorders = dockedSub.Borders;
+                dockedSubBorders.Y -= dockedSubBorders.Height;
+                dockedSubBorders.Location += diff.ToPoint();
+
+                dockedBorders = Rectangle.Union(dockedBorders, dockedSubBorders);
+            }
+
+            dockedBorders.Y += dockedBorders.Height;
+            return dockedBorders;
+        }
+
+        public Vector2 FindSpawnPos(Vector2 spawnPos)
+        {
+            Rectangle dockedBorders = GetDockedBorders();
+            
+            int iterations = 0;
+            bool wallTooClose = false;
+            do
+            {
+                Rectangle worldBorders = new Rectangle(
+                    dockedBorders.X + (int)spawnPos.X,
+                    dockedBorders.Y + (int)spawnPos.Y, 
+                    dockedBorders.Width, 
+                    dockedBorders.Height);
+
+                wallTooClose = false;
+
+                var nearbyCells = Level.Loaded.GetCells(
+                    spawnPos, (int)Math.Ceiling(Math.Max(dockedBorders.Width, dockedBorders.Height) / (float)Level.GridCellSize));
+
+                foreach (VoronoiCell cell in nearbyCells)
+                {
+                    if (cell.CellType == CellType.Empty) continue;
+
+                    foreach (GraphEdge e in cell.edges)
+                    {
+                        List<Vector2> intersections = MathUtils.GetLineRectangleIntersections(e.point1, e.point2, worldBorders);
+                        foreach (Vector2 intersection in intersections)
+                        {
+                            wallTooClose = true;
+
+                            if (intersection.X < spawnPos.X)
+                            {
+                                spawnPos.X += intersection.X - worldBorders.X;
+                            }
+                            else
+                            {
+                                spawnPos.X += intersection.X - worldBorders.Right;
+                            }
+
+                            if (intersection.Y < spawnPos.Y)
+                            {
+                                spawnPos.Y += intersection.Y - (worldBorders.Y - worldBorders.Height);
+                            }
+                            else
+                            {
+                                spawnPos.Y += intersection.Y - worldBorders.Y;
+                            }
+
+                            spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2);
+                        }
+                    }
+                }
+
+                iterations++;
+            } while (wallTooClose && iterations < 10);
+
+            return spawnPos;
+
         
+        }
+        
+        //drawing ----------------------------------------------------
+
         public static void CullEntities(Camera cam)
         {
-            List<Submarine> visibleSubs = new List<Submarine>();
+            HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
             foreach (Submarine sub in Submarine.Loaded)
             {
                 Rectangle worldBorders = new Rectangle(
@@ -311,19 +397,20 @@ namespace Barotrauma
                     sub.Borders.Width + 1000,
                     sub.Borders.Height + 1000);
 
-
                 if (Submarine.RectsOverlap(worldBorders, cam.WorldView))
                 {
                     visibleSubs.Add(sub);
                 }
             }
 
+            Rectangle worldView = cam.WorldView;
+
             visibleEntities = new List<MapEntity>();
             foreach (MapEntity me in MapEntity.mapEntityList)
             {
                 if (me.Submarine == null || visibleSubs.Contains(me.Submarine))
                 {
-                    visibleEntities.Add(me);
+                    if (me.IsVisible(worldView)) visibleEntities.Add(me);
                 }
             }
         }
@@ -827,11 +914,8 @@ namespace Barotrauma
             }
         }
 
-        public static void Preload()
+        public static void RefreshSavedSubs()
         {
-
-            //string[] mapFilePaths;
-            //Unload();
             SavedSubmarines.Clear();
 
             if (!Directory.Exists(SavePath))

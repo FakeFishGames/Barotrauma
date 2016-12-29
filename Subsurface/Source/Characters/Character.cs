@@ -144,10 +144,7 @@ namespace Barotrauma
 
         private float bleeding;
 
-        private Sound[] sounds;
-        private float[] soundRange;
-        //which AIstate each sound is for
-        private AIController.AiState[] soundStates;
+        private List<CharacterSound> sounds;
 
         private float attackCoolDown;
 
@@ -603,28 +600,13 @@ namespace Barotrauma
             soundInterval = ToolBox.GetAttributeFloat(doc.Root, "soundinterval", 10.0f);
 
             var soundElements = doc.Root.Elements("sound").ToList();
-            if (soundElements.Any())
+
+            sounds = new List<CharacterSound>();
+            foreach (XElement soundElement in soundElements)
             {
-                sounds = new Sound[soundElements.Count];
-                soundStates = new AIController.AiState[soundElements.Count];
-                soundRange = new float[soundElements.Count];
-                int i = 0;
-                foreach (XElement soundElement in soundElements)
-                {
-                    sounds[i] = Sound.Load(soundElement.Attribute("file").Value);
-                    soundRange[i] = ToolBox.GetAttributeFloat(soundElement, "range", 1000.0f);
-                    if (soundElement.Attribute("state") == null)
-                    {
-                        soundStates[i] = AIController.AiState.None;
-                    }
-                    else
-                    {
-                        soundStates[i] = (AIController.AiState)Enum.Parse(
-                            typeof(AIController.AiState), soundElement.Attribute("state").Value, true);
-                    }
-                    i++;
-                }
+                sounds.Add(new CharacterSound(soundElement));
             }
+            
 
             if (file == humanConfigFile)
             {
@@ -1536,7 +1518,13 @@ namespace Barotrauma
 
         private void UpdateOxygen(float deltaTime)
         {
+            float prevOxygen = oxygen;
             Oxygen += deltaTime * (oxygenAvailable < 30.0f ? -5.0f : 10.0f);
+
+            if (prevOxygen > 0.0f && Oxygen <= 0.0f && controlled == this)
+            {
+                SoundPlayer.PlaySound("drown");                
+            }
 
             PressureProtection -= deltaTime * 100.0f;
 
@@ -1678,6 +1666,8 @@ namespace Barotrauma
         /// </summary>
         public HUDProgressBar UpdateHUDProgressBar(object linkedObject, Vector2 worldPosition, float progress, Color emptyColor, Color fullColor)
         {
+            if (controlled != this) return null;
+
             HUDProgressBar progressBar = null;
             if (!hudProgressBars.TryGetValue(linkedObject, out progressBar))
             {
@@ -1692,24 +1682,15 @@ namespace Barotrauma
             return progressBar;
         }
 
-        public void PlaySound(AIController.AiState state)
+        public void PlaySound(CharacterSound.SoundType soundType)
         {
-            if (sounds == null || !sounds.Any()) return;
-            var matchingSoundStates = soundStates.Where(x => x == state).ToList();
+            if (sounds == null || sounds.Count == 0) return;
 
-            int selectedSound = Rand.Int(matchingSoundStates.Count);
+            var matchingSounds = sounds.FindAll(s => s.Type == soundType);
+            if (matchingSounds.Count == 0) return;
 
-            int n = 0;
-            for (int i = 0; i < sounds.Length; i++)
-            {
-                if (soundStates[i] != state) continue;
-                if (n == selectedSound && sounds[i]!=null)
-                {
-                    sounds[i].Play(1.0f, soundRange[i], AnimController.Limbs[0].WorldPosition);
-                    return;
-                }
-                n++;
-            }
+            var selectedSound = matchingSounds[Rand.Int(matchingSounds.Count)];
+            selectedSound.Sound.Play(1.0f, selectedSound.Range, AnimController.WorldPosition);
         }
 
         public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
@@ -1810,7 +1791,7 @@ namespace Barotrauma
                 // limb.Damage = 100.0f;
             }
 
-            SoundPlayer.PlayDamageSound(DamageSoundType.Implode, 50.0f, AnimController.Collider);
+            SoundPlayer.PlaySound("implode", 1.0f, 150.0f, WorldPosition);
 
             for (int i = 0; i < 10; i++)
             {
@@ -1861,11 +1842,9 @@ namespace Barotrauma
             GameServer.Log(Name+" has died (Cause of death: "+causeOfDeath+")", Color.Red);
 
             if (OnDeath != null) OnDeath(this, causeOfDeath);
-
-            //CoroutineManager.StartCoroutine(DeathAnim(GameMain.GameScreen.Cam));
-
-            //health = 0.0f;
-
+            
+            PlaySound(CharacterSound.SoundType.Die);
+            
             isDead = true;
             this.causeOfDeath = causeOfDeath;
             AnimController.movement = Vector2.Zero;
@@ -1876,7 +1855,7 @@ namespace Barotrauma
                 if (selectedItems[i] != null) selectedItems[i].Drop(this);            
             }
 
-            if (aiTarget!=null)
+            if (aiTarget != null)
             {
                 aiTarget.Remove();
                 aiTarget = null;

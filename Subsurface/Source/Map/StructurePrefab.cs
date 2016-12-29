@@ -85,22 +85,9 @@ namespace Barotrauma
         {
             StructurePrefab sp = new StructurePrefab();
             sp.name = element.Name.ToString();
-
-            //Vector4 sourceVector = ToolBox.GetAttributeVector4(element, "sourcerect", new Vector4(0,0,1,1));
             
-            //Rectangle sourceRect = new Rectangle(
-            //    (int)sourceVector.X,
-            //    (int)sourceVector.Y,
-            //    (int)sourceVector.Z,
-            //    (int)sourceVector.W);
-            
-            //if (element.Attribute("sprite") != null)
-            //{
-            //    sp.sprite = new Sprite(element.Attribute("sprite").Value, sourceRect, Vector2.Zero);
-                
-            //    sp.sprite.Depth = ToolBox.GetAttributeFloat(element, "depth", 0.0f);
-
-            //}
+            sp.tags = new List<string>();
+            sp.tags.AddRange(ToolBox.GetAttributeString(element, "tags", "").Split(','));
 
             foreach (XElement subElement in element.Elements())
             {

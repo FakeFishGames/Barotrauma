@@ -484,8 +484,6 @@ namespace Barotrauma
 
             Vector2 lastContactPoint = worldPoints[0];
 
-            SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact * 10.0f, ConvertUnits.ToDisplayUnits(lastContactPoint));
-
             if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
             {
                 GameMain.GameScreen.Cam.Shake = impact * 2.0f;
@@ -518,7 +516,29 @@ namespace Barotrauma
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse);                
             }
 
-            Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * DamageMultiplier);
+            var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * DamageMultiplier);
+
+            //play a damage sound for the structure that took the most damage
+            float maxDamage = 0.0f;
+            Structure maxDamageStructure = null;
+            foreach (KeyValuePair<Structure,float> structureDamage in damagedStructures)
+            {
+                if (maxDamageStructure == null || structureDamage.Value > maxDamage)
+                {
+                    maxDamage = structureDamage.Value;
+                    maxDamageStructure = structureDamage.Key;
+                }
+            }
+
+            if (maxDamageStructure != null)
+            {
+                SoundPlayer.PlayDamageSound(
+                    DamageSoundType.StructureBlunt,
+                    impact * 10.0f,
+                    ConvertUnits.ToDisplayUnits(lastContactPoint),
+                    MathHelper.Clamp(maxDamage * 4.0f, 1000.0f, 4000.0f),
+                    maxDamageStructure.Tags);            
+            }
         }
 
     }

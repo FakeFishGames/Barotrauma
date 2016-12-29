@@ -1,4 +1,56 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.4.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed crashes when removing nodes from a wire (i.e. right clicking with a wire equipped)
+- fixed inventory not being drawn in the correct position if switching to a character who's been 
+dragged/grabbed by some other character
+- fixed wires becoming disconnected when copypasting them
+- wire nodes can't be moved when connecting wires to a connection panel
+- fixed repeating crash messageboxes if the game fails to resolve a SharpDX exception on startup
+- fixed crashing when switching to wiring mode while editing some value of an item
+- fixed keyboard focus staying in textboxes after the textbox has been hidden (for example, 
+the input fields in the submarine saving prompt)
+- fixed error message spam if a docking port is linked to another port in the same sub
+- submarine lists in the editor, main menu and server menu are updated when new subs are saved/received
+- fixed item editing menu staying on the screen when loading another sub in the editor
+- ruins cant span above the top of the level anymore
+- the size of the docked subs is taken into account when generating the level
+- fixed autorestart timer not resetting at the clients' end if the server fails to start a shift and
+resets the timer
+- docked subs are forced to correct positions during loading (subs won't get stuck inside each other 
+even if the submarines are slightly overlapping in the editor)
+
+- all sounds are paused when switching to submarine editor
+- replaced the solid black color inside ice walls with a proper texture
+- the background ice texture loops better
+
+---------------------------------------------------------------------------------------------------------
+v0.5.4.1
+---------------------------------------------------------------------------------------------------------
+
+Bugfixes:
+	- copypasted items are now correctly aligned to the "grid"
+	- cabinets can be copypasted from a sub to another without the items inside disappearing
+	- placing explosives inside an item and that item inside another item doesn't prevent explosions
+	- fixed a bug that occasionally caused crashing when the game happens to generate a very small level
+
+Sub editor:
+	- structures/items that are behind something else can be selected using a listbox that appears 
+	when hovering the cursor over them	
+	- wires have to be selected by clicking before any of the points can be moved (makes it possible 
+	to move	the correct wire even if it's overlapping with other wires)
+	- the selected wire is renderer over all structures
+	- points can be added to wires by clicking while holding ctrl
+	- disabled music
+
+Misc:
+	- some rendering optimization	
+	- pathfinding and waypoint generation improvements
+	- made mantises more aggressive
+	- water flows more slowly through partially damaged walls	
+
+---------------------------------------------------------------------------------------------------------
 v0.5.4.0
 ---------------------------------------------------------------------------------------------------------
 

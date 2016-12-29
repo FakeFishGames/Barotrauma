@@ -888,6 +888,11 @@ namespace Barotrauma
             }
         }
 
+        public override bool IsVisible(Rectangle worldView)
+        {
+            return drawableComponents.Count > 0 || body == null || body.Enabled;
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!Visible) return;
@@ -1137,27 +1142,39 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                ic.DrawHUD(spriteBatch, character);
+                if (ic.CanBeSelected) ic.DrawHUD(spriteBatch, character);
             }
         }
 
         public override void AddToGUIUpdateList()
         {
-            if (condition <= 0.0f)
-            {
-                FixRequirement.AddToGUIUpdateList();
-                return;
-            }
-            if (HasInGameEditableProperties)
+            if (Screen.Selected is EditMapScreen)
             {
                 if (editingHUD != null) editingHUD.AddToGUIUpdateList();
             }
-            foreach (ItemComponent ic in components)
+            else
             {
-                ic.AddToGUIUpdateList();
+                if (HasInGameEditableProperties)
+                {
+                    if (editingHUD != null) editingHUD.AddToGUIUpdateList();
+                }
             }
-            if (Screen.Selected is EditMapScreen && editingHUD != null) editingHUD.AddToGUIUpdateList();
+
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction == this)
+            {
+                if (condition <= 0.0f)
+                {
+                    FixRequirement.AddToGUIUpdateList();
+                    return;
+                }
+
+                foreach (ItemComponent ic in components)
+                {
+                    if (ic.CanBeSelected) ic.AddToGUIUpdateList();
+                }
+            }
         }
+
 
         public virtual void UpdateHUD(Camera cam, Character character)
         {
@@ -1949,16 +1966,22 @@ namespace Barotrauma
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
 
+        /// <summary>
+        /// Remove the item so that it doesn't appear to exist in the game world (stop sounds, remove bodies etc)
+        /// but don't reset anything that's required for cloning the item
+        /// </summary>
         public override void ShallowRemove()
         {
             base.ShallowRemove();
 
             Removed = true;
+
             foreach (ItemComponent ic in components)
             {
-                ic.Remove();
+                ic.ShallowRemove();
             }
             ItemList.Remove(this);
+
             if (body != null)
             {
                 body.Remove();

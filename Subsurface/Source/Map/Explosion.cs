@@ -119,15 +119,21 @@ namespace Barotrauma
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
+                    
+                    //calculate distance from the "outer surface" of the physics body
+                    //doesn't take the rotation of the limb into account, but should be accurate enough for this purpose
+                    float limbRadius = Math.Max(Math.Max(limb.body.width * 0.5f, limb.body.height * 0.5f), limb.body.radius);
+                    dist = Math.Max(0.0f, dist - FarseerPhysics.ConvertUnits.ToDisplayUnits(limbRadius));
 
                     if (dist > range) continue;
 
                     float distFactor = 1.0f - dist / range;
 
-                    if (limb.WorldPosition == worldPosition) continue;
-
                     c.AddDamage(limb.WorldPosition, DamageType.None,
                         damage / c.AnimController.Limbs.Length * distFactor, 0.0f, stun * distFactor, false);
+
+                    if (limb.WorldPosition == worldPosition) continue;
+
                     if (force > 0.0f)
                     {
                         limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.WorldPosition - worldPosition) * distFactor * force);
@@ -136,11 +142,12 @@ namespace Barotrauma
             }
         }
 
-        public static void RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
+        /// <summary>
+        /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
+        /// </summary>
+        public static Dictionary<Structure,float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage)
         {
-            List<Structure> structureList = new List<Structure>();
-
-
+            List<Structure> structureList = new List<Structure>();            
             float dist = 600.0f;
             foreach (MapEntity entity in MapEntity.mapEntityList)
             {
@@ -155,14 +162,28 @@ namespace Barotrauma
                 }
             }
 
+            Dictionary<Structure, float> damagedStructures = new Dictionary<Structure, float>();
             foreach (Structure structure in structureList)
             {
                 for (int i = 0; i < structure.SectionCount; i++)
                 {
                     float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i, true), worldPosition) / worldRange);
-                    if (distFactor > 0.0f) structure.AddDamage(i, damage * distFactor);
-                }
+                    if (distFactor <= 0.0f) continue;
+                    
+                    structure.AddDamage(i, damage * distFactor);
+
+                    if (damagedStructures.ContainsKey(structure))
+                    { 
+                        damagedStructures[structure] += damage * distFactor;
+                    }
+                    else
+                    {
+                        damagedStructures.Add(structure, damage * distFactor);
+                    }
+                }                
             }
+
+            return damagedStructures;
         }
     }
 }

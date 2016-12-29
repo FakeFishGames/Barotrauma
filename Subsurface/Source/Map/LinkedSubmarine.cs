@@ -405,19 +405,29 @@ namespace Barotrauma
             }
             else
             {
-                sub.SetPosition(WorldPosition - Submarine.WorldPosition);
-                sub.Submarine = Submarine;
+                sub.SetPosition(WorldPosition);                
             }
-            
-            var linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
 
-            if (linkedItem == null) return;
-            
-            var linkedPort = ((Item)linkedItem).GetComponent<DockingPort>();
 
+            DockingPort linkedPort = null;
             DockingPort myPort = null;
-            float closestDistance = 0.0f;
+            
+            MapEntity linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
+            if (linkedItem == null)
+            {
+                linkedPort = DockingPort.list.Find(dp => dp.DockingTarget != null && dp.DockingTarget.Item.Submarine == sub);
+            }
+            else
+            {
+                linkedPort = ((Item)linkedItem).GetComponent<DockingPort>();
+            }
 
+            if (linkedPort == null)
+            {
+                return;
+            }
+
+            float closestDistance = 0.0f;
             foreach (DockingPort port in DockingPort.list)
             {
                 if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) continue;
@@ -432,8 +442,23 @@ namespace Barotrauma
 
             if (myPort != null)
             {
-                myPort.DockingTarget = linkedPort;
-            }            
+                Vector2 portDiff = myPort.Item.WorldPosition - sub.WorldPosition;
+                Vector2 offset = (myPort.IsHorizontal ?
+                    Vector2.UnitX * Math.Sign(linkedPort.Item.WorldPosition.X - myPort.Item.WorldPosition.X) :
+                    Vector2.UnitY * Math.Sign(linkedPort.Item.WorldPosition.Y - myPort.Item.WorldPosition.Y));
+                offset *= myPort.DockedDistance;
+
+                sub.SetPosition(
+                    (linkedPort.Item.WorldPosition - portDiff)
+                    - offset);
+
+
+                myPort.Dock(linkedPort);   
+                myPort.Lock();
+            }
+
+            sub.SetPosition(sub.WorldPosition - Submarine.WorldPosition);
+            sub.Submarine = Submarine;
         }
     }
 }

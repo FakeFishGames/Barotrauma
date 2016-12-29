@@ -125,6 +125,8 @@ namespace Barotrauma.Items.Components
                     Item it = recipient.Item;
                     if (it == null) continue;
 
+                    if (it.Condition <= 0.0f) continue;
+
                     Powered powered = it.GetComponent<Powered>();
                     if (powered == null || !powered.IsActive) continue;
 

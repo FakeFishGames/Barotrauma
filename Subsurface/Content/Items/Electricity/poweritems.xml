@@ -50,7 +50,7 @@
       <StatusEffect type="OnActive" target="Contained" targetnames="loadable" Condition="2.0"/>
     </PowerContainer>
 
-    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]">
       <StatusEffect type="OnFailure" target="Character">
         <Explosion range="100.0" damage="15" stun="10" force="3.0" flames="false" shockwave="false" sparks="true"/>
       </StatusEffect>
@@ -59,7 +59,7 @@
       <input name="power_in"/>      
     </ConnectionPanel>
 
-    <ItemContainer capacity="3" hideitems="true">
+    <ItemContainer capacity="3" canbeselected="true" hideitems="true">
       <Containable name="loadable"/>      
     </ItemContainer>
   </Item>

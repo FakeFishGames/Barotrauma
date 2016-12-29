@@ -11,7 +11,7 @@ namespace Barotrauma
 {
     class LevelRenderer : IDisposable
     {
-        private static BasicEffect basicEffect;
+        private static BasicEffect wallEdgeEffect, wallCenterEffect;
 
         private static Sprite background, backgroundTop;
         private static Sprite dustParticles;
@@ -39,14 +39,29 @@ namespace Barotrauma
                 dustParticles = new Sprite("Content/Map/dustparticles.png", Vector2.Zero);
             }
 
-            if (basicEffect == null)
+            if (wallEdgeEffect == null)
             {
-                basicEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
-                basicEffect.VertexColorEnabled = false;
-
-                basicEffect.TextureEnabled = true;
-                basicEffect.Texture = TextureLoader.FromFile("Content/Map/iceWall.png");
+                wallEdgeEffect = new BasicEffect(GameMain.CurrGraphicsDevice)
+                {
+                    DiffuseColor = new Vector3(0.8f, 0.8f, 0.8f),
+                    VertexColorEnabled = false,
+                    TextureEnabled = true,
+                    Texture = shaftTexture
+                };
+                wallEdgeEffect.CurrentTechnique = wallEdgeEffect.Techniques["BasicEffect_Texture"];
             }
+
+            if (wallCenterEffect == null)
+            {
+                wallCenterEffect = new BasicEffect(GameMain.CurrGraphicsDevice)
+                {
+                    VertexColorEnabled = false,
+                    TextureEnabled = true,
+                    Texture = backgroundTop.Texture
+                };
+                wallCenterEffect.CurrentTechnique = wallCenterEffect.Techniques["BasicEffect_Texture"];
+            }
+
             
             if (backgroundSpriteManager==null)
             {
@@ -79,9 +94,9 @@ namespace Barotrauma
             wallVertices.SetData(vertices);
         }
 
-        public void SetBodyVertices(VertexPositionColor[] vertices)
+        public void SetBodyVertices(VertexPositionTexture[] vertices)
         {
-            bodyVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            bodyVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
             bodyVertices.SetData(vertices);
         }
 
@@ -96,19 +111,18 @@ namespace Barotrauma
 
             if (backgroundPos.Y < 1024)
             {
-                if (backgroundPos.Y > -1024)
-                {
-                    background.SourceRect = new Rectangle((int)backgroundPos.X, (int)Math.Max(backgroundPos.Y, 0), 1024, 1024);
-                    background.DrawTiled(spriteBatch,
-                        (backgroundPos.Y < 0) ? new Vector2(0.0f, -backgroundPos.Y) : Vector2.Zero,
-                        new Vector2(GameMain.GraphicsWidth, 1024 - backgroundPos.Y),
-                        Vector2.Zero, level.BackgroundColor);
-                }
-
                 if (backgroundPos.Y < 0)
                 {
                     backgroundTop.SourceRect = new Rectangle((int)backgroundPos.X, (int)backgroundPos.Y, 1024, (int)Math.Min(-backgroundPos.Y, 1024));
                     backgroundTop.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, Math.Min(-backgroundPos.Y, GameMain.GraphicsHeight)),
+                        Vector2.Zero, level.BackgroundColor);
+                }
+                if (backgroundPos.Y > -1024)
+                {
+                    background.SourceRect = new Rectangle((int)backgroundPos.X, (int)Math.Max(backgroundPos.Y, 0), 1024, 1024);
+                    background.DrawTiled(spriteBatch,
+                        (backgroundPos.Y < 0) ? new Vector2(0.0f, (int)-backgroundPos.Y) : Vector2.Zero,
+                        new Vector2(GameMain.GraphicsWidth, (int)Math.Ceiling(1024 - backgroundPos.Y)),
                         Vector2.Zero, level.BackgroundColor);
                 }
             }
@@ -165,12 +179,12 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, 
                         new Vector2(cell.edges[0].point1.X, -cell.edges[0].point1.Y),
                         new Vector2(cell.Center.X, -cell.Center.Y), 
-                        Color.White);
+                        Color.Blue*0.5f);
                 
                     foreach (GraphEdge edge in cell.edges)
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(edge.point1.X, -edge.point1.Y),
-                            new Vector2(edge.point2.X, -edge.point2.Y), cell.body==null ? Color.Gray : Color.White);
+                            new Vector2(edge.point2.X, -edge.point2.Y), cell.body==null ? Color.Cyan*0.5f : Color.White);
                     }
 
                     foreach (Vector2 point in cell.bodyVertices)
@@ -205,64 +219,21 @@ namespace Barotrauma
         {
             if (wallVertices == null) return;
             
-            basicEffect.World = cam.ShaderTransform
-                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
+            wallEdgeEffect.World = cam.ShaderTransform
+                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 100) * 0.5f;
+            wallCenterEffect.World = wallEdgeEffect.World;
 
+            //render the solid center of the wall cells
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
-            graphicsDevice.BlendState = BlendState.AlphaBlend;
             graphicsDevice.SetVertexBuffer(bodyVertices);
-
-            basicEffect.VertexColorEnabled = true;
-            basicEffect.TextureEnabled = false;
-            basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_VertexColor"];
-            basicEffect.CurrentTechnique.Passes[0].Apply();
+            wallCenterEffect.CurrentTechnique.Passes[0].Apply();
             
             graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(bodyVertices.VertexCount / 3.0f));
-
-            /*
-            for (int side = 0; side < 2; side++)
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    basicEffect.World = Matrix.CreateTranslation(new Vector3(level.WrappingWalls[side, i].Offset, 0.0f)) * cam.ShaderTransform
-                        * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
-                    basicEffect.CurrentTechnique.Passes[0].Apply();
-
-
-                    graphicsDevice.SetVertexBuffer(level.WrappingWalls[side, i].BodyVertices);
-
-                    graphicsDevice.DrawPrimitives(
-                        PrimitiveType.TriangleList, 0,
-                        (int)Math.Floor(level.WrappingWalls[side, i].BodyVertices.VertexCount / 3.0f));
-                }
-            }*/
-
-
-            graphicsDevice.SetVertexBuffer(wallVertices);
-            basicEffect.VertexColorEnabled = false;
-            basicEffect.TextureEnabled = true;
-            basicEffect.CurrentTechnique = basicEffect.Techniques["BasicEffect_Texture"];
-            basicEffect.CurrentTechnique.Passes[0].Apply();
-            graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
-            /*
-            for (int side = 0; side < 2; side++)
-            {
-                for (int i = 0; i < 2; i++)
-                {
-
-                    basicEffect.World = Matrix.CreateTranslation(new Vector3(level.WrappingWalls[side,i].Offset, 0.0f)) * cam.ShaderTransform
-                        * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
-                    basicEffect.CurrentTechnique.Passes[0].Apply();
-
-                    graphicsDevice.SetVertexBuffer(level.WrappingWalls[side, i].WallVertices);
-
-                    graphicsDevice.DrawPrimitives(
-                        PrimitiveType.TriangleList, 0,
-                        (int)Math.Floor(level.WrappingWalls[side, i].WallVertices.VertexCount / 3.0f));
-
-                }
-            }*/
             
+            //render the edges of the wall cells
+            graphicsDevice.SetVertexBuffer(wallVertices);
+            wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
+            graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
         }
 
         public void Dispose()

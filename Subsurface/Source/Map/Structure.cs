@@ -101,7 +101,7 @@ namespace Barotrauma
 
         public override string Name
         {
-            get { return "structure"; }
+            get { return prefab.Name; }
         }
 
         public bool HasBody
@@ -151,6 +151,11 @@ namespace Barotrauma
             {
                 return prefab.HasBody;
             }
+        }
+
+        public List<string> Tags
+        {
+            get { return prefab.tags; }
         }
 
         public override Rectangle Rect
@@ -477,6 +482,15 @@ namespace Barotrauma
             if (convexHulls != null) convexHulls.ForEach(x => x.Remove());
         }
 
+        public override bool IsVisible(Rectangle WorldView)
+        {
+            Rectangle worldRect = WorldRect;
+
+            if (worldRect.X > WorldView.Right || worldRect.Right < WorldView.X) return false;
+            if (worldRect.Y < WorldView.Y - WorldView.Height || worldRect.Y - worldRect.Height > WorldView.Y) return false;
+
+            return true;
+        }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
@@ -505,6 +519,9 @@ namespace Barotrauma
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
+            float depth = prefab.sprite.Depth;
+            depth -= (ID % 255) * 0.000001f;
+
             if (back && damageEffect == null)
             {
                 if (prefab.BackgroundSprite != null)
@@ -513,7 +530,7 @@ namespace Barotrauma
                         spriteBatch,
                         new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                         new Vector2(rect.Width, rect.Height),
-                        Vector2.Zero, color, Point.Zero);
+                        color, Point.Zero);
                 }
             }
 
@@ -552,8 +569,8 @@ namespace Barotrauma
                         spriteBatch,
                         new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
                         new Vector2(sections[i].rect.Width, sections[i].rect.Height),
-                        Vector2.Zero, color, 
-                        textureOffset);
+                        color,
+                        textureOffset, depth);
                 }
             }
 

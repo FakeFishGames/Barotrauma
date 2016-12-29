@@ -45,7 +45,7 @@
       <Item name="Steel Bar"/>
     </Deconstruct>
 
-    <Sprite texture="railgunetc.png" sourcerect="114,210,68,47" depth ="0.5"/>
+    <Sprite texture="railgunetc.png" sourcerect="114,210,68,47" depth ="0.55"/>
 
     <Body width="68" height="47" density="30"/>
 

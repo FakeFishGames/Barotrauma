@@ -22,9 +22,19 @@ namespace Barotrauma
             fileName = Path.Combine(SaveFolder, fileName);
 
             string tempPath = Path.Combine(SaveFolder, "temp");
-            
-            Directory.CreateDirectory(tempPath);   
 
+            DirectoryInfo dir = new DirectoryInfo(tempPath);
+
+            Directory.CreateDirectory(tempPath);
+            try
+            {
+                ClearFolder(tempPath);
+            }
+            catch
+            {
+
+            }
+            
             try 
             {
                 if (Submarine.MainSub != null)
@@ -273,6 +283,23 @@ namespace Barotrauma
             using (FileStream inFile = new FileStream(sCompressedFile, FileMode.Open, FileAccess.Read, FileShare.None))
             using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
                 while (DecompressFile(sDir, zipStream, progress)) ;
+        }
+
+        private static void ClearFolder(string FolderName)
+        {
+            DirectoryInfo dir = new DirectoryInfo(FolderName);
+
+            foreach (FileInfo fi in dir.GetFiles())
+            {
+                fi.IsReadOnly = false;
+                fi.Delete();
+            }
+
+            foreach (DirectoryInfo di in dir.GetDirectories())
+            {
+                ClearFolder(di.FullName);
+                di.Delete();
+            }
         }
     }
 }

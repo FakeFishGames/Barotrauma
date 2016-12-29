@@ -44,6 +44,12 @@ namespace Barotrauma.Items.Components
 
         private bool docked;
 
+        public int DockingDir
+        {
+            get { return dockingDir; }
+            set { dockingDir = value; }
+        }
+
         [HasDefaultValue("32.0,32.0", false)]
         public string DistanceTolerance
         {
@@ -150,7 +156,8 @@ namespace Barotrauma.Items.Components
 
             if (target.item.Submarine == item.Submarine)
             {
-                DebugConsole.ThrowError("Error - tried to a submarine to itself");
+                DebugConsole.ThrowError("Error - tried to dock a submarine to itself");
+                dockingTarget = null;
                 return;
             }
 
@@ -176,8 +183,9 @@ namespace Barotrauma.Items.Components
 
             dockingDir = IsHorizontal ? 
                 Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
-                Math.Sign(item.WorldPosition.Y - dockingTarget.item.WorldPosition.Y);
+                Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
             dockingTarget.dockingDir = -dockingDir;
+            
 
             foreach (WayPoint wp in WayPoint.WayPointList)
             {
@@ -199,12 +207,46 @@ namespace Barotrauma.Items.Components
             CreateJoint(false);
         }
 
+        public void Lock()
+        {
+            if (dockingTarget==null)
+            {
+                DebugConsole.ThrowError("Error - attempted to lock a docking port that's not connected to anything");
+                return;
+            }
+            else if (joint is WeldJoint)
+            {
+                DebugConsole.ThrowError("Error - attempted to lock a docking port that's already locked");
+                return;
+            }
+
+            dockingDir = IsHorizontal ?
+                Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
+                Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+            dockingTarget.dockingDir = -dockingDir;            
+            
+            GameMain.World.RemoveJoint(joint);
+
+            PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
+
+            ConnectWireBetweenPorts();
+
+            CreateJoint(true);
+
+            if (!item.linkedTo.Any(e => e is Hull) && !dockingTarget.item.linkedTo.Any(e => e is Hull))
+            {
+                CreateHull();
+
+                //item.NewComponentEvent(this, false, true);
+            }
+        }
+
 
         private void CreateJoint(bool useWeldJoint)
         {
             Vector2 offset = (IsHorizontal ?
-                Vector2.UnitX * Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
-                Vector2.UnitY * Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y));
+                Vector2.UnitX * dockingDir :
+                Vector2.UnitY * dockingDir);
             offset *= DockedDistance * 0.5f;
             
             Vector2 pos1 = item.WorldPosition + offset;
@@ -491,28 +533,18 @@ namespace Barotrauma.Items.Components
                 if (!docked)
                 {
                     Dock(dockingTarget);
+                    if (dockingTarget == null) return;
                 }
 
                 if (joint is DistanceJoint)
                 {
                     item.SendSignal(0, "0", "state_out");
+                    dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
 
                     if (Vector2.Distance(joint.WorldAnchorA, joint.WorldAnchorB) < 0.05f)
                     {
-                        GameMain.World.RemoveJoint(joint);
-                        
-                        PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
-
-                        ConnectWireBetweenPorts();                        
-
-                        CreateJoint(true);
-
-                        if (!item.linkedTo.Any(e => e is Hull) && !dockingTarget.item.linkedTo.Any(e => e is Hull))
-                        {
-                            CreateHull();
-                        }
+                        Lock();
                     }
-                    dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
                 }
                 else
                 {
@@ -606,12 +638,14 @@ namespace Barotrauma.Items.Components
 
             if (!item.linkedTo.Any()) return;
 
-            foreach (MapEntity entity in item.linkedTo)
+            List<MapEntity> linked = new List<MapEntity>(item.linkedTo);
+            foreach (MapEntity entity in linked)
             {
                 var hull = entity as Hull;
                 if (hull != null)
                 {
                     hull.Remove();
+                    item.linkedTo.Remove(hull);
                     continue;
                 }
 
@@ -619,6 +653,7 @@ namespace Barotrauma.Items.Components
                 if (gap != null)
                 {
                     gap.Remove();
+                    gap.linkedTo.Remove(hull);
                     continue;
                 }
 
@@ -626,10 +661,11 @@ namespace Barotrauma.Items.Components
                 if (linkedItem == null) continue;
 
                 var dockingPort = linkedItem.GetComponent<DockingPort>();
-                if (dockingPort != null) dockingTarget = dockingPort;
+                if (dockingPort != null)
+                {
+                    Dock(dockingPort);
+                }
             }
-
-            item.linkedTo.Clear();
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)

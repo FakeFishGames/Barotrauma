@@ -544,10 +544,27 @@ namespace Barotrauma.Items.Components
             RemoveComponentSpecific();
         }
 
-        protected virtual void RemoveComponentSpecific() 
+        /// <summary>
+        /// Remove the component so that it doesn't appear to exist in the game world (stop sounds, remove bodies etc)
+        /// but don't reset anything that's required for cloning the item
+        /// </summary>
+        public void ShallowRemove()
         {
+            if (loopingSound != null)
+            {
+                Sounds.SoundManager.Stop(loopingSoundIndex);
+            }
 
+            ShallowRemoveComponentSpecific();
         }
+
+        protected virtual void ShallowRemoveComponentSpecific()
+        {
+            RemoveComponentSpecific();
+        }
+
+        protected virtual void RemoveComponentSpecific() 
+        { }
 
         public bool HasRequiredSkills(Character character)
         {
