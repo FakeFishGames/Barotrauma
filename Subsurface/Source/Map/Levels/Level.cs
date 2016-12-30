@@ -448,35 +448,7 @@ namespace Barotrauma
             renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells));
 
             renderer.PlaceSprites(generationParams.BackgroundSpriteAmount);
-            
-            /*
-            wrappingWalls = new WrappingWall[2, 2];
-
-            Rectangle ignoredArea = new Rectangle((int)startPosition.X, 0, (int)(endPosition.X - startPosition.X), borders.Height);
-            
-            for (int side = 0; side < 2; side++)
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    wrappingWalls[side, i] = new WrappingWall(pathCells, cells, ignoredArea,
-                        (side == 0 ? -1 : 1) * (i + 1));
-
-                    List<VertexPositionColor> wrappingWallVertices;
-                    CaveGenerator.GeneratePolygons(wrappingWalls[side, i].Cells, out wrappingWallVertices, false);
-
-                    wrappingWalls[side, i].SetBodyVertices(wrappingWallVertices.ToArray());
-                    wrappingWalls[side, i].SetWallVertices(CaveGenerator.GenerateWallShapes(wrappingWalls[side, i].Cells));
-                }
-
-            }
-            for (int side = 0; side < 2; side++)
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    cells.AddRange(wrappingWalls[side, i].Cells);
-                }
-            }*/
-            
+                        
             ShaftBody = BodyFactory.CreateEdge(GameMain.World, 
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
                 ConvertUnits.ToSimUnits(new Vector2(borders.Right, 0)));
@@ -498,6 +470,9 @@ namespace Barotrauma
                     edge.site2 = null;
                 }
             }
+
+            //initialize MapEntities that aren't in any sub (e.g. items inside ruins)
+            MapEntity.MapLoaded(null);
 
             Debug.WriteLine("Generatelevel: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
