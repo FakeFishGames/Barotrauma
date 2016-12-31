@@ -1,4 +1,17 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.4.3
+---------------------------------------------------------------------------------------------------------
+
+- a new enemy
+- some new sound effects by Omniary
+- some structure-specific damage sounds
+- the size of docked subs is taken into account when determining the spawn position of the sub (large 
+multi-part subs shouldn't spawn inside walls anymore)
+- explosion damage is calculated based on the distance to the closest surface of a limb instead of the
+center position of the limb (i.e. large monsters can be damaged by smaller explosions)
+- fixed a null reference exception caused by wires
+
+---------------------------------------------------------------------------------------------------------
 v0.5.4.2
 ---------------------------------------------------------------------------------------------------------
 
