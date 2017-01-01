@@ -58,7 +58,6 @@ namespace Barotrauma
 
         protected virtual void Finished()
         {
-            taskManager.TaskFinished(this);
             isFinished = true;
         }
     }

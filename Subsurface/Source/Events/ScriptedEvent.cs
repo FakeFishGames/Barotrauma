@@ -151,7 +151,6 @@ namespace Barotrauma
             isFinished = false;
         }
 
-
         public virtual void Update(float deltaTime)
         {
         }
@@ -159,9 +158,6 @@ namespace Barotrauma
         public virtual void Finished()
         {
             isFinished = true;
-            //EventManager.EventFinished(this);
         }
-
-
     }
 }
