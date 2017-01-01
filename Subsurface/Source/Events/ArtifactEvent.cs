@@ -62,21 +62,16 @@ namespace Barotrauma
             switch (state)
             {
                 case 0:
-                    state = 1;
-                    break;
-                case 1:
-
-                    //item.body.LinearVelocity = Vector2.Zero;
                     if (item.ParentInventory!=null) item.body.FarseerBody.IsKinematic = false;
                     if (item.CurrentHull == null) return;
 
-                    state = 2;
+                    state = 1;
                     break;
-                case 2:
+                case 1:
                     if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) return;
 
                     Finished();
-                    state = 3;
+                    state = 2;
                     break;
             }    
         }

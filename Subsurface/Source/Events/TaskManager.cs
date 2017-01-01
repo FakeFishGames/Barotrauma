@@ -10,8 +10,6 @@ namespace Barotrauma
 
         private List<Task> tasks;
 
-        //private GUIListBox taskListBox;
-
         public List<Task> Tasks
         {
             get { return tasks; }
@@ -27,11 +25,7 @@ namespace Barotrauma
 
         public TaskManager(GameSession session)
         {
-            tasks = new List<Task>();
-
-            //taskListBox = new GUIListBox(new Rectangle(Game1.GraphicsWidth - 250, 50, 250, 500), Color.Transparent);
-            //taskListBox.ScrollBarEnabled = false;
-            //taskListBox.Padding = GUI.style.smallPadding;           
+            tasks = new List<Task>();        
         }
 
         public void AddTask(Task newTask)
@@ -44,14 +38,11 @@ namespace Barotrauma
         public void StartShift(Level level)
         {
             CreateScriptedEvents(level);
-
-            //taskListBox.ClearChildren();
         }
 
 
         public void EndShift()
         {
-            //taskListBox.ClearChildren();
             tasks.Clear();
         }
 
@@ -79,47 +70,17 @@ namespace Barotrauma
 
         }
         
-        public void TaskFinished(Task task)
-        {
-
-        }
-
-
-
         public void Update(float deltaTime)
         {
-            Task removeTask = null;
             foreach (Task task in tasks)
             {
-                if (task.IsFinished)
-                {                    
-                    //foreach (GUIComponent comp in taskListBox.children)
-                    //{
-                    //    if (comp.UserData as Task != task) continue;
-                    //    comp.Rect = new Rectangle(comp.Rect.X, comp.Rect.Y, comp.Rect.Width, comp.Rect.Height - 1);
-                    //    comp.children[0].ClearChildren();
-                    //    if (comp.Rect.Height < 1)
-                    //    {
-                    //        removeComponent = comp;
-                            removeTask = task;
-                    //    }
-                    //    break;
-                    //}
-
-                }
-                else
-                {
+                if (!task.IsFinished)
+                {             
                     task.Update(deltaTime);
                 }
             }
 
-            if (removeTask!= null)
-            {
-                //taskListBox.RemoveChild(removeComponent);
-                tasks.Remove(removeTask);
-            }
-
-            //endShiftButton.Enabled = finished || Game1.server!=null;
+            tasks.RemoveAll(t => t.IsFinished);
         }
 
     }
