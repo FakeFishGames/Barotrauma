@@ -15,8 +15,6 @@
 
             this.item = item;
             IsFinishedChecker = isFinished;
-
-            taskManager.TaskStarted(this);
         }
 
         public override void Update(float deltaTime)

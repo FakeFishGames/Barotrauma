@@ -3,14 +3,7 @@
     class ScriptedTask : Task
     {
         private ScriptedEvent scriptedEvent;
-
-        private bool prevStarted;
-
-        public override bool IsStarted
-        {
-            get { return scriptedEvent.IsStarted; }
-        }
-
+                
         public ScriptedTask(ScriptedEvent scriptedEvent)
             : base(scriptedEvent.Difficulty, scriptedEvent.Name)
         {
@@ -24,12 +17,6 @@
 
         public override void Update(float deltaTime)
         {
-            if (prevStarted == false && scriptedEvent.IsStarted)
-            {
-                taskManager.TaskStarted(this);
-                prevStarted = true;
-            }
-
             scriptedEvent.Update(deltaTime);
             if (scriptedEvent.IsFinished) Finished();
         }

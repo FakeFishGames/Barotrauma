@@ -54,8 +54,10 @@ namespace Barotrauma
             }
         }
 
-        protected override void Start()
+        public override void Init()
         {
+            base.Init();
+
             SpawnMonsters();
         }
 
@@ -88,10 +90,6 @@ namespace Barotrauma
             }
             if (monsters == null) SpawnMonsters();
 
-            //base.Update(deltaTime);
-
-            //if (!isStarted) return;
-
             if (isFinished) return;
 
             bool monstersDead = true;
@@ -99,8 +97,6 @@ namespace Barotrauma
             {
                 if (monster.IsDead) continue;
 
-                if (!isStarted && Vector2.Distance(monster.WorldPosition, Submarine.MainSub.WorldPosition) < 5000.0f) isStarted = true;
-                    
                 monstersDead = false;
                 break;
             }

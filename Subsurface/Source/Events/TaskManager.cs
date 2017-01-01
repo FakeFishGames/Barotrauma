@@ -78,35 +78,7 @@ namespace Barotrauma
             } 
 
         }
-
-        public void TaskStarted(Task task)
-        {
-            //Color color = Color.Red;
-            //int width = 250;
-            //if (task.Priority < 30.0f)
-            //{
-            //    width = 200;
-            //    color = Color.Yellow;
-            //}
-            //else if (task.Priority < 60)
-            //{
-            //    width = 220;
-            //    color = Color.Orange;
-            //}
-
-            //GUIFrame frame = new GUIFrame(new Rectangle(0,0,width,40), Color.Transparent, Alignment.Right, null, taskListBox);
-            //frame.UserData = task;
-            //frame.Padding = new Vector4(0.0f, 5.0f, 5.0f, 5.0f);
-
-            //GUIFrame colorFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), color * 0.5f, Alignment.Right, null, frame);
-            //GUITextBlock textBlock = new GUITextBlock(new Rectangle(5, 5, 0, 20), task.Name, Color.Transparent, Color.Black, Alignment.Right, null, colorFrame);
-            //textBlock.Padding = new Vector4(10.0f, 10.0f, 0.0f, 0.0f);
-
-            //colorFrame.AddChild(textBlock);
-
-            //taskListBox.children.Sort((x, y) => ((Task)y.UserData).Priority.CompareTo(((Task)x.UserData).Priority));      
-        }
-
+        
         public void TaskFinished(Task task)
         {
 

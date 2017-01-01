@@ -7,25 +7,12 @@ namespace Barotrauma
 {
     class ScriptedEvent
     {
-        //const int MaxPreviousEvents = 6;
-        //const float PreviouslyUsedWeight = 10.0f;
-
-        //static List<int> previousEvents = new List<int>();
-        
         protected string name;
         protected string description;
 
         protected int commonness;
         protected int difficulty;
-              
-        //the time after starting a shift after which the event is started
-        //the time is set to a random value between startTimeMin and startTimeMax at the start of the shift
-        private int startTimeMin;
-        private int startTimeMax;
 
-        private double startTimer;
-
-        protected bool isStarted;
         protected bool isFinished;
         
         public string Name
@@ -48,12 +35,7 @@ namespace Barotrauma
             get;
             set;
         }
-
-        public bool IsStarted
-        {
-            get { return isStarted; }
-        }
-
+        
         public bool IsFinished
         {
             get { return isFinished; }
@@ -77,20 +59,7 @@ namespace Barotrauma
             difficulty = ToolBox.GetAttributeInt(element, "difficulty", 1);
             commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
 
-
             MusicType = ToolBox.GetAttributeString(element, "musictype", "default");
-
-
-            if (element.Attribute("starttime") != null)
-            {
-                startTimeMax = ToolBox.GetAttributeInt(element, "starttime", 1);
-                startTimeMin = startTimeMax;
-            }
-            else
-            {
-                startTimeMax = ToolBox.GetAttributeInt(element, "starttimemax", 1);
-                startTimeMin = ToolBox.GetAttributeInt(element, "starttimemin", 1);
-            }
         }
 
 
@@ -179,28 +148,12 @@ namespace Barotrauma
 
         public virtual void Init()
         {
-            isStarted = false;
             isFinished = false;
-            startTimer = Rand.Range(startTimeMin, startTimeMax, false);
         }
 
-        protected virtual void Start()
-        {
-        }
 
         public virtual void Update(float deltaTime)
         {
-            if (isStarted) return;
-
-            if (startTimer>0)
-            {
-                startTimer -= deltaTime;
-            }
-            else
-            {
-                Start();
-                isStarted = true;
-            }
         }
 
         public virtual void Finished()

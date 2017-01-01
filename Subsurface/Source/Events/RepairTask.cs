@@ -10,8 +10,6 @@
             if (taskManager == null) return;
 
             this.item = item;
-
-            taskManager.TaskStarted(this);
         }
 
         public override void Update(float deltaTime)
