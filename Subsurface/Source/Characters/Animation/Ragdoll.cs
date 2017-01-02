@@ -570,7 +570,7 @@ namespace Barotrauma
                 limb.body.DebugDraw(spriteBatch, inWater ? Color.Cyan : Color.White);
             }
 
-            Collider.DebugDraw(spriteBatch, inWater ? Color.SkyBlue : Color.Gray);
+            Collider.DebugDraw(spriteBatch, frozen ? Color.Red : (inWater ? Color.SkyBlue : Color.Gray));
 
             foreach (RevoluteJoint joint in limbJoints)
             {
@@ -1197,7 +1197,17 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;
 
-            if (character == GameMain.NetworkMember.Character)
+            if (character != GameMain.NetworkMember.Character || 
+                character.IsUnconscious || character.Stun > 0.0f)
+            {
+                //use simple interpolation for other players' characters and unconscious characters
+                if (character.MemPos.Count > 0)
+                {
+                    Collider.LinearVelocity = Vector2.Zero;
+                    Collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
+                }               
+            }
+            else
             {
                 if (character.MemPos.Count < 1) return;
 
@@ -1219,14 +1229,14 @@ namespace Barotrauma
                         //local positions are incorrect now -> just clear the list
                         character.MemLocalPos.Clear();
                     }
-                    else if (errorMagnitude > Collider.LinearVelocity.Length()/10.0f + 0.02f)
+                    else if (errorMagnitude > Collider.LinearVelocity.Length() / 10.0f + 0.02f)
                     {
                         //our prediction differs from the server position
                         //-> we need to move the saved local position and all the positions saved after it
 
                         //(a better way to do this would be to move the character back to
                         //serverPos and "replay" inputs to see where the character should be now)
-                        for (int i = localPosIndex; i < character.MemLocalPos.Count; i++ )
+                        for (int i = localPosIndex; i < character.MemLocalPos.Count; i++)
                         {
                             character.MemLocalPos[i] =
                                 new PosInfo(
@@ -1240,14 +1250,6 @@ namespace Barotrauma
 
                 if (character.MemLocalPos.Count > 120) character.MemLocalPos.RemoveRange(0, character.MemLocalPos.Count - 120);
                 character.MemPos.Clear();
-            }
-            else
-            {
-                if (character.MemPos.Count > 0)
-                {
-                    Collider.LinearVelocity = Vector2.Zero;
-                    Collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
-                }
             }
         }
         
