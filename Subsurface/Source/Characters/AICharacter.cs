@@ -47,7 +47,7 @@ namespace Barotrauma
                 AnimController.SimplePhysicsEnabled = false;
             }
 
-            if (isDead || health <= 0.0f) return;
+            if (isDead || Health <= 0.0f) return;
 
             if (Controlled == this || !aiController.Enabled) return;
 
@@ -90,7 +90,7 @@ namespace Barotrauma
         {
             AttackResult result = base.AddDamage(attacker, worldPosition, attack, deltaTime, playSound);
 
-            aiController.OnAttacked(attacker, (result.Damage + result.Bleeding) / Math.Max(health,1.0f));
+            aiController.OnAttacked(attacker, (result.Damage + result.Bleeding) / Math.Max(Health, 1.0f));
 
             return result;
         }
