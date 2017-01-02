@@ -11,7 +11,10 @@ namespace Barotrauma.Networking
     {
         public enum Type
         {
-            Default, ComponentState, InventoryState
+            Default, 
+            ComponentState, 
+            InventoryState,
+            Status
         }
 
         public readonly Entity Entity;

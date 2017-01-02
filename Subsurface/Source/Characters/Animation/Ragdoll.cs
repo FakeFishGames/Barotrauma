@@ -1248,7 +1248,7 @@ namespace Barotrauma
                     Collider.LinearVelocity = Vector2.Zero;
                     Collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
                 }
-            }            
+            }
         }
         
         private Vector2 GetFlowForce()

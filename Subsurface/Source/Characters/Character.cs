@@ -51,9 +51,9 @@ namespace Barotrauma
         private List<Vector2> memMousePos = new List<Vector2>();
 
         private List<PosInfo> memPos = new List<PosInfo>();
-
         private List<PosInfo> memLocalPos = new List<PosInfo>();
 
+        private bool networkUpdateSent;
         
         //the Character that the player is currently controlling
         private static Character controlled;
@@ -122,7 +122,7 @@ namespace Barotrauma
         protected float oxygen, oxygenAvailable;
         protected float drowningTime;
 
-        protected float health;
+        private float health;
         protected float minHealth, maxHealth;
 
         protected Item closestItem;
@@ -328,7 +328,13 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value)) return;
 
-                health = MathHelper.Clamp(value, minHealth, maxHealth);
+                float newHealth = MathHelper.Clamp(value, minHealth, maxHealth);
+                if (newHealth == health) return;
+
+                health = newHealth;
+
+                if (GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
             }
         }
     
@@ -343,7 +349,13 @@ namespace Barotrauma
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                bleeding = Math.Max(value, 0.0f); 
+                float newBleeding =  MathHelper.Clamp(value, 0.0f, 5.0f);
+                if (newBleeding == bleeding) return;
+
+                bleeding = newBleeding;
+                
+                if (GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
             }
         }
 
@@ -537,7 +549,6 @@ namespace Barotrauma
         protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
             : base(null)
         {
-
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
 
             for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
@@ -571,7 +582,7 @@ namespace Barotrauma
             if (doc == null || doc.Root == null) return;
             
             SpeciesName = ToolBox.GetAttributeString(doc.Root, "name", "Unknown");
-
+            
             IsHumanoid = ToolBox.GetAttributeBool(doc.Root, "humanoid", false);
             
             if (IsHumanoid)
@@ -1359,7 +1370,8 @@ namespace Barotrauma
                     }
                 }
             }
-            /*if (networkUpdateSent)
+
+            if (networkUpdateSent)
             {
                 foreach (Key key in keys)
                 {
@@ -1368,7 +1380,7 @@ namespace Barotrauma
                 }
 
                 networkUpdateSent = false;
-            }*/
+            }
 
             DisableImpactDamageTimer -= deltaTime;
             
@@ -1754,12 +1766,15 @@ namespace Barotrauma
 
         public void StartStun(float stunTimer, bool allowStunDecrease = false)
         {
-            if ((stunTimer <= 0.0f && !allowStunDecrease) || !MathUtils.IsValid(stunTimer)) return;
-
+            if ((stunTimer <= AnimController.StunTimer && !allowStunDecrease) || !MathUtils.IsValid(stunTimer)) return;
+            
             if (Math.Sign(stunTimer) != Math.Sign(AnimController.StunTimer)) AnimController.ResetPullJoints();
             AnimController.StunTimer = Math.Max(AnimController.StunTimer, stunTimer);
                 
             selectedConstruction = null;
+
+            if (GameMain.Server != null)
+                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
         }
 
         private void Implode(bool isNetworkMessage = false)
@@ -1768,9 +1783,8 @@ namespace Barotrauma
             {
                 if (GameMain.NetworkMember != null && controlled != this) return; 
             }
-
-
-            health = minHealth;
+            
+            Health = minHealth;
 
             BreakJoints();
 
@@ -1884,7 +1898,7 @@ namespace Barotrauma
 
             aiTarget = new AITarget(this);
 
-            health = Math.Max(maxHealth * 0.1f, health);
+            Health = Math.Max(maxHealth * 0.1f, health);
 
             foreach (RevoluteJoint joint in AnimController.limbJoints)
             {
@@ -1998,9 +2012,19 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return;
 
-            if (extraData != null && (NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
+            if (extraData != null)
             {
-                inventory.ServerWrite(msg, c, extraData);
+                switch ((NetEntityEvent.Type)extraData[0])
+                {
+                    case NetEntityEvent.Type.InventoryState:
+                        msg.Write(true);
+                        inventory.ClientWrite(msg, extraData);
+                        break;
+                    case NetEntityEvent.Type.Status:
+                        msg.Write(false);
+                        WriteStatus(msg);
+                        break;
+                }
             }
             else
             {
@@ -2009,18 +2033,45 @@ namespace Barotrauma
                 if (this == c.Character)
                 {
                     //length of the message
-                    msg.Write((byte)(4+4+4+1));
+                    msg.Write((byte)(4+4+4));
                     msg.Write(true);
                     msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count));
                 }
                 else
                 {
                     //length of the message
-                    msg.Write((byte)(4+4+1));
+                    msg.Write((byte)(4+4+1 + 1 + 1)); 
                     msg.Write(false);
+
+                    bool aiming = false;
+                    bool use    = false;
+
+                    if (IsRemotePlayer)
+                    {
+                        aiming  = dequeuedInput.HasFlag(InputNetFlags.Aim);
+                        use     = dequeuedInput.HasFlag(InputNetFlags.Use);
+                    }
+                    else
+                    {
+                        aiming  = keys[(int)InputType.Aim].GetHeldQueue;
+                        use     = keys[(int)InputType.Use].GetHeldQueue;
+
+                        networkUpdateSent = true;
+                    }
+
+                    msg.Write(aiming);
+                    msg.Write(use);
+
+                    if (aiming)
+                    {
+                        //TODO: write this with less accuracy?
+                        msg.Write(cursorPosition.X);
+                        msg.Write(cursorPosition.Y);
+                    }
+                    
+                    msg.Write(AnimController.TargetDir == Direction.Right);
                 }
 
-                msg.Write(AnimController.TargetDir == Direction.Right);
 
                 msg.Write(SimPosition.X);
                 msg.Write(SimPosition.Y);
@@ -2035,14 +2086,33 @@ namespace Barotrauma
 
             switch (type)
             {
-                case ServerNetObject.ENTITY_POSITION:                    
+                case ServerNetObject.ENTITY_POSITION:
+                    bool facingRight = AnimController.Dir > 0.0f;
+
                     UInt32 networkUpdateID = 0;
                     if (msg.ReadBoolean())
                     {
                         networkUpdateID = msg.ReadUInt32();
                     }
+                    else
+                    {
+                        bool aimInput = msg.ReadBoolean();                        
+                        keys[(int)InputType.Aim].Held = aimInput;
+                        keys[(int)InputType.Aim].SetState(false, aimInput);
 
-                    bool facingRight = msg.ReadBoolean();
+                        bool useInput = msg.ReadBoolean();
+                        keys[(int)InputType.Use].Held = useInput;
+                        keys[(int)InputType.Use].SetState(false, useInput);
+
+                        if (aimInput)
+                        {
+                            cursorPosition = new Vector2(
+                                msg.ReadFloat(), 
+                                msg.ReadFloat());
+                        }
+                        facingRight = msg.ReadBoolean();
+                    }
+
                     Vector2 pos = new Vector2(msg.ReadFloat(), msg.ReadFloat());
                         
                     var posInfo = 
@@ -2069,8 +2139,78 @@ namespace Barotrauma
                     memPos.Insert(index, posInfo);
                     break;
                 case ServerNetObject.ENTITY_STATE:
-                    inventory.ClientRead(type, msg, sendingTime);
+                    bool isInventoryUpdate = msg.ReadBoolean();
+
+                    if (isInventoryUpdate)
+                    {
+                        inventory.ClientRead(type, msg, sendingTime);
+                    }
+                    else
+                    {
+                        ReadStatus(msg);
+                    }
+
                     break;
+            }
+        }
+
+        private void WriteStatus(NetBuffer msg)
+        {
+            if (GameMain.Client != null)
+            {
+                DebugConsole.ThrowError("Client attempted to write character status to a networked message");
+                return;
+            }
+
+            msg.WriteRangedSingle(health, minHealth, maxHealth, 8);
+
+            msg.Write(oxygen < 100.0f);
+            if (oxygen < 100.0f)
+            {
+                msg.WriteRangedSingle(oxygen, -100.0f, 100.0f, 8);
+            }
+
+            msg.Write(bleeding > 0.0f);
+            if (bleeding > 0.0f)
+            {
+                msg.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
+            }
+
+            msg.Write(Stun > 0.0f);
+            if (Stun > 0.0f)
+            {
+                Stun = MathHelper.Clamp(Stun, 0.0f, 60.0f);
+                msg.WriteRangedSingle(Stun, 0.0f, 60.0f, 8);
+            }
+        }
+
+        private void ReadStatus(NetBuffer msg)
+        {
+            if (GameMain.Server != null)
+            {
+                DebugConsole.ThrowError("Server attempted to read character status from a networked message");
+                return;
+            }
+
+            Health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
+
+            bool lowOxygen = msg.ReadBoolean();
+            if (lowOxygen)
+            {
+                Oxygen = msg.ReadRangedSingle(-100.0f, 100.0f, 8);
+            }
+
+            bool isBleeding = msg.ReadBoolean();
+            if (isBleeding)
+            {
+                Bleeding = msg.ReadRangedSingle(0.0f, 5.0f, 8);
+            }
+
+            bool stunned = msg.ReadBoolean();
+            if (stunned)
+            {
+                float newStunTimer = msg.ReadRangedSingle(0.0f, 60.0f, 8);
+                StartStun(newStunTimer, true);
             }
         }
 
@@ -2118,6 +2258,7 @@ namespace Barotrauma
         {
             if (GameMain.Server != null) return null;
 
+
             bool noInfo         = inc.ReadBoolean();
             ushort id           = inc.ReadUInt16();
             string configPath   = inc.ReadString();
@@ -2126,8 +2267,9 @@ namespace Barotrauma
 
             bool enabled        = inc.ReadBoolean();
 
-            Character character = null;
+            DebugConsole.Log("Received spawn data for "+configPath);
 
+            Character character = null;
             if (noInfo)
             {
                 if (!spawn) return null;
