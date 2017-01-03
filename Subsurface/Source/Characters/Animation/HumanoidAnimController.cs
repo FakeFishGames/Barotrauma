@@ -59,7 +59,7 @@ namespace Barotrauma
             ColliderIndex = Crouching ? 1 : 0;
             if (!Crouching && ColliderIndex == 1) Crouching = true;
 
-            if (character.IsDead || character.IsUnconscious || stunTimer > 0.0f)
+            if (!character.AllowMovement)
             {
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
@@ -921,13 +921,15 @@ namespace Barotrauma
 
             target.AnimController.IgnorePlatforms = IgnorePlatforms;
 
-            if (target.Stun > 0.0f || target.IsUnconscious || target.IsDead)
+            if (!target.AllowMovement)
             {
                 target.AnimController.TargetMovement = TargetMovement;
             }
             else if (target is AICharacter)
             {
-                target.AnimController.TargetMovement = Vector2.Lerp(target.AnimController.TargetMovement, (character.SimPosition + Vector2.UnitX * Dir) - target.SimPosition, 0.5f);
+                target.AnimController.TargetMovement = Vector2.Lerp(
+                    target.AnimController.TargetMovement, 
+                    (character.SimPosition + Vector2.UnitX * Dir) - target.SimPosition, 0.5f);
             }
         }
 

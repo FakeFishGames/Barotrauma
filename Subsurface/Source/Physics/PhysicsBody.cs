@@ -20,21 +20,22 @@ namespace Barotrauma
         public readonly UInt32 ID;
 
         public PosInfo(Vector2 pos, Direction dir, float time)
+            : this(pos, dir, 0, time)
         {
-            Position = pos;
-            Direction = dir;
-            Timestamp = time;
-
-            ID = 0;
         }
 
         public PosInfo(Vector2 pos, Direction dir, UInt32 ID)
+            : this(pos, dir, ID, 0.0f)
+        {
+        }
+
+        public PosInfo(Vector2 pos, Direction dir, UInt32 ID, float time)
         {
             Position = pos;
             Direction = dir;
             this.ID = ID;
 
-            Timestamp = 0.0f;
+            Timestamp = time;
         }
     }
 

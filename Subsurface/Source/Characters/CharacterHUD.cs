@@ -269,6 +269,11 @@ namespace Barotrauma
 
         private static void DrawStatusIcons(SpriteBatch spriteBatch, Character character)
         {
+            if (GameMain.DebugDraw)
+            {
+                GUI.DrawString(spriteBatch, new Vector2(30, GameMain.GraphicsHeight - 260), "Stun: "+character.Stun, Color.White);
+            }
+
             if (drowningBar == null)
             {
                 int width = 100, height = 20;
