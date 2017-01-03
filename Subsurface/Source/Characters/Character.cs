@@ -323,7 +323,12 @@ namespace Barotrauma
         public float Stun
         {
             get { return AnimController.StunTimer; }
-            set { StartStun(value); }
+            set
+            {
+                if (GameMain.Client != null) return;
+
+                StartStun(value); 
+            }
         }
 
         public float Health
@@ -332,6 +337,7 @@ namespace Barotrauma
             set
             {
                 if (!MathUtils.IsValid(value)) return;
+                if (GameMain.Client != null) return;
 
                 float newHealth = MathHelper.Clamp(value, minHealth, maxHealth);
                 if (newHealth == health) return;
@@ -1830,9 +1836,14 @@ namespace Barotrauma
         {
             if (isDead) return;
 
+            //clients aren't allowed to kill characters unless they receive a network message
+            if (!isNetworkMessage && GameMain.Client != null)
+            {
+                return;
+            }
+
             if (GameMain.NetworkMember != null)
             {
-                //if the Character is controlled by this client/server, let others know that the Character has died
                 if (Character.controlled == this)
                 {
                     string chatMessage = InfoTextManager.GetInfoText("Self_CauseOfDeath." + causeOfDeath.ToString());
@@ -1841,16 +1852,6 @@ namespace Barotrauma
                     GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                     GameMain.LightManager.LosEnabled = false;
                     controlled = null;
-                }
-                //if it's an ai Character, only let the server kill it
-                else if (GameMain.Server != null && this is AICharacter)
-                {
-                    
-                }
-                //don't kill the Character unless received a message about the Character dying
-                else if (!isNetworkMessage)
-                {
-                    return;
                 }
             }
 
