@@ -54,18 +54,35 @@ namespace Barotrauma.Networking
             if (events.Count == 0) return;
 
             List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
-            for (int i = events.Count - 1; i >= 0 && events[i].ID > thisClient.LastSentEntityEventID; i--)
+
+            //find the index of the first event the server hasn't received
+            int startIndex = events.Count;
+            while (startIndex > 0 &&
+                events[startIndex-1].ID > thisClient.LastSentEntityEventID)
             {
+                startIndex--;
+            }
+
+            for (int i = startIndex; i < events.Count; i++)
+            {
+                //find the first event that hasn't been sent in 1.5 * roundtriptime or at all
                 float lastSent = 0;
                 eventLastSent.TryGetValue(events[i].ID, out lastSent);
 
-                //wait for 1.5f * roundtriptime until resending
                 if (lastSent > NetTime.Now - serverConnection.AverageRoundtripTime * 1.5f)
                 {
-                    break;
+                    continue;
                 }
 
-                eventsToSync.Insert(0, events[i]);
+                eventsToSync.AddRange(events.GetRange(i, events.Count - i));
+                break;
+            }
+            if (eventsToSync.Count == 0) return;
+
+            //too many events for one packet
+            if (eventsToSync.Count > MaxEventsPerWrite)
+            {
+                eventsToSync.RemoveRange(MaxEventsPerWrite, eventsToSync.Count - MaxEventsPerWrite);
             }
             if (eventsToSync.Count == 0) return;
 
