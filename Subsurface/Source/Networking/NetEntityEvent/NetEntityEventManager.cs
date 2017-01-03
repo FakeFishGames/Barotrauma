@@ -10,8 +10,8 @@ namespace Barotrauma.Networking
 {
     abstract class NetEntityEventManager
     {
-        const int MaxEventBufferLength = 1024;
-        const int MaxEventsPerWrite = 64;
+        public const int MaxEventBufferLength = 1024;
+        public const int MaxEventsPerWrite = 64;
 
         //public UInt32 LastReceivedEntityEventID
         //{
@@ -23,12 +23,6 @@ namespace Barotrauma.Networking
         /// </summary>
         protected void Write(NetOutgoingMessage msg, List<NetEntityEvent> eventsToSync, Client recipient = null)
         {
-            //too many events for one packet
-            if (eventsToSync.Count > MaxEventsPerWrite)
-            {
-                eventsToSync.RemoveRange(MaxEventsPerWrite, eventsToSync.Count - MaxEventsPerWrite);
-            }
-
             msg.Write(eventsToSync[0].ID);
             msg.Write((byte)eventsToSync.Count);
 
