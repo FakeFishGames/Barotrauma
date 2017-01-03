@@ -1170,12 +1170,20 @@ namespace Barotrauma
 
         protected void CheckDistFromCollider()
         {
-            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;
+            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;                        
+            float resetDist = allowedDist * 10.0f;
 
-            //if the ragdoll is too far from the collider, disable collisions until it's close enough
-            //(in case the ragdoll has gotten stuck somewhere)
-            if (Vector2.DistanceSquared(Collider.SimPosition, MainLimb.SimPosition) > allowedDist*allowedDist)
+            float distSqrd = Vector2.DistanceSquared(Collider.SimPosition, MainLimb.SimPosition);
+
+            if (distSqrd > resetDist * resetDist)
             {
+                //ragdoll way too far, reset position
+                SetPosition(Collider.SimPosition, true);
+            }
+            if (distSqrd > allowedDist * allowedDist)
+            {
+                //ragdoll too far from the collider, disable collisions until it's close enough
+                //(in case the ragdoll has gotten stuck somewhere)
                 foreach (Limb limb in Limbs)
                 {
                     limb.body.CollidesWith = Physics.CollisionNone;
@@ -1197,19 +1205,30 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;
 
-            if (character != GameMain.NetworkMember.Character || 
-                character.IsUnconscious || character.Stun > 0.0f)
+            if (character != GameMain.NetworkMember.Character || !character.AllowMovement)
             {
-                //use simple interpolation for other players' characters and unconscious characters
+                //use simple interpolation for other players' characters and characters that can't move
                 if (character.MemPos.Count > 0)
                 {
                     Collider.LinearVelocity = Vector2.Zero;
                     Collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
-                }               
+
+                    //unconscious/dead characters can't correct their position using AnimController movement
+                    // -> we need to correct it manually
+                    if (character.AllowMovement)
+                    {
+                        Collider.LinearVelocity = overrideTargetMovement;
+                        MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
+                        MainLimb.pullJoint.Enabled = true;
+                    }
+                }
+                character.MemLocalPos.Clear();
             }
             else
             {
                 if (character.MemPos.Count < 1) return;
+
+                overrideTargetMovement = Vector2.Zero;
 
                 PosInfo serverPos = character.MemPos.Last();
 

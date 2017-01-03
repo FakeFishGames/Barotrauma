@@ -211,6 +211,11 @@ namespace Barotrauma
             }
         }
 
+        public bool AllowMovement
+        {
+            get { return !IsUnconscious && Stun <= 0.0f && !isDead; }
+        }
+
         public Vector2 CursorPosition
         {
             get { return cursorPosition; }
@@ -1302,7 +1307,7 @@ namespace Barotrauma
 
             if (this != Character.Controlled)
             {
-                if (GameMain.Server != null && !(this is AICharacter))
+                if (GameMain.Server != null && !(this is AICharacter) && AllowMovement)
                 {
                     if (memInput.Count > 0)
                     {
@@ -1333,42 +1338,38 @@ namespace Barotrauma
                         {
                             isStillCountdown = 15;
                         }
-                        //DebugConsole.NewMessage(Convert.ToString(memInput.Count), Color.Lime);
                     }
                     else
                     {
-                        AnimController.Frozen = true;
+                        if (AllowMovement) AnimController.Frozen = true;
                         return;
                     }                    
                 }
             }
-            else
+            else if (GameMain.Client != null)
             {
-                if (GameMain.Client != null)
-                {
-                    memLocalPos.Add(new PosInfo(SimPosition, AnimController.TargetDir, LastNetworkUpdateID));
+                memLocalPos.Add(new PosInfo(SimPosition, AnimController.TargetDir, LastNetworkUpdateID));
                     
-                    InputNetFlags newInput = InputNetFlags.None;
-                    if (IsKeyDown(InputType.Left))      newInput |= InputNetFlags.Left;
-                    if (IsKeyDown(InputType.Right))     newInput |= InputNetFlags.Right;
-                    if (IsKeyDown(InputType.Up))        newInput |= InputNetFlags.Up;
-                    if (IsKeyDown(InputType.Down))      newInput |= InputNetFlags.Down;
-                    if (IsKeyDown(InputType.Run))       newInput |= InputNetFlags.Run;
-                    if (IsKeyDown(InputType.Select))    newInput |= InputNetFlags.Select;
-                    if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
-                    if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
+                InputNetFlags newInput = InputNetFlags.None;
+                if (IsKeyDown(InputType.Left))      newInput |= InputNetFlags.Left;
+                if (IsKeyDown(InputType.Right))     newInput |= InputNetFlags.Right;
+                if (IsKeyDown(InputType.Up))        newInput |= InputNetFlags.Up;
+                if (IsKeyDown(InputType.Down))      newInput |= InputNetFlags.Down;
+                if (IsKeyDown(InputType.Run))       newInput |= InputNetFlags.Run;
+                if (IsKeyDown(InputType.Select))    newInput |= InputNetFlags.Select;
+                if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
+                if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
                     
-                    if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
+                if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
-                    memInput.Insert(0, newInput);
-                    memMousePos.Insert(0, closestItem!=null ? closestItem.Position : cursorPosition);
-                    LastNetworkUpdateID++;
-                    if (memInput.Count > 60)
-                    {
-                        memInput.RemoveRange(60, memInput.Count - 60);
-                        memMousePos.RemoveRange(60, memMousePos.Count - 60);
-                    }
-                }
+                memInput.Insert(0, newInput);
+                memMousePos.Insert(0, closestItem!=null ? closestItem.Position : cursorPosition);
+                LastNetworkUpdateID++;
+                if (memInput.Count > 60)
+                {
+                    memInput.RemoveRange(60, memInput.Count - 60);
+                    memMousePos.RemoveRange(60, memMousePos.Count - 60);
+                }                
             }
 
             if (networkUpdateSent)
@@ -2113,27 +2114,22 @@ namespace Barotrauma
                         facingRight = msg.ReadBoolean();
                     }
 
-                    Vector2 pos = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+                    Vector2 pos = new Vector2(
+                        msg.ReadFloat(), 
+                        msg.ReadFloat());
                         
-                    var posInfo = 
-                        GameMain.NetworkMember.Character == this ?
-                        new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID) :
-                        new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, sendingTime);
+                    var posInfo = new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID, sendingTime);
 
                     int index = 0;
-                    if (GameMain.NetworkMember.Character == this)
+                    if (GameMain.NetworkMember.Character == this && AllowMovement)
                     {
-                        while (index < memPos.Count && posInfo.ID > memPos[index].ID)
-                        {
-                            index++;
-                        }
+                        while (index < memPos.Count && posInfo.ID > memPos[index].ID) 
+                            index++;                        
                     }
                     else
                     {
-                        while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp)
-                        {
-                            index++;
-                        }
+                        while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp) 
+                            index++;                        
                     }
 
                     memPos.Insert(index, posInfo);
@@ -2192,7 +2188,7 @@ namespace Barotrauma
                 return;
             }
 
-            Health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
+            health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
 
             bool lowOxygen = msg.ReadBoolean();
             if (lowOxygen)
