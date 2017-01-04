@@ -1215,7 +1215,7 @@ namespace Barotrauma
 
                     //unconscious/dead characters can't correct their position using AnimController movement
                     // -> we need to correct it manually
-                    if (character.AllowMovement)
+                    if (!character.AllowMovement)
                     {
                         Collider.LinearVelocity = overrideTargetMovement;
                         MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
