@@ -2064,6 +2064,16 @@ namespace Barotrauma
                     msg.Write(aiming);
                     msg.Write(use);
 
+                    if (selectedCharacter != null || selectedConstruction != null)
+                    {
+                        msg.Write(true);
+                        msg.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
+                    }
+                    else
+                    {
+                        msg.Write(false);
+                    }
+
                     if (aiming)
                     {
                         //TODO: write this with less accuracy?
@@ -2073,7 +2083,6 @@ namespace Barotrauma
                     
                     msg.Write(AnimController.TargetDir == Direction.Right);
                 }
-
 
                 msg.Write(SimPosition.X);
                 msg.Write(SimPosition.Y);
@@ -2106,6 +2115,27 @@ namespace Barotrauma
                         keys[(int)InputType.Use].Held = useInput;
                         keys[(int)InputType.Use].SetState(false, useInput);
 
+                        bool entitySelected = msg.ReadBoolean();
+                        if (entitySelected)
+                        {
+                            ushort entityID = msg.ReadUInt16();
+                            Entity selectedEntity = Entity.FindEntityByID(entityID);
+                            if (selectedEntity is Character)
+                            {
+                                SelectCharacter((Character)selectedEntity);
+                            }
+                            else if (selectedEntity is Item)
+                            {
+                                selectedConstruction = (Item)selectedEntity;
+                                if (selectedConstruction != null) selectedConstruction.Pick(this, true, true);
+                            }
+                        }
+                        else
+                        {
+                            if (selectedCharacter != null) DeselectCharacter();
+                            selectedConstruction = null;
+                        }
+                                                
                         if (aimInput)
                         {
                             cursorPosition = new Vector2(
