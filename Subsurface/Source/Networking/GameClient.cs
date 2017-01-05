@@ -128,6 +128,8 @@ namespace Barotrauma.Networking
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
             config.SimulatedRandomLatency = 0.05f;
+
+            config.ConnectionTimeout = 600.0f;
 #endif 
 
             config.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt

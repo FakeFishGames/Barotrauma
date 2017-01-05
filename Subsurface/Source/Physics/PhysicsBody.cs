@@ -37,6 +37,42 @@ namespace Barotrauma
 
             Timestamp = time;
         }
+
+        public static PosInfo TransformOutToInside(PosInfo posInfo, Submarine submarine)
+        {
+            //transform outside coordinates to in-sub coordinates
+            return new PosInfo(
+                posInfo.Position - ConvertUnits.ToSimUnits(submarine.Position),
+                posInfo.Direction,
+                posInfo.ID,
+                posInfo.Timestamp);            
+        }
+
+        public static PosInfo TransformInToOutside(PosInfo posInfo)
+        {
+            Submarine closestSub = null;
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                Rectangle subBorders = sub.Borders;
+                subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
+
+                subBorders.Inflate(500.0f, 500.0f);
+
+                if (subBorders.Contains(ConvertUnits.ToDisplayUnits(posInfo.Position)))
+                {
+                    closestSub = sub;
+                    break;
+                }
+            }
+
+            if (closestSub == null) return posInfo;
+
+            return new PosInfo(
+                posInfo.Position + ConvertUnits.ToSimUnits(closestSub.Position),
+                posInfo.Direction,
+                posInfo.ID,
+                posInfo.Timestamp);            
+        }
     }
 
     class PhysicsBody
