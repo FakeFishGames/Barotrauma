@@ -811,7 +811,7 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
-        public static Submarine GetClosest(Vector2 worldPosition)
+        public static Submarine FindClosest(Vector2 worldPosition)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
@@ -826,6 +826,24 @@ namespace Barotrauma
             }
 
             return closest;
+        }
+
+        /// <summary>
+        /// Finds the sub whose borders contain the position
+        /// </summary>
+        public static Submarine FindContaining(Vector2 position)
+        {
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                Rectangle subBorders = sub.Borders;
+                subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Microsoft.Xna.Framework.Point(0, sub.Borders.Height);
+
+                subBorders.Inflate(500.0f, 500.0f);
+
+                if (subBorders.Contains(position)) return sub;                
+            }
+
+            return null;
         }
 
         //saving/loading ----------------------------------------------------
@@ -1056,7 +1074,10 @@ namespace Barotrauma
 
             //place the sub above the top of the level
             HiddenSubPosition = HiddenSubStartPosition;
-            if (Level.Loaded != null) HiddenSubPosition += Vector2.UnitY * Level.Loaded.Size.Y;
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+            {
+                HiddenSubPosition += Vector2.UnitY * GameMain.GameSession.Level.Size.Y;
+            }
 
             foreach (Submarine sub in Submarine.loaded)
             {
