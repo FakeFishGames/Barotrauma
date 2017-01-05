@@ -34,7 +34,7 @@ namespace Barotrauma
     {
         public static string SavePath = "Submarines";
 
-        public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 80000.0f);
+        public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
         //should be in an unreachable place
         public Vector2 HiddenSubPosition
@@ -1054,7 +1054,10 @@ namespace Barotrauma
             Description = ToolBox.GetAttributeString(submarineElement, "description", "");
             Enum.TryParse(ToolBox.GetAttributeString(submarineElement, "tags", ""), out tags);
 
+            //place the sub above the top of the level
             HiddenSubPosition = HiddenSubStartPosition;
+            if (Level.Loaded != null) HiddenSubPosition += Vector2.UnitY * Level.Loaded.Size.Y;
+
             foreach (Submarine sub in Submarine.loaded)
             {
                 HiddenSubPosition += Vector2.UnitY * (sub.Borders.Height + 5000.0f);

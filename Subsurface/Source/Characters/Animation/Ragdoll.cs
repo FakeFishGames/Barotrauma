@@ -1205,6 +1205,23 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;
 
+            for (int i = 0; i < character.MemPos.Count; i++ )
+            {
+                if (character.Submarine == null)
+                {
+                    //transform in-sub coordinates to outside coordinates
+                    if (character.MemPos[i].Position.Y > ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                        character.MemPos[i] = PosInfo.TransformInToOutside(character.MemPos[i]);                    
+                }
+                else if (currentHull != null)
+                {
+                    //transform outside coordinates to in-sub coordinates
+                    if (character.MemPos[i].Position.Y <  ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                        character.MemPos[i] = PosInfo.TransformOutToInside(character.MemPos[i], currentHull.Submarine);                    
+                }
+            }
+
+
             if (character != GameMain.NetworkMember.Character || !character.AllowMovement)
             {
                 //use simple interpolation for other players' characters and characters that can't move
@@ -1226,6 +1243,22 @@ namespace Barotrauma
             }
             else
             {
+                for (int i = 0; i < character.MemLocalPos.Count; i++)
+                {
+                    if (character.Submarine == null)
+                    {
+                        //transform in-sub coordinates to outside coordinates
+                        if (character.MemLocalPos[i].Position.Y > ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                            character.MemLocalPos[i] = PosInfo.TransformInToOutside(character.MemLocalPos[i]);                    
+                    }
+                    else if (currentHull != null)
+                    {
+                        //transform outside coordinates to in-sub coordinates
+                        if (character.MemLocalPos[i].Position.Y < ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                            character.MemLocalPos[i] = PosInfo.TransformOutToInside(character.MemLocalPos[i], currentHull.Submarine);                    
+                    }
+                }
+
                 if (character.MemPos.Count < 1) return;
 
                 overrideTargetMovement = Vector2.Zero;
@@ -1244,7 +1277,7 @@ namespace Barotrauma
                     if (errorMagnitude > 2.0f)
                     {
                         //predicted position was way off, reset completely
-                        Collider.SetTransform(serverPos.Position, Collider.Rotation);
+                        SetPosition(serverPos.Position, false);
                         //local positions are incorrect now -> just clear the list
                         character.MemLocalPos.Clear();
                     }
