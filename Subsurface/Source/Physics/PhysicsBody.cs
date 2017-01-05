@@ -50,25 +50,11 @@ namespace Barotrauma
 
         public static PosInfo TransformInToOutside(PosInfo posInfo)
         {
-            Submarine closestSub = null;
-            foreach (Submarine sub in Submarine.Loaded)
-            {
-                Rectangle subBorders = sub.Borders;
-                subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
-
-                subBorders.Inflate(500.0f, 500.0f);
-
-                if (subBorders.Contains(ConvertUnits.ToDisplayUnits(posInfo.Position)))
-                {
-                    closestSub = sub;
-                    break;
-                }
-            }
-
-            if (closestSub == null) return posInfo;
+            var sub = Submarine.FindContaining(ConvertUnits.ToDisplayUnits(posInfo.Position));
+            if (sub == null) return posInfo;
 
             return new PosInfo(
-                posInfo.Position + ConvertUnits.ToSimUnits(closestSub.Position),
+                posInfo.Position + ConvertUnits.ToSimUnits(sub.Position),
                 posInfo.Direction,
                 posInfo.ID,
                 posInfo.Timestamp);            
