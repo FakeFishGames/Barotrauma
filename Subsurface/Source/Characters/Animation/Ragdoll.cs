@@ -1223,7 +1223,7 @@ namespace Barotrauma
             }
 
 
-            if (character != GameMain.NetworkMember.Character || !character.AllowMovement)
+            if (character != GameMain.NetworkMember.Character || !character.AllowInput)
             {
                 //use simple interpolation for other players' characters and characters that can't move
                 if (character.MemPos.Count > 0)
@@ -1233,7 +1233,7 @@ namespace Barotrauma
 
                     //unconscious/dead characters can't correct their position using AnimController movement
                     // -> we need to correct it manually
-                    if (!character.AllowMovement)
+                    if (!character.AllowInput)
                     {
                         Collider.LinearVelocity = overrideTargetMovement;
                         MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
