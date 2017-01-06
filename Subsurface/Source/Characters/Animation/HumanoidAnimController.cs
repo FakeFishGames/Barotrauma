@@ -283,6 +283,11 @@ namespace Barotrauma
                 MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, movementLerp) :
                 overrideTargetMovement;
 
+            if (Math.Abs(movement.X) < 0.005f)
+            {
+                movement.X = 0.0f;
+            }
+
             movement.Y = 0.0f;
 
             for (int i = 0; i < 2; i++)
@@ -489,6 +494,7 @@ namespace Barotrauma
             {
                 movement = Vector2.Normalize(movement);
             }
+
             if (Math.Abs(movement.X)<0.005f)
             {
                 movement.X = 0.0f;
