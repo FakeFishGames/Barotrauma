@@ -47,7 +47,7 @@ namespace Barotrauma
                 AnimController.SimplePhysicsEnabled = false;
             }
 
-            if (isDead || Health <= 0.0f) return;
+            if (IsDead || Health <= 0.0f) return;
 
             if (Controlled == this || !aiController.Enabled) return;
 
@@ -76,7 +76,7 @@ namespace Barotrauma
         {
             base.DrawFront(spriteBatch,cam);
 
-            if (GameMain.DebugDraw && !isDead) aiController.DebugDraw(spriteBatch);
+            if (GameMain.DebugDraw && !IsDead) aiController.DebugDraw(spriteBatch);
         }
 
         public override void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
