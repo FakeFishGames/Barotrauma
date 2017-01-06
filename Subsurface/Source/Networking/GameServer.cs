@@ -1065,6 +1065,15 @@ namespace Barotrauma.Networking
 
             if (connectedClients.Count > 0)
             {
+                NetOutgoingMessage msg = server.CreateMessage();
+                msg.Write((byte)ServerPacketHeader.ENDGAME);
+                msg.Write(endMessage);
+                msg.Write(mission != null && mission.Completed);
+                if (server.ConnectionsCount > 0)
+                {
+                    server.SendMessage(msg, server.Connections, NetDeliveryMethod.ReliableOrdered, 0);
+                }
+
                 foreach (Client client in connectedClients)
                 {
                     client.Character = null;

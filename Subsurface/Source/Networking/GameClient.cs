@@ -557,6 +557,15 @@ namespace Barotrauma.Networking
                             case ServerPacketHeader.STARTGAME:
                                 startGameCoroutine = GameMain.ShowLoading(StartGame(inc), false);
                                 break;
+                            case ServerPacketHeader.ENDGAME:
+                                string endMessage = inc.ReadString();
+                                bool missionSuccessful = inc.ReadBoolean();
+                                if (missionSuccessful && GameMain.GameSession.Mission != null)
+                                {
+                                    GameMain.GameSession.Mission.Completed = true;
+                                }
+                                CoroutineManager.StartCoroutine(EndGame(endMessage));
+                                break;
                         }
                         break;
                 }
@@ -631,6 +640,41 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Select();
             
+            yield return CoroutineStatus.Success;
+        }
+
+        public IEnumerable<object> EndGame(string endMessage)
+        {
+            if (!gameStarted) yield return CoroutineStatus.Success;
+
+            if (GameMain.GameSession != null) GameMain.GameSession.gameMode.End(endMessage);
+
+            gameStarted = false;
+            Character.Controlled = null;
+            GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+            GameMain.LightManager.LosEnabled = false;
+            respawnManager = null;
+
+            float endPreviewLength = 10.0f;
+            if (Screen.Selected == GameMain.GameScreen)
+            {
+                new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
+                float secondsLeft = endPreviewLength;
+                do
+                {
+                    secondsLeft -= CoroutineManager.UnscaledDeltaTime;
+                    yield return CoroutineStatus.Running;
+                } while (secondsLeft > 0.0f);
+            }
+
+            Submarine.Unload();
+            GameMain.NetLobbyScreen.Select();
+            myCharacter = null;
+            foreach (Client c in otherClients)
+            {
+                c.inGame = false;
+                c.Character = null;
+            }
             yield return CoroutineStatus.Success;
         }
 
