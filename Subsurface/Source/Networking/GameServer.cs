@@ -632,7 +632,7 @@ namespace Barotrauma.Networking
                         ChatMessage.ServerRead(inc, c);
                         break;
                     case ClientNetObject.CHARACTER_INPUT:
-                        if (c.Character != null && !c.Character.IsDead && !c.Character.IsUnconscious)
+                        if (c.Character != null)
                         {
                             c.Character.ServerRead(objHeader, inc, c);
                         }

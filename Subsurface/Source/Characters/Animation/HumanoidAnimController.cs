@@ -59,7 +59,7 @@ namespace Barotrauma
             ColliderIndex = Crouching ? 1 : 0;
             if (!Crouching && ColliderIndex == 1) Crouching = true;
 
-            if (!character.AllowMovement)
+            if (!character.AllowInput)
             {
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
@@ -925,7 +925,7 @@ namespace Barotrauma
 
             target.AnimController.IgnorePlatforms = IgnorePlatforms;
 
-            if (!target.AllowMovement)
+            if (!target.AllowInput)
             {
                 target.AnimController.TargetMovement = TargetMovement;
             }

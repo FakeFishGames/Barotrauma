@@ -211,7 +211,7 @@ namespace Barotrauma
             }
         }
 
-        public bool AllowMovement
+        public bool AllowInput
         {
             get { return !IsUnconscious && Stun <= 0.0f && !isDead; }
         }
@@ -1016,6 +1016,8 @@ namespace Barotrauma
 
         public bool CanAccessInventory(Inventory inventory)
         {
+            if (!AllowInput || LockHands) return false;
+
             if (inventory.Owner is Character && inventory.Owner != this)
             {
                 var owner = (Character)inventory.Owner;
@@ -1036,6 +1038,8 @@ namespace Barotrauma
 
         public bool CanAccessItem(Item item)
         {
+            if (!AllowInput || LockHands) return false;
+
             if (item.ParentInventory != null)
             {
                 return CanAccessInventory(item.ParentInventory);
@@ -1336,12 +1340,11 @@ namespace Barotrauma
 
             if (this != Character.Controlled)
             {
-                if (GameMain.Server != null && !(this is AICharacter) && AllowMovement)
+                if (GameMain.Server != null && !(this is AICharacter) && AllowInput)
                 {
                     if (memInput.Count == 0)
-                    {
-                        
-                        if (AllowMovement) AnimController.Frozen = true;
+                    {                        
+                        if (AllowInput) AnimController.Frozen = true;
                         return;
                     }
 
@@ -2020,15 +2023,19 @@ namespace Barotrauma
                     {
                         InputNetFlags newInput = (InputNetFlags)msg.ReadRangedInteger(0, (int)InputNetFlags.MaxVal);
                         Vector2 newMousePos = Position;
-                        if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Aim))
+
+                        if (AllowInput)
                         {
-                            newMousePos.X = msg.ReadSingle();
-                            newMousePos.Y = msg.ReadSingle();
-                        }
-                        if ((i < ((long)networkUpdateID - (long)LastNetworkUpdateID)) && (i < 60))
-                        {
-                            memInput.Insert(i, newInput);
-                            memMousePos.Insert(i, newMousePos);
+                            if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Aim))
+                            {
+                                newMousePos.X = msg.ReadSingle();
+                                newMousePos.Y = msg.ReadSingle();
+                            }
+                            if ((i < ((long)networkUpdateID - (long)LastNetworkUpdateID)) && (i < 60))
+                            {
+                                memInput.Insert(i, newInput);
+                                memMousePos.Insert(i, newMousePos);
+                            }
                         }
                     }
             
@@ -2200,7 +2207,7 @@ namespace Barotrauma
                     var posInfo = new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID, sendingTime);
 
                     int index = 0;
-                    if (GameMain.NetworkMember.Character == this && AllowMovement)
+                    if (GameMain.NetworkMember.Character == this && AllowInput)
                     {
                         while (index < memPos.Count && posInfo.ID > memPos[index].ID) 
                             index++;                        
