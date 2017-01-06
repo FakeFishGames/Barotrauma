@@ -130,7 +130,7 @@ namespace Barotrauma
 
         private Dictionary<object, HUDProgressBar> hudProgressBars;
 
-        protected bool isDead;
+        private bool isDead;
         private CauseOfDeath lastAttackCauseOfDeath;
         private CauseOfDeath causeOfDeath;
         
@@ -360,6 +360,8 @@ namespace Barotrauma
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
+                if (GameMain.Client != null) return;
+
                 float newBleeding =  MathHelper.Clamp(value, 0.0f, 5.0f);
                 if (newBleeding == bleeding) return;
 
@@ -1888,6 +1890,7 @@ namespace Barotrauma
             PlaySound(CharacterSound.SoundType.Die);
             
             isDead = true;
+
             this.causeOfDeath = causeOfDeath;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
@@ -2154,8 +2157,11 @@ namespace Barotrauma
                             }
                             else if (selectedEntity is Item)
                             {
-                                selectedConstruction = (Item)selectedEntity;
-                                if (selectedConstruction != null) selectedConstruction.Pick(this, true, true);
+                                var newSelectedConstruction = (Item)selectedEntity;
+                                if (newSelectedConstruction != null && selectedConstruction != newSelectedConstruction)
+                                {
+                                    newSelectedConstruction.Pick(this, true, true);
+                                }
                             }
                         }
                         else
@@ -2219,25 +2225,33 @@ namespace Barotrauma
                 return;
             }
 
-            msg.WriteRangedSingle(health, minHealth, maxHealth, 8);
-
-            msg.Write(oxygen < 100.0f);
-            if (oxygen < 100.0f)
+            msg.Write(isDead);
+            if (isDead)
             {
-                msg.WriteRangedSingle(oxygen, -100.0f, 100.0f, 8);
+                msg.Write((byte)causeOfDeath);
             }
-
-            msg.Write(bleeding > 0.0f);
-            if (bleeding > 0.0f)
+            else
             {
-                msg.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
-            }
+                msg.WriteRangedSingle(health, minHealth, maxHealth, 8);
 
-            msg.Write(Stun > 0.0f);
-            if (Stun > 0.0f)
-            {
-                Stun = MathHelper.Clamp(Stun, 0.0f, 60.0f);
-                msg.WriteRangedSingle(Stun, 0.0f, 60.0f, 8);
+                msg.Write(oxygen < 100.0f);
+                if (oxygen < 100.0f)
+                {
+                    msg.WriteRangedSingle(oxygen, -100.0f, 100.0f, 8);
+                }
+
+                msg.Write(bleeding > 0.0f);
+                if (bleeding > 0.0f)
+                {
+                    msg.WriteRangedSingle(bleeding, 0.0f, 5.0f, 8);
+                }
+
+                msg.Write(Stun > 0.0f);
+                if (Stun > 0.0f)
+                {
+                    Stun = MathHelper.Clamp(Stun, 0.0f, 60.0f);
+                    msg.WriteRangedSingle(Stun, 0.0f, 60.0f, 8);
+                }
             }
         }
 
@@ -2249,25 +2263,41 @@ namespace Barotrauma
                 return;
             }
 
-            health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
-
-            bool lowOxygen = msg.ReadBoolean();
-            if (lowOxygen)
+            bool isDead = msg.ReadBoolean();
+            if (isDead)
             {
-                Oxygen = msg.ReadRangedSingle(-100.0f, 100.0f, 8);
+                causeOfDeath = (CauseOfDeath)msg.ReadByte();
+                if (causeOfDeath == CauseOfDeath.Pressure)
+                {
+                    Implode(true);
+                }
+                else
+                {
+                    Kill(causeOfDeath, true);
+                }
             }
-
-            bool isBleeding = msg.ReadBoolean();
-            if (isBleeding)
+            else
             {
-                Bleeding = msg.ReadRangedSingle(0.0f, 5.0f, 8);
-            }
+                health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
 
-            bool stunned = msg.ReadBoolean();
-            if (stunned)
-            {
-                float newStunTimer = msg.ReadRangedSingle(0.0f, 60.0f, 8);
-                StartStun(newStunTimer, true);
+                bool lowOxygen = msg.ReadBoolean();
+                if (lowOxygen)
+                {
+                    Oxygen = msg.ReadRangedSingle(-100.0f, 100.0f, 8);
+                }
+
+                bool isBleeding = msg.ReadBoolean();
+                if (isBleeding)
+                {
+                    bleeding = msg.ReadRangedSingle(0.0f, 5.0f, 8);
+                }
+
+                bool stunned = msg.ReadBoolean();
+                if (stunned)
+                {
+                    float newStunTimer = msg.ReadRangedSingle(0.0f, 60.0f, 8);
+                    StartStun(newStunTimer, true);
+                }
             }
         }
 
