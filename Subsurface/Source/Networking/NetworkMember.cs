@@ -37,7 +37,8 @@ namespace Barotrauma.Networking
         UPDATE_INGAME,      //update state ingame (character input and chat messages)
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
-        STARTGAME           //start a new round
+        STARTGAME,          //start a new round
+        ENDGAME
     }
     enum ServerNetObject
     {
