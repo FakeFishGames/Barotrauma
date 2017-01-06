@@ -489,6 +489,10 @@ namespace Barotrauma
             {
                 movement = Vector2.Normalize(movement);
             }
+            if (Math.Abs(movement.X)<0.005f)
+            {
+                movement.X = 0.0f;
+            }
         }
 
         private void ClimbOverObstacles()
