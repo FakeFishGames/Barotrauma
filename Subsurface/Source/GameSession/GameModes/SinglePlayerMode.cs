@@ -163,7 +163,7 @@ namespace Barotrauma
                 return null;
             }
 
-            Submarine closestSub = Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+            Submarine closestSub = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
             if (closestSub != null && (closestSub.AtEndPosition || closestSub.AtStartPosition))
             {
                 return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;

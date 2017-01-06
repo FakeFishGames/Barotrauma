@@ -76,6 +76,8 @@ namespace Barotrauma.Networking
             config.SimulatedRandomLatency = 0.05f;
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
+
+            config.ConnectionTimeout = 600.0f;
 #endif 
             config.Port = port;
             Port = port;
@@ -472,16 +474,9 @@ namespace Barotrauma.Networking
 
                     foreach (Client c in ConnectedClients)
                     {
-                        if (gameStarted)
+                        if (gameStarted && c.inGame)
                         {
-                            if (c.inGame)
-                            {
-                                ClientWriteIngame(c);
-                            }
-                            else
-                            {
-                                ClientWriteLobby(c);
-                            }
+                            ClientWriteIngame(c);                         
                         }
                         else
                         {
@@ -606,7 +601,6 @@ namespace Barotrauma.Networking
                         //break;
                 }
             }
-
         }
 
         private void ClientReadIngame(NetIncomingMessage inc)
@@ -617,6 +611,8 @@ namespace Barotrauma.Networking
                 inc.SenderConnection.Disconnect("You're not a connected client.");
                 return;
             }
+
+            if (gameStarted) c.inGame = true;
             
             ClientNetObject objHeader;
             while ((objHeader = (ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
@@ -924,7 +920,6 @@ namespace Barotrauma.Networking
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
             foreach (Client client in connectedClients)
             {
-                client.inGame = true;
                 if (client.characterInfo == null)
                 {
                     client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);

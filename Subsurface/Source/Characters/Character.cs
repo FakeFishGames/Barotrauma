@@ -1101,6 +1101,27 @@ namespace Barotrauma
             return closestCharacter;
         }
 
+        private void TransformCursorPos()
+        {
+            if (Submarine == null)
+            {
+                //character is outside but cursor position inside
+                if (cursorPosition.Y > Level.Loaded.Size.Y)
+                {
+                    var sub = Submarine.FindContaining(cursorPosition);
+                    if (sub != null) cursorPosition += sub.Position;
+                }
+            }
+            else
+            {
+                //character is inside but cursor position is outside
+                if (cursorPosition.Y < Level.Loaded.Size.Y)
+                {
+                    cursorPosition -= Submarine.Position;
+                }
+            }
+        }
+
         private void SelectCharacter(Character character)
         {
             if (character == null) return;
@@ -1315,41 +1336,46 @@ namespace Barotrauma
             {
                 if (GameMain.Server != null && !(this is AICharacter) && AllowMovement)
                 {
-                    if (memInput.Count > 0)
+                    if (memInput.Count == 0)
                     {
-                        AnimController.Frozen = false;
-                        prevDequeuedInput = dequeuedInput;
-                        dequeuedInput = memInput[memInput.Count - 1];
-                        cursorPosition = memMousePos[memMousePos.Count - 1];
-                        memInput.RemoveAt(memInput.Count - 1);
-                        memMousePos.RemoveAt(memMousePos.Count - 1);
-                        if (dequeuedInput == InputNetFlags.None)
+                        
+                        if (AllowMovement) AnimController.Frozen = true;
+                        return;
+                    }
+
+                    AnimController.Frozen = false;
+                    prevDequeuedInput = dequeuedInput;
+
+                    dequeuedInput = memInput[memInput.Count - 1];
+                    memInput.RemoveAt(memInput.Count - 1);
+
+                    cursorPosition = memMousePos[memMousePos.Count - 1];
+                    memMousePos.RemoveAt(memMousePos.Count - 1);
+
+                    TransformCursorPos();
+
+                    if (dequeuedInput == InputNetFlags.None)
+                    {
+                        if (isStillCountdown <= 0)
                         {
-                            if (isStillCountdown<=0)
+                            while (memInput.Count > 5 && memInput[memInput.Count - 1] == 0)
                             {
-                                while (memInput.Count>5 && memInput[memInput.Count-1]==0)
-                                {
-                                    //remove inputs where the player is not moving at all
-                                    //helps the server catch up, shouldn't affect final position
-                                    memInput.RemoveAt(memInput.Count - 1);
-                                    memMousePos.RemoveAt(memMousePos.Count - 1);
-                                }
-                                isStillCountdown = 15;
+                                //remove inputs where the player is not moving at all
+                                //helps the server catch up, shouldn't affect final position
+                                memInput.RemoveAt(memInput.Count - 1);
+                                memMousePos.RemoveAt(memMousePos.Count - 1);
                             }
-                            else
-                            {
-                                isStillCountdown--;
-                            }
-                        } else
-                        {
                             isStillCountdown = 15;
+                        }
+                        else
+                        {
+                            isStillCountdown--;
                         }
                     }
                     else
                     {
-                        if (AllowMovement) AnimController.Frozen = true;
-                        return;
-                    }                    
+                        isStillCountdown = 15;
+                    }                                   
                 }
             }
             else if (GameMain.Client != null)
@@ -2089,6 +2115,8 @@ namespace Barotrauma
                     if (aiming)
                     {
                         //TODO: write this with less accuracy?
+                        
+
                         msg.Write(cursorPosition.X);
                         msg.Write(cursorPosition.Y);
                     }
@@ -2153,6 +2181,8 @@ namespace Barotrauma
                             cursorPosition = new Vector2(
                                 msg.ReadFloat(), 
                                 msg.ReadFloat());
+
+                            TransformCursorPos();
                         }
                         facingRight = msg.ReadBoolean();
                     }
