@@ -841,13 +841,13 @@ namespace Barotrauma
                 AnimController.Anim != AnimController.Animation.UsingConstruction &&
                 AnimController.Anim != AnimController.Animation.CPR)
             {
-                Limb head = AnimController.GetLimb(LimbType.Head);
+                //Limb head = AnimController.GetLimb(LimbType.Head);
 
-                if (cursorPosition.X < head.Position.X - 10.0f)
+                if (cursorPosition.X < AnimController.Collider.Position.X - 10.0f)
                 {
                     AnimController.TargetDir = Direction.Left;
                 }
-                else if (cursorPosition.X > head.Position.X + 10.0f)
+                else if (cursorPosition.X > AnimController.Collider.Position.X + 10.0f)
                 {
                     AnimController.TargetDir = Direction.Right;
                 }
@@ -1272,7 +1272,7 @@ namespace Barotrauma
         {
             foreach (Character c in CharacterList)
             {
-                if (!c.Enabled) continue;
+                if (!c.Enabled || c.AnimController.Frozen) continue;
                 
                 c.AnimController.UpdateAnim(deltaTime);
             }
@@ -1638,25 +1638,37 @@ namespace Barotrauma
                 if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
             
-            if (memPos != null && memPos.Count > 0)
+            if (memPos != null && memPos.Count > 0 && controlled == this)
             {
                 PosInfo serverPos = memPos.Last();
                 Vector2 remoteVec = ConvertUnits.ToDisplayUnits(serverPos.Position);
-                if (Submarine!=null)
+                if (Submarine != null)
                 {
                     remoteVec += Submarine.DrawPosition;
                 }
                 remoteVec.Y = -remoteVec.Y;
 
                 PosInfo localPos = memLocalPos.Find(m => m.ID == serverPos.ID);
+                int mpind = memLocalPos.FindIndex(lp => lp.ID == localPos.ID);
+                PosInfo? localPos1 = mpind > 0 ? memLocalPos[mpind - 1] : (PosInfo?)null;
+                PosInfo? localPos2 = mpind < memLocalPos.Count-1 ? memLocalPos[mpind + 1] : (PosInfo?)null;
+
                 Vector2 localVec = ConvertUnits.ToDisplayUnits(localPos.Position);
+                Vector2 localVec1 = localPos1 != null ? ConvertUnits.ToDisplayUnits(((PosInfo)localPos1).Position) : Vector2.Zero;
+                Vector2 localVec2 = localPos2 != null ? ConvertUnits.ToDisplayUnits(((PosInfo)localPos2).Position) : Vector2.Zero;
                 if (Submarine != null)
                 {
                     localVec += Submarine.DrawPosition;
+                    localVec1 += Submarine.DrawPosition;
+                    localVec2 += Submarine.DrawPosition;
                 }
                 localVec.Y = -localVec.Y;
+                localVec1.Y = -localVec1.Y;
+                localVec2.Y = -localVec2.Y;
 
-                GUI.DrawLine(spriteBatch, remoteVec, localVec, Color.Yellow,0,10);
+                GUI.DrawLine(spriteBatch, remoteVec, localVec, Color.Yellow, 0, 10);
+                if (localPos1 != null) GUI.DrawLine(spriteBatch, remoteVec, localVec1, Color.Lime, 0, 6);
+                if (localPos2 != null) GUI.DrawLine(spriteBatch, remoteVec, localVec2, Color.Red, 0, 3);
             }
 
             Vector2 mouseDrawPos = CursorWorldPosition;
@@ -2066,7 +2078,7 @@ namespace Barotrauma
                     //length of the message
                     msg.Write((byte)(4+4+4));
                     msg.Write(true);
-                    msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count));
+                    msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count - 1));
                 }
                 else
                 {
