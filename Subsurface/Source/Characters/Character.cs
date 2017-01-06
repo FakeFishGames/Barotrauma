@@ -1358,7 +1358,7 @@ namespace Barotrauma
 
                     TransformCursorPos();
 
-                    if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.movement.X) < 0.005f && Math.Abs(AnimController.movement.Y) < 0.005f)
+                    if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.005f)
                     {
                         while (memInput.Count > 5 && memInput[memInput.Count - 1] == 0)
                         {
