@@ -45,8 +45,7 @@ namespace Barotrauma
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
-
-        private int isStillCountdown = 5;
+        
         private List<InputNetFlags> memInput = new List<InputNetFlags>();
         private List<Vector2> memMousePos = new List<Vector2>();
 
@@ -1359,28 +1358,16 @@ namespace Barotrauma
 
                     TransformCursorPos();
 
-                    if (dequeuedInput == InputNetFlags.None)
+                    if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.movement.X) < 0.005f && Math.Abs(AnimController.movement.Y) < 0.005f)
                     {
-                        if (isStillCountdown <= 0)
+                        while (memInput.Count > 5 && memInput[memInput.Count - 1] == 0)
                         {
-                            while (memInput.Count > 5 && memInput[memInput.Count - 1] == 0)
-                            {
-                                //remove inputs where the player is not moving at all
-                                //helps the server catch up, shouldn't affect final position
-                                memInput.RemoveAt(memInput.Count - 1);
-                                memMousePos.RemoveAt(memMousePos.Count - 1);
-                            }
-                            isStillCountdown = 15;
-                        }
-                        else
-                        {
-                            isStillCountdown--;
+                            //remove inputs where the player is not moving at all
+                            //helps the server catch up, shouldn't affect final position
+                            memInput.RemoveAt(memInput.Count - 1);
+                            memMousePos.RemoveAt(memMousePos.Count - 1);
                         }
                     }
-                    else
-                    {
-                        isStillCountdown = 15;
-                    }                                   
                 }
             }
             else if (GameMain.Client != null)
