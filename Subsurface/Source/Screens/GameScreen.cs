@@ -118,7 +118,7 @@ namespace Barotrauma
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
                 !DebugConsole.IsOpen)
             {
-                var closestSub = Submarine.GetClosest(cam.WorldViewCenter);
+                var closestSub = Submarine.FindClosest(cam.WorldViewCenter);
                 if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
 
                 Vector2 targetMovement = Vector2.Zero;

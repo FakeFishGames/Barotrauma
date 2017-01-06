@@ -207,7 +207,7 @@ namespace Barotrauma
                 Submarine closestSub = null;
                 if (Character.Controlled == null)
                 {
-                    closestSub = Submarine.GetClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+                    closestSub = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
                 }
                 else
                 {

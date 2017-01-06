@@ -34,7 +34,7 @@ namespace Barotrauma
     {
         public static string SavePath = "Submarines";
 
-        public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 80000.0f);
+        public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
         //should be in an unreachable place
         public Vector2 HiddenSubPosition
@@ -811,7 +811,7 @@ namespace Barotrauma
             //Level.Loaded.Move(-amount);
         }
 
-        public static Submarine GetClosest(Vector2 worldPosition)
+        public static Submarine FindClosest(Vector2 worldPosition)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
@@ -826,6 +826,24 @@ namespace Barotrauma
             }
 
             return closest;
+        }
+
+        /// <summary>
+        /// Finds the sub whose borders contain the position
+        /// </summary>
+        public static Submarine FindContaining(Vector2 position)
+        {
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                Rectangle subBorders = sub.Borders;
+                subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Microsoft.Xna.Framework.Point(0, sub.Borders.Height);
+
+                subBorders.Inflate(500.0f, 500.0f);
+
+                if (subBorders.Contains(position)) return sub;                
+            }
+
+            return null;
         }
 
         //saving/loading ----------------------------------------------------
@@ -1054,7 +1072,13 @@ namespace Barotrauma
             Description = ToolBox.GetAttributeString(submarineElement, "description", "");
             Enum.TryParse(ToolBox.GetAttributeString(submarineElement, "tags", ""), out tags);
 
+            //place the sub above the top of the level
             HiddenSubPosition = HiddenSubStartPosition;
+            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+            {
+                HiddenSubPosition += Vector2.UnitY * GameMain.GameSession.Level.Size.Y;
+            }
+
             foreach (Submarine sub in Submarine.loaded)
             {
                 HiddenSubPosition += Vector2.UnitY * (sub.Borders.Height + 5000.0f);

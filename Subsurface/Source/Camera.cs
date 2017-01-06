@@ -188,7 +188,7 @@ namespace Barotrauma
 
                 if (Screen.Selected == GameMain.GameScreen)
                 {
-                    var closestSub = Submarine.GetClosest(WorldViewCenter);
+                    var closestSub = Submarine.FindClosest(WorldViewCenter);
                     if (closestSub != null)
                     {
                         moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(closestSub.Velocity * deltaTime);
