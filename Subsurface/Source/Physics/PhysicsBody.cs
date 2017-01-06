@@ -168,6 +168,11 @@ namespace Barotrauma
             get { return body.Position; }
         }
 
+        public Vector2 Position
+        {
+            get { return ConvertUnits.ToDisplayUnits(body.Position); }
+        }
+
         public Vector2 PrevPosition
         {
             get { return prevPosition; }
