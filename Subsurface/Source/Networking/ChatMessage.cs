@@ -40,10 +40,11 @@ namespace Barotrauma.Networking
         }
 
         public static UInt32 LastID = 0;
-        public UInt32 netStateID = 0;
+
         public UInt32 NetStateID
         {
-            get { return netStateID; }
+            get;
+            set;
         }
 
         private ChatMessage(string senderName, string text, ChatMessageType type, Character sender)
@@ -56,12 +57,6 @@ namespace Barotrauma.Networking
             SenderName = senderName;
 
             TextWithSender = string.IsNullOrWhiteSpace(senderName) ? text : senderName + ": " + text;
-
-            if (GameMain.Server != null)
-            {
-                LastID++;
-                netStateID = LastID;
-            }
         }        
 
         public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender)
@@ -140,7 +135,8 @@ namespace Barotrauma.Networking
             if (c.lastSentChatMsgID < ID)
             {
                 //this chat message is new to the server
-                GameMain.Server.AddChatMessage(txt, ChatMessageType.Default, c.name);
+                GameMain.Server.SendChatMessage(txt, null, c);
+                //GameMain.Server.AddChatMessage(txt, ChatMessageType.Default, c.name);
                 c.lastSentChatMsgID = ID;
             }
         }

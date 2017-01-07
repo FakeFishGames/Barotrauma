@@ -45,9 +45,14 @@ namespace Barotrauma.Items.Components
             list.Add(this);
         }
 
+        public bool CanTransmit()
+        {
+            return HasRequiredContainedItems(true);
+        }
+
         public void Transmit(string signal)
         {
-            if (!HasRequiredContainedItems(true)) return;
+            if (!CanTransmit()) return;
 
             var receivers = GetReceiversInRange();
             foreach (WifiComponent w in receivers)
@@ -60,14 +65,22 @@ namespace Barotrauma.Items.Components
 
         private List<WifiComponent> GetReceiversInRange()
         {
-            return list.FindAll(w => 
-                w != this && w.channel == channel && 
-                Vector2.Distance(item.WorldPosition, w.item.WorldPosition) <= Range);
+            return list.FindAll(w => w != this && w.CanReceive(this));
+        }
+
+        public bool CanReceive(WifiComponent sender)
+        {
+            if (!HasRequiredContainedItems(false)) return false;
+
+            if (sender == null || sender.channel != channel) return false;
+
+            return Vector2.Distance(item.WorldPosition, sender.item.WorldPosition) <= sender.Range;
         }
         
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
         {
-            if (!HasRequiredContainedItems(false)) return;
+            var senderComponent = sender.GetComponent<WifiComponent>();
+            if (senderComponent != null && !CanReceive(senderComponent)) return;
 
             if (LinkToChat)
             {
@@ -76,7 +89,10 @@ namespace Barotrauma.Items.Components
                     item.ParentInventory.Owner == Character.Controlled &&
                     GameMain.NetworkMember != null)
                 {
-                    signal = ChatMessage.ApplyDistanceEffect(item, sender, signal, range);
+                    if (senderComponent != null)
+                    {
+                        signal = ChatMessage.ApplyDistanceEffect(item, sender, signal, senderComponent.range);
+                    }
 
                     GameMain.NetworkMember.AddChatMessage(signal, ChatMessageType.Radio);
                 }

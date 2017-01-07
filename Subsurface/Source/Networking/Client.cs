@@ -41,7 +41,7 @@ namespace Barotrauma.Networking
 
         public UInt32 lastRecvEntitySpawnID = 0;
 
-        public List<string> ChatMessages = new List<string>();
+        public List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
         public float ChatSpamSpeed;
         public float ChatSpamTimer;
         public int ChatSpamCount;
