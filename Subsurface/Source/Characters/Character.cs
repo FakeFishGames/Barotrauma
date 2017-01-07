@@ -2067,18 +2067,16 @@ namespace Barotrauma
             {
                 msg.Write(ID);
 
+                NetBuffer tempBuffer = new NetBuffer();
+
                 if (this == c.Character)
                 {
-                    //length of the message
-                    msg.Write((byte)(4+4+4));
-                    msg.Write(true);
-                    msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count - 1));
+                    tempBuffer.Write(true);
+                    tempBuffer.Write((UInt32)(LastNetworkUpdateID - memInput.Count - 1));
                 }
                 else
                 {
-                    //length of the message
-                    msg.Write((byte)(4+4+1 + 1 + 1)); 
-                    msg.Write(false);
+                    tempBuffer.Write(false);
 
                     bool aiming = false;
                     bool use    = false;
@@ -2096,33 +2094,36 @@ namespace Barotrauma
                         networkUpdateSent = true;
                     }
 
-                    msg.Write(aiming);
-                    msg.Write(use);
+                    tempBuffer.Write(aiming);
+                    tempBuffer.Write(use);
 
                     if (selectedCharacter != null || selectedConstruction != null)
                     {
-                        msg.Write(true);
-                        msg.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
+                        tempBuffer.Write(true);
+                        tempBuffer.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
                     }
                     else
                     {
-                        msg.Write(false);
+                        tempBuffer.Write(false);
                     }
 
                     if (aiming)
                     {
                         //TODO: write this with less accuracy?
-                        
 
-                        msg.Write(cursorPosition.X);
-                        msg.Write(cursorPosition.Y);
+
+                        tempBuffer.Write(cursorPosition.X);
+                        tempBuffer.Write(cursorPosition.Y);
                     }
-                    
-                    msg.Write(AnimController.TargetDir == Direction.Right);
+
+                    tempBuffer.Write(AnimController.TargetDir == Direction.Right);
                 }
 
-                msg.Write(SimPosition.X);
-                msg.Write(SimPosition.Y);
+                tempBuffer.Write(SimPosition.X);
+                tempBuffer.Write(SimPosition.Y);
+
+                msg.Write((byte)tempBuffer.LengthBytes);
+                msg.Write(tempBuffer);
 
                 msg.WritePadBits();
             }
