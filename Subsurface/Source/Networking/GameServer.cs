@@ -960,8 +960,7 @@ namespace Barotrauma.Networking
             foreach (Character c in GameMain.GameSession.CrewManager.characters)
             {
                 Entity.Spawner.AddToSpawnedList(c);
-
-                c.SpawnItems.ForEach(item => Entity.Spawner.AddToSpawnedList(item));
+                Entity.Spawner.AddToSpawnedList(c.SpawnItems);
             }
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);

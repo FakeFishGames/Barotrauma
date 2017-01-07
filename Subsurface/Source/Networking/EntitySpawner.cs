@@ -152,6 +152,18 @@ namespace Barotrauma
             NetStateID = (UInt32)spawnHistory.Count;
         }
 
+        public void AddToSpawnedList(IEnumerable<Entity> entities)
+        {
+            if (GameMain.Server == null) return;
+            if (entities == null) return;
+
+            foreach (Entity entity in entities)
+            {
+                spawnHistory.Add(new SpawnOrRemove(entity, false));
+                NetStateID = (UInt32)spawnHistory.Count;
+            }
+        }
+
         public void ServerWrite(Lidgren.Network.NetBuffer message, Client client, object[] extraData = null)
         {
             if (GameMain.Server == null) return;
