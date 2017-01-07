@@ -336,8 +336,13 @@ namespace Barotrauma
                 
                 if (value <= 0.0f)
                 {
-                    if (huskInfection != null && huskInfection.State == HuskInfection.InfectionState.Active) return; 
-                    huskInfection = null;
+                    if (huskInfection != null)
+                    {
+                        //already active, can't cure anymore
+                        if (huskInfection.State == HuskInfection.InfectionState.Active) return;
+                        huskInfection.Remove(this);
+                        huskInfection = null;
+                    }
                 }
                 else
                 {
