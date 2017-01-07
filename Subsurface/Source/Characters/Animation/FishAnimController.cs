@@ -155,8 +155,8 @@ namespace Barotrauma
             if (!flip) return;
 
             flipTimer += deltaTime;
-            
-            if (TargetDir != dir) 
+
+            if (TargetDir != Direction.None && TargetDir != dir) 
             {   
                 if (flipTimer>1.0f || character.IsRemotePlayer)
                 {

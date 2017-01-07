@@ -823,7 +823,7 @@ namespace Barotrauma
 
         public void Control(float deltaTime, Camera cam)
         {
-            if (isDead || AnimController.StunTimer>0.0f) return;
+            if (!AllowInput) return;
             
             Vector2 targetMovement = GetTargetMovement();
 
@@ -1461,12 +1461,7 @@ namespace Barotrauma
                 ControlLocalPlayer(deltaTime, cam);
             }
 
-            if (controlled == this || 
-                !(this is AICharacter) || 
-                !((AICharacter)this).AIController.Enabled)
-            {
-                Control(deltaTime, cam);
-            }
+            Control(deltaTime, cam);
                         
             if (selectedConstruction != null && !selectedConstruction.IsInPickRange(WorldPosition))
             {
