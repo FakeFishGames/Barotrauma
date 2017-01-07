@@ -1342,30 +1342,31 @@ namespace Barotrauma
                 if (GameMain.Server != null && !(this is AICharacter) && AllowInput)
                 {
                     if (memInput.Count == 0)
-                    {                        
-                        if (AllowInput) AnimController.Frozen = true;
-                        return;
-                    }
-
-                    AnimController.Frozen = false;
-                    prevDequeuedInput = dequeuedInput;
-
-                    dequeuedInput = memInput[memInput.Count - 1];
-                    memInput.RemoveAt(memInput.Count - 1);
-
-                    cursorPosition = memMousePos[memMousePos.Count - 1];
-                    memMousePos.RemoveAt(memMousePos.Count - 1);
-
-                    TransformCursorPos();
-
-                    if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.005f)
                     {
-                        while (memInput.Count > 5 && memInput[memInput.Count - 1] == 0)
+                        AnimController.Frozen = true;
+                    }
+                    else
+                    {
+                        AnimController.Frozen = false;
+                        prevDequeuedInput = dequeuedInput;
+
+                        dequeuedInput = memInput[memInput.Count - 1];
+                        memInput.RemoveAt(memInput.Count - 1);
+
+                        cursorPosition = memMousePos[memMousePos.Count - 1];
+                        memMousePos.RemoveAt(memMousePos.Count - 1);
+
+                        TransformCursorPos();
+
+                        if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.005f)
                         {
-                            //remove inputs where the player is not moving at all
-                            //helps the server catch up, shouldn't affect final position
-                            memInput.RemoveAt(memInput.Count - 1);
-                            memMousePos.RemoveAt(memMousePos.Count - 1);
+                            while (memInput.Count > 5 && memInput[memInput.Count - 1] == 0)
+                            {
+                                //remove inputs where the player is not moving at all
+                                //helps the server catch up, shouldn't affect final position
+                                memInput.RemoveAt(memInput.Count - 1);
+                                memMousePos.RemoveAt(memMousePos.Count - 1);
+                            }
                         }
                     }
                 }
@@ -1813,7 +1814,7 @@ namespace Barotrauma
         {
             if (!isNetworkMessage)
             {
-                if (GameMain.NetworkMember != null && controlled != this) return; 
+                if (GameMain.Client != null) return; 
             }
             
             Health = minHealth;
