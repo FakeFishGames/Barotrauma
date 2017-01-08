@@ -41,7 +41,7 @@ namespace Barotrauma
             Aim = 0x100,
             //Attack = 0x200
 
-            MaxVal = 0x200
+            MaxVal = 0x1FF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
