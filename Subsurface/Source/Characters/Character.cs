@@ -825,7 +825,7 @@ namespace Barotrauma
 
         public void Control(float deltaTime, Camera cam)
         {
-            if (isDead || AnimController.StunTimer>0.0f) return;
+            if (!AllowInput) return;
             
             Vector2 targetMovement = GetTargetMovement();
 
@@ -1346,30 +1346,31 @@ namespace Barotrauma
                 if (GameMain.Server != null && !(this is AICharacter) && AllowInput)
                 {
                     if (memInput.Count == 0)
-                    {                        
-                        if (AllowInput) AnimController.Frozen = true;
-                        return;
-                    }
-
-                    AnimController.Frozen = false;
-                    prevDequeuedInput = dequeuedInput;
-
-                    dequeuedInput = memInput[memInput.Count - 1];
-                    memInput.RemoveAt(memInput.Count - 1);
-
-                    cursorPosition = memMousePos[memMousePos.Count - 1];
-                    memMousePos.RemoveAt(memMousePos.Count - 1);
-
-                    TransformCursorPos();
-                    
-                    if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
                     {
-                        while (memInput.Count > 5 && memInput[memInput.Count - 1] == InputNetFlags.None)
+                        AnimController.Frozen = true;
+                    }
+                    else
+                    {
+                        AnimController.Frozen = false;
+                        prevDequeuedInput = dequeuedInput;
+
+                        dequeuedInput = memInput[memInput.Count - 1];
+                        memInput.RemoveAt(memInput.Count - 1);
+
+                        cursorPosition = memMousePos[memMousePos.Count - 1];
+                        memMousePos.RemoveAt(memMousePos.Count - 1);
+                        
+                        TransformCursorPos();
+
+                        if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
                         {
-                            //remove inputs where the player is not moving at all
-                            //helps the server catch up, shouldn't affect final position
-                            memInput.RemoveAt(memInput.Count - 1);
-                            memMousePos.RemoveAt(memMousePos.Count - 1);
+                            while (memInput.Count > 5 && memInput[memInput.Count - 1] == 0)
+                            {
+                                //remove inputs where the player is not moving at all
+                                //helps the server catch up, shouldn't affect final position
+                                memInput.RemoveAt(memInput.Count - 1);
+                                memMousePos.RemoveAt(memMousePos.Count - 1);
+                            }
                         }
                     }
                 }
@@ -1465,12 +1466,7 @@ namespace Barotrauma
                 ControlLocalPlayer(deltaTime, cam);
             }
 
-            if (controlled == this || 
-                !(this is AICharacter) || 
-                !((AICharacter)this).AIController.Enabled)
-            {
-                Control(deltaTime, cam);
-            }
+            Control(deltaTime, cam);
                         
             if (selectedConstruction != null && !selectedConstruction.IsInPickRange(WorldPosition))
             {
@@ -1822,7 +1818,7 @@ namespace Barotrauma
         {
             if (!isNetworkMessage)
             {
-                if (GameMain.NetworkMember != null && controlled != this) return; 
+                if (GameMain.Client != null) return; 
             }
             
             Health = minHealth;
@@ -2071,18 +2067,16 @@ namespace Barotrauma
             {
                 msg.Write(ID);
 
+                NetBuffer tempBuffer = new NetBuffer();
+
                 if (this == c.Character)
                 {
-                    //length of the message
-                    msg.Write((byte)(4+4+4));
-                    msg.Write(true);
-                    msg.Write((UInt32)(LastNetworkUpdateID - memInput.Count - 1));
+                    tempBuffer.Write(true);
+                    tempBuffer.Write((UInt32)(LastNetworkUpdateID - memInput.Count - 1));
                 }
                 else
                 {
-                    //length of the message
-                    msg.Write((byte)(4+4+1 + 1 + 1)); 
-                    msg.Write(false);
+                    tempBuffer.Write(false);
 
                     bool aiming = false;
                     bool use    = false;
@@ -2100,33 +2094,36 @@ namespace Barotrauma
                         networkUpdateSent = true;
                     }
 
-                    msg.Write(aiming);
-                    msg.Write(use);
+                    tempBuffer.Write(aiming);
+                    tempBuffer.Write(use);
 
                     if (selectedCharacter != null || selectedConstruction != null)
                     {
-                        msg.Write(true);
-                        msg.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
+                        tempBuffer.Write(true);
+                        tempBuffer.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
                     }
                     else
                     {
-                        msg.Write(false);
+                        tempBuffer.Write(false);
                     }
 
                     if (aiming)
                     {
                         //TODO: write this with less accuracy?
-                        
 
-                        msg.Write(cursorPosition.X);
-                        msg.Write(cursorPosition.Y);
+
+                        tempBuffer.Write(cursorPosition.X);
+                        tempBuffer.Write(cursorPosition.Y);
                     }
-                    
-                    msg.Write(AnimController.TargetDir == Direction.Right);
+
+                    tempBuffer.Write(AnimController.TargetDir == Direction.Right);
                 }
 
-                msg.Write(SimPosition.X);
-                msg.Write(SimPosition.Y);
+                tempBuffer.Write(SimPosition.X);
+                tempBuffer.Write(SimPosition.Y);
+
+                msg.Write((byte)tempBuffer.LengthBytes);
+                msg.Write(tempBuffer);
 
                 msg.WritePadBits();
             }

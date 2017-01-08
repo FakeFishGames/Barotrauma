@@ -847,18 +847,18 @@ namespace Barotrauma.Networking
             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
         }
 
-        public override void SendChatMessage(string message, ChatMessageType? type = null)
+        public void SendChatMessage(string message)
         {
             if (client.ServerConnection == null) return;
 
-            type = ChatMessageType.Default;
-
             ChatMessage chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
-                message, (ChatMessageType)type, gameStarted ? myCharacter : null);
+                message, 
+                ChatMessageType.Default, 
+                gameStarted ? myCharacter : null);
 
             lastQueueChatMsgID++;
-            chatMessage.netStateID = lastQueueChatMsgID;
+            chatMessage.NetStateID = lastQueueChatMsgID;
 
             chatMsgQueue.Add(chatMessage);
         }

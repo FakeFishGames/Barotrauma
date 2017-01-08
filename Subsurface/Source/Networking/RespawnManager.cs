@@ -412,6 +412,8 @@ namespace Barotrauma.Networking
                 bool myCharacter = i >= clients.Count;
 
                 var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, !myCharacter, false);
+                Entity.Spawner.AddToSpawnedList(character);
+                
                 character.TeamID = 1;
 
                 if (myCharacter)
@@ -424,9 +426,7 @@ namespace Barotrauma.Networking
                 {
                     clients[i].Character = character;
                 }
-
-                spawnedCharacters.Add(character);
-
+                
                 Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
 
                 if (divingSuitPrefab != null && oxyPrefab != null)
@@ -450,10 +450,11 @@ namespace Barotrauma.Networking
                     spawnedItems.Add(scooter);
                     spawnedItems.Add(battery);
                 }
-
-                spawnedItems.ForEach(s => Item.Spawner.AddToSpawnedList(s));                
                 
                 character.GiveJobItems(mainSubSpawnPoints[i]);
+                Entity.Spawner.AddToSpawnedList(character.SpawnItems);
+                Entity.Spawner.AddToSpawnedList(spawnedItems);
+
                 GameMain.GameSession.CrewManager.characters.Add(character);
             }
             
