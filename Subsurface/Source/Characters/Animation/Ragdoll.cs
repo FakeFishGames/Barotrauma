@@ -1222,7 +1222,8 @@ namespace Barotrauma
                 }
             }
 
-
+            if (GameMain.Server != null) return; //the server should not be trying to correct any positions, it's authoritative
+            
             if (character != GameMain.NetworkMember.Character || !character.AllowInput)
             {
                 //use simple interpolation for other players' characters and characters that can't move
@@ -1266,6 +1267,16 @@ namespace Barotrauma
 
                 PosInfo serverPos = character.MemPos.Last();
 
+                if (!character.isSynced)
+                {
+                    SetPosition(serverPos.Position, false);
+                    Collider.LinearVelocity = Vector2.Zero;
+                    character.MemLocalPos.Clear();
+                    character.LastNetworkUpdateID = serverPos.ID;
+                    character.isSynced = true;
+                    return;
+                }
+
                 int localPosIndex = character.MemLocalPos.FindIndex(m => m.ID == serverPos.ID);
                 if (localPosIndex > -1)
                 {
@@ -1274,31 +1285,33 @@ namespace Barotrauma
                     Vector2 positionError = serverPos.Position - localPos.Position;
 
                     float errorMagnitude = positionError.Length();
+                    DebugConsole.NewMessage(positionError.X.ToString()+" "+positionError.Y.ToString(),Color.Red);
 
-                    if (errorMagnitude > 2.0f)
+                    /*if (errorMagnitude > 8.0f)
                     {
                         //predicted position was way off, reset completely
                         SetPosition(serverPos.Position, false);
                         //local positions are incorrect now -> just clear the list
                         character.MemLocalPos.Clear();
                     }
-                    else if (errorMagnitude > Collider.LinearVelocity.Length() / 10.0f + 0.02f)
-                    {
-                        //our prediction differs from the server position
-                        //-> we need to move the saved local position and all the positions saved after it
+                    else if (errorMagnitude > Collider.LinearVelocity.Length() / 10.0f + 0.02f && false)
+                    {*/
+                    //our prediction differs from the server position
+                    //-> we need to move the saved local position and all the positions saved after it
 
-                        //(a better way to do this would be to move the character back to
-                        //serverPos and "replay" inputs to see where the character should be now)
-                        for (int i = localPosIndex; i < character.MemLocalPos.Count; i++)
-                        {
-                            character.MemLocalPos[i] =
-                                new PosInfo(
-                                    character.MemLocalPos[i].Position + positionError,
-                                    character.MemLocalPos[i].Direction,
-                                    character.MemLocalPos[i].ID);
-                        }
-                        Collider.SetTransform(character.MemLocalPos.Last().Position, Collider.Rotation);
+                    //(a better way to do this would be to move the character back to
+                    //serverPos and "replay" inputs to see where the character should be now)
+                    for (int i = localPosIndex; i < character.MemLocalPos.Count; i++)
+                    {
+                        character.MemLocalPos[i] =
+                            new PosInfo(
+                                character.MemLocalPos[i].Position + positionError,
+                                character.MemLocalPos[i].Direction,
+                                character.MemLocalPos[i].ID);
                     }
+                    //Collider.SetTransform(character.MemLocalPos.Last().Position, Collider.Rotation);
+                    Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation);
+                    //}
                 }
 
                 if (character.MemLocalPos.Count > 120) character.MemLocalPos.RemoveRange(0, character.MemLocalPos.Count - 120);

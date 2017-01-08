@@ -20,11 +20,11 @@ namespace Barotrauma
         
         public static bool DisableControls;
 
-        private UInt32 netStateID;
+        /*private UInt32 netStateID;
         public UInt32 NetStateID
         {
             get { return netStateID; }
-        }
+        }*/
         
         [Flags]
         private enum InputNetFlags : ushort
@@ -70,6 +70,8 @@ namespace Barotrauma
 
         public List<Item> SpawnItems = new List<Item>();
 
+        public bool isSynced = false;
+
         private bool enabled;
 
         public bool Enabled
@@ -96,7 +98,7 @@ namespace Barotrauma
 
         private CharacterInventory inventory;
 
-        private UInt32 LastNetworkUpdateID = 0;
+        public UInt32 LastNetworkUpdateID = 0;
 
         //public int LargeUpdateTimer;
 
@@ -1312,6 +1314,8 @@ namespace Barotrauma
 
         public virtual void Update(Camera cam, float deltaTime)
         {
+            if (GameMain.Client!=null && this==Controlled && !isSynced) return;
+
             if (!Enabled) return;
 
             PreviousHull = CurrentHull;
@@ -1357,10 +1361,10 @@ namespace Barotrauma
                     memMousePos.RemoveAt(memMousePos.Count - 1);
 
                     TransformCursorPos();
-
-                    if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.005f)
+                    
+                    if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
                     {
-                        while (memInput.Count > 5 && memInput[memInput.Count - 1] == 0)
+                        while (memInput.Count > 5 && memInput[memInput.Count - 1] == InputNetFlags.None)
                         {
                             //remove inputs where the player is not moving at all
                             //helps the server catch up, shouldn't affect final position
@@ -1387,7 +1391,7 @@ namespace Barotrauma
                 if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
                 memInput.Insert(0, newInput);
-                memMousePos.Insert(0, closestItem!=null ? closestItem.Position : cursorPosition);
+                memMousePos.Insert(0, /*closestItem!=null ? closestItem.Position : */cursorPosition);
                 LastNetworkUpdateID++;
                 if (memInput.Count > 60)
                 {
