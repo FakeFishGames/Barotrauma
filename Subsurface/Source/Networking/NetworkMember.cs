@@ -195,7 +195,14 @@ namespace Barotrauma.Networking
 
             if (string.IsNullOrWhiteSpace(message)) return false;
 
-            SendChatMessage(message);
+            if (this == GameMain.Server)
+            {
+                GameMain.Server.SendChatMessage(message, null, null);
+            }
+            else if (this == GameMain.Client)
+            {
+                GameMain.Client.SendChatMessage(message);
+            }
                         
             if (textBox == chatMsgBox) textBox.Deselect();
 
@@ -209,33 +216,12 @@ namespace Barotrauma.Networking
         
         public void AddChatMessage(ChatMessage message)
         {
-
-            if (message.Type == ChatMessageType.Radio && 
-                Character.Controlled != null &&
-                message.Sender != null && message.Sender != myCharacter)
-            {
-                var radio = message.Sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
-                if (radio == null) return;
-
-                message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)ChatMessageType.Radio]);
-
-                var radioComponent = radio.GetComponent<WifiComponent>();
-                radioComponent.Transmit(message.TextWithSender);
-                return;
-            }
-
             GameServer.Log(message.TextWithSender, message.Color);
 
             string displayedText = message.Text;
 
             if (message.Sender != null)
             {
-                if (message.Type == ChatMessageType.Default && Character.Controlled != null)
-                {
-                    displayedText = message.ApplyDistanceEffect(Character.Controlled);
-                    if (string.IsNullOrWhiteSpace(displayedText)) return;
-                }
-
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)ChatMessageType.Default]);
             }
 
@@ -278,8 +264,6 @@ namespace Barotrauma.Networking
 
             GUI.PlayUISound(soundType);
         }
-
-        public virtual void SendChatMessage(string message, ChatMessageType? type = null) { }
 
         public virtual void KickPlayer(string kickedName, bool ban, bool range = false) { }
 

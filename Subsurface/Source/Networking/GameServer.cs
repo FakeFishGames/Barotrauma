@@ -542,7 +542,7 @@ namespace Barotrauma.Networking
             //    }
             //}
 
-            foreach (Character c in Character.CharacterList)
+            /*foreach (Character c in Character.CharacterList)
             {
                 if (c.IsDead) continue;
 
@@ -554,7 +554,7 @@ namespace Barotrauma.Networking
                     //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
                 }
                 
-            }
+            }*/
 
             sparseUpdateTimer = DateTime.Now + sparseUpdateInterval;
         }
@@ -658,17 +658,11 @@ namespace Barotrauma.Networking
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
             outmsg.Write(c.lastSentEntityEventID);
 
-            foreach (GUIComponent gc in GameMain.NetLobbyScreen.ChatBox.children)
+            c.chatMsgQueue.RemoveAll(cMsg => cMsg.NetStateID <= c.lastRecvChatMsgID);
+            foreach (ChatMessage cMsg in c.chatMsgQueue)
             {
-                if (gc is GUITextBlock && gc.UserData is ChatMessage)
-                {
-                    ChatMessage cMsg = (ChatMessage)gc.UserData;
-                    if (cMsg.NetStateID > c.lastRecvChatMsgID)
-                    {
-                        cMsg.ServerWrite(outmsg, c);
-                    }                    
-                }
-            }
+                cMsg.ServerWrite(outmsg, c);
+            }            
 
             if (Item.Spawner.NetStateID > c.lastRecvEntitySpawnID)
             {
@@ -681,7 +675,7 @@ namespace Barotrauma.Networking
             {
                 if (character is AICharacter)
                 {
-                    //TODO: don't send if the ai character is far from the client
+                    //TODO: don't send if the ai character is far from the client 
                     //(some sort of distance-based culling might be a good idea for player-controlled characters as well)
                     outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
                     character.ServerWrite(outmsg, c);
@@ -766,20 +760,12 @@ namespace Barotrauma.Networking
 
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
 
-            foreach (GUIComponent gc in GameMain.NetLobbyScreen.ChatBox.children)
+            c.chatMsgQueue.RemoveAll(cMsg => cMsg.NetStateID <= c.lastRecvChatMsgID);
+            foreach (ChatMessage cMsg in c.chatMsgQueue)
             {
-                if (gc is GUITextBlock)
-                {
-                    if (gc.UserData is ChatMessage)
-                    {
-                        ChatMessage cMsg = (ChatMessage)gc.UserData;
-                        if (cMsg.NetStateID > c.lastRecvChatMsgID)
-                        {
-                            cMsg.ServerWrite(outmsg,c);
-                        }
-                    }
-                }
-            }
+                cMsg.ServerWrite(outmsg, c);
+            } 
+
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
         }
@@ -960,8 +946,7 @@ namespace Barotrauma.Networking
             foreach (Character c in GameMain.GameSession.CrewManager.characters)
             {
                 Entity.Spawner.AddToSpawnedList(c);
-
-                c.SpawnItems.ForEach(item => Entity.Spawner.AddToSpawnedList(item));
+                Entity.Spawner.AddToSpawnedList(c.SpawnItems);
             }
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
@@ -1215,16 +1200,174 @@ namespace Barotrauma.Networking
             }           
         }
 
-        public override void SendChatMessage(string message, ChatMessageType? type = null)
+        /// <summary>
+        /// Add the message to the chatbox and pass it to all clients who can receive it
+        /// </summary>
+        public void SendChatMessage(string message, ChatMessageType? type = null, Client senderClient = null)
         {
-            type = ChatMessageType.Default;
+            Character senderCharacter = null;
+            string senderName = "";
+            
+            if (type==null)
+            {
+                string tempStr;
+                string command = ChatMessage.GetChatMessageCommand(message, out tempStr);
+                switch (command)
+                {
+                    case "r":
+                    case "radio":
+                        type = ChatMessageType.Radio;
+                        break;
+                    case "d":
+                    case "dead":
+                        type = ChatMessageType.Dead;
+                        break;
+                    default:
+                        type = ChatMessageType.Default;
+                        break;
+                }
+            }
 
-            ChatMessage chatMessage = ChatMessage.Create(
-                gameStarted && myCharacter != null ? myCharacter.Name : name,
-                message, (ChatMessageType)type, gameStarted ? myCharacter : null);
+            if (gameStarted)
+            {
+                //msg sent by the server
+                if (senderClient == null)
+                {
+                    senderCharacter = myCharacter;
+                    senderName = myCharacter == null ? name : myCharacter.Name;
+                }                
+                else //msg sent by a client
+                {
+                    senderCharacter = senderClient.Character;
+                    senderName = senderCharacter == null ? senderClient.name : senderCharacter.Name;
 
+                    //sender doesn't have an alive character -> only ChatMessageType.Dead allowed
+                    if (senderCharacter == null || senderCharacter.IsDead)
+                    {
+                        type = ChatMessageType.Dead;
+                    }
+                }
+            }
+            else
+            {
+                //msg sent by the server
+                if (senderClient == null)
+                {
+                    senderName = name;
+                }                
+                else //msg sent by a client          
+                {
+                    //game not started -> clients can only send normal chatmessages
+                    type = ChatMessageType.Default;
+                    senderName = senderClient.name;
+                }
+            }
 
-            AddChatMessage(chatMessage);        
+            //check if the client is allowed to send the message
+            WifiComponent senderRadio = null;
+            switch (type)
+            {
+                case ChatMessageType.Radio:
+                    if (senderCharacter == null) return;
+
+                    //return if senderCharacter doesn't have a working radio
+                    var radio = senderCharacter.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+                    if (radio == null) return;
+
+                    senderRadio = radio.GetComponent<WifiComponent>();
+                    if (!senderRadio.CanTransmit()) return;
+                    break;
+                case ChatMessageType.Dead:
+                    //character still alive -> not allowed
+                    if (senderClient != null && senderCharacter != null && !senderCharacter.IsDead)
+                    {
+                        return;
+                    }
+                    break;
+            }
+            
+            //check which clients can receive the message and apply distance effects
+            foreach (Client client in ConnectedClients)
+            {
+                string modifiedMessage = message;
+
+                switch (type)
+                {
+                    case ChatMessageType.Default:
+                    case ChatMessageType.Radio:
+                        if (senderCharacter != null && 
+                            client.Character != null && !client.Character.IsDead)
+                        {
+                            modifiedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, client.Character);
+
+                            //too far to hear the msg -> don't send
+                            if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
+                        }
+                        break;
+                    case ChatMessageType.Dead:
+                        if (client.Character != null && !client.Character.IsDead) continue;
+                        break;
+                }
+
+                var chatMsg = ChatMessage.Create(
+                    senderName,
+                    modifiedMessage, 
+                    (ChatMessageType)type,
+                    senderCharacter);
+                  
+                chatMsg.NetStateID = client.chatMsgQueue.Count > 0 ? 
+                    client.chatMsgQueue.Last().NetStateID + 1 : 
+                    client.lastRecvChatMsgID+1;
+
+                client.chatMsgQueue.Add(chatMsg);
+            }
+
+            string myReceivedMessage = message;
+
+            if (gameStarted && myCharacter != null)
+            {
+                myReceivedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, myCharacter);
+            }
+
+            if (!string.IsNullOrWhiteSpace(myReceivedMessage))
+            {
+                AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName); 
+            }       
+        }
+
+        private string ApplyChatMsgDistanceEffects(string message, ChatMessageType type, Character sender, Character receiver)
+        {
+            if (sender == null) return "";
+
+            switch (type)
+            {
+                case ChatMessageType.Default:
+                    if (!receiver.IsDead)
+                    {
+                        return ChatMessage.ApplyDistanceEffect(receiver, sender, message, ChatMessage.SpeakRange);
+                    }
+                    break;
+                case ChatMessageType.Radio:
+                    if (!receiver.IsDead)
+                    {
+                        var receiverItem = receiver.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+                        //client doesn't have a radio -> don't send
+                        if (receiverItem == null) return "";
+
+                        var senderItem = sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+                        if (senderItem == null) return "";
+
+                        var receiverRadio   = receiverItem.GetComponent<WifiComponent>();
+                        var senderRadio     = senderItem.GetComponent<WifiComponent>();
+
+                        if (!receiverRadio.CanReceive(senderRadio)) return "";
+
+                        return ChatMessage.ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
+                    }
+                    break;
+            }
+
+            return message;
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
