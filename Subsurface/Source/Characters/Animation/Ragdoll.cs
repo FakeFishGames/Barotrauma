@@ -1285,7 +1285,6 @@ namespace Barotrauma
                     Vector2 positionError = serverPos.Position - localPos.Position;
 
                     float errorMagnitude = positionError.Length();
-                    DebugConsole.NewMessage(positionError.X.ToString()+" "+positionError.Y.ToString(),Color.Red);
 
                     /*if (errorMagnitude > 8.0f)
                     {

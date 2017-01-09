@@ -46,8 +46,15 @@ namespace Barotrauma
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
         
-        private List<InputNetFlags> memInput = new List<InputNetFlags>();
-        private List<Vector2> memMousePos = new List<Vector2>();
+        private struct NetInputMem
+        {
+            public InputNetFlags states; //keys pressed/other boolean states at this step
+            public UInt16 intAim; //aim angle, represented as an unsigned short where 0=0º, 65535=just a bit under 360º
+            public UInt16 interact; //id of the item being interacted with
+        }
+
+        private List<NetInputMem> memInput = new List<NetInputMem>();
+        //private List<Vector2> memMousePos = new List<Vector2>();
 
         private List<PosInfo> memPos = new List<PosInfo>();
         private List<PosInfo> memLocalPos = new List<PosInfo>();
@@ -689,22 +696,22 @@ namespace Barotrauma
                 switch (inputType)
                 {
                     case InputType.Left:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Left)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Left));
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
                         //break;
                     case InputType.Right:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Right)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Right));
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Right)) && (prevDequeuedInput.HasFlag(InputNetFlags.Right));
                         //break;
                     case InputType.Up:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Up)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Up));
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Up)) && (prevDequeuedInput.HasFlag(InputNetFlags.Up));
                         //break;
                     case InputType.Down:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Down)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Down));
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Down)) && (prevDequeuedInput.HasFlag(InputNetFlags.Down));
                     //break;
                     case InputType.Run:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Run)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Run));
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Run)) && (prevDequeuedInput.HasFlag(InputNetFlags.Run));
                     //break;
                     case InputType.Select:
-                        return (dequeuedInput.HasFlag(InputNetFlags.Select)) && !(prevDequeuedInput.HasFlag(InputNetFlags.Select));
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
                     //break;
                     default:
                         return false;
@@ -732,7 +739,7 @@ namespace Barotrauma
                     case InputType.Run:
                         return dequeuedInput.HasFlag(InputNetFlags.Run);                        
                     case InputType.Select:
-                        return dequeuedInput.HasFlag(InputNetFlags.Select);
+                        return false; //TODO: clean up the way this input is registered
                     case InputType.Aim:
                         return dequeuedInput.HasFlag(InputNetFlags.Aim);
                     case InputType.Use:
@@ -1354,22 +1361,27 @@ namespace Barotrauma
                         AnimController.Frozen = false;
                         prevDequeuedInput = dequeuedInput;
 
-                        dequeuedInput = memInput[memInput.Count - 1];
+                        dequeuedInput = memInput[memInput.Count - 1].states;
+
+                        double aimAngle = ((double)memInput[memInput.Count - 1].intAim/65535.0)*2.0*Math.PI;
+                        cursorPosition = AnimController.Collider.Position+new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle))*60.0f;
+
+                        closestItem = Item.ItemList.Find(it => it.ID == memInput[memInput.Count - 1].interact);
+                        if (IsKeyDown(InputType.Select) && closestItem==null)
+                        {
+                            DebugConsole.NewMessage("whoops!",Color.Green);
+                        }
                         memInput.RemoveAt(memInput.Count - 1);
 
-                        cursorPosition = memMousePos[memMousePos.Count - 1];
-                        memMousePos.RemoveAt(memMousePos.Count - 1);
-                        
                         TransformCursorPos();
 
-                        if (dequeuedInput == InputNetFlags.None && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
+                        if ((dequeuedInput == InputNetFlags.None || dequeuedInput == InputNetFlags.FacingLeft) && Math.Abs(AnimController.Collider.LinearVelocity.X) < 0.005f && Math.Abs(AnimController.Collider.LinearVelocity.Y) < 0.2f)
                         {
-                            while (memInput.Count > 5 && memInput[memInput.Count - 1] == 0)
+                            while (memInput.Count > 5 && memInput[memInput.Count - 1].states == dequeuedInput)
                             {
                                 //remove inputs where the player is not moving at all
                                 //helps the server catch up, shouldn't affect final position
                                 memInput.RemoveAt(memInput.Count - 1);
-                                memMousePos.RemoveAt(memMousePos.Count - 1);
                             }
                         }
                     }
@@ -1378,26 +1390,35 @@ namespace Barotrauma
             else if (GameMain.Client != null)
             {
                 memLocalPos.Add(new PosInfo(SimPosition, AnimController.TargetDir, LastNetworkUpdateID));
-                    
+                
                 InputNetFlags newInput = InputNetFlags.None;
                 if (IsKeyDown(InputType.Left))      newInput |= InputNetFlags.Left;
                 if (IsKeyDown(InputType.Right))     newInput |= InputNetFlags.Right;
                 if (IsKeyDown(InputType.Up))        newInput |= InputNetFlags.Up;
                 if (IsKeyDown(InputType.Down))      newInput |= InputNetFlags.Down;
                 if (IsKeyDown(InputType.Run))       newInput |= InputNetFlags.Run;
-                if (IsKeyDown(InputType.Select))    newInput |= InputNetFlags.Select;
+                if (IsKeyHit(InputType.Select))     newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
                 if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
                 if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
                     
                 if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
-                memInput.Insert(0, newInput);
-                memMousePos.Insert(0, /*closestItem!=null ? closestItem.Position : */cursorPosition);
+                
+
+                Vector2 relativeCursorPos = cursorPosition - AnimController.Collider.Position;
+                relativeCursorPos.Normalize();
+                UInt16 intAngle = (UInt16)(65535.0*Math.Atan2(relativeCursorPos.Y,relativeCursorPos.X)/(2.0*Math.PI));
+                
+                NetInputMem newMem = new NetInputMem();
+                newMem.states = newInput;
+                newMem.intAim = intAngle;
+                newMem.interact = closestItem != null ? closestItem.ID : (UInt16)0;
+
+                memInput.Insert(0, newMem);
                 LastNetworkUpdateID++;
                 if (memInput.Count > 60)
                 {
                     memInput.RemoveRange(60, memInput.Count - 60);
-                    memMousePos.RemoveRange(60, memMousePos.Count - 60);
                 }                
             }
 
@@ -1479,7 +1500,7 @@ namespace Barotrauma
                 {
                     Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
 
-                    if (IsKeyHit(InputType.Select))
+                    if (IsKeyHit(InputType.Select) && GameMain.Server==null)
                     {
                         closestCharacter = FindClosestCharacter(mouseSimPos);
                         if (closestCharacter != null && closestCharacter.info == null)
@@ -1492,6 +1513,7 @@ namespace Barotrauma
 
                         if (closestCharacter != null && closestItem != null)
                         {
+                            if (closestItem != null) closestItemDist = (closestItem.Position - AnimController.Collider.Position).Length();
                             if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < ConvertUnits.ToSimUnits(closestItemDist))
                             {
                                 if (selectedConstruction != closestItem) closestItem = null;
@@ -1502,13 +1524,17 @@ namespace Barotrauma
                             }
                         }
                     }
-
+                    
                     if (selectedCharacter == null && closestItem != null)
                     {
-                        closestItem.IsHighlighted = true;
+                        //DebugConsole.NewMessage(closestItem.ToString(), Color.Yellow);
+                        //closestItem.IsHighlighted = true;
                         if (!LockHands && closestItem.Pick(this))
                         {
-
+                            if (AnimController.Anim == AnimController.Animation.Climbing)
+                            {
+                                //DebugConsole.NewMessage("ladder woo",Color.Lime);
+                            }
                         }
                     }
 
@@ -1978,7 +2004,6 @@ namespace Barotrauma
                 if (memInput.Count > 60)
                 {
                     memInput.RemoveRange(60,memInput.Count - 60);
-                    memMousePos.RemoveRange(60,memMousePos.Count - 60);
                 }
 
                 msg.Write(LastNetworkUpdateID);
@@ -1986,12 +2011,20 @@ namespace Barotrauma
                 msg.Write(inputCount);
                 for (int i = 0; i < inputCount; i++)
                 {
-                    msg.WriteRangedInteger(0, (int)InputNetFlags.MaxVal,(int)memInput[i]);
-                    if (memInput[i].HasFlag(InputNetFlags.Select) || memInput[i].HasFlag(InputNetFlags.Aim))
+                    msg.WriteRangedInteger(0, (int)InputNetFlags.MaxVal,(int)memInput[i].states);
+                    if (memInput[i].states.HasFlag(InputNetFlags.Aim))
+                    {
+                        msg.Write(memInput[i].intAim);
+                    }
+                    if (memInput[i].states.HasFlag(InputNetFlags.Select))
+                    {
+                        msg.Write(memInput[i].interact);
+                    }
+                    /*if (memInput[i].HasFlag(InputNetFlags.Select) || memInput[i].HasFlag(InputNetFlags.Aim))
                     {
                         msg.Write(memMousePos[i].X);
                         msg.Write(memMousePos[i].Y);
-                    }
+                    }*/
                 }
             }
         }
@@ -2009,19 +2042,34 @@ namespace Barotrauma
                     for (int i = 0; i < inputCount; i++)
                     {
                         InputNetFlags newInput = (InputNetFlags)msg.ReadRangedInteger(0, (int)InputNetFlags.MaxVal);
-                        Vector2 newMousePos = Position;
+                        //Vector2 newMousePos = Position;
+                        UInt16 newAim = 0;
+                        UInt16 newInteract = 0;
+
+                        if (newInput.HasFlag(InputNetFlags.Aim))
+                        {
+                            newAim = msg.ReadUInt16();
+                        }
+                        if (newInput.HasFlag(InputNetFlags.Select))
+                        {
+                            newInteract = msg.ReadUInt16();
+                        }
 
                         if (AllowInput)
                         {
-                            if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Aim))
+                            /*if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Aim))
                             {
                                 newMousePos.X = msg.ReadSingle();
                                 newMousePos.Y = msg.ReadSingle();
-                            }
+                            }*/
                             if ((i < ((long)networkUpdateID - (long)LastNetworkUpdateID)) && (i < 60))
                             {
-                                memInput.Insert(i, newInput);
-                                memMousePos.Insert(i, newMousePos);
+                                NetInputMem newMem = new NetInputMem();
+                                newMem.states = newInput;
+                                newMem.intAim = newAim;
+                                newMem.interact = newInteract;
+                                
+                                memInput.Insert(i, newMem);
                             }
                         }
                     }
@@ -2035,7 +2083,6 @@ namespace Barotrauma
                         //deleting inputs from the queue here means the server is way behind and data needs to be dropped
                         //we'll make the server drop down to 30 inputs for good measure
                         memInput.RemoveRange(30, memInput.Count - 30);
-                        memMousePos.RemoveRange(30, memMousePos.Count - 30);
                     }
                     break;
 
