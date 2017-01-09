@@ -120,6 +120,8 @@ namespace Barotrauma.Networking
         {
             ID = 0;
 
+            lastReceivedID = 0;
+
             events.Clear();
             eventLastSent.Clear();
         }

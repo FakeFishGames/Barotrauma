@@ -293,36 +293,6 @@ namespace Barotrauma
             {
                 scrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
             }
-
-            for (int i = 0; i < children.Count; i++)
-            {
-                GUIComponent child = children[i];
-                if (child == frame || !child.Visible) continue;
-                
-                if (enabled && child.CanBeFocused &&
-                    (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
-                {
-                    child.State = ComponentState.Hover;
-                    if (PlayerInput.LeftButtonClicked())
-                    {
-                        Debug.WriteLine("clicked");
-                        Select(i);
-                    }
-                }
-                else if (selected.Contains(child))
-                {
-                    child.State = ComponentState.Selected;
-
-                    if (CheckSelected != null)
-                    {
-                        if (CheckSelected() != child.UserData) selected.Remove(child);
-                    }
-                }
-                else
-                {
-                    child.State = ComponentState.None;
-                }
-            }
         }
 
         public void Select(int childIndex, bool force = false)

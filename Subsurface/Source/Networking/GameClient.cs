@@ -577,6 +577,8 @@ namespace Barotrauma.Networking
             if (Character != null) Character.Remove();
 
             Entity.Spawner.Clear();
+            entityEventManager.Clear();
+            LastSentEntityEventID = 0;
 
             endVoteTickBox.Selected = false;
 
