@@ -1399,8 +1399,6 @@ namespace Barotrauma
                     
                 if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
-                
-
                 Vector2 relativeCursorPos = cursorPosition - AnimController.Collider.Position;
                 relativeCursorPos.Normalize();
                 UInt16 intAngle = (UInt16)(65535.0*Math.Atan2(relativeCursorPos.Y,relativeCursorPos.X)/(2.0*Math.PI));
@@ -2152,11 +2150,8 @@ namespace Barotrauma
 
                     if (aiming)
                     {
-                        //TODO: write this with less accuracy?
-
-
-                        tempBuffer.Write(cursorPosition.X);
-                        tempBuffer.Write(cursorPosition.Y);
+                        Vector2 relativeCursorPos = cursorPosition - AnimController.Collider.Position;
+                        tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
                     }
 
                     tempBuffer.Write(AnimController.TargetDir == Direction.Right);
@@ -2167,8 +2162,6 @@ namespace Barotrauma
 
                 msg.Write((byte)tempBuffer.LengthBytes);
                 msg.Write(tempBuffer);
-
-                msg.WritePadBits();
             }
         }
 
@@ -2222,10 +2215,9 @@ namespace Barotrauma
                                                 
                         if (aimInput)
                         {
-                            cursorPosition = new Vector2(
-                                msg.ReadFloat(), 
-                                msg.ReadFloat());
-
+                            double aimAngle = ((double)msg.ReadUInt16() / 65535.0) * 2.0 * Math.PI;
+                            cursorPosition = AnimController.Collider.Position + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
+                            
                             TransformCursorPos();
                         }
                         facingRight = msg.ReadBoolean();
