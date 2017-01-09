@@ -906,6 +906,12 @@ namespace Barotrauma.Networking
             List<CharacterInfo> characterInfos = new List<CharacterInfo>();
             foreach (Client client in connectedClients)
             {
+                client.lastRecvEntitySpawnID = 0;
+
+                client.entityEventLastSent.Clear();
+                client.lastSentEntityEventID = 0;
+                client.lastRecvEntityEventID = 0;
+                                
                 if (client.characterInfo == null)
                 {
                     client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);
