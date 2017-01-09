@@ -1366,7 +1366,7 @@ namespace Barotrauma
                         double aimAngle = ((double)memInput[memInput.Count - 1].intAim/65535.0)*2.0*Math.PI;
                         cursorPosition = AnimController.Collider.Position+new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle))*60.0f;
 
-                        closestItem = Item.ItemList.Find(it => it.ID == memInput[memInput.Count - 1].interact);
+                        closestItem = Entity.FindEntityByID(memInput[memInput.Count - 1].interact) as Item;
                         memInput.RemoveAt(memInput.Count - 1);
 
                         TransformCursorPos();
