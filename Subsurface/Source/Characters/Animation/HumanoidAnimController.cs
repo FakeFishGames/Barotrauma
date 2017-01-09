@@ -832,7 +832,7 @@ namespace Barotrauma
             trigger = character.SelectedConstruction.TransformTrigger(trigger);
 
             bool notClimbing = false;
-            if (character.IsRemotePlayer)
+            if (character.IsRemotePlayer && GameMain.Server == null)
             {
                 notClimbing = character.IsKeyDown(InputType.Left) || character.IsKeyDown(InputType.Right);
             }
