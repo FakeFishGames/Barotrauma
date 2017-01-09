@@ -170,7 +170,7 @@ namespace Barotrauma
 
         public void StartShift(Level level, bool reloadSub = true, bool loadSecondSub = false)
         {
-            GameMain.LightManager.LosEnabled = (GameMain.Server==null || GameMain.Server.CharacterInfo!=null);
+            GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
                         
             this.level = level;
 

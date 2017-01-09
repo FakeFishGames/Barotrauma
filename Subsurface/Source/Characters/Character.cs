@@ -2444,6 +2444,9 @@ namespace Barotrauma
                 {
                     GameMain.Client.Character = character;
                     Controlled = character;
+
+                    GameMain.LightManager.LosEnabled = true;
+
                     character.memInput.Clear();
                     character.memPos.Clear();
                     character.memLocalPos.Clear();

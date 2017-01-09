@@ -31,7 +31,6 @@ namespace Barotrauma.Networking
                 //write into a temporary buffer so we can write the length before the actual data
                 NetBuffer tempBuffer = new NetBuffer();
                 WriteEvent(tempBuffer, e, recipient);
-                tempBuffer.WritePadBits();
 
                 Debug.Assert(
                     tempBuffer.LengthBytes < 256, 
@@ -40,6 +39,7 @@ namespace Barotrauma.Networking
                 msg.Write((UInt16)e.Entity.ID);
                 msg.Write((byte)tempBuffer.LengthBytes);
                 msg.Write(tempBuffer);
+                msg.WritePadBits();
             }
         }
 
