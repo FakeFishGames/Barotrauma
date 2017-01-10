@@ -1337,7 +1337,7 @@ namespace Barotrauma.Networking
 
             if (!string.IsNullOrWhiteSpace(myReceivedMessage))
             {
-                AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName); 
+                AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderCharacter); 
             }       
         }
 

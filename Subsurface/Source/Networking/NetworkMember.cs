@@ -222,7 +222,7 @@ namespace Barotrauma.Networking
 
             if (message.Sender != null)
             {
-                message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)ChatMessageType.Default]);
+                message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
             }
 
             GameMain.NetLobbyScreen.NewChatMessage(message);
