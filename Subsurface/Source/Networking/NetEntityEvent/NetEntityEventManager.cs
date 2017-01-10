@@ -76,7 +76,7 @@ namespace Barotrauma.Networking
                 {
                     long msgPosition = msg.Position;
 
-                    DebugConsole.NewMessage("received msg "+thisEventID, Microsoft.Xna.Framework.Color.Green);
+                    DebugConsole.NewMessage("received msg "+thisEventID+ " ("+entity.ToString()+")", Microsoft.Xna.Framework.Color.Green);
                     lastReceivedID++;
                     try
                     {

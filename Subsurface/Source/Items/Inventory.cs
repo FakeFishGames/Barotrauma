@@ -568,7 +568,7 @@ namespace Barotrauma
                 else
                 {
                     var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
-                    if (item == null) continue;
+                    if (item == null || item == Items[i]) continue;
 
                     if (GameMain.Server != null)
                     {
