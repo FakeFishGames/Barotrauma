@@ -146,19 +146,44 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
             msg.Write((byte)Type);
-            msg.Write(SenderName);
             msg.Write(Text);
+
+            msg.Write(Sender != null);
+            if (Sender != null)
+            {
+                msg.Write(Sender.ID);
+            }
+            else
+            {
+                msg.Write(SenderName);
+            }
         }
 
         static public void ClientRead(NetIncomingMessage msg)
         {
             UInt32 ID = msg.ReadUInt32();
-            ChatMessageType type = (ChatMessageType)msg.ReadByte();
-            string senderName = msg.ReadString();
+            ChatMessageType type = (ChatMessageType)msg.ReadByte();           
             string txt = msg.ReadString();
+
+            string senderName = "";
+            Character senderCharacter = null;
+            bool hasSenderCharacter = msg.ReadBoolean();
+            if (hasSenderCharacter)
+            {
+                senderCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
+                if (senderCharacter != null)
+                {
+                    senderName = senderCharacter.Name;
+                }
+            }
+            else
+            {
+                senderName = msg.ReadString();
+            }
+
             if (ID > LastID)
             {
-                GameMain.Client.AddChatMessage(txt, type, senderName);
+                GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
                 LastID = ID;
             }
         }

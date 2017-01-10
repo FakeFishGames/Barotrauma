@@ -1688,11 +1688,19 @@ namespace Barotrauma
             Vector2 closestItemPos = closestItem != null ? closestItem.DrawPosition : Vector2.Zero;
             closestItemPos.Y = -closestItemPos.Y;
             GUI.DrawLine(spriteBatch, closestItemPos - new Vector2(0, 5), closestItemPos + new Vector2(0, 5), Color.Lime, 0, 10);
+            
+            Vector2 pos = DrawPosition;
+            pos.Y = -pos.Y;
+
+            if (speechBubbleTimer > 0.0f)
+            {
+                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f,
+                    speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f,
+                    Math.Min((float)speechBubbleTimer, 1.0f));
+            }
 
             if (this == controlled) return;
 
-            Vector2 pos = DrawPosition;
-            pos.Y = -pos.Y;
 
             if (info != null)
             {
@@ -1719,13 +1727,6 @@ namespace Barotrauma
                 Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
             
                 GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
-            }
-            
-            if (speechBubbleTimer > 0.0f)
-            {
-                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f, 
-                    speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f, 
-                    Math.Min((float)speechBubbleTimer, 1.0f));
             }
         }
 
