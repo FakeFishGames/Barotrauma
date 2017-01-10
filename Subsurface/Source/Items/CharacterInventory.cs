@@ -143,7 +143,16 @@ namespace Barotrauma
         /// </summary>
         public override bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
-            if (allowedSlots == null || ! allowedSlots.Any()) return false;
+            if (allowedSlots == null || !allowedSlots.Any()) return false;
+
+            for (int i = 0; i < capacity; i++)
+            {
+                //already in the inventory and in a suitable slot
+                if (Items[i] == item && allowedSlots.Any(a => a.HasFlag(limbSlots[i])))
+                {
+                    return true;
+                }
+            }
 
             //try to place the item in LimBlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any))
