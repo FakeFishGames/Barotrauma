@@ -61,10 +61,12 @@ namespace Barotrauma
             get { return hull; }
         }
 
-        public FireSource(Vector2 worldPosition, Hull spawningHull = null)
+        public FireSource(Vector2 worldPosition, Hull spawningHull = null, bool isNetworkMessage = false)
         {
             hull = Hull.FindHull(worldPosition, spawningHull);
-            if (hull == null || (GameMain.Client!=null)) return;
+            if (hull == null) return;
+
+            if (!isNetworkMessage && GameMain.Client != null) return;
 
             if (fireSoundBasic==null)
             {
@@ -311,7 +313,7 @@ namespace Barotrauma
             float range = 100.0f;
 
             if (pos.X < WorldPosition.X - range || pos.X > WorldPosition.X + size.X + range) return;
-            if (pos.Y < WorldPosition.Y - size.Y || pos.Y > WorldPosition.Y + 500.0f) return;
+            if (pos.Y < WorldPosition.Y - range || pos.Y > WorldPosition.Y + 500.0f) return;
 
             float extinquishAmount = amount * deltaTime;
 
