@@ -47,6 +47,7 @@ namespace Barotrauma
 
         public PhysicsBody body;
 
+        private float lastSentCondition;
         private float condition;
 
         private bool inWater;
@@ -179,6 +180,15 @@ namespace Barotrauma
                     foreach (FixRequirement req in FixRequirements)
                     {
                         req.Fixed = false;
+                    }
+                }
+
+                if (GameMain.Server != null && lastSentCondition != condition)
+                {
+                    if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == 100.0f)
+                    {
+                        GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                        lastSentCondition = condition;
                     }
                 }
             }
@@ -1659,35 +1669,42 @@ namespace Barotrauma
             {
                 return;
             }
-            else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.ComponentState)
+
+            msg.WriteRangedInteger(0, 2, (int)((NetEntityEvent.Type)extraData[0]));
+
+            switch ((NetEntityEvent.Type)extraData[0])
             {
-                msg.Write(true);
+                case NetEntityEvent.Type.ComponentState:
+                    int componentIndex = (int)extraData[1];
+                    msg.WriteRangedInteger(0, components.Count-1, componentIndex);
 
-                int componentIndex = (int)extraData[1];
-                msg.Write((byte)componentIndex);
-
-                (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
-            }
-            else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
-            {
-                msg.Write(false);
-
-                ownInventory.ServerWrite(msg, c, extraData);
+                    (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
+                    break;
+                case NetEntityEvent.Type.InventoryState:
+                    ownInventory.ServerWrite(msg, c, extraData);
+                    break;
+                case NetEntityEvent.Type.Status:
+                    msg.WriteRangedSingle(condition, 0.0f, 100.0f, 8);
+                    break;
             }
         }
 
         public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime) 
         {
-            bool isComponentUpdate = msg.ReadBoolean();
+            NetEntityEvent.Type eventType = (NetEntityEvent.Type)msg.ReadRangedInteger(0, 2);
 
-            if (isComponentUpdate)
+            switch (eventType)
             {
-                int componentIndex = msg.ReadByte();
-                (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
-            }
-            else
-            {
-                ownInventory.ClientRead(type, msg, sendingTime);
+                case NetEntityEvent.Type.ComponentState:
+                    int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                    (components[componentIndex] as IServerSerializable).ClientRead(type, msg, sendingTime);
+                    break;
+                case NetEntityEvent.Type.InventoryState:
+                    ownInventory.ClientRead(type, msg, sendingTime);
+                    break;
+                case NetEntityEvent.Type.Status:
+                    Condition = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+                    break;
             }
         }
 
@@ -1702,7 +1719,7 @@ namespace Barotrauma
                 msg.Write(true);
 
                 int componentIndex = (int)extraData[1];
-                msg.Write((byte)componentIndex);
+                msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
 
                 (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
             }
@@ -1720,7 +1737,7 @@ namespace Barotrauma
 
             if (isComponentUpdate)
             {
-                int componentIndex = msg.ReadByte();
+                int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
                 (components[componentIndex] as IClientSerializable).ServerRead(type, msg, c);
             }
             else

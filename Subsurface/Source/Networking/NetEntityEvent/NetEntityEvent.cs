@@ -11,7 +11,6 @@ namespace Barotrauma.Networking
     {
         public enum Type
         {
-            Default, 
             ComponentState, 
             InventoryState,
             Status
