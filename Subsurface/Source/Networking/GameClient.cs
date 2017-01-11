@@ -47,14 +47,7 @@ namespace Barotrauma.Networking
         {
             get { return myID; }
         }
-
-        public ushort MyCharacterID
-        {
-            get;
-            private set;
-        }
-
-
+        
         public override List<Client> ConnectedClients
         {
             get
@@ -435,12 +428,6 @@ namespace Barotrauma.Networking
             {
                 if (Screen.Selected != GameMain.GameScreen)
                 {
-                    List<Submarine> subList = GameMain.NetLobbyScreen.GetSubList();
-
-                    GameMain.NetLobbyScreen = new NetLobbyScreen();
-                    GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, subList);
-                    GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, subList);
-                    
                     GameMain.NetLobbyScreen.Select();
                 }
                 connected = true;
@@ -597,9 +584,7 @@ namespace Barotrauma.Networking
 
             bool respawnAllowed     = inc.ReadBoolean();
             bool loadSecondSub      = inc.ReadBoolean();
-
-            MyCharacterID           = inc.ReadUInt16();
-
+            
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 
             if (gameMode == null)
@@ -690,18 +675,22 @@ namespace Barotrauma.Networking
                     case ServerNetObject.SYNC_IDS:
                         bool lobbyUpdated = inc.ReadBoolean();
                         inc.ReadPadBits();
+
                         if (lobbyUpdated)
                         {
-                            GameMain.NetLobbyScreen.LastUpdateID = inc.ReadUInt32();
-                            GameMain.NetLobbyScreen.ServerName = inc.ReadString();
-                            GameMain.NetLobbyScreen.ServerMessage.Text = inc.ReadString();
-
-                            UInt16 subListCount = inc.ReadUInt16();
-                            if (subListCount > 0)
+                            UInt32 updateID     = inc.ReadUInt32();
+                            string serverName   = inc.ReadString();
+                            string serverText   = inc.ReadString();
+ 
+                            if (inc.ReadBoolean())
                             {
+                                myID = inc.ReadByte();
+
+                                UInt16 subListCount = inc.ReadUInt16();
                                 List<Submarine> submarines = new List<Submarine>();
                                 for (int i = 0; i < subListCount; i++)
                                 {
+
                                     string subName = inc.ReadString();
                                     string subHash = inc.ReadString();
 
@@ -715,28 +704,48 @@ namespace Barotrauma.Networking
                                         submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
                                     }
                                 }
-                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
-                                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);
+
+                                if (updateID > GameMain.NetLobbyScreen.LastUpdateID)
+                                {
+                                    GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
+                                    GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);   
+                                }                             
                             }
-                            string selectSubName = inc.ReadString();
-                            string selectSubHash = inc.ReadString();
-                            GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
-                            string selectShuttleName = inc.ReadString();
-                            string selectShuttleHash = inc.ReadString();
-                            GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
-                            GameMain.NetLobbyScreen.SetTraitorsEnabled((YesNoMaybe)inc.ReadRangedInteger(0, 2));
+                            string selectSubName        = inc.ReadString();
+                            string selectSubHash        = inc.ReadString();
 
-                            GameMain.NetLobbyScreen.SetMissionType(inc.ReadRangedInteger(0, Mission.MissionTypes.Count - 1));
+                            string selectShuttleName    = inc.ReadString();
+                            string selectShuttleHash    = inc.ReadString();
 
-                            GameMain.NetLobbyScreen.SelectMode(inc.ReadByte());
+                            YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
+                            int missionTypeIndex        = inc.ReadRangedInteger(0, Mission.MissionTypes.Count - 1);
+                            int modeIndex               = inc.ReadByte();
 
-                            GameMain.NetLobbyScreen.LevelSeed = inc.ReadString();
+                            string levelSeed            = inc.ReadString();
 
                             bool autoRestartEnabled = inc.ReadBoolean();
                             float autoRestartTimer = autoRestartEnabled ? inc.ReadFloat() : 0.0f; 
 
-                            GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
+                            //ignore the message if we already a more up-to-date one
+                            if (updateID > GameMain.NetLobbyScreen.LastUpdateID)
+                            {
+                                GameMain.NetLobbyScreen.LastUpdateID = updateID;
+
+                                GameMain.NetLobbyScreen.ServerName = serverName;
+                                GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
+
+                                GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
+                                GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+
+                                GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
+                                GameMain.NetLobbyScreen.SetMissionType(missionTypeIndex);
+                                GameMain.NetLobbyScreen.SelectMode(modeIndex);
+
+                                GameMain.NetLobbyScreen.LevelSeed = levelSeed;
+                                
+                                GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
+                            }
                         }
                         lastSentChatMsgID = inc.ReadUInt32();
                         break;

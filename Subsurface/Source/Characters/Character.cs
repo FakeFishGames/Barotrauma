@@ -2436,10 +2436,10 @@ namespace Barotrauma
                 CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
                 ch.HeadSpriteId = headSpriteID;
 
-                character = Character.Create(configPath, position, ch, GameMain.Client.MyCharacterID != id, hasAi);
+                character = Character.Create(configPath, position, ch, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
 
-                if (GameMain.Client.MyCharacterID == id)
+                if (GameMain.Client.ID == ownerId)
                 {
                     GameMain.Client.Character = character;
                     Controlled = character;
