@@ -717,22 +717,23 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(true);
                 outmsg.WritePadBits();
+
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
                 outmsg.Write(GameMain.NetLobbyScreen.GetServerName());
                 outmsg.Write(GameMain.NetLobbyScreen.ServerMessage.Text);
                 var subList = GameMain.NetLobbyScreen.GetSubList();
+
+                outmsg.Write(c.lastRecvGeneralUpdate < 1);
                 if (c.lastRecvGeneralUpdate < 1)
                 {
+                    outmsg.Write(c.ID);
+
                     outmsg.Write((UInt16)subList.Count);
                     for (int i = 0; i < subList.Count; i++)
                     {
                         outmsg.Write(subList[i].Name);
                         outmsg.Write(subList[i].MD5Hash.ToString());
                     }
-                }
-                else
-                {
-                    outmsg.Write((UInt16)0);
                 }
                 outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).Name);
                 outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).MD5Hash.ToString());
@@ -1009,9 +1010,7 @@ namespace Barotrauma.Networking
 
                 msg.Write(AllowRespawn && missionAllowRespawn);
                 msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
-
-                msg.Write(client.Character.ID);
-
+                
                 server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
             }
        
