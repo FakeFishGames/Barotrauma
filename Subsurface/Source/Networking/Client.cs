@@ -68,6 +68,8 @@ namespace Barotrauma.Networking
             lastSentChatMsgID = 0;
             lastRecvChatMsgID = ChatMessage.LastID;
 
+            lastRecvGeneralUpdate = 0;
+
             lastRecvEntitySpawnID = 0;
             lastRecvEntityEventID = 0;
         }

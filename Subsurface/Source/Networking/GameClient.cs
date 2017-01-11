@@ -831,7 +831,7 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ClientPacketHeader.UPDATE_INGAME);
 
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
-            outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
+            //outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(Entity.Spawner.NetStateID);
             outmsg.Write(entityEventManager.LastReceivedID);
