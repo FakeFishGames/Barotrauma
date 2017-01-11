@@ -1350,9 +1350,13 @@ namespace Barotrauma
 
             if (this != Character.Controlled)
             {
-                if (GameMain.Server != null && !(this is AICharacter) && AllowInput)
+                if (GameMain.Server != null && !(this is AICharacter))
                 {
-                    if (memInput.Count == 0)
+                    if (!AllowInput)
+                    {
+                        AnimController.Frozen = false;
+                    }
+                    else if (memInput.Count == 0)
                     {
                         AnimController.Frozen = true;
                     }
@@ -1414,6 +1418,10 @@ namespace Barotrauma
                 {
                     memInput.RemoveRange(60, memInput.Count - 60);
                 }                
+            }
+            else //this == Character.Controlled && GameMain.Client == null
+            {
+                AnimController.Frozen = false;
             }
 
             if (networkUpdateSent)
@@ -1905,6 +1913,8 @@ namespace Barotrauma
                     controlled = null;
                 }
             }
+
+            AnimController.Frozen = false;
 
             GameServer.Log(Name+" has died (Cause of death: "+causeOfDeath+")", Color.Red);
 
