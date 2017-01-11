@@ -876,7 +876,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        var newFire = new FireSource(pos + Submarine.Position);
+                        var newFire = new FireSource(pos + Submarine.Position, null, true);
                         newFire.Size = new Vector2(
                             newFire.Hull == null ? size : size * newFire.Hull.rect.Width,
                             newFire.Size.Y);

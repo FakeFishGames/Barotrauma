@@ -163,7 +163,15 @@ namespace Barotrauma.Items.Components
                 displayPos += item.CurrentHull.Submarine.Position;
 
                 Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
-                if (hull != null) hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
+                if (hull != null)
+                {
+                    hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
+                    if (hull != item.CurrentHull)
+                    {
+                        item.CurrentHull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
+                    }
+                }
+
             }
 
             Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies);
