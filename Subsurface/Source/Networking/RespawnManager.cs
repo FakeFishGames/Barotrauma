@@ -388,11 +388,19 @@ namespace Barotrauma.Networking
 
             var clients = GetClientsToRespawn();
 
+            foreach (Client c in clients)
+            {
+                if (c.characterInfo == null) c.characterInfo = new CharacterInfo(Character.HumanConfigFile, c.name);
+            }
+
             List<CharacterInfo> characterInfos = clients.Select(c => c.characterInfo).ToList();
             if (server.Character != null && server.Character.IsDead) characterInfos.Add(server.CharacterInfo);
 
             server.AssignJobs(clients, server.Character != null && server.Character.IsDead);
-            clients.ForEach(c => c.characterInfo.Job = new Job(c.assignedJob));
+            foreach (Client c in clients)
+            {
+                c.characterInfo.Job = new Job(c.assignedJob);
+            }
 
             //the spawnpoints where the characters will spawn
             var shuttleSpawnPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnShuttle);

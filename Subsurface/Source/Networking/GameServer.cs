@@ -518,6 +518,12 @@ namespace Barotrauma.Networking
                     {
                         connectedClient.ReadyToStart = inc.ReadBoolean();
                         UpdateCharacterInfo(inc, connectedClient);
+
+                        //game already started -> send start message immediately
+                        if (gameStarted)
+                        {
+                            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
+                        }
                     }
                     break;
                 case ClientPacketHeader.UPDATE_LOBBY:
@@ -647,6 +653,25 @@ namespace Barotrauma.Networking
             }
         }
 
+        /// <summary>
+        /// Write info that the client needs when joining the server
+        /// </summary>
+        private void ClientWriteInitial(Client c, NetBuffer outmsg)
+        {
+            outmsg.Write(c.ID);
+
+            var subList = GameMain.NetLobbyScreen.GetSubList();
+            outmsg.Write((UInt16)subList.Count);
+            for (int i = 0; i < subList.Count; i++)
+            {
+                outmsg.Write(subList[i].Name);
+                outmsg.Write(subList[i].MD5Hash.ToString());
+            }
+
+            outmsg.Write(GameStarted);
+            outmsg.Write(AllowSpectating);
+        }
+
         private void ClientWriteIngame(Client c)
         {
             NetOutgoingMessage outmsg = server.CreateMessage();
@@ -721,19 +746,11 @@ namespace Barotrauma.Networking
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
                 outmsg.Write(GameMain.NetLobbyScreen.GetServerName());
                 outmsg.Write(GameMain.NetLobbyScreen.ServerMessage.Text);
-                var subList = GameMain.NetLobbyScreen.GetSubList();
-
+                
                 outmsg.Write(c.lastRecvGeneralUpdate < 1);
                 if (c.lastRecvGeneralUpdate < 1)
                 {
-                    outmsg.Write(c.ID);
-
-                    outmsg.Write((UInt16)subList.Count);
-                    for (int i = 0; i < subList.Count; i++)
-                    {
-                        outmsg.Write(subList[i].Name);
-                        outmsg.Write(subList[i].MD5Hash.ToString());
-                    }
+                    ClientWriteInitial(c, outmsg);
                 }
                 outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).Name);
                 outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).MD5Hash.ToString());
