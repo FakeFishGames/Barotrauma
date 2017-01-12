@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
@@ -15,7 +16,7 @@ using System.Xml.Linq;
 namespace Barotrauma.Items.Components
 {
 
-    class DockingPort : ItemComponent, IDrawableComponent
+    class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
     {
         public static List<DockingPort> list = new List<DockingPort>();
         
@@ -205,6 +206,11 @@ namespace Barotrauma.Items.Components
             }
             
             CreateJoint(false);
+
+            if (GameMain.Server != null)
+            {
+                item.CreateServerEvent(this);
+            }
         }
 
         public void Lock()
@@ -514,6 +520,10 @@ namespace Barotrauma.Items.Components
                 bodies = null;
             }
 
+            if (GameMain.Server != null)
+            {
+                item.CreateServerEvent(this);
+            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -698,7 +708,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, Lidgren.Network.NetIncomingMessage msg, float sendingTime)
         {
             bool isDocked = msg.ReadBoolean();
 
