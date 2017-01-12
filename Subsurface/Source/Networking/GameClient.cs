@@ -463,33 +463,20 @@ namespace Barotrauma.Networking
 #endif            
             }
 
-            if (gameStarted && respawnManager != null)
-            {
-                respawnManager.Update(deltaTime);
-            }
 
             if (updateTimer > DateTime.Now) return;
-
-            if (myCharacter != null)
+                        
+            if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                if (myCharacter.IsDead)
+                if (respawnManager != null)
                 {
-                    //Character.Controlled = null;
-                    //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                    respawnManager.Update(deltaTime);
                 }
-                else if (gameStarted)
-                {
-                    
-                }
-            }
-            
-            if (!gameStarted)
-            {
-                SendLobbyUpdate();
+                SendIngameUpdate();
             }
             else
             {
-                SendIngameUpdate();
+                SendLobbyUpdate();
             }
 
             // Update current time
@@ -665,6 +652,49 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
+        private void ReadInitialUpdate(NetIncomingMessage inc, bool isDuplicate)
+        {
+            myID = inc.ReadByte();
+
+            UInt16 subListCount = inc.ReadUInt16();
+            List<Submarine> submarines = new List<Submarine>();
+            for (int i = 0; i < subListCount; i++)
+            {
+
+                string subName = inc.ReadString();
+                string subHash = inc.ReadString();
+
+                var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == subName);
+                if (matchingSub != null)
+                {
+                    submarines.Add(matchingSub);
+                }
+                else
+                {
+                    submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
+                }
+            }
+
+            if (!isDuplicate)
+            {
+                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
+                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);   
+            }         
+
+            gameStarted = inc.ReadBoolean();
+            bool allowSpectating = inc.ReadBoolean();
+
+            if (gameStarted && !isDuplicate)
+            {
+                new GUIMessageBox("Please wait",
+                    (allowSpectating) ?
+                    "A round is already running, but you can spectate the game while waiting for a respawn shuttle or a new round." :
+                    "A round is already running and the admin has disabled spectating. You will have to wait for a new round to start.");
+
+                GameMain.NetLobbyScreen.Select();
+            }
+        }
+
         private void ReadLobbyUpdate(NetIncomingMessage inc)
         {
             ServerNetObject objHeader;
@@ -684,32 +714,7 @@ namespace Barotrauma.Networking
  
                             if (inc.ReadBoolean())
                             {
-                                myID = inc.ReadByte();
-
-                                UInt16 subListCount = inc.ReadUInt16();
-                                List<Submarine> submarines = new List<Submarine>();
-                                for (int i = 0; i < subListCount; i++)
-                                {
-
-                                    string subName = inc.ReadString();
-                                    string subHash = inc.ReadString();
-
-                                    var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == subName);
-                                    if (matchingSub != null)
-                                    {
-                                        submarines.Add(matchingSub);
-                                    }
-                                    else
-                                    {
-                                        submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
-                                    }
-                                }
-
-                                if (updateID > GameMain.NetLobbyScreen.LastUpdateID)
-                                {
-                                    GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
-                                    GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);   
-                                }                             
+                                ReadInitialUpdate(inc, updateID <= GameMain.NetLobbyScreen.LastUpdateID);
                             }
 
                             string selectSubName        = inc.ReadString();
@@ -998,6 +1003,17 @@ namespace Barotrauma.Networking
         public bool SpectateClicked(GUIButton button, object userData)
         {
             if (button != null) button.Enabled = false;
+
+            NetOutgoingMessage readyToStartMsg = client.CreateMessage();
+            readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
+
+            //correct sub & shuttle files found
+            //TODO: check if they're actually found
+            readyToStartMsg.Write(true); 
+
+            WriteCharacterInfo(readyToStartMsg);
+
+            client.SendMessage(readyToStartMsg, NetDeliveryMethod.ReliableUnordered);
 
             return false;
         }
