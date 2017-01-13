@@ -247,6 +247,11 @@ namespace Barotrauma
                     attackingLimb = limb;
                     break;   
                 }
+
+                if (Character.IsRemotePlayer)
+                {
+                    if (!Character.IsKeyDown(InputType.Attack)) return;
+                }
             }
             if (attackLimb != null)
             {

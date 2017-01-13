@@ -39,9 +39,9 @@ namespace Barotrauma
             Select = 0x40,
             Use = 0x80,
             Aim = 0x100,
-            //Attack = 0x200
+            Attack = 0x200,
 
-            MaxVal = 0x1FF
+            MaxVal = 0x3FF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
@@ -744,6 +744,8 @@ namespace Barotrauma
                         return dequeuedInput.HasFlag(InputNetFlags.Aim);
                     case InputType.Use:
                         return dequeuedInput.HasFlag(InputNetFlags.Use);
+                    case InputType.Attack:
+                        return dequeuedInput.HasFlag(InputNetFlags.Attack);
                 }
                 return false;
             }
@@ -1400,6 +1402,7 @@ namespace Barotrauma
                 if (IsKeyHit(InputType.Select))     newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
                 if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
                 if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
+                if (IsKeyDown(InputType.Attack))    newInput |= InputNetFlags.Attack;
                     
                 if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
@@ -2132,22 +2135,32 @@ namespace Barotrauma
 
                     bool aiming = false;
                     bool use    = false;
+                    bool attack = false;
 
                     if (IsRemotePlayer)
                     {
                         aiming  = dequeuedInput.HasFlag(InputNetFlags.Aim);
                         use     = dequeuedInput.HasFlag(InputNetFlags.Use);
+
+                        attack  = dequeuedInput.HasFlag(InputNetFlags.Attack);
                     }
                     else
                     {
                         aiming  = keys[(int)InputType.Aim].GetHeldQueue;
                         use     = keys[(int)InputType.Use].GetHeldQueue;
 
+                        attack  = keys[(int)InputType.Attack].GetHeldQueue;
+
                         networkUpdateSent = true;
                     }
 
                     tempBuffer.Write(aiming);
                     tempBuffer.Write(use);
+
+                    if (AnimController.Limbs.Any(l => l != null && l.attack != null))
+                    {
+                        tempBuffer.Write(attack);
+                    }
 
                     if (selectedCharacter != null || selectedConstruction != null)
                     {
@@ -2199,6 +2212,13 @@ namespace Barotrauma
                         bool useInput = msg.ReadBoolean();
                         keys[(int)InputType.Use].Held = useInput;
                         keys[(int)InputType.Use].SetState(false, useInput);
+
+                        if (AnimController.Limbs.Any(l => l != null && l.attack != null))
+                        {
+                            bool attackInput = msg.ReadBoolean();
+                            keys[(int)InputType.Attack].Held = attackInput;
+                            keys[(int)InputType.Attack].SetState(false, attackInput);
+                        }
 
                         bool entitySelected = msg.ReadBoolean();
                         if (entitySelected)
