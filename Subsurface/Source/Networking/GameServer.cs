@@ -441,7 +441,7 @@ namespace Barotrauma.Networking
                     continue;
                 }
             }
-
+            
             // if 30ms has passed
             if (updateTimer < DateTime.Now)
             {
@@ -530,6 +530,8 @@ namespace Barotrauma.Networking
                     ClientReadLobby(inc);
                     break;
                 case ClientPacketHeader.UPDATE_INGAME:
+                    if (!gameStarted) return;
+
                     ClientReadIngame(inc);
                     break;
             }            
@@ -596,8 +598,8 @@ namespace Barotrauma.Networking
                 {
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
-                        c.lastRecvGeneralUpdate = Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32());
-                        c.lastRecvChatMsgID     = Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32());
+                        c.lastRecvGeneralUpdate = Math.Min(Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32()), GameMain.NetLobbyScreen.LastUpdateID);
+                        c.lastRecvChatMsgID     = Math.Min(Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32()), c.lastChatMsgQueueID);
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
@@ -627,11 +629,31 @@ namespace Barotrauma.Networking
                 {
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
+                        
+                        UInt32 lastRecvChatMsgID        = inc.ReadUInt32();
+                        UInt32 lastRecvEntitySpawnID    = inc.ReadUInt32();
+                        UInt32 lastRecvEntityEventID    = inc.ReadUInt32();
 
-                        //c.lastRecvGeneralUpdate     = Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32());
-                        c.lastRecvChatMsgID         = Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32());
-                        c.lastRecvEntitySpawnID     = Math.Max(c.lastRecvEntitySpawnID, inc.ReadUInt32());
-                        c.lastRecvEntityEventID     = Math.Max(c.lastRecvEntityEventID, inc.ReadUInt32());  
+                        //last msgs we've created/sent, the client IDs should never be higher than these
+                        UInt32 lastEntitySpawnID = Entity.Spawner.NetStateID;
+                        UInt32 lastEntityEventID = entityEventManager.Events.Count() == 0 ? 0 : entityEventManager.Events.Last().ID;
+
+#if DEBUG
+                        //client thinks they've received a msg we haven't sent yet (corrupted packet, msg read/written incorrectly?)
+                        if (lastRecvChatMsgID > c.lastChatMsgQueueID)
+                            DebugConsole.ThrowError("client.lastRecvChatMsgID > lastChatMsgQueueID");
+
+                        if (lastRecvEntitySpawnID > lastEntitySpawnID)
+                            DebugConsole.ThrowError("client.lastRecvEntitySpawnID > lastEntitySpawnID");
+                        
+                        if (lastRecvEntityEventID > lastEntityEventID)
+                            DebugConsole.ThrowError("client.lastRecvEntityEventID > lastEntityEventID");                        
+#endif
+
+                        c.lastRecvChatMsgID     = Math.Min(Math.Max(c.lastRecvChatMsgID, lastRecvChatMsgID), c.lastChatMsgQueueID);
+                        c.lastRecvEntitySpawnID = Math.Min(Math.Max(c.lastRecvEntitySpawnID, lastRecvEntitySpawnID), lastEntitySpawnID);
+                        c.lastRecvEntityEventID = Math.Min(Math.Max(c.lastRecvEntityEventID, lastRecvEntityEventID), lastEntityEventID);
+
 
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
@@ -1342,6 +1364,7 @@ namespace Barotrauma.Networking
                     client.lastRecvChatMsgID+1;
 
                 client.chatMsgQueue.Add(chatMsg);
+                client.lastChatMsgQueueID = chatMsg.NetStateID;
             }
 
             string myReceivedMessage = message;

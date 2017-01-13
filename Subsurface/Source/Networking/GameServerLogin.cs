@@ -201,7 +201,8 @@ namespace Barotrauma.Networking
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
             ConnectedClients.Add(newClient);
-            return;
+
+            AddChatMessage(clName+" has joined the server.", ChatMessageType.Server);
         }
     }
 }

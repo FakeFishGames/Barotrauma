@@ -11,6 +11,11 @@ namespace Barotrauma.Networking
     {
         private List<ServerEntityEvent> events;
 
+        public List<ServerEntityEvent> Events
+        {
+            get { return events; }
+        }
+
         private UInt32 ID;
 
         private GameServer server;
