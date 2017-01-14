@@ -1250,6 +1250,8 @@ namespace Barotrauma
             if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             Entity.RemoveAll();
+
+            System.Diagnostics.Debug.Assert(Item.ItemList.Count == 0);
             
             PhysicsBody.list.Clear();
 

@@ -2044,12 +2044,27 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return;
 
+            if (c.Character != this)
+            {
+#if DEBUG
+                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+#endif
+                return;
+            }
+
             switch (type)
             {
                 case ClientNetObject.CHARACTER_INPUT:
                     
                     UInt32 networkUpdateID  = msg.ReadUInt32();
                     byte inputCount         = msg.ReadByte();
+
+#if DEBUG
+                    if (((long)networkUpdateID - (long)LastNetworkUpdateID)>10000)
+                    {
+                        DebugConsole.ThrowError("((long)networkUpdateID - (long)LastNetworkUpdateID) > 10000");
+                    }
+#endif
                         
                     for (int i = 0; i < inputCount; i++)
                     {
@@ -2107,7 +2122,7 @@ namespace Barotrauma
         public virtual void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
         {
             if (GameMain.Server == null) return;
-
+            
             if (extraData != null)
             {
                 switch ((NetEntityEvent.Type)extraData[0])
