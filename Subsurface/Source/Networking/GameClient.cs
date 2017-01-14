@@ -163,10 +163,6 @@ namespace Barotrauma.Networking
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
             CoroutineManager.StartCoroutine(WaitForStartingInfo());
-            
-            // Start the timer
-            //update.Start();
-
         }
 
         private bool RetryConnection(GUIButton button, object obj)
@@ -176,19 +172,18 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        private bool SelectMainMenu(GUIButton button, object obj)
+        private bool ReturnToServerList(GUIButton button, object obj)
         {
             Disconnect();
+
+            Submarine.Unload();
             GameMain.NetworkMember = null;
-            GameMain.MainMenuScreen.Select();
-
-            GameMain.MainMenuScreen.SelectTab(MainMenuScreen.Tab.LoadGame);
-
+            GameMain.ServerListScreen.Select();
+            
             return true;
         }
 
         private bool connectCancelled;
-
         private bool CancelConnect(GUIButton button, object obj)
         {
             connectCancelled = true;
@@ -318,8 +313,9 @@ namespace Barotrauma.Networking
                             if (connectionStatus == NetConnectionStatus.Disconnected)
                             {
                                 string denyMessage = inc.ReadString();
-                                
-                                new GUIMessageBox("Couldn't connect to server", denyMessage);
+
+                                var cantConnectMsg = new GUIMessageBox("Couldn't connect to the server", denyMessage);
+                                cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
 
                                 connectCancelled = true;
                             }
@@ -329,7 +325,7 @@ namespace Barotrauma.Networking
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error while connecting to server", e);
+                    DebugConsole.ThrowError("Error while connecting to the server", e);
                     break;
                 }
 
@@ -360,7 +356,8 @@ namespace Barotrauma.Networking
                                     {
                                         string denyMessage = inc.ReadString();
 
-                                        new GUIMessageBox("Couldn't connect to server", denyMessage);
+                                        var cantConnectMsg = new GUIMessageBox("Couldn't connect to the server", denyMessage);
+                                        cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
 
                                         msgBox.Close(null, null);
                                         connectCancelled = true;
@@ -415,13 +412,13 @@ namespace Barotrauma.Networking
 
             if (client.ConnectionStatus != NetConnectionStatus.Connected)
             {
-                var reconnect = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to server.", new string[] { "Retry", "Cancel" });
+                var reconnect = new GUIMessageBox("CONNECTION FAILED", "Failed to connect to the server.", new string[] { "Retry", "Cancel" });
 
-                DebugConsole.NewMessage("Failed to connect to server - connection status: "+client.ConnectionStatus.ToString(), Color.Orange);
+                DebugConsole.NewMessage("Failed to connect to the server - connection status: "+client.ConnectionStatus.ToString(), Color.Orange);
 
                 reconnect.Buttons[0].OnClicked += RetryConnection;
                 reconnect.Buttons[0].OnClicked += reconnect.Close;
-                reconnect.Buttons[1].OnClicked += SelectMainMenu;
+                reconnect.Buttons[1].OnClicked += ReturnToServerList;
                 reconnect.Buttons[1].OnClicked += reconnect.Close;
             }
             else
@@ -540,6 +537,27 @@ namespace Barotrauma.Networking
                                 }
                                 CoroutineManager.StartCoroutine(EndGame(endMessage));
                                 break;
+                        }
+                        break;
+                    case NetIncomingMessageType.StatusChanged:
+                        NetConnectionStatus connectionStatus = (NetConnectionStatus)inc.ReadByte();
+                        DebugConsole.NewMessage("Connection status changed: " + connectionStatus.ToString(), Color.Orange);
+
+                        if (connectionStatus == NetConnectionStatus.Disconnected)
+                        {
+                            string disconnectMsg = inc.ReadString();
+                            if (disconnectMsg == "The server has been shut down")
+                            {
+                                var msgBox = new GUIMessageBox("CONNECTION LOST", "The server has been shut down");
+                                msgBox.Buttons[0].OnClicked += ReturnToServerList;
+                            }
+                            else if (reconnectBox == null)
+                            {
+                                reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
+                                connected = false;
+                                ConnectToServer(serverIP);                            
+                            }
+
                         }
                         break;
                 }
