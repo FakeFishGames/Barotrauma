@@ -511,9 +511,15 @@ namespace Barotrauma
                     Submarine.MainSub.GodMode = !Submarine.MainSub.GodMode;
                     break;
                 case "dumpids":
-                    int count = commands.Length < 2 ? 10 : int.Parse(commands[1]);
-
-                    Entity.DumpIds(count);
+                    try
+                    {
+                        int count = commands.Length < 2 ? 10 : int.Parse(commands[1]);
+                        Entity.DumpIds(count);
+                    }
+                    catch
+                    {
+                        return;
+                    }
                     break;
                 case "heal":
                     if (Character.Controlled != null)

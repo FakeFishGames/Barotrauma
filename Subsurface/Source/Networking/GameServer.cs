@@ -909,11 +909,12 @@ namespace Barotrauma.Networking
         private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
         {
             Item.Spawner.Clear();
+            entityEventManager.Clear();
 
             GameMain.NetLobbyScreen.StartButton.Enabled = false;
 
             GUIMessageBox.CloseAll();
-
+            
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
 
@@ -1150,6 +1151,7 @@ namespace Barotrauma.Networking
             } while (secondsLeft > 0.0f);
 
             Submarine.Unload();
+            entityEventManager.Clear();
 
             GameMain.NetLobbyScreen.Select();
 
