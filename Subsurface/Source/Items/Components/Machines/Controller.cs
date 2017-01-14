@@ -198,6 +198,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            character.ViewTarget = focusTarget;
             if (character == Character.Controlled && cam != null)
             {
                 Lights.LightManager.ViewTarget = focusTarget;
