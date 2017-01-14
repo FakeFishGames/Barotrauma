@@ -125,7 +125,7 @@ namespace Barotrauma
                         - leftEdge;
 
                     fireSources[j].position.X = leftEdge;
-
+                    
                     fireSources[i].Remove();
                 }
             }
@@ -304,6 +304,8 @@ namespace Barotrauma
             size.X -= extinquishAmount;
 
             hull.Volume -= extinquishAmount;
+            
+            if (GameMain.Client != null) return;
 
             if (size.X < 1.0f) Remove();
         }
@@ -337,13 +339,13 @@ namespace Barotrauma
 
             hull.Volume -= extinquishAmount;
 
+            if (GameMain.Client != null) return;
+
             if (size.X < 1.0f) Remove();
         }
 
         public void Remove()
         {
-            if (GameMain.Client != null) return;
-
             lightSource.Remove();
 
             if (basicSoundIndex > -1) Sounds.SoundManager.Stop(basicSoundIndex);

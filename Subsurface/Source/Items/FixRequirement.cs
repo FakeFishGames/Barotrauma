@@ -46,33 +46,39 @@ namespace Barotrauma
             }
         }
 
-        public bool CanBeFixed(Character character, GUIComponent reqFrame)
+        public bool CanBeFixed(Character character, GUIComponent reqFrame = null)
         {
+            if (character == null) return false;
+
             bool success = true;
             foreach (string itemName in requiredItems)
             {
-                GUIComponent component = reqFrame.children.Find(c => c.UserData as string == itemName);
-                
-                GUITextBlock text = component as GUITextBlock;
                 Item item = character.Inventory.FindItem(itemName);
                 bool itemFound = (item != null);
                
                 if (!itemFound) success = false;
                 
-                if (text != null) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
+                if (reqFrame != null)
+                {
+                    GUIComponent component = reqFrame.children.Find(c => c.UserData as string == itemName);                
+                    GUITextBlock text = component as GUITextBlock;
+                    if (text != null) text.TextColor = itemFound ? Color.LightGreen : Color.Red;
+                }
             }
 
             foreach (Skill skill in requiredSkills)
             {
-                GUIComponent component = reqFrame.children.Find(c => c.UserData as Skill == skill);
-                GUITextBlock text = component as GUITextBlock;
-
                 float characterSkill = character.GetSkillLevel(skill.Name);
                 bool sufficientSkill = characterSkill >= skill.Level;
 
                 if (!sufficientSkill) success = false;
 
-                if (text != null) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Red;
+                if (reqFrame != null)
+                {
+                    GUIComponent component = reqFrame.children.Find(c => c.UserData as Skill == skill);
+                    GUITextBlock text = component as GUITextBlock;
+                    if (text != null) text.TextColor = sufficientSkill ? Color.LightGreen : Color.Red;
+                }
             }
 
             return success;
@@ -133,14 +139,22 @@ namespace Barotrauma
         private static bool FixButtonPressed(GUIButton button, object obj)
         {
             FixRequirement requirement = obj as FixRequirement;
-            if (requirement == null) return false;
-
-            if (!requirement.CanBeFixed(Character.Controlled, button.Parent)) return true;
-
-            requirement.Fixed = true;
+            if (requirement == null) return true;
 
             Item item = frame.UserData as Item;
             if (item == null) return true;
+
+            if (!requirement.CanBeFixed(Character.Controlled, button.Parent)) return true;
+
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.RepairItem, item.FixRequirements.IndexOf(requirement)});
+            }
+            else if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
+                requirement.Fixed = true;
+            }
             
             return true;
         }

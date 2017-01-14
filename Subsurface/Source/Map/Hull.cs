@@ -881,7 +881,11 @@ namespace Barotrauma
                             newFire.Hull == null ? size : size * newFire.Hull.rect.Width,
                             newFire.Size.Y);
                         //ignore if the fire wasn't added to this room (invalid position)?
-                        if (!fireSources.Contains(newFire)) continue;
+                        if (!fireSources.Contains(newFire))
+                        {
+                            newFire.Remove();
+                            continue;
+                        }
                         newFireSources.Add(newFire);
                     }
                 }
