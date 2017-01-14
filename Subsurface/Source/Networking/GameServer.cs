@@ -137,6 +137,7 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> StartServer(bool isPublic)
         {
+            bool error = false;
             try
             {
                 Log("Starting the server...", Color.Cyan);
@@ -146,10 +147,29 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                Log("Error while starting the server ("+e.Message+")", Color.Red);
-                DebugConsole.ThrowError("Couldn't start the server", e);
+                Log("Error while starting the server (" + e.Message + ")", Color.Red);
+
+                System.Net.Sockets.SocketException socketException = e as System.Net.Sockets.SocketException;
+
+                if (socketException != null && socketException.SocketErrorCode == System.Net.Sockets.SocketError.AddressAlreadyInUse)
+                {
+                    new GUIMessageBox("Starting the server failed", e.Message + ". Are you trying to run multiple servers on the same port?");
+                }
+                else
+                {
+                    new GUIMessageBox("Starting the server failed", e.Message);
+                }
+
+                error = true;
+            }                  
+      
+            if (error)
+            {
+                if (server != null) server.Shutdown("Error while starting the server");
+
+                GameMain.NetworkMember = null;
+                yield return CoroutineStatus.Success;
             }
-         
 
             if (config.EnableUPnP)
             {
