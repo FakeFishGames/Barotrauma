@@ -13,7 +13,8 @@ namespace Barotrauma.Networking
         {
             ComponentState, 
             InventoryState,
-            Status
+            Status,
+            RepairItem
         }
 
         public readonly Entity Entity;

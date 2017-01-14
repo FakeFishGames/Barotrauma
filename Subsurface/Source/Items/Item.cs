@@ -1671,7 +1671,6 @@ namespace Barotrauma
             }
 
             msg.WriteRangedInteger(0, 2, (int)((NetEntityEvent.Type)extraData[0]));
-
             switch ((NetEntityEvent.Type)extraData[0])
             {
                 case NetEntityEvent.Type.ComponentState:
@@ -1685,6 +1684,12 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.Status:
                     msg.WriteRangedSingle(condition, 0.0f, 100.0f, 8);
+
+                    if (condition <= 0.0f && FixRequirements.Count > 0)
+                    {
+                        for (int i = 0; i<FixRequirements.Count; i++)                        
+                            msg.Write(FixRequirements[i].Fixed);                        
+                    }
                     break;
             }
         }
@@ -1692,7 +1697,6 @@ namespace Barotrauma
         public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime) 
         {
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)msg.ReadRangedInteger(0, 2);
-
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
@@ -1704,6 +1708,20 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.Status:
                     Condition = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+
+                    if (FixRequirements.Count > 0)
+                    {
+                        if (Condition <= 0.0f)
+                        {
+                            for (int i = 0; i < FixRequirements.Count; i++)
+                                FixRequirements[i].Fixed = msg.ReadBoolean();
+                        }
+                        else
+                        {
+                            for (int i = 0; i < FixRequirements.Count; i++)
+                                FixRequirements[i].Fixed = true;
+                        }
+                    }
                     break;
             }
         }
@@ -1714,35 +1732,56 @@ namespace Barotrauma
             {
                 return;
             }
-            else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.ComponentState)
+
+            //TODO: use WriteRangedInteger to write the event type
+            msg.Write((byte)((int)extraData[0]));
+            switch ((NetEntityEvent.Type)extraData[0])
             {
-                msg.Write(true);
+                case NetEntityEvent.Type.ComponentState:                
+                    int componentIndex = (int)extraData[1];
+                    msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
 
-                int componentIndex = (int)extraData[1];
-                msg.WriteRangedInteger(0, components.Count - 1, componentIndex);
-
-                (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
-            }
-            else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
-            {
-                msg.Write(false);
-
-                ownInventory.ClientWrite(msg, extraData);
+                    (components[componentIndex] as IClientSerializable).ClientWrite(msg, extraData);
+                    break;
+                case NetEntityEvent.Type.InventoryState:
+                    ownInventory.ClientWrite(msg, extraData);
+                    break;
+                case NetEntityEvent.Type.RepairItem:   
+                    if (FixRequirements.Count > 0)
+                    {
+                        int requirementIndex = (int)extraData[1];   
+                        msg.WriteRangedInteger(0, FixRequirements.Count - 1, requirementIndex);  
+                    }                      
+                    break;
             }
         }
 
         public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c) 
         {
-            bool isComponentUpdate = msg.ReadBoolean();
+            NetEntityEvent.Type eventType = (NetEntityEvent.Type)msg.ReadByte();
 
-            if (isComponentUpdate)
+            switch (eventType)
             {
-                int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
-                (components[componentIndex] as IClientSerializable).ServerRead(type, msg, c);
-            }
-            else
-            {
-                ownInventory.ServerRead(type, msg, c);
+                case NetEntityEvent.Type.ComponentState:
+                    int componentIndex = msg.ReadRangedInteger(0, components.Count - 1);
+                    (components[componentIndex] as IClientSerializable).ServerRead(type, msg, c);
+                    break;
+                case NetEntityEvent.Type.InventoryState:
+                    ownInventory.ServerRead(type, msg, c);
+                    break;
+                case NetEntityEvent.Type.RepairItem:
+                    if (FixRequirements.Count == 0) return;
+
+                    int requirementIndex = FixRequirements.Count == 1 ? 
+                        0 : msg.ReadRangedInteger(0, FixRequirements.Count - 1);
+
+                    if (!c.Character.CanAccessItem(this)) return;
+                    if (!FixRequirements[requirementIndex].CanBeFixed(c.Character)) return;
+
+                    FixRequirements[requirementIndex].Fixed = true;
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+
+                    break;
             }
         }
 
