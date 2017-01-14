@@ -21,7 +21,7 @@
   <Self_CauseOfDeath.Pressure>You have been crushed by water pressure.</Self_CauseOfDeath.Pressure>  
   <Self_CauseOfDeath.Burn>You have burned to death.</Self_CauseOfDeath.Burn>
   <Self_CauseOfDeath.Husk>The parasite has taken over your body.</Self_CauseOfDeath.Husk>
-  <Self_CauseOfDeath.Disconnected>You have been disconnected from the server.</Self_CauseOfDeath.Disconnected>
+  <Self_CauseOfDeath.Disconnected>You were disconnected from the server.</Self_CauseOfDeath.Disconnected>
 
   <HuskDormant>Your throat feels sore</HuskDormant>
   <HuskDormant>Your feel feverish</HuskDormant>  

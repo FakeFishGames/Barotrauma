@@ -159,11 +159,10 @@ namespace Barotrauma
         public Entity ViewTarget
         {
             get;
-            private set;
+            set;
         }        
 
         private CharacterInfo info;
-
         public CharacterInfo Info
         {
             get
@@ -834,6 +833,7 @@ namespace Barotrauma
 
         public void Control(float deltaTime, Camera cam)
         {
+            ViewTarget = null;
             if (!AllowInput) return;
             
             Vector2 targetMovement = GetTargetMovement();
@@ -1326,7 +1326,7 @@ namespace Barotrauma
             if (GameMain.Client!=null && this==Controlled && !isSynced) return;
 
             if (!Enabled) return;
-
+            
             PreviousHull = CurrentHull;
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull, true);
             //if (PreviousHull != CurrentHull && Character.Controlled == this) Hull.DetectItemVisibility(this); //WIP item culling
@@ -1369,8 +1369,9 @@ namespace Barotrauma
 
                         dequeuedInput = memInput[memInput.Count - 1].states;
 
-                        double aimAngle = ((double)memInput[memInput.Count - 1].intAim/65535.0)*2.0*Math.PI;
-                        cursorPosition = AnimController.Collider.Position+new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle))*60.0f;
+                        double aimAngle = ((double)memInput[memInput.Count - 1].intAim / 65535.0) * 2.0 * Math.PI;
+                        cursorPosition = (ViewTarget == null ? AnimController.Collider.Position : ViewTarget.Position)
+                            + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
 
                         closestItem = Entity.FindEntityByID(memInput[memInput.Count - 1].interact) as Item;
                         memInput.RemoveAt(memInput.Count - 1);
@@ -1406,7 +1407,7 @@ namespace Barotrauma
                     
                 if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
-                Vector2 relativeCursorPos = cursorPosition - AnimController.Collider.Position;
+                Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.Collider.Position : ViewTarget.Position);
                 relativeCursorPos.Normalize();
                 UInt16 intAngle = (UInt16)(65535.0*Math.Atan2(relativeCursorPos.Y,relativeCursorPos.X)/(2.0*Math.PI));
                 
@@ -1915,6 +1916,9 @@ namespace Barotrauma
                     GameMain.LightManager.LosEnabled = false;
                     controlled = null;
                 }
+
+                if (GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
             }
 
             AnimController.Frozen = false;
@@ -1926,7 +1930,7 @@ namespace Barotrauma
             PlaySound(CharacterSound.SoundType.Die);
             
             isDead = true;
-
+            
             this.causeOfDeath = causeOfDeath;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
@@ -2174,7 +2178,7 @@ namespace Barotrauma
 
                     if (aiming)
                     {
-                        Vector2 relativeCursorPos = cursorPosition - AnimController.Collider.Position;
+                        Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.Collider.Position : ViewTarget.Position);
                         tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
                     }
 
@@ -2247,7 +2251,8 @@ namespace Barotrauma
                         if (aimInput)
                         {
                             double aimAngle = ((double)msg.ReadUInt16() / 65535.0) * 2.0 * Math.PI;
-                            cursorPosition = AnimController.Collider.Position + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
+                            cursorPosition = (ViewTarget == null ? AnimController.Collider.Position : ViewTarget.Position)
+                                + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
                             
                             TransformCursorPos();
                         }
