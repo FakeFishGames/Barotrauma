@@ -660,7 +660,7 @@ namespace Barotrauma
             {
                 foreach (string s in effect.OnContainingNames)
                 {
-                    if (!containedItems.Any(x => x!=null && x.Name==s && x.Condition > 0.0f)) return;
+                    if (!containedItems.Any(x => x != null && x.Name == s && x.Condition > 0.0f)) return;
                 }
             }
 
@@ -699,7 +699,6 @@ namespace Barotrauma
                 targets.Add(CurrentHull);
             }
 
-
             if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
             {
                 foreach (var pobject in AllPropertyObjects)
@@ -707,21 +706,12 @@ namespace Barotrauma
                     targets.Add(pobject);
                 }
             }
-                //effect.Apply(type, deltaTime, this);
-                //ApplyStatusEffect(effect, type, deltaTime, this);
 
             if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
-                //effect.Apply(type, deltaTime, null, Character);
-                //ApplyStatusEffect(effect, type, deltaTime, null, Character, limb);
 
             if (Container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(Container);
-            //{
-            //    effect.Apply(type, deltaTime, container);
-            //    //container.ApplyStatusEffect(effect, type, deltaTime, container);
-            //}
             
-            effect.Apply(type, deltaTime, this, targets);
-            
+            effect.Apply(type, deltaTime, this, targets);            
         }
 
 
@@ -1670,7 +1660,8 @@ namespace Barotrauma
                 return;
             }
 
-            msg.WriteRangedInteger(0, 2, (int)((NetEntityEvent.Type)extraData[0]));
+            //TODO: use WriteRangedInteger to write the event type
+            msg.Write((byte)((int)extraData[0]));
             switch ((NetEntityEvent.Type)extraData[0])
             {
                 case NetEntityEvent.Type.ComponentState:
@@ -1691,12 +1682,16 @@ namespace Barotrauma
                             msg.Write(FixRequirements[i].Fixed);                        
                     }
                     break;
+                case NetEntityEvent.Type.ApplyStatusEffect:
+                    ushort targetID = (ushort)extraData[1];
+                    msg.Write(targetID);
+                    break;
             }
         }
 
         public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime) 
         {
-            NetEntityEvent.Type eventType = (NetEntityEvent.Type)msg.ReadRangedInteger(0, 2);
+            NetEntityEvent.Type eventType = (NetEntityEvent.Type)msg.ReadByte();
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
@@ -1722,6 +1717,15 @@ namespace Barotrauma
                                 FixRequirements[i].Fixed = true;
                         }
                     }
+                    break;
+                case NetEntityEvent.Type.ApplyStatusEffect:
+                    ushort targetID = msg.ReadUInt16();
+
+                    Character target = FindEntityByID(targetID) as Character;
+
+                    if (target == null) return;
+
+                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, target);
                     break;
             }
         }
@@ -1753,6 +1757,8 @@ namespace Barotrauma
                         msg.WriteRangedInteger(0, FixRequirements.Count - 1, requirementIndex);  
                     }                      
                     break;
+                case NetEntityEvent.Type.ApplyStatusEffect:
+                    break;
             }
         }
 
@@ -1775,12 +1781,20 @@ namespace Barotrauma
                     int requirementIndex = FixRequirements.Count == 1 ? 
                         0 : msg.ReadRangedInteger(0, FixRequirements.Count - 1);
 
-                    if (!c.Character.CanAccessItem(this)) return;
+                    if (c.Character == null || !c.Character.CanAccessItem(this)) return;
                     if (!FixRequirements[requirementIndex].CanBeFixed(c.Character)) return;
 
                     FixRequirements[requirementIndex].Fixed = true;
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
 
+                    break;
+                case NetEntityEvent.Type.ApplyStatusEffect:
+                    if (c.Character == null || !c.Character.CanAccessItem(this)) return;
+
+                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, c.Character);
+
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, c.Character.ID });
+                    
                     break;
             }
         }
