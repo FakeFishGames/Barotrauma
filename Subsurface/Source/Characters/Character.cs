@@ -2410,16 +2410,18 @@ namespace Barotrauma
             //character with no characterinfo (e.g. some monster)
             if (Info == null) return;
             
-            Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);                
+            Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
             if (ownerClient != null)
             {
                 msg.Write(true);
                 msg.Write(ownerClient.ID);
+                msg.Write(TeamID);
             }
             else if (GameMain.Server.Character == this)
             {
                 msg.Write(true);
                 msg.Write((byte)0);
+                msg.Write(TeamID);
             }
             else
             {
@@ -2461,6 +2463,7 @@ namespace Barotrauma
             {
                 bool hasOwner       = inc.ReadBoolean();
                 int ownerId         = hasOwner ? inc.ReadByte() : -1;
+                byte teamID         = hasOwner ? inc.ReadByte() : (byte)0;
 
                 string newName      = inc.ReadString();
 
@@ -2478,6 +2481,7 @@ namespace Barotrauma
 
                 character = Character.Create(configPath, position, ch, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
+                character.TeamID = teamID;
 
                 if (GameMain.Client.ID == ownerId)
                 {

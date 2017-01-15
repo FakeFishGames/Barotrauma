@@ -961,54 +961,65 @@ namespace Barotrauma.Networking
                 ((MissionMode)GameMain.GameSession.gameMode).Mission.AllowRespawn;
 
             if (AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
-            
-            AssignJobs(connectedClients, characterInfo != null);
-            
-            List<CharacterInfo> characterInfos = new List<CharacterInfo>();
-            foreach (Client client in connectedClients)
-            {
-                client.lastRecvEntitySpawnID = 0;
 
-                client.entityEventLastSent.Clear();
-                client.lastSentEntityEventID = 0;
-                client.lastRecvEntityEventID = 0;
-                                
-                if (client.characterInfo == null)
-                {
-                    client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);
-                }
-                characterInfos.Add(client.characterInfo);
-                client.characterInfo.Job = new Job(client.assignedJob);
-            }
-
-            //host's character
-            if (characterInfo != null)
+            //assign jobs and spawnpoints separately for each team
+            for (int teamID = 1; teamID <= teamCount; teamID++)
             {
-                characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
-                characterInfos.Add(characterInfo);
-            }
-            
-            WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
-            for (int i = 0; i < connectedClients.Count; i++)
-            {
-                Character spawnedCharacter = Character.Create(connectedClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
-                spawnedCharacter.AnimController.Frozen = true;
-                spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
-
-                connectedClients[i].Character = spawnedCharacter;                
+                //find the clients in this team
+                List<Client> teamClients = teamCount == 1 ? connectedClients : connectedClients.FindAll(c => c.TeamID == teamID);
                 
-                GameMain.GameSession.CrewManager.characters.Add(spawnedCharacter);
+                if (!teamClients.Any() && teamID > 1) continue;
+
+                AssignJobs(teamClients, teamID == hostTeam);
+
+                List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+                foreach (Client client in teamClients)
+                {
+                    client.lastRecvEntitySpawnID = 0;
+
+                    client.entityEventLastSent.Clear();
+                    client.lastSentEntityEventID = 0;
+                    client.lastRecvEntityEventID = 0;
+
+                    if (client.characterInfo == null)
+                    {
+                        client.characterInfo = new CharacterInfo(Character.HumanConfigFile, client.name);
+                    }
+                    characterInfos.Add(client.characterInfo);
+                    client.characterInfo.Job = new Job(client.assignedJob);
+                }
+
+                //host's character
+                if (characterInfo != null && hostTeam == teamID)
+                {
+                    characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
+                    characterInfos.Add(characterInfo);
+                }
+
+                WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSubs[teamID - 1]);
+                for (int i = 0; i < teamClients.Count; i++)
+                {
+                    Character spawnedCharacter = Character.Create(teamClients[i].characterInfo, assignedWayPoints[i].WorldPosition, true, false);
+                    spawnedCharacter.AnimController.Frozen = true;
+                    spawnedCharacter.GiveJobItems(assignedWayPoints[i]);
+                    spawnedCharacter.TeamID = (byte)teamID;
+
+                    teamClients[i].Character = spawnedCharacter;
+
+                    GameMain.GameSession.CrewManager.characters.Add(spawnedCharacter);
+                }
+
+                if (characterInfo != null && hostTeam == teamID)
+                {
+                    myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
+                    myCharacter.GiveJobItems(assignedWayPoints.Last());
+                    myCharacter.TeamID = (byte)teamID;
+
+                    Character.Controlled = myCharacter;
+                    GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+                }
             }
-
-            if (characterInfo != null)
-            {
-                myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
-                myCharacter.GiveJobItems(assignedWayPoints.Last());
-
-                Character.Controlled = myCharacter;
-                GameMain.GameSession.CrewManager.characters.Add(myCharacter);
-            }
-
+            
             foreach (Character c in GameMain.GameSession.CrewManager.characters)
             {
                 Entity.Spawner.AddToSpawnedList(c);
