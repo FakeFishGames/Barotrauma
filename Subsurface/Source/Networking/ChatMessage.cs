@@ -11,14 +11,22 @@ namespace Barotrauma.Networking
 
     enum ChatMessageType
     {
-        Default, Error, Dead, Server, Radio
+        Default, Error, Dead, Server, Radio, Private
     }    
 
     class ChatMessage
     {
         public const float SpeakRange = 2000.0f;
 
-        public static Color[] MessageColor = { Color.White, Color.Red, new Color(63, 72, 204), Color.LightGreen, Color.Yellow };
+        public static Color[] MessageColor = 
+        { 
+            Color.White,                //default
+            Color.Red,                  //error
+            new Color(63, 72, 204),     //dead
+            Color.LightGreen,           //server
+            Color.Yellow,               //radio
+            new Color(153, 217, 234)    //private 
+        };
         
         public readonly string Text;
 

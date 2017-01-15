@@ -77,7 +77,7 @@ namespace Barotrauma.Networking
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
 
-            config.ConnectionTimeout = 600.0f;
+            config.ConnectionTimeout = 60.0f;
 #endif 
             config.Port = port;
             Port = port;
@@ -987,7 +987,6 @@ namespace Barotrauma.Networking
                 characterInfo.Job = new Job(GameMain.NetLobbyScreen.JobPreferences[0]);
                 characterInfos.Add(characterInfo);
             }
-
             
             WayPoint[] assignedWayPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
             for (int i = 0; i < connectedClients.Count; i++)
@@ -1273,6 +1272,8 @@ namespace Barotrauma.Networking
         {
             Character senderCharacter = null;
             string senderName = "";
+
+            Client targetClient = null;
             
             if (type==null)
             {
@@ -1289,9 +1290,35 @@ namespace Barotrauma.Networking
                         type = ChatMessageType.Dead;
                         break;
                     default:
-                        type = ChatMessageType.Default;
+                        if (command != "")
+                        {
+                            if (command == name.ToLowerInvariant())
+                            {
+                                //a private message to the host
+                            }
+                            else
+                            {
+                                targetClient = connectedClients.Find(c =>
+                                    command == c.name.ToLowerInvariant() ||
+                                    (c.Character != null && command == c.Character.Name.ToLowerInvariant()));
+
+                                if (targetClient == null)
+                                {
+                                    AddChatMessage("Player \"" + command + "\" not found!", ChatMessageType.Error);
+                                    return;
+                                }
+                            }
+                            
+                            type = ChatMessageType.Private;
+                        }
+                        else
+                        {
+                            type = ChatMessageType.Default;
+                        }
                         break;
                 }
+
+                message = tempStr;
             }
 
             if (gameStarted)
@@ -1312,6 +1339,12 @@ namespace Barotrauma.Networking
                     {
                         type = ChatMessageType.Dead;
                     }
+                    else if (type == ChatMessageType.Private)
+                    {
+                        //sender has an alive character, sending private messages not allowed
+                        return;
+                    }
+
                 }
             }
             else
@@ -1323,8 +1356,8 @@ namespace Barotrauma.Networking
                 }                
                 else //msg sent by a client          
                 {
-                    //game not started -> clients can only send normal chatmessages
-                    type = ChatMessageType.Default;
+                    //game not started -> clients can only send normal and private chatmessages
+                    if (type != ChatMessageType.Private) type = ChatMessageType.Default;
                     senderName = senderClient.name;
                 }
             }
@@ -1371,7 +1404,12 @@ namespace Barotrauma.Networking
                         }
                         break;
                     case ChatMessageType.Dead:
+                        //character still alive -> don't send
                         if (client.Character != null && !client.Character.IsDead) continue;
+                        break;
+                    case ChatMessageType.Private:
+                        //private msg sent to someone else than this client -> don't send
+                        if (client != targetClient && client != senderClient) continue;
                         break;
                 }
 
@@ -1396,7 +1434,8 @@ namespace Barotrauma.Networking
                 myReceivedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, myCharacter);
             }
 
-            if (!string.IsNullOrWhiteSpace(myReceivedMessage))
+            if (!string.IsNullOrWhiteSpace(myReceivedMessage) && 
+                (targetClient == null || senderClient == null))
             {
                 AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderCharacter); 
             }       
