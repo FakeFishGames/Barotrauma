@@ -212,7 +212,7 @@ namespace Barotrauma.Items.Components
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            IDamageable target = null;
+            Character target = null;
 
             Limb limb = f2.Body.UserData as Limb;
             if (limb != null)
@@ -227,15 +227,22 @@ namespace Barotrauma.Items.Components
 
             if (target == null)
             {
-                target = f2.Body.UserData as IDamageable;
+                target = f2.Body.UserData as Character;
             }
 
             if (target == null) return false;
 
-            if (attack!=null) attack.DoDamage(user, target, item.WorldPosition, 1.0f);
+            if (attack != null) attack.DoDamage(user, target, item.WorldPosition, 1.0f);
 
             RestoreCollision();
             hitting = false;
+
+            if (GameMain.Client != null) return true;
+
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(item, new object[] { Barotrauma.Networking.NetEntityEvent.Type.ApplyStatusEffect, target.ID });
+            }
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, limb.character);
 

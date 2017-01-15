@@ -95,10 +95,18 @@ namespace Barotrauma
             int slotIndex = (int)obj;
 
             if (Items[slotIndex] == null) return false;
+                        
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect });
+                return true;
+            }
 
-            //save the ID in a variable in case the statuseffect causes the item to be dropped/destroyed
-            ushort itemID = Items[slotIndex].ID;
-            
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID });
+            }
+
             Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
 
             return true;
