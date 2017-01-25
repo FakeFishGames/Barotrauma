@@ -143,6 +143,12 @@ namespace Barotrauma
             character.AnimController.AddJoint(jointElement);
         }
 
+        public void Remove(Character character)
+        {
+            if (character != null)
+                character.OnDeath -= CharacterDead;
+        }
+
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             var husk = Character.Create(

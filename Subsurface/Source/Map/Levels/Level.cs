@@ -470,6 +470,9 @@ namespace Barotrauma
                     edge.site2 = null;
                 }
             }
+            
+            //initialize MapEntities that aren't in any sub (e.g. items inside ruins)
+            MapEntity.MapLoaded(null);
 
             //initialize MapEntities that aren't in any sub (e.g. items inside ruins)
             MapEntity.MapLoaded(null);

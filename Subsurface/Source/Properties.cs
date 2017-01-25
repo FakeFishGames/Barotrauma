@@ -258,14 +258,13 @@ namespace Barotrauma
                 if (!saveIfDefault)
                 {
                     //only save 
-                    //  - if the attribute is saveable
-                    //  - and it's different from the default value or can be changed in the editor
+                    //  - if the attribute is saveable and it's different from the default value
+                    //  - or can be changed in the editor
                     bool save = false;
                     foreach (var attribute in property.Attributes.OfType<HasDefaultValue>())
                     {
-                        if (!attribute.isSaveable) continue;
-
-                        if (!attribute.defaultValue.Equals(value) || property.Attributes.OfType<Editable>().Any())
+                        if ((!attribute.isSaveable && !attribute.defaultValue.Equals(value)) || 
+                            property.Attributes.OfType<Editable>().Any())
                         {
                             save = true;
                             break;
