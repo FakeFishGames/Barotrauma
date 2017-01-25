@@ -123,6 +123,27 @@ namespace Barotrauma.Items.Components
             list.Add(this);
         }
 
+        public override void FlipX()
+        {
+            base.FlipX();
+
+            if (dockingTarget != null)
+            {
+                if (joint != null)
+                {
+                    CreateJoint(joint is WeldJoint);
+                }
+                else if (dockingTarget.joint != null)
+                {
+                    if (!GameMain.World.BodyList.Contains(dockingTarget.joint.BodyA) ||
+                        !GameMain.World.BodyList.Contains(dockingTarget.joint.BodyB))
+                    {
+                        dockingTarget.CreateJoint(dockingTarget.joint is WeldJoint);
+                    }
+                }
+            }
+        }
+
         private DockingPort FindAdjacentPort()
         {
             foreach (DockingPort port in list)
@@ -225,8 +246,6 @@ namespace Barotrauma.Items.Components
                 Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
             dockingTarget.dockingDir = -dockingDir;            
             
-            GameMain.World.RemoveJoint(joint);
-
             PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
 
             ConnectWireBetweenPorts();
@@ -244,6 +263,12 @@ namespace Barotrauma.Items.Components
 
         private void CreateJoint(bool useWeldJoint)
         {
+            if (joint != null)
+            {
+                GameMain.World.RemoveJoint(joint);
+                joint = null;
+            }
+
             Vector2 offset = (IsHorizontal ?
                 Vector2.UnitX * dockingDir :
                 Vector2.UnitY * dockingDir);
