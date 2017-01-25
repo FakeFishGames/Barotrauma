@@ -29,6 +29,7 @@ namespace Barotrauma.Sounds
             try
             {
                 AC = new AudioContext();
+                ALHelper.Check();
             }
             catch (DllNotFoundException e)
             {
@@ -266,21 +267,28 @@ namespace Barotrauma.Sounds
             {
                 var state = OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]);
                 if (state == OpenTK.Audio.OpenAL.ALSourceState.Playing || state == OpenTK.Audio.OpenAL.ALSourceState.Paused)
+                {
                     Stop(i);
+                }
 
                 OpenTK.Audio.OpenAL.AL.DeleteSource(alSources[i]);
                 
                 ALHelper.Check();
             }
 
-            if (oggStream!=null)
+            if (oggStream != null)
             {
                 oggStream.Stop();
                 oggStream.Dispose();
+
+                oggStream = null;
             }
-            
+
             if (oggStreamer != null)
+            {
                 oggStreamer.Dispose();
+                oggStreamer = null;
+            }
         }
 
     }
