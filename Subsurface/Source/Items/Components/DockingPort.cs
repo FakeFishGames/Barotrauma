@@ -133,6 +133,7 @@ namespace Barotrauma.Items.Components
                 if (joint != null)
                 {
                     CreateJoint(joint is WeldJoint);
+                    LinkHullsToGap();
                 }
                 else if (dockingTarget.joint != null)
                 {
@@ -141,6 +142,7 @@ namespace Barotrauma.Items.Components
                     {
                         dockingTarget.CreateJoint(dockingTarget.joint is WeldJoint);
                     }
+                    dockingTarget.LinkHullsToGap();
                 }
             }
         }
@@ -395,18 +397,9 @@ namespace Barotrauma.Items.Components
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].Right - 2, hullRects[0].Y, 4, hullRects[0].Height), true, subs[0]);
+                if (gapId != null) gap.ID = (ushort)gapId;
 
-                gap.linkedTo.Clear();
-                if (hulls[0].WorldRect.X < hulls[1].WorldRect.X)
-                {
-                    gap.linkedTo.Add(hulls[0]);
-                    gap.linkedTo.Add(hulls[1]);
-                }
-                else
-                {
-                    gap.linkedTo.Add(hulls[1]);
-                    gap.linkedTo.Add(hulls[0]);
-                }
+                LinkHullsToGap();
             }
             else
             {
@@ -431,17 +424,7 @@ namespace Barotrauma.Items.Components
                 gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), false, subs[0]);
                 if (gapId != null) gap.ID = (ushort)gapId;
 
-                gap.linkedTo.Clear();
-                if (hulls[0].WorldRect.Y > hulls[1].WorldRect.Y)
-                {
-                    gap.linkedTo.Add(hulls[0]);
-                    gap.linkedTo.Add(hulls[1]);
-                }
-                else
-                {
-                    gap.linkedTo.Add(hulls[1]);
-                    gap.linkedTo.Add(hulls[0]);
-                }
+                LinkHullsToGap();
             }
 
             item.linkedTo.Add(hulls[0]);
@@ -462,6 +445,46 @@ namespace Barotrauma.Items.Components
                 body.Friction = 0.5f;
 
                 body.CollisionCategories = Physics.CollisionWall;
+            }
+        }
+
+        private void LinkHullsToGap()
+        {
+            if (gap == null || hulls == null || hulls[0] == null || hulls[1] == null)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Failed to link dockingport hulls to gap");
+#endif
+                return;
+            }
+
+            gap.linkedTo.Clear();
+
+            if (IsHorizontal)
+            {
+                if (hulls[0].WorldRect.X < hulls[1].WorldRect.X)
+                {
+                    gap.linkedTo.Add(hulls[0]);
+                    gap.linkedTo.Add(hulls[1]);
+                }
+                else
+                {
+                    gap.linkedTo.Add(hulls[1]);
+                    gap.linkedTo.Add(hulls[0]);
+                }
+            }
+            else
+            {
+                if (hulls[0].WorldRect.Y > hulls[1].WorldRect.Y)
+                {
+                    gap.linkedTo.Add(hulls[0]);
+                    gap.linkedTo.Add(hulls[1]);
+                }
+                else
+                {
+                    gap.linkedTo.Add(hulls[1]);
+                    gap.linkedTo.Add(hulls[0]);
+                }
             }
         }
 
