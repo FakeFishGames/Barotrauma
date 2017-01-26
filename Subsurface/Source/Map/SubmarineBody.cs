@@ -201,7 +201,6 @@ namespace Barotrauma
                 {
                     //clear the position buffer of the docked sub to prevent unnecessary position corrections
                     dockedSub.SubBody.memPos.Clear();
-                    subsToMove.Add(dockedSub);
                 }
 
                 Submarine closestSub = null;
