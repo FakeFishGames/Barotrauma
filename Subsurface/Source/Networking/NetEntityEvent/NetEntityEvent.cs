@@ -15,7 +15,8 @@ namespace Barotrauma.Networking
             InventoryState,
             Status,
             RepairItem,
-            ApplyStatusEffect
+            ApplyStatusEffect,
+            ChangeProperty
         }
 
         public readonly Entity Entity;

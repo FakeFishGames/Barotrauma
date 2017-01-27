@@ -181,6 +181,11 @@ namespace Barotrauma
             }
         }
 
+        public Type GetType()
+        {
+            return propertyInfo.PropertyType;
+        }
+
         public static List<ObjectProperty> GetProperties<T>(IPropertyObject obj)
         {
             List<ObjectProperty> editableProperties = new List<ObjectProperty>();

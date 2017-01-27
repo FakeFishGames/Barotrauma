@@ -1585,6 +1585,15 @@ namespace Barotrauma
             if (objectProperty.TrySetValue(text))
             {
                 textBox.Text = text;
+
+                if (GameMain.Server != null)
+                {
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, objectProperty });
+                }
+                else if (GameMain.Client != null)
+                {
+                    GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, objectProperty });
+                }
                 
                 return true;
             }
@@ -1686,6 +1695,9 @@ namespace Barotrauma
                     ushort targetID = (ushort)extraData[1];
                     msg.Write(targetID);
                     break;
+                case NetEntityEvent.Type.ChangeProperty:
+                    WritePropertyChange(msg, extraData);
+                    break;
             }
         }
 
@@ -1727,6 +1739,9 @@ namespace Barotrauma
 
                     ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, target);
                     break;
+                case NetEntityEvent.Type.ChangeProperty:
+                    ReadPropertyChange(msg);
+                    break;
             }
         }
 
@@ -1758,6 +1773,11 @@ namespace Barotrauma
                     }                      
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
+                    //no further data needed, the server applies the effect
+                    //on the character of the client who sent the message
+                    break;
+                case NetEntityEvent.Type.ChangeProperty:
+                    WritePropertyChange(msg, extraData);
                     break;
             }
         }
@@ -1796,6 +1816,85 @@ namespace Barotrauma
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, c.Character.ID });
                     
                     break;
+                case NetEntityEvent.Type.ChangeProperty:
+                    ReadPropertyChange(msg);
+                    break;
+            }
+        }
+
+        private void WritePropertyChange(NetBuffer msg, object[] extraData)
+        {
+            var allProperties = GetProperties<InGameEditable>();
+            ObjectProperty objectProperty = extraData[1] as ObjectProperty;
+            if (objectProperty != null)
+            {
+                if (allProperties.Count > 1)
+                {
+                    msg.WriteRangedInteger(0, allProperties.Count - 1, allProperties.IndexOf(objectProperty));
+                }
+
+                object value = objectProperty.GetValue();
+                if (value is string)
+                {
+                    msg.Write((string)value);
+                }
+                else if (value is float)
+                {
+                    msg.Write((float)value);
+                }
+                else if (value is int)
+                {
+                    msg.Write((int)value);
+                }
+                else if (value is bool)
+                {
+                    msg.Write((bool)value);
+                }
+                else
+                {
+                    throw new System.NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
+                }
+            }
+        }
+
+        private void ReadPropertyChange(NetIncomingMessage msg)
+        {
+            var allProperties = GetProperties<InGameEditable>();
+            if (allProperties.Count == 0) return;
+
+            int propertyIndex = 0;
+            if (allProperties.Count > 1)
+            {
+                propertyIndex = msg.ReadRangedInteger(0, allProperties.Count-1);
+            }
+
+            ObjectProperty objectProperty = allProperties[propertyIndex];
+
+            Type type = objectProperty.GetType();
+            if (type == typeof(string))
+            {
+                objectProperty.TrySetValue(msg.ReadString());
+            }
+            else if (type == typeof(float))
+            {
+                objectProperty.TrySetValue(msg.ReadFloat());
+            }
+            else if (type == typeof(int))
+            {
+                objectProperty.TrySetValue(msg.ReadInt32());
+            }
+            else if (type == typeof(bool))
+            {
+                objectProperty.TrySetValue(msg.ReadBoolean());
+            }
+            else
+            {
+                return;
+            }
+
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, objectProperty });
             }
         }
 
