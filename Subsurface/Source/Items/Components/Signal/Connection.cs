@@ -145,7 +145,6 @@ namespace Barotrauma.Items.Components
                 if (Wires[i] == null)
                 {
                     Wires[i] = wire;
-                    UpdateRecipients();
                     return;
                 }
             }
@@ -154,14 +153,8 @@ namespace Barotrauma.Items.Components
         public void AddLink(int index, Wire wire)
         {
             Wires[index] = wire;
-            UpdateRecipients();
         }
-
-        public void UpdateRecipients()
-        {
-
-        }
-
+        
         public void SendSignal(int stepsTaken, string signal, Item sender, float power)
         {
             for (int i = 0; i < MaxLinked; i++)
@@ -286,8 +279,15 @@ namespace Barotrauma.Items.Components
 
                 if (!PlayerInput.LeftButtonHeld())
                 {
-                    //panel.Item.NewComponentEvent(panel, true, true);
-                    //draggingConnected.Drop(Character);
+                    if (GameMain.Client != null)
+                    {
+                        panel.Item.CreateClientEvent<ConnectionPanel>(panel);
+                    }
+                    else if (GameMain.Server != null)
+                    {
+                        panel.Item.CreateServerEvent<ConnectionPanel>(panel);
+                    }
+
                     draggingConnected = null;
                 }
             }
@@ -464,8 +464,7 @@ namespace Barotrauma.Items.Components
         public void ConnectLinked()
         {
             if (wireId == null) return;
-
-
+            
             for (int i = 0; i < MaxLinked; i++)
             {
                 if (wireId[i] == 0) continue;
@@ -481,10 +480,6 @@ namespace Barotrauma.Items.Components
                     Wires[i].Connect(this, false, true);
                 }
             }
-
-            UpdateRecipients();
-
-            //wireId = null;
         }
 
     }

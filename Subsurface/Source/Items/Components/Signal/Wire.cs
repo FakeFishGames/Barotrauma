@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -9,7 +11,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Wire : ItemComponent, IDrawableComponent
+    class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         class WireSection
         {
@@ -120,7 +122,6 @@ namespace Barotrauma.Items.Components
                     if (connections[i].Wires[n] != this) continue;
                     
                     connections[i].Wires[n] = null;
-                    connections[i].UpdateRecipients();
                 }
                 connections[i] = null;
             }
@@ -197,7 +198,14 @@ namespace Barotrauma.Items.Components
 
             if (!loading)
             {
-                //Item.NewComponentEvent(this, true, true);
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
+                else if (GameMain.Client != null)
+                {
+                    item.CreateClientEvent(this);
+                }
                 //the wire is active if only one end has been connected
                 IsActive = connections[0] == null ^ connections[1] == null;
             }
@@ -708,7 +716,7 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
         }
 
-        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             msg.Write((byte)Math.Min(nodes.Count, 255));
             for (int i = 0; i < Math.Min(nodes.Count, 255); i++)
@@ -718,7 +726,33 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c)
+        {
+            nodes.Clear();
+
+            int nodeCount = msg.ReadByte();
+            Vector2[] nodePositions = new Vector2[nodeCount];
+
+            for (int i = 0; i < nodeCount; i++)
+            {
+                nodePositions[i] = new Vector2(msg.ReadFloat(), msg.ReadFloat());         
+            }
+
+            if (!item.CanClientAccess(c)) return;
+            if (nodePositions.Any(n => !MathUtils.IsValid(n))) return;
+
+            nodes = nodePositions.ToList();
+
+            UpdateSections();
+            Drawable = nodes.Any();
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            ClientWrite(msg, extraData);
+        }
+
+        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
         {
             nodes.Clear();
 
@@ -726,7 +760,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < nodeCount; i++)
             {
                 Vector2 newNode = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-                if (MathUtils.IsValid(newNode)) nodes.Add(newNode);                
+                if (MathUtils.IsValid(newNode)) nodes.Add(newNode);
             }
 
             UpdateSections();
