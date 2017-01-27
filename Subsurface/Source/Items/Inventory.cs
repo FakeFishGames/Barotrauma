@@ -572,7 +572,7 @@ namespace Barotrauma
 
                     if (GameMain.Server != null)
                     {
-                        if (!c.Character.CanAccessItem(item)) continue;
+                        if (!item.CanClientAccess(c)) continue;
                     }
                     TryPutItem(item, i, true, false);
                 }

@@ -1,12 +1,15 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
-    class ConnectionPanel : ItemComponent
+    class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
         public static Wire HighlightedWire;
 
@@ -157,9 +160,110 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        protected override void ShallowRemoveComponentSpecific()
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
+            foreach (Connection connection in Connections)
+            {
+                Wire[] wires = Array.FindAll(connection.Wires, w => w != null);
+                msg.WriteRangedInteger(0, Connection.MaxLinked, wires.Length);
+                for (int i = 0; i < wires.Length; i++)
+                {
+                    msg.Write(wires[i].Item.ID);
+                }
+            }
         }
-        
+
+        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c)
+        {
+            int[] wireCounts = new int[Connections.Count];
+            Wire[,] wires = new Wire[Connections.Count, Connection.MaxLinked];
+
+            //read wire IDs for each connection
+            for (int i = 0; i < Connections.Count; i++)
+            {
+                wireCounts[i] = msg.ReadRangedInteger(0, Connection.MaxLinked);
+                for (int j = 0; j < wireCounts[i]; j++)
+                {
+                    ushort wireId = msg.ReadUInt16();
+
+                    Item wireItem = MapEntity.FindEntityByID(wireId) as Item;
+                    if (wireItem == null) continue;
+
+                    Wire wireComponent = wireItem.GetComponent<Wire>();
+                    if (wireComponent != null)
+                    {
+                        wires[i, j] = wireComponent;
+                    }
+                }
+            }
+
+            item.CreateServerEvent<ConnectionPanel>(this);
+
+            //check if the character can access this connectionpanel 
+            //and all the wires they're trying to connect
+            if (!item.CanClientAccess(c)) return;
+            foreach (Wire wire in wires)
+            {
+                if (wire != null)
+                {
+                    //wire not found in any of the connections yet (client is trying to connect a new wire)
+                    //  -> we need to check if the client has access to it
+                    if (!Connections.Any(connection => connection.Wires.Contains(wire)))
+                    {
+                        if (!wire.Item.CanClientAccess(c)) return;
+                    }
+                }
+            }
+
+            Networking.GameServer.Log(item.Name + " rewired by " + c.Character.Name, Color.Orange);
+
+            //update the connections
+            for (int i = 0; i < Connections.Count; i++)
+            {
+                Connections[i].ClearConnections();
+
+                for (int j = 0; j < wireCounts[i]; j++)
+                {
+                    if (wires[i, j] == null) continue;
+
+                    Connections[i].Wires[j] = wires[i,j];
+                    wires[i, j].Connect(Connections[i], false);
+
+                    var otherConnection = Connections[i].Wires[j].OtherConnection(Connections[i]);
+
+                    Networking.GameServer.Log(
+                        item.Name + " (" + Connections[i].Name + ") -> " +
+                        (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), Color.Orange);
+                }
+            }
+            
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            ClientWrite(msg, extraData);
+        }
+
+        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        {
+            foreach (Connection connection in Connections)
+            {
+                connection.ClearConnections();
+                int wireCount = msg.ReadRangedInteger(0, Connection.MaxLinked);
+                for (int i = 0; i < wireCount; i++)
+                {
+                    ushort wireId = msg.ReadUInt16();
+
+                    Item wireItem = MapEntity.FindEntityByID(wireId) as Item;
+                    if (wireItem == null) continue;
+
+                    Wire wireComponent = wireItem.GetComponent<Wire>();
+                    if (wireComponent == null) continue;
+
+                    connection.Wires[i] = wireComponent;
+                    wireComponent.Connect(connection, false);
+                }
+            }
+        }        
     }
 }
