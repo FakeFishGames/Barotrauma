@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -77,7 +79,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    class Fabricator : Powered
+    class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
         private List<FabricableItem> fabricableItems;
 
@@ -94,9 +96,7 @@ namespace Barotrauma.Items.Components
         //used for checking if contained items have changed 
         //(in which case we need to recheck which items can be fabricated)
         private Item[] prevContainedItems;
-
-        private float lastNetworkUpdate;
-
+        
         public Fabricator(Item item, XElement element) 
             : base(item, element)
         {
@@ -288,6 +288,15 @@ namespace Barotrauma.Items.Components
             {
                 CancelFabricating();
             }
+
+            if (GameMain.Server != null)
+            {
+                item.CreateServerEvent<Fabricator>(this);
+            }
+            else if (GameMain.Client != null)
+            {
+                item.CreateClientEvent<Fabricator>(this);
+            }
             
             return true;
         }
@@ -436,6 +445,60 @@ namespace Barotrauma.Items.Components
             }
 
             return true;
+        }
+
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        {
+            int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
+            msg.WriteRangedInteger(-1, fabricableItems.Count - 1, itemIndex);
+        }
+
+        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c)
+        {
+            int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
+
+            item.CreateServerEvent<Fabricator>(this);
+
+            if (!item.CanClientAccess(c)) return;
+
+            if (itemIndex == -1)
+            {
+                CancelFabricating();
+            }
+            else
+            {
+                //if already fabricating the selected item, return
+                if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) == itemIndex) return;
+                if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
+
+                SelectItem(null, fabricableItems[itemIndex]);
+                StartFabricating(fabricableItems[itemIndex]);
+            }
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            int itemIndex = fabricatedItem == null ? -1 : fabricableItems.IndexOf(fabricatedItem);
+            msg.WriteRangedInteger(-1, fabricableItems.Count - 1, itemIndex);
+        }
+
+        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        {
+            int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
+            
+            if (itemIndex == -1)
+            {
+                CancelFabricating();
+            }
+            else
+            {
+                //if already fabricating the selected item, return
+                if (fabricatedItem != null && fabricableItems.IndexOf(fabricatedItem) == itemIndex) return;
+                if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
+
+                SelectItem(null, fabricableItems[itemIndex]);
+                StartFabricating(fabricableItems[itemIndex]);
+            }
         }
         
     }
