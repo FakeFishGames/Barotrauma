@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -8,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Deconstructor : Powered
+    class Deconstructor : Powered, IServerSerializable, IClientSerializable
     {
         GUIProgressBar progressBar;
         GUIButton activateButton;
@@ -16,9 +18,7 @@ namespace Barotrauma.Items.Components
         float progressTimer;
 
         ItemContainer container;
-
-        private float lastNetworkUpdate;
-
+        
         public Deconstructor(Item item, XElement element) 
             : base(item, element)
         {
@@ -100,6 +100,15 @@ namespace Barotrauma.Items.Components
             SetActive(!IsActive);
 
             currPowerConsumption = IsActive ? powerConsumption : 0.0f;
+
+            if (GameMain.Server != null)
+            {
+                item.CreateServerEvent<Deconstructor>(this);
+            }
+            else if (GameMain.Client != null)
+            {
+                item.CreateClientEvent<Deconstructor>(this);
+            }
             
             return true;
         }
@@ -129,8 +138,35 @@ namespace Barotrauma.Items.Components
                 activateButton.Text = "Cancel";
             }
 
-            container.Inventory.Locked = IsActive;
-            
+            container.Inventory.Locked = IsActive;            
+        }
+
+
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        {
+            msg.Write(IsActive);
+        }
+
+        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c)
+        {
+            bool active = msg.ReadBoolean();
+
+            item.CreateServerEvent<Deconstructor>(this);
+
+            if (item.CanClientAccess(c))
+            {
+                SetActive(active);
+            }
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(IsActive);
+        }
+
+        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        {
+            SetActive(msg.ReadBoolean());
         }
         
     }
