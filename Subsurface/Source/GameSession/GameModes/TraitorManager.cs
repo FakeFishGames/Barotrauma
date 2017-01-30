@@ -5,8 +5,18 @@ namespace Barotrauma
 {
     class TraitorManager
     {
-        private Character traitorCharacter, targetCharacter;
+        public Character TraitorCharacter
+        {
+            get { return traitorCharacter; }
+        }
 
+        public Character TargetCharacter
+        {
+            get { return targetCharacter; }
+        }
+
+        private Character traitorCharacter, targetCharacter;
+        
         public TraitorManager(GameServer server)
         {
             Start(server);
@@ -19,8 +29,8 @@ namespace Barotrauma
             List<Character> characters = new List<Character>();
             foreach (Client client in server.ConnectedClients)
             {
-                if (!client.inGame || client.Character==null) continue;
-                characters.Add(client.Character);
+                if (client.Character != null)
+                    characters.Add(client.Character);
             }
 
             if (server.Character!= null) characters.Add(server.Character);
@@ -52,8 +62,6 @@ namespace Barotrauma
                 CreateStartPopUp(traitorCharacter.Name);
                 return;
             }
-
-            server.NewTraitor(traitorCharacter, targetCharacter);
         }
 
         public static void CreateStartPopUp(string targetName)
