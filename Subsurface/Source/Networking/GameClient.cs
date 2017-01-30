@@ -589,6 +589,9 @@ namespace Barotrauma.Networking
 
             bool respawnAllowed     = inc.ReadBoolean();
             bool loadSecondSub      = inc.ReadBoolean();
+
+            bool isTraitor          = inc.ReadBoolean();
+            string traitorTargetName = isTraitor ? inc.ReadString() : null;
             
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 
@@ -615,16 +618,10 @@ namespace Barotrauma.Networking
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
             
-            //int characterCount = inc.ReadByte();
-            //for (int i = 0; i < characterCount; i++)
-            //{
-            //    var character = Character.ReadSpawnData(inc);
-            //    if (inc.ReadBoolean())
-            //    {
-            //        myCharacter = character;
-            //        Character.Controlled = character;
-            //    }
-            //}
+            if (isTraitor)
+            {
+                TraitorManager.CreateStartPopUp(traitorTargetName);
+            }
             
             gameStarted = true;
 
@@ -678,7 +675,6 @@ namespace Barotrauma.Networking
             List<Submarine> submarines = new List<Submarine>();
             for (int i = 0; i < subListCount; i++)
             {
-
                 string subName = inc.ReadString();
                 string subHash = inc.ReadString();
 

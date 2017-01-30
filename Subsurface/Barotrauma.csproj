@@ -183,7 +183,7 @@
     <Compile Include="Source\GameSession\HireManager.cs" />
     <Compile Include="Source\Characters\Animation\HumanoidAnimController.cs" />
     <Compile Include="Source\GameSession\GameModes\SinglePlayerMode.cs" />
-    <Compile Include="Source\GameSession\GameModes\TraitorMode.cs" />
+    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\GUI\ComponentStyle.cs" />
     <Compile Include="Source\GUI\GUIImage.cs" />
     <Compile Include="Source\GUI\GUIMessageBox.cs" />

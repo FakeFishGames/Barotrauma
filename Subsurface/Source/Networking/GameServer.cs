@@ -1025,6 +1025,18 @@ namespace Barotrauma.Networking
                 Entity.Spawner.AddToSpawnedList(c);
                 Entity.Spawner.AddToSpawnedList(c.SpawnItems);
             }
+            
+            TraitorManager = null;
+            if (TraitorsEnabled == YesNoMaybe.Yes ||
+                (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
+            {
+                TraitorManager = new TraitorManager(this);
+
+                if (TraitorManager.TraitorCharacter!=null && TraitorManager.TargetCharacter != null)
+                {
+                    Log(TraitorManager.TraitorCharacter.Name + " is the traitor and the target is " + TraitorManager.TargetCharacter.Name, Color.Cyan);
+                }
+            }
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
             //var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
@@ -1080,6 +1092,19 @@ namespace Barotrauma.Networking
 
                 msg.Write(AllowRespawn && missionAllowRespawn);
                 msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
+
+                if (TraitorManager != null &&
+                    TraitorManager.TraitorCharacter != null &&
+                    TraitorManager.TargetCharacter != null && 
+                    TraitorManager.TraitorCharacter == client.Character)
+                {
+                    msg.Write(true);
+                    msg.Write(TraitorManager.TargetCharacter.Name);
+                }
+                else
+                {
+                    msg.Write(false);
+                }
                 
                 server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
             }
@@ -1263,19 +1288,6 @@ namespace Barotrauma.Networking
             }
         }
         
-        public void NewTraitor(Character traitor, Character target)
-        {
-            Log(traitor.Name + " is the traitor and the target is " + target.Name, Color.Cyan);
-
-            Client traitorClient = null;
-            foreach (Client c in connectedClients)
-            {
-                if (c.Character != traitor) continue;
-                traitorClient = c;
-                break;
-            }           
-        }
-
         /// <summary>
         /// Add the message to the chatbox and pass it to all clients who can receive it
         /// </summary>
