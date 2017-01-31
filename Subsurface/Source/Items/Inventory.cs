@@ -564,6 +564,7 @@ namespace Barotrauma
                 if (newItemIDs[i] == 0)
                 {
                     if (Items[i] != null) Items[i].Drop();
+                    System.Diagnostics.Debug.Assert(Items[i]==null);
                 }
                 else
                 {
