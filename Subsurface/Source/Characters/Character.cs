@@ -1842,14 +1842,17 @@ namespace Barotrauma
         public void StartStun(float stunTimer, bool allowStunDecrease = false)
         {
             if ((stunTimer <= AnimController.StunTimer && !allowStunDecrease) || !MathUtils.IsValid(stunTimer)) return;
-            
+
+            if (GameMain.Server != null &&
+                (Math.Sign(stunTimer) != Math.Sign(AnimController.StunTimer) || Math.Abs(stunTimer - AnimController.StunTimer) > 0.1f))
+            {
+                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+            }
+
             if (Math.Sign(stunTimer) != Math.Sign(AnimController.StunTimer)) AnimController.ResetPullJoints();
             AnimController.StunTimer = Math.Max(AnimController.StunTimer, stunTimer);
                 
             selectedConstruction = null;
-
-            if (GameMain.Server != null)
-                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
         }
 
         private void Implode(bool isNetworkMessage = false)
@@ -2383,11 +2386,19 @@ namespace Barotrauma
                 {
                     Oxygen = msg.ReadRangedSingle(-100.0f, 100.0f, 8);
                 }
+                else
+                {
+                    Oxygen = 100.0f;
+                }
 
                 bool isBleeding = msg.ReadBoolean();
                 if (isBleeding)
                 {
                     bleeding = msg.ReadRangedSingle(0.0f, 5.0f, 8);
+                }
+                else
+                {
+                    bleeding = 0.0f;
                 }
 
                 bool stunned = msg.ReadBoolean();
@@ -2395,6 +2406,10 @@ namespace Barotrauma
                 {
                     float newStunTimer = msg.ReadRangedSingle(0.0f, 60.0f, 8);
                     StartStun(newStunTimer, true);
+                }
+                else
+                {
+                    StartStun(0.0f, true);
                 }
             }
         }
