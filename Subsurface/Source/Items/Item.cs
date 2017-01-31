@@ -1529,7 +1529,17 @@ namespace Barotrauma
         {
             foreach (ItemComponent ic in components) ic.Drop(dropper);
 
-            if (Container != null) Container.RemoveContained(this);
+            if (Container != null)
+            {
+                Container.RemoveContained(this);
+                Container = null;
+            }
+
+            if (parentInventory != null)
+            {
+                parentInventory.RemoveItem(this);
+                parentInventory = null;
+            }
         }
 
         public void Equip(Character character)
