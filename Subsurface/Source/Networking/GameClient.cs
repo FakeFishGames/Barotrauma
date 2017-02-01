@@ -546,16 +546,23 @@ namespace Barotrauma.Networking
                         if (connectionStatus == NetConnectionStatus.Disconnected)
                         {
                             string disconnectMsg = inc.ReadString();
-                            if (disconnectMsg == "The server has been shut down")
+
+                            switch (disconnectMsg)
                             {
-                                var msgBox = new GUIMessageBox("CONNECTION LOST", "The server has been shut down");
-                                msgBox.Buttons[0].OnClicked += ReturnToServerList;
-                            }
-                            else if (reconnectBox == null)
-                            {
-                                reconnectBox = new GUIMessageBox("CONNECTION LOST", "You have been disconnected from the server. Reconnecting...", new string[0]);
-                                connected = false;
-                                ConnectToServer(serverIP);                            
+                                case "The server has been shut down":
+                                case "You have been banned from the server":
+                                case "You have been kicked from the server":
+                                    var msgBox = new GUIMessageBox("CONNECTION LOST", disconnectMsg);
+                                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
+                                    break;
+                                default:
+                                    reconnectBox = new GUIMessageBox(
+                                        "CONNECTION LOST", 
+                                        "You have been disconnected from the server. Reconnecting...", new string[0]);
+                                    
+                                    connected = false;
+                                    ConnectToServer(serverIP);
+                                    break;
                             }
 
                         }
@@ -743,8 +750,15 @@ namespace Barotrauma.Networking
 
                             string levelSeed            = inc.ReadString();
 
-                            bool autoRestartEnabled = inc.ReadBoolean();
-                            float autoRestartTimer = autoRestartEnabled ? inc.ReadFloat() : 0.0f; 
+                            bool autoRestartEnabled     = inc.ReadBoolean();
+                            float autoRestartTimer      = autoRestartEnabled ? inc.ReadFloat() : 0.0f;
+
+                            int clientCount             = inc.ReadByte();
+                            List<string> clientNames = new List<string>();
+                            for (int i = 0; i < clientCount; i++)
+                            {
+                                clientNames.Add(inc.ReadString());
+                            }
 
                             //ignore the message if we already a more up-to-date one
                             if (updateID > GameMain.NetLobbyScreen.LastUpdateID)
@@ -764,6 +778,12 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.LevelSeed = levelSeed;
                                 
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
+                                
+                                GameMain.NetLobbyScreen.ClearPlayers();
+                                foreach (string clientName in clientNames)
+                                {
+                                    GameMain.NetLobbyScreen.AddPlayer(clientName);
+                                }
                             }
                         }
                         lastSentChatMsgID = inc.ReadUInt32();

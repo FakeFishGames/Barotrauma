@@ -779,7 +779,9 @@ namespace Barotrauma
                 playerList);
 
             textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-            textBlock.UserData = name;          
+            textBlock.UserData = name;
+
+            if (GameMain.Server != null) lastUpdateID++;
         }
 
         public void RemovePlayer(string name)
@@ -787,6 +789,8 @@ namespace Barotrauma
             GUIComponent child = playerList.children.Find(c => c.UserData as string == name);
 
             if (child != null) playerList.RemoveChild(child);
+
+            if (GameMain.Server != null) lastUpdateID++;
         }
 
         private bool SelectPlayer(GUIComponent component, object obj)
@@ -946,6 +950,8 @@ namespace Barotrauma
         public void ClearPlayers()
         {
             playerList.ClearChildren();
+
+            if (GameMain.Server != null) lastUpdateID++;
         }
 
         public override void AddToGUIUpdateList()

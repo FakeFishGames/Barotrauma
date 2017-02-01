@@ -77,7 +77,7 @@ namespace Barotrauma.Networking
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
 
-            config.ConnectionTimeout = 60.0f;
+            config.ConnectionTimeout = 5.0f;
 #endif 
             config.Port = port;
             Port = port;
@@ -504,7 +504,7 @@ namespace Barotrauma.Networking
                         }
                     }
                 }
-                
+
                 updateTimer = DateTime.Now + updateInterval;
             }
 
@@ -690,7 +690,6 @@ namespace Barotrauma.Networking
                         break;
                     default:
                         return;
-                        //break;
                 }
             }
         }
@@ -810,6 +809,12 @@ namespace Barotrauma.Networking
                 if (autoRestart)
                 {
                     outmsg.Write(AutoRestartTimer);
+                }
+
+                outmsg.Write((byte)connectedClients.Count);
+                foreach (Client client in connectedClients)
+                {
+                    outmsg.Write(client.name);
                 }
             }
             else
@@ -1269,8 +1274,7 @@ namespace Barotrauma.Networking
 
             client.Connection.Disconnect(targetmsg);
 
-            GameMain.NetLobbyScreen.RemovePlayer(client.name);
-            
+            GameMain.NetLobbyScreen.RemovePlayer(client.name);            
             connectedClients.Remove(client);
 
             AddChatMessage(msg, ChatMessageType.Server);
