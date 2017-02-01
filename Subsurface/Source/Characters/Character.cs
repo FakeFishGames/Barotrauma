@@ -2154,7 +2154,14 @@ namespace Barotrauma
                 if (this == c.Character)
                 {
                     tempBuffer.Write(true);
-                    tempBuffer.Write((UInt32)(LastNetworkUpdateID - memInput.Count - 1));
+                    if (LastNetworkUpdateID < memInput.Count + 1)
+                    {
+                        tempBuffer.Write((UInt32)0);
+                    }
+                    else
+                    {
+                        tempBuffer.Write((UInt32)(LastNetworkUpdateID - memInput.Count - 1));
+                    }
                 }
                 else
                 {
