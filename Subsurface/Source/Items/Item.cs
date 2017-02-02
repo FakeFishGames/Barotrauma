@@ -46,8 +46,13 @@ namespace Barotrauma
         public List<IDrawableComponent> drawableComponents;
 
         public PhysicsBody body;
+        
+        private Vector2 lastSentPos;
+        private bool prevBodyAwake;
 
+        private bool needsPositionUpdate;
         private float lastSentCondition;
+
         private float condition;
 
         private bool inWater;
@@ -146,6 +151,18 @@ namespace Barotrauma
             get
             {
                 return (body==null) ? base.SimPosition : body.SimPosition;
+            }
+        }
+        public bool NeedsPositionUpdate
+        {
+            get
+            {
+                if (body == null || !body.Enabled) return false;
+                return needsPositionUpdate;
+            }
+            set
+            {
+                needsPositionUpdate = value;
             }
         }
 
@@ -358,6 +375,8 @@ namespace Barotrauma
                 {
                     case "body":
                         body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position));
+                        body.FarseerBody.AngularDamping = 0.2f;
+                        body.FarseerBody.LinearDamping  = 0.1f;
                         break;
                     case "trigger":
                     case "sprite":
@@ -790,18 +809,17 @@ namespace Barotrauma
                     body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
                 }
                 
-                //Vector2 moveAmount = body.SimPosition - body.LastSentPosition;
-                //if (parentInventory == null && moveAmount != Vector2.Zero && moveAmount.Length() > NetConfig.ItemPosUpdateDistance)
-                //{
-                //    new NetworkEvent(NetworkEventType.PhysicsBodyPosition, ID, false);
-                //}
-
                 Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
                 rect.X = (int)(displayPos.X - rect.Width / 2.0f);
                 rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
             }
 
-            body.MoveToTargetPosition();
+            UpdateNetPosition(deltaTime);
+
+            if (GameMain.Client != null)
+            {
+                body.MoveToTargetPosition();
+            }
 
             if (!inWater || Container != null || body == null) return;
 
@@ -978,7 +996,7 @@ namespace Barotrauma
                         (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
                 }
             }
-            
+                        
             if (!ShowLinks) return;
 
             foreach (MapEntity e in linkedTo)
@@ -1540,6 +1558,8 @@ namespace Barotrauma
                 parentInventory.RemoveItem(this);
                 parentInventory = null;
             }
+
+            lastSentPos = SimPosition;
         }
 
         public void Equip(Character character)
@@ -1556,7 +1576,6 @@ namespace Barotrauma
 
         public List<ObjectProperty> GetProperties<T>()
         {
-
             List<ObjectProperty> editableProperties = ObjectProperty.GetProperties<T>(this);
             
             foreach (ItemComponent ic in components)
@@ -1713,6 +1732,12 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime) 
         {
+            if (type == ServerNetObject.ENTITY_POSITION)
+            {
+                ClientReadPosition(type, msg, sendingTime);
+                return;
+            }
+
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)msg.ReadByte();
             switch (eventType)
             {
@@ -2019,6 +2044,71 @@ namespace Barotrauma
             }
 
             return item;
+        }
+
+        private void UpdateNetPosition(float deltaTime)
+        {
+            if (GameMain.Server == null) return;
+            if (body == null || !body.Enabled || parentInventory != null) return;
+            
+            float minDistance = !body.FarseerBody.Awake && prevBodyAwake ?
+                0.1f : NetConfig.ItemPosUpdateDistance;
+
+            if (Vector2.Distance(lastSentPos, SimPosition) > minDistance)
+            {
+                needsPositionUpdate = true;
+            }
+
+            prevBodyAwake = body.FarseerBody.Awake;            
+        }
+
+        public void ServerWritePosition(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(ID);
+            //length in bytes
+            msg.Write((byte)(4 + 4 + 1));
+
+            msg.Write(SimPosition.X);
+            msg.Write(SimPosition.Y);
+
+            msg.Write(MathUtils.AngleToByte(body.Rotation));
+
+            lastSentPos = SimPosition;
+        }
+
+        public void ClientReadPosition(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        {
+
+            body.TargetPosition = new Vector2(
+                msg.ReadFloat(),
+                msg.ReadFloat());
+
+            body.FarseerBody.Rotation = MathUtils.ByteToAngle(msg.ReadByte());
+
+            DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);
+
+            
+
+           /* //already interpolating with more up-to-date data -> ignore
+            if (MemPos.Count > 1 && MemPos[0].Timestamp > sendingTime)
+            {
+                return;
+            }
+
+            int index = 0;
+            while (index < MemPos.Count && sendingTime > MemPos[index].Timestamp)
+            {
+                index++;
+            }
+
+            //position with the same timestamp already in the buffer (duplicate packet?)
+            //  -> no need to add again
+            if (index < MemPos.Count && sendingTime == MemPos[index].Timestamp)
+            {
+                return;
+            }
+
+            MemPos.Insert(index, new PosInfo(newTargetPosition, Direction.None, sendingTime));*/
         }
 
         public static void Load(XElement element, Submarine submarine)

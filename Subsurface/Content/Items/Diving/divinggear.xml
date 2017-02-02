@@ -36,7 +36,7 @@
     
     <Sprite texture ="DivingMask.png" depth="0.55"/>
   
-    <Body radius="18" density="15"/>
+    <Body width="26" height="18" density="15"/>
 
     <Wearable limbtype="Head" slots="Any,Face">
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>

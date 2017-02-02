@@ -195,10 +195,9 @@ namespace Barotrauma.Items.Components
                 Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
                 bodyDropPos = rightHand.SimPosition;
 
-                if (item.body!=null)
+                if (item.body != null)
                 {
-                    item.body.LinearVelocity = rightHand.body.LinearVelocity;
-                    item.body.AngularVelocity = rightHand.body.AngularVelocity;
+                    item.body.ResetDynamics();
                 }
 
                 picker.Inventory.RemoveItem(item);

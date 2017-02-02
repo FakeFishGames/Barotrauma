@@ -8,7 +8,7 @@
 
     <Sprite texture ="headset.png" depth="0.6"/>
 
-    <Body radius="8" density="10"/>
+    <Body width="12" height="8" density="10"/>
 
     <WifiComponent range="20000.0" LinkToChat="true">
       <RequiredItems name="Battery Cell" type="Contained"/>      
@@ -34,7 +34,7 @@
 
     <Sprite texture ="clownmask.png" depth="0.6"/>
 
-    <Body radius="8" density="10"/>
+    <Body width="10" radius="10"  density="10"/>
 
     <Wearable limbtype="Head" slots="Any,Face">
       <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5"/>
