@@ -97,6 +97,10 @@ namespace Barotrauma
 
         public bool Locked;
 
+        private ushort[] receivedItemIDs;
+        private float syncItemsDelay;
+        private CoroutineHandle syncItemsCoroutine;
+
         public Vector2 CenterPos
         {
             get { return centerPos; }
@@ -285,6 +289,8 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime, bool subInventory = false)
         {
+            syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
+
             if (slots == null || isSubInventory != subInventory)
             {
                 CreateSlots();
@@ -539,12 +545,14 @@ namespace Barotrauma
             item.Sprite.Draw(spriteBatch, new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height / 2), item.Color);
         }
 
-        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             ServerWrite(msg, null);
+
+            syncItemsDelay = 1.0f;
         }
 
-        public void ServerRead(ClientNetObject type, Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Barotrauma.Networking.Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
             ushort[] newItemIDs = new ushort[capacity];
@@ -599,7 +607,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             for (int i = 0; i < capacity; i++)
             {
@@ -607,29 +615,62 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
         {
-            ushort[] newItemIDs = new ushort[capacity];
+            receivedItemIDs = new ushort[capacity];
 
             for (int i = 0; i < capacity; i++)
             {
-                newItemIDs[i] = msg.ReadUInt16();
+                receivedItemIDs[i] = msg.ReadUInt16();
             }
-            
+
+            if (syncItemsDelay > 0.0f)
+            {
+                //delay applying the new state if less than 1 second has passed since this client last sent a state to the server
+                //prevents the inventory from briefly reverting to an old state if items are moved around in quick succession
+                if (syncItemsCoroutine != null) CoroutineManager.StopCoroutines(syncItemsCoroutine);
+
+                syncItemsCoroutine = CoroutineManager.StartCoroutine(SyncItemsAfterDelay());
+            }
+            else
+            {
+                ApplyReceivedState();
+            }
+        }
+
+        private IEnumerable<object> SyncItemsAfterDelay()
+        {
+            while (syncItemsDelay > 0.0f)
+            {
+                syncItemsDelay -= CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            ApplyReceivedState();
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private void ApplyReceivedState()
+        {
+            if (receivedItemIDs == null) return;
+
             for (int i = 0; i < capacity; i++)
             {
-                if (newItemIDs[i] == 0)
+                if (receivedItemIDs[i] == 0)
                 {
                     if (Items[i] != null) Items[i].Drop();
                 }
                 else
                 {
-                    var item = Entity.FindEntityByID(newItemIDs[i]) as Item;
+                    var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
                     if (item == null) continue;
 
                     TryPutItem(item, i, true, false);
                 }
             }
+
+            receivedItemIDs = null;
         }
     }
 }
