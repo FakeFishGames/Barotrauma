@@ -75,14 +75,11 @@ namespace Barotrauma
         protected Vector2 prevPosition;
         protected float prevRotation;
 
-        protected Vector2 targetPosition;
-        //protected Vector2 targetVelocity;
-        protected float targetRotation;
-        //protected float targetAngularVelocity;
+        protected Vector2? targetPosition;
+        protected float? targetRotation;
 
         private Vector2 drawPosition;
         private float drawRotation;
-
 
         private float lastNetworkUpdateTime;
         public Vector2 LastSentPosition
@@ -109,24 +106,41 @@ namespace Barotrauma
             get { return bodyShape; }
         }
 
-        public Vector2 TargetPosition
+        public Vector2? TargetPosition
         {
             get { return targetPosition; }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
-                targetPosition.X = MathHelper.Clamp(value.X, -10000.0f, 10000.0f);
-                targetPosition.Y = MathHelper.Clamp(value.Y, -10000.0f, 10000.0f);
+                if (value == null)
+                {
+                    targetPosition = null;
+                }
+                else
+                {
+                    if (!MathUtils.IsValid((Vector2)value)) return;
+
+                    targetPosition = new Vector2(
+                        MathHelper.Clamp(((Vector2)value).X, -10000.0f, 10000.0f),
+                        MathHelper.Clamp(((Vector2)value).Y, -10000.0f, 10000.0f));
+                }
             }
         }
         
-        public float TargetRotation
+        public float? TargetRotation
         {
             get { return targetRotation; }
             set 
             {
-                if (!MathUtils.IsValid(value)) return;
-                targetRotation = value; 
+                if (value == null)
+                {
+                    targetRotation = null;
+                }
+                else
+                {
+                    if (!MathUtils.IsValid((float)value)) return;
+                    targetRotation = value;
+                }
+ 
             }
         }
 
@@ -378,25 +392,21 @@ namespace Barotrauma
 
         public void MoveToTargetPosition(bool lerp = true)
         {
-            if (targetPosition == Vector2.Zero)
+            if (targetPosition == null) return;
+
+            if (lerp && Vector2.Distance((Vector2)targetPosition, body.Position) < 10.0f)
             {
-                offsetFromTargetPos = Vector2.Zero;
-                return;
+                offsetFromTargetPos = (Vector2)targetPosition - (body.Position - offsetFromTargetPos);
+                prevPosition = (Vector2)targetPosition;
             }
 
-            if (lerp && Vector2.Distance(targetPosition, body.Position)<10.0f)
-            {
-                offsetFromTargetPos = targetPosition - (body.Position - offsetFromTargetPos);
-                prevPosition = targetPosition;
-            }
-
-            body.SetTransform(targetPosition, targetRotation == 0.0f ? body.Rotation : targetRotation);
-            targetPosition = Vector2.Zero;
+            body.SetTransform((Vector2)targetPosition, targetRotation == null ? body.Rotation : (float)targetRotation);
+            targetPosition = null;
         }
-        
+
         public void MoveToPos(Vector2 pos, float force, Vector2? pullPos = null)
         {
-            if (pullPos==null) pullPos = body.Position;
+            if (pullPos == null) pullPos = body.Position;
 
             Vector2 vel = body.LinearVelocity;
             Vector2 deltaPos = pos - (Vector2)pullPos;
@@ -445,7 +455,7 @@ namespace Barotrauma
             }
             else
             {
-                offsetFromTargetPos = Vector2.Lerp(offsetFromTargetPos, Vector2.Zero, 0.1f);
+                offsetFromTargetPos = Vector2.Lerp(offsetFromTargetPos, Vector2.Zero, 0.05f);
             }
         }
 
@@ -459,12 +469,33 @@ namespace Barotrauma
 
             SpriteEffects spriteEffect = (dir == 1.0f) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
-            if (GameMain.DebugDraw && !body.Awake)
+            if (GameMain.DebugDraw)
             {
-                color = Color.Blue;
+                if (!body.Awake) color = Color.Blue;
+
+                if (targetPosition != null)
+                {
+                    Vector2 pos = ConvertUnits.ToDisplayUnits((Vector2)targetPosition);
+                    if (Submarine != null) pos += Submarine.DrawPosition;
+
+                    GUI.DrawRectangle(spriteBatch,
+                        new Vector2(pos.X - 5, -(pos.Y + 5)),
+                        Vector2.One*10.0f, Color.Red, false, 0, 3);
+                }
+
+                if (offsetFromTargetPos != Vector2.Zero)
+                {
+                    Vector2 pos = ConvertUnits.ToDisplayUnits(body.Position);
+                    if (Submarine != null) pos += Submarine.DrawPosition;
+
+                    GUI.DrawLine(spriteBatch,
+                        new Vector2(pos.X, -pos.Y),
+                        new Vector2(DrawPosition.X, -DrawPosition.Y),
+                        Color.Cyan, 0, 5);
+                }
             }
             
-            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);            
+            sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, -drawRotation, scale, spriteEffect, depth);
         }
 
         public void DebugDraw(SpriteBatch spriteBatch, Color color)

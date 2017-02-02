@@ -1086,7 +1086,7 @@ namespace Barotrauma
 
             if (torso == null) return null;
 
-            Vector2 pos = (torso.body.TargetPosition != Vector2.Zero) ? torso.body.TargetPosition : torso.SimPosition;
+            Vector2 pos = (torso.body.TargetPosition != null) ? (Vector2)torso.body.TargetPosition : torso.SimPosition;
             Vector2 pickPos = mouseSimPos;
 
             if (Submarine != null)

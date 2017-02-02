@@ -77,7 +77,7 @@ namespace Barotrauma.Networking
             config.SimulatedDuplicatesChance = 0.05f;
             config.SimulatedMinimumLatency = 0.1f;
 
-            config.ConnectionTimeout = 5.0f;
+            config.ConnectionTimeout = 60.0f;
 #endif 
             config.Port = port;
             Port = port;
@@ -503,6 +503,11 @@ namespace Barotrauma.Networking
                             ClientWriteLobby(c);
                         }
                     }
+
+                    foreach (Item item in Item.ItemList)
+                    {
+                        item.NeedsPositionUpdate = false;
+                    }
                 }
 
                 updateTimer = DateTime.Now + updateInterval;
@@ -688,6 +693,9 @@ namespace Barotrauma.Networking
                     case ClientNetObject.ENTITY_STATE:
                         entityEventManager.Read(inc, c);
                         break;
+                    case ClientNetObject.VOTE:
+                        Voting.RegisterVote(inc, c);
+                        break;
                     default:
                         return;
                 }
@@ -763,6 +771,15 @@ namespace Barotrauma.Networking
 
                 outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
                 sub.ServerWrite(outmsg, c);
+                outmsg.WritePadBits();
+            }
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (!item.NeedsPositionUpdate) continue;
+
+                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                item.ServerWritePosition(outmsg, c);
                 outmsg.WritePadBits();
             }
 

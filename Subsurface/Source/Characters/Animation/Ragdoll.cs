@@ -584,9 +584,9 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.body.TargetPosition != Vector2.Zero)
+                if (limb.body.TargetPosition != null)
                 {
-                    Vector2 pos = ConvertUnits.ToDisplayUnits(limb.body.TargetPosition);
+                    Vector2 pos = ConvertUnits.ToDisplayUnits((Vector2)limb.body.TargetPosition);
                     if (currentHull != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
 
