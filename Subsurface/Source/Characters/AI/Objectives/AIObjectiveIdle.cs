@@ -82,10 +82,14 @@ namespace Barotrauma
                     else if (leftDist < WallAvoidDistance)
                     {
                         pathSteering.SteeringManual(deltaTime, Vector2.UnitX * (WallAvoidDistance-leftDist)/WallAvoidDistance);
+                        pathSteering.WanderAngle = 0.0f;
+                        return;
                     }
                     else if (rightDist < WallAvoidDistance)
                     {
                         pathSteering.SteeringManual(deltaTime, -Vector2.UnitX * (WallAvoidDistance-rightDist)/WallAvoidDistance);
+                        pathSteering.WanderAngle = MathHelper.Pi;
+                        return;
                     }
                 }
 
@@ -96,6 +100,8 @@ namespace Barotrauma
                 else
                 {
                     character.AIController.SteeringManager.SteeringWander();
+                    //reset vertical steering to prevent dropping down from platforms etc
+                    character.AIController.SteeringManager.ResetY();
                 }
 
                 return;                

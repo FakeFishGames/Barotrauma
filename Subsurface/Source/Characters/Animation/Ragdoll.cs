@@ -832,16 +832,14 @@ namespace Barotrauma
             {
                 flowForce = GetFlowForce();
 
-                inWater = false;
                 headInWater = false;
 
                 float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
 
                 float floorY = GetFloorY();
 
-                if (currentHull.Volume > currentHull.FullVolume * 0.95f ||
-                    (waterSurface - floorY > HeadPosition * 0.95f && Collider.SimPosition.Y < waterSurface))
-                    inWater = true;
+                inWater = currentHull.Volume > currentHull.FullVolume * 0.95f ||
+                    (waterSurface - floorY > HeadPosition * 0.95f && Collider.SimPosition.Y < waterSurface);
             }
 
             if (flowForce.LengthSquared() > 0.001f)
@@ -1010,6 +1008,7 @@ namespace Barotrauma
                     {
                         case Physics.CollisionStairs:
                             Structure structure = fixture.Body.UserData as Structure;
+                            if (inWater && targetMovement.Y < 0.5f) return -1;
                             if (colliderBottomDisplay.Y < structure.Rect.Y - structure.Rect.Height + 30 && TargetMovement.Y < 0.5f) return -1;
                             break;
                         case Physics.CollisionPlatform:
@@ -1048,7 +1047,15 @@ namespace Barotrauma
 
                     float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
                     float targetY = tfloorY + Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor;
-                    
+
+                    float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
+
+                    float floorY = GetFloorY();
+
+                    if (currentHull.Volume > currentHull.FullVolume * 0.95f ||
+                        (waterSurface - floorY > HeadPosition * 0.95f && Collider.SimPosition.Y < waterSurface))
+                        inWater = true;
+
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && Collider.SimPosition.Y<targetY && !forceImmediate)
                     {
                         Vector2 newSpeed = Collider.LinearVelocity;
