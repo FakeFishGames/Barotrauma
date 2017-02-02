@@ -60,6 +60,16 @@ namespace Barotrauma
             steering = Vector2.Zero;
         }
 
+        public void ResetX()
+        {
+            steering.X = 0.0f;
+        }
+
+        public void ResetY()
+        {
+            steering.Y = 0.0f;
+        }
+
         public virtual void Update(float speed = 1.0f)
         {
             if (steering == Vector2.Zero || !MathUtils.IsValid(steering))

@@ -840,11 +840,14 @@ namespace Barotrauma
         {
             ViewTarget = null;
             if (!AllowInput) return;
-            
-            Vector2 targetMovement = GetTargetMovement();
 
-            AnimController.TargetMovement = targetMovement;
-            AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < 0.0f;
+            if (!(this is AICharacter) || controlled == this)
+            {
+                Vector2 targetMovement = GetTargetMovement();
+
+                AnimController.TargetMovement = targetMovement;
+                AnimController.IgnorePlatforms = AnimController.TargetMovement.Y < 0.0f;
+            }
 
             if (AnimController is HumanoidAnimController)
             {
