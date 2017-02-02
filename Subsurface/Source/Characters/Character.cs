@@ -1378,7 +1378,16 @@ namespace Barotrauma
                         cursorPosition = (ViewTarget == null ? AnimController.Collider.Position : ViewTarget.Position)
                             + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
 
-                        closestItem = Entity.FindEntityByID(memInput[memInput.Count - 1].interact) as Item;
+                        var closestEntity = Entity.FindEntityByID(memInput[memInput.Count - 1].interact);
+                        if (closestEntity is Item)
+                        {
+                            closestItem = closestEntity as Item;
+                        }
+                        else if (closestEntity is Character)
+                        {
+                            closestCharacter = closestEntity as Character;
+                        }
+
                         memInput.RemoveAt(memInput.Count - 1);
 
                         TransformCursorPos();
@@ -1419,7 +1428,14 @@ namespace Barotrauma
                 NetInputMem newMem = new NetInputMem();
                 newMem.states = newInput;
                 newMem.intAim = intAngle;
-                newMem.interact = closestItem != null ? closestItem.ID : (UInt16)0;
+                if (closestItem != null)
+                {
+                    newMem.interact = closestItem.ID;
+                }
+                else if (closestCharacter != null)
+                {
+                    newMem.interact = closestCharacter.ID;
+                }
 
                 memInput.Insert(0, newMem);
                 LastNetworkUpdateID++;
