@@ -774,7 +774,7 @@ namespace Barotrauma.Networking
 
             Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
 
-            if (subSelectionMode==SelectionMode.Random)
+            if (subSelectionMode == SelectionMode.Random)
             {
                 GameMain.NetLobbyScreen.SubList.Select(Rand.Range(0, GameMain.NetLobbyScreen.SubList.CountChildren));
             }

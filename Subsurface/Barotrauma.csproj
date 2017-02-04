@@ -169,7 +169,7 @@
     <Compile Include="Source\Particles\ParticleEmitter.cs" />
     <Compile Include="Source\Networking\GameServerSettings.cs" />
     <Compile Include="Source\Screens\BlurEffect.cs" />
-    <Compile Include="Source\Screens\NetLobbyVoting.cs" />
+    <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Timing.cs" />
     <Compile Include="Source\Utils\MTRandom.cs" />

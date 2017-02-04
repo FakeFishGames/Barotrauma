@@ -2486,7 +2486,6 @@ namespace Barotrauma
         {
             if (GameMain.Server != null) return null;
 
-
             bool noInfo         = inc.ReadBoolean();
             ushort id           = inc.ReadUInt16();
             string configPath   = inc.ReadString();
@@ -2539,6 +2538,14 @@ namespace Barotrauma
                     character.memInput.Clear();
                     character.memPos.Clear();
                     character.memLocalPos.Clear();
+                }
+                else
+                {
+                    var ownerClient = GameMain.Client.ConnectedClients.Find(c => c.ID == ownerId);
+                    if (ownerClient != null)
+                    {
+                        ownerClient.Character = character;
+                    }
                 }
 
                 if (configPath == Character.HumanConfigFile)

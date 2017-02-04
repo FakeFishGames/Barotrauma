@@ -465,6 +465,8 @@ namespace Barotrauma.Networking
                         
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
+                endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
+
                 if (respawnManager != null)
                 {
                     respawnManager.Update(deltaTime);
@@ -632,8 +634,6 @@ namespace Barotrauma.Networking
             
             gameStarted = true;
 
-            endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
-
             GameMain.GameScreen.Select();
             
             yield return CoroutineStatus.Success;
@@ -744,6 +744,9 @@ namespace Barotrauma.Networking
                             string selectShuttleName    = inc.ReadString();
                             string selectShuttleHash    = inc.ReadString();
 
+                            bool allowSubVoting         = inc.ReadBoolean();
+                            bool allowModeVoting        = inc.ReadBoolean();
+
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
                             int missionTypeIndex        = inc.ReadRangedInteger(0, Mission.MissionTypes.Count - 1);
                             int modeIndex               = inc.ReadByte();
@@ -754,10 +757,14 @@ namespace Barotrauma.Networking
                             float autoRestartTimer      = autoRestartEnabled ? inc.ReadFloat() : 0.0f;
 
                             int clientCount             = inc.ReadByte();
-                            List<string> clientNames = new List<string>();
+                            List<string> clientNames    = new List<string>();
+                            List<byte> clientIDs        = new List<byte>();
+                            List<ushort> characterIDs   = new List<ushort>();
                             for (int i = 0; i < clientCount; i++)
                             {
+                                clientIDs.Add(inc.ReadByte());
                                 clientNames.Add(inc.ReadString());
+                                characterIDs.Add(inc.ReadUInt16());
                             }
 
                             //ignore the message if we already a more up-to-date one
@@ -768,28 +775,49 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.ServerName = serverName;
                                 GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
 
-                                GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
+                                if (!allowSubVoting)
+                                {
+                                    GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
+                                }
                                 GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
                                 GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
                                 GameMain.NetLobbyScreen.SetMissionType(missionTypeIndex);
-                                GameMain.NetLobbyScreen.SelectMode(modeIndex);
+
+                                if (!allowModeVoting)
+                                {
+                                    GameMain.NetLobbyScreen.SelectMode(modeIndex);
+                                }
 
                                 GameMain.NetLobbyScreen.LevelSeed = levelSeed;
                                 
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
-                                
+
+                                ConnectedClients.Clear();
                                 GameMain.NetLobbyScreen.ClearPlayers();
-                                foreach (string clientName in clientNames)
+                                for (int i = 0; i < clientNames.Count; i++)
                                 {
-                                    GameMain.NetLobbyScreen.AddPlayer(clientName);
+                                    var newClient = new Client(clientNames[i], clientIDs[i]);
+                                    if (characterIDs[i] > 0)
+                                    {
+                                        newClient.Character = Entity.FindEntityByID(characterIDs[i]) as Character;
+                                    }
+
+                                    ConnectedClients.Add(newClient);
+                                    GameMain.NetLobbyScreen.AddPlayer(newClient.name);
                                 }
+
+                                Voting.AllowSubVoting = allowSubVoting;
+                                Voting.AllowModeVoting = allowModeVoting;
                             }
                         }
                         lastSentChatMsgID = inc.ReadUInt32();
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
+                        break;
+                    case ServerNetObject.VOTE:
+                        Voting.ClientRead(inc);
                         break;
                 }
             }
@@ -1018,6 +1046,17 @@ namespace Barotrauma.Networking
             return true;
         }
 
+        public void Vote(VoteType voteType, object data)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.UPDATE_LOBBY);
+            msg.Write((byte)ClientNetObject.VOTE);
+            Voting.ClientWrite(msg, voteType, data);
+            msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
         public bool VoteForKick(GUIButton button, object userdata)
         {
             var votedClient = otherClients.Find(c => c.Character == userdata);
@@ -1027,7 +1066,7 @@ namespace Barotrauma.Networking
 
             if (votedClient == null) return false;
 
-            //Vote(VoteType.Kick, votedClient);
+            Vote(VoteType.Kick, votedClient);
 
             button.Enabled = false;
 
@@ -1062,7 +1101,7 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            //Vote(VoteType.EndRound, tickBox.Selected);
+            Vote(VoteType.EndRound, tickBox.Selected);
 
             return false;
         }
