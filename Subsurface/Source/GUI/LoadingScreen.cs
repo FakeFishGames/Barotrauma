@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,6 +24,9 @@ namespace Barotrauma
         
         private float? loadState;
 
+        Video splashScreenVideo;
+        VideoPlayer videoPlayer;
+        
         public Vector2 TitleSize
         {
             get { return new Vector2(titleTexture.Width, titleTexture.Height); }
@@ -49,10 +53,23 @@ namespace Barotrauma
             get;
             set;
         }
-        
 
         public LoadingScreen(GraphicsDevice graphics)
         {
+            if (GameMain.Config.EnableSplashScreen)
+            {
+                try
+                {
+                    splashScreenVideo = GameMain.Instance.Content.Load<Video>("utg_4"); 
+                } 
+              
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to load splashscreen", e);
+                    GameMain.Config.EnableSplashScreen = false;
+                }
+            }
+
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
             monsterTexture = TextureLoader.FromFile("Content/UI/titleMonster.png");
             titleTexture = TextureLoader.FromFile("Content/UI/titleText.png");
@@ -65,6 +82,21 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
         {
+            if (GameMain.Config.EnableSplashScreen && splashScreenVideo != null)
+            {
+                try
+                {
+                    DrawSplashScreen(spriteBatch);
+                    if (videoPlayer != null && videoPlayer.State == MediaState.Playing)
+                        return;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Playing splash screen video failed", e);
+                    GameMain.Config.EnableSplashScreen = false;
+                }
+            }
+                        
             drawn = true;
 
             graphics.SetRenderTarget(renderTarget);
@@ -139,6 +171,42 @@ namespace Barotrauma
 
         }
 
+        private void DrawSplashScreen(SpriteBatch spriteBatch)
+        {
+            if (videoPlayer == null)
+            {
+                videoPlayer = new VideoPlayer();
+                videoPlayer.Play(splashScreenVideo);
+            }
+            else
+            {
+                Texture2D videoTexture = null;
+
+                if (videoPlayer.State == MediaState.Stopped)
+                {
+                    videoPlayer.Dispose();
+                    videoPlayer = null;
+
+                    splashScreenVideo.Dispose();
+                    splashScreenVideo = null;
+                }
+                else
+                {
+                    videoTexture = videoPlayer.GetTexture();
+
+                    spriteBatch.Begin();
+                    spriteBatch.Draw(videoTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+                    spriteBatch.End();
+
+                    if (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown())
+                    {
+                        videoPlayer.Stop();
+                    }
+                }
+
+            }
+        }
+ 
         bool drawn;
         public IEnumerable<object> DoLoading(IEnumerable<object> loader)
         {
