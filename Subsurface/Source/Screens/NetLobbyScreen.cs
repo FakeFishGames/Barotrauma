@@ -382,8 +382,8 @@ namespace Barotrauma
             missionTypeButtons[0].Enabled = GameMain.Server != null;
             missionTypeButtons[1].Enabled = GameMain.Server != null;
 
-            ServerName = (GameMain.Server==null) ? "Server" : GameMain.Server.Name;
-            
+            ServerName = (GameMain.Server == null) ? "Server" : GameMain.Server.Name;
+
             infoFrame.RemoveChild(StartButton);
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
@@ -732,7 +732,7 @@ namespace Barotrauma
         {
             if (GameMain.Client == null) return false;
 
-            VoteType voteType = VoteType.Unknown;
+            VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList)
             {
                 if (!GameMain.Client.Voting.AllowSubVoting) return false;
@@ -748,7 +748,7 @@ namespace Barotrauma
                 return false;
             }
 
-            //GameMain.Client.Vote(voteType, userData);
+            GameMain.Client.Vote(voteType, userData);
 
             return true;
         }
@@ -1195,7 +1195,9 @@ namespace Barotrauma
             var matchingListSub = subList.children.Find(c => c.UserData != null && (c.UserData as Submarine).Name == subName) as GUITextBlock;
             if (matchingListSub != null)
             {
+                subList.OnSelected -= VotableClicked;
                 subList.Select(subList.children.IndexOf(matchingListSub), true);
+                subList.OnSelected += VotableClicked;
             }
 
             Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);

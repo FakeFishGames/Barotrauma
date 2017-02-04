@@ -239,14 +239,7 @@ namespace Barotrauma
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())
                     {
-                        Debug.WriteLine("clicked");
                         Select(i);
-                        //selected = child;
-                        //if (OnSelected != null)
-                        //{
-                        //    if (!OnSelected(selected, child.UserData)) selected = null;
-                        //}
-
                     }
                 }
                 else if (selected.Contains(child))
@@ -301,8 +294,7 @@ namespace Barotrauma
 
             bool wasSelected = true;
             if (OnSelected != null) wasSelected = OnSelected(children[childIndex], children[childIndex].UserData) || force;
-
-
+            
             if (!wasSelected) return;
 
             if (SelectMultiple)

@@ -370,8 +370,7 @@ namespace Barotrauma.Networking
                         Log("Ending round (submarine reached the end of the level)", Color.Cyan);
                     }
 
-                    EndGame();               
-                    UpdateNetLobby(null,null);
+                    EndGame();
                     return;
                 }
             }
@@ -629,6 +628,9 @@ namespace Barotrauma.Networking
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
                         break;
+                    case ClientNetObject.VOTE:
+                        Voting.ServerRead(inc, c);
+                        break;
                     default:
                         return;
                         //break;
@@ -694,7 +696,7 @@ namespace Barotrauma.Networking
                         entityEventManager.Read(inc, c);
                         break;
                     case ClientNetObject.VOTE:
-                        Voting.RegisterVote(inc, c);
+                        Voting.ServerRead(inc, c);
                         break;
                     default:
                         return;
@@ -815,6 +817,9 @@ namespace Barotrauma.Networking
                 outmsg.Write((GameMain.NetLobbyScreen.ShuttleList.SelectedData as Submarine).Name);
                 outmsg.Write((GameMain.NetLobbyScreen.ShuttleList.SelectedData as Submarine).MD5Hash.ToString());
 
+                outmsg.Write(Voting.AllowSubVoting);
+                outmsg.Write(Voting.AllowModeVoting);
+
                 outmsg.WriteRangedInteger(0, 2, (int)TraitorsEnabled);
 
                 outmsg.WriteRangedInteger(0, Mission.MissionTypes.Count - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
@@ -831,7 +836,9 @@ namespace Barotrauma.Networking
                 outmsg.Write((byte)connectedClients.Count);
                 foreach (Client client in connectedClients)
                 {
+                    outmsg.Write(client.ID);
                     outmsg.Write(client.name);
+                    outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
                 }
             }
             else
@@ -965,8 +972,7 @@ namespace Barotrauma.Networking
                 //try again in >5 seconds
                 if (autoRestart) AutoRestartTimer = Math.Max(AutoRestartInterval, 5.0f);
                 GameMain.NetLobbyScreen.StartButton.Enabled = true;
-
-                UpdateNetLobby(null, null);
+                GameMain.NetLobbyScreen.LastUpdateID++;
 
                 couldNotStart = true;
             }
@@ -1294,6 +1300,8 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.RemovePlayer(client.name);            
             connectedClients.Remove(client);
 
+            UpdateVoteStatus();
+
             AddChatMessage(msg, ChatMessageType.Server);
 
             UpdateCrewFrame();
@@ -1457,6 +1465,11 @@ namespace Barotrauma.Networking
                         break;
                 }
 
+                if (type == ChatMessageType.Server)
+                {
+                    senderName = null;
+                }
+
                 var chatMsg = ChatMessage.Create(
                     senderName,
                     modifiedMessage, 
@@ -1598,21 +1611,29 @@ namespace Barotrauma.Networking
         {
             if (server.Connections.Count == 0) return;
 
-            var clientsToKick = connectedClients.FindAll(c => c.KickVoteCount > connectedClients.Count * KickVoteRequiredRatio);
-            //clientsToKick.ForEach(c => KickClient(c));
-            
-        }
+            var clientsToKick = connectedClients.FindAll(c => c.KickVoteCount >= connectedClients.Count * KickVoteRequiredRatio);
+            foreach (Client c in clientsToKick)
+            {
+                SendChatMessage(c.name+" has been kicked from the server.", ChatMessageType.Server, null);
+                KickClient(c);
+            }
+                        
+            GameMain.NetLobbyScreen.LastUpdateID++;
 
-        public bool UpdateNetLobby(object obj)
-        {
-            return UpdateNetLobby(null, obj);
-        }
+            NetOutgoingMessage msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
+            msg.Write((byte)ServerNetObject.VOTE);
+            Voting.ServerWrite(msg);
+            msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
-        public bool UpdateNetLobby(GUIComponent component, object obj)
-        {
-            if (server.Connections.Count == 0) return true;
-            
-            return true;
+            server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
+
+            if (Voting.AllowEndVoting && EndVoteMax > 0 &&
+                ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
+            {
+                Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", Color.Cyan);
+                EndGame();
+            }
         }
 
         public void UpdateClientPermissions(Client client)
@@ -1757,8 +1778,6 @@ namespace Barotrauma.Networking
                     break;
                 }
             }
-
-            UpdateNetLobby(null);
         }
 
         private Client FindClientWithJobPreference(List<Client> clients, JobPrefab job, bool forceAssign = false)

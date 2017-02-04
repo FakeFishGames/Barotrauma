@@ -204,7 +204,7 @@ namespace Barotrauma.Networking
 
             GameMain.NetLobbyScreen.AddPlayer(newClient.name);
 
-            AddChatMessage(clName+" has joined the server.", ChatMessageType.Server);
+            GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
         }
     }
 }
