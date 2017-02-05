@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
             {
                 this.password = Encoding.UTF8.GetString(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)));
             }
-            
+
             config = new NetPeerConfiguration("barotrauma");
 
             netStats = new NetStats();
@@ -78,6 +78,8 @@ namespace Barotrauma.Networking
             config.SimulatedMinimumLatency = 0.1f;
 
             config.ConnectionTimeout = 60.0f;
+
+            NetIdUtils.Test();
 #endif 
             config.Port = port;
             Port = port;
@@ -622,8 +624,8 @@ namespace Barotrauma.Networking
                 {
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
-                        c.lastRecvGeneralUpdate = Math.Min(Math.Max(c.lastRecvGeneralUpdate, inc.ReadUInt32()), GameMain.NetLobbyScreen.LastUpdateID);
-                        c.lastRecvChatMsgID     = Math.Min(Math.Max(c.lastRecvChatMsgID, inc.ReadUInt32()), c.lastChatMsgQueueID);
+                        c.lastRecvGeneralUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.lastRecvGeneralUpdate, GameMain.NetLobbyScreen.LastUpdateID);
+                        c.lastRecvChatMsgID     = NetIdUtils.Clamp(inc.ReadUInt16(), c.lastRecvChatMsgID, c.lastChatMsgQueueID);
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
@@ -657,7 +659,7 @@ namespace Barotrauma.Networking
                     case ClientNetObject.SYNC_IDS:
                         //TODO: might want to use a clever class for this
                         
-                        UInt32 lastRecvChatMsgID        = inc.ReadUInt32();
+                        UInt16 lastRecvChatMsgID        = inc.ReadUInt16();
                         UInt32 lastRecvEntitySpawnID    = inc.ReadUInt32();
                         UInt32 lastRecvEntityEventID    = inc.ReadUInt32();
 
@@ -734,7 +736,7 @@ namespace Barotrauma.Networking
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
             outmsg.Write(c.lastSentEntityEventID);
 
-            c.chatMsgQueue.RemoveAll(cMsg => cMsg.NetStateID <= c.lastRecvChatMsgID);
+            c.chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.lastRecvChatMsgID));
             foreach (ChatMessage cMsg in c.chatMsgQueue)
             {
                 cMsg.ServerWrite(outmsg, c);
@@ -797,8 +799,8 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
 
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
-            
-            if (c.lastRecvGeneralUpdate<GameMain.NetLobbyScreen.LastUpdateID)
+
+            if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.lastRecvGeneralUpdate))
             {
                 outmsg.Write(true);
                 outmsg.WritePadBits();
@@ -849,7 +851,7 @@ namespace Barotrauma.Networking
 
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
 
-            c.chatMsgQueue.RemoveAll(cMsg => cMsg.NetStateID <= c.lastRecvChatMsgID);
+            c.chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.lastRecvChatMsgID));
             foreach (ChatMessage cMsg in c.chatMsgQueue)
             {
                 cMsg.ServerWrite(outmsg, c);
@@ -1480,10 +1482,10 @@ namespace Barotrauma.Networking
                     modifiedMessage, 
                     (ChatMessageType)type,
                     senderCharacter);
-                  
-                chatMsg.NetStateID = client.chatMsgQueue.Count > 0 ? 
-                    client.chatMsgQueue.Last().NetStateID + 1 : 
-                    client.lastRecvChatMsgID+1;
+                
+                chatMsg.NetStateID = client.chatMsgQueue.Count > 0 ?
+                    (ushort)(client.chatMsgQueue.Last().NetStateID + 1) :
+                    (ushort)(client.lastRecvChatMsgID + 1);
 
                 client.chatMsgQueue.Add(chatMsg);
                 client.lastChatMsgQueueID = chatMsg.NetStateID;

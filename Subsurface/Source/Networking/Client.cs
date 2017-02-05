@@ -30,11 +30,11 @@ namespace Barotrauma.Networking
         public NetConnection Connection { get; set; }
         public string version;
         public bool inGame;
-        public UInt32 lastRecvGeneralUpdate = 0;
+        public UInt16 lastRecvGeneralUpdate = 0;
 
         public bool hasLobbyData = false;
-        public UInt32 lastSentChatMsgID = 0; //last msg this client said
-        public UInt32 lastRecvChatMsgID = 0; //last msg this client knows about
+        public UInt16 lastSentChatMsgID = 0; //last msg this client said
+        public UInt16 lastRecvChatMsgID = 0; //last msg this client knows about
 
         public UInt32 lastSentEntityEventID = 0;
         public UInt32 lastRecvEntityEventID = 0;
@@ -42,7 +42,7 @@ namespace Barotrauma.Networking
         public UInt32 lastRecvEntitySpawnID = 0;
 
         public List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
-        public UInt32 lastChatMsgQueueID;
+        public UInt16 lastChatMsgQueueID;
         public float ChatSpamSpeed;
         public float ChatSpamTimer;
         public int ChatSpamCount;

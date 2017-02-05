@@ -47,9 +47,9 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public static UInt32 LastID = 0;
+        public static UInt16 LastID = 0;
 
-        public UInt32 NetStateID
+        public UInt16 NetStateID
         {
             get;
             set;
@@ -138,9 +138,9 @@ namespace Barotrauma.Networking
 
         static public void ServerRead(NetIncomingMessage msg, Client c)
         {
-            UInt32 ID = msg.ReadUInt32();
+            UInt16 ID = msg.ReadUInt16();
             string txt = msg.ReadString();
-            if (c.lastSentChatMsgID < ID)
+            if (NetIdUtils.IdMoreRecent(ID, c.lastSentChatMsgID))
             {
                 //this chat message is new to the server
                 GameMain.Server.SendChatMessage(txt, null, c);
@@ -169,7 +169,7 @@ namespace Barotrauma.Networking
 
         static public void ClientRead(NetIncomingMessage msg)
         {
-            UInt32 ID = msg.ReadUInt32();
+            UInt16 ID = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();           
             string txt = msg.ReadString();
 
@@ -189,7 +189,7 @@ namespace Barotrauma.Networking
                 senderName = msg.ReadString();
             }
 
-            if (ID > LastID)
+            if (NetIdUtils.IdMoreRecent(ID, LastID))
             {
                 GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
                 LastID = ID;

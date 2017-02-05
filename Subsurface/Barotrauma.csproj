@@ -163,6 +163,7 @@
     <Compile Include="Source\Networking\NetEntityEvent\NetEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
+    <Compile Include="Source\Networking\NetIdUtils.cs" />
     <Compile Include="Source\Networking\RespawnManager.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
