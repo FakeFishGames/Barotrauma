@@ -35,8 +35,8 @@ namespace Barotrauma.Networking
         private int nonce;
         private string saltedPw;
 
-        private UInt32 lastSentChatMsgID = 0; //last message this client has successfully sent
-        private UInt32 lastQueueChatMsgID = 0; //last message added to the queue
+        private UInt16 lastSentChatMsgID = 0; //last message this client has successfully sent
+        private UInt16 lastQueueChatMsgID = 0; //last message added to the queue
         private List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
 
         public UInt32 LastSentEntityEventID;
@@ -729,13 +729,13 @@ namespace Barotrauma.Networking
 
                         if (lobbyUpdated)
                         {
-                            UInt32 updateID     = inc.ReadUInt32();
+                            UInt16 updateID     = inc.ReadUInt16();
                             string serverName   = inc.ReadString();
                             string serverText   = inc.ReadString();
  
                             if (inc.ReadBoolean())
                             {
-                                ReadInitialUpdate(inc, updateID <= GameMain.NetLobbyScreen.LastUpdateID);
+                                ReadInitialUpdate(inc, !NetIdUtils.IdMoreRecent(updateID,GameMain.NetLobbyScreen.LastUpdateID));
                             }
 
                             string selectSubName        = inc.ReadString();
@@ -768,7 +768,7 @@ namespace Barotrauma.Networking
                             }
 
                             //ignore the message if we already a more up-to-date one
-                            if (updateID > GameMain.NetLobbyScreen.LastUpdateID)
+                            if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID))
                             {
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
@@ -811,7 +811,7 @@ namespace Barotrauma.Networking
                                 Voting.AllowModeVoting = allowModeVoting;
                             }
                         }
-                        lastSentChatMsgID = inc.ReadUInt32();
+                        lastSentChatMsgID = inc.ReadUInt16();
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
@@ -833,7 +833,7 @@ namespace Barotrauma.Networking
                 switch (objHeader)
                 {
                     case ServerNetObject.SYNC_IDS:
-                        lastSentChatMsgID = inc.ReadUInt32();
+                        lastSentChatMsgID = inc.ReadUInt16();
                         LastSentEntityEventID = inc.ReadUInt32();
                         break;
                     case ServerNetObject.ENTITY_POSITION:
@@ -878,11 +878,8 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
-            ChatMessage removeMsg;
-            while ((removeMsg=chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastSentChatMsgID)) != null)
-            {
-                chatMsgQueue.Remove(removeMsg);
-            }
+
+            chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
 
             foreach (ChatMessage cMsg in chatMsgQueue)
             {
@@ -903,11 +900,7 @@ namespace Barotrauma.Networking
             outmsg.Write(Entity.Spawner.NetStateID);
             outmsg.Write(entityEventManager.LastReceivedID);
 
-            ChatMessage removeMsg;
-            while ((removeMsg = chatMsgQueue.Find(cMsg => cMsg.NetStateID <= lastSentChatMsgID)) != null)
-            {
-                chatMsgQueue.Remove(removeMsg);
-            }
+            chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
 
             foreach (ChatMessage cMsg in chatMsgQueue)
             {

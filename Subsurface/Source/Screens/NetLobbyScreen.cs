@@ -52,9 +52,8 @@ namespace Barotrauma
         public bool IsServer;
         public string ServerName;
 
-        const float NetworkUpdateInterval = 1.0f;
-        private UInt32 lastUpdateID;
-        public UInt32 LastUpdateID
+        private UInt16 lastUpdateID;
+        public UInt16 LastUpdateID
         {
             get { if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++; return lastUpdateID; }
             set { if (GameMain.Server != null) return; lastUpdateID = value; }
