@@ -1740,15 +1740,15 @@ namespace Barotrauma
 
             if (info != null)
             {
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f/cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
-                
-                if (Character.Controlled != null && TeamID!=Character.Controlled.TeamID)
+
+                if (Character.Controlled != null && TeamID != Character.Controlled.TeamID)
                 {
                     nameColor = Color.Red;
                 }
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos + new Vector2(1.0f/cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f,Vector2.Zero, 1.0f / cam.Zoom,SpriteEffects.None,0.001f);
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f/cam.Zoom, SpriteEffects.None, 0.0f);
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
+                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
 
                 if (GameMain.DebugDraw)
                 {
@@ -2461,20 +2461,19 @@ namespace Barotrauma
             {
                 msg.Write(true);
                 msg.Write(ownerClient.ID);
-                msg.Write(TeamID);
             }
             else if (GameMain.Server.Character == this)
             {
                 msg.Write(true);
                 msg.Write((byte)0);
-                msg.Write(TeamID);
             }
             else
             {
                 msg.Write(false);
             }
-
+            
             msg.Write(Info.Name);
+            msg.Write(TeamID);
 
             msg.Write(this is AICharacter);
             msg.Write(Info.Gender == Gender.Female);
@@ -2508,9 +2507,10 @@ namespace Barotrauma
             {
                 bool hasOwner       = inc.ReadBoolean();
                 int ownerId         = hasOwner ? inc.ReadByte() : -1;
-                byte teamID         = hasOwner ? inc.ReadByte() : (byte)0;
+                
 
                 string newName      = inc.ReadString();
+                byte teamID         = inc.ReadByte();
 
                 bool hasAi          = inc.ReadBoolean();
                 bool isFemale       = inc.ReadBoolean();

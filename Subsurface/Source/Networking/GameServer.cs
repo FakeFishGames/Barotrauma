@@ -546,7 +546,7 @@ namespace Barotrauma.Networking
                         //game already started -> send start message immediately
                         if (gameStarted)
                         {
-                            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
+                            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClient);
                         }
                     }
                     break;
@@ -1097,46 +1097,50 @@ namespace Barotrauma.Networking
         {
             foreach (Client client in clients)
             {
-                NetOutgoingMessage msg = server.CreateMessage();
-                msg.Write((byte)ServerPacketHeader.STARTGAME);
+                SendStartMessage(seed, selectedSub, selectedMode, client);
+            }       
+        }
 
-                msg.Write(seed);
+        private void SendStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode, Client client)
+        {
+            NetOutgoingMessage msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.STARTGAME);
 
-                msg.Write(GameMain.NetLobbyScreen.LevelSeed);
+            msg.Write(seed);
 
-                msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
+            msg.Write(GameMain.NetLobbyScreen.LevelSeed);
 
-                msg.Write(selectedSub.Name);
-                msg.Write(selectedSub.MD5Hash.Hash);
+            msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
 
-                msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
-                msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
+            msg.Write(selectedSub.Name);
+            msg.Write(selectedSub.MD5Hash.Hash);
 
-                msg.Write(selectedMode.Name);
+            msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
+            msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
-                bool missionAllowRespawn =
-                    !(GameMain.GameSession.gameMode is MissionMode) ||
-                    ((MissionMode)GameMain.GameSession.gameMode).Mission.AllowRespawn;
+            msg.Write(selectedMode.Name);
 
-                msg.Write(AllowRespawn && missionAllowRespawn);
-                msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
+            bool missionAllowRespawn =
+                !(GameMain.GameSession.gameMode is MissionMode) ||
+                ((MissionMode)GameMain.GameSession.gameMode).Mission.AllowRespawn;
 
-                if (TraitorManager != null &&
-                    TraitorManager.TraitorCharacter != null &&
-                    TraitorManager.TargetCharacter != null && 
-                    TraitorManager.TraitorCharacter == client.Character)
-                {
-                    msg.Write(true);
-                    msg.Write(TraitorManager.TargetCharacter.Name);
-                }
-                else
-                {
-                    msg.Write(false);
-                }
-                
-                server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
+            msg.Write(AllowRespawn && missionAllowRespawn);
+            msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
+
+            if (TraitorManager != null &&
+                TraitorManager.TraitorCharacter != null &&
+                TraitorManager.TargetCharacter != null &&
+                TraitorManager.TraitorCharacter == client.Character)
+            {
+                msg.Write(true);
+                msg.Write(TraitorManager.TargetCharacter.Name);
             }
-       
+            else
+            {
+                msg.Write(false);
+            }
+
+            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
         }
 
         public void EndGame()
@@ -1468,6 +1472,7 @@ namespace Barotrauma.Networking
                 if (type == ChatMessageType.Server)
                 {
                     senderName = null;
+                    senderCharacter = null;
                 }
 
                 var chatMsg = ChatMessage.Create(
@@ -1716,18 +1721,24 @@ namespace Barotrauma.Networking
             unassigned = new List<Client>(unassigned);
             
             int[] assignedClientCount = new int[JobPrefab.List.Count];
-
-            if (characterInfo!=null && assignHost)
+            
+            if (characterInfo != null && assignHost)
             {
-                assignedClientCount[JobPrefab.List.FindIndex(jp => jp == GameMain.NetLobbyScreen.JobPreferences[0])]=1;
+                assignedClientCount[JobPrefab.List.FindIndex(jp => jp == GameMain.NetLobbyScreen.JobPreferences[0])] = 1;                
+            }
+            else if (myCharacter != null && !myCharacter.IsDead)
+            {
+                assignedClientCount[JobPrefab.List.IndexOf(myCharacter.Info.Job.Prefab)] = 1;  
             }
 
+            //count the clients who already have characters with an assigned job
             foreach (Client c in connectedClients)
             {
                 if (unassigned.Contains(c)) continue;
-                if (c.Character == null || !c.Character.IsDead) continue;
-
-                assignedClientCount[JobPrefab.List.IndexOf(c.Character.Info.Job.Prefab)]++;
+                if (c.Character != null && !c.Character.IsDead)
+                {
+                    assignedClientCount[JobPrefab.List.IndexOf(c.Character.Info.Job.Prefab)]++;
+                }
             }
 
             //if any of the players has chosen a job that is Always Allowed, give them that job
