@@ -17,19 +17,19 @@ namespace Barotrauma
         public readonly Direction Direction;
 
         public readonly float Timestamp;
-        public readonly UInt32 ID;
+        public readonly UInt16 ID;
 
         public PosInfo(Vector2 pos, Direction dir, float time)
             : this(pos, dir, 0, time)
         {
         }
 
-        public PosInfo(Vector2 pos, Direction dir, UInt32 ID)
+        public PosInfo(Vector2 pos, Direction dir, UInt16 ID)
             : this(pos, dir, ID, 0.0f)
         {
         }
 
-        public PosInfo(Vector2 pos, Direction dir, UInt32 ID, float time)
+        public PosInfo(Vector2 pos, Direction dir, UInt16 ID, float time)
         {
             Position = pos;
             Direction = dir;

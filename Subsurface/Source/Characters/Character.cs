@@ -105,7 +105,7 @@ namespace Barotrauma
 
         private CharacterInventory inventory;
 
-        public UInt32 LastNetworkUpdateID = 0;
+        public UInt16 LastNetworkUpdateID = 0;
 
         //public int LargeUpdateTimer;
 
@@ -2083,16 +2083,9 @@ namespace Barotrauma
             {
                 case ClientNetObject.CHARACTER_INPUT:
                     
-                    UInt32 networkUpdateID  = msg.ReadUInt32();
+                    UInt16 networkUpdateID  = msg.ReadUInt16();
                     byte inputCount         = msg.ReadByte();
-
-#if DEBUG
-                    if (((long)networkUpdateID - (long)LastNetworkUpdateID)>10000)
-                    {
-                        DebugConsole.ThrowError("((long)networkUpdateID - (long)LastNetworkUpdateID) > 10000");
-                    }
-#endif
-                        
+                                            
                     for (int i = 0; i < inputCount; i++)
                     {
                         InputNetFlags newInput = (InputNetFlags)msg.ReadRangedInteger(0, (int)InputNetFlags.MaxVal);
@@ -2116,7 +2109,10 @@ namespace Barotrauma
                                 newMousePos.X = msg.ReadSingle();
                                 newMousePos.Y = msg.ReadSingle();
                             }*/
-                            if ((i < ((long)networkUpdateID - (long)LastNetworkUpdateID)) && (i < 60))
+
+
+
+                            if (NetIdUtils.IdMoreRecent((ushort)(networkUpdateID - i), LastNetworkUpdateID) && (i < 60))
                             {
                                 NetInputMem newMem = new NetInputMem();
                                 newMem.states = newInput;
@@ -2128,7 +2124,7 @@ namespace Barotrauma
                         }
                     }
             
-                    if (networkUpdateID > LastNetworkUpdateID)
+                    if (NetIdUtils.IdMoreRecent(networkUpdateID, LastNetworkUpdateID))
                     {
                         LastNetworkUpdateID = networkUpdateID;
                     }
@@ -2175,11 +2171,11 @@ namespace Barotrauma
                     tempBuffer.Write(true);
                     if (LastNetworkUpdateID < memInput.Count + 1)
                     {
-                        tempBuffer.Write((UInt32)0);
+                        tempBuffer.Write((UInt16)0);
                     }
                     else
                     {
-                        tempBuffer.Write((UInt32)(LastNetworkUpdateID - memInput.Count - 1));
+                        tempBuffer.Write((UInt16)(LastNetworkUpdateID - memInput.Count - 1));
                     }
                 }
                 else
@@ -2251,10 +2247,10 @@ namespace Barotrauma
                 case ServerNetObject.ENTITY_POSITION:
                     bool facingRight = AnimController.Dir > 0.0f;
 
-                    UInt32 networkUpdateID = 0;
+                    UInt16 networkUpdateID = 0;
                     if (msg.ReadBoolean())
                     {
-                        networkUpdateID = msg.ReadUInt32();
+                        networkUpdateID = msg.ReadUInt16();
                     }
                     else
                     {
@@ -2317,7 +2313,7 @@ namespace Barotrauma
                     int index = 0;
                     if (GameMain.NetworkMember.Character == this && AllowInput)
                     {
-                        while (index < memPos.Count && posInfo.ID > memPos[index].ID) 
+                        while (index < memPos.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memPos[index].ID)) 
                             index++;                        
                     }
                     else
