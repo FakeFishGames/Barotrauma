@@ -560,6 +560,9 @@ namespace Barotrauma.Networking
 
                     ClientReadIngame(inc);
                     break;
+                case ClientPacketHeader.SERVER_COMMAND:
+                    ClientReadServerCommand(inc);
+                    break;
             }            
         }
 
@@ -618,7 +621,7 @@ namespace Barotrauma.Networking
             }
             
             ClientNetObject objHeader;
-            while ((objHeader=(ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
+            while ((objHeader = (ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
             {
                 switch (objHeader)
                 {
@@ -706,6 +709,64 @@ namespace Barotrauma.Networking
             }
         }
 
+        private void ClientReadServerCommand(NetIncomingMessage inc)
+        {
+            Client c = ConnectedClients.Find(x => x.Connection == inc.SenderConnection);
+            if (c == null)
+            {
+                inc.SenderConnection.Disconnect("You're not a connected client.");
+                return;
+            }
+
+            ClientPermissions command = ClientPermissions.None;
+            try
+            {
+                command = (ClientPermissions)inc.ReadByte();
+            }
+
+            catch
+            {
+                return;
+            }
+
+            if (!c.HasPermission(command))
+            {
+                Log("Client \""+c.name+"\" sent a server command \""+command+"\". Permission denied.", Color.Red);
+                return;
+            }
+
+            switch (command)
+            {
+                case ClientPermissions.Kick:
+                    string kickedName = inc.ReadString();
+                    var kickedClient = connectedClients.Find(cl => cl != c && cl.name == kickedName);
+                    if (kickedClient != null)
+                    {
+                        Log("Client \"" + c.name + "\" kicked \"" + kickedClient.name + "\".", Color.Red);
+                        KickClient(kickedClient, false, false);
+                    }
+                    break;
+                case ClientPermissions.Ban:
+                    string bannedName = inc.ReadString();
+                    var bannedClient = connectedClients.Find(cl => cl != c && cl.name == bannedName);
+                    if (bannedClient != null)
+                    {
+                        Log("Client \"" + c.name + "\" banned \"" + bannedClient.name + "\".", Color.Red);
+                        KickClient(bannedClient, true, false);
+                    }
+                    break;
+                case ClientPermissions.EndRound:
+                    if (gameStarted)
+                    {
+                        Log("Client \"" + c.name + "\" ended the round.", Color.Cyan);
+                        EndGame();
+                    }
+                    break;
+            }
+
+            inc.ReadPadBits();
+        }
+
         /// <summary>
         /// Write info that the client needs when joining the server
         /// </summary>
@@ -723,6 +784,8 @@ namespace Barotrauma.Networking
 
             outmsg.Write(GameStarted);
             outmsg.Write(AllowSpectating);
+
+            outmsg.Write((byte)c.Permissions);
         }
 
         private void ClientWriteIngame(Client c)
@@ -1644,8 +1707,7 @@ namespace Barotrauma.Networking
         }
 
         public void UpdateClientPermissions(Client client)
-        {
-            
+        {           
             clientPermissions.RemoveAll(cp => cp.IP == client.Connection.RemoteEndPoint.Address.ToString());
 
             if (client.Permissions != ClientPermissions.None)
@@ -1655,6 +1717,11 @@ namespace Barotrauma.Networking
                     client.Connection.RemoteEndPoint.Address.ToString(), 
                     client.Permissions));
             }
+
+            var msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.PERMISSIONS);
+            msg.Write((byte)client.Permissions);
+            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
 
             SaveClientPermissions();
         }

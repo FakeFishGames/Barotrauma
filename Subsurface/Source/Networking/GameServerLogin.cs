@@ -205,6 +205,16 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.AddPlayer(newClient.name);
 
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
+
+            var savedPermissions = clientPermissions.Find(cp => cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
+            if (savedPermissions != null)
+            {
+                newClient.SetPermissions(savedPermissions.Permissions);
+            }
+            else
+            {
+                newClient.SetPermissions(ClientPermissions.None);
+            }
         }
     }
 }

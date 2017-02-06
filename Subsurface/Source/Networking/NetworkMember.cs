@@ -16,7 +16,8 @@ namespace Barotrauma.Networking
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
 
-        RESPONSE_STARTGAME //tell the server whether you're ready to start
+        RESPONSE_STARTGAME, //tell the server whether you're ready to start
+        SERVER_COMMAND      //tell the server to end a round or kick/ban someone (special permissions required)
     }
     enum ClientNetObject
     {
@@ -25,7 +26,6 @@ namespace Barotrauma.Networking
         CHAT_MESSAGE,   //also self-explanatory
         VOTE,           //you get the idea
         CHARACTER_INPUT,
-        ITEM_INTERACTION,
         ENTITY_STATE
     }
 
@@ -35,6 +35,8 @@ namespace Barotrauma.Networking
         AUTH_FAILURE,       //the server won't authorize player yet, however connection is still alive
         UPDATE_LOBBY,       //update state in lobby (votes and chat messages)
         UPDATE_INGAME,      //update state ingame (character input and chat messages)
+
+        PERMISSIONS,        //tell the client which special permissions they have (if any)
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
