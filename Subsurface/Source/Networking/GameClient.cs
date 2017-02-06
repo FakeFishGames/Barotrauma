@@ -67,7 +67,7 @@ namespace Barotrauma.Networking
             {
                 if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
 
-                //TODO: tell server that client requested round end
+                RequestRoundEnd();
 
                 return true; 
             };
@@ -539,6 +539,9 @@ namespace Barotrauma.Networking
                                 }
                                 CoroutineManager.StartCoroutine(EndGame(endMessage));
                                 break;
+                            case ServerPacketHeader.PERMISSIONS:
+                                ReadPermissions(inc);
+                                break;
                         }
                         break;
                     case NetIncomingMessageType.StatusChanged:
@@ -571,6 +574,48 @@ namespace Barotrauma.Networking
                         break;
                 }
             }
+        }
+
+        private void ReadPermissions(NetIncomingMessage inc)
+        {
+            ClientPermissions newPermissions = (ClientPermissions)inc.ReadByte();
+            if (newPermissions != permissions)
+            {
+                SetPermissions(newPermissions);
+            }                              
+        }
+
+        private void SetPermissions(ClientPermissions newPermissions)
+        {
+            if (GUIMessageBox.MessageBoxes.Count > 0)
+            {
+                var existingMsgBox = GUIMessageBox.MessageBoxes.Peek();
+                if (existingMsgBox.UserData as string == "permissions")
+                {
+                    GUIMessageBox.MessageBoxes.Dequeue();
+                }
+            }
+
+            string msg = "";
+            if (newPermissions == ClientPermissions.None)
+            {
+                msg = "The host has removed all your special permissions.";
+            }
+            else
+            {
+                msg = "Your current permissions:\n";
+                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                {
+                    if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
+                    System.Reflection.FieldInfo fi = typeof(ClientPermissions).GetField(permission.ToString());
+                    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+                    msg += "   - " + attributes[0].Description+"\n";
+                }
+            }
+            permissions = newPermissions;
+            new GUIMessageBox("Permissions changed", msg).UserData = "permissions";
+
+            endRoundButton.Visible = HasPermission(ClientPermissions.EndRound);      
         }
 
         private IEnumerable<object> StartGame(NetIncomingMessage inc)
@@ -704,6 +749,8 @@ namespace Barotrauma.Networking
 
             gameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();
+
+            SetPermissions((ClientPermissions)inc.ReadByte());
 
             if (gameStarted && !isDuplicate)
             {
@@ -997,7 +1044,6 @@ namespace Barotrauma.Networking
             }
         }
 
-
         public override bool SelectCrewCharacter(GUIComponent component, object obj)
         {
             var characterFrame = component.Parent.Parent.FindChild("selectedcharacter");
@@ -1065,7 +1111,26 @@ namespace Barotrauma.Networking
 
             return true;
         }
-        
+
+        public override void KickPlayer(string kickedName, bool ban, bool range = false)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
+            msg.Write((byte)(ban ? ClientPermissions.Ban : ClientPermissions.Kick));
+            msg.Write(kickedName);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public void RequestRoundEnd()
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
+            msg.Write((byte)ClientPermissions.EndRound);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
         public bool SpectateClicked(GUIButton button, object userData)
         {
             if (button != null) button.Enabled = false;
