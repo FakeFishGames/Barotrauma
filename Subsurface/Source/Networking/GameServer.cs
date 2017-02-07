@@ -466,29 +466,6 @@ namespace Barotrauma.Networking
             // if 30ms has passed
             if (updateTimer < DateTime.Now)
             {
-                /*if (gameStarted)
-                {
-
-                    float ignoreDistance = FarseerPhysics.ConvertUnits.ToDisplayUnits(NetConfig.CharacterIgnoreDistance);
-
-                    foreach (Character c in Character.CharacterList)
-                    {
-                        if (!(c is AICharacter) || c.IsDead) continue;
-
-                        if (Character.CharacterList.Any(
-                            c2 => c2.IsRemotePlayer &&
-                                Vector2.Distance(c2.WorldPosition, c.WorldPosition) < ignoreDistance))
-                        {
-                            
-                        }
-
-                        //todo: take multiple subs into account
-                        //Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
-
-                        //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;                        
-                    }
-                }*/
-
                 if (server.ConnectionsCount > 0)
                 {
                     if (sparseUpdateTimer < DateTime.Now) SparseUpdate();
@@ -568,31 +545,6 @@ namespace Barotrauma.Networking
 
         private void SparseUpdate()
         {
-            //if (gameStarted)
-            //{
-            //    foreach (Submarine sub in Submarine.Loaded)
-            //    {
-            //        //no need to send position updates for submarines that are docked to mainsub
-            //        if (sub != Submarine.MainSub && sub.DockedTo.Contains(Submarine.MainSub)) continue;
-
-            //        new NetworkEvent(sub.ID, false);
-            //    }
-            //}
-
-            /*foreach (Character c in Character.CharacterList)
-            {
-                if (c.IsDead) continue;
-
-                if (c is AICharacter)
-                {
-                    //todo: take multiple subs into account
-                    //Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
-
-                    //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
-                }
-                
-            }*/
-
             sparseUpdateTimer = DateTime.Now + sparseUpdateInterval;
         }
 
@@ -672,7 +624,7 @@ namespace Barotrauma.Networking
 
 #if DEBUG
                         //client thinks they've received a msg we haven't sent yet (corrupted packet, msg read/written incorrectly?)
-                        if (lastRecvChatMsgID > c.lastChatMsgQueueID)
+                        if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastChatMsgQueueID))
                             DebugConsole.ThrowError("client.lastRecvChatMsgID > lastChatMsgQueueID");
 
                         if (lastRecvEntitySpawnID > lastEntitySpawnID)
@@ -811,23 +763,21 @@ namespace Barotrauma.Networking
                 Item.Spawner.ServerWrite(outmsg, c);
                 outmsg.WritePadBits();
             }
-            
+
             foreach (Character character in Character.CharacterList)
             {
-                if (character is AICharacter)
+                if (!character.Enabled) continue;
+
+                if (c.Character != null &&
+                    Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
+                    NetConfig.CharacterIgnoreDistance * NetConfig.CharacterIgnoreDistance)
                 {
-                    //TODO: don't send if the ai character is far from the client 
-                    //(some sort of distance-based culling might be a good idea for player-controlled characters as well)
-                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
-                    character.ServerWrite(outmsg, c);
-                    outmsg.WritePadBits();
+                    continue;
                 }
-                else
-                {
-                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
-                    character.ServerWrite(outmsg, c);
-                    outmsg.WritePadBits();
-                }
+
+                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                character.ServerWrite(outmsg, c);
+                outmsg.WritePadBits();
             }
 
             foreach (Submarine sub in Submarine.Loaded)
