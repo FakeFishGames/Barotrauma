@@ -33,16 +33,16 @@ namespace Barotrauma
 
         public override void Update(Camera cam, float deltaTime)
         {
-            if (!Enabled) return;
-
             base.Update(cam, deltaTime);
+
+            if (!Enabled) return;
             
-            float dist = Vector2.Distance(cam.WorldViewCenter, WorldPosition);
-            if (dist > 8000.0f)
+            float dist = Vector2.DistanceSquared(cam.WorldViewCenter, WorldPosition);
+            if (dist > 8000.0f * 8000.0f)
             {
                 AnimController.SimplePhysicsEnabled = true;
             }
-            else if (dist < 7000.0f)
+            else if (dist < 7000.0f * 7000.0f)
             {
                 AnimController.SimplePhysicsEnabled = false;
             }

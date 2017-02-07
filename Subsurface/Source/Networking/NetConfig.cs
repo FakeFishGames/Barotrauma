@@ -12,15 +12,8 @@
         public static string MasterServerUrl = GameMain.Config.MasterServerUrl;
 
         //if a Character is further than this from the sub, the server will ignore it
-        //(in sim units)
-        public const float CharacterIgnoreDistance = 300.0f;
-
-        //if a ragdoll is further than this from the correct position, teleport it there
-        //(in sim units)
-        public const float ResetRagdollDistance = 1.0f;
-
-        //if the ragdoll is closer than this, don't try to correct its position
-        public const float AllowedRagdollDistance = 0.1f;
+        //(in display units)
+        public const float CharacterIgnoreDistance = 20000.0f;
 
         //how much the physics body of an item has to move until the server 
         //send a position update to clients (in sim units)

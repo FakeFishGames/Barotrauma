@@ -1125,14 +1125,14 @@ namespace Barotrauma
 
         public void SetPosition(Vector2 simPosition, bool lerp = false)
         {
-            Vector2 moveAmount = simPosition - Collider.SimPosition;
+            Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
 
             Collider.SetTransform(simPosition, Collider.Rotation);
 
             foreach (Limb limb in Limbs)
             {
                 //check visibility from the new position of the collider to the new position of this limb
-                Vector2 movePos = limb.SimPosition + moveAmount;
+                Vector2 movePos = limb.SimPosition + limbMoveAmount;
 
                 TrySetLimbPosition(limb, simPosition, movePos, lerp);
             }
@@ -1160,7 +1160,7 @@ namespace Barotrauma
             if (lerp)
             {
                 limb.body.TargetPosition = movePos;
-                limb.body.MoveToTargetPosition(Vector2.DistanceSquared(limb.SimPosition, movePos) < 100.0f);                
+                limb.body.MoveToTargetPosition(true);                
             }
             else
             {
@@ -1179,7 +1179,7 @@ namespace Barotrauma
         protected void CheckDistFromCollider()
         {
             float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;                        
-            float resetDist = allowedDist * 10.0f;
+            float resetDist = allowedDist * 5.0f;
 
             float distSqrd = Vector2.DistanceSquared(Collider.SimPosition, MainLimb.SimPosition);
 

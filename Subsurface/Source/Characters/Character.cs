@@ -107,7 +107,7 @@ namespace Barotrauma
 
         public UInt16 LastNetworkUpdateID = 0;
 
-        //public int LargeUpdateTimer;
+        protected float lastRecvPositionUpdateTime;
 
         public readonly Dictionary<string, ObjectProperty> Properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
@@ -1331,7 +1331,7 @@ namespace Barotrauma
 
         public virtual void Update(Camera cam, float deltaTime)
         {
-            if (GameMain.Client!=null && this==Controlled && !isSynced) return;
+            if (GameMain.Client != null && this == Controlled && !isSynced) return;
 
             if (!Enabled) return;
             
@@ -1360,7 +1360,22 @@ namespace Barotrauma
 
             if (this != Character.Controlled)
             {
-                if (GameMain.Server != null && !(this is AICharacter))
+                if (GameMain.Client != null)
+                {
+                    //freeze AI characters if more than 1 seconds have passed since last update from the server
+                    if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
+                    {
+                        AnimController.Frozen = true; 
+                        memPos.Clear();
+                        //hide after 2 seconds
+                        if (lastRecvPositionUpdateTime < NetTime.Now - 2.0f)
+                        {
+                            Enabled = false;
+                            return;
+                        }
+                    }                       
+                }
+                else if (GameMain.Server != null && !(this is AICharacter))
                 {
                     if (!AllowInput)
                     {
@@ -1447,8 +1462,9 @@ namespace Barotrauma
                     memInput.RemoveRange(60, memInput.Count - 60);
                 }                
             }
-            else //this == Character.Controlled && GameMain.Client == null
+            else
             {
+                //this == Character.Controlled && GameMain.Client == null
                 AnimController.Frozen = false;
             }
 
@@ -2246,6 +2262,11 @@ namespace Barotrauma
             {
                 case ServerNetObject.ENTITY_POSITION:
                     bool facingRight = AnimController.Dir > 0.0f;
+
+                    lastRecvPositionUpdateTime = (float)NetTime.Now;
+
+                    AnimController.Frozen = false;
+                    Enabled = true;
 
                     UInt16 networkUpdateID = 0;
                     if (msg.ReadBoolean())
