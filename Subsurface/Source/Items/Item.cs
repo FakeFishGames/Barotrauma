@@ -1701,9 +1701,9 @@ namespace Barotrauma
                 return;
             }
 
-            //TODO: use WriteRangedInteger to write the event type
-            msg.Write((byte)((int)extraData[0]));
-            switch ((NetEntityEvent.Type)extraData[0])
+            NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
+            msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
+            switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
                     int componentIndex = (int)extraData[1];
@@ -1741,7 +1741,9 @@ namespace Barotrauma
                 return;
             }
 
-            NetEntityEvent.Type eventType = (NetEntityEvent.Type)msg.ReadByte();
+            NetEntityEvent.Type eventType = 
+                (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
+
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
@@ -1790,9 +1792,9 @@ namespace Barotrauma
                 return;
             }
 
-            //TODO: use WriteRangedInteger to write the event type
-            msg.Write((byte)((int)extraData[0]));
-            switch ((NetEntityEvent.Type)extraData[0])
+            NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
+            msg.WriteRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
+            switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:                
                     int componentIndex = (int)extraData[1];
@@ -1822,7 +1824,8 @@ namespace Barotrauma
 
         public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c) 
         {
-            NetEntityEvent.Type eventType = (NetEntityEvent.Type)msg.ReadByte();
+            NetEntityEvent.Type eventType =
+                (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
 
             switch (eventType)
             {
@@ -2076,6 +2079,14 @@ namespace Barotrauma
 
             msg.Write(MathUtils.AngleToByte(body.Rotation));
 
+#if DEBUG
+            if (Math.Abs(body.LinearVelocity.X)>32.0f || Math.Abs(body.LinearVelocity.Y)>32.0f)
+                DebugConsole.ThrowError("Item velocity out of range ("+body.LinearVelocity+")");
+#endif
+
+            msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -32.0f, 32.0f), -32.0f, 32.0f, 8);
+            msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -32.0f, 32.0f), -32.0f, 32.0f, 8);
+
             lastSentPos = SimPosition;
         }
 
@@ -2087,6 +2098,10 @@ namespace Barotrauma
                 msg.ReadFloat());
 
             body.FarseerBody.Rotation = MathUtils.ByteToAngle(msg.ReadByte());
+
+            body.LinearVelocity = new Vector2(
+                msg.ReadRangedSingle(-32.0f, 32.0f, 8),
+                msg.ReadRangedSingle(-32.0f, 32.0f, 8));
 
             DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);
 
