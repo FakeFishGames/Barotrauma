@@ -121,21 +121,21 @@ namespace Barotrauma.Items.Components
             itemsWithStatusEffects = new List<Pair<Item, StatusEffect>>();
         }
 
-        public void OnItemContained(Item item)
+        public void OnItemContained(Item containedItem)
         {
             item.SetContainedItemPositions();
             
-            RelatedItem ri = containableItems.Find(x => x.MatchesItem(item));
+            RelatedItem ri = containableItems.Find(x => x.MatchesItem(containedItem));
             if (ri != null)
             {
                 foreach (StatusEffect effect in ri.statusEffects)
                 {
-                    itemsWithStatusEffects.Add(Pair<Item, StatusEffect>.Create(item, effect));
+                    itemsWithStatusEffects.Add(Pair<Item, StatusEffect>.Create(containedItem, effect));
                 }
             }
 
             //no need to Update() if this item has no statuseffects and no physics body
-            IsActive = itemsWithStatusEffects.Count > 0 || item.body != null;
+            IsActive = itemsWithStatusEffects.Count > 0 || containedItem.body != null;
         }
 
         public void OnItemRemoved(Item item)

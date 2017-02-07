@@ -258,13 +258,7 @@ namespace Barotrauma
                 item.ParentInventory = null;                
             }
         }
-
-        protected virtual void DropItem(Item item)
-        {
-            item.Drop(null);
-            return;
-        }
-        
+                
         protected virtual void CreateSlots()
         {
             slots = new InventorySlot[capacity];
@@ -311,7 +305,7 @@ namespace Barotrauma
                 {
                     CreateNetworkEvent();
 
-                    DropItem(draggingItem);
+                    draggingItem.Drop();
                 }
             }
 

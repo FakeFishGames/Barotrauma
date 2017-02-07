@@ -13,13 +13,6 @@ namespace Barotrauma
             this.container = container;
         }
 
-        protected override void DropItem(Item item)
-        {
-            item.Drop();
-            if (item.body != null) item.body.Enabled = true;
-            item.SetTransform(container.Item.SimPosition, 0.0f);
-        }
-
         public override int FindAllowedSlot(Item item)
         {
             for (int i = 0; i < capacity; i++)

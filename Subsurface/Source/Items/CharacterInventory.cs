@@ -111,18 +111,7 @@ namespace Barotrauma
 
             return true;
         }
-
-        protected override void DropItem(Item item)
-        {
-            bool enabled = item.body!=null && item.body.Enabled;
-            item.Drop(character);
-
-            if (!enabled)
-            {
-                item.SetTransform(character.SimPosition, 0.0f);
-            }
-        }
-
+        
         public int FindLimbSlot(InvSlotType limbSlot)
         {
             for (int i = 0; i < Items.Length; i++)

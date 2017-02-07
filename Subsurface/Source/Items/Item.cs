@@ -1549,6 +1549,9 @@ namespace Barotrauma
 
             if (Container != null)
             {
+                if (body != null) body.Enabled = true;
+                SetTransform(Container.SimPosition, 0.0f);
+
                 Container.RemoveContained(this);
                 Container = null;
             }
