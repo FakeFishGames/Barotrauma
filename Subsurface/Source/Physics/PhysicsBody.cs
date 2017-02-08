@@ -98,6 +98,7 @@ namespace Barotrauma
         float dir;
 
         Vector2 offsetFromTargetPos;
+        float offsetLerp;
 
         private float netInterpolationState;
 
@@ -396,7 +397,8 @@ namespace Barotrauma
 
             if (lerp && Vector2.Distance((Vector2)targetPosition, body.Position) < 10.0f)
             {
-                offsetFromTargetPos = (Vector2)targetPosition - (body.Position - offsetFromTargetPos);
+                offsetFromTargetPos = (Vector2)targetPosition - (body.Position - Vector2.Lerp(offsetFromTargetPos, Vector2.Zero, offsetLerp));
+                offsetLerp = 1.0f;
                 prevPosition = (Vector2)targetPosition;
             }
 
@@ -441,21 +443,24 @@ namespace Barotrauma
 
         public void UpdateDrawPosition()
         {
-            drawPosition = Timing.Interpolate(prevPosition, body.Position) - offsetFromTargetPos;
+            drawPosition = Timing.Interpolate(prevPosition, body.Position);
             drawPosition = ConvertUnits.ToDisplayUnits(drawPosition);
 
-            drawRotation = Timing.Interpolate(prevRotation, body.Rotation);
+            drawRotation = Timing.InterpolateRotation(prevRotation, body.Rotation);
 
-            if (offsetFromTargetPos == Vector2.Zero) return;
-
-            float diff = offsetFromTargetPos.Length();
-            if (diff < 0.05f)
+            if (offsetFromTargetPos == Vector2.Zero)
             {
-                offsetFromTargetPos = Vector2.Zero;
+                return;
             }
             else
             {
-                offsetFromTargetPos = Vector2.Lerp(offsetFromTargetPos, Vector2.Zero, 0.05f);
+                drawPosition -= ConvertUnits.ToDisplayUnits(Vector2.Lerp(Vector2.Zero, offsetFromTargetPos, offsetLerp));
+            }
+
+            offsetLerp -= 0.1f;
+            if (offsetLerp < 0.0f)
+            {
+                offsetFromTargetPos = Vector2.Zero;
             }
         }
 
