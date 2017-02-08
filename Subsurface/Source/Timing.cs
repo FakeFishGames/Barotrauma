@@ -30,6 +30,13 @@ namespace Barotrauma
             return current * (float)alpha + previous * (1.0f - (float)alpha);
         }
 
+        public static float InterpolateRotation(float previous, float current)
+        {
+            float angleDiff = MathUtils.GetShortestAngle(previous, current);
+
+            return previous + angleDiff * (float)alpha;
+        }
+
         public static Vector2 Interpolate(Vector2 previous, Vector2 current)
         {
             return new Vector2(
