@@ -36,6 +36,9 @@ namespace Barotrauma.Items.Components
 
         private float lastReceivedMessage;
 
+        private bool? predictedState;
+        private float resetPredictionTimer;
+
         public PhysicsBody Body
         {
             get { return body; }
@@ -286,23 +289,40 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            bool isClosing = false;
             if (!isStuck)
             {
-                OpenState += deltaTime * ((isOpen) ? 2.0f : -2.0f);
+                if (predictedState == null)
+                {
+                    OpenState += deltaTime * ((isOpen) ? 2.0f : -2.0f);
+                    isClosing = openState > 0.0f && openState < 1.0f && !isOpen;
+                }
+                else
+                {
+                    OpenState += deltaTime * (((bool)predictedState) ? 2.0f : -2.0f);
+                    isClosing = openState > 0.0f && openState < 1.0f && !(bool)predictedState;
+
+                    resetPredictionTimer -= deltaTime;
+                    if (resetPredictionTimer <= 0.0f)
+                    {
+                        predictedState = null;
+                    }
+                }
+
                 LinkedGap.Open = openState;
             }
             
-            if (openState > 0.0f && openState < 1.0f && !isOpen)
+            if (isClosing)
             {
                 PushCharactersAway();
             }
             else
             {
-
                 body.Enabled = openState < 1.0f;
             }
 
-            
+            //don't use the predicted state here, because it might set
+            //other items to an incorrect state if the prediction is wrong
             item.SendSignal(0, (isOpen) ? "1" : "0", "state_out");
         }
 
@@ -336,8 +356,6 @@ namespace Barotrauma.Items.Components
                 body.Enabled = false;
                 return;
             }
-
-
 
             if (isHorizontal)
             {
@@ -468,7 +486,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)
         {
-            if (isStuck || GameMain.Client != null) return;
+            if (isStuck) return;
 
             if (connection.Name == "toggle")
             {
@@ -482,13 +500,26 @@ namespace Barotrauma.Items.Components
 
         public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            if (GameMain.Client != null && !isNetworkMessage) return;
 
             if (isStuck || isOpen == open) return;
 
             PlaySound(ActionType.OnUse, item.WorldPosition);
 
-            isOpen = open;
+            if (GameMain.Client != null && !isNetworkMessage)
+            {
+                //clients can "predict" that the door opens/closes when a signal is received
+
+                //the prediction will be reset after 1 second, setting the door to a state
+                //sent by the server, or reverting it back to its old state if no msg from server was received
+
+                predictedState = open;
+                resetPredictionTimer = 1.0f;
+            }
+            else
+            {
+                isOpen = open;
+            }
+
 
             //opening a partially stuck door makes it less stuck
             if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
@@ -509,7 +540,8 @@ namespace Barotrauma.Items.Components
         {
             SetState(msg.ReadBoolean(), true);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-        }
 
+            predictedState = null;
+        }
     }
 }
