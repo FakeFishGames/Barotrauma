@@ -453,7 +453,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedInteger(-1, fabricableItems.Count - 1, itemIndex);
         }
 
-        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
 
@@ -482,7 +482,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedInteger(-1, fabricableItems.Count - 1, itemIndex);
         }
 
-        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
             

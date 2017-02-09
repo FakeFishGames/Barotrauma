@@ -36,6 +36,8 @@ namespace Barotrauma.Networking
 
         public void CreateEvent(IClientSerializable entity, object[] extraData = null)
         {
+            if (GameMain.Client == null || GameMain.Client.Character == null) return;
+
             if (!(entity is Entity))
             {
                 DebugConsole.ThrowError("Can't create an entity event for " + entity + "!");
@@ -44,6 +46,7 @@ namespace Barotrauma.Networking
 
             ID++;
             var newEvent = new ClientEntityEvent(entity, ID);
+            newEvent.CharacterStateID = GameMain.Client.Character.LastNetworkUpdateID;
             if (extraData != null) newEvent.SetData(extraData);
 
             events.Add(newEvent);
@@ -95,9 +98,56 @@ namespace Barotrauma.Networking
             Write(msg, eventsToSync);
         }
 
+        /// <summary>
+        /// Read the events from the message, ignoring ones we've already received
+        /// </summary>
         public void Read(NetIncomingMessage msg, float sendingTime)
         {
-            base.Read(msg, sendingTime, ref lastReceivedID);
+            UInt32 firstEventID = msg.ReadUInt32();
+            int eventCount = msg.ReadByte();
+
+            for (int i = 0; i < eventCount; i++)
+            {
+                UInt32 thisEventID = firstEventID + (UInt32)i;
+                UInt16 entityID = msg.ReadUInt16();
+                byte msgLength = msg.ReadByte();
+
+                IServerSerializable entity = Entity.FindEntityByID(entityID) as IServerSerializable;
+
+                //skip the event if we've already received it or if the entity isn't found
+                if (thisEventID != lastReceivedID + 1 || entity == null)
+                {
+                    if (thisEventID != lastReceivedID + 1)
+                    {
+                        DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
+                    }
+                    else if (entity == null)
+                    {
+                        DebugConsole.NewMessage("received msg " + thisEventID + ", entity " + entityID + " not found", Microsoft.Xna.Framework.Color.Red);
+                    }
+                    msg.Position += msgLength * 8;
+                }
+                else
+                {
+                    long msgPosition = msg.Position;
+
+                    DebugConsole.NewMessage("received msg " + thisEventID + " (" + entity.ToString() + ")", Microsoft.Xna.Framework.Color.Green);
+                    lastReceivedID++;
+                    try
+                    {
+                        ReadEvent(msg, entity, sendingTime);
+                    }
+
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "\"!", e);
+#endif
+                        msg.Position = msgPosition + msgLength * 8;
+                    }
+                }
+                msg.ReadPadBits();
+            }
         }
 
         protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
@@ -108,12 +158,9 @@ namespace Barotrauma.Networking
             clientEvent.Write(buffer);
         }
 
-        protected override void ReadEvent(NetIncomingMessage buffer, INetSerializable entity, float sendingTime, Client sender = null)
+        protected void ReadEvent(NetIncomingMessage buffer, IServerSerializable entity, float sendingTime)
         {
-            var serverEntity = entity as IServerSerializable;
-            if (serverEntity == null) return;
-
-            serverEntity.ClientRead(ServerNetObject.ENTITY_STATE, buffer, sendingTime);
+            entity.ClientRead(ServerNetObject.ENTITY_STATE, buffer, sendingTime);
         }
 
         public void Clear()

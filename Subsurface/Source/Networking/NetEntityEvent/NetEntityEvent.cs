@@ -83,6 +83,8 @@ namespace Barotrauma.Networking
     {
         private IClientSerializable serializable;
 
+        public UInt16 CharacterStateID;
+
         public ClientEntityEvent(IClientSerializable entity, UInt32 id)
             : base(entity, id)
         { 
@@ -91,6 +93,7 @@ namespace Barotrauma.Networking
 
         public void Write(NetBuffer msg)
         {
+            msg.Write(CharacterStateID);
             serializable.ClientWrite(msg, Data);
         } 
     }

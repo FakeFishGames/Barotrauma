@@ -191,21 +191,15 @@ namespace Barotrauma.Items.Components
                 DropConnectedWires(picker);
 
                 item.Submarine = picker.Submarine;
-
-                Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
-                bodyDropPos = rightHand.SimPosition;
-
-                if (item.body != null)
-                {
-                    item.body.ResetDynamics();
-                }
-
+                bodyDropPos = picker.SimPosition;
+                
                 picker.Inventory.RemoveItem(item);
                 picker = null;
             }
 
             if (item.body != null && !item.body.Enabled)
             {
+                    item.body.ResetDynamics();
                 item.SetTransform(bodyDropPos, 0.0f);
                 item.body.Enabled = true;
             }

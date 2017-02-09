@@ -147,7 +147,7 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             bool active = msg.ReadBoolean();
 
@@ -164,7 +164,7 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             SetActive(msg.ReadBoolean());
         }

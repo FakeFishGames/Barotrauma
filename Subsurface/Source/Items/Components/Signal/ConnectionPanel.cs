@@ -173,7 +173,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             int[] wireCounts = new int[Connections.Count];
             Wire[,] wires = new Wire[Connections.Count, Connection.MaxLinked];
@@ -244,7 +244,7 @@ namespace Barotrauma.Items.Components
             ClientWrite(msg, extraData);
         }
 
-        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             foreach (Connection connection in Connections)
             {

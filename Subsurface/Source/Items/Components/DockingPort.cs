@@ -333,9 +333,9 @@ namespace Barotrauma.Items.Components
 
 
             powerConnection.TryAddLink(wire);
-            wire.Connect(powerConnection, false);
+            wire.Connect(powerConnection, false, false);
             recipient.TryAddLink(wire);
-            wire.Connect(recipient, false);
+            wire.Connect(recipient, false, false);
         }
 
         private void CreateDoorBody()
@@ -756,7 +756,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
             bool isDocked = msg.ReadBoolean();
 
