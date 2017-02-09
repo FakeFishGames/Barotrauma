@@ -872,7 +872,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime) 
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime) 
         {
             for (int i = 0; i < sections.Count(); i++)
             {

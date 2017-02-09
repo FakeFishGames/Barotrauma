@@ -546,7 +546,7 @@ namespace Barotrauma
             syncItemsDelay = 1.0f;
         }
 
-        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Barotrauma.Networking.Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
             ushort[] newItemIDs = new ushort[capacity];
@@ -565,7 +565,7 @@ namespace Barotrauma
             {
                 if (newItemIDs[i] == 0)
                 {
-                    if (Items[i] != null) Items[i].Drop();
+                    if (Items[i] != null) Items[i].Drop(c.Character);
                     System.Diagnostics.Debug.Assert(Items[i]==null);
                 }
                 else
@@ -609,7 +609,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             receivedItemIDs = new ushort[capacity];
 

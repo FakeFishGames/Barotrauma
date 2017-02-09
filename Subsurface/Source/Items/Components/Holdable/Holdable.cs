@@ -121,13 +121,16 @@ namespace Barotrauma.Items.Components
             {
                 if (dropper == null) return;
                 picker = dropper;
+
             }
             if (picker.Inventory == null) return;
-
-
+            
             item.Submarine = picker.Submarine;
-
-            //item.Unequip();
+            if (item.body != null)
+            {
+                item.body.ResetDynamics();
+                item.SetTransform(picker.SimPosition, 0.0f);
+            }
 
             picker.DeselectItem(item);
             picker.Inventory.RemoveItem(item);

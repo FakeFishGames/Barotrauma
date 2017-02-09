@@ -348,7 +348,7 @@ namespace Barotrauma.Items.Components
 
                         draggingConnected.RemoveConnection(item);
 
-                        if (draggingConnected.Connect(this, !alreadyConnected)) Wires[index] = draggingConnected;
+                        if (draggingConnected.Connect(this, !alreadyConnected, true)) Wires[index] = draggingConnected;
                     }
                 }
             }
@@ -477,7 +477,7 @@ namespace Barotrauma.Items.Components
                 if (Wires[i] != null)
                 {
                     if (Wires[i].Item.body != null) Wires[i].Item.body.Enabled = false;
-                    Wires[i].Connect(this, false, true);
+                    Wires[i].Connect(this, false, false);
                 }
             }
         }

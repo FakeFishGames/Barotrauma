@@ -133,7 +133,7 @@ namespace Barotrauma.Items.Components
             if (connection == connections[1]) connections[1] = null;
         }
 
-        public bool Connect(Connection newConnection, bool addNode = true, bool loading = false)
+        public bool Connect(Connection newConnection, bool addNode = true, bool sendNetworkEvent = false)
         {
             for (int i = 0; i < 2; i++)
             {
@@ -196,7 +196,7 @@ namespace Barotrauma.Items.Components
                 CleanNodes();
             }
 
-            if (!loading)
+            if (sendNetworkEvent)
             {
                 if (GameMain.Server != null)
                 {
@@ -726,7 +726,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             nodes.Clear();
 
@@ -752,7 +752,7 @@ namespace Barotrauma.Items.Components
             ClientWrite(msg, extraData);
         }
 
-        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             nodes.Clear();
 

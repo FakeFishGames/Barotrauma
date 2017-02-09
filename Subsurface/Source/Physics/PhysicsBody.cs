@@ -452,10 +452,8 @@ namespace Barotrauma
             {
                 return;
             }
-            else
-            {
-                drawPosition -= ConvertUnits.ToDisplayUnits(Vector2.Lerp(Vector2.Zero, offsetFromTargetPos, offsetLerp));
-            }
+
+            drawPosition -= ConvertUnits.ToDisplayUnits(Vector2.Lerp(Vector2.Zero, offsetFromTargetPos, offsetLerp));
 
             offsetLerp -= 0.1f;
             if (offsetLerp < 0.0f)

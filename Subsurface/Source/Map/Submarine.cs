@@ -1286,7 +1286,7 @@ namespace Barotrauma
             msg.Write(PhysicsBody.SimPosition.Y);
         }
 
-        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             var newTargetPosition = new Vector2(
                 msg.ReadFloat(),

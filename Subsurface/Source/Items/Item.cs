@@ -1733,7 +1733,7 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, NetIncomingMessage msg, float sendingTime) 
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime) 
         {
             if (type == ServerNetObject.ENTITY_POSITION)
             {
@@ -1822,7 +1822,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerRead(ClientNetObject type, NetIncomingMessage msg, Client c) 
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c) 
         {
             NetEntityEvent.Type eventType =
                 (NetEntityEvent.Type)msg.ReadRangedInteger(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
@@ -1898,7 +1898,7 @@ namespace Barotrauma
             }
         }
 
-        private void ReadPropertyChange(NetIncomingMessage msg)
+        private void ReadPropertyChange(NetBuffer msg)
         {
             var allProperties = GetProperties<InGameEditable>();
             if (allProperties.Count == 0) return;
@@ -1965,7 +1965,7 @@ namespace Barotrauma
             if (Name == "ID Card") msg.Write(Tags);            
         }
 
-        public static Item ReadSpawnData(NetIncomingMessage msg, bool spawn = true)
+        public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
         {
             if (GameMain.Server != null) return null;
 
@@ -2090,7 +2090,7 @@ namespace Barotrauma
             lastSentPos = SimPosition;
         }
 
-        public void ClientReadPosition(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        public void ClientReadPosition(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
 
             body.TargetPosition = new Vector2(

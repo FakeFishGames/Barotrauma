@@ -16,6 +16,33 @@ namespace Barotrauma.Networking
             get { return events; }
         }
 
+        private class BufferedEvent
+        {
+            public readonly Client Sender;
+
+            public readonly UInt16 CharacterStateID;
+            public readonly NetBuffer Data;
+
+            public readonly Character Character;
+
+            public readonly IClientSerializable TargetEntity;
+
+            public bool IsProcessed;
+
+            public BufferedEvent(Client sender, Character senderCharacter, UInt16 characterStateID, IClientSerializable targetEntity, NetBuffer data)
+            {
+                this.Sender = sender;
+                this.Character = senderCharacter;
+                this.CharacterStateID = characterStateID;
+
+                this.TargetEntity = targetEntity;
+
+                this.Data = data;
+            }
+        }
+
+        private List<BufferedEvent> bufferedEvents;
+
         private UInt32 ID;
 
         private GameServer server;
@@ -25,6 +52,8 @@ namespace Barotrauma.Networking
             events = new List<ServerEntityEvent>();
 
             this.server = server;
+
+            bufferedEvents = new List<BufferedEvent>();
         }
 
         public void CreateEvent(IServerSerializable entity, object[] extraData = null)
@@ -48,6 +77,51 @@ namespace Barotrauma.Networking
             ID++;
 
             events.Add(newEvent);
+        }
+
+        public void Update()
+        {
+            foreach (BufferedEvent bufferedEvent in bufferedEvents)
+            {
+                if (bufferedEvent.Character == null)
+                {
+                    bufferedEvent.IsProcessed = true;
+                    continue;
+                }
+
+                if (NetIdUtils.IdMoreRecent(bufferedEvent.CharacterStateID, bufferedEvent.Character.LastProcessedID)) continue;
+                
+                try
+                {
+                    ReadEvent(bufferedEvent.Data, bufferedEvent.TargetEntity, bufferedEvent.Sender);
+                }
+
+                catch (Exception e)
+                {
+#if DEBUG
+                        DebugConsole.ThrowError("Failed to read event for entity \"" + bufferedEvent.TargetEntity.ToString() + "\"!", e);
+#endif
+                }
+
+                bufferedEvent.IsProcessed = true;
+            }
+
+            bufferedEvents.RemoveAll(b => b.IsProcessed);           
+        }
+
+        private void BufferEvent(BufferedEvent bufferedEvent)
+        {
+            if (bufferedEvents.Count > 512)
+            {
+                //should normally never happen
+
+                //a client could potentially spam events with a much higher character state ID 
+                //than the state of their character and/or stop sending character inputs,
+                //so we'll drop some events to make sure no-one blows up our buffer
+                bufferedEvents.RemoveRange(0, 256);
+            }
+
+            bufferedEvents.Add(bufferedEvent);
         }
 
         /// <summary>
@@ -99,6 +173,49 @@ namespace Barotrauma.Networking
             Write(msg, eventsToSync, client);
         }
 
+        /// <summary>
+        /// Read the events from the message, ignoring ones we've already received
+        /// </summary>
+        public void Read(NetIncomingMessage msg, Client sender = null)
+        {
+            UInt32 firstEventID = msg.ReadUInt32();
+            int eventCount = msg.ReadByte();
+
+            for (int i = 0; i < eventCount; i++)
+            {
+                UInt32 thisEventID = firstEventID + (UInt32)i;
+                UInt16 entityID = msg.ReadUInt16();
+                byte msgLength = msg.ReadByte();
+
+                IClientSerializable entity = Entity.FindEntityByID(entityID) as IClientSerializable;
+
+                //skip the event if we've already received it or if the entity isn't found
+                if (thisEventID != sender.lastSentEntityEventID + 1 || entity == null)
+                {
+                    if (thisEventID != sender.lastSentEntityEventID + 1)
+                    {
+                        DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
+                    }
+                    else if (entity == null)
+                    {
+                        DebugConsole.NewMessage("received msg " + thisEventID + ", entity " + entityID + " not found", Microsoft.Xna.Framework.Color.Red);
+                    }
+                    msg.Position += msgLength * 8;
+                }
+                else
+                {                    
+                    UInt16 characterStateID = msg.ReadUInt16();
+
+                    NetBuffer buffer = new NetBuffer();
+                    buffer.Write(msg.ReadBytes(msgLength-2));
+                    BufferEvent(new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer));
+
+                    sender.lastSentEntityEventID++;
+                }
+                msg.ReadPadBits();
+            }
+        }
+
         protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
         {
             var serverEvent = entityEvent as ServerEntityEvent;
@@ -107,23 +224,20 @@ namespace Barotrauma.Networking
             serverEvent.Write(buffer, recipient);
         }
 
-        protected override void ReadEvent(NetIncomingMessage buffer, INetSerializable entity, float sendingTime, Client sender = null)
+        protected void ReadEvent(NetBuffer buffer, INetSerializable entity, Client sender = null)
         {
             var clientEntity = entity as IClientSerializable;
             if (clientEntity == null) return;
-
+            
             clientEntity.ServerRead(ClientNetObject.ENTITY_STATE, buffer, sender);
         }
-
-        public void Read(NetIncomingMessage msg, Client client)
-        {
-            base.Read(msg, 0.0f, ref client.lastSentEntityEventID, client);
-        }
-
+        
         public void Clear()
         {
             ID = 0;
             events.Clear();
+
+            bufferedEvents.Clear();
 
             server.ConnectedClients.ForEach(c => c.entityEventLastSent.Clear());
         }
