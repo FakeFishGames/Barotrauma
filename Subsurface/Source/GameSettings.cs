@@ -62,6 +62,8 @@ namespace Barotrauma
 
         public static bool VerboseLogging { get; set; }
 
+        public bool EnableSplashScreen { get; set; }
+
         public bool UnsavedSettings
         {
             get
@@ -154,6 +156,8 @@ namespace Barotrauma
 
             VerboseLogging = ToolBox.GetAttributeBool(doc.Root, "verboselogging", false);
 
+            EnableSplashScreen = ToolBox.GetAttributeBool(doc.Root, "enablesplashscreen", true);
+
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up]       = new KeyOrMouse(Keys.W);
             keyMapping[(int)InputType.Down]     = new KeyOrMouse(Keys.S);
@@ -236,7 +240,8 @@ namespace Barotrauma
                 new XAttribute("autocheckupdates", AutoCheckUpdates),
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
-                new XAttribute("verboselogging", VerboseLogging));
+                new XAttribute("verboselogging", VerboseLogging),
+                new XAttribute("enablesplashscreen", EnableSplashScreen));
 
             if (WasGameUpdated)
             {

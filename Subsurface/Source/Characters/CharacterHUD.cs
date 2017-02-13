@@ -34,6 +34,8 @@ namespace Barotrauma
 
         public static void AddToGUIUpdateList(Character character)
         {
+            if (GUI.DisableHUD) return;
+
             if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.AddToGUIUpdateList();
@@ -117,6 +119,8 @@ namespace Barotrauma
             {
                 damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);
             }
+
+            if (GUI.DisableHUD) return;
 
             if (character.Inventory != null)
             {

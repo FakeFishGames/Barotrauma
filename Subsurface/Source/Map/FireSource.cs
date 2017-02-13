@@ -348,8 +348,16 @@ namespace Barotrauma
         {
             lightSource.Remove();
 
-            if (basicSoundIndex > -1) Sounds.SoundManager.Stop(basicSoundIndex);
-            if (largeSoundIndex > -1) Sounds.SoundManager.Stop(largeSoundIndex);
+            if (basicSoundIndex > -1)
+            {
+                Sounds.SoundManager.Stop(basicSoundIndex);
+                basicSoundIndex = -1;
+            }
+            if (largeSoundIndex > -1)
+            {
+                Sounds.SoundManager.Stop(largeSoundIndex);
+                largeSoundIndex = -1;
+            }
 
             hull.RemoveFire(this);
         }

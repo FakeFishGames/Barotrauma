@@ -376,6 +376,8 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             TaskManager.Update(deltaTime);
+
+            if (GUI.DisableHUD) return;
             
             //guiRoot.Update(deltaTime);
             infoButton.Update(deltaTime);
@@ -387,6 +389,8 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            if (GUI.DisableHUD) return;
+
             infoButton.Draw(spriteBatch);
             
             if (gameMode != null)   gameMode.Draw(spriteBatch);

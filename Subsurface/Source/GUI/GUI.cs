@@ -64,6 +64,8 @@ namespace Barotrauma
             get { return arrow; }
         }
 
+        public static bool DisableHUD;
+
         public static void Init(ContentManager content)
         {
             Font = ToolBox.TryLoadFont("SpriteFont1", content);
@@ -497,8 +499,9 @@ namespace Barotrauma
             DebugConsole.Draw(spriteBatch);
             
             if (GUIComponent.MouseOn != null && !string.IsNullOrWhiteSpace(GUIComponent.MouseOn.ToolTip)) GUIComponent.MouseOn.DrawToolTip(spriteBatch);
-
-            cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);
+            
+            if (!GUI.DisableHUD)
+                cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition);            
         }
 
         public static void AddToGUIUpdateList()

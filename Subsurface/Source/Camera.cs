@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     public class Camera
     {
+        public static bool FollowSub = true;
+
         const float DefaultZoom = 1.0f;
         const float ZoomSmoothness = 8.0f;
         const float MoveSmoothness = 8.0f;
@@ -186,7 +188,7 @@ namespace Barotrauma
                     if (GameMain.Config.KeyBind(InputType.Up).IsDown())     moveCam.Y += moveSpeed;
                 }
 
-                if (Screen.Selected == GameMain.GameScreen)
+                if (Screen.Selected == GameMain.GameScreen && FollowSub)
                 {
                     var closestSub = Submarine.FindClosest(WorldViewCenter);
                     if (closestSub != null)

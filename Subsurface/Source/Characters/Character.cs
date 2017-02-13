@@ -1588,6 +1588,8 @@ namespace Barotrauma
             Vector2 closestItemPos = closestItem != null ? closestItem.DrawPosition : Vector2.Zero;
             closestItemPos.Y = -closestItemPos.Y;
             GUI.DrawLine(spriteBatch, closestItemPos - new Vector2(0, 5), closestItemPos + new Vector2(0, 5), Color.Lime, 0, 10);
+
+            if (this == controlled || GUI.DisableHUD) return;
             
             Vector2 pos = DrawPosition;
             pos.Y = -pos.Y;
@@ -1600,7 +1602,6 @@ namespace Barotrauma
             }
 
             if (this == controlled) return;
-
 
             if (info != null)
             {
