@@ -49,6 +49,8 @@ namespace Barotrauma
             private set;
         }
 
+        public static bool LockX, LockY;
+
         public static List<Submarine> SavedSubmarines = new List<Submarine>();
         
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
@@ -754,6 +756,11 @@ namespace Barotrauma
             if (Level.Loaded == null) return;
             
             if (subBody == null) return;
+
+            subBody.Body.LinearVelocity = new Vector2(
+                LockX ? 0.0f : subBody.Body.LinearVelocity.X, 
+                LockY ? 0.0f : subBody.Body.LinearVelocity.Y);
+            
             
             subBody.Update(deltaTime);
 

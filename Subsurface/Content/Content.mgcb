@@ -49,3 +49,8 @@
 /processorParam:DebugMode=Auto
 /build:damageshader.fx
 
+#begin utg_4.mp4
+/importer:H264Importer
+/processor:VideoProcessor
+/build:utg_4.mp4
+
