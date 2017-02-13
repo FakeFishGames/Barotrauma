@@ -32,6 +32,11 @@ namespace Barotrauma
                 if (controlled == value) return;
                 controlled = value;
                 CharacterHUD.Reset();
+
+                if (controlled != null)
+                {
+                    controlled.Enabled = true;
+                }
             }
         }
 
