@@ -183,7 +183,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            if (!isRunning) return;
+            if (!isRunning|| GUI.DisableHUD) return;
 
             CrewManager.Draw(spriteBatch);
 
@@ -228,7 +228,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (!isRunning) return;
+            if (!isRunning || GUI.DisableHUD) return;
 
             base.Update(deltaTime);
 

@@ -511,6 +511,12 @@ namespace Barotrauma
 
                     Submarine.MainSub.GodMode = !Submarine.MainSub.GodMode;
                     break;
+                case "lockx":
+                    Submarine.LockX = !Submarine.LockX;
+                    break;
+                case "locky":
+                    Submarine.LockY = !Submarine.LockY;
+                    break;
                 case "dumpids":
                     int count = commands.Length < 2 ? 10 : int.Parse(commands[1]);
 
@@ -674,6 +680,14 @@ namespace Barotrauma
                     break;
                 case "debugdraw":
                     GameMain.DebugDraw = !GameMain.DebugDraw;
+                    break;
+                case "disablehud":
+                case "hud":
+                    GUI.DisableHUD = !GUI.DisableHUD;
+                    GameMain.Instance.IsMouseVisible = !GameMain.Instance.IsMouseVisible;
+                    break;
+                case "followsub":
+                    Camera.FollowSub = !Camera.FollowSub;
                     break;
                 case "drawaitargets":
                 case "showaitargets":
