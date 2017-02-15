@@ -67,7 +67,8 @@ namespace Barotrauma.Networking
             var newEvent = new ServerEntityEvent(entity, ID + 1);
             if (extraData != null) newEvent.SetData(extraData);
 
-            for (int i = events.Count - 1; i >= 0 && !events[i].Sent; i--)
+            events.RemoveAll(e => e.Sent && e.IsDuplicate(newEvent)); //remove outdated events, they are redundant now
+            for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
                 // -> no need to add a new one
