@@ -11,6 +11,8 @@ namespace Barotrauma.Networking
     {
         private List<ServerEntityEvent> events;
 
+        private UInt32 lastSentToAll;
+
         public List<ServerEntityEvent> Events
         {
             get { return events; }
@@ -67,7 +69,7 @@ namespace Barotrauma.Networking
             var newEvent = new ServerEntityEvent(entity, ID + 1);
             if (extraData != null) newEvent.SetData(extraData);
 
-            events.RemoveAll(e => e.Sent && e.IsDuplicate(newEvent)); //remove outdated events, they are redundant now
+            events.RemoveAll(e => e.ID<=lastSentToAll && e.IsDuplicate(newEvent)); //remove outdated events, they are redundant now
             for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
@@ -80,7 +82,7 @@ namespace Barotrauma.Networking
             events.Add(newEvent);
         }
 
-        public void Update()
+        public void Update(List<Client> clients)
         {
             foreach (BufferedEvent bufferedEvent in bufferedEvents)
             {
@@ -106,6 +108,9 @@ namespace Barotrauma.Networking
 
                 bufferedEvent.IsProcessed = true;
             }
+
+            lastSentToAll = clients[0].lastRecvEntityEventID;
+            clients.ForEach(c => { if (c.lastRecvEntityEventID < lastSentToAll) lastSentToAll = c.lastRecvEntityEventID; });
 
             bufferedEvents.RemoveAll(b => b.IsProcessed);           
         }
@@ -133,7 +138,7 @@ namespace Barotrauma.Networking
             if (events.Count == 0) return;
 
             List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
-
+            
             //find the index of the first event the client hasn't received
             int startIndex = events.Count;
             while (startIndex > 0 &&

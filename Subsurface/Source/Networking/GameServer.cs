@@ -354,7 +354,7 @@ namespace Barotrauma.Networking
             {
                 if (respawnManager != null) respawnManager.Update(deltaTime);
 
-                entityEventManager.Update();
+                entityEventManager.Update(connectedClients);
 
                 bool isCrewDead =  
                     connectedClients.Find(c => c.Character != null && !c.Character.IsDead)==null &&
