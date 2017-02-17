@@ -941,6 +941,9 @@ namespace Barotrauma
                     target.AnimController.TargetMovement, 
                     (character.SimPosition + Vector2.UnitX * Dir) - target.SimPosition, 0.5f);
             }
+            
+            //if on stairs, make the dragged character "climb up" (= collide with stairs)
+            if (stairs != null) target.AnimController.TargetMovement = new Vector2 (target.AnimController.TargetMovement.X, 1.0f);
         }
 
         public void Grab(Vector2 rightHandPos, Vector2 leftHandPos)

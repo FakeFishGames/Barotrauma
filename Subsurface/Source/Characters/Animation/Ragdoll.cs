@@ -707,16 +707,35 @@ namespace Barotrauma
 
         public void FindHull(Vector2? worldPosition = null, bool setSubmarine = true)
         {
-            if (!CanEnterSubmarine)
-            {
-                return;
-            }
-
             Vector2 findPos = worldPosition==null ? this.WorldPosition : (Vector2)worldPosition;
 
             Hull newHull = Hull.FindHull(findPos, currentHull);
             
             if (newHull == currentHull) return;
+
+            if (!CanEnterSubmarine)
+            {
+                //character is inside the sub even though it shouldn't be able to enter -> teleport it out
+
+                //far from an ideal solution, but monsters getting lodged inside the sub seems to be 
+                //pretty rare during normal gameplay (requires abnormally high velocities), so I think
+                //this is preferable to the cost of using continuous collision detection for the character collider
+                if (newHull != null)
+                {
+                    //find a position 32 units away from the hull
+                    Vector2? intersection = MathUtils.GetLineRectangleIntersection(
+                        newHull.WorldPosition, 
+                        newHull.WorldPosition + Vector2.Normalize(WorldPosition - newHull.WorldPosition) * Math.Max(newHull.Rect.Width, newHull.Rect.Height),
+                        new Rectangle(newHull.WorldRect.X - 32, newHull.WorldRect.Y + 32, newHull.WorldRect.Width + 64, newHull.Rect.Height + 64));
+
+                    if (intersection != null)
+                    {
+                        Collider.SetTransform(ConvertUnits.ToSimUnits((Vector2)intersection), Collider.Rotation);
+                    }
+                }
+
+                return;
+            }
 
             if (setSubmarine)
             {
@@ -1358,10 +1377,26 @@ namespace Barotrauma
         {
             float halfHeight = Collider.height * 0.5f + Collider.radius;
 
-            Vector2 offset = Vector2.Zero;
-            offset.Y = -colliderHeightFromFloor;
-            return Collider.SimPosition + offset +
-                new Vector2((float)Math.Sin(Collider.Rotation), -(float)Math.Cos(Collider.Rotation)) * halfHeight;
+            float offset = 0.0f;
+
+            if (!character.IsUnconscious && !character.IsDead && character.Stun <= 0.0f)
+            {
+                offset = -colliderHeightFromFloor;
+            }
+
+            float lowestBound = Collider.SimPosition.Y;
+            for (int i = 0; i < Collider.FarseerBody.FixtureList.Count; i++)
+            {
+                FarseerPhysics.Collision.AABB aabb;
+                FarseerPhysics.Common.Transform transform;
+                
+                Collider.FarseerBody.GetTransform(out transform);
+                Collider.FarseerBody.FixtureList[i].Shape.ComputeAABB(out aabb, ref transform, i);
+
+                lowestBound = Math.Min(aabb.LowerBound.Y, lowestBound);
+            }
+
+            return new Vector2(Collider.SimPosition.X, lowestBound + offset);
         }
 
         public Limb FindLowestLimb()

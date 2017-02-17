@@ -47,7 +47,7 @@ namespace Barotrauma
                 AnimController.SimplePhysicsEnabled = false;
             }
 
-            if (IsDead || Health <= 0.0f) return;
+            if (IsDead || Health <= 0.0f || IsUnconscious || Stun > 0.0f) return;
 
             if (Controlled == this || !aiController.Enabled) return;
 
