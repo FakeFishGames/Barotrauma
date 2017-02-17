@@ -1268,10 +1268,26 @@ namespace Barotrauma
         {
             float halfHeight = Collider.height * 0.5f + Collider.radius;
 
-            Vector2 offset = Vector2.Zero;
-            offset.Y = -colliderHeightFromFloor;
-            return Collider.SimPosition + offset +
-                new Vector2((float)Math.Sin(Collider.Rotation), -(float)Math.Cos(Collider.Rotation)) * halfHeight;
+            float offset = 0.0f;
+
+            if (!character.IsUnconscious && !character.IsDead && character.Stun <= 0.0f)
+            {
+                offset = -colliderHeightFromFloor;
+            }
+
+            float lowestBound = Collider.SimPosition.Y;
+            for (int i = 0; i < Collider.FarseerBody.FixtureList.Count; i++)
+            {
+                FarseerPhysics.Collision.AABB aabb;
+                FarseerPhysics.Common.Transform transform;
+                
+                Collider.FarseerBody.GetTransform(out transform);
+                Collider.FarseerBody.FixtureList[i].Shape.ComputeAABB(out aabb, ref transform, i);
+
+                lowestBound = Math.Min(aabb.LowerBound.Y, lowestBound);
+            }
+
+            return new Vector2(Collider.SimPosition.X, lowestBound + offset);
         }
 
         public Limb FindLowestLimb()
