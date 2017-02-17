@@ -9,7 +9,16 @@ v0.5.4.3
 multi-part subs shouldn't spawn inside walls anymore)
 - explosion damage is calculated based on the distance to the closest surface of a limb instead of the
 center position of the limb (i.e. large monsters can be damaged by smaller explosions)
+- added an Undertow Games splash screen
+- updated to a newer version of the NVorbis sound library
 - fixed a null reference exception caused by wires
+- fixed an issue in the way items in alien ruins are initialized, which occasionally caused ID mismatches
+(and desync) in items and characters created after generating the ruins
+- fixed some item properties not being saved if changed in the editor (e.g. battery recharge speed)
+- fixed characters turning into husks when they die, even if the infection has been cured
+- fixed docking ports being disconnected in the mirrored subs in the combat missions
+- unconscious characters collide with stairs when they're being dragged up
+- fixed characters sinking/floating away when using railgun controllers underwater
 
 ---------------------------------------------------------------------------------------------------------
 v0.5.4.2
