@@ -47,6 +47,10 @@ namespace Barotrauma.Networking
         public float ChatSpamTimer;
         public int ChatSpamCount;
 
+        public bool NeedsMidRoundSync;
+        //how many unique events the client missed before joining the server
+        public UInt32 UnreceivedEntityEventCount;
+
         private List<Client> kickVoters;
 
         //when was a specific entity event last sent to the client
@@ -73,6 +77,9 @@ namespace Barotrauma.Networking
 
             lastRecvEntitySpawnID = 0;
             lastRecvEntityEventID = 0;
+
+            UnreceivedEntityEventCount = 0;
+            NeedsMidRoundSync = false;
         }
 
         public int KickVoteCount

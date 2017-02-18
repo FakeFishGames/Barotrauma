@@ -97,12 +97,21 @@ namespace Barotrauma.Networking
             msg.Write((byte)ClientNetObject.ENTITY_STATE);
             Write(msg, eventsToSync);
         }
-
+        
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received
         /// </summary>
-        public void Read(NetIncomingMessage msg, float sendingTime)
+        public void Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
         {
+            UInt32 unreceivedEntityEventCount = 0;
+            UInt32 firstNewID = 0;
+
+            if (type == ServerNetObject.ENTITY_EVENT_INITIAL)
+            {
+                unreceivedEntityEventCount = msg.ReadUInt32();
+                firstNewID = msg.ReadUInt32();
+            }
+
             UInt32 firstEventID = msg.ReadUInt32();
             int eventCount = msg.ReadByte();
 
@@ -148,6 +157,15 @@ namespace Barotrauma.Networking
                 }
                 msg.ReadPadBits();
             }
+
+            if (type == ServerNetObject.ENTITY_EVENT_INITIAL)
+            {
+                if (lastReceivedID == unreceivedEntityEventCount - 1 ||
+                    unreceivedEntityEventCount == 0)
+                {
+                    lastReceivedID = firstNewID - 1;
+                }
+            }
         }
 
         protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
@@ -160,7 +178,7 @@ namespace Barotrauma.Networking
 
         protected void ReadEvent(NetIncomingMessage buffer, IServerSerializable entity, float sendingTime)
         {
-            entity.ClientRead(ServerNetObject.ENTITY_STATE, buffer, sendingTime);
+            entity.ClientRead(ServerNetObject.ENTITY_EVENT, buffer, sendingTime);
         }
 
         public void Clear()
