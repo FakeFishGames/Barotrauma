@@ -69,7 +69,7 @@ namespace Barotrauma.Networking
             var newEvent = new ServerEntityEvent(entity, ID + 1);
             if (extraData != null) newEvent.SetData(extraData);
 
-            events.RemoveAll(e => e.ID<=lastSentToAll && e.IsDuplicate(newEvent)); //remove outdated events, they are redundant now
+            events.RemoveAll(e => e.ID <= lastSentToAll && e.IsDuplicate(newEvent)); //remove outdated events, they are redundant now
             for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
@@ -109,8 +109,11 @@ namespace Barotrauma.Networking
                 bufferedEvent.IsProcessed = true;
             }
 
-            lastSentToAll = clients[0].lastRecvEntityEventID;
-            clients.ForEach(c => { if (c.lastRecvEntityEventID < lastSentToAll) lastSentToAll = c.lastRecvEntityEventID; });
+            if (clients.Count > 0)
+            {
+                lastSentToAll = clients[0].lastRecvEntityEventID;
+                clients.ForEach(c => { if (c.inGame) lastSentToAll = Math.Min(lastSentToAll, c.lastRecvEntityEventID); });
+            }
 
             bufferedEvents.RemoveAll(b => b.IsProcessed);           
         }
