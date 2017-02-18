@@ -49,7 +49,8 @@ namespace Barotrauma.Networking
         CHAT_MESSAGE,
         VOTE,
         ENTITY_POSITION,
-        ENTITY_STATE,
+        ENTITY_EVENT,
+        ENTITY_EVENT_INITIAL,
 
         ENTITY_SPAWN
     }
@@ -126,7 +127,6 @@ namespace Barotrauma.Networking
         {
             get { return inGameHUD; }
         }
-
 
         public virtual List<Client> ConnectedClients
         {

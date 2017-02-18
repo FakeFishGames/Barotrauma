@@ -11,6 +11,10 @@ namespace Barotrauma.Networking
     {
         private List<ServerEntityEvent> events;
 
+        //list of unique events (i.e. !IsDuplicate) created during the round
+        //used for syncing clients who join mid-round
+        private List<ServerEntityEvent> uniqueEvents;
+
         private UInt32 lastSentToAll;
 
         public List<ServerEntityEvent> Events
@@ -56,6 +60,8 @@ namespace Barotrauma.Networking
             this.server = server;
 
             bufferedEvents = new List<BufferedEvent>();
+
+            uniqueEvents = new List<ServerEntityEvent>();
         }
 
         public void CreateEvent(IServerSerializable entity, object[] extraData = null)
@@ -69,7 +75,7 @@ namespace Barotrauma.Networking
             var newEvent = new ServerEntityEvent(entity, ID + 1);
             if (extraData != null) newEvent.SetData(extraData);
 
-            events.RemoveAll(e => e.ID <= lastSentToAll && e.IsDuplicate(newEvent)); //remove outdated events, they are redundant now
+            events.RemoveAll(e => e.ID <= lastSentToAll); //remove events that , they are redundant now
             for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
@@ -80,6 +86,15 @@ namespace Barotrauma.Networking
             ID++;
 
             events.Add(newEvent);
+
+            if (!uniqueEvents.Any(e => e.IsDuplicate(newEvent)))
+            {
+                //create a copy of the event and give it a new ID
+                var uniqueEvent = new ServerEntityEvent(entity, (uint)uniqueEvents.Count);
+                uniqueEvent.SetData(extraData);
+
+                uniqueEvents.Add(uniqueEvent);
+            }
         }
 
         public void Update(List<Client> clients)
@@ -140,30 +155,16 @@ namespace Barotrauma.Networking
         {
             if (events.Count == 0) return;
 
-            List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
-            
-            //find the index of the first event the client hasn't received
-            int startIndex = events.Count;
-            while (startIndex > 0 &&
-                events[startIndex-1].ID > client.lastRecvEntityEventID)
+            List<NetEntityEvent> eventsToSync = null;
+            if (client.NeedsMidRoundSync)
             {
-                startIndex--;
+                eventsToSync = GetEventsToSync(client, uniqueEvents);
+            }
+            else
+            {
+                eventsToSync = GetEventsToSync(client, events);
             }
 
-            for (int i = startIndex; i < events.Count; i++)
-            {
-                //find the first event that hasn't been sent in 1.5 * roundtriptime or at all
-                float lastSent = 0;
-                client.entityEventLastSent.TryGetValue(events[i].ID, out lastSent);
-
-                if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime * 1.5f)
-                {
-                    continue;
-                }
-
-                eventsToSync.AddRange(events.GetRange(i, events.Count - i));
-                break;
-            }
             if (eventsToSync.Count == 0) return;
 
             //too many events for one packet
@@ -178,8 +179,73 @@ namespace Barotrauma.Networking
                 client.entityEventLastSent[entityEvent.ID] = (float)NetTime.Now;
             }
 
-            msg.Write((byte)ServerNetObject.ENTITY_STATE);
-            Write(msg, eventsToSync, client);
+            if (client.NeedsMidRoundSync)
+            {
+                msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);
+                //how many (unique) events the clients had missed before joining
+                msg.Write(client.UnreceivedEntityEventCount); 
+
+                //ID of the first event sent after the client joined 
+                //(after the client has been synced they'll switch their lastReceivedID 
+                //to the one before this, and the eventmanagers will start to function "normally")
+                msg.Write(events.Count == 0 ? 0 : events[events.Count - 1].ID);
+                Write(msg, eventsToSync, client);
+            }
+            else
+            {
+                msg.Write((byte)ServerNetObject.ENTITY_EVENT);
+                Write(msg, eventsToSync, client);
+            }
+        }
+
+        /// <summary>
+        /// Returns a list of events that should be sent to the client from the eventList 
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="eventList"></param>
+        /// <returns></returns>
+        private List<NetEntityEvent> GetEventsToSync(Client client, List<ServerEntityEvent> eventList)
+        {
+            List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
+
+            //find the index of the first event the client hasn't received
+            int startIndex = eventList.Count;
+            while (startIndex > 0 &&
+                eventList[startIndex - 1].ID > client.lastRecvEntityEventID)
+            {
+                startIndex--;
+            }
+
+            for (int i = startIndex; i < eventList.Count; i++)
+            {
+                //find the first event that hasn't been sent in 1.5 * roundtriptime or at all
+                float lastSent = 0;
+                client.entityEventLastSent.TryGetValue(eventList[i].ID, out lastSent);
+
+                if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime * 1.5f)
+                {
+                    continue;
+                }
+
+                eventsToSync.AddRange(eventList.GetRange(i, eventList.Count - i));
+                break;
+            }
+
+            return eventsToSync;
+        }
+
+        public void InitClientMidRoundSync(Client client)
+        {
+            if (uniqueEvents.Count > 0)
+            {
+                client.UnreceivedEntityEventCount = (UInt32)uniqueEvents.Count;
+                client.NeedsMidRoundSync = true;
+            }
+            else
+            {
+                client.UnreceivedEntityEventCount = 0;
+                client.NeedsMidRoundSync = false;
+            }
         }
 
         /// <summary>
@@ -247,6 +313,8 @@ namespace Barotrauma.Networking
             events.Clear();
 
             bufferedEvents.Clear();
+
+            uniqueEvents.Clear();
 
             server.ConnectedClients.ForEach(c => c.entityEventLastSent.Clear());
         }

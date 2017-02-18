@@ -53,6 +53,12 @@ namespace Barotrauma.Networking
             }
         }
 
+        
+        public ServerEntityEventManager EntityEventManager
+        {
+            get { return entityEventManager; }
+        }
+
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             name = name.Replace(":", "");
@@ -527,6 +533,7 @@ namespace Barotrauma.Networking
                         //game already started -> send start message immediately
                         if (gameStarted)
                         {
+                            connectedClient.NeedsMidRoundSync = true;
                             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClient);
                         }
                     }
@@ -606,7 +613,16 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (gameStarted) c.inGame = true;
+            if (gameStarted)
+            {
+                if (!c.inGame && c.NeedsMidRoundSync)
+                {
+                    //client joined mid-round and has just started up the game
+                    //check which unique messages they've missed
+                    entityEventManager.InitClientMidRoundSync(c);
+                }
+                c.inGame = true;
+            }
             
             ClientNetObject objHeader;
             while ((objHeader = (ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
@@ -622,7 +638,21 @@ namespace Barotrauma.Networking
 
                         //last msgs we've created/sent, the client IDs should never be higher than these
                         UInt32 lastEntitySpawnID = Entity.Spawner.NetStateID;
-                        UInt32 lastEntityEventID = entityEventManager.Events.Count() == 0 ? 0 : entityEventManager.Events.Last().ID;
+                        UInt32 lastEntityEventID = entityEventManager.Events.Count == 0 ? 0 : entityEventManager.Events.Last().ID;
+
+                        if (c.NeedsMidRoundSync)
+                        {
+                            //received all the old events -> client in sync, we can switch to normal behavior
+                            if (lastRecvEntityEventID >= c.UnreceivedEntityEventCount - 1 ||
+                                c.UnreceivedEntityEventCount == 0)
+                            {
+                                c.NeedsMidRoundSync = false;
+                            }
+                            else
+                            {
+                                lastEntityEventID = (uint)c.UnreceivedEntityEventCount - 1;
+                            }
+                        }
 
 #if DEBUG
                         //client thinks they've received a msg we haven't sent yet (corrupted packet, msg read/written incorrectly?)
@@ -636,10 +666,9 @@ namespace Barotrauma.Networking
                             DebugConsole.ThrowError("client.lastRecvEntityEventID > lastEntityEventID");                        
 #endif
 
-                        c.lastRecvChatMsgID     = Math.Min(Math.Max(c.lastRecvChatMsgID, lastRecvChatMsgID), c.lastChatMsgQueueID);
+                        c.lastRecvChatMsgID = NetIdUtils.Clamp(c.lastRecvChatMsgID, lastRecvChatMsgID, c.lastChatMsgQueueID);
                         c.lastRecvEntitySpawnID = Math.Min(Math.Max(c.lastRecvEntitySpawnID, lastRecvEntitySpawnID), lastEntitySpawnID);
                         c.lastRecvEntityEventID = Math.Min(Math.Max(c.lastRecvEntityEventID, lastRecvEntityEventID), lastEntityEventID);
-
 
                         break;
                     case ClientNetObject.CHAT_MESSAGE:

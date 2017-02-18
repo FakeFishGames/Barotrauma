@@ -646,7 +646,7 @@ namespace Barotrauma.Networking
 
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
-            
+
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 
             if (gameMode == null)
@@ -900,8 +900,9 @@ namespace Barotrauma.Networking
 
                         inc.ReadPadBits();
                         break;
-                    case ServerNetObject.ENTITY_STATE:
-                        entityEventManager.Read(inc, sendingTime);
+                    case ServerNetObject.ENTITY_EVENT:
+                    case ServerNetObject.ENTITY_EVENT_INITIAL:
+                        entityEventManager.Read(objHeader, inc, sendingTime);
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);

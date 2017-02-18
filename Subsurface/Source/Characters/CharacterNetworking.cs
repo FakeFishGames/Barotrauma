@@ -480,7 +480,7 @@ namespace Barotrauma
 
                     memPos.Insert(index, posInfo);
                     break;
-                case ServerNetObject.ENTITY_STATE:
+                case ServerNetObject.ENTITY_EVENT:
                     bool isInventoryUpdate = msg.ReadBoolean();
 
                     if (isInventoryUpdate)
