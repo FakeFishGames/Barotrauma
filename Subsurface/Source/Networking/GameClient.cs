@@ -587,14 +587,7 @@ namespace Barotrauma.Networking
 
         private void SetPermissions(ClientPermissions newPermissions)
         {
-            if (GUIMessageBox.MessageBoxes.Count > 0)
-            {
-                var existingMsgBox = GUIMessageBox.MessageBoxes.Peek();
-                if (existingMsgBox.UserData as string == "permissions")
-                {
-                    GUIMessageBox.MessageBoxes.Dequeue();
-                }
-            }
+            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");            
 
             string msg = "";
             if (newPermissions == ClientPermissions.None)

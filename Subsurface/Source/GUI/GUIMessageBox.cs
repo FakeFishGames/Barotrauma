@@ -5,7 +5,7 @@ namespace Barotrauma
 {
     public class GUIMessageBox : GUIFrame
     {
-        public static Queue<GUIComponent> MessageBoxes = new Queue<GUIComponent>();
+        public static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
 
         const int DefaultWidth=400, DefaultHeight=250;
 
@@ -17,7 +17,7 @@ namespace Barotrauma
 
         public static GUIComponent VisibleBox
         {
-            get { return MessageBoxes.Count==0 ? null : MessageBoxes.Peek(); }
+            get { return MessageBoxes.Count == 0 ? null : MessageBoxes[0]; }
         }
 
         public string Text
@@ -60,7 +60,7 @@ namespace Barotrauma
                 x += this.Buttons[i].Rect.Width + 20;
             }
 
-            MessageBoxes.Enqueue(this);
+            MessageBoxes.Add(this);
         }
 
 
@@ -68,7 +68,7 @@ namespace Barotrauma
         public bool Close(GUIButton button, object obj)
         {
             if (parent != null) parent.RemoveChild(this);
-            if (MessageBoxes.Contains(this)) MessageBoxes.Dequeue();
+            if (MessageBoxes.Contains(this)) MessageBoxes.Remove(this);
 
             return true;
         }

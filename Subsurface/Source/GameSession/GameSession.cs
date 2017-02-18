@@ -246,9 +246,9 @@ namespace Barotrauma
             if (shiftSummary != null)
             {
                 GUIFrame summaryFrame = shiftSummary.CreateSummaryFrame(endMessage);
-                GUIMessageBox.MessageBoxes.Enqueue(summaryFrame);
+                GUIMessageBox.MessageBoxes.Add(summaryFrame);
                 var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
-                okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
+                okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
             }
 
             TaskManager.EndShift();

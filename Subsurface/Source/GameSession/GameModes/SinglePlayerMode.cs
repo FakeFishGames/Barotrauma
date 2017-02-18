@@ -294,7 +294,7 @@ namespace Barotrauma
 
             if (!success)
             {
-                var summaryScreen = GUIMessageBox.MessageBoxes.Peek();
+                var summaryScreen = GUIMessageBox.VisibleBox;
 
                 if (summaryScreen != null)
                 {
@@ -303,11 +303,11 @@ namespace Barotrauma
 
                     var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), "Load game", Alignment.BottomRight, GUI.Style, summaryScreen);
                     okButton.OnClicked += GameMain.GameSession.LoadPrevious;
-                    okButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
+                    okButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
 
                     var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Quit", Alignment.BottomRight, GUI.Style, summaryScreen);
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
-                    quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
+                    quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
                 }
             }
 

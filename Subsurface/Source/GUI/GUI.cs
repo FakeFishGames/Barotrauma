@@ -480,11 +480,10 @@ namespace Barotrauma
 
             DrawMessages(spriteBatch, (float)deltaTime);
 
-            if (GUIMessageBox.MessageBoxes.Count>0)
+            if (GUIMessageBox.VisibleBox != null)
             {
-                var messageBox = GUIMessageBox.MessageBoxes.Peek();
-                if (messageBox != null) messageBox.Draw(spriteBatch);
-            }
+                GUIMessageBox.VisibleBox.Draw(spriteBatch);
+            }            
 
             if (pauseMenuOpen)
             {
@@ -516,14 +515,10 @@ namespace Barotrauma
                 GameMain.Config.SettingsFrame.AddToGUIUpdateList();
             }
 
-            if (GUIMessageBox.MessageBoxes.Count > 0)
+            if (GUIMessageBox.VisibleBox != null)
             {
-                var messageBox = GUIMessageBox.MessageBoxes.Peek();
-                if (messageBox != null)
-                {
-                    messageBox.AddToGUIUpdateList();
-                }
-            }
+                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
+            }            
         }
 
         public static void Update(float deltaTime)
@@ -538,14 +533,10 @@ namespace Barotrauma
                 GameMain.Config.SettingsFrame.Update(deltaTime);
             }
 
-            if (GUIMessageBox.MessageBoxes.Count > 0)
+            if (GUIMessageBox.VisibleBox != null)
             {
-                var messageBox = GUIMessageBox.MessageBoxes.Peek();
-                if (messageBox != null)
-                {
-                    messageBox.Update(deltaTime);
-                }
-            }
+                GUIMessageBox.VisibleBox.Update(deltaTime);
+            }            
         }
 
         public static void AddMessage(string message, Color color, float lifeTime = 3.0f, bool playSound = true)

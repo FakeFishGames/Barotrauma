@@ -191,16 +191,12 @@ namespace Launcher2
 
             PlayerInput.Update(deltaTime);
 
-            if (GUIMessageBox.MessageBoxes.Count > 0)
+            if (GUIMessageBox.VisibleBox != null)
             {
-                var messageBox = GUIMessageBox.MessageBoxes.Peek();
-                if (messageBox != null)
-                {
-                    GUIComponent.ForceMouseOn(messageBox);
-                    messageBox.Update(deltaTime);
-                    return;
-                }
-            }
+                GUIComponent.ForceMouseOn(GUIMessageBox.VisibleBox);
+                GUIMessageBox.VisibleBox.Update(deltaTime);
+                return;
+            }            
 
             GUIComponent.ClearUpdateList();
             guiRoot.AddToGUIUpdateList();
@@ -223,12 +219,8 @@ namespace Launcher2
             spriteBatch.Draw(titleTexture, new Vector2(40.0f, 20.0f), null, Color.White, 0.0f, Vector2.Zero, new Vector2(0.2f, 0.2f), SpriteEffects.None, 0.0f);
             
             guiRoot.Draw(spriteBatch);
-
-            if (GUIMessageBox.MessageBoxes.Count > 0)
-            {
-                var messageBox = GUIMessageBox.MessageBoxes.Peek();
-                if (messageBox != null) messageBox.Draw(spriteBatch);
-            }
+            
+            if (GUIMessageBox.VisibleBox != null) GUIMessageBox.VisibleBox.Draw(spriteBatch);            
 
             spriteBatch.End();
         }

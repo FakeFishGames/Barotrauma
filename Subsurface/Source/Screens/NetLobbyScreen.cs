@@ -1226,7 +1226,7 @@ namespace Barotrauma
 
                 if (GUIMessageBox.MessageBoxes.Count>0)
                 {
-                    var currentMessageBox = GUIMessageBox.MessageBoxes.Peek();
+                    var currentMessageBox = GUIMessageBox.VisibleBox;
                     if (currentMessageBox != null && currentMessageBox.UserData as string == subName)
                     {
                         return false;
