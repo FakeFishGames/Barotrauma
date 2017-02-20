@@ -314,9 +314,16 @@ namespace Barotrauma.Networking
 
             bufferedEvents.Clear();
 
+            lastSentToAll = 0;
+
             uniqueEvents.Clear();
 
-            server.ConnectedClients.ForEach(c => c.entityEventLastSent.Clear());
+            foreach (Client c in server.ConnectedClients)
+            {
+                c.entityEventLastSent.Clear();
+                c.lastRecvEntityEventID = 0;
+                c.lastSentEntityEventID = 0;
+            }
         }
     }
 }
