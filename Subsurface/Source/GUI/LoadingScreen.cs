@@ -21,12 +21,12 @@ namespace Barotrauma
         public Vector2 CenterPosition;
 
         public Vector2 TitlePosition;
-        
-        private float? loadState;
 
+        private float? loadState;
+#if !LINUX
         Video splashScreenVideo;
         VideoPlayer videoPlayer;
-        
+#endif
         public Vector2 TitleSize
         {
             get { return new Vector2(titleTexture.Width, titleTexture.Height); }
@@ -56,19 +56,23 @@ namespace Barotrauma
 
         public LoadingScreen(GraphicsDevice graphics)
         {
+#if !LINUX
+
             if (GameMain.Config.EnableSplashScreen)
             {
                 try
                 {
                     splashScreenVideo = GameMain.Instance.Content.Load<Video>("utg_4"); 
                 } 
-              
+
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Failed to load splashscreen", e);
                     GameMain.Config.EnableSplashScreen = false;
                 }
             }
+#endif
+
 
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
             monsterTexture = TextureLoader.FromFile("Content/UI/titleMonster.png");
@@ -82,6 +86,7 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
         {
+#if !LINUX
             if (GameMain.Config.EnableSplashScreen && splashScreenVideo != null)
             {
                 try
@@ -96,6 +101,7 @@ namespace Barotrauma
                     GameMain.Config.EnableSplashScreen = false;
                 }
             }
+#endif
                         
             drawn = true;
 
@@ -171,6 +177,7 @@ namespace Barotrauma
 
         }
 
+#if !LINUX
         private void DrawSplashScreen(SpriteBatch spriteBatch)
         {
             if (videoPlayer == null)
@@ -206,6 +213,7 @@ namespace Barotrauma
 
             }
         }
+#endif
  
         bool drawn;
         public IEnumerable<object> DoLoading(IEnumerable<object> loader)
