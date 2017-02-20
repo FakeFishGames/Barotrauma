@@ -2072,7 +2072,7 @@ namespace Barotrauma
         {
             msg.Write(ID);
             //length in bytes
-            msg.Write((byte)(4 + 4 + 1));
+            msg.Write((byte)(4 + 4 + 1 + 3));
 
             msg.Write(SimPosition.X);
             msg.Write(SimPosition.Y);
@@ -2084,8 +2084,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Item velocity out of range ("+body.LinearVelocity+")");
 #endif
 
-            msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -32.0f, 32.0f), -32.0f, 32.0f, 8);
-            msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -32.0f, 32.0f), -32.0f, 32.0f, 8);
+            msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -32.0f, 32.0f), -32.0f, 32.0f, 12);
+            msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -32.0f, 32.0f), -32.0f, 32.0f, 12);
 
             lastSentPos = SimPosition;
         }
@@ -2100,8 +2100,8 @@ namespace Barotrauma
             body.FarseerBody.Rotation = MathUtils.ByteToAngle(msg.ReadByte());
 
             body.LinearVelocity = new Vector2(
-                msg.ReadRangedSingle(-32.0f, 32.0f, 8),
-                msg.ReadRangedSingle(-32.0f, 32.0f, 8));
+                msg.ReadRangedSingle(-32.0f, 32.0f, 12),
+                msg.ReadRangedSingle(-32.0f, 32.0f, 12));
 
             DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);
 
