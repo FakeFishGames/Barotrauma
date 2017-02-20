@@ -640,6 +640,10 @@ namespace Barotrauma.Networking
                         UInt32 lastEntitySpawnID = Entity.Spawner.NetStateID;
                         UInt32 lastEntityEventID = entityEventManager.Events.Count == 0 ? 0 : entityEventManager.Events.Last().ID;
 
+                        Debug.Assert(
+                            c.lastRecvEntityEventID.GetType() == typeof(UInt32),
+                            "Event ID type changed, you may need to reimplement MidRound syncing logic to handle ID wraparound");
+
                         if (c.NeedsMidRoundSync)
                         {
                             //received all the old events -> client in sync, we can switch to normal behavior
@@ -1049,11 +1053,14 @@ namespace Barotrauma.Networking
                 List<CharacterInfo> characterInfos = new List<CharacterInfo>();
                 foreach (Client client in teamClients)
                 {
+                    client.NeedsMidRoundSync = false;
+
                     client.lastRecvEntitySpawnID = 0;
 
                     client.entityEventLastSent.Clear();
                     client.lastSentEntityEventID = 0;
                     client.lastRecvEntityEventID = 0;
+                    client.UnreceivedEntityEventCount = 0;
 
                     if (client.characterInfo == null)
                     {
