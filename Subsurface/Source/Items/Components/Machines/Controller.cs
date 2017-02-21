@@ -271,11 +271,7 @@ namespace Barotrauma.Items.Components
                 dir = dir == Direction.Left ? Direction.Right : Direction.Left;
             }
 
-            if (userPos.X != 0.0f)
-            {
-                float diff = (item.Rect.X + UserPos.X) - item.Rect.Center.X;
-                userPos.X = item.Rect.Center.X - diff - item.Rect.X;
-            }
+            userPos.X = -UserPos.X;            
 
             for (int i = 0; i < limbPositions.Count; i++)
             {
