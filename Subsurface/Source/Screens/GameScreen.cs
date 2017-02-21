@@ -217,8 +217,17 @@ namespace Barotrauma
 
             if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);
 
-            if (Character.Controlled == null && Submarine.MainSub != null && !GUI.DisableHUD) 
-                DrawSubmarineIndicator(spriteBatch, Submarine.MainSub);
+            if (Character.Controlled == null && !GUI.DisableHUD)
+            {
+                for (int i = 0; i < Submarine.MainSubs.Length; i++)
+                {
+                    if (Submarine.MainSubs[i] != null)
+                    {
+                        Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : Color.Red * 0.5f;
+                        DrawSubmarineIndicator(spriteBatch, Submarine.MainSubs[i], indicatorColor);
+                    }
+                }
+            }
             
             GUI.Draw((float)deltaTime, spriteBatch, cam);
                         
@@ -437,7 +446,7 @@ namespace Barotrauma
 
         }
 
-        private void DrawSubmarineIndicator(SpriteBatch spriteBatch, Submarine submarine)
+        private void DrawSubmarineIndicator(SpriteBatch spriteBatch, Submarine submarine, Color color)
         {
             Vector2 subDiff = submarine.WorldPosition - cam.WorldViewCenter;
 
@@ -449,11 +458,11 @@ namespace Barotrauma
                     cam.WorldToScreen(cam.WorldViewCenter) +
                     new Vector2(normalizedSubDiff.X * GameMain.GraphicsWidth * 0.4f, -normalizedSubDiff.Y * GameMain.GraphicsHeight * 0.4f);
 
-                GUI.SubmarineIcon.Draw(spriteBatch, iconPos, Color.LightBlue * 0.5f);
+                GUI.SubmarineIcon.Draw(spriteBatch, iconPos, color);
 
                 Vector2 arrowOffset = normalizedSubDiff * GUI.SubmarineIcon.size.X * 0.7f;
                 arrowOffset.Y = -arrowOffset.Y;
-                GUI.Arrow.Draw(spriteBatch, iconPos + arrowOffset, Color.LightBlue * 0.5f, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
+                GUI.Arrow.Draw(spriteBatch, iconPos + arrowOffset, color, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
             }
         }
 
