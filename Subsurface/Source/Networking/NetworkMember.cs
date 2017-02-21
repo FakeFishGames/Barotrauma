@@ -243,6 +243,7 @@ namespace Barotrauma.Networking
             if (radio == null || !sender.HasEquippedItem(radio)) return false;
                        
             var radioComponent = radio.GetComponent<WifiComponent>();
+            if (radioComponent == null) return false;
             return radioComponent.HasRequiredContainedItems(false);
         }
 

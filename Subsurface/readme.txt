@@ -47,6 +47,7 @@ Credits:
 Programming, graphics, sounds, game design	- Joonas Rikkonen ("Regalis")
 Graphics					- James Bear ("Moonsaber99")
 Programming					- Sebastian Broberg
+Programming					- Juan Pablo Arce ("juanjp600")
 
 ------------------------------------------------------------------------
 
