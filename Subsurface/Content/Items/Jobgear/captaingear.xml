@@ -8,7 +8,7 @@
 
     <Sprite texture ="captainhat.png" depth="0.6"/>
 
-    <Body radius="8" density="30"/>
+    <Body width="25" height="15" density="30"/>
 
     <Wearable limbtype="Head" slots="Any,Head">
       <sprite texture="captainhat.png" limb="Head" origin="0.5,0.9"/>
