@@ -8,7 +8,7 @@ with.
 <XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
   <Asset Type="Graphics:FontDescription">
 
-    <FontName>Verdana</FontName>
+    <FontName>Code Pro Bold</FontName>
 
     <Size>16</Size>
 
