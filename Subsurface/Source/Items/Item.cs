@@ -2072,20 +2072,34 @@ namespace Barotrauma
         {
             msg.Write(ID);
             //length in bytes
-            msg.Write((byte)(4 + 4 + 1 + 3));
+            if (body.FarseerBody.Awake)
+            {
+                msg.Write((byte)(4 + 4 + 1 + 3));
+            }
+            else
+            {
+                msg.Write((byte)(4 + 4 + 1));
+            }
 
             msg.Write(SimPosition.X);
             msg.Write(SimPosition.Y);
 
-            msg.Write(MathUtils.AngleToByte(body.Rotation));
+            msg.WriteRangedSingle(MathUtils.WrapAngleTwoPi(body.Rotation), 0.0f, MathHelper.TwoPi, 7);
 
 #if DEBUG
-            if (Math.Abs(body.LinearVelocity.X)>32.0f || Math.Abs(body.LinearVelocity.Y)>32.0f)
-                DebugConsole.ThrowError("Item velocity out of range ("+body.LinearVelocity+")");
+            if (Math.Abs(body.LinearVelocity.X) > 32.0f || Math.Abs(body.LinearVelocity.Y) > 32.0f)
+                DebugConsole.ThrowError("Item velocity out of range (" + body.LinearVelocity + ")");
 #endif
 
-            msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -32.0f, 32.0f), -32.0f, 32.0f, 12);
-            msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -32.0f, 32.0f), -32.0f, 32.0f, 12);
+            msg.Write(body.FarseerBody.Awake);
+            if (body.FarseerBody.Awake)
+            {
+                body.FarseerBody.Enabled = true;
+                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -32.0f, 32.0f), -32.0f, 32.0f, 12);
+                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -32.0f, 32.0f), -32.0f, 32.0f, 12);
+            }
+
+            msg.WritePadBits();
 
             lastSentPos = SimPosition;
         }
@@ -2097,15 +2111,22 @@ namespace Barotrauma
                 msg.ReadFloat(),
                 msg.ReadFloat());
 
-            body.FarseerBody.Rotation = MathUtils.ByteToAngle(msg.ReadByte());
+            body.FarseerBody.Rotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);
 
-            body.LinearVelocity = new Vector2(
-                msg.ReadRangedSingle(-32.0f, 32.0f, 12),
-                msg.ReadRangedSingle(-32.0f, 32.0f, 12));
+            body.FarseerBody.Awake = msg.ReadBoolean();
 
-            DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);
+            if (body.FarseerBody.Awake)
+            {
+                body.LinearVelocity = new Vector2(
+                    msg.ReadRangedSingle(-32.0f, 32.0f, 12),
+                    msg.ReadRangedSingle(-32.0f, 32.0f, 12));
+            }
+            else
+            {
+                body.FarseerBody.Enabled = false;
+            }
 
-            
+            DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);            
 
            /* //already interpolating with more up-to-date data -> ignore
             if (MemPos.Count > 1 && MemPos[0].Timestamp > sendingTime)
