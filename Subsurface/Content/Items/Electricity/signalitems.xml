@@ -15,9 +15,9 @@
       <Item name="Copper Bar"/>
     </Deconstruct>
 
-    <Sprite texture ="wire.png" depth="0.55"/>
+    <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
 
-    <Body radius="15" density="30"/>
+    <Body radius="7" width="25" density="30"/>
   
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
 
@@ -38,8 +38,9 @@
       <Item name="Copper Bar"/>
     </Deconstruct>
 
-    <Sprite texture ="wire.png" depth="0.55"/>
-    <Body radius="15" density="30"/>
+    <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
+
+    <Body radius="7" width="25" density="30"/>
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
 
     <Wire/>
@@ -59,8 +60,9 @@
       <Item name="Copper Bar"/>
     </Deconstruct>
 
-    <Sprite texture ="wire.png" depth="0.55"/>
-    <Body radius="15" density="30"/>
+    <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
+
+    <Body radius="7" width="25" density="30"/>
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
 
     <Wire/>
@@ -80,8 +82,9 @@
       <Item name="Copper Bar"/>
     </Deconstruct>
 
-    <Sprite texture ="wire.png" depth="0.55"/>
-    <Body radius="15" density="30"/>
+    <Sprite texture ="signalcomp.png" depth="0.55" sourcerect="83,105,44,22"/>
+
+    <Body radius="7" width="25" density="30"/>
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,0"/>
 
     <Wire/>

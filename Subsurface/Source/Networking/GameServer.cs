@@ -263,6 +263,7 @@ namespace Barotrauma.Networking
 
             var request = new RestRequest("masterserver3.php", Method.GET);
             request.AddParameter("action", "refreshserver");
+            request.AddParameter("serverport", Port);
             request.AddParameter("gamestarted", gameStarted ? 1 : 0);
             request.AddParameter("currplayers", connectedClients.Count);
             request.AddParameter("maxplayers", config.MaximumConnections);
@@ -1889,6 +1890,7 @@ namespace Barotrauma.Networking
             {
                 var request = new RestRequest("masterserver2.php", Method.GET);
                 request.AddParameter("action", "removeserver");
+                request.AddParameter("serverport", Port);
                 
                 restClient.Execute(request);
                 restClient = null;

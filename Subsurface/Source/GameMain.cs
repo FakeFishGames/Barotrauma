@@ -241,7 +241,9 @@ namespace Barotrauma
             while (!SoundPlayer.Initialized)
             {
                 i++;
-                TitleScreen.LoadState = Math.Min((float)TitleScreen.LoadState + 0.5f*i, 70.0f);
+                TitleScreen.LoadState = SoundPlayer.SoundCount == 0 ? 
+                    30.0f :
+                    Math.Min(30.0f + 40.0f * i / Math.Max(SoundPlayer.SoundCount, 1), 70.0f);
                 yield return CoroutineStatus.Running;
             }
 

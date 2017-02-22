@@ -6,7 +6,9 @@
   <sound file="Content/Characters/Scorpion/scorpionidle2.ogg" state="None" />
 
   <ragdoll waveamplitude="50.0" wavelength="2500" speed="1.5">
-
+    
+    <collider width="45" radius="22"/>
+    
     <!-- head -->
     <limb id = "0" radius="37" height="81"  mass="6" type="Head" steerforce="1.0">
       <sprite texture="Content/Characters/Scorpion/scorpion.png" sourcerect="11,12,74,155" depth="0.02"/>

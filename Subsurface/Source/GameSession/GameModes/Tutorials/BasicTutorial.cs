@@ -303,7 +303,7 @@ namespace Barotrauma.Tutorials
             foreach (Structure s in Structure.WallList)
             {
                 if (s.CastShadow || !s.HasBody) continue;
-
+                
                 if (s.Rect.Right > steering.Item.CurrentHull.Rect.Right) windows.Add(s);
             }
 
@@ -332,7 +332,7 @@ namespace Barotrauma.Tutorials
                     }
                     if (broken) break;
                 }
-
+                if (broken) break;
 
                 yield return CoroutineStatus.Running;
             } while (!broken);
@@ -459,8 +459,6 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
-            moloch.AnimController.SetPosition(ConvertUnits.ToSimUnits(Character.Controlled.WorldPosition + Vector2.UnitY * 600.0f));
-
             infoBox = CreateInfoFrame("Now we're ready to shoot! Select the railgun controller.");
 
             while (Character.Controlled.SelectedConstruction == null || Character.Controlled.SelectedConstruction.Name != "Railgun Controller")
@@ -468,11 +466,18 @@ namespace Barotrauma.Tutorials
                 yield return CoroutineStatus.Running;
             }
 
+            moloch.AnimController.SetPosition(ConvertUnits.ToSimUnits(Character.Controlled.WorldPosition + Vector2.UnitY * 600.0f));
+
             infoBox = CreateInfoFrame("Use the right mouse button to aim and wait for the creature to come closer. When you're ready to shoot, "
                 + "press the left mouse button.");
 
             while (!moloch.IsDead)
             {
+                if (moloch.WorldPosition.Y > Character.Controlled.WorldPosition.Y + 600.0f)
+                {
+                    moloch.AIController.SteeringManager.SteeringManual(CoroutineManager.DeltaTime, Character.Controlled.WorldPosition - moloch.WorldPosition);
+                }
+
                 moloch.AIController.SelectTarget(Character.Controlled.AiTarget);
                 yield return CoroutineStatus.Running;
             }

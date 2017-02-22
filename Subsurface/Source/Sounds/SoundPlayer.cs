@@ -90,10 +90,17 @@ namespace Barotrauma
             get;
             set;
         }
+
+        public static int SoundCount;
         
         public static IEnumerable<object> Init()
         {
             OverrideMusicType = null;
+
+            XDocument doc = ToolBox.TryLoadXml("Content/Sounds/sounds.xml");
+            if (doc == null) yield return CoroutineStatus.Failure;
+
+            SoundCount = 16 + doc.Root.Elements().Count();
 
             startDrone = Sound.Load("Content/Sounds/startDrone.ogg", false);
             startDrone.Play();
@@ -116,12 +123,7 @@ namespace Barotrauma
                 SplashSounds[i] = Sound.Load("Content/Sounds/Water/Splash"+(i)+".ogg", false);
                 yield return CoroutineStatus.Running;
             }
-
-            XDocument doc = ToolBox.TryLoadXml("Content/Sounds/sounds.xml");
-            if (doc == null) yield return CoroutineStatus.Failure;
-
-            yield return CoroutineStatus.Running;
-
+            
             var xMusic = doc.Root.Elements("music").ToList();
 
             if (xMusic.Any())
@@ -178,8 +180,7 @@ namespace Barotrauma
                 }
             }
 
-            miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
-            
+            miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);            
 
             Initialized = true;
 

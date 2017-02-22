@@ -8,9 +8,9 @@ with.
 <XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
   <Asset Type="Graphics:FontDescription">
 
-    <FontName>Verdana</FontName>
+    <FontName>Exo Light</FontName>
 
-    <Size>7</Size>
+    <Size>9</Size>
 
     <Spacing>0</Spacing>
 
