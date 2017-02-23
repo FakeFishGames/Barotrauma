@@ -309,9 +309,8 @@ namespace Barotrauma
             }
             else
             {
-                cam.Position = Submarine.HiddenSubStartPosition;
-
                 Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, "Unnamed.sub"), "", false);
+                cam.Position = Submarine.MainSub.Position;
             }
 
             SoundPlayer.OverrideMusicType = "none";
@@ -588,8 +587,7 @@ namespace Barotrauma
             Submarine.MainSub = selectedSub;
             selectedSub.Load(true);
 
-            //nameBox.Text = selectedSub.Name;
-            //descriptionBox.Text = ToolBox.LimitString(selectedSub.Description,15);
+            cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
             loadFrame = null;
 
@@ -1064,7 +1062,7 @@ namespace Barotrauma
             graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
             if (GameMain.DebugDraw)
             {
-                GUI.DrawLine(spriteBatch, new Vector2(0.0f, -cam.WorldView.Y), new Vector2(0.0f, -(cam.WorldView.Y - cam.WorldView.Height)), Color.White*0.5f, 1.0f, (int)(2.0f/cam.Zoom));
+                GUI.DrawLine(spriteBatch, new Vector2(Submarine.MainSub.HiddenSubPosition.X, -cam.WorldView.Y), new Vector2(Submarine.MainSub.HiddenSubPosition.X, -(cam.WorldView.Y - cam.WorldView.Height)), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
                 GUI.DrawLine(spriteBatch, new Vector2(cam.WorldView.X, -Submarine.MainSub.HiddenSubPosition.Y), new Vector2(cam.WorldView.Right, -Submarine.MainSub.HiddenSubPosition.Y), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
             }
            
@@ -1083,6 +1081,11 @@ namespace Barotrauma
             //-------------------- HUD -----------------------------
 
             spriteBatch.Begin();
+
+            if (Submarine.MainSub != null)
+            {
+                DrawSubmarineIndicator(spriteBatch, Submarine.MainSub, Color.LightBlue * 0.5f);
+            }
 
             leftPanel.Draw(spriteBatch);
             topPanel.Draw(spriteBatch);
