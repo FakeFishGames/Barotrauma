@@ -28,7 +28,12 @@ namespace Barotrauma
             if (!Visible) return;
             if (ComponentsToUpdate.Contains(this)) return;
             ComponentsToUpdate.Add(this);
-            children.ForEach(c => c.AddToGUIUpdateList());
+
+            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+            foreach (GUIComponent c in fixedChildren)
+            {
+                c.AddToGUIUpdateList();
+            }
         }
 
         public static void ClearUpdateList()
