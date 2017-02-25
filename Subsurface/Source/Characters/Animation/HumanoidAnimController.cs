@@ -64,17 +64,9 @@ namespace Barotrauma
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
 
-                /*if (character.IsRemotePlayer)
-                {
-                    MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
-                    MainLimb.pullJoint.Enabled = true;
-                }
-                else
-                {*/
                 Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;
-                Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
-                //}
-
+                Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);                
+                
                 if (stunTimer > 0)
                 {
                     stunTimer -= deltaTime;
@@ -92,42 +84,37 @@ namespace Barotrauma
             }
 
 
-            if (!character.IsRemotePlayer || true)
+            //re-enable collider
+            if (!Collider.FarseerBody.Enabled)
             {
-                //re-enable collider
-                if (!Collider.FarseerBody.Enabled)
+                var lowestLimb = FindLowestLimb();
+                
+                Collider.SetTransform(new Vector2(
+                    Collider.SimPosition.X,
+                    Math.Max(lowestLimb.SimPosition.Y + (Collider.radius + Collider.height / 2), Collider.SimPosition.Y)),
+                    Collider.Rotation);
+                
+                Collider.FarseerBody.ResetDynamics();
+                Collider.FarseerBody.Enabled = true;
+            }            
+
+            if (swimming)
+            {
+                Collider.FarseerBody.FixedRotation = false;
+            }
+            else if (!Collider.FarseerBody.FixedRotation)
+            {
+                if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, 0.0f)) > 0.001f)
                 {
-                    var lowestLimb = FindLowestLimb();
+                    //rotate collider back upright
+                    Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 10.0f;
 
-                    Collider.SetTransform(new Vector2(
-                        Collider.SimPosition.X,
-                        Math.Max(lowestLimb.SimPosition.Y + (Collider.radius + Collider.height / 2), Collider.SimPosition.Y)),
-                        Collider.Rotation);
-
-                    Collider.FarseerBody.Enabled = true;
-                }            
-
-                if (swimming)
-                {
                     Collider.FarseerBody.FixedRotation = false;
                 }
-                else if (!Collider.FarseerBody.FixedRotation)
+                else
                 {
-                    if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, 0.0f)) > 0.001f)
-                    {
-                        //rotate collider back upright
-                        Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, 0.0f) * 10.0f;
-                        Collider.FarseerBody.FixedRotation = false;
-                    }
-                    else
-                    {
-                        Collider.FarseerBody.FixedRotation = true;
-                    }
+                    Collider.FarseerBody.FixedRotation = true;
                 }
-            }
-            else
-            {
-                Collider.FarseerBody.Enabled = false;
             }
 
             if (character.LockHands)
@@ -140,11 +127,8 @@ namespace Barotrauma
                 rightHand.Disabled = true;
                 leftHand.Disabled = true;
 
-
                 Vector2 midPos = waist.SimPosition;
-
                 Matrix torsoTransform = Matrix.CreateRotationZ(waist.Rotation);
-
 
                 midPos += Vector2.Transform(new Vector2(-0.3f * Dir, -0.2f), torsoTransform);
 
@@ -155,9 +139,7 @@ namespace Barotrauma
             }
             else
             {
-
                 if (Anim != Animation.UsingConstruction) ResetPullJoints();
-
             }
 
             if (SimplePhysicsEnabled)
@@ -917,7 +899,7 @@ namespace Barotrauma
                     targetLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition - diff;
                     targetLimb.pullJoint.MaxForce = 10000.0f;
 
-                    target.AnimController.movement -= diff;
+                    target.AnimController.movement = -diff;
                 }
             }
 
