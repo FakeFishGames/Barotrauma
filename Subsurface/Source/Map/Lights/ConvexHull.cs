@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma.Lights
 {
-    class CachedShadow : IDisposable
+    /*class CachedShadow : IDisposable
     {
         public VertexBuffer ShadowBuffer;
 
@@ -40,7 +40,7 @@ namespace Barotrauma.Lights
         {
             ShadowBuffer.Dispose();
         }
-    }
+    }*/
 
     class ConvexHullList
     {
@@ -71,7 +71,9 @@ namespace Barotrauma.Lights
         static BasicEffect shadowEffect;
         static BasicEffect penumbraEffect;
 
-        private Dictionary<LightSource, CachedShadow> cachedShadows;
+        //private Dictionary<LightSource, CachedShadow> cachedShadows;
+
+        public VertexBuffer ShadowBuffer;
                 
         private Vector2[] vertices;
         private Vector2[] losVertices;
@@ -124,7 +126,7 @@ namespace Barotrauma.Lights
 
             parentEntity = parent;
 
-            cachedShadows = new Dictionary<LightSource, CachedShadow>();
+            //cachedShadows = new Dictionary<LightSource, CachedShadow>();
             
             shadowVertices = new VertexPositionColor[6 * 2];
             penumbraVertices = new VertexPositionTexture[6];
@@ -191,8 +193,6 @@ namespace Barotrauma.Lights
                 
         public void Move(Vector2 amount)
         {
-            ClearCachedShadows();
-
             for (int i = 0; i < vertices.Length; i++)
             {
                 vertices[i] += amount;
@@ -204,8 +204,6 @@ namespace Barotrauma.Lights
 
         public void SetVertices(Vector2[] points)
         {
-            ClearCachedShadows();
-
             vertices = points;
             losVertices = points;
 
@@ -231,7 +229,7 @@ namespace Barotrauma.Lights
             CalculateDimensions();
         }
 
-        private void RemoveCachedShadow(Lights.LightSource light)
+        /*private void RemoveCachedShadow(Lights.LightSource light)
         {
             CachedShadow shadow = null;
             cachedShadows.TryGetValue(light, out shadow);
@@ -251,7 +249,7 @@ namespace Barotrauma.Lights
                 cachedShadow.Value.Dispose();
             }
             cachedShadows.Clear();
-        }
+        }*/
 
         public bool Intersects(Rectangle rect)
         {
@@ -468,29 +466,13 @@ namespace Barotrauma.Lights
                 }
                 
             }
-
-            CachedShadow cachedShadow = null;
-            if (!cachedShadows.TryGetValue(light, out cachedShadow) ||
-                Vector2.DistanceSquared(lightSourcePos, cachedShadow.LightPos) > 1.0f)
-            {
-                CalculateShadowVertices(lightSourcePos, los);
-
-                if (cachedShadow != null)
-                {
-                    cachedShadow.LightPos = lightSourcePos;
-                    cachedShadow.ShadowBuffer.SetData(shadowVertices, 0, shadowVertices.Length);
-                    cachedShadow.ShadowVertexCount = shadowVertexCount;
-                }
-                else
-                {
-                    cachedShadow = new CachedShadow(shadowVertices, lightSourcePos, shadowVertexCount, 0);
-                    RemoveCachedShadow(light);
-                    cachedShadows.Add(light, cachedShadow);
-                }
-            }
-
-            graphicsDevice.SetVertexBuffer(cachedShadow.ShadowBuffer);
-            shadowVertexCount = cachedShadow.ShadowVertexCount;
+            
+            CalculateShadowVertices(lightSourcePos, los);
+            ShadowBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, 6 * 2, BufferUsage.None);
+            ShadowBuffer.SetData(shadowVertices, 0, shadowVertices.Length);
+            
+            graphicsDevice.SetVertexBuffer(ShadowBuffer);
+            shadowVertexCount = shadowVertices.Length;
 
             DrawShadows(graphicsDevice, cam, transform, los);
         }
@@ -546,8 +528,6 @@ namespace Barotrauma.Lights
 
         public void Remove()
         {
-            ClearCachedShadows();
-
             var chList = HullLists.Find(x => x.Submarine == parentEntity.Submarine);
 
             if (chList != null)
@@ -559,8 +539,6 @@ namespace Barotrauma.Lights
                 }
             }
         }
-
-
     }
 
 }
