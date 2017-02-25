@@ -65,6 +65,32 @@ namespace Barotrauma.Lights
         }
     }
 
+    class Segment
+    {
+        public SegmentPoint Start;
+        public SegmentPoint End;
+
+        public Segment(SegmentPoint start, SegmentPoint end)
+        {
+            Start = start;
+            End = end;
+        }
+    }
+
+    class SegmentPoint
+    {
+        public Vector2 Pos;
+        public Segment[] Segments;
+
+        public Vector2 WorldPos;
+
+        public SegmentPoint(Vector2 pos, Segment[] segments)
+        {
+            Pos = pos;
+            Segments = segments;
+        }
+    }
+
     class ConvexHull
     {
         public static List<ConvexHullList> HullLists = new List<ConvexHullList>();
@@ -75,9 +101,12 @@ namespace Barotrauma.Lights
 
         public VertexBuffer ShadowBuffer;
                 
-        private Vector2[] vertices;
-        private Vector2[] losVertices;
-        private int primitiveCount;
+        Segment[] segments = new Segment[4];
+        SegmentPoint[] vertices = new SegmentPoint[4];
+        SegmentPoint[] losVertices = new SegmentPoint[4];
+
+        //private Vector2[] vertices;
+        //private Vector2[] losVertices;
 
         private bool[] backFacing;
         private bool[] ignoreEdge;
@@ -132,12 +161,11 @@ namespace Barotrauma.Lights
             penumbraVertices = new VertexPositionTexture[6];
             
             //vertices = points;
-            primitiveCount = points.Length;
             SetVertices(points);
             //CalculateDimensions();
             
-            backFacing = new bool[primitiveCount];
-            ignoreEdge = new bool[primitiveCount];
+            backFacing = new bool[4];
+            ignoreEdge = new bool[4];
                         
             Enabled = true;
 
@@ -161,10 +189,10 @@ namespace Barotrauma.Lights
         {
             for (int i = 0; i < vertices.Length; i++)
             {
-                if (vertices[i].X >= ch.boundingBox.X && vertices[i].X <= ch.boundingBox.Right && 
-                    vertices[i].Y >= ch.boundingBox.Y && vertices[i].Y <= ch.boundingBox.Bottom)
+                if (vertices[i].Pos.X >= ch.boundingBox.X && vertices[i].Pos.X <= ch.boundingBox.Right && 
+                    vertices[i].Pos.Y >= ch.boundingBox.Y && vertices[i].Pos.Y <= ch.boundingBox.Bottom)
                 {
-                    Vector2 p = vertices[(i + 1) % vertices.Length];
+                    Vector2 p = vertices[(i + 1) % vertices.Length].Pos;
 
                     if (p.X >= ch.boundingBox.X && p.X <= ch.boundingBox.Right && 
                         p.Y >= ch.boundingBox.Y && p.Y <= ch.boundingBox.Bottom)
@@ -181,11 +209,11 @@ namespace Barotrauma.Lights
 
             for (int i = 0; i < vertices.Length; i++)
             {
-                if (minX == null || vertices[i].X < minX) minX = vertices[i].X;
-                if (minY == null || vertices[i].Y < minY) minY = vertices[i].Y;
+                if (minX == null || vertices[i].Pos.X < minX) minX = vertices[i].Pos.X;
+                if (minY == null || vertices[i].Pos.Y < minY) minY = vertices[i].Pos.Y;
 
-                if (maxX == null || vertices[i].X > maxX) maxX = vertices[i].X;
-                if (maxY == null || vertices[i].Y > minY) maxY = vertices[i].Y;
+                if (maxX == null || vertices[i].Pos.X > maxX) maxX = vertices[i].Pos.X;
+                if (maxY == null || vertices[i].Pos.Y > minY) maxY = vertices[i].Pos.Y;
             }
 
             boundingBox = new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
@@ -195,8 +223,8 @@ namespace Barotrauma.Lights
         {
             for (int i = 0; i < vertices.Length; i++)
             {
-                vertices[i] += amount;
-                losVertices[i] += amount;
+                vertices[i].Pos += amount;
+                losVertices[i].Pos += amount;
             }
 
             CalculateDimensions();
@@ -204,26 +232,38 @@ namespace Barotrauma.Lights
 
         public void SetVertices(Vector2[] points)
         {
-            vertices = points;
-            losVertices = points;
+            Debug.Assert(points.Length == 4, "Only rectangular convex hulls are supported");
 
+            for (int i = 0; i < 4; i++)
+            {
+                vertices[i]     = new SegmentPoint(points[i], new Segment[2]);
+                losVertices[i]  = new SegmentPoint(points[i], new Segment[2]);
+
+            }
+            for (int i = 0; i < 4; i++)
+            {
+                segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4]);
+
+                vertices[i].Segments[1]             = segments[i];
+                vertices[(i + 1) % 4].Segments[0]   = segments[i];
+
+            }
+            
             int margin = 0;
 
             if (Math.Abs(points[0].X - points[2].X) < Math.Abs(points[0].Y - points[1].Y))
             {
-                losVertices = new Vector2[] {
-                    new Vector2(points[0].X+margin, points[0].Y), 
-                    new Vector2(points[1].X+margin, points[1].Y), 
-                     new Vector2(points[2].X-margin, points[2].Y), 
-                    new Vector2(points[3].X-margin, points[3].Y)};
+                losVertices[0].Pos = new Vector2(points[0].X + margin, points[0].Y);
+                losVertices[1].Pos = new Vector2(points[1].X + margin, points[1].Y);
+                losVertices[2].Pos = new Vector2(points[2].X - margin, points[2].Y);
+                losVertices[3].Pos = new Vector2(points[3].X - margin, points[3].Y);
             }
             else
             {
-                losVertices = new Vector2[] {
-                    new Vector2(points[0].X, points[0].Y +margin), 
-                    new Vector2(points[1].X, points[1].Y - margin), 
-                     new Vector2(points[2].X, points[2].Y - margin), 
-                    new Vector2(points[3].X, points[3].Y + margin)};
+                losVertices[0].Pos = new Vector2(points[0].X, points[0].Y + margin);
+                losVertices[1].Pos = new Vector2(points[1].X, points[1].Y - margin);
+                losVertices[2].Pos = new Vector2(points[2].X, points[2].Y - margin);
+                losVertices[3].Pos = new Vector2(points[3].X, points[3].Y + margin);
             }
 
             CalculateDimensions();
@@ -263,6 +303,44 @@ namespace Barotrauma.Lights
             }
             return transformedBounds.Intersects(rect);
         }
+        
+        /// <summary>
+        /// Returns the segments that are facing towards viewPosition
+        /// </summary>
+        public List<Segment> GetVisibleSegments(Vector2 viewPosition)
+        {
+            List<Segment> visibleFaces = new List<Segment>();
+            
+            for (int i = 0; i < 4; i++)
+            {
+                if (ignoreEdge[i]) continue;
+
+                Vector2 middle = (segments[i].Start.Pos + segments[i].End.Pos) / 2;
+
+                Vector2 L = viewPosition - middle;
+
+                Vector2 N = new Vector2(
+                    -(segments[i].End.Pos.Y - segments[i].Start.Pos.Y),
+                    segments[i].End.Pos.X - segments[i].Start.Pos.X);
+
+                if (Vector2.Dot(N, L) < 0)
+                {
+                    visibleFaces.Add(segments[i]);
+                }
+            }
+
+            return visibleFaces;
+        }
+
+
+        public void RefreshWorldPositions()
+        {
+            if (parentEntity == null || parentEntity.Submarine == null) return;
+            for (int i = 0; i < 4; i++)
+            {
+                vertices[i].WorldPos = vertices[i].Pos + parentEntity.Submarine.DrawPosition;
+            }
+        }
 
         private void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
         {
@@ -271,7 +349,7 @@ namespace Barotrauma.Lights
             var vertices = los ? losVertices : this.vertices;
             
             //compute facing of each edge, using N*L
-            for (int i = 0; i < primitiveCount; i++)
+            for (int i = 0; i < 4; i++)
             {
                 if (ignoreEdge[i])
                 {
@@ -279,12 +357,10 @@ namespace Barotrauma.Lights
                     continue;
                 }
 
-                Vector2 firstVertex = new Vector2(vertices[i].X, vertices[i].Y);
-                int secondIndex = (i + 1) % primitiveCount;
-                Vector2 secondVertex = new Vector2(vertices[secondIndex].X, vertices[secondIndex].Y);
-                Vector2 middle = (firstVertex + secondVertex) / 2;
+                Vector2 firstVertex = vertices[i].Pos;
+                Vector2 secondVertex = vertices[(i+1) % 4].Pos;
 
-                Vector2 L = lightSourcePos - middle;
+                Vector2 L = lightSourcePos - ((firstVertex + secondVertex) / 2.0f);
 
                 Vector2 N = new Vector2(
                     -(secondVertex.Y - firstVertex.Y),
@@ -297,10 +373,10 @@ namespace Barotrauma.Lights
             //belong to the shadow
             int startingIndex = 0;
             int endingIndex = 0;
-            for (int i = 0; i < primitiveCount; i++)
+            for (int i = 0; i < 4; i++)
             {
                 int currentEdge = i;
-                int nextEdge = (i + 1) % primitiveCount;
+                int nextEdge = (i + 1) % 4;
 
                 if (backFacing[currentEdge] && !backFacing[nextEdge])
                     endingIndex = nextEdge;
@@ -313,7 +389,7 @@ namespace Barotrauma.Lights
             if (endingIndex > startingIndex)
                 shadowVertexCount = endingIndex - startingIndex + 1;
             else
-                shadowVertexCount = primitiveCount + 1 - startingIndex + endingIndex;
+                shadowVertexCount = 4 + 1 - startingIndex + endingIndex;
 
             //shadowVertices = new VertexPositionColor[shadowVertexCount * 2];
 
@@ -322,7 +398,7 @@ namespace Barotrauma.Lights
             int svCount = 0;
             while (svCount != shadowVertexCount * 2)
             {
-                Vector3 vertexPos = new Vector3(vertices[currentIndex], 0.0f);
+                Vector3 vertexPos = new Vector3(vertices[currentIndex].Pos, 0.0f);
 
                 int i = los ? svCount : svCount + 1;
                 int j = los ? svCount + 1 : svCount;
@@ -336,14 +412,13 @@ namespace Barotrauma.Lights
                 shadowVertices[j] = new VertexPositionColor();
                 shadowVertices[j].Color = shadowVertices[i].Color;
 
-
                 Vector3 L2P = vertexPos - new Vector3(lightSourcePos, 0);
                 L2P.Normalize();
                 
                 shadowVertices[j].Position = new Vector3(lightSourcePos, 0) + L2P * 9000;
 
                 svCount += 2;
-                currentIndex = (currentIndex + 1) % primitiveCount;
+                currentIndex = (currentIndex + 1) % 4;
             }
 
             if (los)
@@ -356,7 +431,7 @@ namespace Barotrauma.Lights
         {
             for (int n = 0; n < 4; n += 3)
             {
-                Vector3 penumbraStart = new Vector3((n == 0) ? vertices[startingIndex] : vertices[endingIndex], 0.0f);
+                Vector3 penumbraStart = new Vector3((n == 0) ? vertices[startingIndex].Pos : vertices[endingIndex].Pos, 0.0f);
 
                 penumbraVertices[n] = new VertexPositionTexture();
                 penumbraVertices[n].Position = penumbraStart;

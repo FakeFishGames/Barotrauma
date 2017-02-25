@@ -162,7 +162,7 @@ namespace Barotrauma.Lights
             {
                 ch.DrawShadows(graphics, cam, this, shadowTransform, false);
             }
-        } 
+        }
                         
         private List<ConvexHull> GetHullsInRange(Submarine sub)
         {
@@ -239,17 +239,33 @@ namespace Barotrauma.Lights
             return chList.List;
         }*/
 
-        private void CalculateFanVertices()
+        private List<Vector2> CalculateFanVertices()
         {
-            if (!CastShadows) return;
-            if (range < 1.0f || color.A < 0.01f) return;
+            if (!CastShadows) return null;
+            if (range < 1.0f || color.A < 0.01f) return null;
 
             var hulls = ConvexHull.GetHullsInRange(position, range, ParentSub);
             
-            //TODO: calculate fan based on hulls
+            List<SegmentPoint> points = new List<SegmentPoint>();
+            foreach (ConvexHull hull in hulls)
+            {
+                hull.RefreshWorldPositions();
+                points.AddRange(hull.GetVisibleSegments(position).Select(s => s.End));
+            }
+
+            Vector2 drawPos = position;
+            if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+
+            //sort points counter-clockwise
+            var compareCCW = new CompareSegmentPointCCW(drawPos);
+            points.Sort(compareCCW);
+
+            //TODO: calculate triangles from points
             
             //http://www.redblobgames.com/articles/visibility/
             //http://roy-t.nl/index.php/2014/02/27/2d-lighting-and-shadows-preview/
+
+            return points.Select(p => p.WorldPos).ToList();
         }
         
         public void Draw(SpriteBatch spriteBatch)
@@ -281,7 +297,14 @@ namespace Barotrauma.Lights
             if (LightSprite != null)
             {
                 LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1, SpriteEffect);
-            } 
+            }
+
+            var verts = CalculateFanVertices();
+
+            foreach (var vert in verts)
+            {
+                GUI.DrawLine(spriteBatch, drawPos, new Vector2(vert.X, -vert.Y), Color.White);
+            }
         }
 
         public void FlipX()

@@ -276,15 +276,16 @@ namespace Barotrauma
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
         {
             float xDist = Math.Abs(circlePos.X - rect.Center.X);
+            float yDist = Math.Abs(circlePos.Y - rect.Center.Y);
+
             int halfWidth = rect.Width / 2;
+            int halfHeight = rect.Height / 2;
             
             if (xDist > (halfWidth + radius))   { return false; }
-            if (xDist <= (halfWidth))           { return true; }
+            if (yDist > (halfHeight + radius))  { return false; }   
 
-            float yDist = Math.Abs(circlePos.Y - rect.Center.Y);
-            int halfHeight = rect.Height / 2;
 
-            if (yDist > (halfHeight + radius))  { return false; }            
+            if (xDist <= (halfWidth))           { return true; }         
             if (yDist <= (halfHeight))          { return true; }
 
             float distSqX = xDist - halfWidth;
@@ -473,6 +474,20 @@ namespace Barotrauma
             float d1 = (a.X - center.X) * (a.X - center.X) + (a.Y - center.Y) * (a.Y - center.Y);
             float d2 = (b.X - center.X) * (b.X - center.X) + (b.Y - center.Y) * (b.Y - center.Y);
             return Math.Sign(d2 - d1);
+        }
+    }
+
+    class CompareSegmentPointCCW : IComparer<Lights.SegmentPoint>
+    {
+        private Vector2 center;
+
+        public CompareSegmentPointCCW(Vector2 center)
+        {
+            this.center = center;
+        }
+        public int Compare(Lights.SegmentPoint a, Lights.SegmentPoint b)
+        {
+            return CompareCCW.Compare(a.WorldPos, b.WorldPos, center);
         }
     }
 }
