@@ -64,16 +64,16 @@ namespace Barotrauma
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
 
-                /*if (character.IsRemotePlayer)
+                if (character.IsRemotePlayer)
                 {
                     MainLimb.pullJoint.WorldAnchorB = Collider.SimPosition;
                     MainLimb.pullJoint.Enabled = true;
                 }
                 else
-                {*/
-                Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;
-                Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
-                //}
+                {
+                    Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;
+                    Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
+                }
 
                 if (stunTimer > 0)
                 {
