@@ -133,44 +133,18 @@ namespace Barotrauma.Lights
             //clear to some small ambient light
             graphics.Clear(AmbientLight);
             
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, null, null, null, cam.Transform);
+
             foreach (LightSource light in lights)
             {
                 if (light.Color.A < 1 || light.Range < 1.0f || !light.CastShadows) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
-                            
-                //clear alpha to 1
-                ClearAlphaToOne(graphics, spriteBatch);
-             
-                //draw all shadows
-                //write only to the alpha channel, which sets alpha to 0
-                graphics.RasterizerState = RasterizerState.CullNone;
-                graphics.BlendState = CustomBlendStates.WriteToAlpha;
 
-                light.DrawShadows(graphics, cam, shadowTransform);
-
-                //draw the light shape
-                //where Alpha is 0, nothing will be written
-                spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
                 light.Draw(spriteBatch);
 
-                spriteBatch.End();
             }
-
-
-            ClearAlphaToOne(graphics, spriteBatch);
-            
-            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.MultiplyWithAlpha, null, null, null, null, cam.Transform);
 
             GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.Additive);
-
-
-            foreach (LightSource light in lights)
-            {
-                if (light.Color.A < 1 || light.Range < 1.0f || light.CastShadows) continue;
-                //if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
-
-                light.Draw(spriteBatch);
-            }
 
             if (Character.Controlled != null)
             {
@@ -185,10 +159,6 @@ namespace Barotrauma.Lights
                     Character.Controlled.ClosestCharacter.Draw(spriteBatch);
                 }
             }
-            spriteBatch.End();
-
-
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, null, null, null, cam.Transform);
 
             foreach (Hull hull in smoothedHullAmbientLights.Keys)
             {
@@ -206,7 +176,6 @@ namespace Barotrauma.Lights
             }
 
             spriteBatch.End();
-
 
             //clear alpha, to avoid messing stuff up later
             ClearAlphaToOne(graphics, spriteBatch);
@@ -253,7 +222,7 @@ namespace Barotrauma.Lights
                 Matrix shadowTransform = cam.ShaderTransform
                     * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
-                var convexHulls = LightSource.GetHullsInRange(viewTarget.Position, cam.WorldView.Width*0.75f, viewTarget.Submarine);
+                var convexHulls = ConvexHull.GetHullsInRange(viewTarget.Position, cam.WorldView.Width*0.75f, viewTarget.Submarine);
 
                 if (convexHulls != null)
                 {
