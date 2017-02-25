@@ -40,7 +40,7 @@ namespace Barotrauma
                 if (loadedSound.filePath == file) oggSound = loadedSound.oggSound;
             }
 
-            if (oggSound == null)
+            if (oggSound == null && !SoundManager.Disabled)
             {
                 try
                 {
@@ -210,26 +210,6 @@ namespace Barotrauma
             }
         }
 
-        //public int Loop(float volume = 1.0f)
-        //{
-        //    return SoundManager.Loop(this, volume);
-        //}
-
-        //public void Pause()
-        //{
-        //    SoundManager.Pause(this);
-        //}
-
-        //public void Resume()
-        //{
-        //    SoundManager.Resume(this);
-        //}
-
-        //public void Stop()
-        //{
-        //    SoundManager.Stop(this);
-        //}
-
         public static void OnGameEnd()
         {
             List<Sound> removableSounds = loadedSounds.FindAll(s => s.destroyOnGameEnd);
@@ -268,17 +248,19 @@ namespace Barotrauma
 
         public static void StartStream(string file, float volume = 1.0f)
         {
+            if (SoundManager.Disabled) return;
             stream = SoundManager.StartStream(file, volume);
         }
 
         public static void StreamVolume(float volume = 1.0f)
         {
+            if (SoundManager.Disabled) return;
             stream.Volume = volume;
         }
 
         public static void StopStream()
         {
-            if (stream!=null) SoundManager.StopStream();
+            if (stream != null) SoundManager.StopStream();
         }
 
         public static void Dispose()
