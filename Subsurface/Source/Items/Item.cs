@@ -2106,24 +2106,36 @@ namespace Barotrauma
 
         public void ClientReadPosition(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-
-            body.TargetPosition = new Vector2(
+            Vector2 newPosition = new Vector2(
                 msg.ReadFloat(),
                 msg.ReadFloat());
 
-            body.FarseerBody.Rotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);
-
+            float newRotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);
+            
             body.FarseerBody.Awake = msg.ReadBoolean();
+
+            Vector2 newVelocity = Vector2.Zero;
+
+            //TODO: this code should take previous positions and velocities into account,
+            //rather than use the current values for the comparisons.
 
             if (body.FarseerBody.Awake)
             {
-                body.LinearVelocity = new Vector2(
+                newVelocity = new Vector2(
                     msg.ReadRangedSingle(-32.0f, 32.0f, 12),
                     msg.ReadRangedSingle(-32.0f, 32.0f, 12));
+                if ((newVelocity-body.LinearVelocity).Length()>8.0f) body.LinearVelocity = newVelocity;
             }
             else
             {
                 body.FarseerBody.Enabled = false;
+            }
+
+            if (body.TargetPosition==null || (newPosition - (Vector2)body.TargetPosition).Length() > body.LinearVelocity.Length() * 3.0f)
+            {
+                body.TargetPosition = newPosition;
+
+                body.FarseerBody.Rotation = newRotation;
             }
 
             DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);            
