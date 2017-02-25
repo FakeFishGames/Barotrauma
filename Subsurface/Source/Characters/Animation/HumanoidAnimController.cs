@@ -910,7 +910,7 @@ namespace Barotrauma
                     targetLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition - diff;
                     targetLimb.pullJoint.MaxForce = 10000.0f;
 
-                    target.AnimController.movement -= diff;
+                    target.AnimController.movement = -diff;
                 }
             }
 
