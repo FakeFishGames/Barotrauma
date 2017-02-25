@@ -1805,7 +1805,7 @@ namespace Barotrauma
         {
             data = null;
 
-            if (GameMain.Server != null && (type != NetworkEventType.InventoryUpdate || (!IsUnconscious && !IsDead)))
+            if (GameMain.Server != null && (type != NetworkEventType.InventoryUpdate || (!IsUnconscious && !IsDead && Stun <= 0.0f)))
             {
                 Client sender = GameMain.Server.ConnectedClients.Find(c => c.Connection == message.SenderConnection);
                 if (sender == null || sender.Character != this)
@@ -1997,7 +1997,7 @@ namespace Barotrauma
                         return false;
                     }
 
-                    if (GameMain.Server != null && (isDead || IsUnconscious)) return false;
+                    if (GameMain.Server != null && (isDead || IsUnconscious || Stun > 0.0f)) return false;
 
                     keys[(int)InputType.Use].Held = actionKeyState;
                     keys[(int)InputType.Use].SetState(false, actionKeyState);
