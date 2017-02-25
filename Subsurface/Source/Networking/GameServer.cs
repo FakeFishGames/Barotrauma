@@ -1035,9 +1035,9 @@ namespace Barotrauma.Networking
 
                 WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, sub);
 
-                if (cargoSpawnPos == null)
+                if (cargoSpawnPos == null || cargoSpawnPos.CurrentHull == null)
                 {
-                    DebugConsole.ThrowError("Couldn't spawn additional cargo (cargo spawnpoint not found)");
+                    DebugConsole.ThrowError("Couldn't spawn additional cargo (no cargo spawnpoint inside any of the hulls)");
                     continue;
                 }
 
