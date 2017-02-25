@@ -136,7 +136,7 @@ namespace Barotrauma.Lights
             GameMain.LightManager.AddLight(this);
         }
 
-        public void DrawShadows(GraphicsDevice graphics, Camera cam, Matrix shadowTransform)
+        /*public void DrawShadows(GraphicsDevice graphics, Camera cam, Matrix shadowTransform)
         {
             if (!CastShadows) return;
             if (range < 1.0f || color.A < 0.01f) return;
@@ -161,9 +161,9 @@ namespace Barotrauma.Lights
             foreach (ConvexHull ch in outsideHulls)
             {
                 ch.DrawShadows(graphics, cam, this, shadowTransform, false);
-            } 
-        }
-        
+            }
+        } 
+                        
         private List<ConvexHull> GetHullsInRange(Submarine sub)
         {
             //find the current list of hulls in range
@@ -237,62 +237,20 @@ namespace Barotrauma.Lights
             }
 
             return chList.List;
-        }
+        }*/
 
-        public static List<ConvexHull> GetHullsInRange(Vector2 position, float range, Submarine ParentSub)
+        private void CalculateFanVertices()
         {
-            List<ConvexHull> list = new List<ConvexHull>();
+            if (!CastShadows) return;
+            if (range < 1.0f || color.A < 0.01f) return;
 
-            foreach (ConvexHullList chList in ConvexHull.HullLists)
-            {
-                Vector2 lightPos = position;
-                if (ParentSub == null)
-                {
-                    //light and the convexhull are both outside
-                    if (chList.Submarine == null)
-                    {
-                        list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
-                        
-                    }
-                    //light is outside, convexhull inside a sub
-                    else
-                    {
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos - chList.Submarine.WorldPosition, range, chList.Submarine.Borders)) continue;
-
-                        lightPos -= (chList.Submarine.WorldPosition - chList.Submarine.HiddenSubPosition);
-
-                        list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
-                    }
-                }
-                else
-                {
-                    //light is inside, convexhull outside
-                    if (chList.Submarine == null) continue;
-
-                    //light and convexhull are both inside the same sub
-                    if (chList.Submarine == ParentSub)
-                    {
-                        list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));                        
-                    }
-                    //light and convexhull are inside different subs
-                    else
-                    {
-                        lightPos -= (chList.Submarine.Position - ParentSub.Position);
-
-                        Rectangle subBorders = chList.Submarine.Borders;
-                        subBorders.Location += chList.Submarine.HiddenSubPosition.ToPoint() - new Point(0, chList.Submarine.Borders.Height);
-
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos, range, subBorders)) continue;
-
-                       list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
-                    }
-                }
-            }
-
-
-            return list;
+            var hulls = ConvexHull.GetHullsInRange(position, range, ParentSub);
+            
+            //TODO: calculate fan based on hulls
+            
+            //http://www.redblobgames.com/articles/visibility/
+            //http://roy-t.nl/index.php/2014/02/27/2d-lighting-and-shadows-preview/
         }
-
         
         public void Draw(SpriteBatch spriteBatch)
         {
@@ -323,7 +281,6 @@ namespace Barotrauma.Lights
             if (LightSprite != null)
             {
                 LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1, SpriteEffect);
-
             } 
         }
 

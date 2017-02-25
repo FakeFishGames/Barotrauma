@@ -397,6 +397,59 @@ namespace Barotrauma.Lights
             }
         }
 
+        public static List<ConvexHull> GetHullsInRange(Vector2 position, float range, Submarine ParentSub)
+        {
+            List<ConvexHull> list = new List<ConvexHull>();
+
+            foreach (ConvexHullList chList in ConvexHull.HullLists)
+            {
+                Vector2 lightPos = position;
+                if (ParentSub == null)
+                {
+                    //light and the convexhull are both outside
+                    if (chList.Submarine == null)
+                    {
+                        list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
+
+                    }
+                    //light is outside, convexhull inside a sub
+                    else
+                    {
+                        if (!MathUtils.CircleIntersectsRectangle(lightPos - chList.Submarine.WorldPosition, range, chList.Submarine.Borders)) continue;
+
+                        lightPos -= (chList.Submarine.WorldPosition - chList.Submarine.HiddenSubPosition);
+
+                        list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
+                    }
+                }
+                else
+                {
+                    //light is inside, convexhull outside
+                    if (chList.Submarine == null) continue;
+
+                    //light and convexhull are both inside the same sub
+                    if (chList.Submarine == ParentSub)
+                    {
+                        list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
+                    }
+                    //light and convexhull are inside different subs
+                    else
+                    {
+                        lightPos -= (chList.Submarine.Position - ParentSub.Position);
+
+                        Rectangle subBorders = chList.Submarine.Borders;
+                        subBorders.Location += chList.Submarine.HiddenSubPosition.ToPoint() - new Point(0, chList.Submarine.Borders.Height);
+
+                        if (!MathUtils.CircleIntersectsRectangle(lightPos, range, subBorders)) continue;
+
+                        list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
+                    }
+                }
+            }
+
+            return list;
+        }
+
         public void DrawShadows(GraphicsDevice graphicsDevice, Camera cam, LightSource light, Matrix transform, bool los = true)
         {
             if (!Enabled) return;
