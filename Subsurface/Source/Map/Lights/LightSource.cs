@@ -239,43 +239,156 @@ namespace Barotrauma.Lights
             return chList.List;
         }*/
 
-        private List<Vector2> CalculateFanVertices()
+        private List<Vector2> FindRaycastHits()
         {
             if (!CastShadows) return null;
             if (range < 1.0f || color.A < 0.01f) return null;
 
+            Vector2 drawPos = position;
+            if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+
             var hulls = ConvexHull.GetHullsInRange(position, range, ParentSub);
-            
+
+            //find convexhull segments that are close enough and facing towards the light source
+            List<Segment> visibleSegments = new List<Segment>();
             List<SegmentPoint> points = new List<SegmentPoint>();
             foreach (ConvexHull hull in hulls)
             {
                 hull.RefreshWorldPositions();
-                points.AddRange(hull.GetVisibleSegments(position).Select(s => s.End));
+
+                var visibleHullSegments = hull.GetVisibleSegments(drawPos);
+                visibleSegments.AddRange(visibleHullSegments);
+
+                foreach (Segment s in visibleHullSegments)
+                {
+                    points.Add(s.Start);
+                    points.Add(s.End);
+                }
             }
+
+            //add a square-shaped boundary to make sure we've got something to construct the triangles from
+            //even if there aren't enough hull segments around the light source
+
+            //(might be more effective to calculate if we actually need these extra points)
+            var boundaryCorners = new List<SegmentPoint> {
+                new SegmentPoint(new Vector2(drawPos.X + range*2, drawPos.Y + range*2)),
+                new SegmentPoint(new Vector2(drawPos.X + range*2, drawPos.Y - range*2)),
+                new SegmentPoint(new Vector2(drawPos.X - range*2, drawPos.Y - range*2)),
+                new SegmentPoint(new Vector2(drawPos.X - range*2, drawPos.Y + range*2))
+            };
+
+            points.AddRange(boundaryCorners);
+
+            var compareCCW = new CompareSegmentPointCW(drawPos);
+            points.Sort(compareCCW);
+            
+            List<Vector2> output = new List<Vector2>();
+
+            //remove points that are very close to each other
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                if (Math.Abs(points[i].WorldPos.X - points[i + 1].WorldPos.X) < 3 &&
+                    Math.Abs(points[i].WorldPos.Y - points[i + 1].WorldPos.Y) < 3)
+                {
+                    points.RemoveAt(i + 1);
+                }
+            }
+
+            foreach (SegmentPoint p in points)
+            {
+                Vector2 dir = Vector2.Normalize(p.WorldPos - drawPos);
+                Vector2 dirNormal = new Vector2(-dir.Y, dir.X)*3;
+                
+                //do two slightly offset raycasts to hit the segment itself and whatever's behind it
+                Vector2 intersection1 = RayCast(drawPos, drawPos + dir * range * 2 - dirNormal, visibleSegments);
+                Vector2 intersection2 = RayCast(drawPos, drawPos + dir * range * 2 + dirNormal, visibleSegments);
+
+                //hit almost the same position -> only add one vertex to output
+                if ((Math.Abs(intersection1.X - intersection2.X) < 5 &&
+                    Math.Abs(intersection1.Y - intersection2.Y) < 5))
+                {
+                    output.Add(intersection1);
+                }
+                else
+                {
+                    output.Add(intersection1);
+                    output.Add(intersection2);
+                }
+            }
+            
+            return output;
+        }
+
+        private Vector2 RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
+        {
+            float closestDist = 0.0f;
+            Vector2? closestIntersection = null;
+
+            foreach (Segment s in segments)
+            {
+                Vector2? intersection = MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos);
+
+                if (intersection != null)
+                {
+                    float dist = Vector2.Distance((Vector2)intersection, rayStart);
+                    if (closestIntersection == null || dist < closestDist)
+                    {
+                        closestDist = dist;
+                        closestIntersection = intersection;
+                    }
+                }
+            }            
+
+            return closestIntersection == null ? rayEnd : (Vector2)closestIntersection;
+        }
+
+        private void CalculateVertices(List<Vector2> encounters,
+            out VertexPositionTexture[] vertexArray, out short[] indexArray)
+        {
+            List<VertexPositionTexture> vertices = new List<VertexPositionTexture>();
 
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
 
-            //sort points counter-clockwise
-            var compareCCW = new CompareSegmentPointCCW(drawPos);
-            points.Sort(compareCCW);
+            // Add a vertex for the center of the mesh
+            vertices.Add(new VertexPositionTexture(new Vector3(drawPos.X, drawPos.Y, 0),
+                new Vector2(0.5f, 0.5f)));
 
-            //TODO: calculate triangles from points
-            
-            //http://www.redblobgames.com/articles/visibility/
-            //http://roy-t.nl/index.php/2014/02/27/2d-lighting-and-shadows-preview/
+            // Add all the other encounter points as vertices
+            // storing their world position as UV coordinates
+            foreach (Vector2 vertex in encounters)
+            {
+                Vector2 diff = vertex - drawPos;
 
-            return points.Select(p => p.WorldPos).ToList();
-        }
-        
-        public void Draw(SpriteBatch spriteBatch)
+                vertices.Add(new VertexPositionTexture(new Vector3(vertex.X, vertex.Y, 0),
+                   new Vector2(0.5f, 0.5f) + diff / range / 2));
+            }
+
+            // Compute the indices to form triangles
+            List<short> indices = new List<short>();
+            for (int i = 0; i < encounters.Count - 1; i++)
+            {
+                indices.Add(0);
+                indices.Add((short)((i + 2) % vertices.Count));
+                indices.Add((short)((i + 1) % vertices.Count));
+            }
+
+            indices.Add(0);
+            indices.Add((short)(1));
+            indices.Add((short)(vertices.Count - 1));
+
+            vertexArray = vertices.ToArray<VertexPositionTexture>();
+            indexArray = indices.ToArray<short>();
+        }     
+
+        public void Draw(SpriteBatch spriteBatch, BasicEffect lightEffect)
         {
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
 
             drawPos.Y = -drawPos.Y;
             
-            if (range > 1.0f)
+            if (range > 1.0f && false)
             {
                 if (overrideLightTexture == null)
                 {
@@ -296,15 +409,36 @@ namespace Barotrauma.Lights
 
             if (LightSprite != null)
             {
-                LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1, SpriteEffect);
+                //LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1, SpriteEffect);
             }
 
-            var verts = CalculateFanVertices();
+            var verts = FindRaycastHits();
 
-            foreach (var vert in verts)
+            /*for (int i = 0; i < verts.Count; i++)
             {
-                GUI.DrawLine(spriteBatch, drawPos, new Vector2(vert.X, -vert.Y), Color.White);
-            }
+                Color[] clrs = new Color[] { Color.Green, Color.Cyan, Color.Red, Color.White, Color.Magenta };
+
+                Color clr = clrs[i % clrs.Length];
+
+                // GUI.DrawString(spriteBatch, new Vector2(verts[i].X, -verts[i].Y), verts[i].ToString(), clr); 
+                GUI.DrawString(spriteBatch, new Vector2(verts[i].X, -verts[i].Y), i.ToString(), clr);
+                GUI.DrawLine(spriteBatch, drawPos, new Vector2(verts[i].X, -verts[i].Y), clr, 0,3);
+            }*/
+
+            // Generate a triangle list from the encounter points
+            VertexPositionTexture[] vertices;
+            short[] indices;
+            CalculateVertices(verts, out vertices, out indices);
+            
+            if (vertices.Length == 0) return;
+
+            lightEffect.DiffuseColor = (new Vector3(color.R, color.G, color.B) * (color.A / 255.0f)) / 255.0f;// color.ToVector3();
+            lightEffect.CurrentTechnique.Passes[0].Apply();
+            
+            GameMain.CurrGraphicsDevice.DrawUserIndexedPrimitives<VertexPositionTexture>
+            (
+                PrimitiveType.TriangleList, vertices, 0, vertices.Length, indices, 0, indices.Length / 3
+            );
         }
 
         public void FlipX()
