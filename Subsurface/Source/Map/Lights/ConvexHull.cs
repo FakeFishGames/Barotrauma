@@ -110,7 +110,7 @@ namespace Barotrauma.Lights
         //private Dictionary<LightSource, CachedShadow> cachedShadows;
 
         public VertexBuffer ShadowBuffer;
-                
+
         Segment[] segments = new Segment[4];
         SegmentPoint[] vertices = new SegmentPoint[4];
         SegmentPoint[] losVertices = new SegmentPoint[4];
@@ -136,10 +136,28 @@ namespace Barotrauma.Lights
 
         }
 
+        private bool enabled;
         public bool Enabled
         {
+            get
+            {
+                return enabled;
+            }
+            set
+            {
+                if (enabled == value) return;
+                enabled = value;
+                LastVertexChangeTime = (float)GameMain.Instance.TotalElapsedTime;
+            }
+        }
+
+        /// <summary>
+        /// The elapsed gametime when the vertices of this hull last changed
+        /// </summary>
+        public float LastVertexChangeTime
+        {
             get;
-            set;
+            private set;
         }
 
         public Rectangle BoundingBox
@@ -197,6 +215,8 @@ namespace Barotrauma.Lights
 
         private void UpdateIgnoredEdges(ConvexHull ch)
         {
+            if (ch == this) return;
+            //ignore edges that are inside some other convex hull
             for (int i = 0; i < vertices.Length; i++)
             {
                 if (vertices[i].Pos.X >= ch.boundingBox.X && vertices[i].Pos.X <= ch.boundingBox.Right && 
@@ -233,12 +253,14 @@ namespace Barotrauma.Lights
         {
             for (int i = 0; i < vertices.Length; i++)
             {
-                vertices[i].Pos += amount;
-                losVertices[i].Pos += amount;
+                vertices[i].Pos         += amount;
+                losVertices[i].Pos      += amount;
 
-                segments[i].Start.Pos += amount;
-                segments[i].End.Pos += amount;
+                segments[i].Start.Pos   += amount;
+                segments[i].End.Pos     += amount;
             }
+
+            LastVertexChangeTime = (float)GameMain.Instance.TotalElapsedTime;
 
             CalculateDimensions();
         }
@@ -246,6 +268,8 @@ namespace Barotrauma.Lights
         public void SetVertices(Vector2[] points)
         {
             Debug.Assert(points.Length == 4, "Only rectangular convex hulls are supported");
+
+            LastVertexChangeTime = (float)GameMain.Instance.TotalElapsedTime;
 
             for (int i = 0; i < 4; i++)
             {
@@ -256,10 +280,6 @@ namespace Barotrauma.Lights
             for (int i = 0; i < 4; i++)
             {
                 segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4]);
-
-                //vertices[i].Segments[1]             = segments[i];
-                //vertices[(i + 1) % 4].Segments[0]   = segments[i];
-
             }
             
             int margin = 0;
@@ -280,6 +300,21 @@ namespace Barotrauma.Lights
             }
 
             CalculateDimensions();
+
+            if (parentEntity == null || ignoreEdge == null) return;
+            for (int i = 0; i<4; i++)
+            {
+                ignoreEdge[i] = false;
+            }
+
+            var chList = HullLists.Find(x => x.Submarine == parentEntity.Submarine);
+            if (chList != null)
+            {
+                foreach (ConvexHull ch in chList.List)
+                {
+                    UpdateIgnoredEdges(ch);
+                }
+            }
         }
 
         /*private void RemoveCachedShadow(Lights.LightSource light)

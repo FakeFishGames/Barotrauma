@@ -94,7 +94,8 @@ namespace Barotrauma.Lights
         {
             foreach (LightSource light in lights)
             {
-                light.NeedsHullUpdate = true;
+                light.NeedsHullCheck = true;
+                light.NeedsRecalculation = true;
             }
         }
 
@@ -152,16 +153,16 @@ namespace Barotrauma.Lights
 
             Vector3 offset = Vector3.Zero;// new Vector3(Submarine.MainSub.DrawPosition.X, Submarine.MainSub.DrawPosition.Y, 0.0f);
 
-            lightEffect.World = Matrix.CreateTranslation(offset) * transform;
-                        
             foreach (LightSource light in lights)
             {
                 if (light.Color.A < 1 || light.Range < 1.0f || !light.CastShadows) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
 
-                light.Draw(spriteBatch, lightEffect);
+                light.Draw(spriteBatch, lightEffect, transform);
             }
 
+            lightEffect.World = Matrix.CreateTranslation(offset) * transform;
+                        
             GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.Additive);
 
             if (Character.Controlled != null)
