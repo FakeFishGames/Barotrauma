@@ -208,6 +208,48 @@ namespace Barotrauma
             return a1 + t * b;
         }
 
+        /// <summary>
+        /// Get the point where line segment (a1, a2) intersects the axis-aligned line segment (axisAligned1, axisAligned2)
+        /// </summary>
+        public static Vector2? GetAxisAlignedLineIntersection(Vector2 a1, Vector2 a2, Vector2 axisAligned1, Vector2 axisAligned2)
+        {
+            if (Math.Abs(axisAligned1.X - axisAligned2.X) < 1.0f)
+            {
+                if (Math.Sign(a1.X - axisAligned1.X) == Math.Sign(a2.X - axisAligned1.X))                
+                    return null;
+                
+                if (Math.Max(a1.Y, a2.Y) < Math.Min(axisAligned1.Y, axisAligned2.Y))                
+                    return null;
+
+                if (Math.Min(a1.Y, a2.Y) > Math.Max(axisAligned1.Y, axisAligned2.Y))
+                    return null;
+            }
+            else
+            {
+                if (Math.Sign(a1.Y - axisAligned1.Y) == Math.Sign(a2.Y - axisAligned1.Y))                
+                    return null;
+
+                if (Math.Max(a1.X, a2.X) < Math.Min(axisAligned1.X, axisAligned2.X))
+                    return null;
+
+                if (Math.Min(a1.X, a2.X) > Math.Max(axisAligned1.X, axisAligned2.X))
+                    return null;                
+            }
+
+            Vector2 b = a2 - a1;
+            Vector2 d = axisAligned2 - axisAligned1;
+            float bDotDPerp = b.X * d.Y - b.Y * d.X;
+
+            Vector2 c = axisAligned1 - a1;
+            float t = (c.X * d.Y - c.Y * d.X) / bDotDPerp;
+            if (t < 0 || t > 1) return null;
+
+            float u = (c.X * b.Y - c.Y * b.X) / bDotDPerp;
+            if (u < 0 || u > 1) return null;
+
+            return a1 + t * b;
+        }
+
         public static Vector2? GetLineRectangleIntersection(Vector2 a1, Vector2 a2, Rectangle rect)
         {
             Vector2? intersection = GetLineIntersection(a1, a2, 
@@ -477,17 +519,17 @@ namespace Barotrauma
         }
     }
 
-    class CompareSegmentPointCCW : IComparer<Lights.SegmentPoint>
+    class CompareSegmentPointCW : IComparer<Lights.SegmentPoint>
     {
         private Vector2 center;
 
-        public CompareSegmentPointCCW(Vector2 center)
+        public CompareSegmentPointCW(Vector2 center)
         {
             this.center = center;
         }
         public int Compare(Lights.SegmentPoint a, Lights.SegmentPoint b)
         {
-            return CompareCCW.Compare(a.WorldPos, b.WorldPos, center);
+            return -CompareCCW.Compare(a.WorldPos, b.WorldPos, center);
         }
     }
 }

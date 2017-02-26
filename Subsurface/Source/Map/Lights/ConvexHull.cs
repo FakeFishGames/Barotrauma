@@ -74,20 +74,30 @@ namespace Barotrauma.Lights
         {
             Start = start;
             End = end;
+
+            start.Segment = this;
+            end.Segment = this;
         }
     }
 
-    class SegmentPoint
+    struct SegmentPoint
     {
-        public Vector2 Pos;
-        public Segment[] Segments;
-
+        public Vector2 Pos;        
         public Vector2 WorldPos;
 
-        public SegmentPoint(Vector2 pos, Segment[] segments)
+        public Segment Segment;
+
+        public SegmentPoint(Vector2 pos)
         {
             Pos = pos;
-            Segments = segments;
+            WorldPos = pos;
+
+            Segment = null;
+        }
+
+        public override string ToString()
+        {
+            return Pos.ToString();
         }
     }
 
@@ -225,6 +235,9 @@ namespace Barotrauma.Lights
             {
                 vertices[i].Pos += amount;
                 losVertices[i].Pos += amount;
+
+                segments[i].Start.Pos += amount;
+                segments[i].End.Pos += amount;
             }
 
             CalculateDimensions();
@@ -236,16 +249,16 @@ namespace Barotrauma.Lights
 
             for (int i = 0; i < 4; i++)
             {
-                vertices[i]     = new SegmentPoint(points[i], new Segment[2]);
-                losVertices[i]  = new SegmentPoint(points[i], new Segment[2]);
+                vertices[i]     = new SegmentPoint(points[i]);
+                losVertices[i]  = new SegmentPoint(points[i]);
 
             }
             for (int i = 0; i < 4; i++)
             {
                 segments[i] = new Segment(vertices[i], vertices[(i + 1) % 4]);
 
-                vertices[i].Segments[1]             = segments[i];
-                vertices[(i + 1) % 4].Segments[0]   = segments[i];
+                //vertices[i].Segments[1]             = segments[i];
+                //vertices[(i + 1) % 4].Segments[0]   = segments[i];
 
             }
             
@@ -315,15 +328,18 @@ namespace Barotrauma.Lights
             {
                 if (ignoreEdge[i]) continue;
 
-                Vector2 middle = (segments[i].Start.Pos + segments[i].End.Pos) / 2;
+                Vector2 pos1 = vertices[i].WorldPos;
+                Vector2 pos2 = vertices[(i + 1) % 4].WorldPos;
+
+                Vector2 middle = (pos1 + pos2) / 2;
 
                 Vector2 L = viewPosition - middle;
 
                 Vector2 N = new Vector2(
-                    -(segments[i].End.Pos.Y - segments[i].Start.Pos.Y),
-                    segments[i].End.Pos.X - segments[i].Start.Pos.X);
+                    -(pos2.Y - pos1.Y),
+                    pos2.X - pos1.X);
 
-                if (Vector2.Dot(N, L) < 0)
+                if (Vector2.Dot(N, L) > 0)
                 {
                     visibleFaces.Add(segments[i]);
                 }
@@ -339,6 +355,9 @@ namespace Barotrauma.Lights
             for (int i = 0; i < 4; i++)
             {
                 vertices[i].WorldPos = vertices[i].Pos + parentEntity.Submarine.DrawPosition;
+                segments[i].Start.WorldPos = segments[i].Start.Pos + parentEntity.Submarine.DrawPosition;
+                segments[i].End.WorldPos = segments[i].End.Pos + parentEntity.Submarine.DrawPosition;
+
             }
         }
 

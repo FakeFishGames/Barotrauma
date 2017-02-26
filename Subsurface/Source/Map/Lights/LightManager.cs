@@ -25,6 +25,8 @@ namespace Barotrauma.Lights
         public Color AmbientLight;
 
         RenderTarget2D lightMap, losTexture;
+
+        BasicEffect lightEffect;
         
         private static Texture2D alphaClearTexture;
 
@@ -59,6 +61,15 @@ namespace Barotrauma.Lights
                        RenderTargetUsage.DiscardContents);
 
             losTexture = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
+            if (lightEffect == null)
+            {
+                lightEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
+                lightEffect.VertexColorEnabled = false;
+
+                lightEffect.TextureEnabled = true;
+                lightEffect.Texture = LightSource.LightTexture;
+            }
 
             hullAmbientLights = new Dictionary<Hull, Color>();
             smoothedHullAmbientLights = new Dictionary<Hull, Color>();
@@ -132,16 +143,23 @@ namespace Barotrauma.Lights
             
             //clear to some small ambient light
             graphics.Clear(AmbientLight);
+            graphics.BlendState = BlendState.Additive;
             
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, null, null, null, cam.Transform);
+                       
+            Matrix transform = cam.ShaderTransform
+                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
+            Vector3 offset = Vector3.Zero;// new Vector3(Submarine.MainSub.DrawPosition.X, Submarine.MainSub.DrawPosition.Y, 0.0f);
+
+            lightEffect.World = Matrix.CreateTranslation(offset) * transform;
+                        
             foreach (LightSource light in lights)
             {
                 if (light.Color.A < 1 || light.Range < 1.0f || !light.CastShadows) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
 
-                light.Draw(spriteBatch);
-
+                light.Draw(spriteBatch, lightEffect);
             }
 
             GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.Additive);
@@ -178,9 +196,10 @@ namespace Barotrauma.Lights
             spriteBatch.End();
 
             //clear alpha, to avoid messing stuff up later
-            ClearAlphaToOne(graphics, spriteBatch);
-            
+            //ClearAlphaToOne(graphics, spriteBatch);
+
             graphics.SetRenderTarget(null);
+            graphics.BlendState = BlendState.AlphaBlend;
         }
 
         public void UpdateObstructVision(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Vector2 lookAtPosition)
