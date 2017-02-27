@@ -598,7 +598,18 @@ namespace Barotrauma
 
                 if (contained.body != null)
                 {
-                    contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                    try
+                    {
+                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                    }
+
+                    catch (NullReferenceException e)
+                    {
+#if DEBUG   
+                        DebugConsole.ThrowError("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions", e);
+#endif
+                        contained.body.SetTransform(simPos, 0.0f);
+                    }
                 }
                 
                 contained.Rect =
