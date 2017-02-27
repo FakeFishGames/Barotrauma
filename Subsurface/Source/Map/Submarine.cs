@@ -938,11 +938,11 @@ namespace Barotrauma
 
         public void CheckForErrors()
         {
-            string errorMsg = "";
+            List<string> errorMsgs = new List<string>();
 
             if (!Hull.hullList.Any())
             {
-                errorMsg = "No hulls found in the submarine. Hulls determine the \"borders\" of an individual room and are required for water and air distribution to work correctly.";
+                errorMsgs.Add("No hulls found in the submarine. Hulls determine the \"borders\" of an individual room and are required for water and air distribution to work correctly.");
             }
 
             foreach (Item item in Item.ItemList)
@@ -951,24 +951,24 @@ namespace Barotrauma
 
                 if (!item.linkedTo.Any())
                 {
-                    errorMsg += "\nThe submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.";
+                    errorMsgs.Add("The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.");
                 }
             }
 
             if (WayPoint.WayPointList.Find(wp => !wp.MoveWithLevel && wp.SpawnType == SpawnType.Path) == null)
             {
-                errorMsg += "\nNo waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.";
+                errorMsgs.Add("No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.");
             }
 
             if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)
             {
-                errorMsg += "\nThe submarine doesn't have spawnpoints for cargo (which are used for determining where to place bought items). "
-                    +"To fix this, create a new spawnpoint and change its \"spawn type\" parameter to \"cargo\".";
+               errorMsgs.Add("The submarine doesn't have spawnpoints for cargo (which are used for determining where to place bought items). "
+                    +"To fix this, create a new spawnpoint and change its \"spawn type\" parameter to \"cargo\".");
             }
 
-            if (!string.IsNullOrWhiteSpace(errorMsg))
+            if (errorMsgs.Any())
             {
-                new GUIMessageBox("Warning", errorMsg);
+                new GUIMessageBox("Warning", string.Join("\n\n", errorMsgs), 400, 0);
             }
 
             foreach (MapEntity e in MapEntity.mapEntityList)
@@ -1074,7 +1074,7 @@ namespace Barotrauma
                 {
                     stream = SaveUtil.DecompressFiletoStream(file);
                 }
-                catch (Exception e)
+                catch (Exception e) 
                 {
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed!", e);
                     return null;
