@@ -1,4 +1,24 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.4.4
+---------------------------------------------------------------------------------------------------------
+
+- new fonts
+- spectators see indicators for both subs during combat missions
+- fixed saves becoming corrupted if the player saves and quits in the "map view"
+- fixed "OpenAL not found" errors if trying to run the game with no enabled audio devices
+- fixed OpenAL errors when quitting a round
+- fixed unconscious/dead characters falling through floors
+- the server list accepts multiple servers from the same IP (assuming they're running on different ports)
+- fixed autorestart and the start button getting stuck if the server fails to load the respawn shuttle
+- fixed server failing to start a round if the cargo spawnpoint has been placed outside the submarine
+- fixed AddToGUIUpdateList errors
+- fixed SetTransformIgnoreContacts errors
+- tickboxes work again in the item UIs in wiring/character mode
+- fixed characters standing in an incorrect position when using railgun controllers in a mirrored sub
+- spawning a scorpion (an old placeholder enemy) doesn't crash the game anymore
+- submarine editor shows a warning if there are structures/items way outside the sub
+
+---------------------------------------------------------------------------------------------------------
 v0.5.4.3
 ---------------------------------------------------------------------------------------------------------
 
