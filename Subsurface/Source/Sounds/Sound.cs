@@ -198,8 +198,8 @@ namespace Barotrauma
                 return sourceIndex;
             }
 
-            return SoundManager.Loop(this, sourceIndex, relativePos/100.0f, volume);
-
+            alSourceId = SoundManager.Loop(this, sourceIndex, relativePos / 100.0f, volume);
+            return alSourceId;
         }
 
         public bool IsPlaying
