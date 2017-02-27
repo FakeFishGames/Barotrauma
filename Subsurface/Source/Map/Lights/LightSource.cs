@@ -180,6 +180,8 @@ namespace Barotrauma.Lights
         private void RefreshConvexHullList(ConvexHullList chList, Vector2 lightPos, Submarine sub)
         {
             var fullChList = ConvexHull.HullLists.Find(x => x.Submarine == sub);
+            if (fullChList == null) return;
+
             chList.List = fullChList.List.FindAll(ch => ch.Enabled && MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox));
 
             NeedsHullCheck = true;
@@ -299,12 +301,7 @@ namespace Barotrauma.Lights
             foreach (ConvexHull hull in hulls)
             {
                 hull.RefreshWorldPositions();
-
-                if (hull.ParentEntity is Item)
-                {
-                    int gfhdfgh = 1;
-                }
-
+                
                 var visibleHullSegments = hull.GetVisibleSegments(drawPos);
                 visibleSegments.AddRange(visibleHullSegments);
 
