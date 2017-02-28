@@ -62,10 +62,18 @@ namespace Barotrauma.Lights
             }
         }
 
+        private float rotation;
         public float Rotation
         {
-            get;
-            set;
+            get { return rotation; }
+            set
+            {
+                if (rotation == value) return;
+                rotation = value;
+
+                NeedsHullCheck = true;
+                NeedsRecalculation = true;
+            }
         }
 
         public Vector2 WorldPosition
@@ -395,18 +403,41 @@ namespace Barotrauma.Lights
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
 
+            float cosAngle = (float)Math.Cos(Rotation);
+            float sinAngle = -(float)Math.Sin(Rotation);
+            
+            Vector2 uvOffset = Vector2.Zero;
+            Vector2 overrideTextureDims = Vector2.One;
+            if (overrideLightTexture != null)
+            {
+                overrideTextureDims = new Vector2(overrideLightTexture.SourceRect.Width, overrideLightTexture.SourceRect.Height);
+                uvOffset = (overrideLightTexture.Origin / overrideLightTexture.size) - new Vector2(0.5f, 0.5f);
+            }
+
             // Add a vertex for the center of the mesh
             vertices.Add(new VertexPositionTexture(new Vector3(position.X, position.Y, 0),
-                new Vector2(0.5f, 0.5f)));
+                new Vector2(0.5f, 0.5f) + uvOffset));
 
             // Add all the other encounter points as vertices
             // storing their world position as UV coordinates
             foreach (Vector2 vertex in rayCastHits)
             {
-                Vector2 diff = vertex - drawPos;
+                Vector2 rawDiff = vertex - drawPos;
+                Vector2 diff = rawDiff;
+                diff /= range*2.0f;
+                if (overrideLightTexture != null)
+                {
+                    diff /= (overrideLightTexture.size / overrideTextureDims);
+                    Vector2 originDiff = diff;
 
-                vertices.Add(new VertexPositionTexture(new Vector3(position.X + diff.X, position.Y + diff.Y, 0),
-                   new Vector2(0.5f, 0.5f) + diff / range / 2));
+                    diff.X = originDiff.X * cosAngle - originDiff.Y * sinAngle;
+                    diff.Y = originDiff.X * sinAngle + originDiff.Y * cosAngle;
+
+                    diff += uvOffset;
+                }
+
+                vertices.Add(new VertexPositionTexture(new Vector3(position.X + rawDiff.X, position.Y + rawDiff.Y, 0),
+                   new Vector2(0.5f, 0.5f) + diff));
             }
 
             // Compute the indices to form triangles
@@ -495,11 +526,19 @@ namespace Barotrauma.Lights
             if (vertexCount == 0) return;
 
             lightEffect.DiffuseColor = (new Vector3(color.R, color.G, color.B) * (color.A / 255.0f)) / 255.0f;// color.ToVector3();
+            if (overrideLightTexture != null)
+            {
+                lightEffect.Texture = overrideLightTexture.Texture;
+            }
+            else
+            {
+                lightEffect.Texture = LightTexture;
+            }
             lightEffect.CurrentTechnique.Passes[0].Apply();
 
             GameMain.CurrGraphicsDevice.SetVertexBuffer(lightVolumeBuffer);
             GameMain.CurrGraphicsDevice.Indices = lightVolumeIndexBuffer;
-
+            
             GameMain.CurrGraphicsDevice.DrawIndexedPrimitives
             (
                 PrimitiveType.TriangleList, 0, 0, indexCount / 3
