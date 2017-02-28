@@ -411,7 +411,7 @@ namespace Barotrauma.Lights
             if (overrideLightTexture != null)
             {
                 overrideTextureDims = new Vector2(overrideLightTexture.SourceRect.Width, overrideLightTexture.SourceRect.Height);
-                uvOffset = (overrideLightTexture.Origin / overrideLightTexture.size) - new Vector2(0.5f, 0.5f);
+                uvOffset = (overrideLightTexture.Origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
             }
 
             // Add a vertex for the center of the mesh
@@ -427,11 +427,11 @@ namespace Barotrauma.Lights
                 diff /= range*2.0f;
                 if (overrideLightTexture != null)
                 {
-                    diff /= (overrideLightTexture.size / overrideTextureDims);
                     Vector2 originDiff = diff;
 
                     diff.X = originDiff.X * cosAngle - originDiff.Y * sinAngle;
                     diff.Y = originDiff.X * sinAngle + originDiff.Y * cosAngle;
+                    diff *= (overrideTextureDims / overrideLightTexture.size) * 2.0f;
 
                     diff += uvOffset;
                 }
