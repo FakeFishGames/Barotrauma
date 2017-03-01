@@ -6,9 +6,11 @@ namespace Barotrauma
 {
     public class GUIImage : GUIComponent
     {
-        Sprite sprite;
+        public float Rotation;
 
-        Rectangle sourceRect;
+        private Sprite sprite;
+
+        private Rectangle sourceRect;
 
         bool crop;
         
@@ -85,7 +87,7 @@ namespace Barotrauma
 
             if (sprite != null && sprite.Texture != null)
             {
-                spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * (currColor.A / 255.0f), 0.0f, Vector2.Zero,
+                spriteBatch.Draw(sprite.Texture, new Vector2(rect.X, rect.Y), sourceRect, currColor * (currColor.A / 255.0f), Rotation, Vector2.Zero,
                     Scale, SpriteEffects.None, 0.0f);
             }          
             

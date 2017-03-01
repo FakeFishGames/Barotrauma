@@ -28,7 +28,7 @@ namespace Barotrauma
             Directory.CreateDirectory(tempPath);
             try
             {
-                ClearFolder(tempPath);
+                ClearFolder(tempPath, new string[] { GameMain.GameSession.Submarine.FilePath });
             }
             catch
             {
@@ -37,7 +37,7 @@ namespace Barotrauma
             
             try 
             {
-                if (Submarine.MainSub != null)
+                if (Submarine.MainSub != null && Submarine.Loaded.Contains(Submarine.MainSub))
                 {
                     Submarine.MainSub.FilePath = Path.Combine(tempPath, Submarine.MainSub.Name + ".sub");
                     Submarine.MainSub.SaveAs(Submarine.MainSub.FilePath);                
@@ -77,7 +77,7 @@ namespace Barotrauma
 
             XDocument doc = ToolBox.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
 
-            string subPath = Path.Combine(TempPath, ToolBox.GetAttributeString(doc.Root, "submarine", ""));
+            string subPath = Path.Combine(TempPath, ToolBox.GetAttributeString(doc.Root, "submarine", ""))+".sub";
             Submarine selectedMap = new Submarine(subPath, "");// Submarine.Load();
             GameMain.GameSession = new GameSession(selectedMap, fileName, doc);
 
@@ -285,19 +285,31 @@ namespace Barotrauma
                 while (DecompressFile(sDir, zipStream, progress)) ;
         }
 
-        private static void ClearFolder(string FolderName)
+        private static void ClearFolder(string FolderName, string[] ignoredFiles = null)
         {
             DirectoryInfo dir = new DirectoryInfo(FolderName);
 
             foreach (FileInfo fi in dir.GetFiles())
             {
+                bool ignore = false;
+                foreach (string ignoredFile in ignoredFiles)
+                {
+                    if (Path.GetFullPath(fi.FullName).Equals(Path.GetFullPath(ignoredFile)))
+                    {
+                        ignore = true;
+                        break;
+                    }
+                }
+
+                if (ignore) continue;
+
                 fi.IsReadOnly = false;
                 fi.Delete();
             }
 
             foreach (DirectoryInfo di in dir.GetDirectories())
             {
-                ClearFolder(di.FullName);
+                ClearFolder(di.FullName, ignoredFiles);
                 di.Delete();
             }
         }

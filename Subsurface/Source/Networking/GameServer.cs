@@ -38,6 +38,9 @@ namespace Barotrauma.Networking
         private ServerLog log;
         private GUIButton showLogButton;
 
+        private bool initiatedStartGame;
+        private CoroutineHandle startGameCoroutine;
+
         private GUIScrollBar clientListScrollBar;
 
         public TraitorManager TraitorManager;
@@ -305,7 +308,6 @@ namespace Barotrauma.Networking
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
             if (log.LogFrame != null) log.LogFrame.Update(deltaTime);
             
-
             if (!started) return;
 
             base.Update(deltaTime);
@@ -348,7 +350,21 @@ namespace Barotrauma.Networking
                     return;
                 }
             }
-            else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count>0)
+            else if (initiatedStartGame)
+            {
+                //tried to start up the game and StartGame coroutine is not running anymore
+                // -> something wen't wrong during startup, re-enable start button and reset AutoRestartTimer
+                if (startGameCoroutine != null && !CoroutineManager.IsCoroutineRunning(startGameCoroutine))
+                {
+                    if (autoRestart) AutoRestartTimer = Math.Max(AutoRestartInterval, 5.0f);
+                    GameMain.NetLobbyScreen.StartButton.Enabled = true;
+
+                    UpdateNetLobby(null, null);
+                    startGameCoroutine = null;
+                    initiatedStartGame = false;
+                }
+            }
+            else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count > 0)
             {
                 AutoRestartTimer -= deltaTime;
                 if (AutoRestartTimer < 0.0f && GameMain.NetLobbyScreen.StartButton.Enabled)
@@ -356,6 +372,7 @@ namespace Barotrauma.Networking
                     StartGameClicked(null,null);
                 }
             }
+            
 
             for (int i = disconnectedClients.Count - 1; i >= 0; i-- )
             {
@@ -914,13 +931,15 @@ namespace Barotrauma.Networking
                 }
             }
 
-            GameMain.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
+            startGameCoroutine = GameMain.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
 
             yield return CoroutineStatus.Success;
         }
         
         private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
         {
+            initiatedStartGame = true;
+
             Item.Spawner.Clear();
             Item.Remover.Clear();
 
@@ -935,34 +954,16 @@ namespace Barotrauma.Networking
 
             int teamCount = 1;
             int hostTeam = 1;
+       
+            GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
 
-            try
-            {            
-                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
-
-                if (GameMain.GameSession.gameMode.Mission != null && 
-                    GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
-                {
-                    teamCount = 2;
-                }
-
-                GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
-            }
-
-            catch (Exception e)
+            if (GameMain.GameSession.gameMode.Mission != null && 
+                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
             {
-                DebugConsole.ThrowError("Failed to start a new round", e);
-
-                //try again in >5 seconds
-                if (autoRestart) AutoRestartTimer = Math.Max(AutoRestartInterval, 5.0f);
-                GameMain.NetLobbyScreen.StartButton.Enabled = true;
-
-                UpdateNetLobby(null, null);
-
-                couldNotStart = true;
+                teamCount = 2;
             }
 
-            if (couldNotStart) yield return CoroutineStatus.Failure;
+            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
 
             GameServer.Log("Starting a new round...", Color.Cyan);
             GameServer.Log("Submarine: " + selectedSub.Name, Color.Cyan);
@@ -1082,7 +1083,6 @@ namespace Barotrauma.Networking
             //give some time for the clients to load the map
             yield return new WaitForSeconds(2.0f);
 
-            gameStarted = true;
 
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
@@ -1099,7 +1099,10 @@ namespace Barotrauma.Networking
             }
 
             GameMain.NetLobbyScreen.StartButton.Enabled = true;
-            
+
+            gameStarted = true;
+            initiatedStartGame = false;
+
             yield return CoroutineStatus.Success;
         }
 

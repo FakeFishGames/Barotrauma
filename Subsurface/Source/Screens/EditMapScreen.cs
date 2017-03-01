@@ -418,6 +418,9 @@ namespace Barotrauma
 
         private void CreateSaveScreen()
         {
+            if (characterMode) ToggleCharacterMode();
+            if (wiringMode) ToggleWiringMode();
+
             int width = 400, height = 400;
 
             int y = 0;
@@ -502,6 +505,9 @@ namespace Barotrauma
 
         private bool CreateLoadScreen(GUIButton button, object obj)
         {
+            if (characterMode) ToggleCharacterMode();
+            if (wiringMode) ToggleWiringMode();
+
             Submarine.RefreshSavedSubs();
 
             int width = 300, height = 400;
@@ -596,10 +602,14 @@ namespace Barotrauma
 
         private bool SelectTab(GUIButton button, object obj)
         {
+            if (characterMode) ToggleCharacterMode();
+            if (wiringMode) ToggleWiringMode();
+
             selectedTab = (int)obj;
 
             var searchBox = GUItabs[selectedTab].GetChild<GUITextBox>();  
             ClearFilter(searchBox, null);
+            searchBox.Text = "";
             
             searchBox.AddToGUIUpdateList();
             searchBox.Select();
@@ -899,22 +909,28 @@ namespace Barotrauma
                 wiringToolPanel.AddToGUIUpdateList();
             }
 
-            if (loadFrame != null)
-            {
-                loadFrame.AddToGUIUpdateList();
-            }
-            else if (saveFrame != null)
-            {
-                saveFrame.AddToGUIUpdateList();
-            }
-            else if (selectedTab > -1)
-            {
-                GUItabs[selectedTab].AddToGUIUpdateList();
-            }
-
             if ((characterMode || wiringMode) && dummyCharacter != null)
             {
                 CharacterHUD.AddToGUIUpdateList(dummyCharacter);
+                if (dummyCharacter.SelectedConstruction != null)
+                {
+                    dummyCharacter.SelectedConstruction.AddToGUIUpdateList();
+                }
+            }
+            else
+            {
+                if (loadFrame != null)
+                {
+                    loadFrame.AddToGUIUpdateList();
+                }
+                else if (saveFrame != null)
+                {
+                    saveFrame.AddToGUIUpdateList();
+                }
+                else if (selectedTab > -1)
+                {
+                    GUItabs[selectedTab].AddToGUIUpdateList();
+                }
             }
 
             GUI.AddToGUIUpdateList();
