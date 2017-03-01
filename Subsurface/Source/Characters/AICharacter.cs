@@ -51,6 +51,22 @@ namespace Barotrauma
 
             if (Controlled == this || !aiController.Enabled) return;
 
+            if (GameMain.Client != null)
+            {
+                //freeze AI characters if more than 1 seconds have passed since last update from the server
+                if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
+                {
+                    AnimController.Frozen = true;
+                    memPos.Clear();
+                    //hide after 2 seconds
+                    if (lastRecvPositionUpdateTime < NetTime.Now - 2.0f)
+                    {
+                        Enabled = false;
+                        return;
+                    }
+                }
+            }
+
             if (soundTimer > 0)
             {
                 soundTimer -= deltaTime;
@@ -149,10 +165,11 @@ namespace Barotrauma
         public override bool ReadNetworkData(NetworkEventType type, NetIncomingMessage message, float sendingTime, out object data)
         {
             data = null;
-            Enabled = true;
 
             //server doesn't accept AICharacter updates from the clients
             if (GameMain.Server != null) return false;
+
+            Enabled = true;
 
             switch (type)
             {
@@ -197,6 +214,13 @@ namespace Barotrauma
                     break;
                 case NetworkEventType.EntityUpdate:
                     if (sendingTime <= LastNetworkUpdate) return false;
+
+                    if (GameMain.Client != null)
+                    {
+                        lastRecvPositionUpdateTime = (float)NetTime.Now;
+                        AnimController.Frozen = false;
+                        Enabled = true;
+                    }
 
                     bool playerControlled = message.ReadBoolean();
                     if (playerControlled)
