@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
             var newEvent = new ServerEntityEvent(entity, ID + 1);
             if (extraData != null) newEvent.SetData(extraData);
 
-            events.RemoveAll(e => e.ID <= lastSentToAll); //remove events that , they are redundant now
+            events.RemoveAll(e => e.ID <= lastSentToAll); //remove events that have been sent to all clients, they are redundant now
             for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
@@ -128,6 +128,15 @@ namespace Barotrauma.Networking
             {
                 lastSentToAll = clients[0].lastRecvEntityEventID;
                 clients.ForEach(c => { if (c.inGame) lastSentToAll = Math.Min(lastSentToAll, c.lastRecvEntityEventID); });
+
+                ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (lastSentToAll + 1));
+                if (firstEventToResend != null && (Timing.TotalTime-firstEventToResend.CreateTime)>10.0f)
+                {
+                    //it's been 10 seconds since this event was created
+                    //kick everyone that hasn't received it yet, this is way too old
+                    List<Client> toKick = clients.FindAll(c => c.inGame && c.lastRecvEntityEventID <= lastSentToAll);
+                    toKick.ForEach(c => GameMain.Server.DisconnectClient(c,"","You have been disconnected because of excessive desync."));
+                }
             }
 
             bufferedEvents.RemoveAll(b => b.IsProcessed);           

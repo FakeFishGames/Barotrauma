@@ -67,10 +67,18 @@ namespace Barotrauma.Networking
 
         public bool Sent;
 
+        private double createTime;
+        public double CreateTime
+        {
+            get { return createTime; }
+        }
+
         public ServerEntityEvent(IServerSerializable entity, UInt32 id)
             : base(entity, id)
         { 
             serializable = entity;
+
+            createTime = Timing.TotalTime;
         }
 
         public void Write(NetBuffer msg, Client recipient)

@@ -298,6 +298,7 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            Timing.TotalTime = gameTime.TotalGameTime.TotalSeconds;
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
             PlayerInput.UpdateVariable();
 
