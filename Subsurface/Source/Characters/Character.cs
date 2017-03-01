@@ -64,6 +64,7 @@ namespace Barotrauma
                 {
                     limb.body.Enabled = enabled;
                 }
+                AnimController.Collider.Enabled = value;
             }
         }
 
