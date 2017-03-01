@@ -1669,7 +1669,8 @@ namespace Barotrauma.Networking
         public void UpdateVoteStatus()
         {
             if (server.Connections.Count == 0) return;
-
+            if (connectedClients.Count == 0) return;
+            
             var clientsToKick = connectedClients.FindAll(c => c.KickVoteCount >= connectedClients.Count * KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
             {

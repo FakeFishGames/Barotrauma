@@ -135,7 +135,7 @@ namespace Barotrauma.Networking
                     //it's been 10 seconds since this event was created
                     //kick everyone that hasn't received it yet, this is way too old
                     List<Client> toKick = clients.FindAll(c => c.inGame && c.lastRecvEntityEventID <= lastSentToAll);
-                    if (toKick!=null) toKick.ForEach(c => GameMain.Server.DisconnectClient(c,"","You have been disconnected because of excessive desync."));
+                    if (toKick!=null) toKick.ForEach(c => GameMain.Server.DisconnectClient(c,"","You have been disconnected because of excessive desync"));
                 }
             }
 
