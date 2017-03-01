@@ -1327,7 +1327,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
+        public void DisconnectClient(NetConnection senderConnection, string msg = "", string targetmsg = "")
         {
             Client client = connectedClients.Find(x => x.Connection == senderConnection);
             if (client == null) return;
@@ -1335,7 +1335,7 @@ namespace Barotrauma.Networking
             DisconnectClient(client, msg, targetmsg);
         }
 
-        private void DisconnectClient(Client client, string msg = "", string targetmsg = "")
+        public void DisconnectClient(Client client, string msg = "", string targetmsg = "")
         {
             if (client == null) return;
 

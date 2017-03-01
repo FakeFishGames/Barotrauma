@@ -11,6 +11,8 @@ namespace Barotrauma
     {
         private static double alpha;
 
+        public static double TotalTime;
+
         public static double Accumulator;
         public static double Step = 1.0 / 60.0;
 
