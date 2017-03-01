@@ -20,13 +20,9 @@ namespace Barotrauma
         
         public static bool DisableControls;
 
-        private UInt32 netStateID;
-        public UInt32 NetStateID
-        {
-            get { return netStateID; }
-        }
-
         protected List<PosInfo> memPos = new List<PosInfo>();
+
+        protected float lastRecvPositionUpdateTime;
 
         private bool networkUpdateSent;
         
@@ -58,6 +54,7 @@ namespace Barotrauma
             }
             set
             {
+                if (value == enabled) return;
                 enabled = value;
 
                 foreach (Limb limb in AnimController.Limbs)
@@ -755,13 +752,6 @@ namespace Barotrauma
             //    else
             //    {
             //        AnimController.TargetDir = Direction.Right;
-            //    }
-            //}
-            //else if (GameMain.Client != null && Character.controlled != this)
-            //{
-            //    if (memPos.Count > 0)
-            //    {
-            //        AnimController.TargetDir = memPos[0].Direction;
             //    }
             //}
 
@@ -1957,7 +1947,12 @@ namespace Barotrauma
 
                     break;
                 case NetworkEventType.EntityUpdate:
-                    if (GameMain.Client != null) Enabled = true;
+                    if (GameMain.Client != null)
+                    {
+                        lastRecvPositionUpdateTime = (float)NetTime.Now;
+                        AnimController.Frozen = false;
+                        Enabled = true;
+                    }
 
                     Vector2 relativeCursorPos = Vector2.Zero;
 

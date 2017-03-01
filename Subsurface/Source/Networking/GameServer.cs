@@ -472,17 +472,18 @@ namespace Barotrauma.Networking
             //    }
             //}
 
+            float ignoreDistance = FarseerPhysics.ConvertUnits.ToDisplayUnits(NetConfig.CharacterIgnoreDistance);
+
             foreach (Character c in Character.CharacterList)
             {
-                if (c.IsDead) continue;
-
                 if (c is AICharacter)
                 {
-                    //todo: take multiple subs into account
-                    //Vector2 diff = c.WorldPosition - Submarine.MainSub.WorldPosition;
-
-                    //if (FarseerPhysics.ConvertUnits.ToSimUnits(diff.Length()) > NetConfig.CharacterIgnoreDistance) continue;
+                    c.Enabled = 
+                       (myCharacter != null && Vector2.Distance(myCharacter.WorldPosition, c.WorldPosition) < ignoreDistance) ||
+                        Character.CharacterList.Any(c2 => c2.IsRemotePlayer && Vector2.Distance(c2.WorldPosition, c.WorldPosition) < ignoreDistance);
                 }
+
+                if (c.IsDead) continue;
 
                 new NetworkEvent(NetworkEventType.ImportantEntityUpdate, c.ID, false);
             }
