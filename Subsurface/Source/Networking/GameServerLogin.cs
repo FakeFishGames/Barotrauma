@@ -138,7 +138,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(name + " couldn't join the server (wrong content package hash)", Color.Red);
                 return;
             }
-            else if (connectedClients.Any(c => c.name.ToLower() == name.ToLower() && c.Connection != inc.SenderConnection))
+            else if (connectedClients.Any(c => Homoglyphs.Compare(c.name.ToLower(),name.ToLower()) && c.Connection != inc.SenderConnection))
             {
                 inc.SenderConnection.Disconnect("The name \"" + name + "\" is already in use. Please choose another name.");
                 DebugConsole.NewMessage(name + " couldn't join the server (name already in use)", Color.Red);

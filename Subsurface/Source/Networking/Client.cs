@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
                 c != '<' &&
                 c != '/'));
         }
-
+        
         public static string SanitizeName(string name)
         {
             name = name.Trim();
@@ -98,9 +98,8 @@ namespace Barotrauma.Networking
             string rName = "";
             for (int i=0;i<name.Length;i++)
             {
-                if (name[i] < 32 || name[i] > 126)
+                if (name[i] < 32)
                 {
-                    //TODO: allow safe unicode characters, this is just to prevent players from taking names that look similar but aren't the same
                     rName += '?';
                 }
                 else
