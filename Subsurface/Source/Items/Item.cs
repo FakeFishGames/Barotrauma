@@ -608,7 +608,6 @@ namespace Barotrauma
 #if DEBUG   
                         DebugConsole.ThrowError("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions", e);
 #endif
-                        contained.body.SetTransform(simPos, 0.0f);
                     }
                 }
                 
