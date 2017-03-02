@@ -377,10 +377,10 @@ namespace Barotrauma.Lights
         {
             float closestDist = 0.0f;
             Vector2? closestIntersection = null;
-
+            
             foreach (Segment s in segments)
             {
-                Vector2? intersection = MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos);
+                Vector2? intersection = MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal);
 
                 if (intersection != null)
                 {
