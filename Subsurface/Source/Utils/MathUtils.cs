@@ -208,6 +208,48 @@ namespace Barotrauma
             return a1 + t * b;
         }
 
+        /// <summary>
+        /// Get the point where line segment (a1, a2) intersects the axis-aligned line segment (axisAligned1, axisAligned2)
+        /// </summary>
+        public static Vector2? GetAxisAlignedLineIntersection(Vector2 a1, Vector2 a2, Vector2 axisAligned1, Vector2 axisAligned2)
+        {
+            if (Math.Abs(axisAligned1.X - axisAligned2.X) < 1.0f)
+            {
+                if (Math.Sign(a1.X - axisAligned1.X) == Math.Sign(a2.X - axisAligned1.X))                
+                    return null;
+                
+                if (Math.Max(a1.Y, a2.Y) < Math.Min(axisAligned1.Y, axisAligned2.Y))                
+                    return null;
+
+                if (Math.Min(a1.Y, a2.Y) > Math.Max(axisAligned1.Y, axisAligned2.Y))
+                    return null;
+            }
+            else
+            {
+                if (Math.Sign(a1.Y - axisAligned1.Y) == Math.Sign(a2.Y - axisAligned1.Y))                
+                    return null;
+
+                if (Math.Max(a1.X, a2.X) < Math.Min(axisAligned1.X, axisAligned2.X))
+                    return null;
+
+                if (Math.Min(a1.X, a2.X) > Math.Max(axisAligned1.X, axisAligned2.X))
+                    return null;                
+            }
+
+            Vector2 b = a2 - a1;
+            Vector2 d = axisAligned2 - axisAligned1;
+            float bDotDPerp = b.X * d.Y - b.Y * d.X;
+
+            Vector2 c = axisAligned1 - a1;
+            float t = (c.X * d.Y - c.Y * d.X) / bDotDPerp;
+            if (t < 0 || t > 1) return null;
+
+            float u = (c.X * b.Y - c.Y * b.X) / bDotDPerp;
+            if (u < 0 || u > 1) return null;
+
+            return a1 + t * b;
+        }
+
         public static Vector2? GetLineRectangleIntersection(Vector2 a1, Vector2 a2, Rectangle rect)
         {
             Vector2? intersection = GetLineIntersection(a1, a2, 
@@ -276,15 +318,16 @@ namespace Barotrauma
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
         {
             float xDist = Math.Abs(circlePos.X - rect.Center.X);
+            float yDist = Math.Abs(circlePos.Y - rect.Center.Y);
+
             int halfWidth = rect.Width / 2;
+            int halfHeight = rect.Height / 2;
             
             if (xDist > (halfWidth + radius))   { return false; }
-            if (xDist <= (halfWidth))           { return true; }
+            if (yDist > (halfHeight + radius))  { return false; }   
 
-            float yDist = Math.Abs(circlePos.Y - rect.Center.Y);
-            int halfHeight = rect.Height / 2;
 
-            if (yDist > (halfHeight + radius))  { return false; }            
+            if (xDist <= (halfWidth))           { return true; }         
             if (yDist <= (halfHeight))          { return true; }
 
             float distSqX = xDist - halfWidth;
@@ -473,6 +516,20 @@ namespace Barotrauma
             float d1 = (a.X - center.X) * (a.X - center.X) + (a.Y - center.Y) * (a.Y - center.Y);
             float d2 = (b.X - center.X) * (b.X - center.X) + (b.Y - center.Y) * (b.Y - center.Y);
             return Math.Sign(d2 - d1);
+        }
+    }
+
+    class CompareSegmentPointCW : IComparer<Lights.SegmentPoint>
+    {
+        private Vector2 center;
+
+        public CompareSegmentPointCW(Vector2 center)
+        {
+            this.center = center;
+        }
+        public int Compare(Lights.SegmentPoint a, Lights.SegmentPoint b)
+        {
+            return -CompareCCW.Compare(a.WorldPos, b.WorldPos, center);
         }
     }
 }
