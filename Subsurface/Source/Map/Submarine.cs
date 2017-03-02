@@ -947,11 +947,12 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.GetComponent<Barotrauma.Items.Components.Vent>() == null) continue;
+                if (item.GetComponent<Items.Components.Vent>() == null) continue;
 
                 if (!item.linkedTo.Any())
                 {
                     errorMsgs.Add("The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.");
+                    break;
                 }
             }
 
