@@ -1830,7 +1830,8 @@ namespace Barotrauma
             for (int i=0;i<a.Length;i++)
             {
                 if (a[i] == b[i]) continue;
-                if (homoglyphs.Find(g => g.Contains((uint)a[i])) != homoglyphs.Find(g => g.Contains((uint)b[i]))) return false;
+                uint[] glyphGroup = homoglyphs.Find(g => g.Contains((uint)a[i]));
+                if (glyphGroup==null || !glyphGroup.Contains((uint)b[i])) return false;
             }
             return true;
         }
