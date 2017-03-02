@@ -70,6 +70,8 @@ namespace Barotrauma.Lights
         public SegmentPoint Start;
         public SegmentPoint End;
 
+        public bool IsHorizontal;
+
         public Segment(SegmentPoint start, SegmentPoint end)
         {
             Start = start;
@@ -77,6 +79,8 @@ namespace Barotrauma.Lights
 
             start.Segment = this;
             end.Segment = this;
+
+            IsHorizontal = Math.Abs(start.Pos.X - end.Pos.X) > Math.Abs(start.Pos.Y - end.Pos.Y);
         }
     }
 
