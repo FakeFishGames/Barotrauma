@@ -368,7 +368,7 @@ namespace Barotrauma.Items.Components
             LinkedGap.ConnectedDoor = this;
             LinkedGap.Open = openState;
 
-            Vector2[] corners = GetConvexHullCorners(doorRect);
+            Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
 
             convexHull = new ConvexHull(corners, Color.Black, item);
             if (window != Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black, item);

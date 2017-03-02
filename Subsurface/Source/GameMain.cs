@@ -103,6 +103,15 @@ namespace Barotrauma
         {
             get { return NetworkMember as GameClient; }
         }
+
+        /// <summary>
+        /// Total seconds elapsed after startup
+        /// </summary>
+        public double TotalElapsedTime
+        {
+            get;
+            private set;
+        }
                         
         public GameMain()
         {
@@ -297,11 +306,12 @@ namespace Barotrauma
         protected override void Update(GameTime gameTime)
         {
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
-
             bool paused = true;
 
             while (Timing.Accumulator >= Timing.Step)
             {
+                TotalElapsedTime = gameTime.TotalGameTime.TotalSeconds;
+
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
                 fixedTime.ElapsedGameTime = addTime;
