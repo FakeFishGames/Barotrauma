@@ -461,6 +461,23 @@ namespace Barotrauma
 
         public virtual void AddChild(GUIComponent child)
         {
+            if (child == null) return;
+            if (child.IsParentOf(this))
+            {
+                DebugConsole.ThrowError("Tried to add the parent of a GUIComponent as a child.\n" + Environment.StackTrace);
+                return;
+            }
+            if (child == this)
+            {
+                DebugConsole.ThrowError("Tried to add a GUIComponent as its own child\n" + Environment.StackTrace);
+                return;
+            }
+            if (children.Contains(child))
+            {
+                DebugConsole.ThrowError("Tried to add a the same child twice to a GUIComponent" + Environment.StackTrace);
+                return;
+            }
+
             child.parent = this;
             child.UpdateDimensions(this);
 

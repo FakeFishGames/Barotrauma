@@ -366,7 +366,15 @@ namespace Barotrauma
         
         public void MoveToPos(Vector2 pos, float force, Vector2? pullPos = null)
         {
-            if (pullPos==null) pullPos = body.Position;
+            if (pullPos == null) pullPos = body.Position;
+
+            if (!MathUtils.IsValid(pos))
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Tried to move a physics body to an invalid position.\n" + Environment.StackTrace);
+#endif
+                return;
+            }
 
             Vector2 vel = body.LinearVelocity;
             Vector2 deltaPos = pos - (Vector2)pullPos;
@@ -502,16 +510,28 @@ namespace Barotrauma
                 //increase the interpolation speed to catch up with the server
                 float speedMultiplier = (float)Math.Pow(1.0f + (positionBuffer.Count - 2) / 10.0f, 2.0f);
 
-                netInterpolationState += (deltaTime * speedMultiplier) / (next.Timestamp - prev.Timestamp);
-                newPosition = Vector2.Lerp(prev.Position, next.Position, netInterpolationState);
+                float dT = next.Timestamp - prev.Timestamp;
+                
+                netInterpolationState += (deltaTime * speedMultiplier) / dT;
+                newPosition = Vector2.Lerp(prev.Position, next.Position, MathHelper.Clamp(netInterpolationState, 0.0f, 1.0f));
 
                 //override the targetMovement to make the character play the walking/running animation
-                newVelocity = (next.Position - prev.Position) / (next.Timestamp - prev.Timestamp);
+                newVelocity = (next.Position - prev.Position) / dT;
             }
             else
             {
                 newPosition = next.Position;
                 netInterpolationState = 1.0f;
+            }
+
+            if (!MathUtils.IsValid(newPosition))
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Invalid physicsbody sync position "+newPosition);
+#endif
+                netInterpolationState = 0.0f;
+                positionBuffer.RemoveAt(0);
+                return;
             }
 
             if (netInterpolationState >= 1.0f)
