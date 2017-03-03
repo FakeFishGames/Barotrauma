@@ -1595,8 +1595,7 @@ namespace Barotrauma.Networking
                         break;
                     case ChatMessageType.Radio:
                         if (message.Sender == null) return;
-                        var radio = message.Sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
-                        if (radio == null) message.Type = ChatMessageType.Default;
+                        if (!CanUseRadio(sender.Character)) message.Type = ChatMessageType.Default;
                         break;
                 }
 
