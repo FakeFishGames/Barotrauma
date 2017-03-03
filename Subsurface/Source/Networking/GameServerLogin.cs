@@ -86,9 +86,7 @@ namespace Barotrauma.Networking
                 inc.SenderConnection.Disconnect("Server full");
                 return;
             }
-
-            DebugConsole.NewMessage("New player has joined the server", Color.White);
-
+            
             byte userID;
             string version = "", packageName = "", packageHash = "", name = "";
             try
@@ -105,6 +103,8 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage("Connection error - server failed to read the ConnectionApproval message", Color.Red);
                 return;
             }
+
+            DebugConsole.NewMessage("New player has joined the server (" + name + ", " + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ")", Color.White);
 
 #if !DEBUG
             if (string.IsNullOrWhiteSpace(name))
