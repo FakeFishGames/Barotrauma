@@ -29,10 +29,18 @@ namespace Barotrauma
             if (ComponentsToUpdate.Contains(this)) return;
             ComponentsToUpdate.Add(this);
 
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
-            foreach (GUIComponent c in fixedChildren)
+            try
             {
-                c.AddToGUIUpdateList();
+                List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+                foreach (GUIComponent c in fixedChildren)
+                {
+                    c.AddToGUIUpdateList();
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.NewMessage("Error in AddToGUIUPdateList! GUIComponent runtime type: "+this.GetType().ToString()+"; children count: "+children.Count.ToString(),Color.Red);
+                throw e;
             }
         }
 
@@ -372,13 +380,21 @@ namespace Barotrauma
 
             }*/
 
-            //use a fixed list since children can change their order in the main children list
-            //TODO: maybe find a more efficient way of handling changes in list order
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
-            foreach (GUIComponent c in fixedChildren)
+            try
             {
-                if (!c.Visible) continue;
-                c.Update(deltaTime);
+                //use a fixed list since children can change their order in the main children list
+                //TODO: maybe find a more efficient way of handling changes in list order
+                List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+                foreach (GUIComponent c in fixedChildren)
+                {
+                    if (!c.Visible) continue;
+                    c.Update(deltaTime);
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.NewMessage("Error in Update! GUIComponent runtime type: " + this.GetType().ToString() + "; children count: " + children.Count.ToString(), Color.Red);
+                throw e;
             }
         }
 
