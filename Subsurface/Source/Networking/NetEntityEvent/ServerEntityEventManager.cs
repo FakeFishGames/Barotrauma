@@ -72,7 +72,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            var newEvent = new ServerEntityEvent(entity, ID + 1);
+            var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
             if (extraData != null) newEvent.SetData(extraData);
 
             events.RemoveAll(e => e.ID <= lastSentToAll); //remove events that have been sent to all clients, they are redundant now
@@ -90,7 +90,7 @@ namespace Barotrauma.Networking
             if (!uniqueEvents.Any(e => e.IsDuplicate(newEvent)))
             {
                 //create a copy of the event and give it a new ID
-                var uniqueEvent = new ServerEntityEvent(entity, (uint)uniqueEvents.Count);
+                var uniqueEvent = new ServerEntityEvent(entity, (UInt16)uniqueEvents.Count);
                 uniqueEvent.SetData(extraData);
 
                 uniqueEvents.Add(uniqueEvent);
