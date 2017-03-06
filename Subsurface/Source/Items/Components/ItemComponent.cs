@@ -73,13 +73,7 @@ namespace Barotrauma.Items.Components
         public ItemComponent Parent;
 
         private string msg;
-
-        protected UInt32 netStateID;
-        public UInt32 NetStateID
-        {
-            get { return netStateID; }
-        }
-
+        
         [HasDefaultValue(0.0f, false)]
         public float PickingTime
         {

@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
         //used for syncing clients who join mid-round
         private List<ServerEntityEvent> uniqueEvents;
 
-        private UInt32 lastSentToAll;
+        private UInt16 lastSentToAll;
 
         public List<ServerEntityEvent> Events
         {
@@ -49,7 +49,7 @@ namespace Barotrauma.Networking
 
         private List<BufferedEvent> bufferedEvents;
 
-        private UInt32 ID;
+        private UInt16 ID;
 
         private GameServer server;
         
@@ -127,14 +127,14 @@ namespace Barotrauma.Networking
             if (clients.Count > 0)
             {
                 lastSentToAll = clients[0].lastRecvEntityEventID;
-                clients.ForEach(c => { if (c.inGame) lastSentToAll = Math.Min(lastSentToAll, c.lastRecvEntityEventID); });
+                clients.ForEach(c => { if (c.inGame && NetIdUtils.IdMoreRecent(lastSentToAll,c.lastRecvEntityEventID)) lastSentToAll = c.lastRecvEntityEventID; });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (lastSentToAll + 1));
                 if (firstEventToResend != null && (Timing.TotalTime-firstEventToResend.CreateTime)>10.0f)
                 {
                     //it's been 10 seconds since this event was created
                     //kick everyone that hasn't received it yet, this is way too old
-                    List<Client> toKick = clients.FindAll(c => c.inGame && c.lastRecvEntityEventID <= lastSentToAll);
+                    List<Client> toKick = clients.FindAll(c => c.inGame && NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll+1),c.lastRecvEntityEventID));
                     if (toKick!=null) toKick.ForEach(c => GameMain.Server.DisconnectClient(c,"","You have been disconnected because of excessive desync"));
                 }
             }
@@ -247,7 +247,7 @@ namespace Barotrauma.Networking
         {
             if (uniqueEvents.Count > 0)
             {
-                client.UnreceivedEntityEventCount = (UInt32)uniqueEvents.Count;
+                client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 client.NeedsMidRoundSync = true;
             }
             else
@@ -262,12 +262,12 @@ namespace Barotrauma.Networking
         /// </summary>
         public void Read(NetIncomingMessage msg, Client sender = null)
         {
-            UInt32 firstEventID = msg.ReadUInt32();
+            UInt16 firstEventID = msg.ReadUInt16();
             int eventCount = msg.ReadByte();
 
             for (int i = 0; i < eventCount; i++)
             {
-                UInt32 thisEventID = firstEventID + (UInt32)i;
+                UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);
                 UInt16 entityID = msg.ReadUInt16();
                 byte msgLength = msg.ReadByte();
 

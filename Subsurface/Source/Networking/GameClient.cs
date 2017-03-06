@@ -39,7 +39,7 @@ namespace Barotrauma.Networking
         private UInt16 lastQueueChatMsgID = 0; //last message added to the queue
         private List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
 
-        public UInt32 LastSentEntityEventID;
+        public UInt16 LastSentEntityEventID;
 
         private ClientEntityEventManager entityEventManager;
 
@@ -875,7 +875,7 @@ namespace Barotrauma.Networking
                 {
                     case ServerNetObject.SYNC_IDS:
                         lastSentChatMsgID = inc.ReadUInt16();
-                        LastSentEntityEventID = inc.ReadUInt32();
+                        LastSentEntityEventID = inc.ReadUInt16();
                         break;
                     case ServerNetObject.ENTITY_POSITION:
                         UInt16 id = inc.ReadUInt16();

@@ -10,7 +10,7 @@ namespace Barotrauma
     {
         private enum SpawnableType { Item, Character };
 
-        public UInt32 NetStateID
+        public UInt16 NetStateID
         {
             get;
             private set;
@@ -138,7 +138,7 @@ namespace Barotrauma
                 spawnHistory.Add(new SpawnOrRemove(entity, true));
 
                 entity.Remove();
-                NetStateID = (UInt32)spawnHistory.Count;
+                NetStateID = (UInt16)spawnHistory.Count;
             }
         }
 
@@ -149,7 +149,7 @@ namespace Barotrauma
 
             spawnHistory.Add(new SpawnOrRemove(entity, false));
 
-            NetStateID = (UInt32)spawnHistory.Count;
+            NetStateID = (UInt16)spawnHistory.Count;
         }
 
         public void AddToSpawnedList(IEnumerable<Entity> entities)
@@ -160,7 +160,7 @@ namespace Barotrauma
             foreach (Entity entity in entities)
             {
                 spawnHistory.Add(new SpawnOrRemove(entity, false));
-                NetStateID = (UInt32)spawnHistory.Count;
+                NetStateID = (UInt16)spawnHistory.Count;
             }
         }
 
@@ -171,7 +171,7 @@ namespace Barotrauma
             //skip items that the client already knows about
             List<SpawnOrRemove> entities = spawnHistory.Skip((int)client.lastRecvEntitySpawnID).ToList();
 
-            message.Write((UInt32)spawnHistory.Count);
+            message.Write((UInt16)spawnHistory.Count);
 
             message.Write((UInt16)entities.Count);
             for (int i = 0; i < entities.Count; i++)
@@ -202,7 +202,7 @@ namespace Barotrauma
         {
             if (GameMain.Server != null) return;
 
-            UInt32 ID = message.ReadUInt32();
+            UInt16 ID = message.ReadUInt16();
             
             var entityCount = message.ReadUInt16();
             for (int i = 0; i < entityCount; i++)
@@ -214,7 +214,7 @@ namespace Barotrauma
                     ushort entityId = message.ReadUInt16();
 
                     var entity = Entity.FindEntityByID(entityId);
-                    if (entity == null || ID - entityCount + i < NetStateID) continue; //already removed
+                    if (entity == null || NetIdUtils.IdMoreRecent(NetStateID,(UInt16)(ID - entityCount + i))) continue; //already removed
 
                     entity.Remove();
                 }
@@ -223,10 +223,10 @@ namespace Barotrauma
                     switch (message.ReadByte())
                     {
                         case (byte)SpawnableType.Item:
-                            Item.ReadSpawnData(message, ID - entityCount + i >= NetStateID);
+                            Item.ReadSpawnData(message, NetIdUtils.IdMoreRecent((UInt16)(ID - entityCount + i),(UInt16)(NetStateID+1)));
                             break;
                         case (byte)SpawnableType.Character:
-                            Character.ReadSpawnData(message, ID - entityCount + i >= NetStateID);
+                            Character.ReadSpawnData(message, NetIdUtils.IdMoreRecent((UInt16)(ID - entityCount + i), (UInt16)(NetStateID + 1)));
                             break;
                         default:
                             DebugConsole.ThrowError("Received invalid entity spawn message (unknown spawnable type)");

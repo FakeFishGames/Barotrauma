@@ -11,25 +11,25 @@ namespace Barotrauma.Networking
     {
         private List<ClientEntityEvent> events;
 
-        private UInt32 ID;
+        private UInt16 ID;
 
         private GameClient thisClient;
 
         //when was a specific entity event last sent to the client
         //  key = event id, value = NetTime.Now when sending
-        public Dictionary<UInt32, float> eventLastSent;
+        public Dictionary<UInt16, float> eventLastSent;
 
-        public UInt32 LastReceivedID
+        public UInt16 LastReceivedID
         {
             get { return lastReceivedID; }
         }
 
-        private UInt32 lastReceivedID;
+        private UInt16 lastReceivedID;
 
         public ClientEntityEventManager(GameClient client) 
         {
             events = new List<ClientEntityEvent>();
-            eventLastSent = new Dictionary<uint, float>();
+            eventLastSent = new Dictionary<UInt16, float>();
 
             thisClient = client;
         }
@@ -61,7 +61,7 @@ namespace Barotrauma.Networking
             //find the index of the first event the server hasn't received
             int startIndex = events.Count;
             while (startIndex > 0 &&
-                events[startIndex-1].ID > thisClient.LastSentEntityEventID)
+                NetIdUtils.IdMoreRecent(events[startIndex-1].ID,thisClient.LastSentEntityEventID))
             {
                 startIndex--;
             }
@@ -103,21 +103,21 @@ namespace Barotrauma.Networking
         /// </summary>
         public void Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
         {
-            UInt32 unreceivedEntityEventCount = 0;
-            UInt32 firstNewID = 0;
+            UInt16 unreceivedEntityEventCount = 0;
+            UInt16 firstNewID = 0;
 
             if (type == ServerNetObject.ENTITY_EVENT_INITIAL)
             {
-                unreceivedEntityEventCount = msg.ReadUInt32();
-                firstNewID = msg.ReadUInt32();
+                unreceivedEntityEventCount = msg.ReadUInt16();
+                firstNewID = msg.ReadUInt16();
             }
 
-            UInt32 firstEventID = msg.ReadUInt32();
+            UInt16 firstEventID = msg.ReadUInt16();
             int eventCount = msg.ReadByte();
 
             for (int i = 0; i < eventCount; i++)
             {
-                UInt32 thisEventID = firstEventID + (UInt32)i;
+                UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);
                 UInt16 entityID = msg.ReadUInt16();
                 byte msgLength = msg.ReadByte();
 
@@ -163,7 +163,7 @@ namespace Barotrauma.Networking
                 if (lastReceivedID == unreceivedEntityEventCount - 1 ||
                     unreceivedEntityEventCount == 0)
                 {
-                    lastReceivedID = firstNewID - 1;
+                    lastReceivedID = (UInt16)(firstNewID - 1);
                 }
             }
         }

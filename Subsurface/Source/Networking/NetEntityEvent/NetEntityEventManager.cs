@@ -13,7 +13,7 @@ namespace Barotrauma.Networking
         public const int MaxEventBufferLength = 1024;
         public const int MaxEventsPerWrite = 64;
 
-        //public UInt32 LastReceivedEntityEventID
+        //public UInt16 LastReceivedEntityEventID
         //{
         //    get { return lastReceivedEntityEventID; }
         //}

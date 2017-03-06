@@ -36,10 +36,10 @@ namespace Barotrauma.Networking
         public UInt16 lastSentChatMsgID = 0; //last msg this client said
         public UInt16 lastRecvChatMsgID = 0; //last msg this client knows about
 
-        public UInt32 lastSentEntityEventID = 0;
-        public UInt32 lastRecvEntityEventID = 0;
+        public UInt16 lastSentEntityEventID = 0;
+        public UInt16 lastRecvEntityEventID = 0;
 
-        public UInt32 lastRecvEntitySpawnID = 0;
+        public UInt16 lastRecvEntitySpawnID = 0;
 
         public List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
         public UInt16 lastChatMsgQueueID;
@@ -49,13 +49,13 @@ namespace Barotrauma.Networking
 
         public bool NeedsMidRoundSync;
         //how many unique events the client missed before joining the server
-        public UInt32 UnreceivedEntityEventCount;
+        public UInt16 UnreceivedEntityEventCount;
 
         private List<Client> kickVoters;
 
         //when was a specific entity event last sent to the client
         //  key = event id, value = NetTime.Now when sending
-        public Dictionary<UInt32, float> entityEventLastSent;
+        public Dictionary<UInt16, float> entityEventLastSent;
 
         public bool ReadyToStart;
 
@@ -104,7 +104,7 @@ namespace Barotrauma.Networking
 
             jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, 3));
 
-            entityEventLastSent = new Dictionary<UInt32, float>();
+            entityEventLastSent = new Dictionary<UInt16, float>();
         }
 
         public static bool IsValidName(string name)
