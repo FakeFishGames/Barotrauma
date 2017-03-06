@@ -135,16 +135,7 @@ namespace Barotrauma
                 return hash;
             }
         }
-
-        private UInt32 netStateID;
-        public UInt32 NetStateID
-        {
-            get
-            {
-                return netStateID;
-            }
-        }
-
+        
         public static List<Submarine> Loaded
         {
             get { return loaded; }

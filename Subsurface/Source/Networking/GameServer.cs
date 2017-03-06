@@ -634,17 +634,13 @@ namespace Barotrauma.Networking
                         //TODO: might want to use a clever class for this
                         
                         UInt16 lastRecvChatMsgID        = inc.ReadUInt16();
-                        UInt32 lastRecvEntitySpawnID    = inc.ReadUInt32();
-                        UInt32 lastRecvEntityEventID    = inc.ReadUInt32();
+                        UInt16 lastRecvEntitySpawnID    = inc.ReadUInt16();
+                        UInt16 lastRecvEntityEventID    = inc.ReadUInt16();
 
                         //last msgs we've created/sent, the client IDs should never be higher than these
-                        UInt32 lastEntitySpawnID = Entity.Spawner.NetStateID;
-                        UInt32 lastEntityEventID = entityEventManager.Events.Count == 0 ? 0 : entityEventManager.Events.Last().ID;
-
-                        Debug.Assert(
-                            c.lastRecvEntityEventID.GetType() == typeof(UInt32),
-                            "Event ID type changed, you may need to reimplement MidRound syncing logic to handle ID wraparound");
-
+                        UInt16 lastEntitySpawnID = Entity.Spawner.NetStateID;
+                        UInt16 lastEntityEventID = entityEventManager.Events.Count == 0 ? (UInt16)0 : entityEventManager.Events.Last().ID;
+                        
                         if (c.NeedsMidRoundSync)
                         {
                             //received all the old events -> client in sync, we can switch to normal behavior
@@ -655,7 +651,7 @@ namespace Barotrauma.Networking
                             }
                             else
                             {
-                                lastEntityEventID = (uint)c.UnreceivedEntityEventCount - 1;
+                                lastEntityEventID = (UInt16)(c.UnreceivedEntityEventCount - 1);
                             }
                         }
 
@@ -672,8 +668,12 @@ namespace Barotrauma.Networking
 #endif
 
                         c.lastRecvChatMsgID = NetIdUtils.Clamp(c.lastRecvChatMsgID, lastRecvChatMsgID, c.lastChatMsgQueueID);
-                        c.lastRecvEntitySpawnID = Math.Min(Math.Max(c.lastRecvEntitySpawnID, lastRecvEntitySpawnID), lastEntitySpawnID);
-                        c.lastRecvEntityEventID = Math.Min(Math.Max(c.lastRecvEntityEventID, lastRecvEntityEventID), lastEntityEventID);
+                        
+                        if (NetIdUtils.IdMoreRecent(lastRecvEntitySpawnID, c.lastRecvEntitySpawnID)) c.lastRecvEntitySpawnID = lastRecvEntitySpawnID;
+                        if (NetIdUtils.IdMoreRecent(c.lastRecvEntitySpawnID, lastEntitySpawnID)) c.lastRecvEntitySpawnID = lastEntitySpawnID;
+
+                        if (NetIdUtils.IdMoreRecent(lastRecvEntityEventID, c.lastRecvEntityEventID)) c.lastRecvEntityEventID = lastRecvEntityEventID;
+                        if (NetIdUtils.IdMoreRecent(c.lastRecvEntityEventID, lastEntityEventID)) c.lastRecvEntityEventID = lastEntityEventID;
 
                         break;
                     case ClientNetObject.CHAT_MESSAGE:

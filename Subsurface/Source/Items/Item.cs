@@ -64,13 +64,7 @@ namespace Barotrauma
 
         //a dictionary containing lists of the status effects in all the components of the item
         private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
-
-        private UInt32 netStateID;
-        public UInt32 NetStateID
-        {
-            get { return netStateID; }
-        }
-
+        
         public readonly Dictionary<string, ObjectProperty> properties;
         public Dictionary<string, ObjectProperty> ObjectProperties
         {

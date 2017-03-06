@@ -63,12 +63,6 @@ namespace Barotrauma
 
         bool isHorizontal;
 
-        private UInt32 netStateID;
-        public UInt32 NetStateID
-        {
-            get { return netStateID; }
-        }
-        
         public SpriteEffects SpriteEffects = SpriteEffects.None;
 
         public bool resizeHorizontal
