@@ -155,6 +155,7 @@
     <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\ChatMessage.cs" />
     <Compile Include="Source\Networking\Client.cs" />
+    <Compile Include="Source\Networking\FileTransfer\FileSender.cs" />
     <Compile Include="Source\Networking\GameServerLogin.cs" />
     <Compile Include="Source\Networking\INetSerializable.cs" />
     <Compile Include="Source\Networking\NetBufferExtensions.cs" />
