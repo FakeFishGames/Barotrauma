@@ -75,7 +75,7 @@ namespace Barotrauma.Networking
             var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
             if (extraData != null) newEvent.SetData(extraData);
 
-            events.RemoveAll(e => e.ID <= lastSentToAll); //remove events that have been sent to all clients, they are redundant now
+            events.RemoveAll(e => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll+1),e.ID)); //remove events that have been sent to all clients, they are redundant now
             for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
@@ -220,7 +220,7 @@ namespace Barotrauma.Networking
             //find the index of the first event the client hasn't received
             int startIndex = eventList.Count;
             while (startIndex > 0 &&
-                eventList[startIndex - 1].ID > client.lastRecvEntityEventID)
+                NetIdUtils.IdMoreRecent(eventList[startIndex - 1].ID,client.lastRecvEntityEventID))
             {
                 startIndex--;
             }
