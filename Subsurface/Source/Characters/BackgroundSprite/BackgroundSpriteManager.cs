@@ -13,13 +13,13 @@ namespace Barotrauma
     class BackgroundSprite
     {
         public readonly BackgroundSpritePrefab Prefab;
-        public Vector2 Position;
+        public Vector3 Position;
 
         public float Scale;
 
         public float Rotation;
 
-        public BackgroundSprite(BackgroundSpritePrefab prefab, Vector2 position, float scale, float rotation = 0.0f)
+        public BackgroundSprite(BackgroundSpritePrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
         {
             this.Prefab = prefab;
             this.Position = position;
@@ -99,15 +99,26 @@ namespace Barotrauma
 
                 rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, false);
 
-                var newSprite = new BackgroundSprite(prefab, 
-                    (Vector2)pos, Rand.Range(prefab.Scale.X, prefab.Scale.Y, false), rotation);
+                var newSprite = new BackgroundSprite(prefab,
+                    new Vector3((Vector2)pos, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, false)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, false), rotation);
 
-                int x = (int)Math.Floor(((Vector2)pos).X / GridSize);
-                if (x < 0 || x >= sprites.GetLength(0)) continue;
-                int y = (int)Math.Floor(((Vector2)pos).Y / GridSize);
-                if (y < 0 || y >= sprites.GetLength(1)) continue;
+                Vector2 spriteSize = newSprite.Prefab.Sprite.size * newSprite.Scale;
 
-                sprites[x,y].Add(newSprite);
+                int minX = (int)Math.Floor((newSprite.Position.X - spriteSize.X / 2 - newSprite.Position.Z) / GridSize);
+                int maxX = (int)Math.Floor((newSprite.Position.X + spriteSize.X / 2 + newSprite.Position.Z) / GridSize);
+                if (minX < 0 || maxX >= sprites.GetLength(0)) continue;
+
+                int minY = (int)Math.Floor((newSprite.Position.Y - spriteSize.Y / 2 - newSprite.Position.Z) / GridSize);
+                int maxY = (int)Math.Floor((newSprite.Position.Y + spriteSize.Y / 2 + newSprite.Position.Z) / GridSize);
+                if (minY < 0 || maxY >= sprites.GetLength(1)) continue;
+
+                for (int x = minX; x <= maxX; x++)
+                {
+                    for (int y = minY; y <= maxY; y++)
+                    {
+                        sprites[x, y].Add(newSprite);
+                    }
+                }
             }
         }
 
@@ -119,6 +130,8 @@ namespace Barotrauma
             Vector2 randomPos = new Vector2(
                 Rand.Range(0.0f, level.Size.X, false), 
                 Rand.Range(0.0f, level.Size.Y, false));
+
+            if (!prefab.SpawnOnWalls) return randomPos;
 
             var cells = level.GetCells(randomPos);
 
@@ -178,48 +191,79 @@ namespace Barotrauma
         public void DrawSprites(SpriteBatch spriteBatch, Camera cam)
         {
             Rectangle indices = Rectangle.Empty;
-            indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize) - 2;            
+            indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize);            
             if (indices.X >= sprites.GetLength(0)) return;
-
-            indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height) / (float)GridSize) - 2;
+            indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height) / (float)GridSize);
             if (indices.Y >= sprites.GetLength(1)) return;
 
-            indices.Width = (int)Math.Ceiling(cam.WorldView.Right / (float)GridSize) + 2;
+            indices.Width = (int)Math.Floor(cam.WorldView.Right / (float)GridSize)+1;
             if (indices.Width < 0) return;
-            indices.Height = (int)Math.Ceiling(cam.WorldView.Y / (float)GridSize) + 2;
+            indices.Height = (int)Math.Floor(cam.WorldView.Y / (float)GridSize)+1;
             if (indices.Height < 0) return;
 
             indices.X = Math.Max(indices.X, 0);
             indices.Y = Math.Max(indices.Y, 0);
-            indices.Width = Math.Min(indices.Width, sprites.GetLength(0));
-            indices.Height = Math.Min(indices.Height, sprites.GetLength(1));
+            indices.Width = Math.Min(indices.Width, sprites.GetLength(0)-1);
+            indices.Height = Math.Min(indices.Height, sprites.GetLength(1)-1);
 
             float swingState = (float)Math.Sin(swingTimer * 0.1f);
 
+            List<BackgroundSprite> visibleSprites = new List<BackgroundSprite>();
+
             float z = 0.0f;
-            for (int x = indices.X; x < indices.Width; x++)
+            for (int x = indices.X; x <= indices.Width; x++)
             {
-                for (int y = indices.Y; y < indices.Height; y++)
+                for (int y = indices.Y; y <= indices.Height; y++)
                 {
                     foreach (BackgroundSprite sprite in sprites[x, y])
                     {
-                        sprite.Prefab.Sprite.Draw(
-                            spriteBatch, 
-                            new Vector2(sprite.Position.X, -sprite.Position.Y), 
-                            Color.White, 
-                            sprite.Rotation + swingState*sprite.Prefab.SwingAmount, 
-                            sprite.Scale, 
-                            SpriteEffects.None, 
-                            z);
-
-                        if (GameMain.DebugDraw)
+                        int drawOrderIndex = 0;
+                        for (int i = 0; i < visibleSprites.Count; i++)
                         {
-                            GUI.DrawRectangle(spriteBatch, new Vector2(sprite.Position.X, -sprite.Position.Y), new Vector2(10.0f, 10.0f), Color.Red, true);
+                            if (visibleSprites[i] == sprite)
+                            {
+                                drawOrderIndex = -1;
+                                break;
+                            }
+
+                            if (visibleSprites[i].Position.Z > sprite.Position.Z)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                drawOrderIndex = i + 1;
+                            }
                         }
 
-                        z += 0.0001f;
+                        if (drawOrderIndex >= 0)
+                        {
+                            visibleSprites.Insert(drawOrderIndex, sprite);
+                        }
                     }
                 }
+            }
+
+            foreach (BackgroundSprite sprite in visibleSprites)
+            {
+                Vector2 camDiff = new Vector2(sprite.Position.X, sprite.Position.Y) - cam.WorldViewCenter;
+                camDiff.Y = -camDiff.Y;
+
+                sprite.Prefab.Sprite.Draw(
+                    spriteBatch,
+                    new Vector2(sprite.Position.X, -sprite.Position.Y) - camDiff * sprite.Position.Z / 10000.0f,
+                    Color.Lerp(Color.White, Level.Loaded.BackgroundColor, sprite.Position.Z / 5000.0f),
+                    sprite.Rotation + swingState * sprite.Prefab.SwingAmount,
+                    sprite.Scale,
+                    SpriteEffects.None,
+                    z);
+
+                if (GameMain.DebugDraw)
+                {
+                    GUI.DrawRectangle(spriteBatch, new Vector2(sprite.Position.X, -sprite.Position.Y), new Vector2(10.0f, 10.0f), Color.Red, true);
+                }
+
+                z += 0.0001f;
             }
         }
 

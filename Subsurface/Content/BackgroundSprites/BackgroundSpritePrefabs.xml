@@ -82,5 +82,21 @@
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <Sprite texture="Content/BackgroundSprites/vegetation5.png" sourcerect="580,151,444,873" origin="0.3,0.95"/>
-  </branch> 
+  </branch>
+
+  <icechunk minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
+    <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5"/>
+  </icechunk>
+  
+  <icechunk minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
+    <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="669,0,335,513" origin="0.5,0.5"/>
+  </icechunk>
+
+  <icechunk minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
+    <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="0,523,331,501" origin="0.5,0.5"/>
+  </icechunk>
+  
+  <icechunk minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
+    <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5"/>
+  </icechunk>
 </backgroundsprites>
