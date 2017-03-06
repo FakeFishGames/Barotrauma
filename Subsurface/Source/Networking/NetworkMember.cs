@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
         REQUEST_INIT,   //ask the server to give you initialization
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
-
+        
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
         SERVER_COMMAND      //tell the server to end a round or kick/ban someone (special permissions required)
     }
@@ -37,6 +37,8 @@ namespace Barotrauma.Networking
         UPDATE_INGAME,      //update state ingame (character input and chat messages)
 
         PERMISSIONS,        //tell the client which special permissions they have (if any)
+
+        FILE_TRANSFER,
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
@@ -70,7 +72,11 @@ namespace Barotrauma.Networking
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
 
-        protected NetPeer netPeer;
+        public NetPeer netPeer
+        {
+            get;
+            protected set;
+        }
 
         protected string name;
 
