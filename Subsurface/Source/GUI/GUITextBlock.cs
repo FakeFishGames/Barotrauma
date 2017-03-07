@@ -14,7 +14,6 @@ namespace Barotrauma
         protected Vector2 origin;
 
         protected Vector2 caretPos;
-        protected int caretAt;
 
         protected Color textColor;
 
