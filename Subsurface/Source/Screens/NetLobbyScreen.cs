@@ -1188,8 +1188,13 @@ namespace Barotrauma
 
         public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
         {
+            if (GameMain.Client == null) return false;
+
             //already downloading the selected sub file
-            //if (GameMain.Client.ActiveFileTransferName == subName+".sub") return false;
+            if (GameMain.Client.FileReceiver.ActiveTransfers.Any(t => t.FileName == subName + ".sub"))
+            {
+                return false;
+            }
 
             var matchingListSub = subList.children.Find(c => c.UserData != null && (c.UserData as Submarine).Name == subName) as GUITextBlock;
             if (matchingListSub != null)
@@ -1219,12 +1224,10 @@ namespace Barotrauma
                     + "Your MD5 hash: " + sub.MD5Hash.Hash + " \n"
                     + "Server's MD5 hash: " + md5Hash + ". ";
                 }
-                    
-                /*string downloadMsg = string.IsNullOrEmpty(GameMain.Client.ActiveFileTransferName) ?
-                    "Do you want to download the file from the server host?" :
-                    "Do you want to download the file and cancel downloading ''" + GameMain.Client.ActiveFileTransferName + "''?";*/
 
-                if (GUIMessageBox.MessageBoxes.Count>0)
+                errorMsg += "Do you want to download the file from the server host?";
+
+                if (GUIMessageBox.MessageBoxes.Count > 0)
                 {
                     var currentMessageBox = GUIMessageBox.VisibleBox;
                     if (currentMessageBox != null && currentMessageBox.UserData as string == subName)
@@ -1233,15 +1236,15 @@ namespace Barotrauma
                     }
                 }
 
-                /*var requestFileBox = new GUIMessageBox("Submarine not found!", errorMsg+downloadMsg, new string[] { "Yes", "No" }, 400, 300);
+                var requestFileBox = new GUIMessageBox("Submarine not found!", errorMsg, new string[] { "Yes", "No" }, 400, 300);
                 requestFileBox.Buttons[0].UserData = subName;
                 requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
                 requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
                     {
-                        GameMain.Client.RequestFile(userdata.ToString(), FileTransferMessageType.Submarine);
+                        GameMain.Client.RequestFile(userdata.ToString(), FileTransferType.Submarine);
                         return true;
                     };
-                requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;*/
+                requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
                 
                 return false;
             }

@@ -134,8 +134,6 @@ namespace Barotrauma.Networking
 
             entityEventManager = new ServerEntityEventManager(this);
 
-            fileSender = new FileSender(this);
-
             whitelist = new WhiteList();
             banList = new BanList();
 
@@ -155,6 +153,8 @@ namespace Barotrauma.Networking
                 Log("Starting the server...", Color.Cyan);
                 server = new NetServer(config);
                 netPeer = server;
+                fileSender = new FileSender(this);
+
                 server.Start();
             }
             catch (Exception e)
@@ -558,7 +558,7 @@ namespace Barotrauma.Networking
                 case ClientPacketHeader.FILE_REQUEST:
                     if (AllowFileTransfers)
                     {
-
+                        fileSender.ReadFileRequest(inc);
                     }
                     break;
             }            

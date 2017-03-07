@@ -132,6 +132,7 @@ namespace Barotrauma.Networking
                 {
                     transfer.SequenceChannel++;
                 }
+                activeTransfers.Add(transfer);
             }
             catch (Exception e)
             {
@@ -173,7 +174,6 @@ namespace Barotrauma.Networking
                     transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
 
                     transfer.Status = FileTransferStatus.Sending;
-                    continue;
                 }
 
                 message = peer.CreateMessage(sendByteCount + 8 + 1);
