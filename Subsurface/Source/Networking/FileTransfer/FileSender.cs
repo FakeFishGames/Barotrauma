@@ -10,7 +10,7 @@ namespace Barotrauma.Networking
 {
     enum FileTransferStatus
     {
-        NotStarted, Sending, Receiving, Finished, Canceled
+        NotStarted, Sending, Receiving, Finished, Canceled, Error
     }
 
     enum FileTransferMessageType
@@ -27,7 +27,6 @@ namespace Barotrauma.Networking
     {
         public class FileTransferOut
         {
-            private byte[] tempBuffer;
             private byte[] data;
 
             private DateTime startingTime;
@@ -56,7 +55,7 @@ namespace Barotrauma.Networking
 
             public float Progress
             {
-                get { return 0.0f; }//inputStream == null ? 0.0f : (float)sentOffset / (float)inputStream.Length; }
+                get { return SentOffset / (float)Data.Length; }
             }
 
             public float WaitTimer
@@ -80,6 +79,8 @@ namespace Barotrauma.Networking
             {
                 get { return connection; }
             }
+
+            public int SequenceChannel;
 
             public FileTransferOut(NetConnection recipient, FileTransferType fileType, string filePath)
             {
@@ -115,6 +116,7 @@ namespace Barotrauma.Networking
 
         public FileTransferOut StartTransfer(NetConnection recipient, FileTransferType fileType, string filePath)
         {
+            //TODO: set a limit on the amount of active transfers
             if (!File.Exists(filePath))
             {
                 DebugConsole.ThrowError("Failed to initiate file transfer (file \""+filePath+"\" not found.");
@@ -125,6 +127,11 @@ namespace Barotrauma.Networking
             try
             {
                 transfer = new FileTransferOut(recipient, fileType, filePath);
+                transfer.SequenceChannel = 1;
+                while (activeTransfers.Any(t => t.Connection == recipient && t.SequenceChannel == transfer.SequenceChannel))
+                {
+                    transfer.SequenceChannel++;
+                }
             }
             catch (Exception e)
             {
@@ -136,6 +143,8 @@ namespace Barotrauma.Networking
 
         public void Update(float deltaTime)
         {
+            activeTransfers.RemoveAll(t => t.Connection.Status != NetConnectionStatus.Connected);
+
             foreach (FileTransferOut transfer in activeTransfers)
             {
                 transfer.WaitTimer -= deltaTime;
@@ -161,9 +170,10 @@ namespace Barotrauma.Networking
                     message.Write((ushort)chunkLen);
                     message.Write((ulong)transfer.Data.Length);
                     message.Write(transfer.FileName);
-                    transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, 1);
+                    transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
 
                     transfer.Status = FileTransferStatus.Sending;
+                    continue;
                 }
 
                 message = peer.CreateMessage(sendByteCount + 8 + 1);
@@ -175,7 +185,7 @@ namespace Barotrauma.Networking
 
                 message.Write(sendBytes);
 
-                transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, 1);
+                transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
                 transfer.SentOffset += sendByteCount;
                 
                 if (remaining - sendByteCount <= 0)
@@ -191,6 +201,34 @@ namespace Barotrauma.Networking
         {
             transfer.Status = FileTransferStatus.Canceled;
             activeTransfers.Remove(transfer);
+        }
+
+        public void ReadFileRequest(NetIncomingMessage inc)
+        {
+            byte messageType = inc.ReadByte();
+
+            if (messageType == (byte)FileTransferMessageType.Cancel)
+            {
+                byte sequenceChannel = inc.ReadByte();
+                var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == sequenceChannel);
+                if (matchingTransfer != null) CancelTransfer(matchingTransfer);
+
+                return;
+            }
+
+            byte fileType = inc.ReadByte();
+            switch (fileType)
+            {
+                case (byte)FileTransferType.Submarine:
+                    string fileName = inc.ReadString();
+                    var requestedSubmarine = Submarine.SavedSubmarines.Find(s => s.Name == fileName);
+
+                    if (requestedSubmarine != null)
+                    {
+                        StartTransfer(inc.SenderConnection, FileTransferType.Submarine, requestedSubmarine.FilePath);
+                    }
+                    break;
+            }
         }
 
     }

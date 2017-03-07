@@ -45,6 +45,8 @@ namespace Barotrauma.Networking
 
         private ServerEntityEventManager entityEventManager;
 
+        private FileSender fileSender;
+
         public override List<Client> ConnectedClients
         {
             get
@@ -131,6 +133,8 @@ namespace Barotrauma.Networking
             settingsButton.UserData = "settingsButton";
 
             entityEventManager = new ServerEntityEventManager(this);
+
+            fileSender = new FileSender(this);
 
             whitelist = new WhiteList();
             banList = new BanList();
@@ -341,7 +345,6 @@ namespace Barotrauma.Networking
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
             if (log.LogFrame != null) log.LogFrame.Update(deltaTime);
             
-
             if (!started) return;
 
             base.Update(deltaTime);
@@ -355,7 +358,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            unauthenticatedClients.RemoveAll(uc => uc.AuthTimer <= 0.0f);            
+            unauthenticatedClients.RemoveAll(uc => uc.AuthTimer <= 0.0f);
+
+            fileSender.Update(deltaTime);         
             
             if (gameStarted)
             {
@@ -549,6 +554,12 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPacketHeader.SERVER_COMMAND:
                     ClientReadServerCommand(inc);
+                    break;
+                case ClientPacketHeader.FILE_REQUEST:
+                    if (AllowFileTransfers)
+                    {
+
+                    }
                     break;
             }            
         }
@@ -1902,7 +1913,7 @@ namespace Barotrauma.Networking
                 Log("Shutting down server...", Color.Cyan);
                 log.Save();
             }
-            
+                        
             server.Shutdown("The server has been shut down");
         }
     }
