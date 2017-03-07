@@ -223,10 +223,10 @@ namespace Barotrauma
                     switch (message.ReadByte())
                     {
                         case (byte)SpawnableType.Item:
-                            Item.ReadSpawnData(message, NetIdUtils.IdMoreRecent((UInt16)(ID - entityCount + i),(UInt16)(NetStateID+1)));
+                            Item.ReadSpawnData(message, NetIdUtils.IdMoreRecent((UInt16)(ID - entityCount + i), (UInt16)(NetStateID - 1)));
                             break;
                         case (byte)SpawnableType.Character:
-                            Character.ReadSpawnData(message, NetIdUtils.IdMoreRecent((UInt16)(ID - entityCount + i), (UInt16)(NetStateID + 1)));
+                            Character.ReadSpawnData(message, NetIdUtils.IdMoreRecent((UInt16)(ID - entityCount + i), (UInt16)(NetStateID - 1)));
                             break;
                         default:
                             DebugConsole.ThrowError("Received invalid entity spawn message (unknown spawnable type)");
