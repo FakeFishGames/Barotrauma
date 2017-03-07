@@ -15,6 +15,8 @@ namespace Barotrauma.Networking
         REQUEST_INIT,   //ask the server to give you initialization
         UPDATE_LOBBY,   //update state in lobby
         UPDATE_INGAME,  //update state ingame
+
+        FILE_REQUEST,   //request a (submarine) file from the server
         
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
         SERVER_COMMAND      //tell the server to end a round or kick/ban someone (special permissions required)
