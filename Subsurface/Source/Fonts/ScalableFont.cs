@@ -206,8 +206,8 @@ namespace Barotrauma
                 {
                     lineNum++;
                     currentPos = position;
-                    currentPos.X += baseHeight * 18 / 10 * lineNum * advanceUnit.Y;
-                    currentPos.Y += baseHeight * 18 / 10 * lineNum * advanceUnit.X;
+                    currentPos.X += baseHeight * 18 / 10 * lineNum * advanceUnit.Y * scale.Y;
+                    currentPos.Y += baseHeight * 18 / 10 * lineNum * advanceUnit.X * scale.Y;
                     continue;
                 }
                 uint charIndex = text[i];
