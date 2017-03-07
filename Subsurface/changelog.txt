@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------------
+v0.5.4.5
+---------------------------------------------------------------------------------------------------------
+
+- optimized light rendering
+- switched fonts again, now to ones that support the cyrillic alphabet
+- special symbols are allowed in player names again (unless there's already a player on the server
+with a visually identical name)
+- fixed monsters not appearing in the position indicated by the sonar in monster missions (or being desynced
+whenever they did)
+- fixed the game process staying active in the background after a crash
+- players can't use headsets that are in the inventory
+- the warning message about unlinked vents is only shown once when saving a sub (not for each vent)
+- another attempt to fix AddToGUIUpdateList and SetTransformIgnoreContacts errors
+
+---------------------------------------------------------------------------------------------------------
 v0.5.4.4
 ---------------------------------------------------------------------------------------------------------
 
