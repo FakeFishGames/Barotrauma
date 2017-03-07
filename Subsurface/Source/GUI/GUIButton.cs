@@ -84,7 +84,7 @@ namespace Barotrauma
             set { textBlock.TextColor = value; }
         }
 
-        public override SpriteFont Font
+        public override ScalableFont Font
         {
             get
             {

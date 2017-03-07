@@ -232,11 +232,11 @@ namespace Barotrauma.Items.Components
             int y = GuiFrame.Rect.Y;
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            spriteBatch.DrawString(GUI.Font,
+            GUI.Font.DrawString(spriteBatch,
                 "Charge: " + (int)charge + "/" + (int)capacity + " kWm (" + (int)((charge / capacity) * 100.0f) + " %)",
                 new Vector2(x + 30, y + 30), Color.White);
 
-            spriteBatch.DrawString(GUI.Font, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
         }
 
         public override void AddToGUIUpdateList()

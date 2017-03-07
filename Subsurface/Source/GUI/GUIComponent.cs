@@ -99,7 +99,7 @@ namespace Barotrauma
         protected Color flashColor;
         protected float flashTimer;
 
-        public virtual SpriteFont Font
+        public virtual ScalableFont Font
         {
             get;
             set;

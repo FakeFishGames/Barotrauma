@@ -443,9 +443,9 @@ namespace Barotrauma.Items.Components
 
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            spriteBatch.DrawString(GUI.Font, "Output: " + (int)temperature + " kW", 
+            GUI.Font.DrawString(spriteBatch, "Output: " + (int)temperature + " kW", 
                 new Vector2(x + 450, y + 30), Color.Red);
-            spriteBatch.DrawString(GUI.Font, "Grid load: " + (int)load + " kW",
+            GUI.Font.DrawString(spriteBatch, "Grid load: " + (int)load + " kW",
                 new Vector2(x + 600, y + 30), Color.Yellow);
 
             float maxLoad = 0.0f;
@@ -460,18 +460,18 @@ namespace Barotrauma.Items.Components
             DrawGraph(loadGraph, spriteBatch,
                 new Rectangle(x + 30, y + 30, 400, 250),  Math.Max(10000.0f, maxLoad), xOffset, Color.Yellow);
 
-            spriteBatch.DrawString(GUI.Font, "Shutdown Temperature: " + (int)shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Shutdown Temperature: " + (int)shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
 
-            //spriteBatch.DrawString(GUI.Font, "Automatic Temperature Control: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 450, y + 180), Color.White);
+            //GUI.Font.DrawString(spriteBatch, "Automatic Temperature Control: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 450, y + 180), Color.White);
             
             y += 300;
 
-            spriteBatch.DrawString(GUI.Font, "Fission rate: " + (int)fissionRate + " %", new Vector2(x + 30, y), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Fission rate: " + (int)fissionRate + " %", new Vector2(x + 30, y), Color.White);
             DrawGraph(fissionRateGraph, spriteBatch, 
                 new Rectangle(x + 30, y + 30, 200, 100), 100.0f, xOffset, Color.Orange);
 
 
-            spriteBatch.DrawString(GUI.Font, "Cooling rate: " + (int)coolingRate + " %", new Vector2(x + 320, y), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Cooling rate: " + (int)coolingRate + " %", new Vector2(x + 320, y), Color.White);
             DrawGraph(coolingRateGraph, spriteBatch,
                 new Rectangle(x + 320, y + 30, 200, 100), 100.0f, xOffset, Color.LightBlue);
 
