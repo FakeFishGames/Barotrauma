@@ -13,10 +13,7 @@ namespace Barotrauma.Networking
     class FileReceiver
     {
         public class FileTransferIn : IDisposable
-        {
-            public delegate void OnFinishedDelegate(FileTransferIn fileStreamReceiver);
-            public OnFinishedDelegate OnFinished;
-            
+        {            
             public string FileName
             {
                 get;
@@ -32,7 +29,7 @@ namespace Barotrauma.Networking
             public ulong FileSize
             {
                 get;
-                private set;
+                set;
             }
 
             public ulong Received
@@ -78,14 +75,12 @@ namespace Barotrauma.Networking
 
             public int SequenceChannel;
 
-            public FileTransferIn(string filePath, FileTransferType fileType, OnFinishedDelegate onFinished)
+            public FileTransferIn(string filePath, FileTransferType fileType)
             {
                 FilePath = filePath;
                 FileName = Path.GetFileName(FilePath);
                 FileType = fileType;
-
-                this.OnFinished = onFinished;
-
+                
                 WriteStream = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
                 TimeStarted = Environment.TickCount;
 
@@ -131,10 +126,18 @@ namespace Barotrauma.Networking
         }
 
         const int MaxFileSize = 1000000;
+        
+        public delegate void OnFinishedDelegate(FileTransferIn fileStreamReceiver);
+        public OnFinishedDelegate OnFinished;
 
         private List<FileTransferIn> activeTransfers;
 
         private string downloadFolder;
+
+        public List<FileTransferIn> ActiveTransfers
+        {
+            get { return activeTransfers; }
+        }
 
         public FileReceiver(string downloadFolder)
         {
@@ -143,7 +146,7 @@ namespace Barotrauma.Networking
             this.downloadFolder = downloadFolder;
         }
         
-        private void ReadMessage(NetIncomingMessage inc)
+        public void ReadMessage(NetIncomingMessage inc)
         {
             System.Diagnostics.Debug.Assert(!activeTransfers.Any(t => 
                 t.Status == FileTransferStatus.Error ||
@@ -173,9 +176,10 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    var newTransfer = new FileTransferIn(Path.Combine(downloadFolder, fileName), (FileTransferType)fileType, null);
+                    var newTransfer = new FileTransferIn(Path.Combine(downloadFolder, fileName), (FileTransferType)fileType);
                     newTransfer.SequenceChannel = inc.SequenceChannel;
                     newTransfer.Status = FileTransferStatus.Receiving;
+                    newTransfer.FileSize = fileSize;
 
                     activeTransfers.Add(newTransfer);
 
@@ -188,10 +192,11 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    if (activeTransfer.Received + (ulong)inc.LengthBytes > activeTransfer.FileSize * 1.1f)
+                    if (activeTransfer.Received + (ulong)(inc.LengthBytes-inc.PositionInBytes) > activeTransfer.FileSize)
                     {
                         DebugConsole.ThrowError("File transfer error: Received more data than expected");
-                        activeTransfer.Status = FileTransferStatus.Error;         
+                        activeTransfer.Status = FileTransferStatus.Error;
+                        StopTransfer(activeTransfer);
                         return;
                     }
 
@@ -209,14 +214,18 @@ namespace Barotrauma.Networking
 
                     if (activeTransfer.Status == FileTransferStatus.Finished)
                     {
+                        activeTransfer.Dispose();
+
                         string errorMessage = "";
                         if (ValidateReceivedData(activeTransfer, out errorMessage))
                         {
-                            activeTransfer.OnFinished(activeTransfer);
+                            OnFinished(activeTransfer);
                             StopTransfer(activeTransfer);
                         }
                         else
                         {
+                            new GUIMessageBox("File transfer aborted", errorMessage);
+
                             activeTransfer.Status = FileTransferStatus.Error;
                             StopTransfer(activeTransfer, true);
                         }
@@ -236,7 +245,7 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            if (!Enum.IsDefined(typeof(FileTransferType), type))
+            if (!Enum.IsDefined(typeof(FileTransferType), (int)type))
             {
                 errorMessage = "Unknown file type";
                 return false;
@@ -318,6 +327,15 @@ namespace Barotrauma.Networking
         
         public void StopTransfer(FileTransferIn transfer, bool deleteFile = false)
         {
+            if (transfer.Status != FileTransferStatus.Finished && 
+                transfer.Status != FileTransferStatus.Error)
+            {
+                transfer.Status = FileTransferStatus.Canceled;
+            }
+
+            if (activeTransfers.Contains(transfer)) activeTransfers.Remove(transfer);
+            transfer.Dispose();
+
             if (deleteFile && File.Exists(transfer.FilePath))
             {
                 try
@@ -329,15 +347,6 @@ namespace Barotrauma.Networking
                     DebugConsole.ThrowError("Failed to delete file \""+transfer.FilePath+"\" ("+e.Message+")");
                 }
             }
-
-            if (transfer.Status != FileTransferStatus.Finished && 
-                transfer.Status != FileTransferStatus.Error)
-            {
-                transfer.Status = FileTransferStatus.Canceled;
-            }
-
-            if (activeTransfers.Contains(transfer)) activeTransfers.Remove(transfer);
-            transfer.Dispose();
         }
     }
 }

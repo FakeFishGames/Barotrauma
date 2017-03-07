@@ -43,6 +43,8 @@ namespace Barotrauma.Networking
 
         private ClientEntityEventManager entityEventManager;
 
+        private FileReceiver fileReceiver;
+
         public byte ID
         {
             get { return myID; }
@@ -54,6 +56,11 @@ namespace Barotrauma.Networking
             {
                 return otherClients;
             }
+        }
+
+        public FileReceiver FileReceiver
+        {
+            get { return fileReceiver; }
         }
         
         public GameClient(string newName)
@@ -83,6 +90,9 @@ namespace Barotrauma.Networking
             name = newName;
 
             entityEventManager = new ClientEntityEventManager(this);
+
+            fileReceiver = new FileReceiver("Submarines/Downloaded");
+            fileReceiver.OnFinished += OnFileReceived;
             
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name);
             characterInfo.Job = null;
@@ -542,6 +552,9 @@ namespace Barotrauma.Networking
                             case ServerPacketHeader.PERMISSIONS:
                                 ReadPermissions(inc);
                                 break;
+                            case ServerPacketHeader.FILE_TRANSFER:
+                                fileReceiver.ReadMessage(inc);
+                                break;
                         }
                         break;
                     case NetIncomingMessageType.StatusChanged:
@@ -974,6 +987,40 @@ namespace Barotrauma.Networking
             chatMessage.NetStateID = lastQueueChatMsgID;
 
             chatMsgQueue.Add(chatMessage);
+        }
+
+        public void RequestFile(string file, FileTransferType fileType)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
+            msg.Write((byte)FileTransferMessageType.Initiate);
+            msg.Write((byte)fileType);
+            msg.Write(file);
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        private void OnFileReceived(FileReceiver.FileTransferIn transfer)
+        {
+            new GUIMessageBox("Download finished", "File \"" + transfer.FileName + "\" was downloaded succesfully.");
+            switch (transfer.FileType)
+            {
+                case FileTransferType.Submarine:
+                    Submarine.SavedSubmarines.RemoveAll(s => s.Name + ".sub" == transfer.FileName);
+                    for (int i = 0; i < 2; i++)
+                    {
+                        var textBlock = ((i == 0) ?
+                            GameMain.NetLobbyScreen.ShuttleList.ListBox.children.Find(c => (c.UserData as Submarine).Name + ".sub" == transfer.FileName) :
+                            GameMain.NetLobbyScreen.SubList.children.Find(c => (c.UserData as Submarine).Name + ".sub" == transfer.FileName)) as GUITextBlock;
+
+                        if (textBlock == null) continue;
+                        textBlock.TextColor = Color.White;
+                        var newSub = new Submarine(transfer.FilePath);
+                        Submarine.SavedSubmarines.Add(newSub);
+                        textBlock.UserData = newSub;
+                        textBlock.ToolTip = newSub.Description;
+                    }
+                    break;
+            }
         }
 
         public void CreateEntityEvent(IClientSerializable entity, object[] extraData)
