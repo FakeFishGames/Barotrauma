@@ -116,7 +116,7 @@ namespace Barotrauma
         public GameMain()
         {
             Graphics = new GraphicsDeviceManager(this);
-
+            
             Window.Title = "Barotrauma";
 
             Instance = this;
@@ -208,6 +208,7 @@ namespace Barotrauma
 
         public IEnumerable<object> Load()
         {
+            GUI.GraphicsDevice = GraphicsDevice;
             GUI.Init(Content);
 
             GUIComponent.Init(Window);
@@ -221,7 +222,7 @@ namespace Barotrauma
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
-            GUI.LoadContent(GraphicsDevice);
+            GUI.LoadContent();
             TitleScreen.LoadState = 2.0f;
         yield return CoroutineStatus.Running;
 
@@ -380,8 +381,7 @@ namespace Barotrauma
 
             if (!paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
         }
-
-
+        
         /// <summary>
         /// This is called when the game should draw itself.
         /// </summary>
@@ -399,7 +399,7 @@ namespace Barotrauma
             {
                 Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
             }
-
+            
             if (!DebugDraw) return;
             if (GUIComponent.MouseOn!=null)
             {

@@ -65,7 +65,7 @@ namespace Barotrauma
         {
         }
 
-        public GUITickBox(Rectangle rect, string label, Alignment alignment, SpriteFont font, GUIComponent parent)
+        public GUITickBox(Rectangle rect, string label, Alignment alignment, ScalableFont font, GUIComponent parent)
             : base(null)
         {
             if (parent != null)

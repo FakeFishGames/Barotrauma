@@ -316,7 +316,7 @@ namespace Barotrauma.Items.Components
 
         private void Draw(SpriteBatch spriteBatch, Item item, Vector2 position, Vector2 labelPos, Vector2 wirePosition, bool mouseIn, Wire equippedWire, float wireInterval)
         {
-            //spriteBatch.DrawString(GUI.SmallFont, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
+            //GUI.SmallFont.DrawString(spriteBatch, Name, new Vector2(labelPos.X, labelPos.Y-10), Color.White);
             GUI.DrawString(spriteBatch, labelPos, Name, IsPower ? Color.Red : Color.White, Color.Black,0, GUI.SmallFont);
 
             GUI.DrawRectangle(spriteBatch, new Rectangle((int)position.X-10, (int)position.Y-10, 20, 20), Color.White);

@@ -603,9 +603,9 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                spriteBatch.DrawString(GUI.SmallFont, "Pressure: " + ((int)pressure - rect.Y).ToString() +
+                GUI.SmallFont.DrawString(spriteBatch, "Pressure: " + ((int)pressure - rect.Y).ToString() +
                     " - Oxygen: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 5, -drawRect.Y + 5), Color.White);
-                spriteBatch.DrawString(GUI.SmallFont, volume + " / " + FullVolume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
+                GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
             }
 
             if ((IsSelected || isHighlighted) && editing)

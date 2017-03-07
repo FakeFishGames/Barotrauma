@@ -15,7 +15,7 @@ namespace Barotrauma
 
         bool caretVisible;
         float caretTimer;
-
+        
         GUITextBlock textBlock;
 
         public delegate bool OnEnterHandler(GUITextBox textBox, string text);
@@ -65,7 +65,7 @@ namespace Barotrauma
             }
         }
 
-        public override SpriteFont Font
+        public override ScalableFont Font
         {
             set
             {
@@ -131,7 +131,7 @@ namespace Barotrauma
 
                 if (textBlock.Text != "")
                 {
-                    //if you attempt to display a Character that is not in your font
+                    /*//if you attempt to display a Character that is not in your font
                     //you will get an exception, so we filter the characters
                     //remove the filtering if you're using a default Character in your spritefont
                     String filtered = "";
@@ -140,7 +140,7 @@ namespace Barotrauma
                         if (Font.Characters.Contains(c)) filtered += c;
                     }
 
-                    textBlock.Text = filtered;
+                    textBlock.Text = filtered;*/
 
                     if (!Wrap && Font.MeasureString(textBlock.Text).X > rect.Width)
                     {
@@ -181,6 +181,8 @@ namespace Barotrauma
                 parent.AddChild(this);
 
             textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
+
+            Font = GUI.Font;
 
             if (style != null) style.Apply(textBlock, this);
             textBlock.Padding = new Vector4(3.0f, 0.0f, 3.0f, 0.0f);

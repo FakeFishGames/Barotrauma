@@ -232,7 +232,7 @@ namespace Barotrauma
         
         public void DrawListLine(SpriteBatch spriteBatch, Vector2 pos, Color color)
         {            
-            spriteBatch.DrawString(GUI.Font, name, pos, color);
+            GUI.Font.DrawString(spriteBatch, name, pos, color);
         }
 
     }

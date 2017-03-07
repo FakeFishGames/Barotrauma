@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
             
             GuiFrame.Draw(spriteBatch);
             
-            spriteBatch.DrawString(GUI.Font, "Pumping speed: " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Pumping speed: " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
      
         }
 

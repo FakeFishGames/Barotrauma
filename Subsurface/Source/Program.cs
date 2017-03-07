@@ -139,11 +139,11 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                sb.AppendLine("Server (" + (GameMain.Server.GameStarted ? "Round had started)" : "Round hand't been started)"));
+                sb.AppendLine("Server (" + (GameMain.Server.GameStarted ? "Round had started)" : "Round hadn't been started)"));
             }
             else if (GameMain.Client != null)
             {
-                sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hand't been started)"));
+                sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hadn't been started)"));
             }
 
             sb.AppendLine("\n");
