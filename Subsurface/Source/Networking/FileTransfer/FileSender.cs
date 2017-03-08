@@ -98,6 +98,9 @@ namespace Barotrauma.Networking
             }
         }
 
+        const int MaxTransferCount = 16;
+        const int MaxTransferCountPerRecipient = 5;
+
         public static TimeSpan MaxTransferDuration = new TimeSpan(0, 2, 0);
 
         private List<FileTransferOut> activeTransfers;
@@ -116,7 +119,16 @@ namespace Barotrauma.Networking
 
         public FileTransferOut StartTransfer(NetConnection recipient, FileTransferType fileType, string filePath)
         {
-            //TODO: set a limit on the amount of active transfers
+            if (activeTransfers.Count >= MaxTransferCount)
+            {
+                return null;
+            }
+
+            if (activeTransfers.Count(t => t.Connection == recipient) > MaxTransferCountPerRecipient)
+            {
+                return null;
+            }
+            
             if (!File.Exists(filePath))
             {
                 DebugConsole.ThrowError("Failed to initiate file transfer (file \""+filePath+"\" not found.");
@@ -149,7 +161,7 @@ namespace Barotrauma.Networking
             foreach (FileTransferOut transfer in activeTransfers)
             {
                 transfer.WaitTimer -= deltaTime;
-                if (transfer.WaitTimer > 0.0f) return;
+                if (transfer.WaitTimer > 0.0f) continue;
                 
                 if (!transfer.Connection.CanSendImmediately(NetDeliveryMethod.ReliableOrdered, 1)) continue;
                 
@@ -164,7 +176,7 @@ namespace Barotrauma.Networking
                 //first message; send length, chunk length, file name etc
                 if (transfer.SentOffset == 0)
                 {
-                    message = peer.CreateMessage(sendByteCount + 8 + 1);
+                    message = peer.CreateMessage();
                     message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
                     message.Write((byte)FileTransferMessageType.Initiate);
                     message.Write((byte)transfer.FileType);
@@ -174,9 +186,17 @@ namespace Barotrauma.Networking
                     transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
 
                     transfer.Status = FileTransferStatus.Sending;
+
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.Log("Sending file transfer initiation message: ");
+                        DebugConsole.Log("  File: " + transfer.FileName);
+                        DebugConsole.Log("  Size: " + transfer.Data.Length);
+                        DebugConsole.Log("  Sequence channel: " + transfer.SequenceChannel);
+                    }
                 }
 
-                message = peer.CreateMessage(sendByteCount + 8 + 1);
+                message = peer.CreateMessage(1 + 1 + sendByteCount);
                 message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
                 message.Write((byte)FileTransferMessageType.Data);
 
@@ -187,7 +207,12 @@ namespace Barotrauma.Networking
 
                 transfer.Connection.SendMessage(message, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
                 transfer.SentOffset += sendByteCount;
-                
+
+                if (GameSettings.VerboseLogging)
+                {
+                    DebugConsole.Log("Sending " + sendByteCount + " bytes of the file " + transfer.FileName + " (" + transfer.SentOffset + "/" + transfer.Data.Length + " sent)");
+                }
+
                 if (remaining - sendByteCount <= 0)
                 {
                     transfer.Status = FileTransferStatus.Finished;

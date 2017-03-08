@@ -73,13 +73,21 @@ namespace Barotrauma.Networking
                 private set;
             }
 
+            public NetConnection Connection
+            {
+                get;
+                private set;
+            }
+
             public int SequenceChannel;
 
-            public FileTransferIn(string filePath, FileTransferType fileType)
+            public FileTransferIn(NetConnection connection, string filePath, FileTransferType fileType)
             {
                 FilePath = filePath;
                 FileName = Path.GetFileName(FilePath);
                 FileType = fileType;
+
+                Connection = connection;
                 
                 WriteStream = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
                 TimeStarted = Environment.TickCount;
@@ -95,6 +103,11 @@ namespace Barotrauma.Networking
 
                 int passed = Environment.TickCount - TimeStarted;
                 float psec = passed / 1000.0f;
+                
+                if (GameSettings.VerboseLogging)
+                {
+                    DebugConsole.Log("Received "+all.Length+" bytes of the file "+FileName+" ("+Received+"/"+FileSize+" received)");
+                }
 
                 BytesPerSecond = Received / psec;
 
@@ -176,7 +189,15 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    var newTransfer = new FileTransferIn(Path.Combine(downloadFolder, fileName), (FileTransferType)fileType);
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.Log("Received file transfer initiation message: ");
+                        DebugConsole.Log("  File: "+fileName);
+                        DebugConsole.Log("  Size: " + fileSize);
+                        DebugConsole.Log("  Sequence channel: " + inc.SequenceChannel);
+                    }
+
+                    var newTransfer = new FileTransferIn(inc.SenderConnection, Path.Combine(downloadFolder, fileName), (FileTransferType)fileType);
                     newTransfer.SequenceChannel = inc.SequenceChannel;
                     newTransfer.Status = FileTransferStatus.Receiving;
                     newTransfer.FileSize = fileSize;
@@ -185,7 +206,7 @@ namespace Barotrauma.Networking
 
                     break;
                 case (byte)FileTransferMessageType.Data:
-                    var activeTransfer = activeTransfers.Find(t => t.SequenceChannel == inc.SequenceChannel);
+                    var activeTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == inc.SequenceChannel);
                     if (activeTransfer == null)
                     {
                         DebugConsole.ThrowError("File transfer error: received data without a transfer initiation message");
@@ -230,6 +251,12 @@ namespace Barotrauma.Networking
                             StopTransfer(activeTransfer, true);
                         }
                     }
+
+                    break;
+                case (byte)FileTransferMessageType.Cancel:
+                    byte sequenceChannel = inc.ReadByte();
+                    var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == sequenceChannel);
+                    if (matchingTransfer != null) StopTransfer(matchingTransfer);
 
                     break;
             }

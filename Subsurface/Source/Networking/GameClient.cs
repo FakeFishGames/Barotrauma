@@ -1036,7 +1036,41 @@ namespace Barotrauma.Networking
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-            
+
+            if (fileReceiver != null && fileReceiver.ActiveTransfers.Count > 0)
+            {
+                Vector2 pos = new Vector2(GameMain.NetLobbyScreen.InfoFrame.Rect.X, GameMain.GraphicsHeight - 35);
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle(
+                    (int)pos.X,
+                    (int)pos.Y, 
+                    fileReceiver.ActiveTransfers.Count * 210 + 10, 
+                    32), 
+                    Color.Black * 0.8f, true);
+                
+                for (int i = 0; i < fileReceiver.ActiveTransfers.Count; i++)
+                {
+                    var transfer = fileReceiver.ActiveTransfers[i];
+
+                    GameMain.NetLobbyScreen.SubList.children.Find(c => c is GUITextBlock && ((GUITextBlock)c).Text == transfer.FileName);
+                    GUI.DrawString(spriteBatch,
+                        pos,
+                        ToolBox.LimitString("Downloading " + transfer.FileName, GUI.SmallFont, 200),
+                        Color.White, null, 0, GUI.SmallFont);
+                    GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - 15), new Vector2(135, 15), transfer.Progress, Color.Green);
+                    GUI.DrawString(spriteBatch, pos + new Vector2(5, 15),
+                        MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
+                        Color.White, null, 0, GUI.SmallFont);
+
+                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 15, 60, 15), "Cancel", new Color(0.47f, 0.13f, 0.15f, 0.08f)))
+                    {
+                        fileReceiver.StopTransfer(transfer);
+                    }
+
+                    pos.X += 210;
+                }
+            }
+
             if (!GameMain.DebugDraw) return;
 
             int width = 200, height = 300;
