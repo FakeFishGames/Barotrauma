@@ -627,13 +627,16 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                if (!c.inGame && c.NeedsMidRoundSync)
+                if (!c.inGame)
                 {
-                    //client joined mid-round and has just started up the game
-                    //check which unique messages they've missed
-                    entityEventManager.InitClientMidRoundSync(c);
+                    if (c.NeedsMidRoundSync)
+                    {
+                        //client joined mid-round and has just started up the game
+                        //check which unique messages they've missed
+                        entityEventManager.InitClientMidRoundSync(c);
+                    }
+                    c.inGame = true;
                 }
-                c.inGame = true;
             }
             
             ClientNetObject objHeader;

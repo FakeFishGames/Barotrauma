@@ -124,21 +124,26 @@ namespace Barotrauma.Networking
                 bufferedEvent.IsProcessed = true;
             }
 
-            if (clients.Count > 0)
+            var inGameClients = clients.FindAll(c => c.inGame && !c.NeedsMidRoundSync);
+            if (inGameClients.Count > 0)
             {
-                lastSentToAll = clients[0].lastRecvEntityEventID;
-                clients.ForEach(c => { if (c.inGame && NetIdUtils.IdMoreRecent(lastSentToAll,c.lastRecvEntityEventID)) lastSentToAll = c.lastRecvEntityEventID; });
+                lastSentToAll = inGameClients[0].lastRecvEntityEventID;
+                inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.lastRecvEntityEventID)) lastSentToAll = c.lastRecvEntityEventID; });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (lastSentToAll + 1));
-                if (firstEventToResend != null && (Timing.TotalTime-firstEventToResend.CreateTime)>10.0f)
+                if (firstEventToResend != null && (Timing.TotalTime - firstEventToResend.CreateTime) > 10.0f)
                 {
                     //it's been 10 seconds since this event was created
                     //kick everyone that hasn't received it yet, this is way too old
-                    List<Client> toKick = clients.FindAll(c => c.inGame && NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll+1),c.lastRecvEntityEventID));
-                    if (toKick!=null) toKick.ForEach(c => GameMain.Server.DisconnectClient(c,"","You have been disconnected because of excessive desync"));
+                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.lastRecvEntityEventID));
+                    if (toKick != null) toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
                 }
             }
 
+            //TODO: calculate a reasonable timeout period for midround syncing and/or give the client more time if they're receiving messages
+            var timedOutClients = clients.FindAll(c => c.inGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
+            if (timedOutClients != null) timedOutClients.ForEach(c => GameMain.Server.DisconnectClient(c, "", "You have been disconnected because syncing your client with the server took too long."));
+            
             bufferedEvents.RemoveAll(b => b.IsProcessed);           
         }
 
@@ -249,6 +254,7 @@ namespace Barotrauma.Networking
             {
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 client.NeedsMidRoundSync = true;
+                client.MidRoundSyncTimeOut = Timing.TotalTime + 10.0;
             }
             else
             {
