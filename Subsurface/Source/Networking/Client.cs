@@ -47,6 +47,8 @@ namespace Barotrauma.Networking
         public float ChatSpamTimer;
         public int ChatSpamCount;
 
+        public double MidRoundSyncTimeOut;
+
         public bool NeedsMidRoundSync;
         //how many unique events the client missed before joining the server
         public UInt16 UnreceivedEntityEventCount;
