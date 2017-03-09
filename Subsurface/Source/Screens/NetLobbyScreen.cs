@@ -473,6 +473,16 @@ namespace Barotrauma
             base.Select();
         }
 
+        public void ShowSpectateButton()
+        {
+            if (GameMain.Client == null) return;
+
+            infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
+            GUIButton spectateButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Spectate", Alignment.BottomRight, GUI.Style, infoFrame);
+            spectateButton.OnClicked = GameMain.Client.SpectateClicked;
+            spectateButton.UserData = "spectateButton";
+        }
+
         private void UpdatePlayerFrame(CharacterInfo characterInfo)
         {
             if (myPlayerFrame.children.Count <= 1)
@@ -1227,16 +1237,14 @@ namespace Barotrauma
 
                 errorMsg += "Do you want to download the file from the server host?";
 
-                if (GUIMessageBox.MessageBoxes.Count > 0)
+                //already showing a message about the same sub
+                if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "request" + subName))
                 {
-                    var currentMessageBox = GUIMessageBox.VisibleBox;
-                    if (currentMessageBox != null && currentMessageBox.UserData as string == subName)
-                    {
-                        return false;
-                    }
+                    return false;                    
                 }
 
                 var requestFileBox = new GUIMessageBox("Submarine not found!", errorMsg, new string[] { "Yes", "No" }, 400, 300);
+                requestFileBox.UserData = "request" + subName;
                 requestFileBox.Buttons[0].UserData = subName;
                 requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
                 requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>

@@ -154,6 +154,11 @@ namespace Barotrauma.Networking
 
         public FileReceiver(string downloadFolder)
         {
+            if (GameMain.Server != null)
+            {
+                throw new InvalidOperationException("Creating a file receiver is not allowed when a server is running.");
+            }
+
             activeTransfers = new List<FileTransferIn>();
 
             this.downloadFolder = downloadFolder;
@@ -161,6 +166,11 @@ namespace Barotrauma.Networking
         
         public void ReadMessage(NetIncomingMessage inc)
         {
+            if (GameMain.Server != null)
+            {
+                throw new InvalidOperationException("Receiving files when a server is running is not allowed");
+            }
+
             System.Diagnostics.Debug.Assert(!activeTransfers.Any(t => 
                 t.Status == FileTransferStatus.Error ||
                 t.Status == FileTransferStatus.Canceled ||

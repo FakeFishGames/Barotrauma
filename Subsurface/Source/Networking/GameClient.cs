@@ -629,6 +629,10 @@ namespace Barotrauma.Networking
         {
             if (Character != null) Character.Remove();
 
+            //enable spectate button in case we fail to start the round now
+            //(for example, due to a missing sub file or an error)
+            GameMain.NetLobbyScreen.ShowSpectateButton();
+
             Entity.Spawner.Clear();
             entityEventManager.Clear();
             LastSentEntityEventID = 0;
@@ -999,6 +1003,15 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
+        public void CancelFileTransfer(FileReceiver.FileTransferIn transfer)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
+            msg.Write((byte)FileTransferMessageType.Cancel);
+            msg.Write((byte)transfer.SequenceChannel);
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
         private void OnFileReceived(FileReceiver.FileTransferIn transfer)
         {
             new GUIMessageBox("Download finished", "File \"" + transfer.FileName + "\" was downloaded succesfully.");
@@ -1062,8 +1075,9 @@ namespace Barotrauma.Networking
                         MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
                         Color.White, null, 0, GUI.SmallFont);
 
-                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 15, 60, 15), "Cancel", new Color(0.47f, 0.13f, 0.15f, 0.08f)))
+                    if (GUI.DrawButton(spriteBatch, new Rectangle((int)pos.X + 140, (int)pos.Y + 18, 60, 15), "Cancel", new Color(0.47f, 0.13f, 0.15f, 0.08f)))
                     {
+                        CancelFileTransfer(transfer);
                         fileReceiver.StopTransfer(transfer);
                     }
 
@@ -1210,12 +1224,12 @@ namespace Barotrauma.Networking
         public bool SpectateClicked(GUIButton button, object userData)
         {
             if (button != null) button.Enabled = false;
-
+            
             NetOutgoingMessage readyToStartMsg = client.CreateMessage();
             readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
 
-            //correct sub & shuttle files found
-            //TODO: check if they're actually found
+            //assume we have the required sub files to start the round
+            //(if not, we'll find out when the server sends the STARTGAME message and can initiate a file transfer)
             readyToStartMsg.Write(true); 
 
             WriteCharacterInfo(readyToStartMsg);

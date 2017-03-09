@@ -109,6 +109,11 @@ namespace Barotrauma.Networking
 
         private NetPeer peer;
 
+        public List<FileTransferOut> ActiveTransfers
+        {
+            get { return activeTransfers; }
+        }
+
         public FileSender(NetworkMember networkMember)
         {
             peer = networkMember.netPeer;
