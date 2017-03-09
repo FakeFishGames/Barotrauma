@@ -93,12 +93,13 @@ namespace Launcher2
 
             TextureLoader.Init(GraphicsDevice);
 
+            GUI.GraphicsDevice = GraphicsDevice;
             GUI.Init(Content);
 
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            GUI.LoadContent(GraphicsDevice, false);
+            GUI.LoadContent(false);
 
             backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
             titleTexture = TextureLoader.FromFile("Content/UI/titleText.png");
