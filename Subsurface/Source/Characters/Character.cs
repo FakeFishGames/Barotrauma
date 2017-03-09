@@ -670,13 +670,16 @@ namespace Barotrauma
                         //break;
                     case InputType.Down:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Down)) && (prevDequeuedInput.HasFlag(InputNetFlags.Down));
-                    //break;
+                        //break;
                     case InputType.Run:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Run)) && (prevDequeuedInput.HasFlag(InputNetFlags.Run));
-                    //break;
+                        //break;
+                    case InputType.Crouch:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
+                        //break;
                     case InputType.Select:
                         return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
-                    //break;
+                        //break;
                     default:
                         return false;
                         //break;
@@ -699,9 +702,11 @@ namespace Barotrauma
                     case InputType.Up:
                         return dequeuedInput.HasFlag(InputNetFlags.Up);                        
                     case InputType.Down:
-                        return dequeuedInput.HasFlag(InputNetFlags.Down);                        
+                        return dequeuedInput.HasFlag(InputNetFlags.Down);
                     case InputType.Run:
-                        return dequeuedInput.HasFlag(InputNetFlags.Run);                        
+                        return dequeuedInput.HasFlag(InputNetFlags.Run);
+                    case InputType.Crouch:
+                        return dequeuedInput.HasFlag(InputNetFlags.Crouch);
                     case InputType.Select:
                         return false; //TODO: clean up the way this input is registered
                     case InputType.Aim:

@@ -1543,7 +1543,11 @@ namespace Barotrauma
 
             if (Container != null)
             {
-                if (body != null) body.Enabled = true;
+                if (body != null)
+                {
+                    body.Enabled = true;
+                    body.LinearVelocity = Vector2.Zero;
+                }
                 SetTransform(Container.SimPosition, 0.0f);
 
                 Container.RemoveContained(this);
@@ -2109,10 +2113,7 @@ namespace Barotrauma
             body.FarseerBody.Awake = msg.ReadBoolean();
 
             Vector2 newVelocity = Vector2.Zero;
-
-            //TODO: this code should take previous positions and velocities into account,
-            //rather than use the current values for the comparisons.
-
+            
             if (body.FarseerBody.Awake)
             {
                 newVelocity = new Vector2(
@@ -2125,11 +2126,9 @@ namespace Barotrauma
                 body.FarseerBody.Enabled = false;
             }
 
-            if (body.TargetPosition==null || (newPosition - (Vector2)body.TargetPosition).Length() > body.LinearVelocity.Length() * 3.0f)
+            if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 3.0f + 24.0f)
             {
-                body.TargetPosition = newPosition;
-
-                body.FarseerBody.Rotation = newRotation;
+                body.SetTransform(newPosition,newRotation);
             }
 
             DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);            

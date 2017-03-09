@@ -21,12 +21,13 @@ namespace Barotrauma
             Down = 0x8,
             FacingLeft = 0x10,
             Run = 0x20,
-            Select = 0x40,
-            Use = 0x80,
-            Aim = 0x100,
-            Attack = 0x200,
+            Crouch = 0x40,
+            Select = 0x80,
+            Use = 0x100,
+            Aim = 0x200,
+            Attack = 0x400,
 
-            MaxVal = 0x3FF
+            MaxVal = 0x7FF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
@@ -134,6 +135,7 @@ namespace Barotrauma
                 if (IsKeyDown(InputType.Up))        newInput |= InputNetFlags.Up;
                 if (IsKeyDown(InputType.Down))      newInput |= InputNetFlags.Down;
                 if (IsKeyDown(InputType.Run))       newInput |= InputNetFlags.Run;
+                if (IsKeyDown(InputType.Crouch))    newInput |= InputNetFlags.Crouch;
                 if (IsKeyHit(InputType.Select))     newInput |= InputNetFlags.Select; //TODO: clean up the way this input is registered
                 if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
                 if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
