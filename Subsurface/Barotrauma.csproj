@@ -1221,7 +1221,7 @@
     <None Include="Content\Characters\Watcher\watch6.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Content\CODE Bold.otf">
+    <None Include="Content\Code Pro Bold.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Content.mgcb">

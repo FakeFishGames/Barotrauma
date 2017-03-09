@@ -81,7 +81,7 @@ namespace Barotrauma
         {
             Font = new ScalableFont("Content/Exo2-Medium.otf", 14, graphicsDevice);
             SmallFont = new ScalableFont("Content/Exo2-Light.otf", 12, graphicsDevice);
-            LargeFont = new ScalableFont("Content/CODE Bold.otf", 22, graphicsDevice);
+            LargeFont = new ScalableFont("Content/Code Pro Bold.otf", 22, graphicsDevice);
 
             cursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
 
