@@ -982,14 +982,32 @@ namespace Barotrauma.Networking
                 server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
 
                 //give the clients a few seconds to request missing sub/shuttle files before starting the round
-                float waitForResponseTimer = 3.0f;
+                float waitForResponseTimer = 5.0f;
                 while (connectedClients.Any(c => !c.ReadyToStart) && waitForResponseTimer > 0.0f)
                 {
                     waitForResponseTimer -= CoroutineManager.UnscaledDeltaTime;
                     yield return CoroutineStatus.Running;
                 }
 
-                //todo: wait until file transfers are finished/cancelled
+                if (fileSender.ActiveTransfers.Count > 0)
+                {
+                    var msgBox = new GUIMessageBox("", "Waiting for file transfers to finish before starting the round...", new string[] { "Start now" });
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+                    float waitForTransfersTimer = 20.0f;
+                    while (fileSender.ActiveTransfers.Count > 0 && waitForTransfersTimer > 0.0f)
+                    {
+                        waitForTransfersTimer -= CoroutineManager.UnscaledDeltaTime;
+
+                        //message box close, break and start the round immediately
+                        if (!GUIMessageBox.MessageBoxes.Contains(msgBox))
+                        {
+                            break;
+                        }
+
+                        yield return CoroutineStatus.Running;
+                    }
+                }
             }
 
             GameMain.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
