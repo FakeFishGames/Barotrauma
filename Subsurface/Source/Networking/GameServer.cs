@@ -153,7 +153,10 @@ namespace Barotrauma.Networking
                 Log("Starting the server...", Color.Cyan);
                 server = new NetServer(config);
                 netPeer = server;
+
                 fileSender = new FileSender(this);
+                fileSender.OnEnded += FileTransferChanged;
+                fileSender.OnStarted += FileTransferChanged;
 
                 server.Start();
             }
@@ -1695,7 +1698,57 @@ namespace Barotrauma.Networking
             netStats.AddValue(NetStats.NetStatType.ReceivedBytes, server.Statistics.ReceivedBytes);
 
             netStats.Draw(spriteBatch, new Rectangle(200,0,800,200), this);
+        }
 
+        private void FileTransferChanged(FileSender.FileTransferOut transfer)
+        {
+            Client recipient = connectedClients.Find(c => c.Connection == transfer.Connection);
+            UpdateFileTransferIndicator(recipient);
+        }
+
+        public void SendCancelTransferMsg(FileSender.FileTransferOut transfer)
+        {
+            NetOutgoingMessage msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.FILE_TRANSFER);
+            msg.Write((byte)FileTransferMessageType.Cancel);
+            msg.Write((byte)transfer.SequenceChannel);
+            server.SendMessage(msg, transfer.Connection, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
+        }
+
+        private void UpdateFileTransferIndicator(Client client)
+        {
+            var transfers = fileSender.ActiveTransfers.FindAll(t => t.Connection == client.Connection);
+
+            var clientNameBox = GameMain.NetLobbyScreen.PlayerList.FindChild(client.name);
+
+            var clientInfo = clientNameBox.FindChild("filetransfer");
+            if (clientInfo == null)
+            {
+                clientNameBox.ClearChildren();
+                clientInfo = new GUIFrame(new Rectangle(0, 0, 180, 0), Color.Transparent, Alignment.TopRight, null, clientNameBox);
+                clientInfo.UserData = "filetransfer";
+            }
+            else if (transfers.Count == 0)
+            {
+                clientInfo.Parent.RemoveChild(clientInfo);
+            }
+
+            clientInfo.ClearChildren();
+
+            var progressBar = new GUIProgressBar(new Rectangle(0, 4, 160, clientInfo.Rect.Height - 8), Color.Green, GUI.Style, 0.0f, Alignment.Left, clientInfo);
+            progressBar.IsHorizontal = true;            
+            progressBar.ProgressGetter = () => { return transfers.Sum(t => t.Progress) / transfers.Count; };
+
+            var textBlock = new GUITextBlock(new Rectangle(0, 2, 160, 0), "", GUI.Style, Alignment.TopLeft, Alignment.Left | Alignment.CenterY, clientInfo, true, GUI.SmallFont);
+            textBlock.TextGetter = () =>
+            { return MathUtils.GetBytesReadable(transfers.Sum(t => t.SentOffset)) + " / " + MathUtils.GetBytesReadable(transfers.Sum(t => t.Data.Length)); };
+
+            var cancelButton = new GUIButton(new Rectangle(-5, 0, 14, 0), "X", Alignment.Right, GUI.Style, clientInfo);
+            cancelButton.OnClicked = (GUIButton button, object userdata) =>
+            {
+                transfers.ForEach(t => fileSender.CancelTransfer(t));
+                return true;
+            };
         }
 
         public void UpdateVoteStatus()
