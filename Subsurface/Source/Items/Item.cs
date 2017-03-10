@@ -810,10 +810,10 @@ namespace Barotrauma
 
             UpdateNetPosition(deltaTime);
 
-            if (GameMain.Client != null)
+            /*if (GameMain.Client != null)
             {
                 body.MoveToTargetPosition();
-            }
+            }*/
 
             if (!inWater || Container != null || body == null) return;
 
@@ -2126,14 +2126,14 @@ namespace Barotrauma
                 body.FarseerBody.Enabled = false;
             }
 
-            if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 3.0f + 24.0f)
+            if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 2.0f)
             {
                 body.SetTransform(newPosition,newRotation);
             }
 
-            DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);            
+            //DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);            
 
-           /* //already interpolating with more up-to-date data -> ignore
+            /*//already interpolating with more up-to-date data -> ignore
             if (MemPos.Count > 1 && MemPos[0].Timestamp > sendingTime)
             {
                 return;
