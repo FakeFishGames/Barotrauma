@@ -102,6 +102,10 @@ namespace Barotrauma.Networking
         const int MaxTransferCountPerRecipient = 5;
 
         public static TimeSpan MaxTransferDuration = new TimeSpan(0, 2, 0);
+        
+        public delegate void FileTransferDelegate(FileTransferOut fileStreamReceiver);
+        public FileTransferDelegate OnStarted;
+        public FileTransferDelegate OnEnded;
 
         private List<FileTransferOut> activeTransfers;
 
@@ -156,12 +160,26 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Failed to initiate file transfer", e);
             }
 
+            OnStarted(transfer);
+
             return transfer;
         }
 
         public void Update(float deltaTime)
         {
             activeTransfers.RemoveAll(t => t.Connection.Status != NetConnectionStatus.Connected);
+
+            var endedTransfers = activeTransfers.FindAll(t => 
+                t.Connection.Status != NetConnectionStatus.Connected ||
+                t.Status == FileTransferStatus.Finished ||
+                t.Status == FileTransferStatus.Canceled || 
+                t.Status == FileTransferStatus.Error);
+
+            foreach (FileTransferOut transfer in endedTransfers)
+            {
+                activeTransfers.Remove(transfer);
+                OnEnded(transfer);
+            }
 
             foreach (FileTransferOut transfer in activeTransfers)
             {
@@ -223,14 +241,16 @@ namespace Barotrauma.Networking
                     transfer.Status = FileTransferStatus.Finished;
                 }
             }
-
-            activeTransfers.RemoveAll(t => t.Status == FileTransferStatus.Finished);
         }
 
         public void CancelTransfer(FileTransferOut transfer)
         {
             transfer.Status = FileTransferStatus.Canceled;
             activeTransfers.Remove(transfer);
+
+            OnEnded(transfer);
+
+            GameMain.Server.SendCancelTransferMsg(transfer);
         }
 
         public void ReadFileRequest(NetIncomingMessage inc)

@@ -266,8 +266,11 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Cancel:
                     byte sequenceChannel = inc.ReadByte();
                     var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == sequenceChannel);
-                    if (matchingTransfer != null) StopTransfer(matchingTransfer);
-
+                    if (matchingTransfer != null)
+                    {
+                        new GUIMessageBox("File transfer cancelled", "The server has cancelled the transfer of the file \"" + matchingTransfer.FileName + "\".");
+                        StopTransfer(matchingTransfer);
+                    }
                     break;
             }
         }

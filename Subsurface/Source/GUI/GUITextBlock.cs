@@ -259,7 +259,7 @@ namespace Barotrauma
 
             base.Draw(spriteBatch);
 
-            if (TextGetter != null) text = TextGetter();
+            if (TextGetter != null) Text = TextGetter();
 
             if (!string.IsNullOrEmpty(text))
             {
