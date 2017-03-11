@@ -443,26 +443,5 @@ namespace Barotrauma
             }
 
         }
-
-        private void DrawSubmarineIndicator(SpriteBatch spriteBatch, Submarine submarine, Color color)
-        {
-            Vector2 subDiff = submarine.WorldPosition - cam.WorldViewCenter;
-
-            if (Math.Abs(subDiff.X) > cam.WorldView.Width || Math.Abs(subDiff.Y) > cam.WorldView.Height)
-            {
-                Vector2 normalizedSubDiff = Vector2.Normalize(subDiff);
-
-                Vector2 iconPos =
-                    cam.WorldToScreen(cam.WorldViewCenter) +
-                    new Vector2(normalizedSubDiff.X * GameMain.GraphicsWidth * 0.4f, -normalizedSubDiff.Y * GameMain.GraphicsHeight * 0.4f);
-
-                GUI.SubmarineIcon.Draw(spriteBatch, iconPos, color);
-
-                Vector2 arrowOffset = normalizedSubDiff * GUI.SubmarineIcon.size.X * 0.7f;
-                arrowOffset.Y = -arrowOffset.Y;
-                GUI.Arrow.Draw(spriteBatch, iconPos + arrowOffset, color, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
-            }
-        }
-
     }
 }

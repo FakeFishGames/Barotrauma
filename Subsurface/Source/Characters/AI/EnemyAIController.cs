@@ -529,7 +529,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, ConvertUnits.ToDisplayUnits(new Vector2(wallAttackPos.X, -wallAttackPos.Y)) - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Red, false);
                 }
 
-                spriteBatch.DrawString(GUI.Font, targetValue.ToString(), pos - Vector2.UnitY*20.0f, Color.Red);
+                GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY*20.0f, Color.Red);
             }
 
             if (selectedAiTarget != null)
@@ -539,10 +539,10 @@ namespace Barotrauma
                     new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);
             }
 
-            spriteBatch.DrawString(GUI.Font, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
+            GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
 
-            spriteBatch.DrawString(GUI.Font, "updatetargets: "+updateTargetsTimer, pos - Vector2.UnitY * 100.0f, Color.Red);
-            spriteBatch.DrawString(GUI.Font, "cooldown: " + coolDownTimer, pos - Vector2.UnitY * 120.0f, Color.Red);
+            GUI.Font.DrawString(spriteBatch, "updatetargets: "+updateTargetsTimer, pos - Vector2.UnitY * 100.0f, Color.Red);
+            GUI.Font.DrawString(spriteBatch, "cooldown: " + coolDownTimer, pos - Vector2.UnitY * 120.0f, Color.Red);
 
 
             IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
@@ -561,7 +561,7 @@ namespace Barotrauma
                     new Vector2(pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i - 1].DrawPosition.Y),
                     Color.LightGreen);
 
-                spriteBatch.DrawString(GUI.SmallFont,
+                GUI.SmallFont.DrawString(spriteBatch,
                     pathSteering.CurrentPath.Nodes[i].ID.ToString(),
                     new Vector2(pathSteering.CurrentPath.Nodes[i].DrawPosition.X, -pathSteering.CurrentPath.Nodes[i].DrawPosition.Y - 10),
                     Color.LightGreen);

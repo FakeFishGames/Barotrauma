@@ -103,6 +103,12 @@ namespace Barotrauma
         {
             get { return NetworkMember as GameClient; }
         }
+
+        public double TotalElapsedTime
+        {
+            get;
+            private set;
+        }
                         
         public GameMain()
         {
@@ -202,6 +208,7 @@ namespace Barotrauma
 
         public IEnumerable<object> Load()
         {
+            GUI.GraphicsDevice = GraphicsDevice;
             GUI.Init(Content);
 
             GUIComponent.Init(Window);
@@ -215,7 +222,7 @@ namespace Barotrauma
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
-            GUI.LoadContent(GraphicsDevice);
+            GUI.LoadContent();
             TitleScreen.LoadState = 2.0f;
         yield return CoroutineStatus.Running;
 
@@ -306,6 +313,8 @@ namespace Barotrauma
 
             while (Timing.Accumulator >= Timing.Step)
             {
+                TotalElapsedTime = gameTime.TotalGameTime.TotalSeconds;
+
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
                 fixedTime.ElapsedGameTime = addTime;

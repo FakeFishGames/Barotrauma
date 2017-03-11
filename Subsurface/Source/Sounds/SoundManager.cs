@@ -9,6 +9,12 @@ namespace Barotrauma.Sounds
 {
     static class SoundManager
     {
+        public static bool Disabled
+        {
+            get;
+            private set;
+        }
+
         public const int DefaultSourceCount = 16;
 
         private static readonly List<int> alSources = new List<int>();
@@ -26,9 +32,17 @@ namespace Barotrauma.Sounds
 
         public static void Init()
         {
+            var availableDevices = AudioContext.AvailableDevices;
+            if (availableDevices.Count == 0)
+            {
+                DebugConsole.ThrowError("No audio devices found. Disabling audio playback.");
+                Disabled = true;
+                return;
+            }
+
             try
             {
-                AC = new AudioContext();
+                AC = new AudioContext();                
                 ALHelper.Check();
             }
             catch (DllNotFoundException e)
@@ -55,11 +69,14 @@ namespace Barotrauma.Sounds
 
         public static int Play(Sound sound, float volume = 1.0f)
         {
+            if (Disabled) return -1;
             return Play(sound, Vector2.Zero, volume, 0.0f);
         }
 
         public static int Play(Sound sound, Vector2 position, float volume = 1.0f, float lowPassGain = 0.0f, bool loop=false)
         {
+            if (Disabled) return -1;
+
             for (int i = 1; i < DefaultSourceCount; i++)
             {
                 //find a source that's free to use (not playing or paused)
@@ -85,11 +102,15 @@ namespace Barotrauma.Sounds
 
         public static int Loop(Sound sound, int sourceIndex, float volume = 1.0f)
         {
+            if (Disabled) return -1;
+
             return Loop(sound,sourceIndex, Vector2.Zero, volume);
         }
 
         public static int Loop(Sound sound, int sourceIndex, Vector2 position, float volume = 1.0f)
         {
+            if (Disabled) return -1;
+
             if (!MathUtils.IsValid(volume))
             {
                 volume = 0.0f;
@@ -111,6 +132,8 @@ namespace Barotrauma.Sounds
 
         public static void Pause(int sourceIndex)
         {
+            if (Disabled) return;
+
             if (AL.GetSourceState(alSources[sourceIndex]) != ALSourceState.Playing)
                 return;
 
@@ -120,6 +143,8 @@ namespace Barotrauma.Sounds
 
         public static void Resume(int sourceIndex)
         {
+            if (Disabled) return;
+
             if (AL.GetSourceState(alSources[sourceIndex]) != ALSourceState.Paused)
                 return;
 
@@ -129,6 +154,8 @@ namespace Barotrauma.Sounds
         
         public static void Stop(int sourceIndex)
         {
+            if (Disabled) return;
+
             if (sourceIndex < 1) return;
             
             var state = AL.GetSourceState(alSources[sourceIndex]);
@@ -143,6 +170,8 @@ namespace Barotrauma.Sounds
 
         public static Sound GetPlayingSound(int sourceIndex)
         {
+            if (Disabled) return null;
+
             if (sourceIndex < 1 || sourceIndex>alSources.Count-1) return null;
 
             if (AL.GetSourceState(alSources[sourceIndex]) != ALSourceState.Playing) return null;
@@ -152,6 +181,8 @@ namespace Barotrauma.Sounds
 
         public static bool IsPlaying(int sourceIndex)
         {
+            if (Disabled) return false;
+
             if (sourceIndex < 1 || sourceIndex>alSources.Count-1) return false;
 
             return AL.GetSourceState(alSources[sourceIndex]) == ALSourceState.Playing;
@@ -159,6 +190,8 @@ namespace Barotrauma.Sounds
 
         public static bool IsPaused(int sourceIndex)
         {
+            if (Disabled) return false;
+
             if (sourceIndex < 1 || sourceIndex > alSources.Count - 1) return false;
             
             return AL.GetSourceState(alSources[sourceIndex]) == ALSourceState.Paused;
@@ -166,6 +199,7 @@ namespace Barotrauma.Sounds
 
         public static bool IsLooping(int sourceIndex)
         {
+            if (Disabled) return false;
             if (sourceIndex < 1 || sourceIndex > alSources.Count - 1) return false;
 
             bool isLooping;            
@@ -177,6 +211,8 @@ namespace Barotrauma.Sounds
 
         public static void Volume(int sourceIndex, float volume)
         {
+            if (Disabled) return;
+
             AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume * MasterVolume);
             ALHelper.Check();
         }
@@ -187,6 +223,7 @@ namespace Barotrauma.Sounds
             get { return lowPassHfGain; }
             set
             {
+                if (Disabled) return;
                 if (ALHelper.Efx.IsInitialized)
                 {
                     lowPassHfGain = value;
@@ -200,7 +237,6 @@ namespace Barotrauma.Sounds
                         ALHelper.Efx.BindFilterToSource(alSources[i], lowpassFilterId);
                         ALHelper.Check();
                     }
-
                 }
             }
         }
@@ -208,7 +244,7 @@ namespace Barotrauma.Sounds
 
         public static void UpdateSoundPosition(int sourceIndex, Vector2 position, float baseVolume = 1.0f)
         {
-            if (sourceIndex < 1) return;
+            if (sourceIndex < 1 || Disabled) return;
 
             if (!MathUtils.IsValid(position))
             {
@@ -229,6 +265,8 @@ namespace Barotrauma.Sounds
 
         public static OggStream StartStream(string file, float volume = 1.0f)
         {
+            if (Disabled) return null;
+
             if (oggStreamer == null)
                 oggStreamer = new OggStreamer();
 
@@ -244,7 +282,7 @@ namespace Barotrauma.Sounds
 
         public static void StopStream()
         {
-            if (oggStream!=null) oggStream.Stop();
+            if (oggStream != null) oggStream.Stop();
         }
 
         public static void ClearAlSource(int bufferId)
@@ -260,6 +298,8 @@ namespace Barotrauma.Sounds
         
         public static void Dispose()
         {
+            if (Disabled) return;
+
             if (ALHelper.Efx.IsInitialized)
                 ALHelper.Efx.DeleteFilter(lowpassFilterId);
 

@@ -372,7 +372,7 @@ namespace Barotrauma
             pos.Y = (int)pos.Y;
             
             GUI.DrawRectangle(spriteBatch, pos, rectSize, Color.Black * 0.8f, true);
-            spriteBatch.DrawString(GUI.Font, toolTip,
+            GUI.Font.DrawString(spriteBatch, toolTip,
                 new Vector2((int)(pos.X + rectSize.X * 0.5f), (int)(pos.Y + rectSize.Y * 0.5f)),
                 Color.White, 0.0f,
                 new Vector2((int)(textSize.X * 0.5f), (int)(textSize.Y * 0.5f)),

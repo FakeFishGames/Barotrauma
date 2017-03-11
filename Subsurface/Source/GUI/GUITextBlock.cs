@@ -103,8 +103,8 @@ namespace Barotrauma
         {
             get { return caretPos; }
         }
-
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, GUIComponent parent, SpriteFont font)
+        
+        public GUITextBlock(Rectangle rect, string text, GUIStyle style, GUIComponent parent, ScalableFont font)
             : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, false, font)
         {
         }
@@ -142,7 +142,7 @@ namespace Barotrauma
             if (textColor != null) this.textColor = (Color)textColor;
         }
 
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, SpriteFont font = null)
+        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, ScalableFont font = null)
             :base (style)        
         {
             this.Font = font == null ? GUI.Font : font;
@@ -174,7 +174,7 @@ namespace Barotrauma
 
             wrappedText = text;
 
-           Vector2 size = MeasureText(text);
+            Vector2 size = MeasureText(text);
             
             if (Wrap && rect.Width>0)
             {
@@ -184,7 +184,7 @@ namespace Barotrauma
 
                 size = newSize;
             }
-
+            
             if (LimitText && text.Length>1 && size.Y > rect.Height)
             {
                 string[] lines = text.Split('\n');
@@ -205,7 +205,7 @@ namespace Barotrauma
 
             if (textAlignment.HasFlag(Alignment.Bottom))
                 origin.Y -= (rect.Height / 2.0f - padding.W) - size.Y / 2;
-
+            
             origin.X = (int)origin.X;
             origin.Y = (int)origin.Y;
 
@@ -263,7 +263,7 @@ namespace Barotrauma
 
             if (!string.IsNullOrEmpty(text))
             {
-                spriteBatch.DrawString(Font,
+                Font.DrawString(spriteBatch,
                     Wrap ? wrappedText : text,
                     new Vector2(rect.X, rect.Y) + textPos + offset,
                     textColor * (textColor.A / 255.0f),

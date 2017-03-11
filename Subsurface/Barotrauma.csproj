@@ -111,6 +111,7 @@
     <Compile Include="Source\Events\Missions\MonsterMission.cs" />
     <Compile Include="Source\Events\Missions\SalvageMission.cs" />
     <Compile Include="Source\Events\ArtifactEvent.cs" />
+    <Compile Include="Source\Fonts\ScalableFont.cs" />
     <Compile Include="Source\GameSession\CargoManager.cs" />
     <Compile Include="Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="Source\GameSession\GameModes\MissionMode.cs" />
@@ -176,6 +177,7 @@
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Timing.cs" />
+    <Compile Include="Source\Utils\Homoglyphs.cs" />
     <Compile Include="Source\Utils\MTRandom.cs" />
     <Compile Include="Source\Utils\Rand.cs" />
     <Compile Include="Source\Events\PropertyTask.cs" />
@@ -1061,6 +1063,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="freetype6.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Icon.ico" />
     <Content Include="Mods\info.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1236,6 +1241,9 @@
     <None Include="Content\Characters\Watcher\watch6.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Code Pro Bold.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\Content.mgcb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -1243,6 +1251,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\effects.mgfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Exo2-Light.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Exo2-Medium.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Items\Artifacts\aliendoor.ogg">
@@ -1359,13 +1373,7 @@
     <None Include="Content\Items\Weapons\stungrenade.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Content\LargeFont.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Content\Map\TutorialSub.sub">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\SmallFont.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Content\Sounds\Ambient\Ambient1.ogg">
@@ -1641,9 +1649,6 @@
     <None Include="Content\Sounds\Water\WaterAmbience2.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Content\SpriteFont1.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Content\step.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -1679,6 +1684,10 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{49ba1c69-6104-41ac-a5d8-b54fa9f696e8}</Project>
       <Name>Lidgren.Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SharpFont\Source\SharpFont\SharpFont.csproj">
+      <Project>{c293db32-fa42-486d-b128-5a12522fae4e}</Project>
+      <Name>SharpFont</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

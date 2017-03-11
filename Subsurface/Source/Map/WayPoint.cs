@@ -158,7 +158,7 @@ namespace Barotrauma
 
             //GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height), clr, true);
             
-            //spriteBatch.DrawString(GUI.SmallFont, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
+            //GUI.SmallFont.DrawString(spriteBatch, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
 
             foreach (MapEntity e in linkedTo)
             {
@@ -314,7 +314,7 @@ namespace Barotrauma
 
 
 
-            //spriteBatch.DrawString(GUI.font, "Spawnpoint: " + spawnType.ToString() + " +/-", new Vector2(x, y + 40), Color.Black);
+            //GUI.Font.DrawString(spriteBatch, "Spawnpoint: " + spawnType.ToString() + " +/-", new Vector2(x, y + 40), Color.Black);
 
 
             y = y + 30;

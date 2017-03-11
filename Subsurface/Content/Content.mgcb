@@ -13,24 +13,6 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin LargeFont.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Color
-/build:LargeFont.spritefont
-
-#begin SmallFont.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Color
-/build:SmallFont.spritefont
-
-#begin SpriteFont1.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Color
-/build:SpriteFont1.spritefont
-
 #begin watershader.fx
 /importer:EffectImporter
 /processor:EffectProcessor

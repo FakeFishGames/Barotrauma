@@ -89,7 +89,7 @@ namespace Barotrauma
             return doc;
         }
 
-        public static SpriteFont TryLoadFont(string file, Microsoft.Xna.Framework.Content.ContentManager contentManager)
+        /*public static SpriteFont TryLoadFont(string file, Microsoft.Xna.Framework.Content.ContentManager contentManager)
         {
             SpriteFont font = null;
             try
@@ -102,7 +102,7 @@ namespace Barotrauma
             }
 
             return font;
-        }
+        }*/
 
         public static object GetAttributeObject(XElement element, string name)
         {
@@ -383,7 +383,7 @@ namespace Barotrauma
             return str.Substring(0, maxCharacters-3) + "...";            
         }
 
-        public static string LimitString(string str, SpriteFont font, int maxWidth)
+        public static string LimitString(string str, ScalableFont font, int maxWidth)
         {
             if (maxWidth <= 0 || string.IsNullOrWhiteSpace(str)) return "";
 
@@ -465,7 +465,7 @@ namespace Barotrauma
             return d[n, m];
         }
         
-        public static string WrapText(string text, float lineLength, SpriteFont font)
+        public static string WrapText(string text, float lineLength, ScalableFont font) //TODO: could integrate this into the ScalableFont class directly
         {
             if (font.MeasureString(text).X < lineLength) return text;
 

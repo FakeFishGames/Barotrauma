@@ -28,7 +28,20 @@ namespace Barotrauma
             if (!Visible) return;
             if (ComponentsToUpdate.Contains(this)) return;
             ComponentsToUpdate.Add(this);
-            children.ForEach(c => c.AddToGUIUpdateList());
+
+            try
+            {
+                List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+                foreach (GUIComponent c in fixedChildren)
+                {
+                    c.AddToGUIUpdateList();
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.NewMessage("Error in AddToGUIUPdateList! GUIComponent runtime type: "+this.GetType().ToString()+"; children count: "+children.Count.ToString(),Color.Red);
+                throw e;
+            }
         }
 
         public static void ClearUpdateList()
@@ -86,7 +99,7 @@ namespace Barotrauma
         protected Color flashColor;
         protected float flashTimer;
 
-        public virtual SpriteFont Font
+        public virtual ScalableFont Font
         {
             get;
             set;
@@ -367,13 +380,21 @@ namespace Barotrauma
 
             }*/
 
-            //use a fixed list since children can change their order in the main children list
-            //TODO: maybe find a more efficient way of handling changes in list order
-            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
-            foreach (GUIComponent c in fixedChildren)
+            try
             {
-                if (!c.Visible) continue;
-                c.Update(deltaTime);
+                //use a fixed list since children can change their order in the main children list
+                //TODO: maybe find a more efficient way of handling changes in list order
+                List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+                foreach (GUIComponent c in fixedChildren)
+                {
+                    if (!c.Visible) continue;
+                    c.Update(deltaTime);
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.NewMessage("Error in Update! GUIComponent runtime type: " + this.GetType().ToString() + "; children count: " + children.Count.ToString(), Color.Red);
+                throw e;
             }
         }
 
@@ -440,6 +461,23 @@ namespace Barotrauma
 
         public virtual void AddChild(GUIComponent child)
         {
+            if (child == null) return;
+            if (child.IsParentOf(this))
+            {
+                DebugConsole.ThrowError("Tried to add the parent of a GUIComponent as a child.\n" + Environment.StackTrace);
+                return;
+            }
+            if (child == this)
+            {
+                DebugConsole.ThrowError("Tried to add a GUIComponent as its own child\n" + Environment.StackTrace);
+                return;
+            }
+            if (children.Contains(child))
+            {
+                DebugConsole.ThrowError("Tried to add a the same child twice to a GUIComponent" + Environment.StackTrace);
+                return;
+            }
+
             child.parent = this;
             child.UpdateDimensions(this);
 

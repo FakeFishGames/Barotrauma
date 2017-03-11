@@ -207,57 +207,111 @@ namespace Barotrauma
 
             return a1 + t * b;
         }
+        
+        public static Vector2? GetAxisAlignedLineIntersection(Vector2 a1, Vector2 a2, Vector2 axisAligned1, Vector2 axisAligned2, bool isHorizontal)
+        {
+            if (!isHorizontal)
+            {
+                if (Math.Sign(a1.X - axisAligned1.X) == Math.Sign(a2.X - axisAligned1.X))                
+                    return null;
+                
+                float s = (a2.Y - a1.Y) / (a2.X - a1.X);
+                float y = a1.Y + (axisAligned1.X - a1.X) * s;
+
+                if (axisAligned1.Y < axisAligned2.Y)
+                {
+                    if (y < axisAligned1.Y) return null;
+                    if (y > axisAligned2.Y) return null;
+                }
+                else
+                {
+                    if (y > axisAligned1.Y) return null;
+                    if (y < axisAligned2.Y) return null;
+                }
+                
+                return new Vector2(axisAligned1.X, y);
+            }
+            else //horizontal line
+            {
+                if (Math.Sign(a1.Y - axisAligned1.Y) == Math.Sign(a2.Y - axisAligned1.Y))                
+                    return null;
+
+                float s = (a2.X - a1.X) / (a2.Y - a1.Y);
+                float x = a1.X + (axisAligned1.Y - a1.Y) * s;
+
+                if (axisAligned1.X < axisAligned2.X)
+                {
+                    if (x < axisAligned1.X) return null;
+                    if (x > axisAligned2.X) return null;
+                }
+                else
+                {
+                    if (x > axisAligned1.X) return null;
+                    if (x < axisAligned2.X) return null;
+                }
+                
+                return new Vector2(x, axisAligned1.Y);
+            }
+        }
 
         public static Vector2? GetLineRectangleIntersection(Vector2 a1, Vector2 a2, Rectangle rect)
         {
-            Vector2? intersection = GetLineIntersection(a1, a2, 
+            Vector2? intersection = GetAxisAlignedLineIntersection(a1, a2, 
                 new Vector2(rect.X, rect.Y),
-                new Vector2(rect.Right, rect.Y));
-
-            if (intersection != null) return intersection;
-
-            intersection = GetLineIntersection(a1, a2,
-                new Vector2(rect.X, rect.Y-rect.Height),
-                new Vector2(rect.Right, rect.Y-rect.Height));
-
-            if (intersection != null) return intersection;
-
-            intersection = GetLineIntersection(a1, a2,
-                new Vector2(rect.X, rect.Y),
-                new Vector2(rect.X, rect.Y - rect.Height));
-
-            if (intersection != null) return intersection;
-
-            return GetLineIntersection(a1, a2,
                 new Vector2(rect.Right, rect.Y),
-                new Vector2(rect.Right, rect.Y - rect.Height));
+                true);
+
+            if (intersection != null) return intersection;
+
+            intersection = GetAxisAlignedLineIntersection(a1, a2,
+                new Vector2(rect.X, rect.Y-rect.Height),
+                new Vector2(rect.Right, rect.Y-rect.Height),
+                true);
+
+            if (intersection != null) return intersection;
+
+            intersection = GetAxisAlignedLineIntersection(a1, a2,
+                new Vector2(rect.X, rect.Y),
+                new Vector2(rect.X, rect.Y - rect.Height),
+                false);
+
+            if (intersection != null) return intersection;
+
+            return GetAxisAlignedLineIntersection(a1, a2,
+                new Vector2(rect.Right, rect.Y),
+                new Vector2(rect.Right, rect.Y - rect.Height),
+                false);
         }
 
         public static List<Vector2> GetLineRectangleIntersections(Vector2 a1, Vector2 a2, Rectangle rect)
         {
             List<Vector2> intersections = new List<Vector2>();
 
-            Vector2? intersection = GetLineIntersection(a1, a2,
+            Vector2? intersection = GetAxisAlignedLineIntersection(a1, a2,
                 new Vector2(rect.X, rect.Y),
-                new Vector2(rect.Right, rect.Y));
-
-            if (intersection != null) intersections.Add((Vector2)intersection);
-
-            intersection = GetLineIntersection(a1, a2,
-                new Vector2(rect.X, rect.Y - rect.Height),
-                new Vector2(rect.Right, rect.Y - rect.Height));
-
-            if (intersection != null) intersections.Add((Vector2)intersection);
-
-            intersection = GetLineIntersection(a1, a2,
-                new Vector2(rect.X, rect.Y),
-                new Vector2(rect.X, rect.Y - rect.Height));
-
-            if (intersection != null) intersections.Add((Vector2)intersection);
-
-            intersection = GetLineIntersection(a1, a2,
                 new Vector2(rect.Right, rect.Y),
-                new Vector2(rect.Right, rect.Y - rect.Height));
+                true);
+
+            if (intersection != null) intersections.Add((Vector2)intersection);
+
+            intersection = GetAxisAlignedLineIntersection(a1, a2,
+                new Vector2(rect.X, rect.Y - rect.Height),
+                new Vector2(rect.Right, rect.Y - rect.Height),
+                true);
+
+            if (intersection != null) intersections.Add((Vector2)intersection);
+
+            intersection = GetAxisAlignedLineIntersection(a1, a2,
+                new Vector2(rect.X, rect.Y),
+                new Vector2(rect.X, rect.Y - rect.Height),
+                false);
+
+            if (intersection != null) intersections.Add((Vector2)intersection);
+
+            intersection = GetAxisAlignedLineIntersection(a1, a2,
+                new Vector2(rect.Right, rect.Y),
+                new Vector2(rect.Right, rect.Y - rect.Height),
+                false);
 
             if (intersection != null) intersections.Add((Vector2)intersection);
 
@@ -276,15 +330,16 @@ namespace Barotrauma
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
         {
             float xDist = Math.Abs(circlePos.X - rect.Center.X);
+            float yDist = Math.Abs(circlePos.Y - rect.Center.Y);
+
             int halfWidth = rect.Width / 2;
+            int halfHeight = rect.Height / 2;
             
             if (xDist > (halfWidth + radius))   { return false; }
-            if (xDist <= (halfWidth))           { return true; }
+            if (yDist > (halfHeight + radius))  { return false; }   
 
-            float yDist = Math.Abs(circlePos.Y - rect.Center.Y);
-            int halfHeight = rect.Height / 2;
 
-            if (yDist > (halfHeight + radius))  { return false; }            
+            if (xDist <= (halfWidth))           { return true; }         
             if (yDist <= (halfHeight))          { return true; }
 
             float distSqX = xDist - halfWidth;
@@ -473,6 +528,20 @@ namespace Barotrauma
             float d1 = (a.X - center.X) * (a.X - center.X) + (a.Y - center.Y) * (a.Y - center.Y);
             float d2 = (b.X - center.X) * (b.X - center.X) + (b.Y - center.Y) * (b.Y - center.Y);
             return Math.Sign(d2 - d1);
+        }
+    }
+
+    class CompareSegmentPointCW : IComparer<Lights.SegmentPoint>
+    {
+        private Vector2 center;
+
+        public CompareSegmentPointCW(Vector2 center)
+        {
+            this.center = center;
+        }
+        public int Compare(Lights.SegmentPoint a, Lights.SegmentPoint b)
+        {
+            return -CompareCCW.Compare(a.WorldPos, b.WorldPos, center);
         }
     }
 }
