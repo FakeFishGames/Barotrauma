@@ -5,10 +5,12 @@ using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using FarseerPhysics;
+using Barotrauma.Networking;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
-    class Turret : Powered, IDrawableComponent
+    class Turret : Powered, IDrawableComponent, IServerSerializable
     {
         Sprite barrelSprite;
 
@@ -159,12 +161,12 @@ namespace Barotrauma.Items.Components
             {
                 rotation = maxRotation;
             }
-            
-            
         }
 
         public override bool Use(float deltaTime, Character character = null)
         {
+            if (GameMain.Client != null) return false;
+
             if (reload > 0.0f) return false;
 
             var projectiles = GetLoadedProjectiles(true);
@@ -181,11 +183,21 @@ namespace Barotrauma.Items.Components
                 float takePower = Math.Min(powerConsumption - availablePower, batteryPower);
 
                 battery.Charge -= takePower/3600.0f;
+
+                if (GameMain.Server != null)
+                {
+                    battery.Item.CreateServerEvent(battery);
+                }
             }
+         
+            Launch(projectiles[0].Item);
 
-            reload = reloadTime;            
+            return true;
+        }
 
-            Item projectile = projectiles[0].Item;
+        private void Launch(Item projectile)
+        {
+            reload = reloadTime;
 
             projectile.Drop();
             projectile.body.Dir = 1.0f;
@@ -196,12 +208,14 @@ namespace Barotrauma.Items.Components
             projectile.FindHull();
             projectile.Submarine = projectile.body.Submarine;
 
-            projectiles[0].Use(deltaTime);
-            projectiles[0].User = character;
+            projectile.Use((float)Timing.Step);
 
             if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
 
-            return true;
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.components.IndexOf(this), projectile });
+            }
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
@@ -249,8 +263,6 @@ namespace Barotrauma.Items.Components
                     objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, ""));
                     return false;
                 }
-
-
             }
 
             //enough shells and power
@@ -274,19 +286,9 @@ namespace Barotrauma.Items.Components
             character.CursorPosition = closestEnemy.WorldPosition;
             if (item.Submarine!=null) character.CursorPosition -= item.Submarine.Position;
             character.SetInput(InputType.Aim, false, true);
-            //Vector2 receive
-
-            //Vector2 centerPos = new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y);
-
-            //Vector2 offset = receivedPos - centerPos;
-            //offset.Y = -offset.Y;
-
-            //targetRotation = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(offset));
 
             float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition-item.WorldPosition);
             float turretAngle = -rotation;
-
-
 
             if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.01f) return false;
 
@@ -295,9 +297,7 @@ namespace Barotrauma.Items.Components
 
             if (objective.Option.ToLowerInvariant() == "fire at will") Use(deltaTime, character);
 
-
             return false;
-
         }
 
         private float GetAvailablePower()
@@ -385,6 +385,26 @@ namespace Barotrauma.Items.Components
                     item.Use((float)Timing.Step, null);
                     break;
             }
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            //ID of the launched projectile
+            msg.Write((UInt16)extraData[2]);
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            UInt16 projectileID = msg.ReadUInt16();
+            Item projectile = Entity.FindEntityByID(projectileID) as Item;
+
+            if (projectile == null)
+            {
+                DebugConsole.ThrowError("Failed to launch a projectile - item with the ID \""+projectileID+" not found");
+                return;
+            }
+
+            Launch(projectile);
         }
     }
 }

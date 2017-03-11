@@ -2,10 +2,12 @@
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Networking;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
-    class PowerContainer : Powered, IDrawableComponent
+    class PowerContainer : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         //[power/min]        
         float capacity;
@@ -62,7 +64,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!MathUtils.IsValid(value)) return;              
                 rechargeSpeed = MathHelper.Clamp(value, 0.0f, maxRechargeSpeed);
-                rechargeSpeed = MathUtils.Round(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.1f, 1.0f));
+                rechargeSpeed = MathUtils.RoundTowardsClosest(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.1f, 1.0f));
             }
         }
 
@@ -87,14 +89,26 @@ namespace Barotrauma.Items.Components
                 var button = new GUIButton(new Rectangle(160, 50, 30,30), "-", GUI.Style, GuiFrame);
                 button.OnClicked = (GUIButton btn, object obj) =>
                 {
-                    RechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);
+                    RechargeSpeed = rechargeSpeed - maxRechargeSpeed * 0.1f;
+
+                    if (GameMain.Server != null)
+                        item.CreateServerEvent(this);
+                    else if (GameMain.Client != null)
+                        item.CreateClientEvent(this);
+
                     return true;
                 };
 
                 button = new GUIButton(new Rectangle(200, 50, 30, 30), "+", GUI.Style, GuiFrame);
                 button.OnClicked = (GUIButton btn, object obj) =>
                 {
-                    RechargeSpeed = Math.Max(rechargeSpeed + maxRechargeSpeed * 0.1f, 0.0f);
+                    RechargeSpeed = rechargeSpeed + maxRechargeSpeed * 0.1f;
+
+                    if (GameMain.Server != null)
+                        item.CreateServerEvent(this);
+                    else if (GameMain.Client != null)
+                        item.CreateClientEvent(this);
+
                     return true;
                 };
             }
@@ -245,31 +259,40 @@ namespace Barotrauma.Items.Components
             GuiFrame.Update(1.0f / 60.0f);
         }
 
-        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
+        public void ClientWrite(NetBuffer msg, object[] extraData)
         {
-            float chargeSpeed = MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f);
-            msg.WriteRangedSingle(chargeSpeed, 0.0f, 1.0f, 8);
+            DebugConsole.NewMessage("writing recharge speed " + (rechargeSpeed / MaxRechargeSpeed * 10), Color.White);
+            msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
         }
 
-        public void ServerRead(Lidgren.Network.NetIncomingMessage msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
-            RechargeSpeed = msg.ReadRangedSingle(0.0f, 1.0f, 8) * maxRechargeSpeed;
+            float newRechargeSpeed = msg.ReadRangedInteger(0,10) / 10.0f * maxRechargeSpeed;
+
+            DebugConsole.NewMessage("received recharge speed " + newRechargeSpeed, Color.White);
+
+            if (item.CanClientAccess(c))
+            {
+                RechargeSpeed = newRechargeSpeed;
+            }
+
+            item.CreateServerEvent(this);
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-            float chargeSpeed = MathHelper.Clamp(rechargeSpeed / MaxRechargeSpeed, 0.0f, 1.0f);
-            msg.WriteRangedSingle(chargeSpeed, 0.0f, 1.0f, 8);
+
+            DebugConsole.NewMessage("writing recharge speed " + (rechargeSpeed / MaxRechargeSpeed * 10), Color.White);
+            msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
 
             float chargeRatio = MathHelper.Clamp(charge / capacity, 0.0f, 1.0f);
             msg.WriteRangedSingle(chargeRatio, 0.0f, 1.0f, 8);
         }
 
-        public void ClientRead(Lidgren.Network.NetIncomingMessage msg, float sendingTime)
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            RechargeSpeed = msg.ReadRangedSingle(0.0f, 1.0f, 8) * maxRechargeSpeed;
-
+            RechargeSpeed = msg.ReadRangedInteger(0, 10) / 10.0f * maxRechargeSpeed;
             Charge = msg.ReadRangedSingle(0.0f, 1.0f, 8) * capacity;
-        }        
+        }
     }
 }
