@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
@@ -252,9 +250,12 @@ namespace Barotrauma.Networking
         {
             if (uniqueEvents.Count > 0)
             {
+                double midRoundSyncTimeOut = uniqueEvents.Count / MaxEventsPerWrite * server.UpdateInterval.TotalSeconds;
+                midRoundSyncTimeOut = Math.Max(5.0f, midRoundSyncTimeOut * 1.5f);
+
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 client.NeedsMidRoundSync = true;
-                client.MidRoundSyncTimeOut = Timing.TotalTime + 10.0;
+                client.MidRoundSyncTimeOut = Timing.TotalTime + midRoundSyncTimeOut;
             }
             else
             {
@@ -293,11 +294,13 @@ namespace Barotrauma.Networking
                     msg.Position += msgLength * 8;
                 }
                 else
-                {                    
+                {
+                    DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Green);
+
                     UInt16 characterStateID = msg.ReadUInt16();
 
                     NetBuffer buffer = new NetBuffer();
-                    buffer.Write(msg.ReadBytes(msgLength-2));
+                    buffer.Write(msg.ReadBytes(msgLength - 2));
                     BufferEvent(new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer));
 
                     sender.lastSentEntityEventID++;

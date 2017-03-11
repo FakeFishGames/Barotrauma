@@ -61,6 +61,11 @@ namespace Barotrauma.Networking
             get { return entityEventManager; }
         }
 
+        public TimeSpan UpdateInterval
+        {
+            get { return updateInterval; }
+        }
+
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             name = name.Replace(":", "");
