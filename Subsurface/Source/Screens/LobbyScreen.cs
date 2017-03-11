@@ -267,7 +267,7 @@ namespace Barotrauma
 
             frame.ToolTip = ep.Description;
 
-            SpriteFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
+            ScalableFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(50, 0, 0, 25),

@@ -223,7 +223,7 @@ namespace Barotrauma
         {
             new GUIImage(new Rectangle(0,0,30,30), HeadSprite, Alignment.TopLeft, frame);
 
-            SpriteFont font = frame.Rect.Width<280 ? GUI.SmallFont : GUI.Font;
+            ScalableFont font = frame.Rect.Width<280 ? GUI.SmallFont : GUI.Font;
 
             int x = 0, y = 0;
             new GUITextBlock(new Rectangle(x+60, y, 200, 20), Name, GUI.Style, frame, font);

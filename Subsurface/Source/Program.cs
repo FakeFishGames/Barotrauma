@@ -139,11 +139,11 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                sb.AppendLine("Server (" + (GameMain.Server.GameStarted ? "Round had started)" : "Round hand't been started)"));
+                sb.AppendLine("Server (" + (GameMain.Server.GameStarted ? "Round had started)" : "Round hadn't been started)"));
             }
             else if (GameMain.Client != null)
             {
-                sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hand't been started)"));
+                sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hadn't been started)"));
             }
 
             sb.AppendLine("\n");
@@ -157,7 +157,7 @@ namespace Barotrauma
             sb.AppendLine("\n");
 
             sb.AppendLine("Last debug messages:");
-            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 10; i-- )
+            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i-- )
             {
                 sb.AppendLine("   "+DebugConsole.Messages[i].Time+" - "+DebugConsole.Messages[i].Text);
             }

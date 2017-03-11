@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Barotrauma", "Subsurface\Barotrauma.csproj", "{008C0F83-E914-4966-9135-EA885059EDD8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C293DB32-FA42-486D-B128-5A12522FAE4E} = {C293DB32-FA42-486D-B128-5A12522FAE4E}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farseer Physics MonoGame", "Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj", "{0AAD36E3-51A5-4A07-AB60-5C8A66BD38B7}"
 EndProject
@@ -15,7 +18,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hyper.ComponentModel", "Hyper.ComponentModel\Hyper.ComponentModel.csproj", "{3B8F9EDB-6E5E-450C-ABC2-EC49075D0B50}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpFont", "SharpFont\Source\SharpFont\SharpFont.csproj", "{C293DB32-FA42-486D-B128-5A12522FAE4E}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SharpFontShared", "SharpFont\Source\SharpFontShared\SharpFontShared.shproj", "{2E4773B7-961A-4328-9D77-9749F9071CA2}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		SharpFont\Source\SharpFontShared\SharpFontShared.projitems*{2e4773b7-961a-4328-9d77-9749f9071ca2}*SharedItemsImports = 13
+		SharpFont\Source\SharpFontShared\SharpFontShared.projitems*{c293db32-fa42-486d-b128-5a12522fae4e}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Android|Any CPU = Android|Any CPU
 		Android|Mixed Platforms = Android|Mixed Platforms
@@ -280,6 +291,60 @@ Global
 		{3B8F9EDB-6E5E-450C-ABC2-EC49075D0B50}.Windows8|Mixed Platforms.Build.0 = Release|Any CPU
 		{3B8F9EDB-6E5E-450C-ABC2-EC49075D0B50}.Windows8|x86.ActiveCfg = Release|Any CPU
 		{3B8F9EDB-6E5E-450C-ABC2-EC49075D0B50}.Windows8|x86.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Android|Any CPU.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Android|Any CPU.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Android|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Android|Mixed Platforms.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Android|x86.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Android|x86.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Debug|x86.Build.0 = Debug|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.iOS|Any CPU.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.iOS|Any CPU.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.iOS|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.iOS|Mixed Platforms.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.iOS|x86.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.iOS|x86.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Linux|Any CPU.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Linux|Any CPU.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Linux|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Linux|Mixed Platforms.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Linux|x86.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Linux|x86.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.OSX|Any CPU.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.OSX|Any CPU.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.OSX|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.OSX|Mixed Platforms.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.OSX|x86.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.OSX|x86.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.PSM|Any CPU.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.PSM|Any CPU.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.PSM|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.PSM|Mixed Platforms.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.PSM|x86.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.PSM|x86.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Release|x86.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Release|x86.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows|Any CPU.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows|Any CPU.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows|Mixed Platforms.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows|x86.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows|x86.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows8|Any CPU.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows8|Any CPU.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows8|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows8|Mixed Platforms.Build.0 = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows8|x86.ActiveCfg = Release|Any CPU
+		{C293DB32-FA42-486D-B128-5A12522FAE4E}.Windows8|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

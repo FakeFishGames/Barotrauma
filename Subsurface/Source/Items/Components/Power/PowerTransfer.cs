@@ -179,8 +179,8 @@ namespace Barotrauma.Items.Components
 
             GuiFrame.Draw(spriteBatch);
 
-            spriteBatch.DrawString(GUI.Font, "Power: " + (int)(-currPowerConsumption) + " kW", new Vector2(x + 30, y + 30), Color.White);
-            spriteBatch.DrawString(GUI.Font, "Load: " + (int)powerLoad + " kW", new Vector2(x + 30, y + 100), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Power: " + (int)(-currPowerConsumption) + " kW", new Vector2(x + 30, y + 30), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Load: " + (int)powerLoad + " kW", new Vector2(x + 30, y + 100), Color.White);
         }
 
         public override void AddToGUIUpdateList()

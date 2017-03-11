@@ -1,0 +1,58 @@
+--- .\freetype-2.5.4\include\fttypes.h	Tue Dec  2 07:12:12 2014
++++ .\freetype-2.5.4-patched\include\fttypes.h	Sun Dec 28 13:54:21 2014
+@@ -239,9 +239,12 @@
+   /* <Description>                                                         */
+   /*    A typedef for signed long.                                         */
+   /*                                                                       */
++#ifdef _WIN32
++  typedef signed __int64 FT_Long;
++#else
+   typedef signed long  FT_Long;
++#endif
+ 
+-
+   /*************************************************************************/
+   /*                                                                       */
+   /* <Type>                                                                */
+@@ -250,9 +253,12 @@
+   /* <Description>                                                         */
+   /*    A typedef for unsigned long.                                       */
+   /*                                                                       */
++#ifdef _WIN32
++  typedef unsigned __int64 FT_ULong;
++#else
+   typedef unsigned long  FT_ULong;
++#endif
+ 
+-
+   /*************************************************************************/
+   /*                                                                       */
+   /* <Type>                                                                */
+@@ -273,9 +279,12 @@
+   /*    A signed 26.6 fixed-point type used for vectorial pixel            */
+   /*    coordinates.                                                       */
+   /*                                                                       */
++#ifdef _WIN32
++  typedef signed __int64 FT_F26Dot6;
++#else
+   typedef signed long  FT_F26Dot6;
++#endif
+ 
+-
+   /*************************************************************************/
+   /*                                                                       */
+   /* <Type>                                                                */
+@@ -285,9 +294,12 @@
+   /*    This type is used to store 16.16 fixed-point values, like scaling  */
+   /*    values or matrix coefficients.                                     */
+   /*                                                                       */
++#ifdef _WIN32
++  typedef signed __int64 FT_Fixed;
++#else
+   typedef signed long  FT_Fixed;
++#endif
+ 
+-
+   /*************************************************************************/
+   /*                                                                       */
+   /* <Type>                                                                */

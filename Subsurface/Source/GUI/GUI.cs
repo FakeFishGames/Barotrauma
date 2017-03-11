@@ -31,11 +31,22 @@ namespace Barotrauma
         public static GUIStyle Style;
 
         private static Texture2D t;
-        public static SpriteFont Font, SmallFont, LargeFont;
+        public static ScalableFont Font, SmallFont, LargeFont;
 
         private static Sprite cursor;
 
         private static GraphicsDevice graphicsDevice;
+        public static GraphicsDevice GraphicsDevice
+        {
+            get
+            {
+                return graphicsDevice;
+            }
+            set
+            {
+                graphicsDevice = value;
+            }
+        }
 
         private static List<GUIMessage> messages = new List<GUIMessage>();
 
@@ -68,9 +79,9 @@ namespace Barotrauma
 
         public static void Init(ContentManager content)
         {
-            Font = ToolBox.TryLoadFont("SpriteFont1", content);
-            SmallFont = ToolBox.TryLoadFont("SmallFont", content);
-            LargeFont = ToolBox.TryLoadFont("LargeFont", content);
+            Font = new ScalableFont("Content/Exo2-Medium.otf", 14, graphicsDevice);
+            SmallFont = new ScalableFont("Content/Exo2-Light.otf", 12, graphicsDevice);
+            LargeFont = new ScalableFont("Content/Code Pro Bold.otf", 22, graphicsDevice);
 
             cursor = new Sprite("Content/UI/cursor.png", Vector2.Zero);
 
@@ -87,10 +98,8 @@ namespace Barotrauma
             get { return settingsMenuOpen; }
         }
 
-        public static void LoadContent(GraphicsDevice graphics, bool loadSounds = true)
+        public static void LoadContent(bool loadSounds = true)
         {
-            graphicsDevice = graphics;
-
             if (loadSounds)
             {
                 sounds = new Sound[Enum.GetValues(typeof(GUISoundType)).Length];
@@ -232,7 +241,7 @@ namespace Barotrauma
                 depth);
         }
         
-        public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor=null, int backgroundPadding=0, SpriteFont font = null)
+        public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor=null, int backgroundPadding=0, ScalableFont font = null)
         {
 
             if (font == null) font = Font;
@@ -242,7 +251,7 @@ namespace Barotrauma
                 DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true);
             }
 
-            sb.DrawString(font, text, pos, color);
+            font.DrawString(sb, text, pos, color);
         }
 
         public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
@@ -405,7 +414,7 @@ namespace Barotrauma
                 origin = Vector2.Zero;
             }
 
-            sb.DrawString(Font, text, new Vector2(rect.Center.X, rect.Center.Y) , Color.White, 0.0f, origin, 1.0f, SpriteEffects.None, 0.0f);
+            Font.DrawString(sb, text, new Vector2(rect.Center.X, rect.Center.Y) , Color.White, 0.0f, origin, 1.0f, SpriteEffects.None, 0.0f);
 
             return clicked;
         }
@@ -582,12 +591,12 @@ namespace Barotrauma
 
                 msg.Pos = MathUtils.SmoothStep(msg.Pos, currPos, deltaTime*20.0f);
 
-                spriteBatch.DrawString(Font, msg.Text,
+                Font.DrawString(spriteBatch, msg.Text,
                     new Vector2((int)msg.Pos.X - 1, (int)msg.Pos.Y - 1),
                     Color.Black * alpha*0.5f, 0.0f,
                     new Vector2((int)(0.5f * msg.Size.X), (int)(0.5f * msg.Size.Y)), 1.0f, SpriteEffects.None, 0.0f);
 
-                spriteBatch.DrawString(Font, msg.Text,
+                Font.DrawString(spriteBatch, msg.Text,
                     new Vector2((int)msg.Pos.X, (int)msg.Pos.Y), 
                     msg.Color * alpha, 0.0f,
                     new Vector2((int)(0.5f * msg.Size.X), (int)(0.5f * msg.Size.Y)), 1.0f, SpriteEffects.None, 0.0f);

@@ -381,6 +381,10 @@ namespace Barotrauma.Sounds
 
                 Instance = this;
                 underlyingThread = new Thread(EnsureBuffersFilled) { Priority = ThreadPriority.Lowest };
+
+                //background threads are automatically stopped when all foreground threads have been stopped
+                // -> the streaming thread won't stay running in the background if the main thread crashes
+                underlyingThread.IsBackground = true;
                 underlyingThread.Start();
             }
 

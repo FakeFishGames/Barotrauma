@@ -41,7 +41,7 @@ namespace Barotrauma
         }
 
         public List<Item> SpawnItems = new List<Item>();
-        
+
         private bool enabled;
         public bool Enabled
         {
@@ -51,12 +51,14 @@ namespace Barotrauma
             }
             set
             {
+                if (value == enabled) return;
                 enabled = value;
 
                 foreach (Limb limb in AnimController.Limbs)
                 {
                     limb.body.Enabled = enabled;
                 }
+                AnimController.Collider.Enabled = value;
             }
         }
 
@@ -1617,12 +1619,12 @@ namespace Barotrauma
                 {
                     nameColor = Color.Red;
                 }
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
-                spriteBatch.DrawString(GUI.Font, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
+                GUI.Font.DrawString(spriteBatch, Info.Name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
+                GUI.Font.DrawString(spriteBatch, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
 
                 if (GameMain.DebugDraw)
                 {
-                    spriteBatch.DrawString(GUI.Font, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
+                    GUI.Font.DrawString(spriteBatch, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
                 }
             }
 

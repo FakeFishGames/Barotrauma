@@ -39,6 +39,9 @@ namespace Barotrauma.Networking
         private ServerLog log;
         private GUIButton showLogButton;
 
+        private bool initiatedStartGame;
+        private CoroutineHandle startGameCoroutine;
+
         private GUIScrollBar clientListScrollBar;
 
         public TraitorManager TraitorManager;
@@ -396,6 +399,21 @@ namespace Barotrauma.Networking
 
                     EndGame();
                     return;
+                }
+            }
+            else if (initiatedStartGame)
+            {
+                //tried to start up the game and StartGame coroutine is not running anymore
+                // -> something wen't wrong during startup, re-enable start button and reset AutoRestartTimer
+                if (startGameCoroutine != null && !CoroutineManager.IsCoroutineRunning(startGameCoroutine))
+                {
+                    if (autoRestart) AutoRestartTimer = Math.Max(AutoRestartInterval, 5.0f);
+                    GameMain.NetLobbyScreen.StartButton.Enabled = true;
+
+                    GameMain.NetLobbyScreen.LastUpdateID++;
+
+                    startGameCoroutine = null;
+                    initiatedStartGame = false;
                 }
             }
             else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count>0)
@@ -1021,13 +1039,15 @@ namespace Barotrauma.Networking
                 }
             }
 
-            GameMain.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
+            startGameCoroutine = GameMain.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
 
             yield return CoroutineStatus.Success;
         }
 
         private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
         {
+            initiatedStartGame = true;
+
             Item.Spawner.Clear();
             entityEventManager.Clear();
 
@@ -1037,38 +1057,19 @@ namespace Barotrauma.Networking
             
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
-
-            bool couldNotStart = false;
-
+            
             int teamCount = 1;
             int hostTeam = 1;
+        
+            GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
 
-            try
-            {            
-                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
-
-                if (GameMain.GameSession.gameMode.Mission != null && 
-                    GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
-                {
-                    teamCount = 2;
-                }
-
-                GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
-            }
-
-            catch (Exception e)
+            if (GameMain.GameSession.gameMode.Mission != null && 
+                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
             {
-                DebugConsole.ThrowError("Failed to start a new round", e);
-
-                //try again in >5 seconds
-                if (autoRestart) AutoRestartTimer = Math.Max(AutoRestartInterval, 5.0f);
-                GameMain.NetLobbyScreen.StartButton.Enabled = true;
-                GameMain.NetLobbyScreen.LastUpdateID++;
-
-                couldNotStart = true;
+                teamCount = 2;
             }
 
-            if (couldNotStart) yield return CoroutineStatus.Failure;
+            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
 
             GameServer.Log("Starting a new round...", Color.Cyan);
             GameServer.Log("Submarine: " + selectedSub.Name, Color.Cyan);
@@ -1183,6 +1184,7 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.StartButton.Enabled = true;
 
             gameStarted = true;
+            initiatedStartGame = false;
 
             yield return CoroutineStatus.Success;
         }
@@ -1658,14 +1660,14 @@ namespace Barotrauma.Networking
 
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
-            spriteBatch.DrawString(GUI.Font, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
                         
-            spriteBatch.DrawString(GUI.SmallFont, "Connections: "+server.ConnectionsCount, new Vector2(x + 10, y + 30), Color.White);
-            spriteBatch.DrawString(GUI.SmallFont, "Received bytes: " + MathUtils.GetBytesReadable(server.Statistics.ReceivedBytes), new Vector2(x + 10, y + 45), Color.White);
-            spriteBatch.DrawString(GUI.SmallFont, "Received packets: " + server.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
+            GUI.SmallFont.DrawString(spriteBatch, "Connections: "+server.ConnectionsCount, new Vector2(x + 10, y + 30), Color.White);
+            GUI.SmallFont.DrawString(spriteBatch, "Received bytes: " + MathUtils.GetBytesReadable(server.Statistics.ReceivedBytes), new Vector2(x + 10, y + 45), Color.White);
+            GUI.SmallFont.DrawString(spriteBatch, "Received packets: " + server.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
 
-            spriteBatch.DrawString(GUI.SmallFont, "Sent bytes: " + MathUtils.GetBytesReadable(server.Statistics.SentBytes), new Vector2(x + 10, y + 75), Color.White);
-            spriteBatch.DrawString(GUI.SmallFont, "Sent packets: " + server.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
+            GUI.SmallFont.DrawString(spriteBatch, "Sent bytes: " + MathUtils.GetBytesReadable(server.Statistics.SentBytes), new Vector2(x + 10, y + 75), Color.White);
+            GUI.SmallFont.DrawString(spriteBatch, "Sent packets: " + server.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
 
             int resentMessages = 0;
 
@@ -1685,10 +1687,10 @@ namespace Barotrauma.Networking
 
                 if (y >= startY && y < startY + height - 120)
                 {
-                    spriteBatch.DrawString(GUI.SmallFont, c.name + " ("+c.Connection.RemoteEndPoint.Address.ToString()+")", new Vector2(x + 10, y), clientColor);
-                    spriteBatch.DrawString(GUI.SmallFont, "Ping: " + (int)(c.Connection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x+20, y+10), clientColor);
+                    GUI.SmallFont.DrawString(spriteBatch, c.name + " ("+c.Connection.RemoteEndPoint.Address.ToString()+")", new Vector2(x + 10, y), clientColor);
+                    GUI.SmallFont.DrawString(spriteBatch, "Ping: " + (int)(c.Connection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x+20, y+10), clientColor);
                 }
-                if (y + 25 >= startY && y < startY + height - 130) spriteBatch.DrawString(GUI.SmallFont, "Resent messages: " + c.Connection.Statistics.ResentMessages, new Vector2(x + 20, y + 20), clientColor);
+                if (y + 25 >= startY && y < startY + height - 130) GUI.SmallFont.DrawString(spriteBatch, "Resent messages: " + c.Connection.Statistics.ResentMessages, new Vector2(x + 20, y + 20), clientColor);
 
                 resentMessages += (int)c.Connection.Statistics.ResentMessages;
 

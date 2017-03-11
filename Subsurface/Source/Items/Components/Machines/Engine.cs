@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
 
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
-            spriteBatch.DrawString(GUI.Font, "Force: " + (int)(targetForce) + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
+            GUI.Font.DrawString(spriteBatch, "Force: " + (int)(targetForce) + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
         }
 
         public override void AddToGUIUpdateList()

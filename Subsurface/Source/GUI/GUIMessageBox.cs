@@ -42,6 +42,17 @@ namespace Barotrauma
             : base(new Rectangle(0,0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 Color.Black*0.5f, Alignment.TopLeft, null, parent)
         {
+            if (height == 0)
+            {
+                string wrappedText = ToolBox.WrapText(text, width, GUI.Font);
+                string[] lines = wrappedText.Split('\n');
+                foreach (string line in lines)
+                {
+                    height += (int)GUI.Font.MeasureString(line).Y;
+                }
+                height += 220;
+            }
+
             var frame = new GUIFrame(new Rectangle(0,0,width,height), null, Alignment.Center, GUI.Style, this);
 
             new GUITextBlock(new Rectangle(0, 0, 0, 30), header, Color.Transparent, Color.White, textAlignment, GUI.Style, frame, true);

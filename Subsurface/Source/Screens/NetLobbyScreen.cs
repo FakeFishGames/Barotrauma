@@ -540,11 +540,18 @@ namespace Barotrauma
                     infoButton.UserData = -1;
                     infoButton.OnClicked += ViewJobInfo;
 
-                    GUIButton upButton = new GUIButton(new Rectangle(30, 2, 15, 15), "^", GUI.Style, jobText);
+                    GUIButton upButton = new GUIButton(new Rectangle(30, 2, 15, 15), "", GUI.Style, jobText);
+                    //TODO: make GUIImages align correctly when scaled/rotated 
+                    //so there's no need to do this ↓
+                    new GUIImage(new Rectangle(3,2,0,0), GUI.Arrow, Alignment.Center, upButton).Scale = 0.6f;
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
-                    GUIButton downButton = new GUIButton(new Rectangle(50, 2, 15, 15), "˅", GUI.Style, jobText);
+                    GUIButton downButton = new GUIButton(new Rectangle(50, 2, 15, 15), "", GUI.Style, jobText);
+                    var downArrow = new GUIImage(new Rectangle(13,14,0,0), GUI.Arrow, Alignment.Center, downButton);
+                    downArrow.Rotation = MathHelper.Pi;
+                    downArrow.Scale = 0.6f;
+
                     downButton.UserData = 1;
                     downButton.OnClicked += ChangeJobPreference;
                 }

@@ -60,7 +60,7 @@ namespace Barotrauma
                 if (n > 0) columnX[n] += columnX[n - 1];
             }
 
-            SpriteFont font = GUI.SmallFont; // serverList.Rect.Width < 400 ? GUI.SmallFont : GUI.Font;
+            ScalableFont font = GUI.SmallFont; // serverList.Rect.Width < 400 ? GUI.SmallFont : GUI.Font;
 
             new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Password", GUI.Style, menu).Font = font;
 
