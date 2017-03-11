@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
             {
                 //we already have an identical event that's waiting to be sent
                 // -> no need to add a new one
-                if (events[i].IsDuplicate(newEvent)) return;
+                if (events[i].IsDuplicate(newEvent) && !events[i].Sent) return;
             }
 
             ID++;

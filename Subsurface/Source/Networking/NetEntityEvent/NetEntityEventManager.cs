@@ -30,7 +30,16 @@ namespace Barotrauma.Networking
             {
                 //write into a temporary buffer so we can write the length before the actual data
                 NetBuffer tempBuffer = new NetBuffer();
-                WriteEvent(tempBuffer, e, recipient);
+                try
+                {
+                    WriteEvent(tempBuffer, e, recipient);
+                }
+
+                catch (Exception exception)
+                {
+                    DebugConsole.ThrowError("Failed to write an event for the entity \""+e.Entity+"\"", exception);
+                    continue;
+                }
 
                 Debug.Assert(
                     tempBuffer.LengthBytes < 128, 
