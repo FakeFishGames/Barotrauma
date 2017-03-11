@@ -1812,12 +1812,13 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     //no further data needed, the server applies the effect
-                    //on the character of the client who sent the message
+                    //on the character of the client who sent the message                    
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData);
                     break;
             }
+            msg.WritePadBits();
         }
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c) 
