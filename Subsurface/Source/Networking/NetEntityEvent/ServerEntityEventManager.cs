@@ -133,12 +133,14 @@ namespace Barotrauma.Networking
                 {
                     //it's been 10 seconds since this event was created
                     //kick everyone that hasn't received it yet, this is way too old
-                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.lastRecvEntityEventID));
+                    List<Client> toKick = inGameClients.FindAll(c => 
+                        NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.lastRecvEntityEventID) && 
+                        (Timing.TotalTime - c.MidRoundSyncTimeOut) > 10.0f); //give mid-round joining players extra 10 seconds to receive the events
+
                     if (toKick != null) toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
                 }
             }
-
-            //TODO: calculate a reasonable timeout period for midround syncing and/or give the client more time if they're receiving messages
+            
             var timedOutClients = clients.FindAll(c => c.inGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
             if (timedOutClients != null) timedOutClients.ForEach(c => GameMain.Server.DisconnectClient(c, "", "You have been disconnected because syncing your client with the server took too long."));
             
@@ -248,7 +250,14 @@ namespace Barotrauma.Networking
 
         public void InitClientMidRoundSync(Client client)
         {
-            if (uniqueEvents.Count > 0)
+            //no need for midround syncing if no events have been created,
+            //or if the first created unique event is still in the event list
+            if (uniqueEvents.Count == 0 || (events.Count > 0 && events[0].ID == uniqueEvents[0].ID))
+            {
+                client.UnreceivedEntityEventCount = 0;
+                client.NeedsMidRoundSync = false;
+            }
+            else
             {
                 double midRoundSyncTimeOut = uniqueEvents.Count / MaxEventsPerWrite * server.UpdateInterval.TotalSeconds;
                 midRoundSyncTimeOut = Math.Max(5.0f, midRoundSyncTimeOut * 1.5f);
@@ -256,11 +265,6 @@ namespace Barotrauma.Networking
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 client.NeedsMidRoundSync = true;
                 client.MidRoundSyncTimeOut = Timing.TotalTime + midRoundSyncTimeOut;
-            }
-            else
-            {
-                client.UnreceivedEntityEventCount = 0;
-                client.NeedsMidRoundSync = false;
             }
         }
 

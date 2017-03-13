@@ -565,7 +565,6 @@ namespace Barotrauma.Networking
                         //game already started -> send start message immediately
                         if (gameStarted)
                         {
-                            connectedClient.NeedsMidRoundSync = true;
                             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClient);
                         }
                     }
@@ -655,12 +654,8 @@ namespace Barotrauma.Networking
             {
                 if (!c.inGame)
                 {
-                    if (c.NeedsMidRoundSync)
-                    {
-                        //client joined mid-round and has just started up the game
-                        //check which unique messages they've missed
-                        entityEventManager.InitClientMidRoundSync(c);
-                    }
+                    //check if midround syncing is needed due to missed unique events
+                    entityEventManager.InitClientMidRoundSync(c);                    
                     c.inGame = true;
                 }
             }
