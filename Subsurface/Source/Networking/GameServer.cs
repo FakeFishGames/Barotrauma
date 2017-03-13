@@ -246,7 +246,7 @@ namespace Barotrauma.Networking
             request.AddParameter("servername", name);
             request.AddParameter("serverport", Port);
             request.AddParameter("currplayers", connectedClients.Count);
-            request.AddParameter("maxplayers", config.MaximumConnections);
+            request.AddParameter("maxplayers", MaxPlayers);
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
 
             // execute the request
@@ -281,7 +281,7 @@ namespace Barotrauma.Networking
             request.AddParameter("serverport", Port);
             request.AddParameter("gamestarted", gameStarted ? 1 : 0);
             request.AddParameter("currplayers", connectedClients.Count);
-            request.AddParameter("maxplayers", config.MaximumConnections);
+            request.AddParameter("maxplayers", MaxPlayers);
 
             Log("Refreshing connection with master server...", Color.Cyan);
 
@@ -1431,7 +1431,7 @@ namespace Barotrauma.Networking
             {
                 string tempStr;
                 string command = ChatMessage.GetChatMessageCommand(message, out tempStr);
-                switch (command)
+                switch (command.ToLowerInvariant())
                 {
                     case "r":
                     case "radio":
