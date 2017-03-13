@@ -390,7 +390,7 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             //ID of the launched projectile
-            msg.Write((UInt16)extraData[2]);
+            msg.Write(((Item)extraData[2]).ID);
         }
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)

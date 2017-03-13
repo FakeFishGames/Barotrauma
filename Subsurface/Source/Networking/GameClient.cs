@@ -601,6 +601,7 @@ namespace Barotrauma.Networking
 
         private void SetPermissions(ClientPermissions newPermissions)
         {
+            if (newPermissions == permissions) return;
             GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");            
 
             string msg = "";
