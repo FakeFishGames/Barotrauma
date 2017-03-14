@@ -22,6 +22,7 @@ namespace Barotrauma
 
         //private RestRequestAsyncHandle restRequestHandle;
         private bool masterServerResponded;
+        private IRestResponse masterServerResponse;
 
         private int[] columnX;
 
@@ -229,30 +230,21 @@ namespace Barotrauma
                     serverList.ClearChildren();
                     restRequestHandle.Abort();
                     DebugConsole.ThrowError("Couldn't connect to master server (request timed out)");
+                    yield return CoroutineStatus.Success;
                 }
                 yield return CoroutineStatus.Running;
             }
 
-            yield return CoroutineStatus.Success;
-
-        }
-
-        private void MasterServerCallBack(IRestResponse response)
-        {
-            masterServerResponded = true;
-
-            if (response.ErrorException!=null)
+            if (masterServerResponse.ErrorException != null)
             {
-                serverList.ClearChildren();  
-                DebugConsole.ThrowError("Error while connecting to master server", response.ErrorException);
-                return;
+                serverList.ClearChildren();
+                DebugConsole.ThrowError("Error while connecting to master server", masterServerResponse.ErrorException);
             }
-
-            if (response.StatusCode!= System.Net.HttpStatusCode.OK)
+            else if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
             {
-                serverList.ClearChildren();  
+                serverList.ClearChildren();
 
-                switch (response.StatusCode)
+                switch (masterServerResponse.StatusCode)
                 {
                     case System.Net.HttpStatusCode.NotFound:
                         DebugConsole.ThrowError("Error while connecting to master server (404 - \"" + NetConfig.MasterServerUrl + "\" not found)");
@@ -262,14 +254,23 @@ namespace Barotrauma
                         DebugConsole.ThrowError("The master server may be down for maintenance or temporarily overloaded. Please try again after in a few moments.");
                         break;
                     default:
-                        DebugConsole.ThrowError("Error while connecting to master server (" +response.StatusCode+": "+response.StatusDescription+")");
+                        DebugConsole.ThrowError("Error while connecting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")");
                         break;
                 }
-
-                return;
+            }
+            else
+            {
+                UpdateServerList(masterServerResponse.Content);
             }
 
-            UpdateServerList(response.Content);
+            yield return CoroutineStatus.Success;
+
+        }
+
+        private void MasterServerCallBack(IRestResponse response)
+        {
+            masterServerResponse = response;
+            masterServerResponded = true;
         }
 
         private bool JoinServer(GUIButton button, object obj)
