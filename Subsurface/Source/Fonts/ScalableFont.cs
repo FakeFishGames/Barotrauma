@@ -199,15 +199,15 @@ namespace Barotrauma
 
             int lineNum = 0;
             Vector2 currentPos = position;
-            Vector2 advanceUnit = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+            Vector2 advanceUnit = new Vector2((float)Math.Cos(rotation) * scale.X, (float)Math.Sin(rotation) * scale.Y);
             for (int i = 0; i < text.Length; i++)
             {
                 if (text[i]=='\n')
                 {
                     lineNum++;
                     currentPos = position;
-                    currentPos.X += baseHeight * 18 / 10 * lineNum * advanceUnit.Y * scale.Y;
-                    currentPos.Y += baseHeight * 18 / 10 * lineNum * advanceUnit.X * scale.Y;
+                    currentPos.X += baseHeight * 18 / 10 * lineNum * advanceUnit.Y;
+                    currentPos.Y += baseHeight * 18 / 10 * lineNum * advanceUnit.X;
                     continue;
                 }
                 uint charIndex = text[i];
@@ -223,7 +223,7 @@ namespace Barotrauma
 
                         sb.Draw(tex, currentPos + drawOffset, null, gd.texCoords, origin, rotation, scale, color, se, layerDepth);
                     }
-                    currentPos += gd.advance * advanceUnit * scale.X;
+                    currentPos += gd.advance * advanceUnit;
                 }
             }
         }
