@@ -156,8 +156,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)Type);
             msg.Write(Text);
 
-            msg.Write(Sender != null);
-            if (Sender != null)
+            msg.Write(Sender != null && c.inGame);
+            if (Sender != null && c.inGame)
             {
                 msg.Write(Sender.ID);
             }
