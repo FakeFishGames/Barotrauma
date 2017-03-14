@@ -72,8 +72,11 @@ namespace Barotrauma.Networking
 
             var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
             if (extraData != null) newEvent.SetData(extraData);
-
-            events.RemoveAll(e => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll+1),e.ID)); //remove events that have been sent to all clients, they are redundant now
+            
+            //remove events that have been sent to all clients, they are redundant now
+            //keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
+            events.RemoveAll(e => NetIdUtils.IdMoreRecent(lastSentToAll, e.ID)); 
+            
             for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
@@ -137,6 +140,14 @@ namespace Barotrauma.Networking
                         NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.lastRecvEntityEventID) && 
                         (Timing.TotalTime - c.MidRoundSyncTimeOut) > 10.0f); //give mid-round joining players extra 10 seconds to receive the events
 
+                    if (toKick != null) toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
+                }
+
+                if (events.Count > 0)
+                {
+                    //the client is waiting for an event that we don't have anymore
+                    //(the ID they're expecting is smaller than the ID of the first event in our list)
+                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent(events[0].ID, (UInt16)(c.lastRecvEntityEventID+1)));
                     if (toKick != null) toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
                 }
             }
@@ -229,7 +240,7 @@ namespace Barotrauma.Networking
             {
                 startIndex--;
             }
-
+            
             for (int i = startIndex; i < eventList.Count; i++)
             {
                 //find the first event that hasn't been sent in 1.5 * roundtriptime or at all
