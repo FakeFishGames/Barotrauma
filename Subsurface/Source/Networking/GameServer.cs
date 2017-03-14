@@ -1879,13 +1879,16 @@ namespace Barotrauma.Networking
             
             int[] assignedClientCount = new int[JobPrefab.List.Count];
             
-            if (characterInfo != null && assignHost)
+            if (assignHost)
             {
-                assignedClientCount[JobPrefab.List.FindIndex(jp => jp == GameMain.NetLobbyScreen.JobPreferences[0])] = 1;                
-            }
-            else if (myCharacter != null && !myCharacter.IsDead)
-            {
-                assignedClientCount[JobPrefab.List.IndexOf(myCharacter.Info.Job.Prefab)] = 1;  
+                if (characterInfo != null)
+                {
+                    assignedClientCount[JobPrefab.List.FindIndex(jp => jp == GameMain.NetLobbyScreen.JobPreferences[0])] = 1;                
+                }
+                else if (myCharacter != null && !myCharacter.IsDead)
+                {
+                    assignedClientCount[JobPrefab.List.IndexOf(myCharacter.Info.Job.Prefab)] = 1;  
+                }
             }
 
             //count the clients who already have characters with an assigned job
