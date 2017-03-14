@@ -99,6 +99,7 @@ namespace Barotrauma.Networking
 
             otherClients = new List<Client>();
 
+            ChatMessage.LastID = 0;
             GameMain.NetLobbyScreen = new NetLobbyScreen();
         }
 

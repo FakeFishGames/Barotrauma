@@ -712,9 +712,10 @@ namespace Barotrauma.Networking
                         if (lastRecvEntityEventID > lastEntityEventID)
                             DebugConsole.ThrowError("client.lastRecvEntityEventID > lastEntityEventID");                        
 #endif
+                                                
+                        if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastRecvChatMsgID)) c.lastRecvChatMsgID = lastRecvChatMsgID;
+                        if (NetIdUtils.IdMoreRecent(c.lastRecvChatMsgID, c.lastChatMsgQueueID)) c.lastRecvChatMsgID = c.lastChatMsgQueueID;
 
-                        c.lastRecvChatMsgID = NetIdUtils.Clamp(c.lastRecvChatMsgID, lastRecvChatMsgID, c.lastChatMsgQueueID);
-                        
                         if (NetIdUtils.IdMoreRecent(lastRecvEntitySpawnID, c.lastRecvEntitySpawnID)) c.lastRecvEntitySpawnID = lastRecvEntitySpawnID;
                         if (NetIdUtils.IdMoreRecent(c.lastRecvEntitySpawnID, lastEntitySpawnID)) c.lastRecvEntitySpawnID = lastEntitySpawnID;
 
