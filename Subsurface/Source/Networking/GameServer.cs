@@ -35,6 +35,7 @@ namespace Barotrauma.Networking
 
         private RestClient restClient;
         private bool masterServerResponded;
+        private IRestResponse masterServerResponse;
 
         private ServerLog log;
         private GUIButton showLogButton;
@@ -222,7 +223,7 @@ namespace Barotrauma.Networking
 
             if (isPublic)
             {
-                RegisterToMasterServer();
+                CoroutineManager.StartCoroutine(RegisterToMasterServer());
             }
                         
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
@@ -234,7 +235,7 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        private void RegisterToMasterServer()
+        private IEnumerable<object> RegisterToMasterServer()
         {
             if (restClient==null)
             {
@@ -248,25 +249,40 @@ namespace Barotrauma.Networking
             request.AddParameter("currplayers", connectedClients.Count);
             request.AddParameter("maxplayers", MaxPlayers);
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
-
-            // execute the request
-            restClient.ExecuteAsync(request, response =>
+            
+            masterServerResponded = false;
+            masterServerResponse = null;
+            var restRequestHandle = restClient.ExecuteAsync(request, response => MasterServerCallBack(response));
+            
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 15);
+            while (!masterServerResponded)
             {
-                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                if (DateTime.Now > timeOut)
                 {
-                    DebugConsole.ThrowError("Error while connecting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")");
-                    return;
+                    restRequestHandle.Abort();
+                    DebugConsole.NewMessage("Couldn't register to master server (request timed out)", Color.Red);
+                    Log("Couldn't register to master server (request timed out)", Color.Red);
+                    yield return CoroutineStatus.Success;
                 }
 
-                if (response != null && !string.IsNullOrWhiteSpace(response.Content))
-                {
-                    DebugConsole.ThrowError("Error while connecting to master server (" + response.Content + ")");
-                    return;
-                }
+                yield return CoroutineStatus.Running;
+            }
 
+            if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                DebugConsole.ThrowError("Error while connecting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")");
+            }
+            else if (masterServerResponse != null && !string.IsNullOrWhiteSpace(masterServerResponse.Content))
+            {
+                DebugConsole.ThrowError("Error while connecting to master server (" + masterServerResponse.Content + ")");
+            }
+            else
+            {
                 registeredToMaster = true;
                 refreshMasterTimer = DateTime.Now + refreshMasterInterval;
-            });
+            }
+
+            yield return CoroutineStatus.Success;
         }
 
         private IEnumerable<object> RefreshMaster()
@@ -289,6 +305,7 @@ namespace Barotrauma.Networking
             sw.Start();
 
             masterServerResponded = false;
+            masterServerResponse = null;
             var restRequestHandle = restClient.ExecuteAsync(request, response => MasterServerCallBack(response));
 
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 15);
@@ -298,14 +315,31 @@ namespace Barotrauma.Networking
                 {
                     restRequestHandle.Abort();
                     DebugConsole.NewMessage("Couldn't connect to master server (request timed out)", Color.Red);
-
                     Log("Couldn't connect to master server (request timed out)", Color.Red);
-
-                    break;
-                    //registeredToMaster = false;
+                    yield return CoroutineStatus.Success;
                 }
                 
                 yield return CoroutineStatus.Running;
+            }
+
+            if (masterServerResponse.Content == "Error: server not found")
+            {
+                Log("Not registered to master server, re-registering...", Color.Red);
+                CoroutineManager.StartCoroutine(RegisterToMasterServer());
+            }
+            else if (masterServerResponse.ErrorException != null)
+            {
+                DebugConsole.NewMessage("Error while registering to master server (" + masterServerResponse.ErrorException + ")", Color.Red);
+                Log("Error while registering to master server (" + masterServerResponse.ErrorException + ")", Color.Red);
+            }
+            else if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                DebugConsole.NewMessage("Error while reporting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")", Color.Red);
+                Log("Error while reporting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")", Color.Red);
+            }
+            else
+            {
+                Log("Master server responded", Color.Cyan);
             }
 
             System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
@@ -315,31 +349,8 @@ namespace Barotrauma.Networking
 
         private void MasterServerCallBack(IRestResponse response)
         {
+            masterServerResponse = response;
             masterServerResponded = true;
-
-            if (response.Content=="Error: server not found")
-            {
-                Log("Not registered to master server, re-registering...", Color.Red);
-
-                RegisterToMasterServer();
-                return;
-            }
-
-            if (response.ErrorException != null)
-            {
-                DebugConsole.NewMessage("Error while registering to master server (" + response.ErrorException + ")", Color.Red);
-                Log("Error while registering to master server (" + response.ErrorException + ")", Color.Red);
-                return;
-            }
-
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            {
-                DebugConsole.NewMessage("Error while reporting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")", Color.Red);
-                Log("Error while reporting to master server (" + response.StatusCode + ": " + response.StatusDescription + ")", Color.Red);
-                return;
-            }
-
-            Log("Master server responded", Color.Cyan);
         }
         
         public override void AddToGUIUpdateList()
