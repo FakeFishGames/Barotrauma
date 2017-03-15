@@ -1,8 +1,6 @@
-﻿
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
@@ -1113,14 +1111,14 @@ namespace Barotrauma
             }
         }
 
-        private void SelectCharacter(Character character)
+        public void SelectCharacter(Character character)
         {
             if (character == null) return;
 
             selectedCharacter = character;
         }
 
-        private void DeselectCharacter()
+        public void DeselectCharacter()
         {
             if (selectedCharacter == null) return;
             

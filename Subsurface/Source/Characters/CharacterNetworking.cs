@@ -43,7 +43,7 @@ namespace Barotrauma
         {
             public InputNetFlags states; //keys pressed/other boolean states at this step
             public UInt16 intAim; //aim angle, represented as an unsigned short where 0=0º, 65535=just a bit under 360º
-            public UInt16 interact; //id of the item being interacted with
+            public UInt16 interact; //id of the entity being interacted with
 
             public UInt16 networkUpdateID;
         }
@@ -127,7 +127,13 @@ namespace Barotrauma
             }
             else if (GameMain.Client != null)
             {
-                memLocalPos.Add(new PosInfo(SimPosition, AnimController.TargetDir, LastNetworkUpdateID));
+                var posInfo = new PosInfo(
+                    SimPosition, 
+                    AnimController.TargetDir, 
+                    LastNetworkUpdateID, 0.0f, 
+                    selectedCharacter == null ? (Entity)selectedConstruction : (Entity)selectedCharacter);
+
+                memLocalPos.Add(posInfo);
 
                 InputNetFlags newInput = InputNetFlags.None;
                 if (IsKeyDown(InputType.Left))      newInput |= InputNetFlags.Left;
@@ -255,14 +261,6 @@ namespace Barotrauma
 
                         if (AllowInput)
                         {
-                            /*if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Aim))
-                            {
-                                newMousePos.X = msg.ReadSingle();
-                                newMousePos.Y = msg.ReadSingle();
-                            }*/
-
-
-
                             if (NetIdUtils.IdMoreRecent((ushort)(networkUpdateID - i), LastNetworkUpdateID) && (i < 60))
                             {
                                 NetInputMem newMem = new NetInputMem();
@@ -364,15 +362,6 @@ namespace Barotrauma
                         tempBuffer.Write(attack);
                     }
 
-                    if (selectedCharacter != null || selectedConstruction != null)
-                    {
-                        tempBuffer.Write(true);
-                        tempBuffer.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
-                    }
-                    else
-                    {
-                        tempBuffer.Write(false);
-                    }
 
                     if (aiming)
                     {
@@ -381,6 +370,16 @@ namespace Barotrauma
                     }
 
                     tempBuffer.Write(AnimController.TargetDir == Direction.Right);
+                }
+
+                if (selectedCharacter != null || selectedConstruction != null)
+                {
+                    tempBuffer.Write(true);
+                    tempBuffer.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
+                }
+                else
+                {
+                    tempBuffer.Write(false);
                 }
 
                 tempBuffer.Write(SimPosition.X);
@@ -426,31 +425,7 @@ namespace Barotrauma
                             keys[(int)InputType.Attack].Held = attackInput;
                             keys[(int)InputType.Attack].SetState(false, attackInput);
                         }
-
-                        bool entitySelected = msg.ReadBoolean();
-                        if (entitySelected)
-                        {
-                            ushort entityID = msg.ReadUInt16();
-                            Entity selectedEntity = Entity.FindEntityByID(entityID);
-                            if (selectedEntity is Character)
-                            {
-                                SelectCharacter((Character)selectedEntity);
-                            }
-                            else if (selectedEntity is Item)
-                            {
-                                var newSelectedConstruction = (Item)selectedEntity;
-                                if (newSelectedConstruction != null && selectedConstruction != newSelectedConstruction)
-                                {
-                                    newSelectedConstruction.Pick(this, true, true);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (selectedCharacter != null) DeselectCharacter();
-                            selectedConstruction = null;
-                        }
-
+                        
                         if (aimInput)
                         {
                             double aimAngle = ((double)msg.ReadUInt16() / 65535.0) * 2.0 * Math.PI;
@@ -462,11 +437,19 @@ namespace Barotrauma
                         facingRight = msg.ReadBoolean();
                     }
 
+                    bool entitySelected = msg.ReadBoolean();
+                    Entity selectedEntity = null;
+                    if (entitySelected)
+                    {
+                        ushort entityID = msg.ReadUInt16();
+                        selectedEntity = FindEntityByID(entityID);
+                    }
+
                     Vector2 pos = new Vector2(
                         msg.ReadFloat(),
                         msg.ReadFloat());
 
-                    var posInfo = new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID, sendingTime);
+                    var posInfo = new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID, sendingTime, selectedEntity);
 
                     int index = 0;
                     if (GameMain.NetworkMember.Character == this && AllowInput)
