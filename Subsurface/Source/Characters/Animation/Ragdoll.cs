@@ -1255,6 +1255,24 @@ namespace Barotrauma
                 //use simple interpolation for other players' characters and characters that can't move
                 if (character.MemPos.Count > 0)
                 {
+                    if (character.MemPos[0].Interact == null)
+                    {
+                        character.DeselectCharacter();
+                        character.SelectedConstruction = null;
+                    }
+                    else if (character.MemPos[0].Interact is Character)
+                    {
+                        character.SelectCharacter((Character)character.MemPos[0].Interact);
+                    }
+                    else if (character.MemPos[0].Interact is Item)
+                    {
+                        var newSelectedConstruction = (Item)character.MemPos[0].Interact;
+                        if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
+                        {
+                            newSelectedConstruction.Pick(character, true, true);
+                        }
+                    }
+
                     Collider.LinearVelocity = Vector2.Zero;
                     Collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
 
@@ -1307,36 +1325,42 @@ namespace Barotrauma
                 if (localPosIndex > -1)
                 {
                     PosInfo localPos = character.MemLocalPos[localPosIndex];
-
-                    Vector2 positionError = serverPos.Position - localPos.Position;
-
-                    float errorMagnitude = positionError.Length();
-
-                    /*if (errorMagnitude > 8.0f)
+                    
+                    //the entity we're interacting with doesn't match the server's
+                    if (localPos.Interact != serverPos.Interact)
                     {
-                        //predicted position was way off, reset completely
-                        SetPosition(serverPos.Position, false);
-                        //local positions are incorrect now -> just clear the list
-                        character.MemLocalPos.Clear();
+                        if (serverPos.Interact == null)
+                        {
+                            character.DeselectCharacter();
+                            character.SelectedConstruction = null;
+                        }
+                        else if (serverPos.Interact is Character)
+                        {
+                            character.SelectCharacter((Character)serverPos.Interact);
+                        }
+                        else if (serverPos.Interact is Item)
+                        {
+                            var newSelectedConstruction = (Item)serverPos.Interact;
+                            if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
+                            {
+                                newSelectedConstruction.Pick(character, true, true);
+                            }
+                        }
                     }
-                    else if (errorMagnitude > Collider.LinearVelocity.Length() / 10.0f + 0.02f && false)
-                    {*/
-                    //our prediction differs from the server position
-                    //-> we need to move the saved local position and all the positions saved after it
 
-                    //(a better way to do this would be to move the character back to
-                    //serverPos and "replay" inputs to see where the character should be now)
+                    Vector2 positionError = serverPos.Position - localPos.Position;                    
                     for (int i = localPosIndex; i < character.MemLocalPos.Count; i++)
                     {
                         character.MemLocalPos[i] =
                             new PosInfo(
                                 character.MemLocalPos[i].Position + positionError,
                                 character.MemLocalPos[i].Direction,
-                                character.MemLocalPos[i].ID);
+                                character.MemLocalPos[i].ID,
+                                0.0f,
+                                character.MemLocalPos[i].Interact);
                     }
-                    //Collider.SetTransform(character.MemLocalPos.Last().Position, Collider.Rotation);
+
                     Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation);
-                    //}
                 }
 
                 if (character.MemLocalPos.Count > 120) character.MemLocalPos.RemoveRange(0, character.MemLocalPos.Count - 120);

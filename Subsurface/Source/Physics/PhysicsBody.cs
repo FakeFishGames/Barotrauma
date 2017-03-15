@@ -19,6 +19,8 @@ namespace Barotrauma
         public readonly float Timestamp;
         public readonly UInt16 ID;
 
+        public readonly Entity Interact; //the entity being interacted with
+
         public PosInfo(Vector2 pos, Direction dir, float time)
             : this(pos, dir, 0, time)
         {
@@ -30,10 +32,17 @@ namespace Barotrauma
         }
 
         public PosInfo(Vector2 pos, Direction dir, UInt16 ID, float time)
+            : this(pos, dir, ID, time, null)
+        {
+        }
+
+        public PosInfo(Vector2 pos, Direction dir, UInt16 ID, float time, Entity interact)
         {
             Position = pos;
             Direction = dir;
             this.ID = ID;
+
+            Interact = interact;
 
             Timestamp = time;
         }
