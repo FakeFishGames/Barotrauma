@@ -381,6 +381,8 @@ namespace Barotrauma
 
         public static List<Vector2> GiftWrap(List<Vector2> points)
         {
+            if (points.Count == 0) return points;
+
             Vector2 leftMost = points[0];
             foreach (Vector2 point in points)
             {

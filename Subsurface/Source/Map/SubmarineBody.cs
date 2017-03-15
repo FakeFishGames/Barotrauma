@@ -160,17 +160,17 @@ namespace Barotrauma
 
         private List<Vector2> GenerateConvexHull()
         {
-            if (!Structure.WallList.Any())
+            List<Structure> subWalls = Structure.WallList.FindAll(wall => wall.Submarine == submarine);
+
+            if (subWalls.Count == 0)
             {
                 return new List<Vector2> { new Vector2(-1.0f, 1.0f), new Vector2(1.0f, 1.0f), new Vector2(0.0f, -1.0f) };
             }
 
             List<Vector2> points = new List<Vector2>();
 
-            foreach (Structure wall in Structure.WallList)
+            foreach (Structure wall in subWalls)
             {
-                if (wall.Submarine != submarine) continue;
-
                 points.Add(new Vector2(wall.Rect.X, wall.Rect.Y));
                 points.Add(new Vector2(wall.Rect.X + wall.Rect.Width, wall.Rect.Y));
                 points.Add(new Vector2(wall.Rect.X, wall.Rect.Y - wall.Rect.Height));
