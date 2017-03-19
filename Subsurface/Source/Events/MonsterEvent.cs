@@ -94,12 +94,13 @@ namespace Barotrauma
 
             if (isFinished) return;
 
+            isStarted = false;
             bool monstersDead = true;
             foreach (Character monster in monsters)
             {
                 if (monster.IsDead) continue;
 
-                if (!isStarted && Vector2.Distance(monster.WorldPosition, Submarine.MainSub.WorldPosition) < 5000.0f) isStarted = true;
+                if (!isStarted && Vector2.DistanceSquared(monster.WorldPosition, Submarine.MainSub.WorldPosition) < 5000.0f*5000.0f) isStarted = true;
                     
                 monstersDead = false;
                 break;
