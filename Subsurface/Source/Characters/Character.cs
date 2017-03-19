@@ -446,7 +446,7 @@ namespace Barotrauma
         {
             get
             {
-                return isDead || Stun > 0.0f || LockHands;
+                return isDead || Stun > 0.0f || LockHands || IsUnconscious;
             }
         }
 
@@ -661,28 +661,22 @@ namespace Barotrauma
                 {
                     case InputType.Left:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
-                        //break;
                     case InputType.Right:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Right)) && (prevDequeuedInput.HasFlag(InputNetFlags.Right));
-                        //break;
                     case InputType.Up:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Up)) && (prevDequeuedInput.HasFlag(InputNetFlags.Up));
-                        //break;
                     case InputType.Down:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Down)) && (prevDequeuedInput.HasFlag(InputNetFlags.Down));
-                        //break;
                     case InputType.Run:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Run)) && (prevDequeuedInput.HasFlag(InputNetFlags.Run));
-                        //break;
                     case InputType.Crouch:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
-                        //break;
                     case InputType.Select:
-                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
-                        //break;
+                        return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered                                                                           
+                    case InputType.Use:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
                     default:
                         return false;
-                        //break;
                 }
             }
 

@@ -212,7 +212,7 @@ namespace Barotrauma
                     {
                         msg.Write(memInput[i].intAim);
                     }
-                    if (memInput[i].states.HasFlag(InputNetFlags.Select))
+                    if (memInput[i].states.HasFlag(InputNetFlags.Select) || memInput[i].states.HasFlag(InputNetFlags.Use))
                     {
                         msg.Write(memInput[i].interact);
                     }
@@ -254,7 +254,7 @@ namespace Barotrauma
                         {
                             newAim = msg.ReadUInt16();
                         }
-                        if (newInput.HasFlag(InputNetFlags.Select))
+                        if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Use))
                         {
                             newInteract = msg.ReadUInt16();
                         }
