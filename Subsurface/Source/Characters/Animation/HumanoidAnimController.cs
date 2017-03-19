@@ -638,13 +638,26 @@ namespace Barotrauma
                         
             walkPos += movement.Length() * 0.15f;
             footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
-
-            var rightThigh = GetLimb(LimbType.RightThigh);
-            var leftThigh = GetLimb(LimbType.LeftThigh);
-
-            rightThigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(walkPos) * 0.3f, 2.0f);
-            leftThigh.body.SmoothRotate(torso.Rotation - (float)Math.Sin(walkPos) * 0.3f, 2.0f);
-
+            
+            for (int i = -1; i<2; i+=2)
+            {
+                var thigh = i == -1 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
+                var leg = i == -1 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
+                
+                float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
+                if (thighDiff > MathHelper.PiOver2)
+                {
+                    //thigh bent too close to the torso -> force the leg to extend
+                    float thighTorque = thighDiff * thigh.Mass * Math.Sign(torso.Rotation - thigh.Rotation) * 10.0f;
+                    thigh.body.ApplyTorque(thighTorque);
+                    leg.body.ApplyTorque(thighTorque);
+                }
+                else
+                {
+                    thigh.body.SmoothRotate(torso.Rotation + (float)Math.Sin(walkPos) * i * 0.3f, 2.0f);
+                }
+            }
+            
             Vector2 transformedFootPos = new Vector2((float)Math.Sin(walkPos) * 0.5f, 0.0f);
             transformedFootPos = Vector2.Transform(
                 transformedFootPos,
