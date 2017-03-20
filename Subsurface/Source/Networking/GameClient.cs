@@ -470,10 +470,7 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Error while receiving message from server", e);
 #endif            
             }
-
-
-            if (updateTimer > DateTime.Now) return;
-                        
+                                    
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 endVoteTickBox.Visible = Voting.AllowEndVoting && myCharacter != null;
@@ -482,10 +479,13 @@ namespace Barotrauma.Networking
                 {
                     respawnManager.Update(deltaTime);
                 }
+
+                if (updateTimer > DateTime.Now) return;
                 SendIngameUpdate();
             }
             else
             {
+                if (updateTimer > DateTime.Now) return;
                 SendLobbyUpdate();
             }
 
