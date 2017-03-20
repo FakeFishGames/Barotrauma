@@ -40,6 +40,8 @@ namespace Barotrauma.Lights
         //when were the vertices of the light volume last calculated
         private float lastRecalculationTime;
 
+        private Dictionary<Submarine, Vector2> diffToSub;
+
         private DynamicVertexBuffer lightVolumeBuffer;
         private DynamicIndexBuffer lightVolumeIndexBuffer;
         private int vertexCount;
@@ -122,7 +124,7 @@ namespace Barotrauma.Lights
             color = new Color(ToolBox.GetAttributeVector4(element, "color", Vector4.One));
 
             CastShadows = ToolBox.GetAttributeBool(element, "castshadows", true);
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -150,7 +152,9 @@ namespace Barotrauma.Lights
             CastShadows = true;
             
             texture = LightTexture;
-            
+
+            diffToSub = new Dictionary<Submarine, Vector2>();
+
             GameMain.LightManager.AddLight(this);
         }
 
@@ -269,20 +273,34 @@ namespace Barotrauma.Lights
                     else
                     {
                         if (sub.DockedTo.Contains(ParentSub) && !NeedsHullCheck) continue;
-
+                        
                         lightPos -= (sub.Position - ParentSub.Position);
 
                         Rectangle subBorders = sub.Borders;
                         subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Point(0, sub.Borders.Height);
 
-                        //only draw if the light overlaps with the sub
+                        //don't draw any shadows if the light doesn't overlap with the borders of the sub
                         if (!MathUtils.CircleIntersectsRectangle(lightPos, range, subBorders))
                         {
                             if (chList.List.Count > 0) NeedsRecalculation = true;
                             chList.List.Clear();
                             continue;
                         }
-                        
+
+                        //recalculate vertices if the subs have moved > 5 px relative to each other
+                        Vector2 diff = ParentSub.WorldPosition - sub.WorldPosition;
+                        Vector2 prevDiff;
+                        if (!diffToSub.TryGetValue(sub, out prevDiff))
+                        {
+                            diffToSub.Add(sub, diff);
+                            NeedsRecalculation = true;
+                        }
+                        else if (Vector2.DistanceSquared(diff, prevDiff) > 5.0f*5.0f)
+                        {
+                            diffToSub[sub] = diff;
+                            NeedsRecalculation = true;
+                        }
+
                         RefreshConvexHullList(chList, lightPos, sub);
                     }
                 }
