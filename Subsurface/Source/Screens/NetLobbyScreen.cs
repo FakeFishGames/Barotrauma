@@ -1046,7 +1046,7 @@ namespace Barotrauma
                 chatBox.RemoveChild(chatBox.children[1]);
             }
 
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20),
+            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width, 0),
                 message.TextWithSender, 
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, message.Color, 
                 Alignment.Left, GUI.Style, null, true);
