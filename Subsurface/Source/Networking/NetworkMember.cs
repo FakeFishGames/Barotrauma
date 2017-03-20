@@ -248,7 +248,7 @@ namespace Barotrauma.Networking
                 displayedText = message.SenderName + ": " + displayedText;
             }
             
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), displayedText,
+            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width, 0), displayedText,
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
                 Alignment.Left, null, null, true);
             msg.Font = GUI.SmallFont;

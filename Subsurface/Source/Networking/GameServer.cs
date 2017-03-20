@@ -1409,7 +1409,7 @@ namespace Barotrauma.Networking
 
             UpdateVoteStatus();
 
-            AddChatMessage(msg, ChatMessageType.Server);
+            SendChatMessage(msg, ChatMessageType.Server);
 
             UpdateCrewFrame();
 
@@ -1544,6 +1544,12 @@ namespace Barotrauma.Networking
                     break;
             }
             
+            if (type == ChatMessageType.Server)
+            {
+                senderName = null;
+                senderCharacter = null;
+            }
+
             //check which clients can receive the message and apply distance effects
             foreach (Client client in ConnectedClients)
             {
@@ -1571,13 +1577,7 @@ namespace Barotrauma.Networking
                         if (client != targetClient && client != senderClient) continue;
                         break;
                 }
-
-                if (type == ChatMessageType.Server)
-                {
-                    senderName = null;
-                    senderCharacter = null;
-                }
-
+                
                 var chatMsg = ChatMessage.Create(
                     senderName,
                     modifiedMessage, 
