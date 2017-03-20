@@ -111,11 +111,11 @@ namespace Barotrauma
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory));
         }
 
-        public void AddToRemoveQueue(Item item)
+        public void AddToRemoveQueue(Entity entity)
         {
             if (GameMain.Client != null) return;
 
-            removeQueue.Enqueue(item);
+            removeQueue.Enqueue(entity);
         }
 
         public void Update()

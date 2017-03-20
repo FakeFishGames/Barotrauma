@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
-    class RespawnManager
+    class RespawnManager : Entity, IServerSerializable
     {
         private readonly float respawnInterval;
         private float maxTransportTime;
@@ -62,6 +62,7 @@ namespace Barotrauma.Networking
         private float updateReturnTimer;
 
         public RespawnManager(NetworkMember networkMember, Submarine shuttle)
+            : base(shuttle)
         {
             this.networkMember = networkMember;
 
@@ -93,12 +94,7 @@ namespace Barotrauma.Networking
                     }
                 }
             }
-
-            if (shuttleSteering != null)
-            {
-                shuttleSteering.TargetPosition = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
-            }
-            
+                        
             var server = networkMember as GameServer;
             if (server != null)
             {
@@ -161,6 +157,7 @@ namespace Barotrauma.Networking
                 if (!CountdownStarted)
                 {
                     CountdownStarted = true;
+                    server.CreateEntityEvent(this);
                 }
             }
             else
@@ -181,21 +178,21 @@ namespace Barotrauma.Networking
 
         private void UpdateTransporting(float deltaTime)
         {
+            //infinite transport time -> shuttle wont return
+            if (maxTransportTime <= 0.0f) return;
+
             shuttleTransportTimer -= deltaTime;
 
-            if (shuttleReturnTimer + deltaTime > 15.0f && shuttleReturnTimer <= 15.0f &&
+            if (shuttleTransportTimer + deltaTime > 15.0f && shuttleTransportTimer <= 15.0f &&
                 networkMember.Character != null &&
                 networkMember.Character.Submarine == respawnShuttle)
             {
                 networkMember.AddChatMessage("The shuttle will automatically return back to the outpost. Please leave the shuttle immediately.", ChatMessageType.Server);
             }
 
-            //infinite transport time -> shuttle wont return
-            if (maxTransportTime < 0.1f) return;
 
             var server = networkMember as GameServer;
             if (server == null) return;
-
 
             //if there are no living chracters inside, transporting can be stopped immediately
             if (!Character.CharacterList.Any(c => c.Submarine == respawnShuttle && !c.IsDead))
@@ -206,6 +203,8 @@ namespace Barotrauma.Networking
             if (shuttleTransportTimer <= 0.0f)
             {
                 state = State.Returning;
+
+                server.CreateEntityEvent(this);
 
                 CountdownStarted = false;
                 shuttleReturnTimer = maxTransportTime;
@@ -226,14 +225,13 @@ namespace Barotrauma.Networking
 
             updateReturnTimer += deltaTime;
 
-            if (updateReturnTimer > 10.0f)
+            if (updateReturnTimer > 1.0f)
             {
                 updateReturnTimer = 0.0f;
 
                 respawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.ShaftBody);
 
-                shuttleSteering.AutoPilot = true;
-                shuttleSteering.MaintainPos = false;
+                shuttleSteering.SetDestinationLevelStart();
 
                 foreach (Door door in shuttleDoors)
                 {
@@ -271,6 +269,8 @@ namespace Barotrauma.Networking
                     ResetShuttle();
 
                     state = State.Waiting;
+                    server.CreateEntityEvent(this);
+
                     respawnTimer = respawnInterval;
                     CountdownStarted = false;
                 }
@@ -283,12 +283,11 @@ namespace Barotrauma.Networking
             if (server == null) return;
 
             state = State.Transporting;
+            server.CreateEntityEvent(this);
 
             ResetShuttle();
 
             shuttleSteering.TargetVelocity = Vector2.Zero;
-
-            //server.SendChatMessage(ChatMessage.Create("", "Transportation shuttle dispatched", ChatMessageType.Server, null), server.ConnectedClients);
 
             RespawnCharacters();
 
@@ -467,6 +466,56 @@ namespace Barotrauma.Networking
             }
             
         }
-        
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.WriteRangedInteger(0, Enum.GetNames(typeof(State)).Length, (int)state);
+
+            switch (state)
+            {
+                case State.Transporting:
+                    msg.Write(TransportTimer);
+                    break;
+                case State.Waiting:
+                    msg.Write(CountdownStarted);
+                    msg.Write(respawnTimer);
+                    break;
+                case State.Returning:
+                    break;
+            }
+
+            msg.WritePadBits();
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            var newState = (State)msg.ReadRangedInteger(0, Enum.GetNames(typeof(State)).Length);
+
+            switch (newState)
+            {
+                case State.Transporting:
+                    maxTransportTime = msg.ReadSingle();
+                    shuttleTransportTimer = maxTransportTime;
+                    CountdownStarted = false;
+
+                    if (state != newState)
+                    {
+                        CoroutineManager.StopCoroutines("forcepos");
+                        CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
+                    }
+                    break;
+                case State.Waiting:
+                    CountdownStarted = msg.ReadBoolean();
+                    ResetShuttle();
+                    respawnTimer = msg.ReadSingle();
+                    break;
+                case State.Returning:
+                    CountdownStarted = false;
+                    break;
+            }
+            state = newState;
+
+            msg.ReadPadBits();
+        }
     }
 }

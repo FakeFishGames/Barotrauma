@@ -38,9 +38,7 @@ namespace Barotrauma.Items.Components
         private Vector2 avoidStrength;
 
         private float neutralBallastLevel;
-
-        public Vector2? TargetPosition;
-        
+                
         public bool AutoPilot
         {
             get { return autoPilot; }
@@ -367,22 +365,18 @@ namespace Barotrauma.Items.Components
 
         private void UpdatePath()
         {
+            if (pathFinder == null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
+
             Vector2 target;
-            if (TargetPosition != null)
+            if (levelEndTickBox.Selected)
             {
-                target = (Vector2)TargetPosition;
+                target = ConvertUnits.ToSimUnits(Level.Loaded.EndPosition);
             }
             else
             {
-                if (levelEndTickBox.Selected)
-                {
-                    target = ConvertUnits.ToSimUnits(Level.Loaded.EndPosition);
-                }
-                else
-                {
-                    target = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
-                }
+                target = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
             }
+            
 
             steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(item.WorldPosition), target);
         }
@@ -426,6 +420,39 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public void SetDestinationLevelStart()
+        {
+            AutoPilot = true;
+
+            MaintainPos = false;
+            posToMaintain = null;
+
+            levelEndTickBox.Selected = false;
+
+            if (!levelStartTickBox.Selected)
+            {
+                levelStartTickBox.Selected = true;
+                UpdatePath();
+            }
+        }
+
+        public void SetDestinationLevelEnd()
+        {
+            AutoPilot = false;
+
+            MaintainPos = false;
+            posToMaintain = null;
+
+            levelStartTickBox.Selected = false;
+
+            if (!levelEndTickBox.Selected)
+            {
+                levelEndTickBox.Selected = true;
+                UpdatePath();
+            }
+        }
+
+
         private bool SelectDestination(GUITickBox tickBox)
         {
             unsentChanges = true;
@@ -443,8 +470,7 @@ namespace Barotrauma.Items.Components
             posToMaintain = null;
             tickBox.Selected = true;
 
-            UpdatePath();
-            
+            UpdatePath();            
 
             return true;
         }
