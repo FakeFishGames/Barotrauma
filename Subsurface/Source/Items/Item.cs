@@ -1849,11 +1849,16 @@ namespace Barotrauma
 
                     int requirementIndex = FixRequirements.Count == 1 ? 
                         0 : msg.ReadRangedInteger(0, FixRequirements.Count - 1);
-
+                    
                     if (c.Character == null || !c.Character.CanAccessItem(this)) return;
                     if (!FixRequirements[requirementIndex].CanBeFixed(c.Character)) return;
 
                     FixRequirements[requirementIndex].Fixed = true;
+                    if (condition <= 0.0f && FixRequirements.All(f => f.Fixed))
+                    {
+                        Condition = 100.0f;
+                    }
+
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
 
                     break;
