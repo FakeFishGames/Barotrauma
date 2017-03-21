@@ -62,7 +62,7 @@ namespace Barotrauma
             {
                 try
                 {
-                    splashScreenVideo = GameMain.Instance.Content.Load<Video>("utg_4"); 
+                    splashScreenVideo = GameMain.Instance.Content.Load<Video>("utg_4");
                 } 
 
                 catch (Exception e)
@@ -184,6 +184,7 @@ namespace Barotrauma
             {
                 videoPlayer = new VideoPlayer();
                 videoPlayer.Play(splashScreenVideo);
+                videoPlayer.Volume = GameMain.Config.SoundVolume;
             }
             else
             {
