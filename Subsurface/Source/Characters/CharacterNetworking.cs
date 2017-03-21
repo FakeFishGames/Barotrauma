@@ -4,11 +4,33 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma
-{
+{    
+    class CharacterStateInfo : PosInfo
+    {
+        public readonly Direction Direction;
+
+        public readonly Entity Interact; //the entity being interacted with
+
+        public CharacterStateInfo(Vector2 pos, float time, Direction dir, Entity interact)
+            : this(pos, 0, time, dir, interact)
+        {
+        }
+
+        public CharacterStateInfo(Vector2 pos, UInt16 ID, Direction dir, Entity interact)
+            : this(pos, ID, 0.0f, dir, interact)
+        {
+        }
+
+        protected CharacterStateInfo(Vector2 pos, UInt16 ID, float time, Direction dir, Entity interact)
+            : base(pos, ID, time)
+        {
+            Direction = dir;
+            Interact = interact;
+        }
+    }
+
     partial class Character
     {
         [Flags]
@@ -50,12 +72,22 @@ namespace Barotrauma
 
         private List<NetInputMem> memInput  = new List<NetInputMem>();
 
-        private List<PosInfo> memPos        = new List<PosInfo>();
-        private List<PosInfo> memLocalPos   = new List<PosInfo>();
+        private List<CharacterStateInfo> memState        = new List<CharacterStateInfo>();
+        private List<CharacterStateInfo> memLocalState   = new List<CharacterStateInfo>();
 
         private bool networkUpdateSent;
 
         public bool isSynced = false;
+
+        public List<CharacterStateInfo> MemState
+        {
+            get { return memState; }
+        }
+
+        public List<CharacterStateInfo> MemLocalState
+        {
+            get { return memLocalState; }
+        }
 
         private void UpdateNetInput()
         {
@@ -67,7 +99,7 @@ namespace Barotrauma
                     if (lastRecvPositionUpdateTime < NetTime.Now - 1.0f)
                     {
                         AnimController.Frozen = true;
-                        memPos.Clear();
+                        memState.Clear();
                         //hide after 2 seconds
                         if (lastRecvPositionUpdateTime < NetTime.Now - 2.0f)
                         {
@@ -127,13 +159,13 @@ namespace Barotrauma
             }
             else if (GameMain.Client != null)
             {
-                var posInfo = new PosInfo(
-                    SimPosition, 
+                var posInfo = new CharacterStateInfo(
+                    SimPosition,
+                    LastNetworkUpdateID, 
                     AnimController.TargetDir, 
-                    LastNetworkUpdateID, 0.0f, 
                     selectedCharacter == null ? (Entity)selectedConstruction : (Entity)selectedCharacter);
 
-                memLocalPos.Add(posInfo);
+                memLocalState.Add(posInfo);
 
                 InputNetFlags newInput = InputNetFlags.None;
                 if (IsKeyDown(InputType.Left))      newInput |= InputNetFlags.Left;
@@ -449,21 +481,25 @@ namespace Barotrauma
                         msg.ReadFloat(),
                         msg.ReadFloat());
 
-                    var posInfo = new PosInfo(pos, facingRight ? Direction.Right : Direction.Left, networkUpdateID, sendingTime, selectedEntity);
 
                     int index = 0;
                     if (GameMain.NetworkMember.Character == this && AllowInput)
                     {
-                        while (index < memPos.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memPos[index].ID))
+                        var posInfo = new CharacterStateInfo(pos, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity);
+                        while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
                             index++;
+
+                        memState.Insert(index, posInfo);
                     }
                     else
                     {
-                        while (index < memPos.Count && posInfo.Timestamp > memPos[index].Timestamp)
+                        var posInfo = new CharacterStateInfo(pos, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity);
+                        while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                             index++;
+
+                        memState.Insert(index, posInfo);
                     }
 
-                    memPos.Insert(index, posInfo);
                     break;
                 case ServerNetObject.ENTITY_EVENT:
                     bool isInventoryUpdate = msg.ReadBoolean();
@@ -673,8 +709,8 @@ namespace Barotrauma
                     GameMain.LightManager.LosEnabled = true;
 
                     character.memInput.Clear();
-                    character.memPos.Clear();
-                    character.memLocalPos.Clear();
+                    character.memState.Clear();
+                    character.memLocalState.Clear();
                 }
                 else
                 {
