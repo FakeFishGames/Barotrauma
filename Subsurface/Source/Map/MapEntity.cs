@@ -463,7 +463,11 @@ namespace Barotrauma
                     Vector2 moveAmount = Submarine.VectorToWorldGrid(cam.WorldViewCenter - center);
 
                     selectedList = new List<MapEntity>(clones);
-                    selectedList.ForEach(c => c.Move(moveAmount));                    
+                    foreach (MapEntity clone in selectedList)
+                    {
+                        clone.Move(moveAmount);
+                        clone.Submarine = Submarine.MainSub;
+                    }                    
                 }
             }
 

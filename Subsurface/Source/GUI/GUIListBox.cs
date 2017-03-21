@@ -163,7 +163,7 @@ namespace Barotrauma
 
             scrollBar.BarScroll = 0.0f;
         }
-
+        
         public void Select(object userData, bool force = false)
         {
             for (int i = 0; i < children.Count; i++)
@@ -260,7 +260,34 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            base.AddToGUIUpdateList();
+            if (!Visible) return;
+            if (ComponentsToUpdate.Contains(this)) return;
+            ComponentsToUpdate.Add(this);
+
+            try
+            {
+                List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+                int lastVisible = 0;
+                for (int i = 0; i < fixedChildren.Count; i++)
+                {
+                    if (fixedChildren[i] == frame) continue;
+
+                    if (!IsChildVisible(fixedChildren[i]))
+                    {
+                        if (lastVisible > 0) break;
+                        continue;
+                    }
+
+                    lastVisible = i;
+                    fixedChildren[i].AddToGUIUpdateList();
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.NewMessage("Error in AddToGUIUpdateList! GUIComponent runtime type: " + this.GetType().ToString() + "; children count: " + children.Count.ToString(), Color.Red);
+                throw e;
+            }
+
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
         }
 
@@ -352,19 +379,9 @@ namespace Barotrauma
                 rect.Height += scrollBar.Rect.Height;
             else
                 rect.Width += scrollBar.Rect.Width;
-
-            //float oldScroll = scrollBar.BarScroll;
-            //float oldSize = scrollBar.BarSize;
+            
             UpdateScrollBarSize();
             UpdateChildrenRect(0.0f);
-
-            //if (oldSize == 1.0f && scrollBar.BarScroll == 0.0f) scrollBar.BarScroll = 1.0f;
-
-            //if (scrollBar.BarSize < 1.0f && oldScroll == 1.0f)
-            //{
-            //    scrollBar.BarScroll = 1.0f;
-            //}
-
         }
 
         public override void ClearChildren()
@@ -385,43 +402,54 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-
-            //base.Draw(spriteBatch);
-
+            
             frame.Draw(spriteBatch);
 
             if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
-            
+
+            int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
-                if (child == frame || !child.Visible) continue;
-                
-                if (scrollBar.IsHorizontal)
-                {
-                    if (child.Rect.Right < rect.X) continue;
-                    if (child.Rect.Right > rect.Right) break;
+                if (child == frame) continue;
 
-                    if (child.Rect.X < rect.X && child.Rect.Right >= rect.X)
-                    {
-                        continue;
-                    }
-                }
-                else
+                if (!IsChildVisible(child))
                 {
-                    if (child.Rect.Y + child.Rect.Height < rect.Y) continue;
-                    if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) break;
-
-                    if (child.Rect.Y < rect.Y && child.Rect.Y + child.Rect.Height >= rect.Y)
-                    {
-                        continue;
-                    }
+                    if (lastVisible > 0) break;
+                    continue;
                 }
-                
+
+                lastVisible = i;         
                 child.Draw(spriteBatch);
             }
+        }
 
-            //GUI.DrawRectangle(spriteBatch, rect, Color.Black, false);
+        private bool IsChildVisible(GUIComponent child)
+        {
+            if (child == null || !child.Visible) return false;
+
+            if (scrollBar.IsHorizontal)
+            {
+                if (child.Rect.Right < rect.X) return false;
+                if (child.Rect.Right > rect.Right) return false;
+
+                if (child.Rect.X < rect.X && child.Rect.Right >= rect.X)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (child.Rect.Y + child.Rect.Height < rect.Y) return false;
+                if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) return false;
+
+                if (child.Rect.Y < rect.Y && child.Rect.Y + child.Rect.Height >= rect.Y)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
