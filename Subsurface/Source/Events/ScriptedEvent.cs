@@ -35,6 +35,11 @@ namespace Barotrauma
             get;
             set;
         }
+
+        public virtual bool IsActive
+        {
+            get { return true; }
+        }
         
         public bool IsFinished
         {
