@@ -181,6 +181,7 @@ namespace Barotrauma
             get { return condition; }
             set 
             {
+                if (GameMain.Client != null) return;
                 if (!MathUtils.IsValid(value)) return;
 
                 float prev = condition;
@@ -1722,12 +1723,14 @@ namespace Barotrauma
                     ownInventory.ServerWrite(msg, c, extraData);
                     break;
                 case NetEntityEvent.Type.Status:
-                    msg.WriteRangedSingle(condition, 0.0f, 100.0f, 8);
+                    //clamp above 0.5f if condition > 0.0f
+                    //to prevent condition from being rounded down to 0.0 even if the item is not broken
+                    msg.WriteRangedSingle(condition > 0.0f ? Math.Max(condition, 0.5f) : 0.0f, 0.0f, 100.0f, 8);
 
                     if (condition <= 0.0f && FixRequirements.Count > 0)
                     {
-                        for (int i = 0; i<FixRequirements.Count; i++)                        
-                            msg.Write(FixRequirements[i].Fixed);                        
+                        for (int i = 0; i < FixRequirements.Count; i++)
+                            msg.Write(FixRequirements[i].Fixed);
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
@@ -1761,7 +1764,7 @@ namespace Barotrauma
                     ownInventory.ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.Status:
-                    Condition = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+                    condition = msg.ReadRangedSingle(0.0f, 100.0f, 8);
 
                     if (FixRequirements.Count > 0)
                     {
