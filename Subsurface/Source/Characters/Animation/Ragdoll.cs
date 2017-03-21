@@ -595,15 +595,15 @@ namespace Barotrauma
                 }
             }
 
-            if (character.MemPos.Count > 1)
+            if (character.MemState.Count > 1)
             {
-                Vector2 prevPos = ConvertUnits.ToDisplayUnits(character.MemPos[0].Position);
+                Vector2 prevPos = ConvertUnits.ToDisplayUnits(character.MemState[0].Position);
                 if (currentHull != null) prevPos += currentHull.Submarine.DrawPosition;
                 prevPos.Y = -prevPos.Y;
 
-                for (int i = 1; i < character.MemPos.Count; i++ )
+                for (int i = 1; i < character.MemState.Count; i++ )
                 {
-                    Vector2 currPos = ConvertUnits.ToDisplayUnits(character.MemPos[i].Position);
+                    Vector2 currPos = ConvertUnits.ToDisplayUnits(character.MemState[i].Position);
                     if (currentHull != null) currPos += currentHull.Submarine.DrawPosition;
                     currPos.Y = -currPos.Y;
 
@@ -1232,19 +1232,19 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;
 
-            for (int i = 0; i < character.MemPos.Count; i++ )
+            for (int i = 0; i < character.MemState.Count; i++ )
             {
                 if (character.Submarine == null)
                 {
                     //transform in-sub coordinates to outside coordinates
-                    if (character.MemPos[i].Position.Y > ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
-                        character.MemPos[i] = PosInfo.TransformInToOutside(character.MemPos[i]);                    
+                    if (character.MemState[i].Position.Y > ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                        character.MemState[i].TransformInToOutside();                    
                 }
                 else if (currentHull != null)
                 {
                     //transform outside coordinates to in-sub coordinates
-                    if (character.MemPos[i].Position.Y <  ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
-                        character.MemPos[i] = PosInfo.TransformOutToInside(character.MemPos[i], currentHull.Submarine);                    
+                    if (character.MemState[i].Position.Y <  ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                        character.MemState[i].TransformOutToInside(currentHull.Submarine);                    
                 }
             }
 
@@ -1253,20 +1253,20 @@ namespace Barotrauma
             if (character != GameMain.NetworkMember.Character || !character.AllowInput)
             {
                 //use simple interpolation for other players' characters and characters that can't move
-                if (character.MemPos.Count > 0)
+                if (character.MemState.Count > 0)
                 {
-                    if (character.MemPos[0].Interact == null)
+                    if (character.MemState[0].Interact == null)
                     {
                         character.DeselectCharacter();
                         character.SelectedConstruction = null;
                     }
-                    else if (character.MemPos[0].Interact is Character)
+                    else if (character.MemState[0].Interact is Character)
                     {
-                        character.SelectCharacter((Character)character.MemPos[0].Interact);
+                        character.SelectCharacter((Character)character.MemState[0].Interact);
                     }
-                    else if (character.MemPos[0].Interact is Item)
+                    else if (character.MemState[0].Interact is Item)
                     {
-                        var newSelectedConstruction = (Item)character.MemPos[0].Interact;
+                        var newSelectedConstruction = (Item)character.MemState[0].Interact;
                         if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                         {
                             newSelectedConstruction.Pick(character, true, true);
@@ -1274,7 +1274,7 @@ namespace Barotrauma
                     }
 
                     Collider.LinearVelocity = Vector2.Zero;
-                    Collider.CorrectPosition(character.MemPos, deltaTime, out overrideTargetMovement);
+                    Collider.CorrectPosition(character.MemState, deltaTime, out overrideTargetMovement);
 
                     //unconscious/dead characters can't correct their position using AnimController movement
                     // -> we need to correct it manually
@@ -1285,46 +1285,46 @@ namespace Barotrauma
                         MainLimb.pullJoint.Enabled = true;
                     }
                 }
-                character.MemLocalPos.Clear();
+                character.MemLocalState.Clear();
             }
             else
             {
-                for (int i = 0; i < character.MemLocalPos.Count; i++)
+                for (int i = 0; i < character.MemLocalState.Count; i++)
                 {
                     if (character.Submarine == null)
                     {
                         //transform in-sub coordinates to outside coordinates
-                        if (character.MemLocalPos[i].Position.Y > ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
-                            character.MemLocalPos[i] = PosInfo.TransformInToOutside(character.MemLocalPos[i]);                    
+                        if (character.MemLocalState[i].Position.Y > ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                            character.MemLocalState[i].TransformInToOutside();                    
                     }
                     else if (currentHull != null)
                     {
                         //transform outside coordinates to in-sub coordinates
-                        if (character.MemLocalPos[i].Position.Y < ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
-                            character.MemLocalPos[i] = PosInfo.TransformOutToInside(character.MemLocalPos[i], currentHull.Submarine);                    
+                        if (character.MemLocalState[i].Position.Y < ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                            character.MemLocalState[i].TransformOutToInside(currentHull.Submarine);                    
                     }
                 }
 
-                if (character.MemPos.Count < 1) return;
+                if (character.MemState.Count < 1) return;
 
                 overrideTargetMovement = Vector2.Zero;
 
-                PosInfo serverPos = character.MemPos.Last();
+                CharacterStateInfo serverPos = character.MemState.Last();
 
                 if (!character.isSynced)
                 {
                     SetPosition(serverPos.Position, false);
                     Collider.LinearVelocity = Vector2.Zero;
-                    character.MemLocalPos.Clear();
+                    character.MemLocalState.Clear();
                     character.LastNetworkUpdateID = serverPos.ID;
                     character.isSynced = true;
                     return;
                 }
 
-                int localPosIndex = character.MemLocalPos.FindIndex(m => m.ID == serverPos.ID);
+                int localPosIndex = character.MemLocalState.FindIndex(m => m.ID == serverPos.ID);
                 if (localPosIndex > -1)
                 {
-                    PosInfo localPos = character.MemLocalPos[localPosIndex];
+                    CharacterStateInfo localPos = character.MemLocalState[localPosIndex];
                     
                     //the entity we're interacting with doesn't match the server's
                     if (localPos.Interact != serverPos.Interact)
@@ -1349,22 +1349,21 @@ namespace Barotrauma
                     }
 
                     Vector2 positionError = serverPos.Position - localPos.Position;                    
-                    for (int i = localPosIndex; i < character.MemLocalPos.Count; i++)
+                    for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
                     {
-                        character.MemLocalPos[i] =
-                            new PosInfo(
-                                character.MemLocalPos[i].Position + positionError,
-                                character.MemLocalPos[i].Direction,
-                                character.MemLocalPos[i].ID,
-                                0.0f,
-                                character.MemLocalPos[i].Interact);
+                        character.MemLocalState[i] =
+                            new CharacterStateInfo(
+                                character.MemLocalState[i].Position + positionError,
+                                character.MemLocalState[i].ID,
+                                character.MemLocalState[i].Direction,                                
+                                character.MemLocalState[i].Interact);
                     }
 
                     Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation);
                 }
 
-                if (character.MemLocalPos.Count > 120) character.MemLocalPos.RemoveRange(0, character.MemLocalPos.Count - 120);
-                character.MemPos.Clear();
+                if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
+                character.MemState.Clear();
             }
         }
         

@@ -2,71 +2,55 @@
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Networking;
 using System.Collections.Generic;
 using System;
 
 namespace Barotrauma
-{
-    struct PosInfo
+{     
+    class PosInfo
     {
-        public readonly Vector2 Position;
-        public readonly Direction Direction;
+        public Vector2 Position
+        {
+            get;
+            private set;
+        }
 
         public readonly float Timestamp;
         public readonly UInt16 ID;
 
-        public readonly Entity Interact; //the entity being interacted with
-
-        public PosInfo(Vector2 pos, Direction dir, float time)
-            : this(pos, dir, 0, time)
+        public PosInfo(Vector2 pos, float time)
+            : this(pos, 0, time)
         {
         }
 
-        public PosInfo(Vector2 pos, Direction dir, UInt16 ID)
-            : this(pos, dir, ID, 0.0f)
+        public PosInfo(Vector2 pos, UInt16 ID)
+            : this(pos, ID, 0.0f)
         {
         }
-
-        public PosInfo(Vector2 pos, Direction dir, UInt16 ID, float time)
-            : this(pos, dir, ID, time, null)
-        {
-        }
-
-        public PosInfo(Vector2 pos, Direction dir, UInt16 ID, float time, Entity interact)
+        
+        protected PosInfo(Vector2 pos, UInt16 ID, float time)
         {
             Position = pos;
-            Direction = dir;
             this.ID = ID;
-
-            Interact = interact;
-
+            
             Timestamp = time;
         }
 
-        public static PosInfo TransformOutToInside(PosInfo posInfo, Submarine submarine)
+        public void TransformOutToInside(Submarine submarine)
         {
             //transform outside coordinates to in-sub coordinates
-            return new PosInfo(
-                posInfo.Position - ConvertUnits.ToSimUnits(submarine.Position),
-                posInfo.Direction,
-                posInfo.ID,
-                posInfo.Timestamp);            
+            Position -= ConvertUnits.ToSimUnits(submarine.Position);         
         }
 
-        public static PosInfo TransformInToOutside(PosInfo posInfo)
+        public void TransformInToOutside()
         {
-            var sub = Submarine.FindContaining(ConvertUnits.ToDisplayUnits(posInfo.Position));
-            if (sub == null) return posInfo;
-
-            return new PosInfo(
-                posInfo.Position + ConvertUnits.ToSimUnits(sub.Position),
-                posInfo.Direction,
-                posInfo.ID,
-                posInfo.Timestamp);            
+            var sub = Submarine.FindContaining(ConvertUnits.ToDisplayUnits(Position));
+            if (sub != null)
+            {
+                Position += ConvertUnits.ToSimUnits(sub.Position);
+            }         
         }
     }
 
@@ -549,7 +533,7 @@ namespace Barotrauma
                 1.0f, SpriteEffects.None, 0.0f);
         }
 
-        public void CorrectPosition(List<PosInfo> positionBuffer, float deltaTime, out Vector2 newVelocity)
+        public void CorrectPosition<T>(List<T> positionBuffer, float deltaTime, out Vector2 newVelocity) where T : PosInfo
         {
             Vector2 newPosition = SimPosition;
             CorrectPosition(positionBuffer, deltaTime, out newVelocity, out newPosition);
@@ -558,7 +542,7 @@ namespace Barotrauma
         }
 
 
-        public void CorrectPosition(List<PosInfo> positionBuffer, float deltaTime, out Vector2 newVelocity, out Vector2 newPosition)
+        public void CorrectPosition<T>(List<T> positionBuffer, float deltaTime, out Vector2 newVelocity, out Vector2 newPosition) where T : PosInfo
         {
             newVelocity = Vector2.Zero;
             newPosition = SimPosition;

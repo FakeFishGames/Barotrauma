@@ -198,17 +198,6 @@ namespace Barotrauma
             get { return Submarine == null ? cursorPosition : cursorPosition + Submarine.Position; }
         }
 
-        public List<PosInfo> MemPos
-        {
-            get { return memPos; }
-        }
-
-
-        public List<PosInfo> MemLocalPos
-        {
-            get { return memLocalPos; }
-        }
-
         public Character ClosestCharacter
         {
             get { return closestCharacter; }
@@ -843,9 +832,9 @@ namespace Barotrauma
             }
             else if (GameMain.Client != null && Character.controlled != this)
             {
-                if (memPos.Count > 0)
+                if (memState.Count > 0)
                 {
-                    AnimController.TargetDir = memPos[0].Direction;
+                    AnimController.TargetDir = memState[0].Direction;
                 }
             }
 
@@ -1547,7 +1536,7 @@ namespace Barotrauma
                 if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
             
-            if (memPos != null && memPos.Count > 0 && controlled == this)
+            /*if (memPos != null && memPos.Count > 0 && controlled == this)
             {
                 PosInfo serverPos = memPos.Last();
                 Vector2 remoteVec = ConvertUnits.ToDisplayUnits(serverPos.Position);
@@ -1559,8 +1548,8 @@ namespace Barotrauma
 
                 PosInfo localPos = memLocalPos.Find(m => m.ID == serverPos.ID);
                 int mpind = memLocalPos.FindIndex(lp => lp.ID == localPos.ID);
-                PosInfo? localPos1 = mpind > 0 ? memLocalPos[mpind - 1] : (PosInfo?)null;
-                PosInfo? localPos2 = mpind < memLocalPos.Count-1 ? memLocalPos[mpind + 1] : (PosInfo?)null;
+                PosInfo localPos1 = mpind > 0 ? memLocalPos[mpind - 1] : null;
+                PosInfo localPos2 = mpind < memLocalPos.Count-1 ? memLocalPos[mpind + 1] : null;
 
                 Vector2 localVec = ConvertUnits.ToDisplayUnits(localPos.Position);
                 Vector2 localVec1 = localPos1 != null ? ConvertUnits.ToDisplayUnits(((PosInfo)localPos1).Position) : Vector2.Zero;
@@ -1578,7 +1567,7 @@ namespace Barotrauma
                 //GUI.DrawLine(spriteBatch, remoteVec, localVec, Color.Yellow, 0, 10);
                 if (localPos1 != null) GUI.DrawLine(spriteBatch, remoteVec, localVec1, Color.Lime, 0, 2);
                 if (localPos2 != null) GUI.DrawLine(spriteBatch, remoteVec + Vector2.One, localVec2 + Vector2.One, Color.Red, 0, 2);
-            }
+            }*/
 
             Vector2 mouseDrawPos = CursorWorldPosition;
             mouseDrawPos.Y = -mouseDrawPos.Y;
