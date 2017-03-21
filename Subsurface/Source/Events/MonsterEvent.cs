@@ -25,6 +25,15 @@ namespace Barotrauma
             return "ScriptedEvent (" + characterFile + ")";
         }
 
+        private bool isActive;
+        public override bool IsActive
+        {
+            get
+            {
+                return isActive;
+            }
+        }
+
         public MonsterEvent(XElement element)
             : base (element)
         {
@@ -92,13 +101,31 @@ namespace Barotrauma
 
             if (isFinished) return;
 
+            isActive = false;
+
+            Entity targetEntity = null;
+            if (Character.Controlled != null)
+            {
+                targetEntity = Character.Controlled;
+            }
+            else
+            {
+                targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+            }
+
             bool monstersDead = true;
             foreach (Character monster in monsters)
             {
-                if (monster.IsDead) continue;
+                if (!monster.IsDead)
+                {
+                    monstersDead = false;
 
-                monstersDead = false;
-                break;
+                    if (targetEntity != null && Vector2.DistanceSquared(monster.WorldPosition, targetEntity.WorldPosition) < 5000.0f * 5000.0f)
+                    {
+                        isActive = true;
+                        break;
+                    }
+                }
             }
 
             if (monstersDead) Finished();

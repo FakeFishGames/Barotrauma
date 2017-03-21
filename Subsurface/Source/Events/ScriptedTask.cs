@@ -3,7 +3,15 @@
     class ScriptedTask : Task
     {
         private ScriptedEvent scriptedEvent;
-                
+
+        public override bool IsStarted
+        {
+            get
+            {
+                return scriptedEvent.IsActive;
+            }
+        }
+
         public ScriptedTask(ScriptedEvent scriptedEvent)
             : base(scriptedEvent.Difficulty, scriptedEvent.Name)
         {
