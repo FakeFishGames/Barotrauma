@@ -13,21 +13,25 @@ namespace Barotrauma
 
         public readonly Entity Interact; //the entity being interacted with
 
-        public CharacterStateInfo(Vector2 pos, float time, Direction dir, Entity interact)
-            : this(pos, 0, time, dir, interact)
+        public readonly AnimController.Animation Animation;
+
+        public CharacterStateInfo(Vector2 pos, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : this(pos, 0, time, dir, interact, animation)
         {
         }
 
-        public CharacterStateInfo(Vector2 pos, UInt16 ID, Direction dir, Entity interact)
-            : this(pos, ID, 0.0f, dir, interact)
+        public CharacterStateInfo(Vector2 pos, UInt16 ID, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : this(pos, ID, 0.0f, dir, interact, animation)
         {
         }
 
-        protected CharacterStateInfo(Vector2 pos, UInt16 ID, float time, Direction dir, Entity interact)
+        protected CharacterStateInfo(Vector2 pos, UInt16 ID, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
             : base(pos, ID, time)
         {
             Direction = dir;
             Interact = interact;
+
+            Animation = animation;
         }
     }
 
@@ -66,6 +70,7 @@ namespace Barotrauma
             public InputNetFlags states; //keys pressed/other boolean states at this step
             public UInt16 intAim; //aim angle, represented as an unsigned short where 0=0º, 65535=just a bit under 360º
             public UInt16 interact; //id of the entity being interacted with
+            public AnimController.Animation? animation;
 
             public UInt16 networkUpdateID;
         }
@@ -133,13 +138,15 @@ namespace Barotrauma
                         var closestEntity = Entity.FindEntityByID(memInput[memInput.Count - 1].interact);
                         if (closestEntity is Item)
                         {
-                            closestItem = closestEntity as Item;
+                            closestItem = (Item)closestEntity;
+                            closestCharacter = null;
                         }
                         else if (closestEntity is Character)
                         {
-                            closestCharacter = closestEntity as Character;
+                            closestCharacter = (Character)closestEntity;
+                            closestItem = null;
                         }
-
+                        
                         memInput.RemoveAt(memInput.Count - 1);
 
                         TransformCursorPos();
@@ -163,7 +170,8 @@ namespace Barotrauma
                     SimPosition,
                     LastNetworkUpdateID, 
                     AnimController.TargetDir, 
-                    selectedCharacter == null ? (Entity)selectedConstruction : (Entity)selectedCharacter);
+                    selectedCharacter == null ? (Entity)selectedConstruction : (Entity)selectedCharacter,
+                    AnimController.Anim);
 
                 memLocalState.Add(posInfo);
 
@@ -221,9 +229,19 @@ namespace Barotrauma
         {
             if (GameMain.Server != null) return;
 
-            if (extraData != null && (NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
+            if (extraData != null)
             {
-                inventory.ClientWrite(msg, extraData);
+                if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
+                {
+                    msg.Write(true);
+                    inventory.ClientWrite(msg, extraData);
+                }
+                else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.Repair)
+                {
+                    msg.Write(false);
+                    msg.Write(AnimController.Anim == AnimController.Animation.CPR);
+                }
+                msg.WritePadBits();
             }
             else
             {
@@ -248,11 +266,6 @@ namespace Barotrauma
                     {
                         msg.Write(memInput[i].interact);
                     }
-                    /*if (memInput[i].HasFlag(InputNetFlags.Select) || memInput[i].HasFlag(InputNetFlags.Aim))
-                    {
-                        msg.Write(memMousePos[i].X);
-                        msg.Write(memMousePos[i].Y);
-                    }*/
                 }
             }
         }
@@ -278,7 +291,6 @@ namespace Barotrauma
                     for (int i = 0; i < inputCount; i++)
                     {
                         InputNetFlags newInput = (InputNetFlags)msg.ReadRangedInteger(0, (int)InputNetFlags.MaxVal);
-                        //Vector2 newMousePos = Position;
                         UInt16 newAim = 0;
                         UInt16 newInteract = 0;
 
@@ -288,7 +300,7 @@ namespace Barotrauma
                         }
                         if (newInput.HasFlag(InputNetFlags.Select) || newInput.HasFlag(InputNetFlags.Use))
                         {
-                            newInteract = msg.ReadUInt16();
+                            newInteract = msg.ReadUInt16();                 
                         }
 
                         if (AllowInput)
@@ -320,7 +332,17 @@ namespace Barotrauma
                     break;
 
                 case ClientNetObject.ENTITY_STATE:
-                    inventory.ServerRead(type, msg, c);
+                    bool isInventoryUpdate = msg.ReadBoolean();
+                    if (isInventoryUpdate)
+                    {
+                        inventory.ServerRead(type, msg, c);
+                    }
+                    else
+                    {
+                        bool doingCPR = msg.ReadBoolean();
+                        AnimController.Anim = doingCPR ? AnimController.Animation.CPR : AnimController.Animation.None;
+                    }
+                    msg.ReadPadBits();
                     break;
             }
         }
@@ -408,6 +430,10 @@ namespace Barotrauma
                 {
                     tempBuffer.Write(true);
                     tempBuffer.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
+                    if (selectedCharacter != null)
+                    {
+                        tempBuffer.Write(AnimController.Anim == AnimController.Animation.CPR);
+                    }
                 }
                 else
                 {
@@ -471,10 +497,20 @@ namespace Barotrauma
 
                     bool entitySelected = msg.ReadBoolean();
                     Entity selectedEntity = null;
+
+                    AnimController.Animation animation = AnimController.Animation.None;
                     if (entitySelected)
                     {
                         ushort entityID = msg.ReadUInt16();
                         selectedEntity = FindEntityByID(entityID);
+                        if (selectedEntity is Character)
+                        {
+                            bool doingCpr = msg.ReadBoolean();
+                            if (doingCpr && selectedCharacter != null)
+                            {
+                                animation = AnimController.Animation.CPR;
+                            }
+                        }
                     }
 
                     Vector2 pos = new Vector2(
@@ -485,7 +521,7 @@ namespace Barotrauma
                     int index = 0;
                     if (GameMain.NetworkMember.Character == this && AllowInput)
                     {
-                        var posInfo = new CharacterStateInfo(pos, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity);
+                        var posInfo = new CharacterStateInfo(pos, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
                             index++;
 
@@ -493,7 +529,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        var posInfo = new CharacterStateInfo(pos, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity);
+                        var posInfo = new CharacterStateInfo(pos, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                             index++;
 

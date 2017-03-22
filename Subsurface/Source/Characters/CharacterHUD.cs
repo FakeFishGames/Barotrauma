@@ -168,6 +168,11 @@ namespace Barotrauma
                                 limb.pullJoint.Enabled = false;
                             }
                             
+                            if (GameMain.Client != null)
+                            {
+                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
+                            }
+                            
                             return true;
                         };
                     }
