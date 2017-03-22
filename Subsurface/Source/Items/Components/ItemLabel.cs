@@ -36,6 +36,16 @@ namespace Barotrauma.Items.Components
             }
         }
         
+        [Editable, HasDefaultValue(1.0f, true)]
+        public float TextScale
+        {
+            get { return textBlock == null ? 1.0f : textBlock.TextScale; }
+            set
+            {
+                if (textBlock != null) textBlock.TextScale = MathHelper.Clamp(value, 0.1f, 10.0f);
+            }
+        }
+
         private GUITextBlock TextBlock
         {
             get 
@@ -49,6 +59,7 @@ namespace Barotrauma.Items.Components
                     textBlock.Font = GUI.SmallFont;
                     textBlock.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                     textBlock.TextDepth = item.Sprite.Depth - 0.0001f;
+                    textBlock.TextScale = TextScale;
                 }
                 return textBlock; 
             }
