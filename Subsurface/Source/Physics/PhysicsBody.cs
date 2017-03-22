@@ -52,6 +52,11 @@ namespace Barotrauma
                 Position += ConvertUnits.ToSimUnits(sub.Position);
             }         
         }
+
+        public void Translate(Vector2 amount)
+        {
+            Position += amount;
+        }
     }
 
     class PhysicsBody

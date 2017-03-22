@@ -148,7 +148,7 @@ namespace Barotrauma
 
             if (GameMain.Client != null)
             {
-                GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.RepairItem, item.FixRequirements.IndexOf(requirement)});
+                GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Repair, item.FixRequirements.IndexOf(requirement)});
             }
             else if (GameMain.Server != null)
             {

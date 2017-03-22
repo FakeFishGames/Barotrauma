@@ -1815,7 +1815,7 @@ namespace Barotrauma
                 case NetEntityEvent.Type.InventoryState:
                     ownInventory.ClientWrite(msg, extraData);
                     break;
-                case NetEntityEvent.Type.RepairItem:   
+                case NetEntityEvent.Type.Repair:   
                     if (FixRequirements.Count > 0)
                     {
                         int requirementIndex = (int)extraData[1];   
@@ -1847,7 +1847,7 @@ namespace Barotrauma
                 case NetEntityEvent.Type.InventoryState:
                     ownInventory.ServerRead(type, msg, c);
                     break;
-                case NetEntityEvent.Type.RepairItem:
+                case NetEntityEvent.Type.Repair:
                     if (FixRequirements.Count == 0) return;
 
                     int requirementIndex = FixRequirements.Count == 1 ? 

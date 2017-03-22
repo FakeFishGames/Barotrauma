@@ -1273,6 +1273,15 @@ namespace Barotrauma
                         }
                     }
 
+                    if (character.MemState[0].Animation == AnimController.Animation.CPR)
+                    {
+                        character.AnimController.Anim = AnimController.Animation.CPR;
+                    }
+                    else if (character.AnimController.Anim == AnimController.Animation.CPR)
+                    {
+                        character.AnimController.Anim = AnimController.Animation.None;
+                    }
+
                     Collider.LinearVelocity = Vector2.Zero;
                     Collider.CorrectPosition(character.MemState, deltaTime, out overrideTargetMovement);
 
@@ -1341,22 +1350,30 @@ namespace Barotrauma
                         else if (serverPos.Interact is Item)
                         {
                             var newSelectedConstruction = (Item)serverPos.Interact;
-                            if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
+                            if (newSelectedConstruction != null && 
+                                character.SelectedConstruction != newSelectedConstruction)
                             {
                                 newSelectedConstruction.Pick(character, true, true);
                             }
                         }
                     }
 
+                    if (localPos.Animation != serverPos.Animation)
+                    {
+                        if (serverPos.Animation == AnimController.Animation.CPR)
+                        {
+                            character.AnimController.Anim = AnimController.Animation.CPR;
+                        }
+                        else if (character.AnimController.Anim == AnimController.Animation.CPR) 
+                        {
+                            character.AnimController.Anim = AnimController.Animation.None;
+                        }
+                    }
+
                     Vector2 positionError = serverPos.Position - localPos.Position;                    
                     for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
                     {
-                        character.MemLocalState[i] =
-                            new CharacterStateInfo(
-                                character.MemLocalState[i].Position + positionError,
-                                character.MemLocalState[i].ID,
-                                character.MemLocalState[i].Direction,                                
-                                character.MemLocalState[i].Interact);
+                        character.MemLocalState[i].Translate(positionError);
                     }
 
                     Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation);
