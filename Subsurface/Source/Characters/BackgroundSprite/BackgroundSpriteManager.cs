@@ -133,53 +133,74 @@ namespace Barotrauma
 
             if (!prefab.SpawnOnWalls) return randomPos;
 
-            var cells = level.GetCells(randomPos);
-
-            if (!cells.Any()) return null;
-
-            VoronoiCell cell = cells[Rand.Int(cells.Count, false)];
             List<GraphEdge> edges = new List<GraphEdge>();
             List<Vector2> normals = new List<Vector2>();
-            foreach (GraphEdge edge in cell.edges)
+
+            var cells = level.GetCells(randomPos);
+
+            if (cells.Any())
             {
-                if (!edge.isSolid || edge.OutsideLevel) continue;
+                VoronoiCell cell = cells[Rand.Int(cells.Count, false)];
 
-                Vector2 normal = edge.GetNormal(cell);
+                foreach (GraphEdge edge in cell.edges)
+                {
+                    if (!edge.isSolid || edge.OutsideLevel) continue;
+
+                    Vector2 normal = edge.GetNormal(cell);
                 
-                if (prefab.Alignment.HasFlag(Alignment.Bottom) && normal.Y < -0.5f)
-                {
-                    edges.Add(edge);
-                }
-                else if (prefab.Alignment.HasFlag(Alignment.Top) && normal.Y > 0.5f)
-                {
-                    edges.Add(edge);
-                }
-                else if (prefab.Alignment.HasFlag(Alignment.Left) && normal.X < -0.5f)
-                {
-                    edges.Add(edge);
-                }
-                else if (prefab.Alignment.HasFlag(Alignment.Right) && normal.X > 0.5f)
-                {
-                    edges.Add(edge);
-                }
-                else
-                {
-                    continue;
-                }
+                    if (prefab.Alignment.HasFlag(Alignment.Bottom) && normal.Y < -0.5f)
+                    {
+                        edges.Add(edge);
+                    }
+                    else if (prefab.Alignment.HasFlag(Alignment.Top) && normal.Y > 0.5f)
+                    {
+                        edges.Add(edge);
+                    }
+                    else if (prefab.Alignment.HasFlag(Alignment.Left) && normal.X < -0.5f)
+                    {
+                        edges.Add(edge);
+                    }
+                    else if (prefab.Alignment.HasFlag(Alignment.Right) && normal.X > 0.5f)
+                    {
+                        edges.Add(edge);
+                    }
+                    else
+                    {
+                        continue;
+                    }
 
-                normals.Add(normal);
+                    normals.Add(normal);
+                }
+            }
+
+            foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
+            {
+                Rectangle expandedArea = ruin.Area;
+                expandedArea.Inflate(ruin.Area.Width, ruin.Area.Height);
+                if (!expandedArea.Contains(randomPos)) continue;
+
+                foreach (var ruinShape in ruin.RuinShapes)
+                {
+                    foreach (var wall in ruinShape.Walls)
+                    {
+                        if (!prefab.Alignment.HasFlag(ruinShape.GetLineAlignment(wall))) continue;
+
+                        edges.Add(new GraphEdge(wall.A, wall.B));
+                        normals.Add((wall.A + wall.B) / 2.0f - ruinShape.Center);
+                    }
+                }
             }
 
             if (!edges.Any()) return null;
 
-            int index = Rand.Int(edges.Count,false);
+            int index = Rand.Int(edges.Count, false);
             closestEdge = edges[index];
             edgeNormal = normals[index];
 
             float length = Vector2.Distance(closestEdge.point1, closestEdge.point2);
             Vector2 dir = (closestEdge.point1 - closestEdge.point2) / length;
             Vector2 pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f, false);
-            
+
             return pos;
         }
 
