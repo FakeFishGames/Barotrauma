@@ -538,10 +538,8 @@ namespace Voronoi2
 		
 		private void pushGraphEdge( Site leftSite, Site rightSite, Vector2 point1, Vector2 point2 )
 		{
-			GraphEdge newEdge = new GraphEdge ();
+			GraphEdge newEdge = new GraphEdge(point1, point2);
 			allEdges.Add ( newEdge );
-            newEdge.point1 = point1;
-            newEdge.point2 = point2;
     			
 			newEdge.site1 = leftSite;
 			newEdge.site2 = rightSite;
