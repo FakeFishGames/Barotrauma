@@ -375,7 +375,15 @@ namespace Barotrauma.Items.Components
                 }
             }
                         
-            Item.Spawner.QueueItem(fabricatedItem.TargetItem, containers[1].Inventory);
+            if (containers[1].Inventory.Items.All(i => i != null))
+            {
+                Item.Spawner.QueueItem(fabricatedItem.TargetItem, item.Position, item.Submarine);
+            }
+            else
+            {
+                Item.Spawner.QueueItem(fabricatedItem.TargetItem, containers[1].Inventory);
+            }
+
 
             CancelFabricating();
         }

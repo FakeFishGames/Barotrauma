@@ -30,12 +30,9 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (container == null || !container.Inventory.Items.Any(i=>i!=null))
+            if (container == null || container.Inventory.Items.All(i => i == null))
             {
-                progressBar.BarSize = 0.0f;
-                //activateButton.Enabled = true;
-                if (container != null) container.Inventory.Locked = false;
-                IsActive = false;
+                SetActive(false);
                 return;
             }
 
@@ -68,15 +65,27 @@ namespace Barotrauma.Items.Components
                         DebugConsole.ThrowError("Tried to deconstruct item \""+targetItem.Name+"\" but couldn't find item prefab \""+deconstructProduct+"\"!");
                         continue;
                     }
-                    Item.Spawner.QueueItem(itemPrefab, containers[1].Inventory);
+
+                    //container full, drop the items outside the deconstructor
+                    if (containers[1].Inventory.Items.All(i => i != null))
+                    {
+                        Item.Spawner.QueueItem(itemPrefab, item.Position, item.Submarine);
+                    }
+                    else
+                    {
+                        Item.Spawner.QueueItem(itemPrefab, containers[1].Inventory);
+                    }
+
                 }
 
                 container.Inventory.RemoveItem(targetItem);
                 Item.Remover.QueueItem(targetItem);
 
-                activateButton.Text = "Deconstruct";
-                progressBar.BarSize = 0.0f;
-                progressTimer = 0.0f;
+                if (container.Inventory.Items.Any(i => i != null))
+                {
+                    progressTimer = 0.0f;
+                    progressBar.BarSize = 0.0f;
+                }
             }
         }
 
@@ -115,6 +124,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            if (container.Inventory.Items.All(i => i == null)) active = false;
+
             IsActive = active;
 
             if (!IsActive)
@@ -126,7 +137,6 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (container.Inventory.Items.All(i => i == null)) return;
 
                 activateButton.Text = "Cancel";
             }
