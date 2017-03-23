@@ -10,6 +10,8 @@ namespace Barotrauma
 
         protected Alignment textAlignment;
 
+        private float textScale;
+
         protected Vector2 textPos;
         protected Vector2 origin;
 
@@ -88,6 +90,19 @@ namespace Barotrauma
             get { return textPos; }
         }
 
+        public float TextScale
+        {
+            get { return textScale; }
+            set
+            {
+                if (value != textScale)
+                {
+                    textScale = value;
+                    SetTextPos();
+                }
+            }
+        }
+
         public Vector2 Origin
         {
             get { return origin; }
@@ -161,6 +176,8 @@ namespace Barotrauma
             this.Wrap = wrap;
 
             SetTextPos();
+
+            TextScale = 1.0f;
 
             if (rect.Height == 0 && !string.IsNullOrEmpty(Text))
             {
@@ -267,7 +284,7 @@ namespace Barotrauma
                     Wrap ? wrappedText : text,
                     new Vector2(rect.X, rect.Y) + textPos + offset,
                     textColor * (textColor.A / 255.0f),
-                    0.0f, origin, 1.0f,
+                    0.0f, origin, TextScale,
                     SpriteEffects.None, textDepth);
             }
 

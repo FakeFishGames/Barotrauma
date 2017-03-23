@@ -735,7 +735,13 @@ namespace Barotrauma
                     {
                         if (MathUtils.GetLineRectangleIntersection(e.point1, e.point2, ruinShape.Rect) != null)
                         {
-                            cell.CellType = CellType.Empty;
+                            cell.CellType = CellType.Removed;
+
+                            int x = (int)Math.Floor(cell.Center.X / GridCellSize);
+                            int y = (int)Math.Floor(cell.Center.Y / GridCellSize);
+
+                            cellGrid[x, y].Remove(cell);
+                            cells.Remove(cell);
                             break;
                         }
                     }

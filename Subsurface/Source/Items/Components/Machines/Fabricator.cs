@@ -360,25 +360,32 @@ namespace Barotrauma.Items.Components
             if (timeUntilReady > 0.0f) return;
 
             var containers = item.GetComponents<ItemContainer>();
-            if (containers.Count<2)
+            if (containers.Count < 2)
             {
                 DebugConsole.ThrowError("Error while fabricating a new item: fabricators must have two ItemContainer components");
                 return;
             }
 
-            foreach (Tuple<ItemPrefab,int> ip in fabricatedItem.RequiredItems)
+            foreach (Tuple<ItemPrefab, int> ip in fabricatedItem.RequiredItems)
             {
-                for (int i = 0; i<ip.Item2; i++)
+                for (int i = 0; i < ip.Item2; i++)
                 {
                     var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1);
                     if (requiredItem == null) continue;
 
-                    Item.Spawner.AddToRemoveQueue(requiredItem);
+                    Entity.Spawner.AddToRemoveQueue(requiredItem);
                     containers[0].Inventory.RemoveItem(requiredItem);
                 }
             }
-                        
-            Item.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory);
+
+            if (containers[1].Inventory.Items.All(i => i != null))
+            {
+                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine);
+            }
+            else
+            {
+                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory);
+            }
 
             CancelFabricating();
         }

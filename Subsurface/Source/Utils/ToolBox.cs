@@ -464,44 +464,43 @@ namespace Barotrauma
             
             return d[n, m];
         }
-        
+
         public static string WrapText(string text, float lineLength, ScalableFont font) //TODO: could integrate this into the ScalableFont class directly
         {
             if (font.MeasureString(text).X < lineLength) return text;
 
             text = text.Replace("\n", " \n ");
 
-            string[] words = text.Split(' ');//, '\n');
+            string[] words = text.Split(' ');
 
             StringBuilder wrappedText = new StringBuilder();
             float linePos = 0f;
             float spaceWidth = font.MeasureString(" ").X;
             for (int i = 0; i < words.Length; ++i)
             {
-                if (string.IsNullOrWhiteSpace(words[i]) && words[i]!="\n") continue;
+                if (string.IsNullOrWhiteSpace(words[i]) && words[i] != "\n") continue;
 
-                Vector2 size;
-                string tempWord = words[i];
-                string prevWord = words[i];
-                while ((size = font.MeasureString(tempWord)).X > lineLength)
+                Vector2 size = font.MeasureString(words[i]);
+                if (size.X > lineLength)
                 {
-                    tempWord = tempWord.Remove(tempWord.Length - 1, 1);
-                }
+                    while (words[i].Length > 0 &&
+                        (size = font.MeasureString((words[i][0]).ToString())).X + linePos < lineLength)
+                    {
+                        wrappedText.Append(words[i][0]);
+                        words[i] = words[i].Remove(0, 1);
 
-                words[i] = tempWord;
-                if (prevWord.Length> tempWord.Length)
-                {
-                    wrappedText.Append(words[i]);
-                    wrappedText.Append(" \n");
-                    wrappedText.Append(prevWord.Remove(0, tempWord.Length));
-                    linePos = lineLength*2.0f;
+                        linePos += size.X;
+                    }
+
+                    wrappedText.Append("\n");
+                    linePos = 0.0f;
+                    i--;
                     continue;
-
                 }
-                
+
                 if (linePos + size.X < lineLength)
                 {
-                        wrappedText.Append(words[i]);
+                    wrappedText.Append(words[i]);
                     if (words[i] == "\n")
                     {
                         linePos = 0.0f;
@@ -514,13 +513,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    //if (i>0)wrappedText.Remove(wrappedText.Length - 1, 1);
+                    wrappedText.Append("\n");
+                    wrappedText.Append(words[i]);
 
-                        wrappedText.Append("\n");
-                        wrappedText.Append(words[i]);
-                    
-                        linePos = size.X + spaceWidth;
-                    
+                    linePos = size.X + spaceWidth;
                 }
 
                 if (i < words.Length - 1) wrappedText.Append(" ");

@@ -155,18 +155,14 @@ namespace Voronoi2
 
             for (int i = 1; i < vertices.Length; i++ )
             {
-                GraphEdge ge = new GraphEdge();
-                ge.point1 = vertices[i-1];
-                ge.point2 = vertices[i];
+                GraphEdge ge = new GraphEdge(vertices[i-1], vertices[i]);
 
                 System.Diagnostics.Debug.Assert(ge.point1 != ge.point2);
 
                 edges.Add(ge);
             }
 
-            GraphEdge lastEdge = new GraphEdge();
-            lastEdge.point1 = vertices[0];
-            lastEdge.point2 = vertices[vertices.Length-1];
+            GraphEdge lastEdge = new GraphEdge(vertices[0], vertices[vertices.Length-1]);
 
             edges.Add(lastEdge);
 
@@ -206,6 +202,12 @@ namespace Voronoi2
         public Vector2 Center
         {
             get { return (point1 + point2) / 2.0f; }
+        }
+
+        public GraphEdge(Vector2 point1, Vector2 point2)
+        {
+            this.point1 = point1;
+            this.point2 = point2;
         }
 
         public VoronoiCell AdjacentCell(VoronoiCell cell)
