@@ -119,6 +119,14 @@ namespace Barotrauma.Networking
             {
                 UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);
                 UInt16 entityID = msg.ReadUInt16();
+
+                if (entityID == 0)
+                {
+                    msg.ReadPadBits();
+                    lastReceivedID++;
+                    continue;
+                }
+
                 byte msgLength = msg.ReadByte();
 
                 IServerSerializable entity = Entity.FindEntityByID(entityID) as IServerSerializable;
