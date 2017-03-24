@@ -98,20 +98,20 @@ namespace Barotrauma
             img.Color = order.Color;
             img.CanBeFocused = false;
 
-            orderListBox.children[characterIndex].ToolTip = "Order: " + order.Name; 
+            orderListBox.children[characterIndex].ToolTip = "Order: " + order.Name;
         }
 
         public bool SelectCharacterOrder(GUIComponent component, object selection)
         {
-            GameMain.GameSession.CrewManager.commander.ToggleGUIFrame();
+            commander.ToggleGUIFrame();
 
             int orderIndex = orderListBox.children.IndexOf(component);
-            if (orderIndex<0 || orderIndex >= listBox.children.Count) return false;
+            if (orderIndex < 0 || orderIndex >= listBox.children.Count) return false;
 
             var characterFrame = listBox.children[orderIndex];
             if (characterFrame == null) return false;
 
-            GameMain.GameSession.CrewManager.commander.SelectCharacter(characterFrame.UserData as Character);
+            commander.SelectCharacter(characterFrame.UserData as Character);
 
             return false;
         }
@@ -129,7 +129,6 @@ namespace Barotrauma
                 commander.UpdateCharacters();
             }
 
-
             character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
 
             GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, null, orderListBox);
@@ -140,21 +139,6 @@ namespace Barotrauma
 
             var ai = character.AIController as HumanAIController;
             SetCharacterOrder(character, ai.CurrentOrder);
-
-           
-
-            //string name = character.Info.Name.Replace(' ', '\n');
-
-            //GUITextBlock textBlock = new GUITextBlock(
-            //    new Rectangle(40, 0, 0, 25),
-            //    name,
-            //    Color.Transparent, Color.White,
-            //    Alignment.Left, Alignment.Left,
-            //    null, frame, false);
-            //textBlock.Font = GUI.SmallFont;
-            //textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
-
-            //new GUIImage(new Rectangle(-10, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
         }
 
         public void AddToGUIUpdateList()

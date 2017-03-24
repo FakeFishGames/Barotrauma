@@ -1891,6 +1891,10 @@ namespace Barotrauma.Networking
                     assignedClientCount[JobPrefab.List.IndexOf(myCharacter.Info.Job.Prefab)] = 1;  
                 }
             }
+            else if (myCharacter != null && !myCharacter.IsDead)
+            {
+                assignedClientCount[JobPrefab.List.IndexOf(myCharacter.Info.Job.Prefab)]++;
+            }
 
             //count the clients who already have characters with an assigned job
             foreach (Client c in connectedClients)
