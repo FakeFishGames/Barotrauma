@@ -123,6 +123,7 @@ namespace Barotrauma.Networking
             }
 
             myCharacter = Character.Controlled;
+            ChatMessage.LastID = 0;
 
             // Create new instance of configs. Parameter is "application Id". It has to be same on client and server.
             NetPeerConfiguration config = new NetPeerConfiguration("barotrauma");

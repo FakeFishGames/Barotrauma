@@ -214,7 +214,7 @@ namespace Barotrauma
                     ushort entityId = message.ReadUInt16();
 
                     var entity = Entity.FindEntityByID(entityId);
-                    if (entity == null || NetIdUtils.IdMoreRecent(NetStateID,(UInt16)(ID - entityCount + i))) continue; //already removed
+                    if (entity == null || NetIdUtils.IdMoreRecent((UInt16)(NetStateID - 1), (UInt16)(ID - entityCount + i))) continue; //already removed
 
                     entity.Remove();
                 }
