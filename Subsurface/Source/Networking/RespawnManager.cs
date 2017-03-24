@@ -324,7 +324,8 @@ namespace Barotrauma.Networking
 
                 if (item.body != null && item.body.Enabled && item.ParentInventory == null)
                 {
-                    Item.Spawner.AddToRemoveQueue(item);
+                    Entity.Spawner.AddToRemoveQueue(item);
+                    continue;
                 }
 
                 item.Condition = 100.0f;
@@ -362,9 +363,17 @@ namespace Barotrauma.Networking
                 if (c.Submarine == respawnShuttle)
                 {
                     if (Character.Controlled == c) Character.Controlled = null;
-                    //if (networkMember.Character == c) networkMember.Character = null;
                     c.Enabled = false;
 
+                    if (c.Inventory != null)
+                    {
+                        foreach (Item item in c.Inventory.Items)
+                        {
+                            if (item == null) continue;
+                            Entity.Spawner.AddToRemoveQueue(item);
+                        }
+                    }
+                    
                     c.Kill(CauseOfDeath.Damage, true);
                 }
             }

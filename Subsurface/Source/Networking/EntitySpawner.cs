@@ -118,12 +118,23 @@ namespace Barotrauma
             removeQueue.Enqueue(entity);
         }
 
-        public void Update()
+        public void AddToRemoveQueue(Item item)
         {
             if (GameMain.Client != null) return;
 
-            if (!spawnQueue.Any()) return;
+            removeQueue.Enqueue(item);
+            if (item.ContainedItems == null) return;
+            foreach (Item containedItem in item.ContainedItems)
+            {
+                if (containedItem != null) AddToRemoveQueue(containedItem);
+            }
+        }
 
+
+        public void Update()
+        {
+            if (GameMain.Client != null) return;
+            
             while (spawnQueue.Count>0)
             {
                 var entitySpawnInfo = spawnQueue.Dequeue();
