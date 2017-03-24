@@ -45,18 +45,19 @@ namespace Barotrauma.Networking
                     tempBuffer.LengthBytes < 128, 
                     "Maximum EntityEvent size exceeded when serializing \""+e.Entity+"\"!");
 
-#if DEBUG
                 if (Entity.FindEntityByID(e.Entity.ID) != e.Entity)
                 {
-                    DebugConsole.ThrowError("Error in NetEntityEventManager.Write (FindEntityByID(e.Entity.ID) != e.Entity)");
+                    //DebugConsole.ThrowError("Error in NetEntityEventManager.Write (FindEntityByID(e.Entity.ID) != e.Entity)");
+                    msg.Write((UInt16)0);
+                    msg.WritePadBits();
                 }
-#endif
-                
-
-                msg.Write((UInt16)e.Entity.ID);
-                msg.Write((byte)tempBuffer.LengthBytes);
-                msg.Write(tempBuffer);
-                msg.WritePadBits();
+                else
+                {
+                    msg.Write((UInt16)e.Entity.ID);
+                    msg.Write((byte)tempBuffer.LengthBytes);
+                    msg.Write(tempBuffer);
+                    msg.WritePadBits();
+                }
             }
         }
        
