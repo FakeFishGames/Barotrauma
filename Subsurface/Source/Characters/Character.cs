@@ -618,7 +618,12 @@ namespace Barotrauma
 
             CharacterList.Add(this);
 
-            Enabled = true;
+            //characters start disabled in the multiplayer mode, and are enabled if/when
+            //  - controlled by the player
+            //  - client receives a position update from the server
+            //  - server receives an input message from the client controlling the character
+            //  - if an AICharacter, the server enables it when close enough to any of the players
+            Enabled = GameMain.NetworkMember == null;
         }
 
         private static string humanConfigFile;
@@ -1247,7 +1252,7 @@ namespace Barotrauma
                 c.AnimController.UpdateAnim(deltaTime);
             }
         }
-        
+
         public static void AddAllToGUIUpdateList()
         {
             for (int i = 0; i < CharacterList.Count; i++)
@@ -1258,12 +1263,31 @@ namespace Barotrauma
 
         public static void UpdateAll(Camera cam, float deltaTime)
         {
-            //if (NewCharacterQueue.Count>0)
-            //{
-            //    new Character(NewCharacterQueue.Dequeue(), Vector2.Zero);
-            //}
+            if (GameMain.Client == null)
+            {
+                foreach (Character c in CharacterList)
+                {
+                    if (!(c is AICharacter)) continue;
+                    
+                    if (GameMain.Server != null)
+                    {
+                        //disable AI characters that are far away from all clients and the host's character
+                        c.Enabled =
+                            CharacterList.Any(c2 => 
+                                (c2.IsRemotePlayer || c2 == GameMain.Server.Character) && 
+                                Vector2.Distance(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistance);
+                    }
+                    else
+                    {
+                        //disable AI characters that are far away from the sub and the controlled character
+                        c.Enabled = Vector2.Distance(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistance ||
+                            (controlled != null && Vector2.Distance(controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistance);
+                    }
+                }
+            }
 
-            for (int i = 0; i<CharacterList.Count; i++)
+
+            for (int i = 0; i < CharacterList.Count; i++)
             {
                 CharacterList[i].Update(cam, deltaTime);
             }
