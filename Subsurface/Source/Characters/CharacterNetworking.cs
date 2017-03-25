@@ -212,6 +212,10 @@ namespace Barotrauma
                     memInput.RemoveRange(60, memInput.Count - 60);
                 }
             }
+            else //this == Character.Controlled && GameMain.Client == null
+            {                
+                AnimController.Frozen = false;
+            }
 
             if (networkUpdateSent)
             {
@@ -287,6 +291,8 @@ namespace Barotrauma
 
                     UInt16 networkUpdateID = msg.ReadUInt16();
                     byte inputCount = msg.ReadByte();
+
+                    if (AllowInput) Enabled = true;                   
 
                     for (int i = 0; i < inputCount; i++)
                     {
@@ -763,7 +769,7 @@ namespace Barotrauma
                 }
             }
 
-            character.Enabled = enabled;
+            character.Enabled = Controlled == character || enabled;
 
             return character;
         }
