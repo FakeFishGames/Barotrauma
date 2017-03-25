@@ -473,10 +473,7 @@ namespace Barotrauma
             
             //initialize MapEntities that aren't in any sub (e.g. items inside ruins)
             MapEntity.MapLoaded(null);
-
-            //initialize MapEntities that aren't in any sub (e.g. items inside ruins)
-            MapEntity.MapLoaded(null);
-
+            
             Debug.WriteLine("Generatelevel: " + sw2.ElapsedMilliseconds + " ms");
             sw2.Restart();
             
@@ -733,7 +730,9 @@ namespace Barotrauma
                     if (cell.CellType == CellType.Empty) continue;
                     foreach (GraphEdge e in cell.edges)
                     {
-                        if (MathUtils.GetLineRectangleIntersection(e.point1, e.point2, ruinShape.Rect) != null)
+                        Rectangle rect = ruinShape.Rect;
+                        rect.Y += rect.Height;
+                        if (MathUtils.GetLineRectangleIntersection(e.point1, e.point2, rect) != null)
                         {
                             cell.CellType = CellType.Removed;
 
