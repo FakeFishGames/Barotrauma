@@ -90,7 +90,7 @@ namespace Barotrauma
         protected float oxygen, oxygenAvailable;
         protected float drowningTime;
 
-        private float health;
+        private float health, lastSentHealth;
         protected float minHealth, maxHealth;
 
         protected Item closestItem;
@@ -301,7 +301,13 @@ namespace Barotrauma
                 health = newHealth;
 
                 if (GameMain.Server != null)
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                {
+                    if (Math.Abs(health - lastSentHealth) > (maxHealth - minHealth) / 255.0f || Math.Sign(health) != Math.Sign(lastSentHealth))
+                    {
+                        GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                        lastSentHealth = health;
+                    }
+                }
             }
         }
     
@@ -1325,10 +1331,10 @@ namespace Barotrauma
                     item.Submarine = Submarine;
                 }
             }
+                        
+            if (isDead) return;
 
             if (huskInfection != null) huskInfection.Update(deltaTime, this);
-            
-            if (isDead) return;
 
             if (GameMain.NetworkMember != null)
             {

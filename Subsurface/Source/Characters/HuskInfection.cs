@@ -151,6 +151,8 @@ namespace Barotrauma
 
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
+            if (GameMain.Client != null) return;
+
             var husk = Character.Create(
                 Path.Combine("Content", "Characters", "Human", "humanhusk.xml"),
                 character.WorldPosition,
@@ -177,6 +179,7 @@ namespace Barotrauma
             
             character.Enabled = false;
 
+            Entity.Spawner.AddToRemoveQueue(character);
             Entity.Spawner.AddToSpawnedList(husk);
         }
     }
