@@ -54,7 +54,7 @@ namespace Barotrauma.Networking
 
         public void Write(NetOutgoingMessage msg, NetConnection serverConnection)
         {
-            if (events.Count == 0) return;
+            if (events.Count == 0 || serverConnection == null) return;
 
             List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
 
