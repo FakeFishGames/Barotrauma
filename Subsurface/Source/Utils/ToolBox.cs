@@ -465,7 +465,7 @@ namespace Barotrauma
             return d[n, m];
         }
 
-        public static string WrapText(string text, float lineLength, ScalableFont font) //TODO: could integrate this into the ScalableFont class directly
+        public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f) //TODO: could integrate this into the ScalableFont class directly
         {
             if (font.MeasureString(text).X < lineLength) return text;
 
@@ -475,26 +475,35 @@ namespace Barotrauma
 
             StringBuilder wrappedText = new StringBuilder();
             float linePos = 0f;
-            float spaceWidth = font.MeasureString(" ").X;
+            float spaceWidth = font.MeasureString(" ").X * textScale;
             for (int i = 0; i < words.Length; ++i)
             {
                 if (string.IsNullOrWhiteSpace(words[i]) && words[i] != "\n") continue;
 
-                Vector2 size = font.MeasureString(words[i]);
+                Vector2 size = font.MeasureString(words[i]) * textScale;
                 if (size.X > lineLength)
                 {
-                    while (words[i].Length > 0 &&
-                        (size = font.MeasureString((words[i][0]).ToString())).X + linePos < lineLength)
+                    if (linePos == 0.0f)
                     {
-                        wrappedText.Append(words[i][0]);
-                        words[i] = words[i].Remove(0, 1);
+                        wrappedText.AppendLine(words[i]);
+                    }
+                    else
+                    {
+                        do
+                        {
+                            if (words[i].Length == 0) break;
 
-                        linePos += size.X;
+                            wrappedText.Append(words[i][0]);
+                            words[i] = words[i].Remove(0, 1);
+
+                            linePos += size.X;
+                        } while (words[i].Length > 0 && (size = font.MeasureString((words[i][0]).ToString()) * textScale).X + linePos < lineLength);
+
+                        wrappedText.Append("\n");
+                        linePos = 0.0f;
+                        i--;
                     }
 
-                    wrappedText.Append("\n");
-                    linePos = 0.0f;
-                    i--;
                     continue;
                 }
 
