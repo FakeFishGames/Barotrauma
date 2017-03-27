@@ -358,6 +358,7 @@ namespace Barotrauma
             if (submarine==null || !submarine.Loading) FindHull();
 
             condition = 100.0f;
+            lastSentCondition = 100.0f;
 
             XElement element = prefab.ConfigElement;
             if (element == null) return;
