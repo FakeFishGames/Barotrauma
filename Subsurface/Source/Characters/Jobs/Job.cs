@@ -106,6 +106,11 @@ namespace Barotrauma
             }
 
             Item item = new Item(itemPrefab, character.Position, null);
+            
+            if (GameMain.Server != null && Entity.Spawner != null)
+            {
+                Entity.Spawner.CreateNetworkEvent(item, false);
+            }
 
             if (ToolBox.GetAttributeBool(itemElement, "equip", false))
             {

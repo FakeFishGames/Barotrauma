@@ -497,17 +497,18 @@ namespace Barotrauma
                 return null;
             }
 #endif
-            
+
+            Character newCharacter = null;
 
             if (file != humanConfigFile)
             {
-                var enemyCharacter = new AICharacter(file, position, characterInfo, isRemotePlayer);
-                var ai = new EnemyAIController(enemyCharacter, file);
-                enemyCharacter.SetAI(ai);
+                var aiCharacter = new AICharacter(file, position, characterInfo, isRemotePlayer);
+                var ai = new EnemyAIController(aiCharacter, file);
+                aiCharacter.SetAI(ai);
 
-                enemyCharacter.minHealth = 0.0f;
-
-                return enemyCharacter;
+                aiCharacter.minHealth = 0.0f;
+                
+                newCharacter = aiCharacter;
             }
             else if (hasAi)
             {
@@ -517,13 +518,18 @@ namespace Barotrauma
 
                 aiCharacter.minHealth = -100.0f;
 
-                return aiCharacter;
+                newCharacter = aiCharacter;
+            }
+            else
+            {
+                newCharacter = new Character(file, position, characterInfo, isRemotePlayer);
+                newCharacter.minHealth = -100.0f;
             }
 
-            var character = new Character(file, position, characterInfo, isRemotePlayer);
-            character.minHealth = -100.0f;
+            if (GameMain.Server != null && Entity.Spawner != null)
+                Entity.Spawner.CreateNetworkEvent(newCharacter, false);
 
-            return character;
+            return newCharacter;
         }
 
         protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
@@ -1911,6 +1917,21 @@ namespace Barotrauma
             if (AnimController != null) AnimController.Remove();
 
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
+
+            if (selectedItems[0] != null) selectedItems[0].Drop(this);
+            if (selectedItems[1] != null) selectedItems[1].Drop(this);
+
+            if (GameMain.GameSession?.CrewManager != null &&
+                GameMain.GameSession.CrewManager.characters.Contains(this))
+            {
+                GameMain.GameSession.CrewManager.characters.Remove(this);
+            }
+
+            foreach (Character c in CharacterList)
+            {
+                if (c.closestCharacter == this) c.closestCharacter = null;
+                if (c.selectedCharacter == this) c.selectedCharacter = null;
+            }
         }
     }
 }

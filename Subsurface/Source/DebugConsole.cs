@@ -320,11 +320,6 @@ namespace Barotrauma
                             + "/" + commands[1].ToLower() + ".xml", spawnPosition);
                     }
 
-                    if (spawnedCharacter != null && GameMain.Server != null)
-                    {
-                        Entity.Spawner.AddToSpawnedList(spawnedCharacter);
-                    }
-
                     break;
                 case "spawnitem":
                     if (commands.Length < 2) return;

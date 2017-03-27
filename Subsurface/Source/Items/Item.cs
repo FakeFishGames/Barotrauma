@@ -944,9 +944,9 @@ namespace Barotrauma
                 else if (body.Enabled)
                 {
                     var holdable = GetComponent<Holdable>();
-                    if (holdable!=null && holdable.Picker !=null)
+                    if (holdable != null && holdable.Picker?.AnimController != null)
                     {
-                        if (holdable.Picker.SelectedItems[0]==this)
+                        if (holdable.Picker.SelectedItems[0] == this)
                         {
                             depth = holdable.Picker.AnimController.GetLimb(LimbType.RightHand).sprite.Depth + 0.000001f;
                         }
@@ -960,7 +960,7 @@ namespace Barotrauma
                     else
                     {
                         body.Draw(spriteBatch, prefab.sprite, color, depth);
-                    }                    
+                    }
                 }
             }
 
