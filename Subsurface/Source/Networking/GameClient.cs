@@ -2,11 +2,8 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using FarseerPhysics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using Barotrauma.Items.Components;
 using System.ComponentModel;
 
 namespace Barotrauma.Networking
@@ -635,8 +632,7 @@ namespace Barotrauma.Networking
             //enable spectate button in case we fail to start the round now
             //(for example, due to a missing sub file or an error)
             GameMain.NetLobbyScreen.ShowSpectateButton();
-
-            Entity.Spawner.Clear();
+            
             entityEventManager.Clear();
             LastSentEntityEventID = 0;
 
@@ -921,10 +917,6 @@ namespace Barotrauma.Networking
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
                         break;
-                    case ServerNetObject.ENTITY_SPAWN:
-                        Item.Spawner.ClientRead(objHeader, inc, sendingTime);
-                        inc.ReadPadBits();
-                        break;
                     default:
                         DebugConsole.ThrowError("Error while reading update from server (unknown object header \""+objHeader+"\"!)");
                         break;
@@ -959,7 +951,6 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             //outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
-            outmsg.Write(Entity.Spawner.NetStateID);
             outmsg.Write(entityEventManager.LastReceivedID);
 
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));

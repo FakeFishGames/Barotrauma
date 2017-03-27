@@ -178,9 +178,7 @@ namespace Barotrauma
             }
             
             character.Enabled = false;
-
             Entity.Spawner.AddToRemoveQueue(character);
-            Entity.Spawner.AddToSpawnedList(husk);
         }
     }
 }

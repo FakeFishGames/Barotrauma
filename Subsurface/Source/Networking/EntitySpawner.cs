@@ -6,18 +6,12 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class EntitySpawner : IServerSerializable
+    class EntitySpawner : Entity, IServerSerializable
     {
         const int MaxEntitiesPerWrite = 10;
 
         private enum SpawnableType { Item, Character };
-
-        public UInt16 NetStateID
-        {
-            get;
-            private set;
-        }
-
+        
         interface IEntitySpawnInfo
         {
             Entity Spawn();
@@ -84,9 +78,8 @@ namespace Barotrauma
             }
         }
         
-        private List<SpawnOrRemove> spawnHistory = new List<SpawnOrRemove>();
-        
         public EntitySpawner()
+            : base(null)
         {
             spawnQueue = new Queue<IEntitySpawnInfo>();
             removeQueue = new Queue<Entity>();
@@ -132,6 +125,13 @@ namespace Barotrauma
             }
         }
 
+        public void CreateNetworkEvent(Entity entity, bool remove)
+        {
+            if (GameMain.Server != null && entity != null)
+            {
+                GameMain.Server.CreateEntityEvent(this, new object[] { new SpawnOrRemove(entity, remove) });
+            }
+        }
 
         public void Update()
         {
@@ -142,38 +142,22 @@ namespace Barotrauma
                 var entitySpawnInfo = spawnQueue.Dequeue();
 
                 var spawnedEntity = entitySpawnInfo.Spawn();
-                if (spawnedEntity != null) AddToSpawnedList(spawnedEntity);
+                if (spawnedEntity != null)
+                {
+                    CreateNetworkEvent(spawnedEntity, false);
+                }
             }
 
             while (removeQueue.Count > 0)
             {
-                var entity = removeQueue.Dequeue();
-                spawnHistory.Add(new SpawnOrRemove(entity, true));
+                var removedEntity = removeQueue.Dequeue();
 
-                entity.Remove();
-                NetStateID = (UInt16)spawnHistory.Count;
-            }
-        }
+                if (GameMain.Server != null)
+                {
+                    CreateNetworkEvent(removedEntity, true);
+                }
 
-        public void AddToSpawnedList(Entity entity)
-        {
-            if (GameMain.Server == null) return;
-            if (entity == null) return;
-
-            spawnHistory.Add(new SpawnOrRemove(entity, false));
-
-            NetStateID = (UInt16)spawnHistory.Count;
-        }
-
-        public void AddToSpawnedList(IEnumerable<Entity> entities)
-        {
-            if (GameMain.Server == null) return;
-            if (entities == null) return;
-
-            foreach (Entity entity in entities)
-            {
-                spawnHistory.Add(new SpawnOrRemove(entity, false));
-                NetStateID = (UInt16)spawnHistory.Count;
+                removedEntity.Remove();
             }
         }
 
@@ -181,89 +165,60 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return;
 
-            //skip items that the client already knows about
-            List<SpawnOrRemove> entities = spawnHistory.Skip((int)client.lastRecvEntitySpawnID).ToList();
+            SpawnOrRemove entities = (SpawnOrRemove)extraData[0];
+            
+            message.Write(entities.Remove);
 
-            if (entities.Count > MaxEntitiesPerWrite)
+            if (entities.Remove)
             {
-                entities = entities.GetRange(0, MaxEntitiesPerWrite);
+                message.Write(entities.Entity.ID);
             }
-
-            message.Write((UInt16)(spawnHistory.IndexOf(entities[0])+1));
-            message.WriteRangedInteger(0, MaxEntitiesPerWrite, entities.Count);
-
-            for (int i = 0; i < entities.Count; i++)
+            else
             {
-                message.Write(entities[i].Remove);
-
-                if (entities[i].Remove)
+                if (entities.Entity is Item)
                 {
-                    message.Write(entities[i].Entity.ID);
+                    message.Write((byte)SpawnableType.Item);
+                    ((Item)entities.Entity).WriteSpawnData(message);
                 }
-                else
+                else if (entities.Entity is Character)
                 {
-                    if (entities[i].Entity is Item)
-                    {
-                        message.Write((byte)SpawnableType.Item);
-                        ((Item)entities[i].Entity).WriteSpawnData(message);
-                    }
-                    else if (entities[i].Entity is Character)
-                    {
-                        message.Write((byte)SpawnableType.Character);
-                        ((Character)entities[i].Entity).WriteSpawnData(message);
-                    }
+                    message.Write((byte)SpawnableType.Character);
+                    ((Character)entities.Entity).WriteSpawnData(message);
                 }
-            }
+            }            
         }
 
         public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer message, float sendingTime)
         {
             if (GameMain.Server != null) return;
 
-            UInt16 ID = message.ReadUInt16();            
-            var entityCount = message.ReadRangedInteger(0, MaxEntitiesPerWrite);
-            for (int i = 0; i < entityCount; i++)
+            bool remove = message.ReadBoolean();
+
+            if (remove)
             {
-                bool remove = message.ReadBoolean();
+                ushort entityId = message.ReadUInt16();
 
-                if (remove)
+                var entity = FindEntityByID(entityId);
+                if (entity != null)
                 {
-                    ushort entityId = message.ReadUInt16();
-
-                    var entity = Entity.FindEntityByID(entityId);
-                    if (entity != null && NetIdUtils.IdMoreRecent((UInt16)(ID + i), NetStateID))
-                    {
-                        entity.Remove();
-                    }
-                }
-                else
-                {
-                    switch (message.ReadByte())
-                    {
-                        case (byte)SpawnableType.Item:
-                            Item.ReadSpawnData(message, NetIdUtils.IdMoreRecent((UInt16)(ID + i), NetStateID));
-                            break;
-                        case (byte)SpawnableType.Character:
-                            Character.ReadSpawnData(message, NetIdUtils.IdMoreRecent((UInt16)(ID + i), NetStateID));
-                            break;
-                        default:
-                            DebugConsole.ThrowError("Received invalid entity spawn message (unknown spawnable type)");
-                            break;
-                    }
+                    entity.Remove();
                 }
             }
-
-            NetStateID = Math.Max((UInt16)(ID + entityCount - 1), NetStateID);
-        }
-
-
-        public void Clear()
-        {
-            NetStateID = 0;
-
-            spawnQueue.Clear();
-            removeQueue.Clear();
-            spawnHistory.Clear();
+            else
+            {
+                switch (message.ReadByte())
+                {
+                    case (byte)SpawnableType.Item:
+                        Item.ReadSpawnData(message, true);
+                        break;
+                    case (byte)SpawnableType.Character:
+                        Character.ReadSpawnData(message, true);
+                        break;
+                    default:
+                        DebugConsole.ThrowError("Received invalid entity spawn message (unknown spawnable type)");
+                        break;
+                }
+            }
         }
     }
 }

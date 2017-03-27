@@ -38,9 +38,7 @@ namespace Barotrauma.Networking
 
         public UInt16 lastSentEntityEventID = 0;
         public UInt16 lastRecvEntityEventID = 0;
-
-        public UInt16 lastRecvEntitySpawnID = 0;
-
+        
         public List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
         public UInt16 lastChatMsgQueueID;
         public float ChatSpamSpeed;
@@ -76,8 +74,7 @@ namespace Barotrauma.Networking
             lastRecvChatMsgID = ChatMessage.LastID;
 
             lastRecvGeneralUpdate = 0;
-
-            lastRecvEntitySpawnID = 0;
+            
             lastRecvEntityEventID = 0;
 
             UnreceivedEntityEventCount = 0;

@@ -109,9 +109,7 @@ namespace Barotrauma
             CrewManager = new CrewManager();
 
             TaskManager = new TaskManager(this);
-
-            Entity.Spawner.Clear();
-
+            
             this.saveFile = saveFile;
 
             infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", GUI.Style, null);
@@ -179,7 +177,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
                 return;
             }
-            
+
             if (reloadSub || Submarine.MainSub != submarine) submarine.Load(true);
             Submarine.MainSub = submarine;
             if (loadSecondSub)
@@ -194,18 +192,13 @@ namespace Barotrauma
                     Submarine.MainSubs[1].Load(false);
                 }
             }
-
-            //var secondSub = new Submarine(submarine.FilePath, submarine.MD5Hash.Hash);
-            //secondSub.Load(false);
-
+            
             if (level != null)
             {
                 level.Generate();
 
                 submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition - new Vector2(0.0f, 2000.0f)));
-
-                //secondSub.SetPosition(level.EndPosition - new Vector2(0.0f, 2000.0f));
-
+                
                 GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(80);
             }
 
@@ -223,6 +216,8 @@ namespace Barotrauma
             TaskManager.StartShift(level);
 
             if (gameMode != null) gameMode.MsgBox();
+
+            Entity.Spawner = new EntitySpawner();
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
             SoundPlayer.SwitchMusic();

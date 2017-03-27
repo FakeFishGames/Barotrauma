@@ -680,11 +680,9 @@ namespace Barotrauma.Networking
                         //TODO: might want to use a clever class for this
                         
                         UInt16 lastRecvChatMsgID        = inc.ReadUInt16();
-                        UInt16 lastRecvEntitySpawnID    = inc.ReadUInt16();
                         UInt16 lastRecvEntityEventID    = inc.ReadUInt16();
 
                         //last msgs we've created/sent, the client IDs should never be higher than these
-                        UInt16 lastEntitySpawnID = Entity.Spawner.NetStateID;
                         UInt16 lastEntityEventID = entityEventManager.Events.Count == 0 ? (UInt16)0 : entityEventManager.Events.Last().ID;
                         
                         if (c.NeedsMidRoundSync)
@@ -705,20 +703,14 @@ namespace Barotrauma.Networking
                         //client thinks they've received a msg we haven't sent yet (corrupted packet, msg read/written incorrectly?)
                         if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastChatMsgQueueID))
                             DebugConsole.ThrowError("client.lastRecvChatMsgID > lastChatMsgQueueID");
-
-                        if (lastRecvEntitySpawnID > lastEntitySpawnID)
-                            DebugConsole.ThrowError("client.lastRecvEntitySpawnID > lastEntitySpawnID");
-                        
+                                                
                         if (lastRecvEntityEventID > lastEntityEventID)
                             DebugConsole.ThrowError("client.lastRecvEntityEventID > lastEntityEventID");                        
 #endif
                                                 
                         if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastRecvChatMsgID)) c.lastRecvChatMsgID = lastRecvChatMsgID;
                         if (NetIdUtils.IdMoreRecent(c.lastRecvChatMsgID, c.lastChatMsgQueueID)) c.lastRecvChatMsgID = c.lastChatMsgQueueID;
-
-                        if (NetIdUtils.IdMoreRecent(lastRecvEntitySpawnID, c.lastRecvEntitySpawnID)) c.lastRecvEntitySpawnID = lastRecvEntitySpawnID;
-                        if (NetIdUtils.IdMoreRecent(c.lastRecvEntitySpawnID, lastEntitySpawnID)) c.lastRecvEntitySpawnID = lastEntitySpawnID;
-
+                        
                         if (NetIdUtils.IdMoreRecent(lastRecvEntityEventID, c.lastRecvEntityEventID)) c.lastRecvEntityEventID = lastRecvEntityEventID;
                         if (NetIdUtils.IdMoreRecent(c.lastRecvEntityEventID, lastEntityEventID)) c.lastRecvEntityEventID = lastEntityEventID;
 
@@ -839,14 +831,7 @@ namespace Barotrauma.Networking
             {
                 cMsg.ServerWrite(outmsg, c);
             }            
-
-            if (Item.Spawner.NetStateID > c.lastRecvEntitySpawnID)
-            {
-                outmsg.Write((byte)ServerNetObject.ENTITY_SPAWN);
-                Item.Spawner.ServerWrite(outmsg, c);
-                outmsg.WritePadBits();
-            }
-
+            
             foreach (Character character in Character.CharacterList)
             {
                 if (!character.Enabled) continue;
@@ -1054,8 +1039,7 @@ namespace Barotrauma.Networking
         private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
         {
             initiatedStartGame = true;
-
-            Item.Spawner.Clear();
+            
             entityEventManager.Clear();
 
             GameMain.NetLobbyScreen.StartButton.Enabled = false;
@@ -1103,9 +1087,7 @@ namespace Barotrauma.Networking
                 foreach (Client client in teamClients)
                 {
                     client.NeedsMidRoundSync = false;
-
-                    client.lastRecvEntitySpawnID = 0;
-
+                    
                     client.entityEventLastSent.Clear();
                     client.lastSentEntityEventID = 0;
                     client.lastRecvEntityEventID = 0;
@@ -1149,13 +1131,7 @@ namespace Barotrauma.Networking
                     GameMain.GameSession.CrewManager.characters.Add(myCharacter);
                 }
             }
-            
-            foreach (Character c in GameMain.GameSession.CrewManager.characters)
-            {
-                Entity.Spawner.AddToSpawnedList(c);
-                Entity.Spawner.AddToSpawnedList(c.SpawnItems);
-            }
-            
+                        
             TraitorManager = null;
             if (TraitorsEnabled == YesNoMaybe.Yes ||
                 (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
@@ -1268,8 +1244,7 @@ namespace Barotrauma.Networking
             myCharacter = null;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
-
-            Item.Spawner.Clear();
+            
             entityEventManager.Clear();
             foreach (Client c in connectedClients)
             {
