@@ -271,7 +271,8 @@ namespace Barotrauma.Networking
             {
                 case (byte)FileTransferType.Submarine:
                     string fileName = inc.ReadString();
-                    var requestedSubmarine = Submarine.SavedSubmarines.Find(s => s.Name == fileName);
+                    string fileHash = inc.ReadString();
+                    var requestedSubmarine = Submarine.SavedSubmarines.Find(s => s.Name == fileName && s.MD5Hash.Hash == fileHash);
 
                     if (requestedSubmarine != null)
                     {
