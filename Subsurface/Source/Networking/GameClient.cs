@@ -740,7 +740,7 @@ namespace Barotrauma.Networking
                 string subName = inc.ReadString();
                 string subHash = inc.ReadString();
 
-                var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == subName);
+                var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == subName && s.MD5Hash.Hash == subHash);
                 if (matchingSub != null)
                 {
                     submarines.Add(matchingSub);
@@ -987,13 +987,14 @@ namespace Barotrauma.Networking
             chatMsgQueue.Add(chatMessage);
         }
 
-        public void RequestFile(string file, FileTransferType fileType)
+        public void RequestFile(FileTransferType fileType, string file, string fileHash)
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
             msg.Write((byte)FileTransferMessageType.Initiate);
             msg.Write((byte)fileType);
             msg.Write(file);
+            msg.Write(fileHash);
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
@@ -1012,17 +1013,23 @@ namespace Barotrauma.Networking
             switch (transfer.FileType)
             {
                 case FileTransferType.Submarine:
-                    Submarine.SavedSubmarines.RemoveAll(s => s.Name + ".sub" == transfer.FileName);
+                    var newSub = new Submarine(transfer.FilePath);
+                    Submarine.SavedSubmarines.RemoveAll(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash);
+                    Submarine.SavedSubmarines.Add(newSub);
+
                     for (int i = 0; i < 2; i++)
                     {
-                        var textBlock = ((i == 0) ?
-                            GameMain.NetLobbyScreen.ShuttleList.ListBox.children.Find(c => (c.UserData as Submarine).Name + ".sub" == transfer.FileName) :
-                            GameMain.NetLobbyScreen.SubList.children.Find(c => (c.UserData as Submarine).Name + ".sub" == transfer.FileName)) as GUITextBlock;
+                        List<GUIComponent> subListChildren = (i == 0) ? 
+                            GameMain.NetLobbyScreen.ShuttleList.ListBox.children : 
+                            GameMain.NetLobbyScreen.SubList.children;
+
+                        var textBlock = subListChildren.Find(c => 
+                            ((Submarine)c.UserData).Name == newSub.Name && 
+                            ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash) as GUITextBlock;
 
                         if (textBlock == null) continue;
                         textBlock.TextColor = Color.White;
-                        var newSub = new Submarine(transfer.FilePath);
-                        Submarine.SavedSubmarines.Add(newSub);
+
                         textBlock.UserData = newSub;
                         textBlock.ToolTip = newSub.Description;
                     }

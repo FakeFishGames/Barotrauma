@@ -94,9 +94,9 @@ namespace Barotrauma
             return sb.ToString();
         }
 
-        private string GetShortHash(string fullHash)
-        {
-            return fullHash;
+        public static string GetShortHash(string fullHash)
+        {            
+            return fullHash.Length < 7 ? fullHash : fullHash.Substring(0, 7);
         }
     }
 }

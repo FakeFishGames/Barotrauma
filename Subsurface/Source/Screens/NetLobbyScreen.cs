@@ -716,7 +716,9 @@ namespace Barotrauma
             };
 
 
-            var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name);
+            var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
+            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name);
+
             if (matchingSub == null)
             {
                 subTextBlock.TextColor = Color.Gray;
@@ -1213,7 +1215,10 @@ namespace Barotrauma
                 return false;
             }
 
-            var matchingListSub = subList.children.Find(c => c.UserData != null && (c.UserData as Submarine).Name == subName) as GUITextBlock;
+            Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
+            if (sub == null) sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
+
+            var matchingListSub = subList.children.Find(c => c.UserData == sub) as GUITextBlock;
             if (matchingListSub != null)
             {
                 subList.OnSelected -= VotableClicked;
@@ -1221,7 +1226,6 @@ namespace Barotrauma
                 subList.OnSelected += VotableClicked;
             }
 
-            Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
             if (sub == null || sub.MD5Hash.Hash != md5Hash)
             {
                 string errorMsg = "";
@@ -1237,9 +1241,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    errorMsg = "Your version of the submarine file \"" + sub.Name + "\" doesn't match the server's version! "
-                    + "Your MD5 hash: " + sub.MD5Hash.Hash + " \n"
-                    + "Server's MD5 hash: " + md5Hash + ". ";
+                    errorMsg = "Your version of the submarine file \"" + sub.Name + "\" doesn't match the server's version!\n"
+                    + "Your MD5 hash: " + sub.MD5Hash.ShortHash + "\n"
+                    + "Server's MD5 hash: " + Md5Hash.GetShortHash(md5Hash) + "\n";
                 }
 
                 errorMsg += "Do you want to download the file from the server host?";
@@ -1252,11 +1256,12 @@ namespace Barotrauma
 
                 var requestFileBox = new GUIMessageBox("Submarine not found!", errorMsg, new string[] { "Yes", "No" }, 400, 300);
                 requestFileBox.UserData = "request" + subName;
-                requestFileBox.Buttons[0].UserData = subName;
+                requestFileBox.Buttons[0].UserData = new string[] { subName, md5Hash };
                 requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
                 requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
                     {
-                        GameMain.Client.RequestFile(userdata.ToString(), FileTransferType.Submarine);
+                        string[] fileInfo = (string[])userdata;
+                        GameMain.Client.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
                         return true;
                     };
                 requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
