@@ -143,7 +143,7 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             float count = Rand.Range(0.0f, size.X/50.0f);
-
+            
             if (hull.FireSources.Any(fs => fs != this && fs.size.X > size.X))
             {
                 if (basicSoundIndex > 0)
@@ -172,41 +172,39 @@ namespace Barotrauma
                 }
             }
 
-            if (size.X > 50.0f)
+            //the firesource will start to shrink if oxygen percentage is below 10
+            float growModifier = Math.Min((hull.OxygenPercentage / 10.0f) - 1.0f, 1.0f);
+
+            for (int i = 0; i < count; i++)
             {
-                this.position.Y = MathHelper.Lerp(this.position.Y, hull.Rect.Y - hull.Rect.Height, deltaTime);
-            }
+                Vector2 particlePos = new Vector2(
+                    WorldPosition.X + Rand.Range(0.0f, size.X), 
+                    Rand.Range(WorldPosition.Y - size.Y, WorldPosition.Y + 20.0f));
 
-            float growModifier = hull.OxygenPercentage < 20.0f ? (hull.OxygenPercentage/10.0f)-1.0f : 1.0f;
+                Vector2 particleVel = new Vector2(
+                    (particlePos.X - (WorldPosition.X + size.X / 2.0f)),
+                    (float)Math.Sqrt(size.X) * Rand.Range(0.0f, 15.0f) * growModifier);
 
-            for (int i = 0; i < count; i++ )
-            {
-                Vector2 spawnPos = new Vector2(WorldPosition.X + Rand.Range(0.0f, size.X), Rand.Range(WorldPosition.Y - size.Y, WorldPosition.Y) + 10.0f);
-
-                Vector2 speed = new Vector2((spawnPos.X - (WorldPosition.X + size.X / 2.0f)), (float)Math.Sqrt(size.X) * Rand.Range(10.0f, 15.0f) * growModifier);
-                
                 var particle = GameMain.ParticleManager.CreateParticle("flame",
-                    spawnPos, speed, 0.0f, hull);
+                    particlePos, particleVel, 0.0f, hull);
 
                 if (particle == null) continue;
-                
+
+                //make some of the particles create another firesource when they enter another hull
                 if (Rand.Int(20) == 1) particle.OnChangeHull = OnChangeHull;
 
-                particle.Size *= MathHelper.Clamp(size.X/60.0f * Math.Max(hull.Oxygen/hull.FullVolume, 0.4f), 0.5f, 3.0f);
-
-                if (size.X < 100.0f) continue;
+                particle.Size *= MathHelper.Clamp(size.X / 60.0f * Math.Max(hull.Oxygen / hull.FullVolume, 0.4f), 0.5f, 1.0f);
 
                 if (Rand.Int(5) == 1)
                 {
                     var smokeParticle = GameMain.ParticleManager.CreateParticle("smoke",
-                    spawnPos, speed, 0.0f, hull);
+                    particlePos, particleVel * 0.1f, 0.0f, hull);
 
                     if (smokeParticle != null)
                     {
-                        smokeParticle.Size *= MathHelper.Clamp(size.X / 100.0f * Math.Max(hull.Oxygen / hull.FullVolume, 0.4f), 0.5f, 4.0f);
+                        smokeParticle.Size *= MathHelper.Clamp(size.X / 100.0f * Math.Max(hull.Oxygen / hull.FullVolume, 0.4f), 0.5f, 1.0f);
                     }
                 }
-
             }
 
             DamageCharacters(deltaTime);
@@ -219,13 +217,22 @@ namespace Barotrauma
             position.X -= GrowSpeed * growModifier * 0.5f * deltaTime;
 
             size.X += GrowSpeed * growModifier * deltaTime;
+            size.Y = MathHelper.Clamp(size.Y + GrowSpeed * growModifier * deltaTime, 10.0f, 50.0f);
+
+            if (size.X > 50.0f)
+            {
+                this.position.Y = MathHelper.Lerp(this.position.Y, hull.Rect.Y - hull.Rect.Height + size.Y, deltaTime);
+            }
 
             LimitSize();
 
             lightSource.Range = Math.Max(size.X, size.Y) * 10.0f / 2.0f;
             lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f);
-            lightSource.Position = position;
+            lightSource.Position = position + Vector2.UnitY * 30.0f;
 
+            if (GameMain.Client != null) return;
+
+            if (size.X < 1.0f) Remove();
         }
 
         private void OnChangeHull(Vector2 pos, Hull particleHull)
@@ -280,15 +287,19 @@ namespace Barotrauma
 
         private void HullWaterExtinquish(float deltaTime)
         {
-            float extinquishAmount = Math.Min(hull.Volume / 100.0f, size.X)*10.0f*deltaTime;
+            //the higher the surface of the water is relative to the firesource, the faster it puts out the fire 
+            float extinquishAmount = (hull.Surface - (position.Y - size.Y)) * deltaTime;
 
-            float steamCount = Rand.Range(-5.0f, (float)Math.Sqrt(extinquishAmount));
+            if (extinquishAmount < 0.0f) return;
 
+            float steamCount = Rand.Range(-5.0f, Math.Min(extinquishAmount * 100.0f, 10));
             for (int i = 0; i < steamCount; i++)
             {
-                Vector2 spawnPos = new Vector2(position.X + size.X * (i / steamCount) + Rand.Range(-5.0f, 5.0f), Rand.Range(position.Y - size.Y, position.Y) + 10.0f);
+                Vector2 spawnPos = new Vector2(
+                    WorldPosition.X + Rand.Range(0.0f, size.X), 
+                    Rand.Range(position.Y - size.Y, WorldPosition.Y) + 10.0f);
 
-                Vector2 speed = new Vector2((spawnPos.X - (position.X + size.X / 2.0f)), (float)Math.Sqrt(size.X) * Rand.Range(20.0f, 25.0f));
+                Vector2 speed = new Vector2((spawnPos.X - (WorldPosition.X + size.X / 2.0f)), (float)Math.Sqrt(size.X) * Rand.Range(20.0f, 25.0f));
 
                 var particle = GameMain.ParticleManager.CreateParticle("steam",
                     spawnPos, speed, 0.0f, hull);
@@ -301,6 +312,7 @@ namespace Barotrauma
             position.X += extinquishAmount / 2.0f;
             size.X -= extinquishAmount;
 
+            //evaporate some of the water
             hull.Volume -= extinquishAmount;
 
             if (size.X < 1.0f) Remove();
