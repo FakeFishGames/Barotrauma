@@ -13,6 +13,9 @@ namespace Barotrauma.Particles
 
         public readonly List<Sprite> Sprites;
 
+        public readonly float AnimDuration;
+        public readonly bool LoopAnim;
+
         public readonly float AngularVelocityMin, AngularVelocityMax;
 
         public readonly float StartRotationMin, StartRotationMax;
@@ -53,10 +56,20 @@ namespace Barotrauma.Particles
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
-
-                Sprites.Add(new Sprite(subElement));
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "sprite":
+                        Sprites.Add(new Sprite(subElement));
+                        break;
+                    case "spritesheet":
+                    case "animatedsprite":
+                        Sprites.Add(new SpriteSheet(subElement));
+                        break;
+                }
             }
+
+            AnimDuration = ToolBox.GetAttributeFloat(element, "animduration", 1.0f);
+            LoopAnim = ToolBox.GetAttributeBool(element, "loopanim", true);
 
             if (element.Attribute("angularvelocity") == null)
             {
@@ -134,7 +147,9 @@ namespace Barotrauma.Particles
             DeleteOnCollision = ToolBox.GetAttributeBool(element, "deleteoncollision", false);
             CollidesWithWalls = ToolBox.GetAttributeBool(element, "collideswithwalls", false);
 
-            CollisionRadius = ToolBox.GetAttributeFloat(element, "collisionradius", Sprites[0].SourceRect.Width/2.0f);
+            CollisionRadius = ToolBox.GetAttributeFloat(element,
+                "collisionradius",
+                Sprites.Count > 0 ? 1 : Sprites[0].SourceRect.Width / 2.0f);
 
             ColorChange = ToolBox.GetAttributeVector4(element, "colorchange", Vector4.Zero);
 

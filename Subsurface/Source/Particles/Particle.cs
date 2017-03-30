@@ -42,6 +42,9 @@ namespace Barotrauma.Particles
         private Hull currentHull;
 
         private List<Gap> hullGaps;
+
+        private float animState;
+        private int animFrame;
         
         public ParticlePrefab.DrawTargetType DrawTarget
         {
@@ -76,6 +79,9 @@ namespace Barotrauma.Particles
             this.prefab = prefab;
 
             spriteIndex = Rand.Int(prefab.Sprites.Count);
+
+            animState = 0;
+            animFrame = 0;
 
             currentHull = Hull.FindHull(position, hullGuess);
 
@@ -166,6 +172,13 @@ namespace Barotrauma.Particles
                 color.R / 255.0f + prefab.ColorChange.X * deltaTime,
                 color.G / 255.0f + prefab.ColorChange.Y * deltaTime,
                 color.B / 255.0f + prefab.ColorChange.Z * deltaTime);
+
+            if (prefab.Sprites[spriteIndex] is SpriteSheet)
+            {
+                animState += deltaTime;
+                int frameCount = ((SpriteSheet)prefab.Sprites[spriteIndex]).FrameCount;
+                animFrame = (int)Math.Min(Math.Floor(animState / prefab.AnimDuration * frameCount), frameCount - 1);
+            }
             
             if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
@@ -317,11 +330,25 @@ namespace Barotrauma.Particles
                 drawSize *= ((totalLifeTime - lifeTime) / prefab.GrowTime);
             }
 
-            prefab.Sprites[spriteIndex].Draw(spriteBatch,
-                new Vector2(drawPosition.X, -drawPosition.Y),
-                color * alpha,
-                prefab.Sprites[spriteIndex].Origin, drawRotation,
-                drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
+            if (prefab.Sprites[spriteIndex] is SpriteSheet)
+            {
+                ((SpriteSheet)prefab.Sprites[spriteIndex]).Draw(
+                    spriteBatch, animFrame,
+                    new Vector2(drawPosition.X, -drawPosition.Y),
+                    color * alpha,
+                    prefab.Sprites[spriteIndex].Origin, drawRotation,
+                    drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
+            }
+            else
+            {
+                prefab.Sprites[spriteIndex].Draw(spriteBatch,
+                    new Vector2(drawPosition.X, -drawPosition.Y),
+                    color * alpha,
+                    prefab.Sprites[spriteIndex].Origin, drawRotation,
+                    drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
+            }
+
+
         }
     }
 }
