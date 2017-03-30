@@ -69,6 +69,7 @@ namespace Barotrauma
 
         public static GameSettings Config;
 
+        private CoroutineHandle loadingCoroutine;
         private bool hasLoaded;
 
         private GameTime fixedTime;
@@ -203,7 +204,7 @@ namespace Barotrauma
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
-            CoroutineManager.StartCoroutine(Load());
+            loadingCoroutine = CoroutineManager.StartCoroutine(Load());
         }
 
         public IEnumerable<object> Load()
@@ -332,6 +333,14 @@ namespace Barotrauma
                         (!waitForKeyHit || PlayerInput.GetKeyboardState.GetPressedKeys().Length>0 || PlayerInput.LeftButtonClicked()))
                     {
                         loadingScreenOpen = false;
+                    }
+
+                    if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
+                    {
+                        DebugConsole.ThrowError("Loading was interrupted due to an error");
+                        loadingScreenOpen = false;
+                        loadingCoroutine = null;
+                        hasLoaded = true;
                     }
                 }
                 else if (hasLoaded)
