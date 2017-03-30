@@ -341,8 +341,6 @@ namespace Barotrauma
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
                     GUIComponent.ClearUpdateList();
-                    DebugConsole.AddToGUIUpdateList();
-
                     paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
@@ -357,6 +355,7 @@ namespace Barotrauma
                     }
 
                     GUI.AddToGUIUpdateList();
+                    DebugConsole.AddToGUIUpdateList();
                     GUIComponent.UpdateMouseOn();
 
                     DebugConsole.Update(this, (float)Timing.Step);
