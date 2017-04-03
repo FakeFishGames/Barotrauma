@@ -280,10 +280,8 @@ namespace Barotrauma
                 float range = (float)Math.Sqrt(size.X) * 10.0f;
                 if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) continue;
                 if (item.Position.Y < position.Y - size.Y || item.Position.Y > hull.Rect.Y) continue;
-
-                //item.Condition -= (float)Math.Sqrt(size.X) * deltaTime;
-
-                item.ApplyStatusEffects(ActionType.OnFire, deltaTime);
+                
+                if (GameMain.Client == null) item.ApplyStatusEffects(ActionType.OnFire, deltaTime);
             }
         }
 
