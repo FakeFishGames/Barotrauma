@@ -837,9 +837,9 @@ namespace Barotrauma
                         (fireSource.Position.X - rect.X) / rect.Width,
                         (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
 
-                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 4);
-                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 4);
-                    message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 6);
+                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+                    message.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+                    message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 8);
                 }
             }
 
@@ -853,53 +853,41 @@ namespace Barotrauma
             OxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
 
             bool hasFireSources = message.ReadBoolean();
-
-            List<FireSource> newFireSources = new List<FireSource>();
+            int fireSourceCount = 0;
+            
             if (hasFireSources)
             {
-                int fireSourceCount = message.ReadRangedInteger(0, 16);
+                fireSourceCount = message.ReadRangedInteger(0, 16);
                 for (int i = 0; i < fireSourceCount; i++)
                 {
                     Vector2 pos = Vector2.Zero;
                     float size = 0.0f;
-                    pos.X = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 4), 0.05f, 0.95f);
-                    pos.Y = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 4), 0.05f, 0.95f);
-                    size = message.ReadRangedSingle(0.0f, 1.0f, 6);
+                    pos.X = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
+                    pos.Y = MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
+                    size = message.ReadRangedSingle(0.0f, 1.0f, 8);
 
                     pos = new Vector2(
                         rect.X + rect.Width * pos.X, 
                         rect.Y - rect.Height + (rect.Height * pos.Y));
+                    size = size * rect.Width;
+                    
+                    var newFire = i < fireSources.Count ? fireSources[i] : new FireSource(pos + Submarine.Position, null, true);
+                    newFire.Position = pos;
+                    newFire.Size = new Vector2(size, newFire.Size.Y);
 
-                    var existingFire = fireSources.Find(fs => fs.Contains(pos));
-                    if (existingFire != null)
+                    //ignore if the fire wasn't added to this room (invalid position)?
+                    if (!fireSources.Contains(newFire))
                     {
-                        newFireSources.Add(existingFire);
-                        existingFire.Position = pos;
-                        existingFire.Size = new Vector2(
-                            existingFire.Hull == null ? size : size * existingFire.Hull.rect.Width,
-                            existingFire.Size.Y);
-                    }
-                    else
-                    {
-                        var newFire = new FireSource(pos + Submarine.Position, null, true);
-                        newFire.Size = new Vector2(
-                            newFire.Hull == null ? size : size * newFire.Hull.rect.Width,
-                            newFire.Size.Y);
-                        //ignore if the fire wasn't added to this room (invalid position)?
-                        if (!fireSources.Contains(newFire))
-                        {
-                            newFire.Remove();
-                            continue;
-                        }
-                        newFireSources.Add(newFire);
-                    }
+                        newFire.Remove();
+                        continue;
+                    }                    
                 }
             }
 
-            var toBeRemoved = fireSources.FindAll(fs => !newFireSources.Contains(fs));
-            toBeRemoved.ForEach(tbr => tbr.Remove());
-
-            fireSources = newFireSources;
+            while (fireSources.Count > fireSourceCount)
+            {
+                fireSources[fireSources.Count - 1].Remove();
+            }            
         }
 
         public override XElement Save(XElement parentElement)
