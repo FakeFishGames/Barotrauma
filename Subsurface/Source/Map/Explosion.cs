@@ -75,12 +75,11 @@ namespace Barotrauma
 
             ApplyExplosionForces(worldPosition, attack.Range, force, attack.GetDamage(1.0f), attack.Stun);
 
-            if (flames)
+            if (flames && GameMain.Client == null)
             {
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
-                    //if (item.ParentInventory != null) return;
 
                     if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
 
