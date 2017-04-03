@@ -60,7 +60,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Source\AnimatedSprite.cs" />
+    <Compile Include="Source\SpriteSheet.cs" />
     <Compile Include="Source\Camera.cs" />
     <Compile Include="Source\Characters\AICharacter.cs" />
     <Compile Include="Source\Characters\AI\AIController.cs" />

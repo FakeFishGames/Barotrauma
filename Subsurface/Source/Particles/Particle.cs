@@ -245,7 +245,7 @@ namespace Barotrauma.Particles
             velocity -= (velocity / speed) * Math.Min(speed * speed * prefab.WaterDrag * deltaTime, 1.0f);
         }
 
-        private void OnWallCollisionInside(Hull prevHull, Vector2 position)
+        private void OnWallCollisionInside(Hull prevHull, Vector2 edgePos)
         {
             Rectangle prevHullRect = prevHull.WorldRect;
 
@@ -253,24 +253,24 @@ namespace Barotrauma.Particles
 
             velocity -= subVel;
 
-            if (position.Y < prevHullRect.Y - prevHullRect.Height)
+            if (edgePos.Y < prevHullRect.Y - prevHullRect.Height)
             {
                 position.Y = prevHullRect.Y - prevHullRect.Height + prefab.CollisionRadius;
                 velocity.Y = -velocity.Y;
             }
-            else if (position.Y > prevHullRect.Y)
+            else if (edgePos.Y > prevHullRect.Y)
             {
                 position.Y = prevHullRect.Y - prefab.CollisionRadius;
                 velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
                 velocity.Y = -velocity.Y * 0.1f;
             }
 
-            if (position.X < prevHullRect.X)
+            if (edgePos.X < prevHullRect.X)
             {
                 position.X = prevHullRect.X + prefab.CollisionRadius;
                 velocity.X = -velocity.X;
             }
-            else if (position.X > prevHullRect.X + prevHullRect.Width)
+            else if (edgePos.X > prevHullRect.X + prevHullRect.Width)
             {
                 position.X = prevHullRect.X + prevHullRect.Width - prefab.CollisionRadius;
                 velocity.X = -velocity.X;
