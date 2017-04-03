@@ -111,19 +111,20 @@
   </shockwave>
 
   <flame
-    startsizemin="0.3,0.3" startsizemax="0.5,0.5"
+    startsizemin="0.5,0.3" startsizemax="1.0,0.5"
     sizechangemin="0.1,0.1" sizechangemax="0.2,0.2"
     startrotationmin ="-20.0" startrotationmax="20"
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
     colorchange="-0.9, -1.5, -6.3, -1.2"
     lifetime="2.5"
-    growtime ="0.05"
+    growtime ="0.2"
     drawtarget="air"
     collideswithwalls="true"
     blendstate="additive"
-    velocitychange="0.0, 2.5">
-    <sprite texture="Content/Particles/fire.png" sourcerect="0,0,96,96"/>
-    <sprite texture="Content/Particles/fire.png" sourcerect="96,0,96,96"/>
+    velocitychange="0.0, 2.5"
+    animduration="1.2"
+    loopanim="false">
+    <animatedsprite texture="Content/Particles/FlameRoundParticleSheet.png" sourcerect="0,0,2048,2048" columns="10" rows="5" origin="0.5,0.8"/>
   </flame>
 
   <steam
@@ -144,14 +145,17 @@
     startsizemin="0.4,0.4" startsizemax="0.5,0.5"
     sizechangemin="0.25,0.25" sizechangemax="0.3,0.3"
     startrotationmin ="0.0" startrotationmax="360"
-    startcolor="0.0, 0.0, 0.0" startalpha="0.5"
+    startcolor="0.0, 0.0, 0.0" startalpha="1.0"
     colorchange="0.0, 0.0, 0.0, -0.25"
     growtime ="0.2"
-    lifetime="3"
+    lifetime="5"
     collideswithwalls="true"
-    collisionradius="30.0"
-    velocitychange="0.0, 2.5">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
+    collisionradius="80.0"
+    velocitychange="0.0, 2.5"
+    animduration="4"
+    restitution="0.98"
+    loopanim="false">
+    <animatedsprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="0,0,1024,1024" columns="5" rows="5"/>
   </smoke>  
 
   <explosionfire

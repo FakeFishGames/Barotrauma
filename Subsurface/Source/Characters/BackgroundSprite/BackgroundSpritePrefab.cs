@@ -43,7 +43,7 @@ namespace Barotrauma
             Scale.X = ToolBox.GetAttributeFloat(element, "minsize", 1.0f);
             Scale.Y = ToolBox.GetAttributeFloat(element, "maxsize", 1.0f);
 
-            DepthRange = ToolBox.GetAttributeVector2(element, "depthrange", Vector2.Zero);
+            DepthRange = ToolBox.GetAttributeVector2(element, "depthrange", new Vector2(0.0f, 1.0f));
 
             AlignWithSurface = ToolBox.GetAttributeBool(element, "alignwithsurface", false);
 

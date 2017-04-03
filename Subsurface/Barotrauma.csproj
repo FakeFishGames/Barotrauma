@@ -176,6 +176,7 @@
     <Compile Include="Source\Screens\BlurEffect.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
+    <Compile Include="Source\SpriteSheet.cs" />
     <Compile Include="Source\Timing.cs" />
     <Compile Include="Source\Utils\Homoglyphs.cs" />
     <Compile Include="Source\Utils\MTRandom.cs" />
@@ -420,6 +421,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Human\fhead7[black].png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Characters\Human\fhead8.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Characters\Human\ftorso[black].png">
@@ -852,10 +856,16 @@
     <Content Include="Content\Particles\fire.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\Particles\FlameRoundParticleSheet.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Particles\flames.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Particles\shrapnel.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Particles\SmokeParticleSheet.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Sounds\Damage\StructureBlunt10.ogg">
