@@ -42,6 +42,9 @@ namespace Barotrauma.Particles
         private Hull currentHull;
 
         private List<Gap> hullGaps;
+
+        private float animState;
+        private int animFrame;
         
         public ParticlePrefab.DrawTargetType DrawTarget
         {
@@ -76,6 +79,9 @@ namespace Barotrauma.Particles
             this.prefab = prefab;
 
             spriteIndex = Rand.Int(prefab.Sprites.Count);
+
+            animState = 0;
+            animFrame = 0;
 
             currentHull = Hull.FindHull(position, hullGuess);
 
@@ -166,6 +172,13 @@ namespace Barotrauma.Particles
                 color.R / 255.0f + prefab.ColorChange.X * deltaTime,
                 color.G / 255.0f + prefab.ColorChange.Y * deltaTime,
                 color.B / 255.0f + prefab.ColorChange.Z * deltaTime);
+
+            if (prefab.Sprites[spriteIndex] is SpriteSheet)
+            {
+                animState += deltaTime;
+                int frameCount = ((SpriteSheet)prefab.Sprites[spriteIndex]).FrameCount;
+                animFrame = (int)Math.Min(Math.Floor(animState / prefab.AnimDuration * frameCount), frameCount - 1);
+            }
             
             if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
@@ -232,7 +245,7 @@ namespace Barotrauma.Particles
             velocity -= (velocity / speed) * Math.Min(speed * speed * prefab.WaterDrag * deltaTime, 1.0f);
         }
 
-        private void OnWallCollisionInside(Hull prevHull, Vector2 position)
+        private void OnWallCollisionInside(Hull prevHull, Vector2 edgePos)
         {
             Rectangle prevHullRect = prevHull.WorldRect;
 
@@ -240,24 +253,24 @@ namespace Barotrauma.Particles
 
             velocity -= subVel;
 
-            if (position.Y < prevHullRect.Y - prevHullRect.Height)
+            if (edgePos.Y < prevHullRect.Y - prevHullRect.Height)
             {
                 position.Y = prevHullRect.Y - prevHullRect.Height + prefab.CollisionRadius;
                 velocity.Y = -velocity.Y;
             }
-            else if (position.Y > prevHullRect.Y)
+            else if (edgePos.Y > prevHullRect.Y)
             {
                 position.Y = prevHullRect.Y - prefab.CollisionRadius;
                 velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
                 velocity.Y = -velocity.Y * 0.1f;
             }
 
-            if (position.X < prevHullRect.X)
+            if (edgePos.X < prevHullRect.X)
             {
                 position.X = prevHullRect.X + prefab.CollisionRadius;
                 velocity.X = -velocity.X;
             }
-            else if (position.X > prevHullRect.X + prevHullRect.Width)
+            else if (edgePos.X > prevHullRect.X + prevHullRect.Width)
             {
                 position.X = prevHullRect.X + prevHullRect.Width - prefab.CollisionRadius;
                 velocity.X = -velocity.X;
@@ -317,11 +330,25 @@ namespace Barotrauma.Particles
                 drawSize *= ((totalLifeTime - lifeTime) / prefab.GrowTime);
             }
 
-            prefab.Sprites[spriteIndex].Draw(spriteBatch,
-                new Vector2(drawPosition.X, -drawPosition.Y),
-                color * alpha,
-                prefab.Sprites[spriteIndex].Origin, drawRotation,
-                drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
+            if (prefab.Sprites[spriteIndex] is SpriteSheet)
+            {
+                ((SpriteSheet)prefab.Sprites[spriteIndex]).Draw(
+                    spriteBatch, animFrame,
+                    new Vector2(drawPosition.X, -drawPosition.Y),
+                    color * alpha,
+                    prefab.Sprites[spriteIndex].Origin, drawRotation,
+                    drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
+            }
+            else
+            {
+                prefab.Sprites[spriteIndex].Draw(spriteBatch,
+                    new Vector2(drawPosition.X, -drawPosition.Y),
+                    color * alpha,
+                    prefab.Sprites[spriteIndex].Origin, drawRotation,
+                    drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
+            }
+
+
         }
     }
 }

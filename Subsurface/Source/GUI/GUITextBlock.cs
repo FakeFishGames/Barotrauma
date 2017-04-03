@@ -187,21 +187,21 @@ namespace Barotrauma
 
         public void SetTextPos()
         {
-            if (text==null) return;
+            if (text == null) return;
 
             wrappedText = text;
 
             Vector2 size = MeasureText(text);
-            
-            if (Wrap && rect.Width>0)
+
+            if (Wrap && rect.Width > 0)
             {
-                wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font);
+                wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font, textScale);
 
                 Vector2 newSize = MeasureText(wrappedText);
 
                 size = newSize;
             }
-            
+
             if (LimitText && text.Length>1 && size.Y > rect.Height)
             {
                 string[] lines = text.Split('\n');

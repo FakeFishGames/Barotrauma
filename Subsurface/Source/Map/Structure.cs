@@ -654,9 +654,9 @@ namespace Barotrauma
 
             var section = sections[sectionIndex];
 
-            int particleAmount = (int)(Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f));
+            float particleAmount = Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f);
 
-            particleAmount = Math.Min(particleAmount, 200);
+            particleAmount = Math.Min(particleAmount + Rand.Range(-5,1), 100);
             for (int i = 0; i < particleAmount; i++)
             {
                 Vector2 particlePos = new Vector2(

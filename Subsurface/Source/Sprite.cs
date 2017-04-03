@@ -14,15 +14,15 @@ namespace Barotrauma
         //if two sprites use the same file, they share the same texture
         string file;
 
-        Texture2D texture;
+        protected Texture2D texture;
 
         //the area in the texture that is supposed to be drawn
         Rectangle sourceRect;
 
         //the offset used when drawing the sprite
-        Vector2 offset;
+        protected Vector2 offset;
 
-        private Vector2 origin;
+        protected Vector2 origin;
 
         //the size of the drawn sprite, if larger than the source,
         //the sprite is tiled to fill the target size
@@ -32,7 +32,7 @@ namespace Barotrauma
 
         public SpriteEffects effects;
 
-        float depth;
+        protected float depth;
 
         public Rectangle SourceRect
         {
@@ -202,7 +202,7 @@ namespace Barotrauma
             this.Draw(spriteBatch, pos, color, origin, rotate, new Vector2(scale, scale), spriteEffect, depth);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
+        public virtual void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
             //for (int x = -1; x <= 1; x += 2)
             //{

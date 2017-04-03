@@ -18,6 +18,8 @@ namespace Barotrauma
         public float Scale;
 
         public float Rotation;
+        
+        //public Vector2[] spriteCorners;
 
         public BackgroundSprite(BackgroundSpritePrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
         {
@@ -68,6 +70,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError(String.Format("Failed to load BackgroundSprites from {0}", configPath), e);
             }
         }
+
+
         public void PlaceSprites(Level level, int amount)
         {
             sprites = new List<BackgroundSprite>[
@@ -101,15 +105,38 @@ namespace Barotrauma
 
                 var newSprite = new BackgroundSprite(prefab,
                     new Vector3((Vector2)pos, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, false)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, false), rotation);
+                
+                //calculate the positions of the corners of the rotated sprite
+                Vector2 halfSize = newSprite.Prefab.Sprite.size * newSprite.Scale / 2;
+                var spriteCorners = new Vector2[]
+                {
+                    -halfSize, new Vector2(-halfSize.X, halfSize.Y),
+                    halfSize, new Vector2(halfSize.X, -halfSize.Y)
+                };
 
-                Vector2 spriteSize = newSprite.Prefab.Sprite.size * newSprite.Scale;
+                Vector2 pivotOffset = newSprite.Prefab.Sprite.Origin * newSprite.Scale - halfSize;
+                pivotOffset.X = -pivotOffset.X;
+                pivotOffset = new Vector2(
+                    (float)(pivotOffset.X * Math.Cos(-rotation) - pivotOffset.Y * Math.Sin(-rotation)),
+                    (float)(pivotOffset.X * Math.Sin(-rotation) + pivotOffset.Y * Math.Cos(-rotation)));                
 
-                int minX = (int)Math.Floor((newSprite.Position.X - spriteSize.X / 2 - newSprite.Position.Z) / GridSize);
-                int maxX = (int)Math.Floor((newSprite.Position.X + spriteSize.X / 2 + newSprite.Position.Z) / GridSize);
+                for (int j = 0; j < 4; j++)
+                {
+                    spriteCorners[j] = new Vector2(
+                        (float)(spriteCorners[j].X * Math.Cos(-rotation) - spriteCorners[j].Y * Math.Sin(-rotation)),
+                        (float)(spriteCorners[j].X * Math.Sin(-rotation) + spriteCorners[j].Y * Math.Cos(-rotation)));
+
+                    spriteCorners[j] += (Vector2)pos + pivotOffset;
+                }
+
+                //newSprite.spriteCorners = spriteCorners;
+                
+                int minX = (int)Math.Floor((spriteCorners.Min(c => c.X) - newSprite.Position.Z) / GridSize);
+                int maxX = (int)Math.Floor((spriteCorners.Max(c => c.X) + newSprite.Position.Z) / GridSize);
                 if (minX < 0 || maxX >= sprites.GetLength(0)) continue;
 
-                int minY = (int)Math.Floor((newSprite.Position.Y - spriteSize.Y / 2 - newSprite.Position.Z) / GridSize);
-                int maxY = (int)Math.Floor((newSprite.Position.Y + spriteSize.Y / 2 + newSprite.Position.Z) / GridSize);
+                int minY = (int)Math.Floor((spriteCorners.Min(c => c.Y) - newSprite.Position.Z) / GridSize);
+                int maxY = (int)Math.Floor((spriteCorners.Max(c => c.Y) + newSprite.Position.Z) / GridSize);
                 if (minY < 0 || maxY >= sprites.GetLength(1)) continue;
 
                 for (int x = minX; x <= maxX; x++)
@@ -266,7 +293,7 @@ namespace Barotrauma
             }
 
             foreach (BackgroundSprite sprite in visibleSprites)
-            {
+            {              
                 Vector2 camDiff = new Vector2(sprite.Position.X, sprite.Position.Y) - cam.WorldViewCenter;
                 camDiff.Y = -camDiff.Y;
 
@@ -278,6 +305,14 @@ namespace Barotrauma
                     sprite.Scale,
                     SpriteEffects.None,
                     z);
+
+                /*for (int i = 0; i < 4; i++)
+                {
+                    GUI.DrawLine(spriteBatch,
+                        new Vector2(sprite.spriteCorners[i].X, -sprite.spriteCorners[i].Y),
+                        new Vector2(sprite.spriteCorners[(i + 1) % 4].X, -sprite.spriteCorners[(i + 1) % 4].Y),
+                        Color.White, 0, 5);
+                }*/
 
                 if (GameMain.DebugDraw)
                 {
