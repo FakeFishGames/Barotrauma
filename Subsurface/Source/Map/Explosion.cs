@@ -3,6 +3,7 @@ using Barotrauma.Lights;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -116,6 +117,11 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
+                Vector2 explosionPos = worldPosition;
+                if (c.Submarine != null) explosionPos -= c.Submarine.Position;
+
+                explosionPos = ConvertUnits.ToSimUnits(explosionPos);
+
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
@@ -128,6 +134,9 @@ namespace Barotrauma
                     if (dist > range) continue;
 
                     float distFactor = 1.0f - dist / range;
+
+                    //solid obstacles between the explosion and the limb reduce the effect of the explosion by 90%
+                    if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null) distFactor *= 0.1f;
 
                     c.AddDamage(limb.WorldPosition, DamageType.None,
                         damage / c.AnimController.Limbs.Length * distFactor, 0.0f, stun * distFactor, false);
