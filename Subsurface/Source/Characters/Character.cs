@@ -1001,11 +1001,14 @@ namespace Barotrauma
         {
             if (!AllowInput || LockHands) return false;
 
+            //the inventory belongs to some other character
             if (inventory.Owner is Character && inventory.Owner != this)
             {
                 var owner = (Character)inventory.Owner;
 
-                return owner.isDead || owner.IsUnconscious || owner.Stun > 0.0f || owner.LockHands;
+                //can only be accessed if the character is incapacitated and has been selected
+                return selectedCharacter == owner &&
+                    (owner.isDead || owner.IsUnconscious || owner.Stun > 0.0f || owner.LockHands);
             }
 
             if (inventory.Owner is Item)
