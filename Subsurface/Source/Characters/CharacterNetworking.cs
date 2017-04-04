@@ -277,17 +277,17 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return;
 
-            if (c.Character != this)
-            {
-#if DEBUG
-                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
-#endif
-                return;
-            }
-
             switch (type)
             {
                 case ClientNetObject.CHARACTER_INPUT:
+
+                    if (c.Character != this)
+                    {
+#if DEBUG
+                        DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+#endif
+                        return;
+                    }
 
                     UInt16 networkUpdateID = msg.ReadUInt16();
                     byte inputCount = msg.ReadByte();
@@ -345,6 +345,14 @@ namespace Barotrauma
                     }
                     else
                     {
+                        if (c.Character != this)
+                        {
+#if DEBUG
+                            DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+#endif
+                            return;
+                        }
+
                         bool doingCPR = msg.ReadBoolean();
                         AnimController.Anim = doingCPR ? AnimController.Animation.CPR : AnimController.Animation.None;
                     }
