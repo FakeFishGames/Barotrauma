@@ -1252,6 +1252,10 @@ namespace Barotrauma
             
             if (character != GameMain.NetworkMember.Character || !character.AllowInput)
             {
+                //remove states without a timestamp (there may still be ID-based states 
+                //in the list when the controlled character switches to timestamp-based interpolation)
+                character.MemState.RemoveAll(m => m.Timestamp == 0.0f);
+
                 //use simple interpolation for other players' characters and characters that can't move
                 if (character.MemState.Count > 0)
                 {
@@ -1298,13 +1302,17 @@ namespace Barotrauma
             }
             else
             {
+                //remove states with a timestamp (there may still timestamp-based states 
+                //in the list if the controlled character switches from timestamp-based interpolation to ID-based)
+                character.MemState.RemoveAll(m => m.Timestamp > 0.0f);
+
                 for (int i = 0; i < character.MemLocalState.Count; i++)
                 {
                     if (character.Submarine == null)
                     {
                         //transform in-sub coordinates to outside coordinates
                         if (character.MemLocalState[i].Position.Y > ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
-                            character.MemLocalState[i].TransformInToOutside();                    
+                            character.MemLocalState[i].TransformInToOutside();
                     }
                     else if (currentHull != null)
                     {
