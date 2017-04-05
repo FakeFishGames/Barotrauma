@@ -8,8 +8,6 @@ using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Networking;
-using Lidgren.Network;
 
 namespace Barotrauma
 {
@@ -31,10 +29,10 @@ namespace Barotrauma
 
                 frozen = value;
 
-                foreach (Limb l in Limbs)
+                /*foreach (Limb l in Limbs)
                 {
                     l.body.PhysEnabled = !frozen;
-                }
+                }*/
                 Collider.PhysEnabled = !frozen;
             }
         }
@@ -99,7 +97,8 @@ namespace Barotrauma
             set
             {
                 if (value == colliderIndex) return;
-                if (value >= collider.Count) return;
+                if (value >= collider.Count || value < 0) return;
+
                 if (collider[colliderIndex].height<collider[value].height)
                 {
                     Vector2 pos1 = collider[colliderIndex].SimPosition;
@@ -108,15 +107,19 @@ namespace Barotrauma
                     pos2.Y += collider[value].height * 1.1f;
                     if (GameMain.World.RayCast(pos1, pos2).Any(f => f.CollisionCategories.HasFlag(Physics.CollisionWall))) return;
                 }
-                collider[value].LinearVelocity = collider[colliderIndex].LinearVelocity;
-                collider[value].AngularVelocity = collider[colliderIndex].AngularVelocity;
+
+
                 Vector2 pos = collider[colliderIndex].SimPosition;
                 pos.Y -= collider[colliderIndex].height * 0.5f;
                 pos.Y += collider[value].height * 0.5f;
                 collider[value].SetTransform(pos, collider[colliderIndex].Rotation);
+
+                collider[value].LinearVelocity  = collider[colliderIndex].LinearVelocity;
+                collider[value].AngularVelocity = collider[colliderIndex].AngularVelocity;
+                collider[value].Submarine       = collider[colliderIndex].Submarine;
                 collider[value].PhysEnabled = !frozen;
                 collider[value].Enabled = !simplePhysicsEnabled;
-                collider[value].Submarine = collider[colliderIndex].Submarine;
+
                 collider[colliderIndex].PhysEnabled = false;
                 colliderIndex = value;
             }
