@@ -50,7 +50,7 @@ namespace Barotrauma
         private GUIDropDown shuttleList;
 
         public bool IsServer;
-        public string ServerName;
+        public string ServerName = "Server";
 
         private UInt16 lastUpdateID;
         public UInt16 LastUpdateID
@@ -62,11 +62,6 @@ namespace Barotrauma
         private Sprite backgroundSprite;
 
         private GUITextBox serverMessage;
-        //public string ServerMessage
-        //{
-        //    get { return serverMessage.Text; }
-        //    set { if (GameMain.Server != null) return; serverMessage.Text = value; }
-        //}
 
         public GUITextBox ServerMessage
         {
@@ -381,7 +376,7 @@ namespace Barotrauma
             missionTypeButtons[0].Enabled = GameMain.Server != null;
             missionTypeButtons[1].Enabled = GameMain.Server != null;
 
-            ServerName = (GameMain.Server == null) ? "Server" : GameMain.Server.Name;
+            ServerName = (GameMain.Server == null) ? ServerName : GameMain.Server.Name;
 
             infoFrame.RemoveChild(StartButton);
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
