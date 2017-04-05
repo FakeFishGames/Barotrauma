@@ -3,9 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace Barotrauma.Networking
@@ -183,6 +181,7 @@ namespace Barotrauma.Networking
                     var existingTransfer = activeTransfers.Find(t => t.SequenceChannel == inc.SequenceChannel);
                     if (existingTransfer != null)
                     {
+                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
                         DebugConsole.ThrowError("File transfer error: file transfer initiated on a sequence channel that's already in use");
                         return;
                     }
@@ -195,7 +194,8 @@ namespace Barotrauma.Networking
                     string errorMsg;
                     if (!ValidateInitialData(fileType, fileName, fileSize, out errorMsg))
                     {
-                        DebugConsole.ThrowError("File transfer failed ("+errorMsg+")");
+                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                        DebugConsole.ThrowError("File transfer failed (" + errorMsg + ")");
                         return;
                     }
 
@@ -219,12 +219,14 @@ namespace Barotrauma.Networking
                     var activeTransfer = activeTransfers.Find(t => t.Connection == inc.SenderConnection && t.SequenceChannel == inc.SequenceChannel);
                     if (activeTransfer == null)
                     {
+                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
                         DebugConsole.ThrowError("File transfer error: received data without a transfer initiation message");
                         return;
                     }
 
                     if (activeTransfer.Received + (ulong)(inc.LengthBytes-inc.PositionInBytes) > activeTransfer.FileSize)
                     {
+                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
                         DebugConsole.ThrowError("File transfer error: Received more data than expected");
                         activeTransfer.Status = FileTransferStatus.Error;
                         StopTransfer(activeTransfer);
@@ -237,6 +239,7 @@ namespace Barotrauma.Networking
                     }
                     catch (Exception e)
                     {
+                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
                         DebugConsole.ThrowError("File transfer error: "+e.Message);
                         activeTransfer.Status = FileTransferStatus.Error;
                         StopTransfer(activeTransfer, true);
@@ -291,7 +294,8 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            if (!Regex.Match(fileName, @"^[\w\- ]+[\w\-. ]*$").Success)
+            if (string.IsNullOrEmpty(fileName) ||
+                fileName.IndexOfAny(Path.GetInvalidFileNameChars()) > -1)
             {
                 errorMessage = "Illegal characters in file name ''" + fileName + "''";
                 return false;
