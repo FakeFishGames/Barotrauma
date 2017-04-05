@@ -503,7 +503,6 @@ namespace Barotrauma.Items.Components
 
             if (isStuck || isOpen == open) return;
 
-            PlaySound(ActionType.OnUse, item.WorldPosition);
 
             if (GameMain.Client != null && !isNetworkMessage)
             {
@@ -512,11 +511,15 @@ namespace Barotrauma.Items.Components
                 //the prediction will be reset after 1 second, setting the door to a state
                 //sent by the server, or reverting it back to its old state if no msg from server was received
 
+                PlaySound(ActionType.OnUse, item.WorldPosition);
+
                 predictedState = open;
                 resetPredictionTimer = 1.0f;
             }
             else
             {
+                if (!isNetworkMessage) PlaySound(ActionType.OnUse, item.WorldPosition);
+
                 isOpen = open;
             }
 
