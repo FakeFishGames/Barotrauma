@@ -1000,10 +1000,15 @@ namespace Barotrauma.Networking
 
         public void CancelFileTransfer(FileReceiver.FileTransferIn transfer)
         {
+            CancelFileTransfer(transfer);
+        }
+
+        public void CancelFileTransfer(int sequenceChannel)
+        {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
             msg.Write((byte)FileTransferMessageType.Cancel);
-            msg.Write((byte)transfer.SequenceChannel);
+            msg.Write((byte)sequenceChannel);
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
