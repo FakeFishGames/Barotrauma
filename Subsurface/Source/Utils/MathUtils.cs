@@ -512,6 +512,7 @@ namespace Barotrauma
 
         public static int Compare(Vector2 a, Vector2 b, Vector2 center)
         {
+            if (a == b) return 0;
             if (a.X - center.X >= 0 && b.X - center.X < 0) return -1;
             if (a.X - center.X < 0 && b.X - center.X >= 0) return 1;
             if (a.X - center.X == 0 && b.X - center.X == 0)
