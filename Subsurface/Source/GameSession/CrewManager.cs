@@ -138,6 +138,11 @@ namespace Barotrauma
             frame.SelectedColor = Color.Gold * 0.5f;
 
             var ai = character.AIController as HumanAIController;
+            if (ai == null)
+            {
+                DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
+                return;
+            }
             SetCharacterOrder(character, ai.CurrentOrder);
         }
 
@@ -151,9 +156,10 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             guiFrame.Update(deltaTime);
-
-
-            if (GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
+            
+            //TODO: implement AI commands in multiplayer?
+            if (GameMain.NetworkMember != null &&
+                GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
             {
                 //deselect construction unless it's the ladders the character is climbing
                 if (!commander.IsOpen && Character.Controlled != null && 
