@@ -997,7 +997,7 @@ namespace Barotrauma.Networking
 
                 msg.Write(selectedShuttle.Name);
                 msg.Write(selectedShuttle.MD5Hash.Hash);
-            
+
                 connectedClients.ForEach(c => c.ReadyToStart = false);
 
                 server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
@@ -1218,6 +1218,14 @@ namespace Barotrauma.Networking
             {
                 msg.Write(false);
             }
+
+            //monster spawn settings
+            List<string> monsterNames = monsterEnabled.Keys.ToList();
+            foreach (string s in monsterNames)
+            {
+                msg.Write(monsterEnabled[s]);
+            }
+            msg.WritePadBits();
 
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);     
         }

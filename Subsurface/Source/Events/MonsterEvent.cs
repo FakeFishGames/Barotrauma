@@ -52,13 +52,13 @@ namespace Barotrauma
 
             spawnDeep = ToolBox.GetAttributeBool(element, "spawndeep", false);
 
-            if (GameMain.Server != null)
+            if (GameMain.NetworkMember != null)
             {
-                List<string> monsterNames = GameMain.Server.monsterEnabled.Keys.ToList();
+                List<string> monsterNames = GameMain.NetworkMember.monsterEnabled.Keys.ToList();
                 string tryKey = monsterNames.Find(s => characterFile.ToLower().Contains(s.ToLower()));
                 if (!string.IsNullOrWhiteSpace(tryKey))
                 {
-                    if (!GameMain.Server.monsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
+                    if (!GameMain.NetworkMember.monsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
                 }
             }
         }

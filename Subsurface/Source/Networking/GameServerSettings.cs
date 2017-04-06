@@ -46,7 +46,6 @@ namespace Barotrauma.Networking
             private set;
         }
         
-        public Dictionary<string, bool> monsterEnabled;
         public Dictionary<string, int> extraCargo;
 
         public bool ShowNetStats;
@@ -287,7 +286,7 @@ namespace Barotrauma.Networking
             showLogButton.Visible = SaveServerLogs;
 
             List<string> monsterNames = Directory.GetDirectories("Content/Characters").ToList();
-            for (int i=0;i<monsterNames.Count;i++)
+            for (int i = 0; i < monsterNames.Count; i++)
             {
                 monsterNames[i] = monsterNames[i].Replace("Content/Characters", "").Replace("/", "").Replace("\\", "");
             }
