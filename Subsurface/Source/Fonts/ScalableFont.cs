@@ -196,18 +196,18 @@ namespace Barotrauma
         public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth)
         {
             if (textures.Count == 0) return;
-
+            
             int lineNum = 0;
             Vector2 currentPos = position;
-            Vector2 advanceUnit = new Vector2((float)Math.Cos(rotation) * scale.X, (float)Math.Sin(rotation) * scale.Y);
+            Vector2 advanceUnit = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
             for (int i = 0; i < text.Length; i++)
             {
                 if (text[i]=='\n')
                 {
                     lineNum++;
                     currentPos = position;
-                    currentPos.X += baseHeight * 18 / 10 * lineNum * advanceUnit.Y;
-                    currentPos.Y += baseHeight * 18 / 10 * lineNum * advanceUnit.X;
+                    currentPos.X -= baseHeight * 1.8f * lineNum * advanceUnit.Y * scale.Y;
+                    currentPos.Y += baseHeight * 1.8f * lineNum * advanceUnit.X * scale.Y;
                     continue;
                 }
                 uint charIndex = text[i];
@@ -218,12 +218,12 @@ namespace Barotrauma
                     {
                         Texture2D tex = textures[gd.texIndex];
                         Vector2 drawOffset;
-                        drawOffset.X = gd.drawOffset.X * advanceUnit.X - gd.drawOffset.Y * advanceUnit.Y;
-                        drawOffset.Y = gd.drawOffset.X * advanceUnit.Y + gd.drawOffset.Y * advanceUnit.X;
+                        drawOffset.X = gd.drawOffset.X * advanceUnit.X * scale.X - gd.drawOffset.Y * advanceUnit.Y * scale.Y;
+                        drawOffset.Y = gd.drawOffset.X * advanceUnit.Y * scale.Y + gd.drawOffset.Y * advanceUnit.X * scale.X;
 
                         sb.Draw(tex, currentPos + drawOffset, null, gd.texCoords, origin, rotation, scale, color, se, layerDepth);
                     }
-                    currentPos += gd.advance * advanceUnit;
+                    currentPos += gd.advance * advanceUnit * scale.X;
                 }
             }
         }
@@ -243,7 +243,7 @@ namespace Barotrauma
                 if (text[i] == '\n')
                 {
                     currentPos.X = position.X;
-                    currentPos.Y += baseHeight * 18 / 10;
+                    currentPos.Y += baseHeight * 1.8f;
                     continue;
                 }
                 uint charIndex = text[i];
@@ -264,7 +264,7 @@ namespace Barotrauma
         {
             float currentLineX = 0.0f;
             Vector2 retVal = Vector2.Zero;
-            retVal.Y = baseHeight*18/10;
+            retVal.Y = baseHeight*1.8f;
             for (int i = 0; i < text.Length; i++)
             {
                 if (text[i] == '\n')
