@@ -20,6 +20,11 @@ namespace Barotrauma.Networking
             get { return events; }
         }
 
+        public List<ServerEntityEvent> UniqueEvents
+        {
+            get { return uniqueEvents; }
+        }
+
         private class BufferedEvent
         {
             public readonly Client Sender;
@@ -208,12 +213,14 @@ namespace Barotrauma.Networking
             {
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);
                 //how many (unique) events the clients had missed before joining
+                client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 msg.Write(client.UnreceivedEntityEventCount);
 
                 //ID of the first event sent after the client joined 
                 //(after the client has been synced they'll switch their lastReceivedID 
                 //to the one before this, and the eventmanagers will start to function "normally")
                 msg.Write(events.Count == 0 ? (UInt16)0 : events[events.Count - 1].ID);
+
                 Write(msg, eventsToSync, client);
             }
             else

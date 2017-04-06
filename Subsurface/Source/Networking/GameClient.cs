@@ -570,6 +570,7 @@ namespace Barotrauma.Networking
                                 case "You have been banned from the server":
                                 case "You have been kicked from the server":
                                 case "You have been disconnected because of excessive desync":
+                                case "You have been disconnected because syncing your client with the server took too long.":
                                     var msgBox = new GUIMessageBox("CONNECTION LOST", disconnectMsg);
                                     msgBox.Buttons[0].OnClicked += ReturnToServerList;
                                     break;

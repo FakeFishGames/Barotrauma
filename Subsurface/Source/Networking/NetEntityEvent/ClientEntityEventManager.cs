@@ -136,7 +136,7 @@ namespace Barotrauma.Networking
                 {
                     if (thisEventID != lastReceivedID + 1)
                     {
-                        DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
+                        DebugConsole.NewMessage("received msg " + thisEventID + " (waiting for "+ (lastReceivedID+1) + ")", thisEventID<lastReceivedID+1 ? Microsoft.Xna.Framework.Color.Yellow : Microsoft.Xna.Framework.Color.Red);
                     }
                     else if (entity == null)
                     {
