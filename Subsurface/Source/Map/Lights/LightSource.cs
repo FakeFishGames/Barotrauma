@@ -352,7 +352,19 @@ namespace Barotrauma.Lights
             points.AddRange(boundaryCorners);
 
             var compareCCW = new CompareSegmentPointCW(drawPos);
-            points.Sort(compareCCW);
+            try
+            {
+                points.Sort(compareCCW);
+            }
+            catch (Exception e)
+            {
+                StringBuilder sb = new StringBuilder("Constructing light volumes failed! Light pos: "+drawPos+", Hull verts:\n");
+                foreach (SegmentPoint sp in points)
+                {
+                    sb.AppendLine(sp.Pos.ToString());
+                }
+                DebugConsole.ThrowError(sb.ToString(), e);
+            }
             
             List<Vector2> output = new List<Vector2>();
 
