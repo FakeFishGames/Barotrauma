@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.ComponentModel;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -523,7 +524,7 @@ namespace Barotrauma.Networking
 
                                 string shuttleName = inc.ReadString();
                                 string shuttleHash = inc.ReadString();
-                                
+
                                 NetOutgoingMessage readyToStartMsg = client.CreateMessage();
                                 readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
 
@@ -657,6 +658,28 @@ namespace Barotrauma.Networking
 
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
+            
+            //monster spawn settings
+            if (monsterEnabled == null)
+            {
+                List<string> monsterNames1 = Directory.GetDirectories("Content/Characters").ToList();
+                for (int i = 0; i < monsterNames1.Count; i++)
+                {
+                    monsterNames1[i] = monsterNames1[i].Replace("Content/Characters", "").Replace("/", "").Replace("\\", "");
+                }
+                monsterEnabled = new Dictionary<string, bool>();
+                foreach (string s in monsterNames1)
+                {
+                    monsterEnabled.Add(s, true);
+                }
+            }
+
+            List<string> monsterNames = monsterEnabled.Keys.ToList();
+            foreach (string s in monsterNames)
+            {
+                monsterEnabled[s] = inc.ReadBoolean();
+            }
+            inc.ReadPadBits();
 
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
 

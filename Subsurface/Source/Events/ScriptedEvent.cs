@@ -137,7 +137,15 @@ namespace Barotrauma
                     }
 
                     ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
-                    object instance = constructor.Invoke(new object[] { element });
+                    object instance = null;
+                    try
+                    {
+                        instance = constructor.Invoke(new object[] { element });
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugConsole.ThrowError(ex.InnerException!=null ? ex.InnerException.ToString() : ex.ToString());
+                    }
 
                     //previousEvents.Add(i);
 

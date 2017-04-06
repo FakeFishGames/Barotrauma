@@ -97,6 +97,7 @@ namespace Barotrauma.Networking
         protected Character myCharacter;
         protected CharacterInfo characterInfo;
 
+        public Dictionary<string, bool> monsterEnabled;
 
         protected RespawnManager respawnManager;
 
