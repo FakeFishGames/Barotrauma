@@ -3,6 +3,7 @@ using Barotrauma.Lights;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -14,7 +15,7 @@ namespace Barotrauma
         
         public float CameraShake;
 
-        private bool sparks, shockwave, flames;
+        private bool sparks, shockwave, flames, smoke;
 
         public Explosion(XElement element)
         {
@@ -24,7 +25,8 @@ namespace Barotrauma
 
             sparks      = ToolBox.GetAttributeBool(element, "sparks", true);
             shockwave   = ToolBox.GetAttributeBool(element, "shockwave", true);
-            flames      = ToolBox.GetAttributeBool(element, "flames", true); 
+            flames      = ToolBox.GetAttributeBool(element, "flames", true);
+            smoke       = ToolBox.GetAttributeBool(element, "smoke", true);
 
             CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range*0.1f);
         }
@@ -52,8 +54,13 @@ namespace Barotrauma
                 }
                 if (flames)
                 {
-                    GameMain.ParticleManager.CreateParticle("explosionfire", worldPosition + Rand.Vector(50f),
-                        Rand.Vector(Rand.Range(50f, 100.0f)), 0.0f, hull);
+                    GameMain.ParticleManager.CreateParticle("explosionfire", ClampParticlePos(worldPosition + Rand.Vector(50f), hull),
+                        Rand.Vector(Rand.Range(50.0f, 100.0f)), 0.0f, hull);
+                }
+                if (smoke)
+                {
+                    GameMain.ParticleManager.CreateParticle("smoke", ClampParticlePos(worldPosition + Rand.Vector(50f), hull),
+                        Rand.Vector(Rand.Range(1.0f, 10.0f)), 0.0f, hull);
                 }
             }
 
@@ -89,9 +96,19 @@ namespace Barotrauma
 
         }
 
+        private Vector2 ClampParticlePos(Vector2 particlePos, Hull hull)
+        {
+            if (hull == null) return particlePos;
+
+            return new Vector2(
+                MathHelper.Clamp(particlePos.X, hull.WorldRect.X, hull.WorldRect.Right),
+                MathHelper.Clamp(particlePos.Y, hull.WorldRect.Y - hull.WorldRect.Height, hull.WorldRect.Y));
+        }
+
+
         private IEnumerable<object> DimLight(LightSource light)
         {
-            float currBrightness= 1.0f;
+            float currBrightness = 1.0f;
             float startRange = light.Range;
 
             while (light.Color.A > 0.0f)
@@ -99,13 +116,13 @@ namespace Barotrauma
                 light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, currBrightness);
                 light.Range = startRange * currBrightness;
 
-                currBrightness -= CoroutineManager.DeltaTime*10.0f;
+                currBrightness -= CoroutineManager.DeltaTime * 20.0f;
 
                 yield return CoroutineStatus.Running;
             }
 
             light.Remove();
-            
+
             yield return CoroutineStatus.Success;
         }
 
@@ -115,6 +132,11 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
+                Vector2 explosionPos = worldPosition;
+                if (c.Submarine != null) explosionPos -= c.Submarine.Position;
+
+                explosionPos = ConvertUnits.ToSimUnits(explosionPos);
+
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
@@ -127,6 +149,9 @@ namespace Barotrauma
                     if (dist > range) continue;
 
                     float distFactor = 1.0f - dist / range;
+
+                    //solid obstacles between the explosion and the limb reduce the effect of the explosion by 90%
+                    if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null) distFactor *= 0.1f;
 
                     c.AddDamage(limb.WorldPosition, DamageType.None,
                         damage / c.AnimController.Limbs.Length * distFactor, 0.0f, stun * distFactor, false);

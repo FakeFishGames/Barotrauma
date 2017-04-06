@@ -17,7 +17,7 @@
 
     <Pickable holdpos="30,-15" handle1="0,1" slots="RightHand,LeftHand,Any">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg" disabledeltatime="true">
-        <Explosion range="500.0" structuredamage="100" damage="200" stun="5" force="3.0"/>
+        <Explosion range="250.0" structuredamage="10" damage="20" stun="5" force="3.0"/>
       </StatusEffect>
     </Pickable>
   </Item>

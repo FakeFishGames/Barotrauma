@@ -159,18 +159,21 @@
   </smoke>  
 
   <explosionfire
-    startsizemin="1.0,1.0" startsizemax="1.5,1.5"
-    sizechangemin="0.5,0.5" sizechangemax="0.6,0.6"
-    startrotationmin ="0.0" startrotationmax="360"
+    startsizemin="0.25,0.15" startsizemax="0.5,0.25"
+    sizechangemin="0.2,0.2" sizechangemax="0.3,0.3"
+    startrotationmin ="-50.0" startrotationmax="50"
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
     colorchange="-0.6, -0.6, -0.6, -0.5"
     lifetime="5.0"
     growtime ="0.05"
     drawtarget="air"
     collideswithwalls="true"
+    collisionradius="100"
     blendstate="additive"
-    velocitychange="0.0, 0.5">
-    <sprite texture="Content/Particles/explosion.png" sourcerect="0,0,128,128"/>
+    velocitychange="0.0, 1.0"    
+    animduration="1.2"
+    loopanim="false">
+    <animatedsprite texture="Content/Particles/FlameRoundParticleSheet.png" sourcerect="0,0,2048,2048" columns="10" rows="5" origin="0.5,0.8"/>
   </explosionfire>
   
   <weld

@@ -242,7 +242,11 @@ namespace Barotrauma
             SoundManager.ClearAlSource(AlBufferId);
             ALHelper.Check();
 
-            if (oggSound != null) oggSound.Dispose();
+            if (oggSound != null)
+            {
+                oggSound.Dispose();
+                oggSound = null;
+            }
         }
 
 
