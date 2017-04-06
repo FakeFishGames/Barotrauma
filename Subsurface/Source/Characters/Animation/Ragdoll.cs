@@ -853,13 +853,19 @@ namespace Barotrauma
                 inWater = false;
                 headInWater = false;
 
-                float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
-
-                float floorY = GetFloorY();
-
-                if (currentHull.Volume > currentHull.FullVolume * 0.95f ||
-                    (waterSurface - floorY > HeadPosition * 0.95f && Collider.SimPosition.Y < waterSurface))
+                inWater = false;
+                if (inWater = currentHull.Volume > currentHull.FullVolume * 0.95f)
+                {
                     inWater = true;
+                }
+                else
+                {
+                    float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
+                    if (Collider.SimPosition.Y < waterSurface && waterSurface - GetFloorY() > HeadPosition * 0.95f)
+                    {
+                        inWater = true;
+                    }
+                }
             }
 
             if (flowForce.LengthSquared() > 0.001f)
