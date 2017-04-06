@@ -97,19 +97,30 @@ namespace Barotrauma.Networking
             msg.Write((byte)ClientNetObject.ENTITY_STATE);
             Write(msg, eventsToSync);
         }
-        
+
+        private UInt16? firstNewID;
+
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received
         /// </summary>
         public void Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
         {
             UInt16 unreceivedEntityEventCount = 0;
-            UInt16 firstNewID = 0;
 
             if (type == ServerNetObject.ENTITY_EVENT_INITIAL)
             {
                 unreceivedEntityEventCount = msg.ReadUInt16();
                 firstNewID = msg.ReadUInt16();
+
+                DebugConsole.NewMessage("received midround syncing msg, unreceived: "+unreceivedEntityEventCount+", first new ID: "+firstNewID, Microsoft.Xna.Framework.Color.Yellow);
+
+            }
+            else if (firstNewID != null)
+            {
+                DebugConsole.NewMessage("midround syncing complete, switching to ID "+ (UInt16)(firstNewID - 1), Microsoft.Xna.Framework.Color.Yellow);
+
+                lastReceivedID = (UInt16)(firstNewID - 1);
+                firstNewID = null;
             }
 
             UInt16 firstEventID = msg.ReadUInt16();
@@ -165,15 +176,6 @@ namespace Barotrauma.Networking
                 }
                 msg.ReadPadBits();
             }
-
-            if (type == ServerNetObject.ENTITY_EVENT_INITIAL)
-            {
-                if (lastReceivedID == unreceivedEntityEventCount - 1 ||
-                    unreceivedEntityEventCount == 0)
-                {
-                    lastReceivedID = (UInt16)(firstNewID - 1);
-                }
-            }
         }
 
         protected override void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
@@ -194,6 +196,8 @@ namespace Barotrauma.Networking
             ID = 0;
 
             lastReceivedID = 0;
+
+            firstNewID = null;
 
             events.Clear();
             eventLastSent.Clear();

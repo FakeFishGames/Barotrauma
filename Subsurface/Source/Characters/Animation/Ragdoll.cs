@@ -856,12 +856,19 @@ namespace Barotrauma
 
                 headInWater = false;
 
-                float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
-
-                float floorY = GetFloorY();
-
-                inWater = currentHull.Volume > currentHull.FullVolume * 0.95f ||
-                    (waterSurface - floorY > HeadPosition * 0.95f && Collider.SimPosition.Y < waterSurface);
+                inWater = false;
+                if (inWater = currentHull.Volume > currentHull.FullVolume * 0.95f)
+                {
+                    inWater = true;
+                }
+                else
+                {
+                    float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
+                    if (Collider.SimPosition.Y < waterSurface && waterSurface - GetFloorY() > HeadPosition * 0.95f)
+                    {
+                        inWater = true;
+                    }
+                }
             }
 
             if (flowForce.LengthSquared() > 0.001f)
@@ -1069,15 +1076,7 @@ namespace Barotrauma
 
                     float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
                     float targetY = tfloorY + Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor;
-
-                    float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
-
-                    float floorY = GetFloorY();
-
-                    if (currentHull.Volume > currentHull.FullVolume * 0.95f ||
-                        (waterSurface - floorY > HeadPosition * 0.95f && Collider.SimPosition.Y < waterSurface))
-                        inWater = true;
-
+                    
                     if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && Collider.SimPosition.Y<targetY && !forceImmediate)
                     {
                         Vector2 newSpeed = Collider.LinearVelocity;
