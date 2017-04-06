@@ -207,6 +207,19 @@ namespace Barotrauma.Networking
                         DebugConsole.Log("  Sequence channel: " + inc.SequenceChannel);
                     }
 
+                    if (!Directory.Exists(downloadFolder))
+                    {
+                        try
+                        {
+                            Directory.CreateDirectory(downloadFolder);
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError("Could not start a file transfer: failed to create the folder \""+downloadFolder+"\".", e);
+                            return;
+                        }
+                    }
+
                     var newTransfer = new FileTransferIn(inc.SenderConnection, Path.Combine(downloadFolder, fileName), (FileTransferType)fileType);
                     newTransfer.SequenceChannel = inc.SequenceChannel;
                     newTransfer.Status = FileTransferStatus.Receiving;
