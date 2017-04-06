@@ -684,7 +684,7 @@ namespace Barotrauma.Networking
 
                         //last msgs we've created/sent, the client IDs should never be higher than these
                         UInt16 lastEntityEventID = entityEventManager.Events.Count == 0 ? (UInt16)0 : entityEventManager.Events.Last().ID;
-                        
+
                         if (c.NeedsMidRoundSync)
                         {
                             //received all the old events -> client in sync, we can switch to normal behavior
@@ -1628,8 +1628,10 @@ namespace Barotrauma.Networking
             {
                 log.LogFrame.Draw(spriteBatch);
             }
-
+            
             if (!ShowNetStats) return;
+
+            GUI.Font.DrawString(spriteBatch, "Unique Events: " + entityEventManager.UniqueEvents.Count, new Vector2(10, 50), Color.White);
 
             int width = 200, height = 300;
             int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
@@ -1643,7 +1645,7 @@ namespace Barotrauma.Networking
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
             GUI.Font.DrawString(spriteBatch, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
-                        
+
             GUI.SmallFont.DrawString(spriteBatch, "Connections: "+server.ConnectionsCount, new Vector2(x + 10, y + 30), Color.White);
             GUI.SmallFont.DrawString(spriteBatch, "Received bytes: " + MathUtils.GetBytesReadable(server.Statistics.ReceivedBytes), new Vector2(x + 10, y + 45), Color.White);
             GUI.SmallFont.DrawString(spriteBatch, "Received packets: " + server.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
