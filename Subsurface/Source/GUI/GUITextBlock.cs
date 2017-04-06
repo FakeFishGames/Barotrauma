@@ -43,6 +43,8 @@ namespace Barotrauma
             get { return text; }
             set
             {
+                if (Text == value) return;
+
                 text = value;
                 wrappedText = value;
                 SetTextPos();
@@ -68,8 +70,12 @@ namespace Barotrauma
                     child.Rect = new Rectangle(child.Rect.X + value.X - rect.X, child.Rect.Y + value.Y - rect.Y, child.Rect.Width, child.Rect.Height);
                 }
 
+                if (value.Width != rect.Width || value.Height != rect.Height)
+                {
+                    SetTextPos();
+                }
+
                 rect = value;
-                SetTextPos();
             }
         }
 

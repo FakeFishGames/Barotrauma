@@ -68,10 +68,10 @@ namespace Barotrauma
 
             if (!isNetworkMessage && GameMain.Client != null) return;
 
-            if (fireSoundBasic==null)
+            if (fireSoundBasic == null)
             {
-                fireSoundBasic = Sound.Load("Content/Sounds/fire.ogg");
-                fireSoundLarge = Sound.Load("Content/Sounds/firelarge.ogg");
+                fireSoundBasic = Sound.Load("Content/Sounds/fire.ogg", false);
+                fireSoundLarge = Sound.Load("Content/Sounds/firelarge.ogg", false);
             }
 
             hull.AddFireSource(this);
@@ -80,13 +80,8 @@ namespace Barotrauma
 
             this.position = worldPosition - new Vector2(-5.0f, 5.0f) - Submarine.Position;
 
-
             lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull == null ? null : hull.Submarine);
-
-
-
-            //this.position.Y = hull.Rect.Y - hull.Rect.Height;
-
+            
             size = new Vector2(10.0f, 10.0f);
         }
 
@@ -358,12 +353,12 @@ namespace Barotrauma
         {
             lightSource.Remove();
 
-            if (basicSoundIndex > -1)
+            if (basicSoundIndex > 0)
             {
                 Sounds.SoundManager.Stop(basicSoundIndex);
                 basicSoundIndex = -1;
             }
-            if (largeSoundIndex > -1)
+            if (largeSoundIndex > 0)
             {
                 Sounds.SoundManager.Stop(largeSoundIndex);
                 largeSoundIndex = -1;

@@ -75,8 +75,8 @@ namespace Barotrauma.Sounds
 
         public static int Play(Sound sound, Vector2 position, float volume = 1.0f, float lowPassGain = 0.0f, bool loop=false)
         {
-            if (Disabled) return -1;
-
+            if (Disabled || sound.AlBufferId == -1) return -1;
+            
             for (int i = 1; i < DefaultSourceCount; i++)
             {
                 //find a source that's free to use (not playing or paused)
