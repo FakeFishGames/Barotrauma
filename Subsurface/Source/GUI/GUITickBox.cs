@@ -71,13 +71,15 @@ namespace Barotrauma
             if (parent != null)
                 parent.AddChild(this);
 
-            box = new GUIFrame(rect, Color.DarkGray, null, this);
+            box = new GUIFrame(rect, Color.DarkGray, "", this);
             box.HoverColor = Color.Gray;
             box.SelectedColor = Color.DarkGray;
             box.CanBeFocused = false;
-            
-            text = new GUITextBlock(new Rectangle(rect.Right + 10, rect.Y+2, 20, rect.Height), label, GUI.Style, this, font);
 
+            GUI.Style.Apply(box, "", this);
+            
+            text = new GUITextBlock(new Rectangle(rect.Right + 10, rect.Y+2, 20, rect.Height), label, "", this, font);
+            
             this.rect = new Rectangle(box.Rect.X, box.Rect.Y, 240, rect.Height);
 
             Enabled = true;

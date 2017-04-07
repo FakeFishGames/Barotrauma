@@ -88,18 +88,18 @@ namespace Barotrauma
             }
         }
 
-        public GUIScrollBar(Rectangle rect, GUIStyle style, float barSize, GUIComponent parent = null)
+        public GUIScrollBar(Rectangle rect, string style, float barSize, GUIComponent parent = null)
             : this(rect, null, barSize, style, parent)
         {
         }
 
-        public GUIScrollBar(Rectangle rect, Color? color, float barSize, GUIStyle style = null, GUIComponent parent = null)
+        public GUIScrollBar(Rectangle rect, Color? color, float barSize, string style = "", GUIComponent parent = null)
             : this(rect, color, barSize, Alignment.TopLeft, style, parent)
         {
         }
 
 
-        public GUIScrollBar(Rectangle rect, Color? color, float barSize, Alignment alignment, GUIStyle style = null, GUIComponent parent = null)
+        public GUIScrollBar(Rectangle rect, Color? color, float barSize, Alignment alignment, string style = "", GUIComponent parent = null)
             : base(style)
         {
             this.rect = rect;
@@ -118,7 +118,7 @@ namespace Barotrauma
 
             this.barSize = barSize;
 
-            bar = new GUIButton(new Rectangle(0, 0, 0, 0), "", color, style, this);
+            bar = new GUIButton(new Rectangle(0, 0, 0, 0), "", color, "", this);
             
             bar.OnPressed = SelectBar;
             //AddChild(bar);

@@ -226,10 +226,10 @@ namespace Barotrauma
             {
                 if (teamIDs.Count > 1)
                 {
-                    new GUITextBlock(new Rectangle(0, y - 20, 100, 20), CombatMission.GetTeamName(teamIDs[i]), GUI.Style, crewFrame);
+                    new GUITextBlock(new Rectangle(0, y - 20, 100, 20), CombatMission.GetTeamName(teamIDs[i]), "", crewFrame);
                 }
 
-                GUIListBox crewList = new GUIListBox(new Rectangle(0, y, 280, listBoxHeight), Color.White * 0.7f, GUI.Style, crewFrame);
+                GUIListBox crewList = new GUIListBox(new Rectangle(0, y, 280, listBoxHeight), Color.White * 0.7f, "", crewFrame);
                 crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
                 crewList.OnSelected = SelectCrewCharacter;
             
@@ -275,7 +275,7 @@ namespace Barotrauma
 
             var previewPlayer = new GUIFrame(
                 new Rectangle(0, 0, 230, 300),
-                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, GUI.Style, crewFrame);
+                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, "", crewFrame);
             previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
             previewPlayer.UserData = "selectedcharacter";
 

@@ -126,23 +126,23 @@ namespace Barotrauma
 
             selectedTab = -1;
 
-            topPanel = new GUIFrame(new Rectangle(0, 0, 0, 31), GUI.Style);
+            topPanel = new GUIFrame(new Rectangle(0, 0, 0, 31), "");
             topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 280, 70), GUI.Style, topPanel);
+            hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 280, 70), "", topPanel);
             hullVolumeFrame.Visible = false;
             hullVolumeFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
 
-            GUITextBlock totalHullVolume = new GUITextBlock(new Rectangle(0, 0, 0, 20), "", GUI.Style, hullVolumeFrame, GUI.SmallFont);            
+            GUITextBlock totalHullVolume = new GUITextBlock(new Rectangle(0, 0, 0, 20), "", "", hullVolumeFrame, GUI.SmallFont);            
             totalHullVolume.TextGetter = GetTotalHullVolume;
 
-            GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", GUI.Style, hullVolumeFrame, GUI.SmallFont);
+            GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", "", hullVolumeFrame, GUI.SmallFont);
             selectedHullVolume.TextGetter = GetSelectedHullVolume;
 
-            var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", GUI.Style, topPanel);
+            var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", "", topPanel);
             button.OnClicked = CreateLoadScreen;
 
-            button = new GUIButton(new Rectangle(80,0,70,20), "Save", GUI.Style, topPanel);
+            button = new GUIButton(new Rectangle(80,0,70,20), "Save", "", topPanel);
             button.OnClicked = (GUIButton btn, object data) =>
             {
                 CreateSaveScreen();
@@ -150,10 +150,10 @@ namespace Barotrauma
                 return true;
             };
 
-            var nameLabel = new GUITextBlock(new Rectangle(170, -4, 150, 20), "", GUI.Style, topPanel, GUI.LargeFont);
+            var nameLabel = new GUITextBlock(new Rectangle(170, -4, 150, 20), "", "", topPanel, GUI.LargeFont);
             nameLabel.TextGetter = GetSubName;
 
-            linkedSubBox = new GUIDropDown(new Rectangle(750,0,200,20), "Add submarine", GUI.Style, topPanel);
+            linkedSubBox = new GUIDropDown(new Rectangle(750,0,200,20), "Add submarine", "", topPanel);
             linkedSubBox.ToolTip = 
                 "Places another submarine into the current submarine file. "+
                 "Can be used for adding things such as smaller vessels, "+
@@ -165,13 +165,13 @@ namespace Barotrauma
             }
             linkedSubBox.OnSelected += SelectLinkedSub;
             
-            leftPanel = new GUIFrame(new Rectangle(0, 30, 150, GameMain.GraphicsHeight-30), GUI.Style);
+            leftPanel = new GUIFrame(new Rectangle(0, 30, 150, GameMain.GraphicsHeight-30), "");
             leftPanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             
-            GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", GUI.Style, leftPanel);
+            GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", "", leftPanel);
             itemCount.TextGetter = GetItemCount;
 
-            GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 50, 0, 20), "", GUI.Style, leftPanel);
+            GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 50, 0, 20), "", "", leftPanel);
             structureCount.TextGetter = GetStructureCount;
 
             GUItabs = new GUIComponent[Enum.GetValues(typeof(MapEntityCategory)).Length];                       
@@ -181,25 +181,25 @@ namespace Barotrauma
             int i = 0;
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
-                var catButton = new GUIButton(new Rectangle(0, y, 0, 20), category.ToString(), Alignment.Left, GUI.Style, leftPanel);
+                var catButton = new GUIButton(new Rectangle(0, y, 0, 20), category.ToString(), Alignment.Left, "", leftPanel);
                 catButton.UserData = i;
                 catButton.OnClicked = SelectTab;
                 y+=25;
 
-                GUItabs[i] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+                GUItabs[i] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "");
                 GUItabs[i].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-                new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", GUI.Style, Alignment.TopRight, Alignment.TopRight, GUItabs[i], false, GUI.SmallFont);
+                new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.TopRight, GUItabs[i], false, GUI.SmallFont);
 
-                GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), Alignment.TopRight, GUI.Style, GUItabs[i]);
+                GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), Alignment.TopRight, "", GUItabs[i]);
                 searchBox.Font = GUI.SmallFont;
                 searchBox.OnTextChanged = FilterMessages;
 
-                var clearButton = new GUIButton(new Rectangle(0, 0, 15, 15), "x", Alignment.TopRight, GUI.Style, GUItabs[i]);
+                var clearButton = new GUIButton(new Rectangle(0, 0, 15, 15), "x", Alignment.TopRight, "", GUItabs[i]);
                 clearButton.OnClicked = ClearFilter;
                 clearButton.UserData = searchBox;
 
-                GUIListBox itemList = new GUIListBox(new Rectangle(0, 20, 0, 0), Color.White * 0.7f, GUI.Style, GUItabs[i]);
+                GUIListBox itemList = new GUIListBox(new Rectangle(0, 20, 0, 0), Color.White * 0.7f, "", GUItabs[i]);
                 itemList.OnSelected = SelectPrefab;
                 itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
@@ -243,23 +243,23 @@ namespace Barotrauma
             }
 
             y+=50;
-            button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, GUI.Style, leftPanel);
+            button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, "", leftPanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
 
             y += 35;
-            button = new GUIButton(new Rectangle(0, y, 0, 20), "Wiring mode", Alignment.Left, GUI.Style, leftPanel);
+            button = new GUIButton(new Rectangle(0, y, 0, 20), "Wiring mode", Alignment.Left, "", leftPanel);
             //button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleWiringMode;
             
             y+=50;
-            button = new GUIButton(new Rectangle(0, y, 0, 20), "Generate waypoints", Alignment.Left, GUI.Style, leftPanel);
+            button = new GUIButton(new Rectangle(0, y, 0, 20), "Generate waypoints", Alignment.Left, "", leftPanel);
             button.ToolTip = "AI controlled crew members require waypoints to navigate around the sub.";
             button.OnClicked = GenerateWaypoints;
             
             y+=50;
 
-            new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", GUI.Style, leftPanel);
+            new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", "", leftPanel);
             
             var tickBox = new GUITickBox(new Rectangle(0,y+20,20,20), "Waypoints", Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = !WayPoint.ShowWayPoints; return true; };
@@ -281,9 +281,9 @@ namespace Barotrauma
 
             if (y < GameMain.GraphicsHeight - 100)
             {
-                new GUITextBlock(new Rectangle(0, y, 0, 15), "Previously used:", GUI.Style, leftPanel);
+                new GUITextBlock(new Rectangle(0, y, 0, 15), "Previously used:", "", leftPanel);
 
-                previouslyUsedList = new GUIListBox(new Rectangle(0, y + 15, 0, Math.Min(GameMain.GraphicsHeight - y - 40, 150)), GUI.Style, leftPanel);
+                previouslyUsedList = new GUIListBox(new Rectangle(0, y + 15, 0, Math.Min(GameMain.GraphicsHeight - y - 40, 150)), "", leftPanel);
                 previouslyUsedList.OnSelected = SelectPrefab;
             }
 
@@ -425,33 +425,33 @@ namespace Barotrauma
 
             int y = 0;
 
-            saveFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style, null);
+            saveFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", null);
             saveFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            new GUITextBlock(new Rectangle(0,0,200,30), "Save submarine", GUI.Style, saveFrame, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0,0,200,30), "Save submarine", "", saveFrame, GUI.LargeFont);
 
             y += 30;
 
-            new GUITextBlock(new Rectangle(0,y,150,20), "Name:", GUI.Style, saveFrame);
+            new GUITextBlock(new Rectangle(0,y,150,20), "Name:", "", saveFrame);
             y += 20;
 
-            nameBox = new GUITextBox(new Rectangle(5, y, 250, 20), GUI.Style, saveFrame);
+            nameBox = new GUITextBox(new Rectangle(5, y, 250, 20), "", saveFrame);
             nameBox.OnEnterPressed = ChangeSubName;
             nameBox.Text = GetSubName();
 
             y += 30;
             
-            new GUITextBlock(new Rectangle(0, y, 150, 20), "Description:", GUI.Style, saveFrame);
+            new GUITextBlock(new Rectangle(0, y, 150, 20), "Description:", "", saveFrame);
             y += 20;
 
             var descriptionBox = new GUITextBox(new Rectangle(5, y, 0, 100), null, null, Alignment.TopLeft,
-                Alignment.TopLeft, GUI.Style, saveFrame);
+                Alignment.TopLeft, "", saveFrame);
             descriptionBox.Wrap = true;
             descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
             descriptionBox.OnTextChanged = ChangeSubDescription;
 
             y += descriptionBox.Rect.Height + 15;
-            new GUITextBlock(new Rectangle(0, y, 150, 20), "Settings:", GUI.Style, saveFrame);
+            new GUITextBlock(new Rectangle(0, y, 150, 20), "Settings:", "", saveFrame);
 
             y += 20;
 
@@ -491,10 +491,10 @@ namespace Barotrauma
                 }
             }
             
-            var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), "Save", Alignment.Right | Alignment.Bottom, GUI.Style, saveFrame);
+            var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), "Save", Alignment.Right | Alignment.Bottom, "", saveFrame);
             saveButton.OnClicked = SaveSub;
 
-            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Cancel", Alignment.Right | Alignment.Bottom, GUI.Style, saveFrame);
+            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Cancel", Alignment.Right | Alignment.Bottom, "", saveFrame);
             cancelButton.OnClicked = (GUIButton btn, object userdata) =>
             {
                 saveFrame = null;
@@ -511,10 +511,10 @@ namespace Barotrauma
             Submarine.RefreshSavedSubs();
 
             int width = 300, height = 400;
-            loadFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style, null);
+            loadFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", null);
             loadFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            var subList = new GUIListBox(new Rectangle(0, 0, 0, height - 50), Color.White, GUI.Style, loadFrame);
+            var subList = new GUIListBox(new Rectangle(0, 0, 0, height - 50), Color.White, "", loadFrame);
             subList.OnSelected = (GUIComponent selected, object userData) =>
                 {
                     var deleteBtn = loadFrame.FindChild("delete") as GUIButton;
@@ -528,7 +528,7 @@ namespace Barotrauma
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
                     ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 80),
-                    GUI.Style,
+                    "",
                     Alignment.Left, Alignment.CenterY | Alignment.Left, subList);
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 textBlock.UserData = sub;
@@ -536,13 +536,13 @@ namespace Barotrauma
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
-                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
+                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", "", Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
                     shuttleText.TextColor = textBlock.TextColor * 0.8f;
                     shuttleText.ToolTip = textBlock.ToolTip;
                 }
             }
 
-            var deleteButton = new GUIButton(new Rectangle(0, 0, 70, 20), "Delete", Alignment.BottomLeft, GUI.Style, loadFrame);
+            var deleteButton = new GUIButton(new Rectangle(0, 0, 70, 20), "Delete", Alignment.BottomLeft, "", loadFrame);
             deleteButton.Enabled = false;
             deleteButton.UserData = "delete";
             deleteButton.OnClicked = (btn, userdata) =>
@@ -567,10 +567,10 @@ namespace Barotrauma
                 return true;
             };
 
-            var loadButton = new GUIButton(new Rectangle(-90, 0, 80, 20), "Load", Alignment.Right | Alignment.Bottom, GUI.Style, loadFrame);
+            var loadButton = new GUIButton(new Rectangle(-90, 0, 80, 20), "Load", Alignment.Right | Alignment.Bottom, "", loadFrame);
             loadButton.OnClicked = LoadSub;
 
-            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Cancel", Alignment.Right | Alignment.Bottom, GUI.Style, loadFrame);
+            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Cancel", Alignment.Right | Alignment.Bottom, "", loadFrame);
             cancelButton.OnClicked = (GUIButton btn, object userdata) =>
                 {
                     loadFrame = null;
@@ -738,10 +738,10 @@ namespace Barotrauma
 
         private GUIFrame CreateWiringPanel()
         {
-            GUIFrame frame = new GUIFrame(new Rectangle(0,0,65,300), null, Alignment.Right | Alignment.CenterY, GUI.Style);
+            GUIFrame frame = new GUIFrame(new Rectangle(0,0,65,300), null, Alignment.Right | Alignment.CenterY, "");
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            GUIListBox listBox = new GUIListBox(Rectangle.Empty, GUI.Style, frame);
+            GUIListBox listBox = new GUIListBox(Rectangle.Empty, "", frame);
             listBox.OnSelected = SelectWire;
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.list)
@@ -880,7 +880,7 @@ namespace Barotrauma
             var textBlock = new GUITextBlock(
                 new Rectangle(0,0,0,10), 
                 ToolBox.LimitString(name, GUI.SmallFont, previouslyUsedList.Rect.Width), 
-                GUI.Style, previouslyUsedList, GUI.SmallFont);
+                "", previouslyUsedList, GUI.SmallFont);
 
             textBlock.UserData = mapEntityPrefab;
 

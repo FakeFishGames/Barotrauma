@@ -53,20 +53,20 @@ namespace Barotrauma
                 height += 220;
             }
 
-            var frame = new GUIFrame(new Rectangle(0,0,width,height), null, Alignment.Center, GUI.Style, this);
+            var frame = new GUIFrame(new Rectangle(0,0,width,height), null, Alignment.Center, "", this);
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), header, Color.Transparent, Color.White, textAlignment, GUI.Style, frame, true);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), header, Color.Transparent, Color.White, textAlignment, "", frame, true);
             if (!string.IsNullOrWhiteSpace(text))
             {
                 new GUITextBlock(new Rectangle(0, 30, 0, height - 70), text, 
-                    Color.Transparent, Color.White, textAlignment, GUI.Style, frame, true);
+                    Color.Transparent, Color.White, textAlignment, "", frame, true);
             }
 
             int x = 0;
             this.Buttons = new GUIButton[buttons.Length];
             for (int i = 0; i < buttons.Length; i++)
             {
-                this.Buttons[i] = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], Alignment.Left | Alignment.Bottom, GUI.Style, frame);
+                this.Buttons[i] = new GUIButton(new Rectangle(x, 0, 150, 30), buttons[i], Alignment.Left | Alignment.Bottom, "", frame);
 
                 x += this.Buttons[i].Rect.Width + 20;
             }

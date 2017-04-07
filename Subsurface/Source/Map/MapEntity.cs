@@ -657,7 +657,7 @@ namespace Barotrauma
 
             highlightedListBox = new GUIListBox(
                 new Rectangle((int)PlayerInput.MousePosition.X+15, (int)PlayerInput.MousePosition.Y+15, 150, highlightedEntities.Count * 15), 
-                null, Alignment.TopLeft, GUI.Style, null, false);
+                null, Alignment.TopLeft, "", null, false);
 
             highlightedListBox.Color = Color.Black * 0.6f;
 
@@ -665,7 +665,7 @@ namespace Barotrauma
             {
                 var textBlock = new GUITextBlock(
                     new Rectangle(0,0,0,15), 
-                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), GUI.Style, highlightedListBox, GUI.SmallFont);
+                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), "", highlightedListBox, GUI.SmallFont);
 
                 textBlock.UserData = entity;
             }

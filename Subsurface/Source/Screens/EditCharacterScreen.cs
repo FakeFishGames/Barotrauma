@@ -43,18 +43,18 @@ namespace Barotrauma
 
             cam = new Camera();
 
-            GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), GUI.Style);
+            GUIpanel = new GUIFrame(new Rectangle(0, 0, 300, GameMain.GraphicsHeight), "");
             GUIpanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Alignment.Left, GUI.Style, GUIpanel);
+            physicsButton = new GUIButton(new Rectangle(0, 50, 200, 25), "Physics", Alignment.Left, "", GUIpanel);
             physicsButton.OnClicked += TogglePhysics;
 
-            new GUITextBlock(new Rectangle(0, 80, 0, 25), "Limbs:", GUI.Style, GUIpanel);
-            limbList = new GUIListBox(new Rectangle(0, 110, 0, 250), Color.White * 0.7f, GUI.Style, GUIpanel);
+            new GUITextBlock(new Rectangle(0, 80, 0, 25), "Limbs:", "", GUIpanel);
+            limbList = new GUIListBox(new Rectangle(0, 110, 0, 250), Color.White * 0.7f, "", GUIpanel);
             limbList.OnSelected = SelectLimb;
 
-            new GUITextBlock(new Rectangle(0, 360, 0, 25), "Joints:", GUI.Style, GUIpanel);
-            jointList = new GUIListBox(new Rectangle(0, 390, 0, 250), Color.White * 0.7f, GUI.Style, GUIpanel);
+            new GUITextBlock(new Rectangle(0, 360, 0, 25), "Joints:", "", GUIpanel);
+            jointList = new GUIListBox(new Rectangle(0, 390, 0, 250), Color.White * 0.7f, "", GUIpanel);
             
             while (Character.CharacterList.Count > 1)
             {

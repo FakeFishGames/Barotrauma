@@ -136,15 +136,15 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                pauseMenu = new GUIFrame(new Rectangle(0, 0, 200, 300), null, Alignment.Center, Style);
+                pauseMenu = new GUIFrame(new Rectangle(0, 0, 200, 300), null, Alignment.Center, "");
 
                 int y = 0;
-                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, Style, pauseMenu);
+                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, "", pauseMenu);
                 button.OnClicked = TogglePauseMenu;
 
                 y += 60;
 
-                button = new GUIButton(new Rectangle(0, y, 0, 30), "Settings", Alignment.CenterX, Style, pauseMenu);
+                button = new GUIButton(new Rectangle(0, y, 0, 30), "Settings", Alignment.CenterX, "", pauseMenu);
                 button.OnClicked = (btn, userData) => 
                 {
                     TogglePauseMenu();
@@ -161,7 +161,7 @@ namespace Barotrauma
                     SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
                     if (spMode != null)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, Style, pauseMenu);
+                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, "", pauseMenu);
                         button.OnClicked += TogglePauseMenu;
                         button.OnClicked += GameMain.GameSession.LoadPrevious;
 
@@ -174,7 +174,7 @@ namespace Barotrauma
                     SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
                     if (spMode != null)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, Style, pauseMenu);
+                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, "", pauseMenu);
                         button.OnClicked += QuitClicked;
                         button.OnClicked += TogglePauseMenu;
                         button.UserData = "save";
@@ -184,7 +184,7 @@ namespace Barotrauma
                 }
 
 
-                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, Style, pauseMenu);
+                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, "", pauseMenu);
                 button.OnClicked += QuitClicked;
                 button.OnClicked += TogglePauseMenu;
             }

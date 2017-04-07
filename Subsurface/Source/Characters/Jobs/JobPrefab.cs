@@ -108,14 +108,14 @@ namespace Barotrauma
 
             GUIFrame backFrame = new GUIFrame(Rectangle.Empty, Color.Black*0.5f);
 
-            GUIFrame frame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style, backFrame);
+            GUIFrame frame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", backFrame);
             frame.Padding = new Vector4(30.0f, 30.0f, 30.0f, 30.0f);
             
-            new GUITextBlock(new Rectangle(0,0,100,20), Name, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0,0,100,20), Name, "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
 
-            var descriptionBlock = new GUITextBlock(new Rectangle(0, 40, 0, 0), Description, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+            var descriptionBlock = new GUITextBlock(new Rectangle(0, 40, 0, 0), Description, "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(0, 40 + descriptionBlock.Rect.Height + 20, 100, 20), "Skills: ", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, 40 + descriptionBlock.Rect.Height + 20, 100, 20), "Skills: ", "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
 
             int y = 40 + descriptionBlock.Rect.Height + 50;
             foreach (SkillPrefab skill in Skills)
@@ -128,18 +128,18 @@ namespace Barotrauma
                     skillDescription += "/"+skillDescription2;
                 }
                 new GUITextBlock(new Rectangle(0, y, 100, 20),
-                    "   - " + skill.Name + ": " + skillDescription, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.SmallFont);
+                    "   - " + skill.Name + ": " + skillDescription, "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.SmallFont);
 
                 y += 20;
             }
 
-            new GUITextBlock(new Rectangle(250, 40 + descriptionBlock.Rect.Height + 20, 0, 20), "Items: ", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(250, 40 + descriptionBlock.Rect.Height + 20, 0, 20), "Items: ", "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
 
             y = 40 + descriptionBlock.Rect.Height + 50;
             foreach (string itemName in ItemNames)
             {
                 new GUITextBlock(new Rectangle(250, y, 100, 20),
-                "   - " + itemName, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.SmallFont);
+                "   - " + itemName, "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.SmallFont);
 
                 y += 20;
             }

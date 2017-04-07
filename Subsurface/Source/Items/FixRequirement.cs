@@ -83,11 +83,11 @@ namespace Barotrauma
             int width = 400, height = 500;
             int y = 0;
 
-            frame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, GUI.Style);
+            frame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, "");
             frame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
             frame.UserData = item;
 
-            new GUITextBlock(new Rectangle(0,0,200,20), "Attempting to fix " + item.Name, GUI.Style, frame);
+            new GUITextBlock(new Rectangle(0,0,200,20), "Attempting to fix " + item.Name, "", frame);
 
             y = y + 40;
             foreach (FixRequirement requirement in item.FixRequirements)
@@ -98,7 +98,7 @@ namespace Barotrauma
                 reqFrame.UserData = requirement;
 
 
-                var fixButton = new GUIButton(new Rectangle(0, 0, 50, 20), "Fix", GUI.Style, reqFrame);
+                var fixButton = new GUIButton(new Rectangle(0, 0, 50, 20), "Fix", "", reqFrame);
                 fixButton.OnClicked = FixButtonPressed;
                 fixButton.UserData = requirement;
 
@@ -108,7 +108,7 @@ namespace Barotrauma
                 int y2 = 20;
                 foreach (string itemName in requirement.requiredItems)
                 {
-                    var itemBlock = new GUITextBlock(new Rectangle(30, y2, 200, 15), itemName, GUI.Style, reqFrame);
+                    var itemBlock = new GUITextBlock(new Rectangle(30, y2, 200, 15), itemName, "", reqFrame);
                     itemBlock.Font = GUI.SmallFont;
                     itemBlock.UserData = itemName;
                     
@@ -118,7 +118,7 @@ namespace Barotrauma
                 y2 = 20;
                 foreach (Skill skill in requirement.requiredSkills)
                 {
-                    var skillBlock = new GUITextBlock(new Rectangle(0, y2, 200, 15), skill.Name + " - " + skill.Level, GUI.Style, Alignment.Right, Alignment.TopLeft, reqFrame);
+                    var skillBlock = new GUITextBlock(new Rectangle(0, y2, 200, 15), skill.Name + " - " + skill.Level, "", Alignment.Right, Alignment.TopLeft, reqFrame);
                     skillBlock.Font = GUI.SmallFont;
                     skillBlock.UserData = skill;
 
