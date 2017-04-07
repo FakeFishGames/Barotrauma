@@ -1576,8 +1576,7 @@ namespace Barotrauma.Networking
             }
 
             string myReceivedMessage = message;
-
-            if (gameStarted && myCharacter != null)
+            if (gameStarted && myCharacter != null && senderCharacter != null)
             {
                 myReceivedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, myCharacter);
             }
