@@ -43,7 +43,7 @@ namespace Barotrauma
             
         }
 
-        public GUIProgressBar(Rectangle rect, Color color, GUIStyle style, float barSize, Alignment alignment, GUIComponent parent = null)
+        public GUIProgressBar(Rectangle rect, Color color, string style, float barSize, Alignment alignment, GUIComponent parent = null)
             : base(style)
         {
             this.rect = rect;
@@ -61,8 +61,6 @@ namespace Barotrauma
 
             this.barSize = barSize;
             UpdateRect();
-
-            if (style != null) style.Apply(this);
         }
 
         public override void ApplyStyle(GUIComponentStyle style)

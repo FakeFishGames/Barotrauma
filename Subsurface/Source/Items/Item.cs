@@ -1051,11 +1051,11 @@ namespace Barotrauma
                 }
             }
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 70 + (editableProperties.Count + requiredItemCount) * 30), GUI.Style);
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, 70 + (editableProperties.Count + requiredItemCount) * 30), "");
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
             
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, GUI.Style, 
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, "", 
                 Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);
 
             y += 20;
@@ -1065,15 +1065,15 @@ namespace Barotrauma
                 if (prefab.IsLinkable) 
                 {
                     new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", 
-                        GUI.Style, Alignment.TopRight, Alignment.TopRight, editingHUD).Font = GUI.SmallFont;
+                        "", Alignment.TopRight, Alignment.TopRight, editingHUD).Font = GUI.SmallFont;
                     y += 25;
                 }
                 foreach (ItemComponent ic in components)
                 {
                     foreach (RelatedItem relatedItem in ic.requiredItems)
                     {
-                        new GUITextBlock(new Rectangle(0, y, 100, 20), ic.Name + ": " + relatedItem.Type.ToString() + " required", GUI.Style, editingHUD);
-                        GUITextBox namesBox = new GUITextBox(new Rectangle(-10, y, 160, 20), Alignment.Right, GUI.Style, editingHUD);
+                        new GUITextBlock(new Rectangle(0, y, 100, 20), ic.Name + ": " + relatedItem.Type.ToString() + " required", "", editingHUD);
+                        GUITextBox namesBox = new GUITextBox(new Rectangle(-10, y, 160, 20), Alignment.Right, "", editingHUD);
 
                         PropertyDescriptorCollection properties = TypeDescriptor.GetProperties (relatedItem);
                         PropertyDescriptor property = properties.Find("JoinedNames", false);
@@ -1110,9 +1110,9 @@ namespace Barotrauma
                 else
                 {
 
-                    new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, GUI.Style, editingHUD);
+                    new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, "", editingHUD);
 
-                    GUITextBox propertyBox = new GUITextBox(new Rectangle(180, y, 250, height), GUI.Style, editingHUD);
+                    GUITextBox propertyBox = new GUITextBox(new Rectangle(180, y, 250, height), "", editingHUD);
                     if (height > 20) propertyBox.Wrap = true;
 
                     if (value != null)

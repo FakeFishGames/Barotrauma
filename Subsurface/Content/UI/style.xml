@@ -2,28 +2,37 @@
 <style>
   <GUIFrame
     padding="40.0, 40.0, 40.0, 40.0"
-    color="0.8, 0.8, 0.8, 0.85"
+    color="1.0,1.0,1.0,1.0"
   
     textcolor="0.0, 0.0, 0.0, 1.0"
   
     hovercolor="0.8, 0.8, 0.8, 1.0"
-    selectedcolor="1.0, 0.82, 0.05, 1.0"    
-    
-    outlinecolor="0.5, 0.57, 0.6, 1.0">
+    selectedcolor="1.0, 0.82, 0.05, 1.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="13, 6, 420, 647" slice="208,88,238,585"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 454" slice="87,576,430,960"/>
   </GUIFrame>
 
   <GUIButton
-    color="0.88, 0.25, 0.15, 0.8"
+    color="1.0,1.0,1.0,1.0"
   
     textcolor="1.0, 1.0, 1.0, 1.0"
   
     hovercolor="0.88, 0.25, 0.15, 1.0"
     selectedcolor="1.0, 0.0, 0.0, 1.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="13, 667, 220, 59" slice="27,673,226,718"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="888, 91, 129, 41" slice="897, 98, 1009, 125"/>
   </GUIButton>
+
+  <GUIButtonLarge
+    color="1.0,1.0,1.0,1.0"
+  
+    textcolor="1.0, 1.0, 1.0, 1.0"
+  
+    hovercolor="0.88, 0.25, 0.15, 1.0"
+    selectedcolor="1.0, 0.0, 0.0, 1.0">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="13, 667, 220, 59" slice="27, 673, 226, 718"/>
+  </GUIButtonLarge>
 
   <GUITextBlock
     textcolor="1.0, 1.0, 1.0, 1.0"
@@ -53,17 +62,15 @@
   </GUIDropDown>
 
   <GUITextBox
-    color="0.0, 0.0, 0.0, 1.0"  
+    color="1.0, 1.0, 1.0, 1.0"  
     hovercolor="0.5, 0.5, 0.5, 0.7"
-    textcolor="1.0, 1.0, 1.0, 1.0"
-    outlinecolor="0.5, 0.57, 0.6, 1.0">
+    textcolor="1.0, 1.0, 1.0, 1.0">    
+    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="494, 574, 332, 51" slice="497, 578, 823, 620"/>
   </GUITextBox>
 
   <GUITickBox
-    color="0.5, 0.5, 0.5, 1.0"
-  
-    outlinecolor="0.5, 0.57, 0.6, 1.0">
-    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
+    color="1.0, 1.0, 1.0, 1.0">
+    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="992, 814, 21, 22" slice="995, 817, 1008, 830"/>
   </GUITickBox>
 
   <GUIMessageBox
@@ -77,8 +84,7 @@
     
     outlinecolor="0.5, 0.57, 0.6, 1.0">
 
-    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
-    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 1.0" sourcerect ="0.0, 0.0, 0.0, 90.0"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="32, 541, 420, 454" slice="87,576,430,960"/>
   </GUIMessageBox>
 
   <GUIProgressBar

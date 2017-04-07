@@ -36,20 +36,20 @@ namespace Barotrauma
 
             Rectangle panelRect = new Rectangle(0, 0, width, height);
 
-            menu = new GUIFrame(panelRect, null, Alignment.Center, GUI.Style);
+            menu = new GUIFrame(panelRect, null, Alignment.Center, "");
             menu.Padding = new Vector4(40.0f, 40.0f, 40.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Join Server", GUI.Style, Alignment.CenterX, Alignment.CenterX, menu, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Join Server", "", Alignment.CenterX, Alignment.CenterX, menu, false, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Your Name:", GUI.Style, menu);
-            clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), GUI.Style, menu);
+            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Your Name:", "", menu);
+            clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), "", menu);
 
-            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", GUI.Style, menu);
-            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), GUI.Style, menu);
+            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", "", menu);
+            ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), "", menu);
 
             int middleX = (int)(width * 0.4f);
 
-            serverList = new GUIListBox(new Rectangle(middleX,60,0,height-160), GUI.Style, menu);
+            serverList = new GUIListBox(new Rectangle(middleX,60,0,height-160), "", menu);
             serverList.OnSelected = SelectServer;
 
             float[] columnRelativeX = new float[] { 0.15f, 0.55f, 0.15f, 0.15f };
@@ -62,19 +62,19 @@ namespace Barotrauma
 
             ScalableFont font = GUI.SmallFont; // serverList.Rect.Width < 400 ? GUI.SmallFont : GUI.Font;
 
-            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Password", GUI.Style, menu).Font = font;
+            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Password", "", menu).Font = font;
 
-            new GUITextBlock(new Rectangle(middleX + columnX[0], 30, 0, 30), "Name", GUI.Style, menu).Font = font;
-            new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), "Players", GUI.Style, menu).Font = font;
-            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), "Round started", GUI.Style, menu).Font = font;
+            new GUITextBlock(new Rectangle(middleX + columnX[0], 30, 0, 30), "Name", "", menu).Font = font;
+            new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), "Players", "", menu).Font = font;
+            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), "Round started", "", menu).Font = font;
 
-            joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), "Refresh", Alignment.BottomRight, GUI.Style, menu);
+            joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), "Refresh", Alignment.BottomRight, "", menu);
             joinButton.OnClicked = RefreshServers;
 
-            joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join", Alignment.BottomRight, GUI.Style, menu);
+            joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join", Alignment.BottomRight, "", menu);
             joinButton.OnClicked = JoinServer;
 
-            GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, GUI.Style, menu);
+            GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, "", menu);
             button.OnClicked = GameMain.MainMenuScreen.SelectTab;
             button.SelectedColor = button.Color;
 
@@ -104,7 +104,7 @@ namespace Barotrauma
             if (waitingForRefresh) return false;
             serverList.ClearChildren();
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 20), "Refreshing server list...", GUI.Style, serverList);
+            new GUITextBlock(new Rectangle(0, 0, 0, 20), "Refreshing server list...", "", serverList);
             
             CoroutineManager.StartCoroutine(WaitForRefresh());
 
@@ -137,7 +137,7 @@ namespace Barotrauma
 
             if (string.IsNullOrWhiteSpace(masterServerData))
             {
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), "Couldn't find any servers", GUI.Style, serverList);
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), "Couldn't find any servers", "", serverList);
 
                 return;
             }
@@ -176,13 +176,13 @@ namespace Barotrauma
                 passwordBox.Enabled = false;
                 passwordBox.UserData = "password";
 
-                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, GUI.Style, serverFrame);
+                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, "", serverFrame);
 
                 int playerCount = 0, maxPlayers = 1;
                 int.TryParse(currPlayersStr, out playerCount);
                 int.TryParse(maxPlayersStr, out maxPlayers);
 
-                new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, GUI.Style, serverFrame);
+                new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, "", serverFrame);
 
                 var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2])/ 2, 0, 20, 20), "", Alignment.TopLeft, serverFrame);
                 gameStartedBox.Selected = gameStarted == "1";
@@ -306,7 +306,7 @@ namespace Barotrauma
             if (hasPassword)
             {
                 var msgBox = new GUIMessageBox(msg, "", new string[] { "OK", "Cancel" });
-                var passwordBox = new GUITextBox(new Rectangle(0,40,150,25), Alignment.TopLeft, GUI.Style, msgBox.children[0]);
+                var passwordBox = new GUITextBox(new Rectangle(0,40,150,25), Alignment.TopLeft, "", msgBox.children[0]);
                 passwordBox.UserData = "password";
                 
                 var okButton = msgBox.Buttons[0];

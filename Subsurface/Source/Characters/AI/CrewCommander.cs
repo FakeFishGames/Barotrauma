@@ -55,7 +55,7 @@ namespace Barotrauma
             frame = new GUIFrame(Rectangle.Empty, Color.Black * 0.6f);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
 
-            GUIButton closeButton = new GUIButton(new Rectangle(0, 50, 100, 20), "Close", Alignment.BottomCenter, GUI.Style, frame);
+            GUIButton closeButton = new GUIButton(new Rectangle(0, 50, 100, 20), "Close", Alignment.BottomCenter, "", frame);
             closeButton.OnClicked = (GUIButton button, object userData) =>
             {
                 ToggleGUIFrame();
@@ -269,7 +269,7 @@ namespace Barotrauma
             img.Color = order.Color;
             img.CanBeFocused = false;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 20), order.DoingText, GUI.Style, Alignment.TopLeft, Alignment.TopCenter, orderFrame);
+            new GUITextBlock(new Rectangle(0, 0, 0, 20), order.DoingText, "", Alignment.TopLeft, Alignment.TopCenter, orderFrame);
 
 
 
@@ -280,7 +280,7 @@ namespace Barotrauma
 
             for (int i = 0; i < order.Options.Length; i++ )
             {
-                var optionBox = new GUITextBlock(new Rectangle(0, 0, 0, 15), order.Options[i], GUI.Style, optionList);
+                var optionBox = new GUITextBlock(new Rectangle(0, 0, 0, 15), order.Options[i], "", optionList);
                 optionBox.Font = GUI.SmallFont;
                 optionBox.UserData = order.Options[i];
 

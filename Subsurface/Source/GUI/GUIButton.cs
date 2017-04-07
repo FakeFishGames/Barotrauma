@@ -133,29 +133,29 @@ namespace Barotrauma
 
         public bool Selected { get; set; }
 
-        public GUIButton(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null)
+        public GUIButton(Rectangle rect, string text, string style, GUIComponent parent = null)
             : this(rect, text, null, Alignment.Left, style, parent)
         {
         }
 
-        public GUIButton(Rectangle rect, string text, Alignment alignment, GUIStyle style, GUIComponent parent = null)
+        public GUIButton(Rectangle rect, string text, Alignment alignment, string style, GUIComponent parent = null)
             : this(rect, text, null, alignment, style, parent)
         {
         }
 
-        public GUIButton(Rectangle rect, string text, Color? color, GUIStyle style, GUIComponent parent = null)
+        public GUIButton(Rectangle rect, string text, Color? color, string style, GUIComponent parent = null)
             : this(rect, text, color, (Alignment.Left | Alignment.Top), style, parent)
         {
         }
 
-        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, GUIStyle style, GUIComponent parent = null)
-            :this(rect, text, color, alignment, Alignment.Center, style, parent)
+        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, string style = "", GUIComponent parent = null)
+            : this(rect, text, color, alignment, Alignment.Center, style, parent)
         {
 
         }
 
-        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, Alignment textAlignment, GUIStyle style, GUIComponent parent = null)
-            :base (style)
+        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, Alignment textAlignment, string style = "", GUIComponent parent = null)
+            : base (style)
         {
             this.rect = rect;
             if (color!=null) this.color = (Color)color;
@@ -164,7 +164,7 @@ namespace Barotrauma
             if (parent != null) parent.AddChild(this);
 
             frame = new GUIFrame(Rectangle.Empty, style, this);
-            if (style != null) style.Apply(frame, this);
+            GUI.Style.Apply(frame, style, this);
 
             textBlock = new GUITextBlock(Rectangle.Empty, text,
                 Color.Transparent, (this.style == null) ? Color.Black : this.style.textColor,

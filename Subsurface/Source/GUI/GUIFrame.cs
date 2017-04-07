@@ -5,18 +5,18 @@ namespace Barotrauma
 {
     public class GUIFrame : GUIComponent
     {        
-        public GUIFrame(Rectangle rect, GUIStyle style = null, GUIComponent parent = null)
+        public GUIFrame(Rectangle rect, string style = "", GUIComponent parent = null)
             : this(rect, null, (Alignment.Left | Alignment.Top), style, parent)
         {
         }
 
 
-        public GUIFrame(Rectangle rect, Color color, GUIStyle style = null, GUIComponent parent = null)
+        public GUIFrame(Rectangle rect, Color color, string style = "", GUIComponent parent = null)
             : this(rect, color, (Alignment.Left | Alignment.Top), style, parent)
         {
         }
 
-        public GUIFrame(Rectangle rect, Color? color, Alignment alignment, GUIStyle style = null, GUIComponent parent = null)
+        public GUIFrame(Rectangle rect, Color? color, Alignment alignment, string style = "", GUIComponent parent = null)
             : base(style)
         {
             this.rect = rect;

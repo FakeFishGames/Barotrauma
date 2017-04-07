@@ -96,11 +96,11 @@ namespace Barotrauma.Networking
 
             //----------------------------------------
 
-            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 20), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
+            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
             endRoundButton.OnClicked = (btn, userdata) => { EndGame(); return true; };
 
             log = new ServerLog(name);
-            showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, GUI.Style, inGameHUD);
+            showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, "", inGameHUD);
             showLogButton.OnClicked = (GUIButton button, object userData) =>
             {
                 if (log.LogFrame == null)
@@ -115,7 +115,7 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Settings", Alignment.TopLeft, GUI.Style, inGameHUD);
+            GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Settings", Alignment.TopLeft, "", inGameHUD);
             settingsButton.OnClicked = ToggleSettingsFrame;
             settingsButton.UserData = "settingsButton";
 
@@ -1340,10 +1340,10 @@ namespace Barotrauma.Networking
 
                 clientInfo = new GUIFrame(new Rectangle(0, 0, 180, 0), Color.Transparent, Alignment.TopRight, null, clientNameBox);
                 clientInfo.UserData = client.FileStreamSender;
-                new GUIProgressBar(new Rectangle(0, 4, 160, clientInfo.Rect.Height - 8), Color.Green, GUI.Style, 0.0f, Alignment.Left, clientInfo).IsHorizontal = true;
-                new GUITextBlock(new Rectangle(0, 2, 160, 0), "", GUI.Style, Alignment.TopLeft, Alignment.Left | Alignment.CenterY, clientInfo, true, GUI.SmallFont);
+                new GUIProgressBar(new Rectangle(0, 4, 160, clientInfo.Rect.Height - 8), Color.Green, "", 0.0f, Alignment.Left, clientInfo).IsHorizontal = true;
+                new GUITextBlock(new Rectangle(0, 2, 160, 0), "", "", Alignment.TopLeft, Alignment.Left | Alignment.CenterY, clientInfo, true, GUI.SmallFont);
 
-                var cancelButton = new GUIButton(new Rectangle(20, 0, 14, 0), "X", Alignment.Right, GUI.Style, clientInfo);
+                var cancelButton = new GUIButton(new Rectangle(20, 0, 14, 0), "X", Alignment.Right, "", clientInfo);
                 cancelButton.OnClicked = (GUIButton button, object userdata) =>
                 {
                     (cancelButton.Parent.UserData as FileStreamSender).CancelTransfer();
@@ -1428,7 +1428,7 @@ namespace Barotrauma.Networking
 
             if (clientListScrollBar == null)
             {
-                clientListScrollBar = new GUIScrollBar(new Rectangle(x + width - 10, y, 10, height), GUI.Style, 1.0f);
+                clientListScrollBar = new GUIScrollBar(new Rectangle(x + width - 10, y, 10, height), "", 1.0f);
             }
 
 
@@ -1555,15 +1555,15 @@ namespace Barotrauma.Networking
 
             if (character != myCharacter)
             {
-                var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, GUI.Style, characterFrame);
+                var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, "", characterFrame);
                 banButton.UserData = character.Name;
                 banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
 
-                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomRight, GUI.Style, characterFrame);
+                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomRight, "", characterFrame);
                 rangebanButton.UserData = character.Name;
                 rangebanButton.OnClicked += GameMain.NetLobbyScreen.BanPlayerRange;
 
-                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, "", characterFrame);
                 kickButton.UserData = character.Name;
                 kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
             }

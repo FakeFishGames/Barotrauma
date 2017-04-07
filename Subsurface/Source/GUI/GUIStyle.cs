@@ -10,7 +10,6 @@ namespace Barotrauma
                 
         public GUIStyle(string file)
         {
-
             componentStyles = new Dictionary<string, GUIComponentStyle>();
 
             XDocument doc;
@@ -32,15 +31,18 @@ namespace Barotrauma
             }
         }
 
-        public void Apply(GUIComponent targetComponent, GUIComponent parent = null)
+        public void Apply(GUIComponent targetComponent, string styleName = "", GUIComponent parent = null)
         {
-            GUIComponentStyle componentStyle = null;
-            string name = (parent == null) ? targetComponent.GetType().Name.ToLowerInvariant() : parent.GetType().Name.ToLowerInvariant();
-            componentStyles.TryGetValue(name, out componentStyle);
-
-            if (componentStyle==null)
+            if (string.IsNullOrEmpty(styleName))
             {
-                DebugConsole.ThrowError("Couldn't find a GUI style for "+targetComponent.GetType().Name);
+                styleName = parent == null ? targetComponent.GetType().Name.ToLowerInvariant() : parent.GetType().Name.ToLowerInvariant();
+            }
+
+            GUIComponentStyle componentStyle = null;            
+
+            if (!componentStyles.TryGetValue(styleName, out componentStyle))
+            {
+                DebugConsole.ThrowError("Couldn't find a GUI style \""+ styleName+"\"");
                 return;
             }
 

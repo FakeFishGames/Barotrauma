@@ -107,7 +107,7 @@ namespace Launcher2
             guiRoot = new GUIFrame(new Rectangle(0,0,graphicsWidth, graphicsHeight), Color.Transparent);
             guiRoot.Padding = new Vector4(40.0f, 40.0f, 40.0f, 40.0f);
 
-            launchButton = new GUIButton(new Rectangle(0,0,100,30), "START", Alignment.BottomRight, GUI.Style, guiRoot);
+            launchButton = new GUIButton(new Rectangle(0,0,100,30), "START", Alignment.BottomRight, "", guiRoot);
             launchButton.OnClicked = LaunchClick;
 
             int y = 50;
@@ -115,15 +115,15 @@ namespace Launcher2
             var checkForUpdates = new GUITickBox(new Rectangle(0, y, 20, 20), "Automatically check for updates", Alignment.TopLeft, guiRoot);
             checkForUpdates.Selected = settings.AutoCheckUpdates;
             
-            updateInfoText = new GUITextBlock(new Rectangle(0,y+30,100,20), "", GUI.Style, guiRoot);
+            updateInfoText = new GUITextBlock(new Rectangle(0,y+30,100,20), "", "", guiRoot);
 
-            updateInfoBox = new GUIListBox(new Rectangle(0, y + 55, 330, graphicsHeight-y-55-30-80), GUI.Style, guiRoot);
+            updateInfoBox = new GUIListBox(new Rectangle(0, y + 55, 330, graphicsHeight-y-55-30-80), "", guiRoot);
             updateInfoBox.Visible = false;
 
             progressBar = new GUIProgressBar(new Rectangle(110,0,220,20), Color.Green, 0.0f, Alignment.BottomLeft, guiRoot);
             progressBar.Visible = false;
 
-            downloadButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Download", Alignment.BottomLeft, GUI.Style, guiRoot);
+            downloadButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Download", Alignment.BottomLeft, "", guiRoot);
             downloadButton.OnClicked = DownloadButtonClicked;
             downloadButton.Visible = false;
 
@@ -131,8 +131,8 @@ namespace Launcher2
             //-----------------------------------------------------------------
 
             int x = 360;
-            new GUITextBlock(new Rectangle(x, y, 20, 20), "Resolution", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, guiRoot);
-            resolutionDD = new GUIDropDown(new Rectangle(x, y + 20, 200, 20), "", GUI.Style, guiRoot);
+            new GUITextBlock(new Rectangle(x, y, 20, 20), "Resolution", "", Alignment.TopLeft, Alignment.TopLeft, guiRoot);
+            resolutionDD = new GUIDropDown(new Rectangle(x, y + 20, 200, 20), "", "", guiRoot);
 
             foreach (DisplayMode mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
             {
@@ -149,8 +149,8 @@ namespace Launcher2
                 resolutionDD.SelectItem(GraphicsAdapter.DefaultAdapter.SupportedDisplayModes.Last());
             }
 
-            new GUITextBlock(new Rectangle(x, y + 50, 20, 20), "Content package", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, guiRoot);
-            contentPackageDD = new GUIDropDown(new Rectangle(x, y + 70, 200, 20), "", GUI.Style, guiRoot);
+            new GUITextBlock(new Rectangle(x, y + 50, 20, 20), "Content package", "", Alignment.TopLeft, Alignment.TopLeft, guiRoot);
+            contentPackageDD = new GUIDropDown(new Rectangle(x, y + 70, 200, 20), "", "", guiRoot);
 
             foreach (ContentPackage contentPackage in ContentPackage.list)
             {
@@ -161,8 +161,8 @@ namespace Launcher2
 
             //new GUIButton(new Rectangle(x,y+120,150,20), "Package Manager", GUI.Style, guiRoot);
 
-            new GUITextBlock(new Rectangle(x, y + 130, 20, 20), "Display mode", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, guiRoot);
-            displayModeDD = new GUIDropDown(new Rectangle(x, y + 150, 200, 20), "", GUI.Style, guiRoot);
+            new GUITextBlock(new Rectangle(x, y + 130, 20, 20), "Display mode", "", Alignment.TopLeft, Alignment.TopLeft, guiRoot);
+            displayModeDD = new GUIDropDown(new Rectangle(x, y + 150, 200, 20), "", "", guiRoot);
             displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
             displayModeDD.AddItem("Windowed", WindowMode.Windowed);
             displayModeDD.AddItem("Borderless windowed", WindowMode.BorderlessWindowed);
@@ -318,7 +318,7 @@ namespace Launcher2
                 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(indent, 0, 0, heigth), 
-                    line, GUI.Style, 
+                    line, "", 
                     Alignment.TopLeft, Alignment.TopLeft, 
                     updateInfoBox, true, GUI.SmallFont);
                 textBlock.Padding = new Vector4(indent, 0, 0, 0);
@@ -559,7 +559,7 @@ namespace Launcher2
 
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(0, 0, 0, 17),
-                "Downloading " + filesToDownload[filesDownloaded] + "...", GUI.Style,
+                "Downloading " + filesToDownload[filesDownloaded] + "...", "",
                 Alignment.TopLeft, Alignment.TopLeft,
                 updateInfoBox, false, GUI.SmallFont);
             textBlock.CanBeFocused = false;
@@ -599,7 +599,7 @@ namespace Launcher2
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 0),
-                    errorMsg, GUI.Style,
+                    errorMsg, "",
                     Alignment.TopLeft, Alignment.TopLeft,
                     updateInfoBox, true, GUI.SmallFont);
                 textBlock.TextColor = Color.Red;

@@ -213,7 +213,7 @@ namespace Barotrauma
             get { return keyboardDispatcher; }
         }
 
-        protected GUIComponent(GUIStyle style)
+        protected GUIComponent(string style)
         {
             Visible = true;
 
@@ -228,7 +228,8 @@ namespace Barotrauma
 
             CanBeFocused = true;
 
-            if (style!=null) style.Apply(this);
+            if (style != null)
+                GUI.Style.Apply(this, style);
         }
 
         public static void Init(GameWindow window)
@@ -294,7 +295,7 @@ namespace Barotrauma
 
             if (currColor.A>0.0f && !sprites.Any()) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
 
-            if (sprites != null)
+            if (sprites != null && currColor.A > 0.0f)
             {
                 foreach (UISprite uiSprite in sprites)
                 {
@@ -372,7 +373,7 @@ namespace Barotrauma
             int width = 400;
             if (toolTipBlock==null || (string)toolTipBlock.userData != ToolTip)
             {
-                toolTipBlock = new GUITextBlock(new Rectangle(0,0,width, 18), ToolTip, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
+                toolTipBlock = new GUITextBlock(new Rectangle(0,0,width, 18), ToolTip, "", Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
                 toolTipBlock.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 toolTipBlock.rect.Width = (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20);
                 toolTipBlock.rect.Height = toolTipBlock.WrappedText.Split('\n').Length * 18;

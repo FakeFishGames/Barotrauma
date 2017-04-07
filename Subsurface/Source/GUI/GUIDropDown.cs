@@ -74,7 +74,7 @@ namespace Barotrauma
             }
         }
         
-        public GUIDropDown(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null)
+        public GUIDropDown(Rectangle rect, string text, string style, GUIComponent parent = null)
             : base(style)
         {
             this.rect = rect;
@@ -101,7 +101,7 @@ namespace Barotrauma
 
         public void AddItem(string text, object userData = null)
         {
-            GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, GUI.Style, listBox);
+            GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, "", listBox);
             textBlock.UserData = userData;
         }
 

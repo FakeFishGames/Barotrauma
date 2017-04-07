@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
 
             if (canBeSelected)
             {
-                var button = new GUIButton(new Rectangle(160, 50, 30,30), "-", GUI.Style, GuiFrame);
+                var button = new GUIButton(new Rectangle(160, 50, 30,30), "-", "", GuiFrame);
                 button.OnClicked = (GUIButton btn, object obj) =>
                 {
                     RechargeSpeed = Math.Max(rechargeSpeed - maxRechargeSpeed * 0.1f, 0.0f);
@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
                     return true;
                 };
 
-                button = new GUIButton(new Rectangle(200, 50, 30, 30), "+", GUI.Style, GuiFrame);
+                button = new GUIButton(new Rectangle(200, 50, 30, 30), "+", "", GuiFrame);
                 button.OnClicked = (GUIButton btn, object obj) =>
                 {
                     RechargeSpeed = Math.Max(rechargeSpeed + maxRechargeSpeed * 0.1f, 0.0f);

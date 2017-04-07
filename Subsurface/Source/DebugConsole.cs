@@ -59,10 +59,10 @@ namespace Barotrauma
             frame.Color = Color.White * 0.4f;
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            listBox = new GUIListBox(new Rectangle(0, 0, 0, frame.Rect.Height - 40), Color.Black, GUI.Style, frame);
+            listBox = new GUIListBox(new Rectangle(0, 0, 0, frame.Rect.Height - 40), Color.Black, "", frame);
             listBox.Color = Color.Black * 0.7f;
             
-            textBox = new GUITextBox(new Rectangle(0,0,0,20), Color.Black, Color.White, Alignment.BottomLeft, Alignment.Left, GUI.Style, frame);
+            textBox = new GUITextBox(new Rectangle(0,0,0,20), Color.Black, Color.White, Alignment.BottomLeft, Alignment.Left, "", frame);
             textBox.Color = Color.Black * 0.7f;
 
             //messages already added before initialization -> add them to the listbox
@@ -830,7 +830,7 @@ namespace Barotrauma
 
             try
             {
-                var textBlock = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 0), msg, GUI.Style, Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
+                var textBlock = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 0), msg, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
                 textBlock.CanBeFocused = false;
                 textBlock.TextColor = color;
 

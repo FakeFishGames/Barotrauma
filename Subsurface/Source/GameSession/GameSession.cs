@@ -112,7 +112,7 @@ namespace Barotrauma
 
             this.saveFile = saveFile;
 
-            infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", GUI.Style, null);
+            infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
 
             if (gameModePreset != null) gameMode = gameModePreset.Instantiate(missionType);
@@ -245,7 +245,7 @@ namespace Barotrauma
             {
                 GUIFrame summaryFrame = shiftSummary.CreateSummaryFrame(endMessage);
                 GUIMessageBox.MessageBoxes.Enqueue(summaryFrame);
-                var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, GUI.Style, summaryFrame.children[0]);
+                var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, "", summaryFrame.children[0]);
                 okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Dequeue(); return true; };
             }
 
@@ -298,26 +298,26 @@ namespace Barotrauma
             int width = 600, height = 400;
 
             infoFrame = new GUIFrame(
-                new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), GUI.Style);
+                new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "");
 
             infoFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            var crewButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Crew", GUI.Style, infoFrame);
+            var crewButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Crew", "", infoFrame);
             crewButton.UserData = InfoFrameTab.Crew;
             crewButton.OnClicked = SelectInfoFrameTab;
 
-            var missionButton = new GUIButton(new Rectangle(100, -30, 100, 20), "Mission", GUI.Style, infoFrame);
+            var missionButton = new GUIButton(new Rectangle(100, -30, 100, 20), "Mission", "", infoFrame);
             missionButton.UserData = InfoFrameTab.Mission;
             missionButton.OnClicked = SelectInfoFrameTab;
 
             if (GameMain.Server != null)
             {
-                var manageButton = new GUIButton(new Rectangle(200, -30, 130, 20), "Manage players", GUI.Style, infoFrame);
+                var manageButton = new GUIButton(new Rectangle(200, -30, 130, 20), "Manage players", "", infoFrame);
                 manageButton.UserData = InfoFrameTab.ManagePlayers;
                 manageButton.OnClicked = SelectInfoFrameTab;
             }
 
-            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, GUI.Style, infoFrame);
+            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, "", infoFrame);
             closeButton.OnClicked = ToggleInfoFrame;
 
         }
@@ -348,14 +348,14 @@ namespace Barotrauma
         {
             if (Mission == null)
             {
-                new GUITextBlock(new Rectangle(0,0,0,50), "No mission", GUI.Style, infoFrame, true);
+                new GUITextBlock(new Rectangle(0,0,0,50), "No mission", "", infoFrame, true);
                 return;
             }
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 40), Mission.Name, GUI.Style, infoFrame, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, 0, 0, 40), Mission.Name, "", infoFrame, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 50, 0, 20), "Reward: "+Mission.Reward, GUI.Style, infoFrame, true);
-            new GUITextBlock(new Rectangle(0, 70, 0, 50), Mission.Description, GUI.Style, infoFrame, true);
+            new GUITextBlock(new Rectangle(0, 50, 0, 20), "Reward: "+Mission.Reward, "", infoFrame, true);
+            new GUITextBlock(new Rectangle(0, 70, 0, 50), Mission.Description, "", infoFrame, true);
 
             
         }
