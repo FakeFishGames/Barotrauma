@@ -18,6 +18,18 @@ namespace Barotrauma
             private set;
         }
 
+        public bool Slice
+        {
+            get;
+            set;
+        }
+
+        public Rectangle[] Slices
+        {
+            get;
+            set;
+        }
+
         public bool MaintainAspectRatio
         {
             get;
@@ -80,7 +92,40 @@ namespace Barotrauma
                         bool maintainAspect = ToolBox.GetAttributeBool(subElement, "maintainaspectratio",false);
                         bool tile = ToolBox.GetAttributeBool(subElement, "tile", true);
 
-                        Sprites.Add(new UISprite(sprite, tile, maintainAspect));
+                        UISprite newSprite = new UISprite(sprite, tile, maintainAspect);
+
+                        Vector4 sliceVec = ToolBox.GetAttributeVector4(subElement, "slice", Vector4.Zero);
+                        if (sliceVec != Vector4.Zero)
+                        {
+                            Rectangle slice = new Rectangle((int)sliceVec.X, (int)sliceVec.Y, (int)(sliceVec.Z - sliceVec.X), (int)(sliceVec.W - sliceVec.Y));
+
+                            newSprite.Slice = true;
+
+                            newSprite.Slices = new Rectangle[9];
+
+                            //top-left
+                            newSprite.Slices[0] = new Rectangle(newSprite.Sprite.SourceRect.Location, slice.Location - newSprite.Sprite.SourceRect.Location);
+                            //top-mid
+                            newSprite.Slices[1] = new Rectangle(slice.Location.X, newSprite.Slices[0].Y, slice.Width, newSprite.Slices[0].Height);
+                            //top-right
+                            newSprite.Slices[2] = new Rectangle(slice.Right, newSprite.Slices[0].Y, newSprite.Sprite.SourceRect.Right - slice.Right, newSprite.Slices[0].Height);
+
+                            //mid-left
+                            newSprite.Slices[3] = new Rectangle(newSprite.Slices[0].X, slice.Y, newSprite.Slices[0].Width, slice.Height);
+                            //center
+                            newSprite.Slices[4] = slice;
+                            //mid-right
+                            newSprite.Slices[5] = new Rectangle(newSprite.Slices[2].X, slice.Y, newSprite.Slices[2].Width, slice.Height);
+
+                            //bottom-left
+                            newSprite.Slices[6] = new Rectangle(newSprite.Slices[0].X, slice.Bottom, newSprite.Slices[0].Width, newSprite.Sprite.SourceRect.Bottom - slice.Bottom);
+                            //bottom-mid
+                            newSprite.Slices[7] = new Rectangle(newSprite.Slices[1].X, slice.Bottom, newSprite.Slices[1].Width, newSprite.Sprite.SourceRect.Bottom - slice.Bottom);
+                            //bottom-right
+                            newSprite.Slices[8] = new Rectangle(newSprite.Slices[2].X, slice.Bottom, newSprite.Slices[2].Width, newSprite.Sprite.SourceRect.Bottom - slice.Bottom);
+                        }
+
+                        Sprites.Add(newSprite);
                         break;
                 }
             }
