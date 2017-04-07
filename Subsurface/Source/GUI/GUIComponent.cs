@@ -298,7 +298,36 @@ namespace Barotrauma
             {
                 foreach (UISprite uiSprite in sprites)
                 {
-                    if (uiSprite.Tile)
+                    if (uiSprite.Slice)
+                    {
+                        Vector2 pos = new Vector2(rect.X, rect.Y);
+
+                        int centerWidth = rect.Width - uiSprite.Slices[0].Width - uiSprite.Slices[2].Width;
+                        int centerHeight = rect.Height - uiSprite.Slices[0].Height - uiSprite.Slices[8].Height;
+
+                        for (int x = 0; x<3; x++)
+                        {
+                            int width = x == 1 ? centerWidth : uiSprite.Slices[x].Width;
+                            for (int y = 0; y<3; y++)
+                            {
+                                int height = y == 1 ? centerHeight : uiSprite.Slices[x + y * 3].Height;
+                                //GUI.DrawString(spriteBatch, pos, x + ", " + y, Color.White);
+
+                                uiSprite.Sprite.DrawTiled(
+                                    spriteBatch, 
+                                    pos, 
+                                    new Vector2(width, height), 
+                                    Vector2.Zero, 
+                                    uiSprite.Slices[x + y * 3],
+                                    currColor * (currColor.A / 255.0f));
+
+                                pos.Y += height;
+                            }
+                            pos.X += width;
+                            pos.Y = rect.Y;
+                        }
+                    }
+                    else if (uiSprite.Tile)
                     {
                         Vector2 startPos = new Vector2(rect.X, rect.Y);
                         Vector2 size = new Vector2(Math.Min(uiSprite.Sprite.SourceRect.Width, rect.Width), Math.Min(uiSprite.Sprite.SourceRect.Height, rect.Height));

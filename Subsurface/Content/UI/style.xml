@@ -11,7 +11,7 @@
     
     outlinecolor="0.5, 0.57, 0.6, 1.0">
 
-    <Sprite texture="Content/UI/uiBackground.png" size="0.0, 0.0" sourcerect ="0.0, 90.0, 0.0, 100.0"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="13, 6, 420, 647" slice="208,88,238,585"/>
   </GUIFrame>
 
   <GUIButton
@@ -22,8 +22,7 @@
     hovercolor="0.88, 0.25, 0.15, 1.0"
     selectedcolor="1.0, 0.0, 0.0, 1.0">
 
-    <Sprite texture="Content/UI/uiButton.png" size="1.0, 1.0" tile="false" maintainaspectratio="false" sourcerect ="0.0, 0.0, 0.0, 71.0"/>
-
+    <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="13, 667, 220, 59" slice="27,673,226,718"/>
   </GUIButton>
 
   <GUITextBlock
