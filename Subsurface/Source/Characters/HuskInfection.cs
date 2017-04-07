@@ -127,7 +127,7 @@ namespace Barotrauma
                 return;
             }
 
-            character.StartStun(0.5f);
+            character.SetStun(0.5f);
             if (character.AnimController.Dir < 1.0f)
             {
                 character.AnimController.Flip();

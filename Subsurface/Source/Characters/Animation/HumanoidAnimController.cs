@@ -67,18 +67,13 @@ namespace Barotrauma
                 Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;
                 Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);                
                 
-                if (stunTimer > 0)
-                {
-                    stunTimer -= deltaTime;
-                }
-
                 return;
             }
 
             //stun (= disable the animations) if the ragdoll receives a large enough impact
             if (strongestImpact > 0.0f)
             {
-                character.StartStun(MathHelper.Min(strongestImpact * 0.5f, 5.0f));
+                character.SetStun(MathHelper.Min(strongestImpact * 0.5f, 5.0f));
                 strongestImpact = 0.0f;
                 return;
             }
@@ -979,7 +974,7 @@ namespace Barotrauma
 
 
             float itemAngle;
-            if (Anim != Animation.Climbing && !usingController && stunTimer <= 0.0f && aim && itemPos != Vector2.Zero)
+            if (Anim != Animation.Climbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 

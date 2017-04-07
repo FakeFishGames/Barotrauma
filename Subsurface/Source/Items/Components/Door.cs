@@ -479,7 +479,7 @@ namespace Barotrauma.Items.Components
                         body.ApplyLinearImpulse(new Vector2(dir * 0.5f, isOpen ? 0.0f : -1.0f));
                     }
 
-                    c.StartStun(0.2f);
+                    c.SetStun(0.2f);
                 }
             }
         }

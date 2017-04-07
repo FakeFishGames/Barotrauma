@@ -497,7 +497,7 @@ namespace Barotrauma
             {
                 if (c.Submarine != submarine) continue;
 
-                if (impact > 2.0f) c.StartStun((impact - 2.0f) * 0.1f);
+                if (impact > 2.0f) c.SetStun((impact - 2.0f) * 0.1f);
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
