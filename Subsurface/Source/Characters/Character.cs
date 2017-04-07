@@ -276,14 +276,15 @@ namespace Barotrauma
             set { oxygenAvailable = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
+        private float stunTimer;
         public float Stun
         {
-            get { return AnimController.StunTimer; }
+            get { return stunTimer; }
             set
             {
                 if (GameMain.Client != null) return;
 
-                StartStun(value); 
+                SetStun(value); 
             }
         }
 
@@ -1397,6 +1398,16 @@ namespace Barotrauma
                 }
             }
 
+            if (Stun > 0.0f)
+            {
+                stunTimer -= deltaTime;
+                if (stunTimer < 0.0f && GameMain.Server != null)
+                {
+                    //stun ended -> notify clients
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                }                
+            }
+
             if (IsUnconscious)
             {
                 UpdateUnconscious(deltaTime);
@@ -1717,7 +1728,7 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce = 0.0f)
         {
-            StartStun(stun);
+            SetStun(stun);
 
             Limb closestLimb = null;
             float closestDistance = 0.0f;
@@ -1750,20 +1761,20 @@ namespace Barotrauma
             return attackResult;
         }
 
-        public void StartStun(float stunTimer, bool allowStunDecrease = false, bool isNetworkMessage = false)
+        public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
             if (GameMain.Client != null && !isNetworkMessage) return;
 
-            if ((stunTimer <= AnimController.StunTimer && !allowStunDecrease) || !MathUtils.IsValid(stunTimer)) return;
+            if ((newStun <= stunTimer && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
 
             if (GameMain.Server != null &&
-                (Math.Sign(stunTimer) != Math.Sign(AnimController.StunTimer) || Math.Abs(stunTimer - AnimController.StunTimer) > 0.1f))
+                (Math.Sign(newStun) != Math.Sign(stunTimer) || Math.Abs(newStun - stunTimer) > 0.1f))
             {
                 GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
             }
 
-            if (Math.Sign(stunTimer) != Math.Sign(AnimController.StunTimer)) AnimController.ResetPullJoints();
-            AnimController.StunTimer = Math.Max(AnimController.StunTimer, stunTimer);
+            if (Math.Sign(newStun) != Math.Sign(stunTimer)) AnimController.ResetPullJoints();
+            stunTimer = newStun;
                 
             selectedConstruction = null;
         }

@@ -528,7 +528,7 @@ namespace Barotrauma
                         Character.Controlled.AddDamage(CauseOfDeath.Damage, -Character.Controlled.MaxHealth, null);
                         Character.Controlled.Oxygen = 100.0f;
                         Character.Controlled.Bleeding = 0.0f;
-                        Character.Controlled.AnimController.StunTimer = 0.0f;
+                        Character.Controlled.SetStun(0.0f, true);
                     }
                     break;
                 case "revive":

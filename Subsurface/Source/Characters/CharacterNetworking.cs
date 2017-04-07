@@ -602,6 +602,8 @@ namespace Barotrauma
                     Stun = MathHelper.Clamp(Stun, 0.0f, 60.0f);
                     msg.WriteRangedSingle(Stun, 0.0f, 60.0f, 8);
                 }
+
+                msg.Write(HuskInfectionState > 0.0f);
             }
         }
 
@@ -654,12 +656,23 @@ namespace Barotrauma
                 if (stunned)
                 {
                     float newStunTimer = msg.ReadRangedSingle(0.0f, 60.0f, 8);
-                    StartStun(newStunTimer, true, true);
+                    SetStun(newStunTimer, true, true);
                 }
                 else
                 {
-                    StartStun(0.0f, true, true);
+                    SetStun(0.0f, true, true);
                 }
+
+                bool huskInfected = msg.ReadBoolean();
+                if (huskInfected)
+                {
+                    HuskInfectionState = Math.Max(HuskInfectionState, 0.01f);
+                }
+                else
+                {
+                    HuskInfectionState = 0.0f;
+                }
+
             }
         }
 

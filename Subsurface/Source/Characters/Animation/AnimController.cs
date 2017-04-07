@@ -13,26 +13,12 @@ namespace Barotrauma
         protected Character character;
 
         protected float walkSpeed, swimSpeed;  
-        
-        protected float stunTimer;
-        
+                
         protected float walkPos;
 
         protected readonly Vector2 stepSize;
         protected readonly float legTorque;
-
-
-
-        public float StunTimer
-        {
-            get { return stunTimer; }
-            set 
-            {
-                if (!MathUtils.IsValid(value)) return;
-                stunTimer = value; 
-            }
-        }
-        
+                
         public AnimController(Character character, XElement element)
             : base(character, element)
         {

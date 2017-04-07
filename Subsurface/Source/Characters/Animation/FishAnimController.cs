@@ -49,7 +49,7 @@ namespace Barotrauma
         {
             if (Frozen) return;
 
-            if (character.IsDead || character.IsUnconscious || stunTimer > 0.0f)
+            if (character.IsDead || character.IsUnconscious || character.Stun > 0.0f)
             {
                 Collider.FarseerBody.FixedRotation = false;
 
@@ -63,12 +63,7 @@ namespace Barotrauma
                     Collider.LinearVelocity = (MainLimb.SimPosition - Collider.SimPosition) * 60.0f;
                     Collider.SmoothRotate(MainLimb.Rotation);
                 }
-
-                if (stunTimer > 0)
-                {
-                    stunTimer -= deltaTime;
-                }
-
+                
                 return;
             }
 
@@ -89,7 +84,7 @@ namespace Barotrauma
 
             if (strongestImpact > 0.0f)
             {
-                stunTimer = MathHelper.Clamp(strongestImpact * 0.5f, stunTimer, 5.0f);
+                character.Stun = MathHelper.Clamp(strongestImpact * 0.5f, character.Stun, 5.0f);
                 strongestImpact = 0.0f;
             }
 
