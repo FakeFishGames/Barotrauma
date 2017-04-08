@@ -692,6 +692,7 @@ namespace Barotrauma.Networking
                                 c.UnreceivedEntityEventCount == 0)
                             {
                                 c.NeedsMidRoundSync = false;
+                                lastRecvEntityEventID = (UInt16)(c.FirstNewEventID - 1);
                             }
                             else
                             {

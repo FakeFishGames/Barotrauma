@@ -212,15 +212,16 @@ namespace Barotrauma.Networking
             if (client.NeedsMidRoundSync)
             {
                 msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);
+
                 //how many (unique) events the clients had missed before joining
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
-                msg.Write(client.UnreceivedEntityEventCount);
-
                 //ID of the first event sent after the client joined 
                 //(after the client has been synced they'll switch their lastReceivedID 
                 //to the one before this, and the eventmanagers will start to function "normally")
-                msg.Write(events.Count == 0 ? (UInt16)0 : events[events.Count - 1].ID);
+                client.FirstNewEventID = events.Count == 0 ? (UInt16)0 : events[events.Count - 1].ID;
 
+                msg.Write(client.UnreceivedEntityEventCount);                
+                msg.Write(client.FirstNewEventID);
                 Write(msg, eventsToSync, client);
             }
             else
@@ -273,14 +274,16 @@ namespace Barotrauma.Networking
             if (uniqueEvents.Count == 0 || (events.Count > 0 && events[0].ID == uniqueEvents[0].ID))
             {
                 client.UnreceivedEntityEventCount = 0;
+                client.FirstNewEventID = 0;
                 client.NeedsMidRoundSync = false;
             }
             else
             {
                 double midRoundSyncTimeOut = uniqueEvents.Count / MaxEventsPerWrite * server.UpdateInterval.TotalSeconds;
-                midRoundSyncTimeOut = Math.Max(5.0f, midRoundSyncTimeOut * 1.5f);
+                midRoundSyncTimeOut = Math.Max(5.0f, midRoundSyncTimeOut * 2.0f);
 
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
+                client.FirstNewEventID = 0;
                 client.NeedsMidRoundSync = true;
                 client.MidRoundSyncTimeOut = Timing.TotalTime + midRoundSyncTimeOut;
             }

@@ -708,6 +708,39 @@ namespace Barotrauma
 
                     GameMain.Server.ShowNetStats = !GameMain.Server.ShowNetStats;
                     break;
+#if DEBUG
+                case "spamevents":
+                    foreach (Item item in Item.ItemList)
+                    {
+                        for (int i = 0; i<item.components.Count; i++)
+                        {
+                            if (item.components[i] is IServerSerializable)
+                            {
+                                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, i });
+                            }
+                            var itemContainer = item.GetComponent<ItemContainer>();
+                            if (itemContainer != null)
+                            {
+                                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.InventoryState });
+                            }
+
+                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
+
+                            item.NeedsPositionUpdate = true;
+                        }
+                    }
+
+                    foreach (Character c in Character.CharacterList)
+                    {
+                        GameMain.Server.CreateEntityEvent(c, new object[] { NetEntityEvent.Type.Status });
+                    }
+
+                    foreach (Structure wall in Structure.WallList)
+                    {
+                        GameMain.Server.CreateEntityEvent(wall);
+                    }
+                    break;
+#endif
                 case "cleanbuild":
                     GameMain.Config.MusicVolume = 0.5f;
                     GameMain.Config.SoundVolume = 0.5f;
