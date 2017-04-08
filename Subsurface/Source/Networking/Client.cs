@@ -50,6 +50,7 @@ namespace Barotrauma.Networking
         public bool NeedsMidRoundSync;
         //how many unique events the client missed before joining the server
         public UInt16 UnreceivedEntityEventCount;
+        public UInt16 FirstNewEventID;
 
         private List<Client> kickVoters;
 
