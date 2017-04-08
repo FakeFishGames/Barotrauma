@@ -31,7 +31,7 @@ namespace Barotrauma
         const int PreviouslyUsedCount = 10;
         private GUIListBox previouslyUsedList;
 
-        GUIDropDown linkedSubBox;
+        private GUIDropDown linkedSubBox;
 
         //a Character used for picking up and manipulating items
         private Character dummyCharacter;
@@ -126,7 +126,7 @@ namespace Barotrauma
 
             selectedTab = -1;
 
-            topPanel = new GUIFrame(new Rectangle(0, 0, 0, 31), "");
+            topPanel = new GUIFrame(new Rectangle(0, 0, 0, 50), "GUIFrameTop");
             topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
             hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 280, 70), "", topPanel);
@@ -153,10 +153,10 @@ namespace Barotrauma
             var nameLabel = new GUITextBlock(new Rectangle(170, -4, 150, 20), "", "", topPanel, GUI.LargeFont);
             nameLabel.TextGetter = GetSubName;
 
-            linkedSubBox = new GUIDropDown(new Rectangle(750,0,200,20), "Add submarine", "", topPanel);
-            linkedSubBox.ToolTip = 
-                "Places another submarine into the current submarine file. "+
-                "Can be used for adding things such as smaller vessels, "+
+            linkedSubBox = new GUIDropDown(new Rectangle(750, 0, 200, 20), "Add submarine", "", topPanel);
+            linkedSubBox.ToolTip =
+                "Places another submarine into the current submarine file. " +
+                "Can be used for adding things such as smaller vessels, " +
                 "escape pods or detachable sections into the main submarine.";
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
@@ -164,17 +164,17 @@ namespace Barotrauma
                 linkedSubBox.AddItem(sub.Name, sub);
             }
             linkedSubBox.OnSelected += SelectLinkedSub;
-            
-            leftPanel = new GUIFrame(new Rectangle(0, 30, 150, GameMain.GraphicsHeight-30), "");
+
+            leftPanel = new GUIFrame(new Rectangle(0, 0, 150, GameMain.GraphicsHeight), "GUIFrameLeft");
             leftPanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-            
+
             GUITextBlock itemCount = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", "", leftPanel);
             itemCount.TextGetter = GetItemCount;
 
             GUITextBlock structureCount = new GUITextBlock(new Rectangle(0, 50, 0, 20), "", "", leftPanel);
             structureCount.TextGetter = GetStructureCount;
 
-            GUItabs = new GUIComponent[Enum.GetValues(typeof(MapEntityCategory)).Length];                       
+            GUItabs = new GUIComponent[Enum.GetValues(typeof(MapEntityCategory)).Length];
 
             int width = 400, height = 400;
             int y = 90;

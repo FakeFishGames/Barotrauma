@@ -33,22 +33,35 @@ namespace Barotrauma
 
         public void Apply(GUIComponent targetComponent, string styleName = "", GUIComponent parent = null)
         {
-            if (string.IsNullOrEmpty(styleName))
+            GUIComponentStyle componentStyle = null;  
+            if (parent != null)
             {
-                styleName = parent == null ? targetComponent.GetType().Name.ToLowerInvariant() : parent.GetType().Name.ToLowerInvariant();
+                string parentStyleName = parent.GetType().Name.ToLowerInvariant();
+
+                GUIComponentStyle parentStyle = null;
+                if (!componentStyles.TryGetValue(parentStyleName, out parentStyle))
+                {
+                    DebugConsole.ThrowError("Couldn't find a GUI style \""+ parentStyleName + "\"");
+                    return;
+                }
+
+                string childStyleName = string.IsNullOrEmpty(styleName) ? targetComponent.GetType().Name : styleName;
+                parentStyle.ChildStyles.TryGetValue(childStyleName.ToLowerInvariant(), out componentStyle);
             }
-
-            GUIComponentStyle componentStyle = null;            
-
-            if (!componentStyles.TryGetValue(styleName, out componentStyle))
+            else
             {
-                DebugConsole.ThrowError("Couldn't find a GUI style \""+ styleName+"\"");
-                return;
+                if (string.IsNullOrEmpty(styleName))
+                {
+                    styleName = targetComponent.GetType().Name;
+                }
+                if (!componentStyles.TryGetValue(styleName.ToLowerInvariant(), out componentStyle))
+                {
+                    DebugConsole.ThrowError("Couldn't find a GUI style \""+ styleName+"\"");
+                    return;
+                }
             }
-
+            
             targetComponent.ApplyStyle(componentStyle);            
         }
-
-
     }
 }

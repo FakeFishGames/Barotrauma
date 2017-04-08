@@ -184,7 +184,7 @@ namespace Barotrauma
 
             Font = GUI.Font;
 
-            GUI.Style.Apply(textBlock, "", this);
+            GUI.Style.Apply(textBlock, style == "" ? "GUITextBox" : style);
             textBlock.Padding = new Vector4(3.0f, 0.0f, 3.0f, 0.0f);
 
             //previousMouse = PlayerInput.GetMouseState;

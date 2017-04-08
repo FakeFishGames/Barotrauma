@@ -81,17 +81,13 @@ namespace Barotrauma
 
             if (parent != null) parent.AddChild(this);
 
-            button = new GUIButton(this.rect, text, Color.White, Alignment.TopLeft, Alignment.TopLeft, null, null);
-
-            button.TextColor = Color.White;
-            button.Color = Color.Black * 0.8f;
-            button.HoverColor = Color.DarkGray * 0.8f;
-            button.OutlineColor = Color.LightGray * 0.8f;
+            button = new GUIButton(this.rect, text, Color.White, Alignment.TopLeft, Alignment.CenterLeft, "GUIDropDown", null);
+            GUI.Style.Apply(button, style, this);
+            
             button.OnClicked = OnClicked;
 
             listBox = new GUIListBox(new Rectangle(this.rect.X, this.rect.Bottom, this.rect.Width, 200), style, null);
             listBox.OnSelected = SelectItem;
-            //listBox.ScrollBarEnabled = false;
         }
 
         public override void AddChild(GUIComponent child)

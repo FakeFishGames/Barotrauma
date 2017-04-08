@@ -112,6 +112,7 @@ namespace Barotrauma
 
             isHorizontal = (rect.Width > rect.Height);
             frame = new GUIFrame(new Rectangle(0,0,0,0), Color.Black*0.8f, style, this);
+            GUI.Style.Apply(frame, "", this);
             //AddChild(frame);
 
             //System.Diagnostics.Debug.WriteLine(frame.rect);

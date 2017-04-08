@@ -45,7 +45,7 @@ namespace Barotrauma
             if (state == ComponentState.Selected) currColor = selectedColor;
             if (state == ComponentState.Hover) currColor = hoverColor;
 
-            if (!sprites.Any()) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A/255.0f), true);
+            if (sprites == null || !sprites.Any()) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A/255.0f), true);
             base.Draw(spriteBatch);
 
             if (OutlineColor != Color.Transparent)

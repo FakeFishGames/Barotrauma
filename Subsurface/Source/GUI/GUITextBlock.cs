@@ -150,6 +150,7 @@ namespace Barotrauma
 
         public override void ApplyStyle(GUIComponentStyle style)
         {
+            if (style == null) return;
             base.ApplyStyle(style);
 
             textColor = style.textColor;
@@ -173,6 +174,8 @@ namespace Barotrauma
             this.text = text;
 
             this.alignment = alignment;
+
+            this.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
             this.textAlignment = textAlignment;
             
