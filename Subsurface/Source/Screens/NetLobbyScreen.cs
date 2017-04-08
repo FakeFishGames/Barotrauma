@@ -170,7 +170,7 @@ namespace Barotrauma
 
             Rectangle panelRect = new Rectangle(0,0,width,height);
 
-            menu = new GUIFrame(panelRect, Color.Transparent, Alignment.Center);
+            menu = new GUIFrame(panelRect, Color.Transparent, Alignment.Center, null);
             //menu.Padding = GUI.style.smallPadding;
 
             //server info panel ------------------------------------------------------------
@@ -251,7 +251,7 @@ namespace Barotrauma
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
                     mode.Name, "",
-                    Alignment.Left, Alignment.Left,
+                    Alignment.TopLeft, Alignment.CenterLeft,
                     modeList);
                 textBlock.ToolTip = mode.Description;
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
@@ -674,7 +674,7 @@ namespace Barotrauma
         {
             var subTextBlock = new GUITextBlock(
                 new Rectangle(0, 0, 0, 25), ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "",
-                Alignment.Left, Alignment.CenterY | Alignment.Left, subList)
+                Alignment.TopLeft, Alignment.CenterLeft, subList)
             {
                 Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
                 ToolTip = sub.Description,

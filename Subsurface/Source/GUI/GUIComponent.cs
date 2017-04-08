@@ -73,7 +73,7 @@ namespace Barotrauma
 
         protected static KeyboardDispatcher keyboardDispatcher;
 
-        public enum ComponentState { None, Hover, Selected};
+        public enum ComponentState { None, Hover, Pressed, Selected };
 
         protected Alignment alignment;
 
@@ -119,7 +119,7 @@ namespace Barotrauma
 
         public bool TileSprites;
 
-        private GUITextBlock toolTipBlock;
+        private static GUITextBlock toolTipBlock;
 
         //protected float alpha;
                 
@@ -161,7 +161,7 @@ namespace Barotrauma
             get { return CanBeFocused ? rect : Rectangle.Empty; }
         }
 
-        public List<UISprite> sprites;
+        public Dictionary<GUIComponent.ComponentState, List<UISprite>> sprites;
         //public Alignment SpriteAlignment { get; set; }
         //public bool RepeatSpriteX, RepeatSpriteY;
 
@@ -222,8 +222,7 @@ namespace Barotrauma
             OutlineColor = Color.Transparent;
 
             Font = GUI.Font;
-
-            sprites = new List<UISprite>();
+            
             children = new List<GUIComponent>();
 
             CanBeFocused = true;
@@ -286,42 +285,38 @@ namespace Barotrauma
             if (state == ComponentState.Selected) currColor = selectedColor;
             if (state == ComponentState.Hover) currColor = hoverColor;
 
-            if (flashTimer>0.0f)
+            if (flashTimer > 0.0f)
             {
-                GUI.DrawRectangle(spriteBatch, 
-                    new Rectangle(rect.X-5,rect.Y-5,rect.Width+10,rect.Height+10), 
+                GUI.DrawRectangle(spriteBatch,
+                    new Rectangle(rect.X - 5, rect.Y - 5, rect.Width + 10, rect.Height + 10),
                     flashColor * (flashTimer / FlashDuration), true);
             }
 
-            if (currColor.A>0.0f && !sprites.Any()) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
+            if (currColor.A > 0.0f && (sprites == null || !sprites.Any())) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
 
-            if (sprites != null && currColor.A > 0.0f)
+            if (sprites != null && sprites[state] != null && currColor.A > 0.0f)
             {
-                foreach (UISprite uiSprite in sprites)
+                foreach (UISprite uiSprite in sprites[state])
                 {
                     if (uiSprite.Slice)
                     {
                         Vector2 pos = new Vector2(rect.X, rect.Y);
 
-                        int centerWidth = rect.Width - uiSprite.Slices[0].Width - uiSprite.Slices[2].Width;
-                        int centerHeight = rect.Height - uiSprite.Slices[0].Height - uiSprite.Slices[8].Height;
+                        int centerWidth = Math.Max(rect.Width - uiSprite.Slices[0].Width - uiSprite.Slices[2].Width, 0);
+                        int centerHeight = Math.Max(rect.Height - uiSprite.Slices[0].Height - uiSprite.Slices[8].Height, 0);
 
-                        for (int x = 0; x<3; x++)
+                        for (int x = 0; x < 3; x++)
                         {
                             int width = x == 1 ? centerWidth : uiSprite.Slices[x].Width;
-                            for (int y = 0; y<3; y++)
+                            for (int y = 0; y < 3; y++)
                             {
                                 int height = y == 1 ? centerHeight : uiSprite.Slices[x + y * 3].Height;
-                                //GUI.DrawString(spriteBatch, pos, x + ", " + y, Color.White);
 
-                                uiSprite.Sprite.DrawTiled(
-                                    spriteBatch, 
-                                    pos, 
-                                    new Vector2(width, height), 
-                                    Vector2.Zero, 
+                                spriteBatch.Draw(uiSprite.Sprite.Texture,
+                                    new Rectangle((int)pos.X, (int)pos.Y, width, height),
                                     uiSprite.Slices[x + y * 3],
                                     currColor * (currColor.A / 255.0f));
-
+                                
                                 pos.Y += height;
                             }
                             pos.X += width;
@@ -366,18 +361,17 @@ namespace Barotrauma
             //DrawChildren(spriteBatch);
         }
 
-        public void DrawToolTip(SpriteBatch spriteBatch)
+        public  void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
             int width = 400;
-            if (toolTipBlock==null || (string)toolTipBlock.userData != ToolTip)
+            if (toolTipBlock == null || (string)toolTipBlock.userData != ToolTip)
             {
-                toolTipBlock = new GUITextBlock(new Rectangle(0,0,width, 18), ToolTip, "", Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
+                toolTipBlock = new GUITextBlock(new Rectangle(0, 0, width, 18), ToolTip, "GUIToolTip", Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
                 toolTipBlock.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 toolTipBlock.rect.Width = (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + 20);
-                toolTipBlock.rect.Height = toolTipBlock.WrappedText.Split('\n').Length * 18;
-                toolTipBlock.Color = Color.Black * 0.7f;
+                toolTipBlock.rect.Height = toolTipBlock.WrappedText.Split('\n').Length * 18 + 7;
                 toolTipBlock.userData = ToolTip;
 
             }
@@ -468,13 +462,15 @@ namespace Barotrauma
         }
 
         public virtual void ApplyStyle(GUIComponentStyle style)
-        {            
+        {
+            if (style == null) return;
+
             color = style.Color;
             hoverColor = style.HoverColor;
             selectedColor = style.SelectedColor;
             
             padding = style.Padding;
-            sprites = new List<UISprite>(style.Sprites);
+            sprites = style.Sprites;
 
             OutlineColor = style.OutlineColor;
 

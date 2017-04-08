@@ -176,13 +176,13 @@ namespace Barotrauma
                 passwordBox.Enabled = false;
                 passwordBox.UserData = "password";
 
-                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, "", serverFrame);
+                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
 
                 int playerCount = 0, maxPlayers = 1;
                 int.TryParse(currPlayersStr, out playerCount);
                 int.TryParse(maxPlayersStr, out maxPlayers);
 
-                new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, "", serverFrame);
+                new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
 
                 var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2])/ 2, 0, 20, 20), "", Alignment.TopLeft, serverFrame);
                 gameStartedBox.Selected = gameStarted == "1";
