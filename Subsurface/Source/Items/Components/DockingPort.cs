@@ -236,8 +236,10 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Lock()
+        public void Lock(bool isNetworkMessage)
         {
+            if (GameMain.Client != null && !isNetworkMessage) return;
+
             if (dockingTarget==null)
             {
                 DebugConsole.ThrowError("Error - attempted to lock a docking port that's not connected to anything");
@@ -245,7 +247,7 @@ namespace Barotrauma.Items.Components
             }
             else if (joint is WeldJoint)
             {
-                DebugConsole.ThrowError("Error - attempted to lock a docking port that's already locked");
+                //DebugConsole.ThrowError("Error - attempted to lock a docking port that's already locked");
                 return;
             }
 
@@ -260,11 +262,14 @@ namespace Barotrauma.Items.Components
 
             CreateJoint(true);
 
+            if (GameMain.Server != null)
+            {
+                item.CreateServerEvent(this);
+            }
+
             if (!item.linkedTo.Any(e => e is Hull) && !dockingTarget.item.linkedTo.Any(e => e is Hull))
             {
                 CreateHull();
-
-                //item.NewComponentEvent(this, false, true);
             }
         }
 
@@ -601,7 +606,7 @@ namespace Barotrauma.Items.Components
 
                     if (Vector2.Distance(joint.WorldAnchorA, joint.WorldAnchorB) < 0.05f)
                     {
-                        Lock();
+                        Lock(false);
                     }
                 }
                 else
@@ -621,24 +626,24 @@ namespace Barotrauma.Items.Components
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
             if (dockingState == 0.0f) return;
-            
+
             Vector2 drawPos = item.DrawPosition;
             drawPos.Y = -drawPos.Y;
 
             var rect = overlaySprite.SourceRect;
-            
+
             if (IsHorizontal)
             {
                 drawPos.Y -= rect.Height / 2;
 
                 if (dockingDir == 1)
                 {
-                    spriteBatch.Draw(overlaySprite.Texture, 
+                    spriteBatch.Draw(overlaySprite.Texture,
                         drawPos,
                         new Rectangle(
                             rect.Center.X + (int)(rect.Width / 2 * (1.0f - dockingState)), rect.Y,
                             (int)(rect.Width / 2 * dockingState), rect.Height), Color.White);
-        
+
                 }
                 else
                 {
@@ -647,7 +652,7 @@ namespace Barotrauma.Items.Components
                         new Rectangle(
                             rect.X, rect.Y,
                             (int)(rect.Width / 2 * dockingState), rect.Height), Color.White);
-                }              
+                }
             }
             else
             {
@@ -656,20 +661,19 @@ namespace Barotrauma.Items.Components
                 if (dockingDir == 1)
                 {
                     spriteBatch.Draw(overlaySprite.Texture,
-                        drawPos,
-                        new Rectangle(
-                            rect.X, rect.Y + rect.Height/2 + (int)(rect.Height / 2 * (1.0f - dockingState)),
-                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
-
-                }
-                else
-                {
-                    spriteBatch.Draw(overlaySprite.Texture,
                         drawPos - Vector2.UnitY * (rect.Height / 2 * dockingState),
                         new Rectangle(
                             rect.X, rect.Y,
                             rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
-                }      
+                }
+                else
+                {
+                    spriteBatch.Draw(overlaySprite.Texture,
+                        drawPos,
+                        new Rectangle(
+                            rect.X, rect.Y + rect.Height / 2 + (int)(rect.Height / 2 * (1.0f - dockingState)),
+                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
+                }
             }
         }
 
@@ -750,9 +754,17 @@ namespace Barotrauma.Items.Components
             {
                 msg.Write(dockingTarget.item.ID);
 
-                msg.Write((ushort)hullIds[0]);
-                msg.Write((ushort)hullIds[1]);
-                msg.Write((ushort)gapId);
+                if (hullIds[0] != null && hullIds[1] != null && gapId != null)
+                {
+                    msg.Write(true);
+                    msg.Write((ushort)hullIds[0]);
+                    msg.Write((ushort)hullIds[1]);
+                    msg.Write((ushort)gapId);
+                }
+                else
+                {
+                    msg.Write(false);
+                }
             }
         }
 
@@ -762,12 +774,17 @@ namespace Barotrauma.Items.Components
 
             if (isDocked)
             {
-                ushort dockingTargetID  = msg.ReadUInt16();
+                ushort dockingTargetID = msg.ReadUInt16();
 
-                hullIds[0]  = msg.ReadUInt16();
-                hullIds[1]  = msg.ReadUInt16();
-                gapId       = msg.ReadUInt16();
-                
+                bool isLocked = msg.ReadBoolean();
+
+                if (isLocked)
+                {
+                    hullIds[0] = msg.ReadUInt16();
+                    hullIds[1] = msg.ReadUInt16();
+                    gapId = msg.ReadUInt16();
+                }
+
                 Entity targetEntity = Entity.FindEntityByID(dockingTargetID);
                 if (targetEntity == null || !(targetEntity is Item))
                 {
@@ -782,22 +799,22 @@ namespace Barotrauma.Items.Components
                     return;
                 }
 
-                if (hulls != null)
-                {
-                    if (hulls[0] != null) hulls[0].ID = (ushort)hullIds[0];
-                    if (hulls[1] != null) hulls[1].ID = (ushort)hullIds[1];
-                }
-
-                if (gap != null) gap.ID = (ushort)gapId;
-
                 Dock(dockingTarget);
 
+                if (isLocked)
+                {
+                    Lock(true);
+
+                    hulls[0].ID = (ushort)hullIds[0];
+                    hulls[1].ID = (ushort)hullIds[1];
+                    gap.ID = (ushort)gapId;
+                }
             }
             else
             {
                 Undock();
             }
         }
-        
+
     }
 }

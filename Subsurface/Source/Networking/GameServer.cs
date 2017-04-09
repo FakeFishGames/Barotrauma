@@ -703,10 +703,10 @@ namespace Barotrauma.Networking
 #if DEBUG
                         //client thinks they've received a msg we haven't sent yet (corrupted packet, msg read/written incorrectly?)
                         if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastChatMsgQueueID))
-                            DebugConsole.ThrowError("client.lastRecvChatMsgID > lastChatMsgQueueID (" + c.lastRecvChatMsgID + " > " + c.lastChatMsgQueueID + ")");
+                            DebugConsole.ThrowError("client.lastRecvChatMsgID > lastChatMsgQueueID (" + lastRecvChatMsgID + " > " + c.lastChatMsgQueueID + ")");
 
                         if (lastRecvEntityEventID > lastEntityEventID)
-                            DebugConsole.ThrowError("client.lastRecvEntityEventID > lastEntityEventID (" + c.lastRecvEntityEventID + " > " + lastEntityEventID + ")");
+                            DebugConsole.ThrowError("client.lastRecvEntityEventID > lastEntityEventID (" + lastRecvEntityEventID + " > " + lastEntityEventID + ")");
 #endif
 
                         if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastRecvChatMsgID)) c.lastRecvChatMsgID = lastRecvChatMsgID;

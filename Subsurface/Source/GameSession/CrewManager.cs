@@ -158,7 +158,7 @@ namespace Barotrauma
             guiFrame.Update(deltaTime);
             
             //TODO: implement AI commands in multiplayer?
-            if (GameMain.NetworkMember != null &&
+            if (GameMain.NetworkMember == null &&
                 GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
             {
                 //deselect construction unless it's the ladders the character is climbing
