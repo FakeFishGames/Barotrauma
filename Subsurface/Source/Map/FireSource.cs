@@ -245,20 +245,21 @@ namespace Barotrauma
         {
             if (size.X <= 0.0f) return;
 
-            foreach (Character c in Character.CharacterList)
+            for (int i = 0; i < Character.CharacterList.Count; i++)
             {
+                Character c = Character.CharacterList[i];
                 if (c.AnimController.CurrentHull == null || c.IsDead) continue;
 
                 float range = (float)Math.Sqrt(size.X) * 20.0f;
                 if (c.Position.X < position.X - range || c.Position.X > position.X + size.X + range) continue;
                 if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) continue;
-                
+
                 float dmg = (float)Math.Sqrt(size.X) * deltaTime / c.AnimController.Limbs.Length;
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (limb.WearingItems.Find(w => w!=null && w.WearableComponent.Item.FireProof)!=null) continue;
+                    if (limb.WearingItems.Find(w => w != null && w.WearableComponent.Item.FireProof) != null) continue;
                     limb.Burnt += dmg * 10.0f;
-                    c.AddDamage(limb.SimPosition, DamageType.None, dmg, 0,0,false);
+                    c.AddDamage(limb.SimPosition, DamageType.None, dmg, 0, 0, false);
                 }
             }
         }
