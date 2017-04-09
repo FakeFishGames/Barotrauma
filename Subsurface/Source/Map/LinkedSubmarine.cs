@@ -454,7 +454,7 @@ namespace Barotrauma
 
 
                 myPort.Dock(linkedPort);   
-                myPort.Lock();
+                myPort.Lock(true);
             }
 
             sub.SetPosition(sub.WorldPosition - Submarine.WorldPosition);
