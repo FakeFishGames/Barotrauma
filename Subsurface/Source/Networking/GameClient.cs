@@ -921,18 +921,17 @@ namespace Barotrauma.Networking
                         UInt16 id = inc.ReadUInt16();
                         byte msgLength = inc.ReadByte();
 
+                        long msgEndPos = inc.Position + msgLength * 8;
+
                         var entity = Entity.FindEntityByID(id) as IServerSerializable;
-                        if (entity == null)
-                        {
-                            //skip through the rest of the message
-                            inc.Position += msgLength * 8;
-                        }
-                        else
+                        if (entity != null)
                         {
                             entity.ClientRead(objHeader, inc, sendingTime);
                         }
 
-                        inc.ReadPadBits();
+                        //force to the correct position in case the entity doesn't exist 
+                        //or the message wasn't read correctly for whatever reason
+                        inc.Position = msgEndPos;
                         break;
                     case ServerNetObject.ENTITY_EVENT:
                     case ServerNetObject.ENTITY_EVENT_INITIAL:
