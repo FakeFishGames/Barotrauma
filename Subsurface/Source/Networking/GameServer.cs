@@ -703,12 +703,12 @@ namespace Barotrauma.Networking
 #if DEBUG
                         //client thinks they've received a msg we haven't sent yet (corrupted packet, msg read/written incorrectly?)
                         if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastChatMsgQueueID))
-                            DebugConsole.ThrowError("client.lastRecvChatMsgID > lastChatMsgQueueID");
-                                                
+                            DebugConsole.ThrowError("client.lastRecvChatMsgID > lastChatMsgQueueID (" + c.lastRecvChatMsgID + " > " + c.lastChatMsgQueueID + ")");
+
                         if (lastRecvEntityEventID > lastEntityEventID)
-                            DebugConsole.ThrowError("client.lastRecvEntityEventID > lastEntityEventID");                        
+                            DebugConsole.ThrowError("client.lastRecvEntityEventID > lastEntityEventID (" + c.lastRecvEntityEventID + " > " + lastEntityEventID + ")");
 #endif
-                                                
+
                         if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastRecvChatMsgID)) c.lastRecvChatMsgID = lastRecvChatMsgID;
                         if (NetIdUtils.IdMoreRecent(c.lastRecvChatMsgID, c.lastChatMsgQueueID)) c.lastRecvChatMsgID = c.lastChatMsgQueueID;
                         
@@ -833,40 +833,45 @@ namespace Barotrauma.Networking
                 cMsg.ServerWrite(outmsg, c);
             }            
             
-            foreach (Character character in Character.CharacterList)
+            //don't send position updates to characters who are still midround syncing
+            //characters or items spawned mid-round don't necessarily exist at the client's end yet
+            if (!c.NeedsMidRoundSync)
             {
-                if (!character.Enabled) continue;
-
-                if (c.Character != null &&
-                    Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                    NetConfig.CharacterIgnoreDistance * NetConfig.CharacterIgnoreDistance)
+                foreach (Character character in Character.CharacterList)
                 {
-                    continue;
+                    if (!character.Enabled) continue;
+
+                    if (c.Character != null &&
+                        Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
+                        NetConfig.CharacterIgnoreDistance * NetConfig.CharacterIgnoreDistance)
+                    {
+                        continue;
+                    }
+
+                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                    character.ServerWrite(outmsg, c);
+                    outmsg.WritePadBits();
                 }
 
-                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
-                character.ServerWrite(outmsg, c);
-                outmsg.WritePadBits();
-            }
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    //if docked to a sub with a smaller ID, don't send an update
+                    //  (= update is only sent for the docked sub that has the smallest ID, doesn't matter if it's the main sub or a shuttle)
+                    if (sub.DockedTo.Any(s => s.ID < sub.ID)) continue;
 
-            foreach (Submarine sub in Submarine.Loaded)
-            {
-                //if docked to a sub with a smaller ID, don't send an update
-                //  (= update is only sent for the docked sub that has the smallest ID, doesn't matter if it's the main sub or a shuttle)
-                if (sub.DockedTo.Any(s => s.ID < sub.ID)) continue;
+                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                    sub.ServerWrite(outmsg, c);
+                    outmsg.WritePadBits();
+                }
 
-                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
-                sub.ServerWrite(outmsg, c);
-                outmsg.WritePadBits();
-            }
+                foreach (Item item in Item.ItemList)
+                {
+                    if (!item.NeedsPositionUpdate) continue;
 
-            foreach (Item item in Item.ItemList)
-            {
-                if (!item.NeedsPositionUpdate) continue;
-
-                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
-                item.ServerWritePosition(outmsg, c);
-                outmsg.WritePadBits();
+                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                    item.ServerWritePosition(outmsg, c);
+                    outmsg.WritePadBits();
+                }
             }
 
             entityEventManager.Write(c, outmsg);

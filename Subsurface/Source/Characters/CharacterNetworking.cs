@@ -425,11 +425,9 @@ namespace Barotrauma
                     tempBuffer.Write(aiming);
                     tempBuffer.Write(use);
 
-                    if (AnimController.Limbs.Any(l => l != null && l.attack != null))
-                    {
-                        tempBuffer.Write(attack);
-                    }
-
+                    bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null);
+                    tempBuffer.Write(hasAttackLimb);
+                    if (hasAttackLimb) tempBuffer.Write(attack);
 
                     if (aiming)
                     {
@@ -491,7 +489,8 @@ namespace Barotrauma
                         keys[(int)InputType.Use].Held = useInput;
                         keys[(int)InputType.Use].SetState(false, useInput);
 
-                        if (AnimController.Limbs.Any(l => l != null && l.attack != null))
+                        bool hasAttackLimb = msg.ReadBoolean();
+                        if (hasAttackLimb)
                         {
                             bool attackInput = msg.ReadBoolean();
                             keys[(int)InputType.Attack].Held = attackInput;
