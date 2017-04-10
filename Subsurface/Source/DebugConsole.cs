@@ -581,6 +581,11 @@ namespace Barotrauma
                     reactor.ShutDownTemp = power == 0 ? 0 : 7000.0f;
                     reactor.AutoTemp = true;
                     reactor.Temperature = power;
+
+                    if (GameMain.Server != null)
+                    {
+                        reactorItem.CreateServerEvent(reactor);
+                    }
                     break;
                 case "shake":
                     GameMain.GameScreen.Cam.Shake = 10.0f;

@@ -1617,7 +1617,7 @@ namespace Barotrauma
                 //GUI.DrawLine(spriteBatch, remoteVec, localVec, Color.Yellow, 0, 10);
                 if (localPos1 != null) GUI.DrawLine(spriteBatch, remoteVec, localVec1, Color.Lime, 0, 2);
                 if (localPos2 != null) GUI.DrawLine(spriteBatch, remoteVec + Vector2.One, localVec2 + Vector2.One, Color.Red, 0, 2);
-            }*/
+            }
 
             Vector2 mouseDrawPos = CursorWorldPosition;
             mouseDrawPos.Y = -mouseDrawPos.Y;
@@ -1625,7 +1625,7 @@ namespace Barotrauma
 
             Vector2 closestItemPos = closestItem != null ? closestItem.DrawPosition : Vector2.Zero;
             closestItemPos.Y = -closestItemPos.Y;
-            GUI.DrawLine(spriteBatch, closestItemPos - new Vector2(0, 5), closestItemPos + new Vector2(0, 5), Color.Lime, 0, 10);
+            GUI.DrawLine(spriteBatch, closestItemPos - new Vector2(0, 5), closestItemPos + new Vector2(0, 5), Color.Lime, 0, 10);*/
 
             if (this == controlled || GUI.DisableHUD) return;
             

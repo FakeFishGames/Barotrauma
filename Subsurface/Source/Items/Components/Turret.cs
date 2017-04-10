@@ -405,6 +405,7 @@ namespace Barotrauma.Items.Components
             }
 
             Launch(projectile);
+            PlaySound(ActionType.OnUse, item.WorldPosition);
         }
     }
 }
