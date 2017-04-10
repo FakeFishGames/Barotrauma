@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Globalization;
@@ -592,6 +593,20 @@ namespace Barotrauma
 
                 return "";
             }            
+        }
+
+        /// <summary>
+        /// Reads a number of bits from the buffer and inserts them to a new NetBuffer instance
+        /// </summary>
+        public static NetBuffer ExtractBits(this NetBuffer originalBuffer, int numberOfBits)
+        {
+            var buffer = new NetBuffer();
+            byte[] data = new byte[(int)Math.Ceiling(numberOfBits / (double)8)];
+
+            originalBuffer.ReadBits(data, 0, numberOfBits);
+            buffer.Write(data);
+
+            return buffer;
         }
     }
 }

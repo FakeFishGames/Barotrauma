@@ -100,9 +100,14 @@ namespace Barotrauma.Items.Components
                     RechargeSpeed = rechargeSpeed - maxRechargeSpeed * 0.1f;
 
                     if (GameMain.Server != null)
+                    {
                         item.CreateServerEvent(this);
+                    }
                     else if (GameMain.Client != null)
+                    {
                         item.CreateClientEvent(this);
+                        correctionTimer = CorrectionDelay;
+                    }
 
                     return true;
                 };
@@ -113,9 +118,14 @@ namespace Barotrauma.Items.Components
                     RechargeSpeed = rechargeSpeed + maxRechargeSpeed * 0.1f;
 
                     if (GameMain.Server != null)
+                    {
                         item.CreateServerEvent(this);
+                    }
                     else if (GameMain.Client != null)
+                    {
                         item.CreateClientEvent(this);
+                        correctionTimer = CorrectionDelay;
+                    }
 
                     return true;
                 };
@@ -269,15 +279,12 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(NetBuffer msg, object[] extraData)
         {
-            DebugConsole.NewMessage("writing recharge speed " + (rechargeSpeed / MaxRechargeSpeed * 10), Color.White);
             msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
         }
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             float newRechargeSpeed = msg.ReadRangedInteger(0,10) / 10.0f * maxRechargeSpeed;
-
-            DebugConsole.NewMessage("received recharge speed " + newRechargeSpeed, Color.White);
 
             if (item.CanClientAccess(c))
             {
@@ -297,6 +304,12 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
+            if (correctionTimer > 0.0f)
+            {
+                StartDelayedCorrection(type, msg.ExtractBits(4 + 8), sendingTime);
+                return;
+            }
+
             RechargeSpeed = msg.ReadRangedInteger(0, 10) / 10.0f * maxRechargeSpeed;
             Charge = msg.ReadRangedSingle(0.0f, 1.0f, 8) * capacity;
         }

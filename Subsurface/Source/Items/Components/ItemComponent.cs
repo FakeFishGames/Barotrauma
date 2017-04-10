@@ -59,9 +59,7 @@ namespace Barotrauma.Items.Components
         public bool WasUsed;
 
         public readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
-        
-        protected bool updated;
-        
+                
         public List<RelatedItem> requiredItems;
 
         public List<Skill> requiredSkills;
@@ -71,6 +69,10 @@ namespace Barotrauma.Items.Components
         private GUIFrame guiFrame;
 
         public ItemComponent Parent;
+
+        protected const float CorrectionDelay = 1.0f;
+        protected CoroutineHandle delayedCorrectionCoroutine;
+        protected float correctionTimer;
 
         private string msg;
         
@@ -86,15 +88,7 @@ namespace Barotrauma.Items.Components
         {
             get { return properties; }
         }
-        //has the component already been updated this frame
-        public bool Updated
-        {
-            get { return updated; }
-            set { updated = value; }
-        }
-
-        public bool NetworkUpdateSent;
-        
+                
         public virtual bool IsActive
         {
             get { return isActive; }
@@ -535,6 +529,12 @@ namespace Barotrauma.Items.Components
                 Sounds.SoundManager.Stop(loopingSoundIndex);
             }
 
+            if (delayedCorrectionCoroutine != null)
+            {
+                CoroutineManager.StopCoroutines(delayedCorrectionCoroutine);
+                delayedCorrectionCoroutine = null;
+            }
+
             RemoveComponentSpecific();
         }
 
@@ -678,6 +678,30 @@ namespace Barotrauma.Items.Components
             {
                 effect.Apply(type, deltaTime, item, targets);
             }
+        }
+
+        //Starts a coroutine that will read the correct state of the component from the NetBuffer when correctionTimer reaches zero.
+        protected void StartDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime)
+        {
+            if (delayedCorrectionCoroutine != null) CoroutineManager.StopCoroutines(delayedCorrectionCoroutine);
+
+            delayedCorrectionCoroutine = CoroutineManager.StartCoroutine(DoDelayedCorrection(type, buffer, sendingTime));            
+        }
+
+        private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, NetBuffer buffer, float sendingTime)
+        {
+            while (correctionTimer > 0.0f)
+            {
+                correctionTimer -= CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+            
+            ((IServerSerializable)this).ClientRead(type, buffer, sendingTime);           
+
+            correctionTimer = 0.0f;
+            delayedCorrectionCoroutine = null;
+
+            yield return CoroutineStatus.Success;
         }
 
         public virtual XElement Save(XElement parentElement)

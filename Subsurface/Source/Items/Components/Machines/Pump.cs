@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (GameMain.Client != null)
                 {
+                    correctionTimer = CorrectionDelay;
                     item.CreateClientEvent(this);
                 }
 
@@ -97,6 +98,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (GameMain.Client != null)
                 {
+                    correctionTimer = CorrectionDelay;
                     item.CreateClientEvent(this);
                 }
 
@@ -114,6 +116,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (GameMain.Client != null)
                 {
+                    correctionTimer = CorrectionDelay;
                     item.CreateClientEvent(this);
                 }
 
@@ -234,7 +237,7 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c)
+        public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
         {
             float flowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             bool isActive        = msg.ReadBoolean();
@@ -243,9 +246,12 @@ namespace Barotrauma.Items.Components
 
             FlowPercentage  = flowPercentage;
             IsActive        = isActive;
+
+            //notify all clients of the changed state
+            item.CreateServerEvent(this);
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
@@ -254,6 +260,12 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
+            if (correctionTimer > 0.0f)
+            {
+                StartDelayedCorrection(type, msg.ExtractBits(5 + 1), sendingTime);
+                return;
+            }
+
             FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             IsActive = msg.ReadBoolean();
         }

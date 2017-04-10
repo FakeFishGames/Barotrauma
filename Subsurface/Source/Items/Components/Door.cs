@@ -514,7 +514,7 @@ namespace Barotrauma.Items.Components
                 PlaySound(ActionType.OnUse, item.WorldPosition);
 
                 predictedState = open;
-                resetPredictionTimer = 1.0f;
+                resetPredictionTimer = CorrectionDelay;
             }
             else
             {
@@ -522,7 +522,6 @@ namespace Barotrauma.Items.Components
 
                 isOpen = open;
             }
-
 
             //opening a partially stuck door makes it less stuck
             if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
