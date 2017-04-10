@@ -10,20 +10,22 @@ namespace Barotrauma.Items.Components
     class PowerContainer : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         //[power/min]        
-        float capacity;
+        private float capacity;
 
-        float charge;
+        private float charge;
 
-        float rechargeVoltage, outputVoltage;
+        private float rechargeVoltage, outputVoltage;
 
         //how fast the battery can be recharged
-        float maxRechargeSpeed;
+        private float maxRechargeSpeed;
 
         //how fast it's currently being recharged (can be changed, so that
         //charging can be slowed down or disabled if there's a shortage of power)
-        float rechargeSpeed;
+        private float rechargeSpeed;
 
-        float maxOutput;
+        private float maxOutput;
+
+        private float lastSentCharge;
 
         public float CurrPowerOutput
         {
@@ -53,6 +55,12 @@ namespace Barotrauma.Items.Components
             {
                 if (!MathUtils.IsValid(value)) return;
                 charge = MathHelper.Clamp(value, 0.0f, capacity); 
+
+                if (Math.Abs(charge - lastSentCharge) > 1.0f)
+                {
+                    if (GameMain.Server != null) item.CreateServerEvent(this);
+                    lastSentCharge = charge;
+                }
             }
         }
 
@@ -281,8 +289,6 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
-
-            DebugConsole.NewMessage("writing recharge speed " + (rechargeSpeed / MaxRechargeSpeed * 10), Color.White);
             msg.WriteRangedInteger(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
 
             float chargeRatio = MathHelper.Clamp(charge / capacity, 0.0f, 1.0f);

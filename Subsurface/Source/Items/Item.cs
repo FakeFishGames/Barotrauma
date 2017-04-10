@@ -16,7 +16,6 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-
     public enum ActionType
     {
         Always, OnPicked, OnUse, OnSecondaryUse,
@@ -28,6 +27,8 @@ namespace Barotrauma
 
     class Item : MapEntity, IDamageable, IPropertyObject, IServerSerializable, IClientSerializable
     {
+        const float MaxVel = 64.0f;
+
         public static List<Item> ItemList = new List<Item>();
         private ItemPrefab prefab;
 
@@ -817,22 +818,19 @@ namespace Barotrauma
                 Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
                 rect.X = (int)(displayPos.X - rect.Width / 2.0f);
                 rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+                if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+                {
+                    body.LinearVelocity = new Vector2(
+                        MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
+                        MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                }
             }
 
             UpdateNetPosition(deltaTime);
-
-            /*if (GameMain.Client != null)
-            {
-                body.MoveToTargetPosition();
-            }*/
-
-            if (!inWater || Container != null || body == null) return;
-
-            if (body.LinearVelocity != Vector2.Zero && body.LinearVelocity.Length() > 1000.0f)
-            {
-                body.ResetDynamics();
-            }
-
+            
+            if (!inWater || Container != null) return;
+            
             ApplyWaterForces();
 
             if(CurrentHull != null) CurrentHull.ApplyFlowForces(deltaTime, this);
@@ -2104,16 +2102,20 @@ namespace Barotrauma
             msg.WriteRangedSingle(MathUtils.WrapAngleTwoPi(body.Rotation), 0.0f, MathHelper.TwoPi, 7);
 
 #if DEBUG
-            if (Math.Abs(body.LinearVelocity.X) > 32.0f || Math.Abs(body.LinearVelocity.Y) > 32.0f)
+            if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+            {
+
                 DebugConsole.ThrowError("Item velocity out of range (" + body.LinearVelocity + ")");
+
+            }
 #endif
 
             msg.Write(body.FarseerBody.Awake);
             if (body.FarseerBody.Awake)
             {
                 body.FarseerBody.Enabled = true;
-                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -32.0f, 32.0f), -32.0f, 32.0f, 12);
-                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -32.0f, 32.0f), -32.0f, 32.0f, 12);
+                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
+                msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
             }
 
             msg.WritePadBits();
@@ -2136,9 +2138,9 @@ namespace Barotrauma
             if (body.FarseerBody.Awake)
             {
                 newVelocity = new Vector2(
-                    msg.ReadRangedSingle(-32.0f, 32.0f, 12),
-                    msg.ReadRangedSingle(-32.0f, 32.0f, 12));
-                if ((newVelocity-body.LinearVelocity).Length()>8.0f) body.LinearVelocity = newVelocity;
+                    msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
+                    msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
+                if ((newVelocity - body.LinearVelocity).Length() > 8.0f) body.LinearVelocity = newVelocity;
             }
             else
             {

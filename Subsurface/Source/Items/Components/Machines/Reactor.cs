@@ -47,9 +47,7 @@ namespace Barotrauma.Items.Components
         private float[] loadGraph;
 
         private float load;
-
-        private float lastUpdate;
-
+        
         private PropertyTask powerUpTask;
 
         private GUITickBox autoTempTickBox;
