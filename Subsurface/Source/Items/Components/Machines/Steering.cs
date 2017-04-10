@@ -146,6 +146,7 @@ namespace Barotrauma.Items.Components
                     if (GameMain.Client != null)
                     {
                         item.CreateClientEvent(this);
+                        correctionTimer = CorrectionDelay;
                     }
                     else if (GameMain.Server != null)
                     {
@@ -597,6 +598,8 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
+            long msgStartPos = msg.Position;
+
             bool autoPilot              = msg.ReadBoolean();
             Vector2 newTargetVelocity   = targetVelocity;
             bool maintainPos            = false;
@@ -620,6 +623,14 @@ namespace Barotrauma.Items.Components
             else
             {
                 newTargetVelocity = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+            }
+
+            if (correctionTimer > 0.0f)
+            {
+                int msgLength = (int)(msg.Position - msgStartPos);
+                msg.Position = msgStartPos;
+                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
+                return;
             }
 
             AutoPilot = autoPilot;

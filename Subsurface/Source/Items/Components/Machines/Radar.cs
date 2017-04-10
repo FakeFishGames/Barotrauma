@@ -64,6 +64,7 @@ namespace Barotrauma.Items.Components
                 else if (GameMain.Client != null)
                 {
                     item.CreateClientEvent(this);
+                    correctionTimer = CorrectionDelay;
                 }
                 IsActive = box.Selected;
 
@@ -450,6 +451,12 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
         {
+            if (correctionTimer > 0.0f)
+            {
+                StartDelayedCorrection(type, msg.ExtractBits(1), sendingTime);
+                return;
+            }
+
             IsActive = msg.ReadBoolean();
             isActiveTickBox.Selected = IsActive;
         }        

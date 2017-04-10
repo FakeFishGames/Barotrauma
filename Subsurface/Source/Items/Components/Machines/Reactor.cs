@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
 {
     class Reactor : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
     {
-        const float NetworkUpdateInterval = 3.0f;
+        const float NetworkUpdateInterval = 0.5f;
 
         //the rate at which the reactor is being run un
         //higher rates generate more power (and heat)
@@ -553,16 +553,18 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             msg.Write(autoTemp);
-            msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 8);
+            msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 15);
 
             msg.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
+
+            correctionTimer = CorrectionDelay;
         }
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             bool autoTemp       = msg.ReadBoolean();
-            float shutDownTemp  = msg.ReadRangedSingle(0.0f, 10000.0f, 8);
+            float shutDownTemp  = msg.ReadRangedSingle(0.0f, 10000.0f, 15);
             float coolingRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             float fissionRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
 
@@ -583,7 +585,7 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedSingle(temperature, 0.0f, 10000.0f, 16);
 
             msg.Write(autoTemp);
-            msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 8);
+            msg.WriteRangedSingle(shutDownTemp, 0.0f, 10000.0f, 15);
 
             msg.WriteRangedSingle(coolingRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(fissionRate, 0.0f, 100.0f, 8);
@@ -591,10 +593,16 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
+            if (correctionTimer > 0.0f)
+            {
+                StartDelayedCorrection(type, msg.ExtractBits(16 + 1 + 15 + 8 + 8), sendingTime);
+                return;
+            }
+
             Temperature = msg.ReadRangedSingle(0.0f, 10000.0f, 16);
 
             AutoTemp = msg.ReadBoolean();
-            ShutDownTemp = msg.ReadRangedSingle(0.0f, 10000.0f, 8);
+            ShutDownTemp = msg.ReadRangedSingle(0.0f, 10000.0f, 15);
 
             CoolingRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             FissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
