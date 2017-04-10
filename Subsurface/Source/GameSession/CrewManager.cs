@@ -38,6 +38,7 @@ namespace Barotrauma
             characterInfos = new List<CharacterInfo>();
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
+            guiFrame.Padding = Vector4.One * 5.0f;
 
             listBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
             listBox.ScrollBarEnabled = false;
@@ -128,33 +129,14 @@ namespace Barotrauma
             {
                 commander.UpdateCharacters();
             }
-
-
+            
             character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
 
-            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, null, orderListBox);
-            frame.UserData = character;
-            //frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            frame.HoverColor = Color.LightGray * 0.5f;
-            frame.SelectedColor = Color.Gold * 0.5f;
+            GUIFrame orderFrame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, "ListBoxElement", orderListBox);
+            orderFrame.UserData = character;
 
             var ai = character.AIController as HumanAIController;
             SetCharacterOrder(character, ai.CurrentOrder);
-
-           
-
-            //string name = character.Info.Name.Replace(' ', '\n');
-
-            //GUITextBlock textBlock = new GUITextBlock(
-            //    new Rectangle(40, 0, 0, 25),
-            //    name,
-            //    Color.Transparent, Color.White,
-            //    Alignment.Left, Alignment.Left,
-            //    null, frame, false);
-            //textBlock.Font = GUI.SmallFont;
-            //textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
-
-            //new GUIImage(new Rectangle(-10, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
         }
 
         public void AddToGUIUpdateList()

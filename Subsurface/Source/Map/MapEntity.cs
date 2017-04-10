@@ -657,10 +657,8 @@ namespace Barotrauma
 
             highlightedListBox = new GUIListBox(
                 new Rectangle((int)PlayerInput.MousePosition.X+15, (int)PlayerInput.MousePosition.Y+15, 150, highlightedEntities.Count * 15), 
-                null, Alignment.TopLeft, "", null, false);
-
-            highlightedListBox.Color = Color.Black * 0.6f;
-
+                null, Alignment.TopLeft, "GUIToolTip", null, false);
+            
             foreach (MapEntity entity in highlightedEntities)
             {
                 var textBlock = new GUITextBlock(

@@ -56,7 +56,7 @@ namespace Barotrauma
             frame = new GUIFrame(new Rectangle(0, 0, 0, 0), null, this);
             GUI.Style.Apply(frame, "", this);
 
-            slider = new GUIFrame(new Rectangle(0, 0, 0, 0), null, this);
+            slider = new GUIFrame(new Rectangle(0, 0, 0, 0), null);
             GUI.Style.Apply(slider, "Slider", this);
 
             this.barSize = barSize;
@@ -95,7 +95,30 @@ namespace Barotrauma
 
             DrawChildren(spriteBatch);
 
-            //GUI.DrawRectangle(spriteBatch, rect, color * (color.A / 255.0f), true);
+            Color currColor = color;
+            if (state == ComponentState.Selected) currColor = selectedColor;
+            if (state == ComponentState.Hover) currColor = hoverColor;
+
+            if (slider.sprites != null && slider.sprites[state].Count > 0)
+            {
+                foreach (UISprite uiSprite in slider.sprites[state])
+                {
+                    if (uiSprite.Tile)
+                    {
+                        uiSprite.Sprite.DrawTiled(spriteBatch, slider.Rect.Location.ToVector2(), slider.Rect.Size.ToVector2(), currColor);
+                    }
+                    else
+                    {
+                        spriteBatch.Draw(uiSprite.Sprite.Texture,
+                            slider.Rect, new Rectangle(
+                                uiSprite.Sprite.SourceRect.X, 
+                                uiSprite.Sprite.SourceRect.Y, 
+                                (int)(uiSprite.Sprite.SourceRect.Width * (isHorizontal ? barSize : 1.0f)),
+                                (int)(uiSprite.Sprite.SourceRect.Height * (isHorizontal ? 1.0f : barSize))), 
+                            currColor);
+                    }
+                }
+            }
         }
 
     }

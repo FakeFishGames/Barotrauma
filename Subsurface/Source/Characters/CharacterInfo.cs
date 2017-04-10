@@ -254,14 +254,9 @@ namespace Barotrauma
 
         public GUIFrame CreateCharacterFrame(GUIComponent parent, string text, object userData)
         {
-            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, parent);
+            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, "ListBoxElement", parent);
             frame.UserData = userData;
-            frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            frame.HoverColor = Color.LightGray * 0.5f;
-            frame.SelectedColor = Color.Gold * 0.5f;
-
-           // string name = character.Info.Name.Replace(' ', '\n');
-
+            
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(40, 0, 0, 25),
                 text,

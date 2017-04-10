@@ -1340,8 +1340,8 @@ namespace Barotrauma.Networking
 
                 clientInfo = new GUIFrame(new Rectangle(0, 0, 180, 0), Color.Transparent, Alignment.TopRight, null, clientNameBox);
                 clientInfo.UserData = client.FileStreamSender;
-                new GUIProgressBar(new Rectangle(0, 4, 160, clientInfo.Rect.Height - 8), Color.Green, "", 0.0f, Alignment.Left, clientInfo).IsHorizontal = true;
-                new GUITextBlock(new Rectangle(0, 2, 160, 0), "", "", Alignment.TopLeft, Alignment.Left | Alignment.CenterY, clientInfo, true, GUI.SmallFont);
+                new GUIProgressBar(new Rectangle(0, 4, 160, clientInfo.Rect.Height - 8), Color.White, "", 0.0f, Alignment.Left, clientInfo).IsHorizontal = true;
+                new GUITextBlock(new Rectangle(0, 2, 160, 0), "", "", Alignment.Center, Alignment.Center, clientInfo, true, GUI.SmallFont);
 
                 var cancelButton = new GUIButton(new Rectangle(20, 0, 14, 0), "X", Alignment.Right, "", clientInfo);
                 cancelButton.OnClicked = (GUIButton button, object userdata) =>
