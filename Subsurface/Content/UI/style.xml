@@ -114,6 +114,17 @@
     </GUIFrame>
   </GUIListBox>
 
+  <ListBoxElement
+    textcolor="0.5, 0.55, 0.6, 1.0"    
+    color="0.0,0.0,0.0,0.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"
+    padding="5.0, 5.0, 5.0, 5.0">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="474, 544, 266, 52" slice="480, 552, 731, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="474, 544, 266, 52" slice="480, 552, 731, 584"/>
+  </ListBoxElement>
+
   <GUIScrollBar>
     <GUIFrame
       color="1.0,1.0,1.0,1.0"
@@ -196,7 +207,7 @@
       hovercolor="1.0,1.0,1.0,1.0"
       selectedcolor="1.0,1.0,1.0,1.0">
 
-      <Sprite texture="Content/UI/UI_Atlas.png" sourcerect ="28, 430, 875, 49" slice="43,436,888,472"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" tile="false" sourcerect ="28, 430, 875, 49"/>
     </GUIFrame>
 
     <Slider
@@ -205,8 +216,16 @@
       selectedcolor="1.0,1.0,1.0,1.0">
 
       <Sprite texture="Content/UI/UI_Atlas.png" tile="false" sourcerect ="0, 276, 859, 37"/>
-    </Slider>
-    
+    </Slider>    
   </GUIProgressBar>
+
+  <ItemUI
+    padding="40.0,40.0,40.0,40.0"
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 454" slice="87,576,430,960"/>
+  </ItemUI>
 
 </style>

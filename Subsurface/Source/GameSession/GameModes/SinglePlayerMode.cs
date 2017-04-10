@@ -56,7 +56,7 @@ namespace Barotrauma
 
             CargoManager = new CargoManager();
 
-            endShiftButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, "");
+            endShiftButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End shift", null, Alignment.TopLeft, Alignment.Center, "");
             endShiftButton.Font = GUI.SmallFont;
             endShiftButton.OnClicked = TryEndShift;
 
