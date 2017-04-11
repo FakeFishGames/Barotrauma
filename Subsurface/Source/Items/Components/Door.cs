@@ -500,9 +500,7 @@ namespace Barotrauma.Items.Components
 
         public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-
             if (isStuck || isOpen == open) return;
-
 
             if (GameMain.Client != null && !isNetworkMessage)
             {
@@ -511,14 +509,15 @@ namespace Barotrauma.Items.Components
                 //the prediction will be reset after 1 second, setting the door to a state
                 //sent by the server, or reverting it back to its old state if no msg from server was received
 
-                PlaySound(ActionType.OnUse, item.WorldPosition);
+                if (open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
 
                 predictedState = open;
                 resetPredictionTimer = CorrectionDelay;
+                
             }
             else
             {
-                if (!isNetworkMessage) PlaySound(ActionType.OnUse, item.WorldPosition);
+                if (!isNetworkMessage || open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
 
                 isOpen = open;
             }

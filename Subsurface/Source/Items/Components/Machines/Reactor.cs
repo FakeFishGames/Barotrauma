@@ -545,7 +545,11 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "shutdown":
-                    shutDownTemp = 0.0f;
+                    if (shutDownTemp > 0.0f)
+                    {
+                        unsentChanges = true;
+                        shutDownTemp = 0.0f;
+                    }
                     break;
             }
         }
