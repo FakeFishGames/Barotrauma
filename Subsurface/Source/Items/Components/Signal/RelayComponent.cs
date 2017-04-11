@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class RelayComponent : PowerTransfer
+    class RelayComponent : PowerTransfer, IServerSerializable
     {
         private float maxPower;
-
-        private float lastReceivedMessage;
-
+        
         [Editable, HasDefaultValue(1000.0f, true)]
         public float MaxPower
         {
@@ -75,19 +75,34 @@ namespace Barotrauma.Items.Components
             }
             else if (connection.Name == "toggle")
             {
-                SetState(!IsOn);
+                SetState(!IsOn, false);
             }
             else if (connection.Name == "set_state")
             {
-                SetState(signal != "0");
+                SetState(signal != "0", false);
             }
         }
 
-        public void SetState(bool on)
+        public void SetState(bool on, bool isNetworkMessage)
         {
-            //if (GameMain.Client != null && !isNetworkMessage) return;
+            if (GameMain.Client != null && !isNetworkMessage) return;
+
+            if (on != IsOn && GameMain.Server != null)
+            {
+                item.CreateServerEvent(this);
+            }
 
             IsOn = on;
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(isOn);
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            SetState(msg.ReadBoolean(), true);
         }
     }
 }

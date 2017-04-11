@@ -56,7 +56,7 @@ namespace Barotrauma.Items.Components
                 if (!MathUtils.IsValid(value)) return;
                 charge = MathHelper.Clamp(value, 0.0f, capacity); 
 
-                if (Math.Abs(charge - lastSentCharge) > 1.0f)
+                if (Math.Abs(charge - lastSentCharge) / capacity > 1.0f)
                 {
                     if (GameMain.Server != null) item.CreateServerEvent(this);
                     lastSentCharge = charge;

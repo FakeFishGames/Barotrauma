@@ -2,10 +2,12 @@
 using Barotrauma.Lights;
 using System;
 using System.Xml.Linq;
+using Barotrauma.Networking;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
-    class LightComponent : Powered, IDrawableComponent
+    class LightComponent : Powered, IServerSerializable, IDrawableComponent
     {
 
         private Color lightColor;
@@ -47,7 +49,10 @@ namespace Barotrauma.Items.Components
             get { return IsActive; }
             set
             {
+                if (IsActive == value) return;
+                
                 IsActive = value;
+                if (GameMain.Server != null) item.CreateServerEvent(this);
             }
         }
         
@@ -204,6 +209,16 @@ namespace Barotrauma.Items.Components
                     LightColor = signal;
                     break;
             }
+        }
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(IsOn);
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            IsOn = msg.ReadBoolean();
         }
     }
 }
