@@ -715,7 +715,19 @@ namespace Barotrauma
             msg.Write(this is AICharacter);
             msg.Write(Info.Gender == Gender.Female);
             msg.Write((byte)Info.HeadSpriteId);
-            msg.Write(Info.Job == null ? "" : Info.Job.Name);
+            if (info.Job != null)
+            {
+                msg.Write(Info.Job.Name);
+                msg.Write((byte)info.Job.Skills.Count);
+                foreach (Skill skill in info.Job.Skills)
+                {
+                    msg.WriteRangedInteger(0, 100, MathHelper.Clamp(skill.Level, 0, 100));
+                }
+            }
+            else
+            {
+                msg.Write("");
+            }
         }
 
         public static Character ReadSpawnData(NetBuffer inc, bool spawn = true)
@@ -746,22 +758,42 @@ namespace Barotrauma
                 int ownerId = hasOwner ? inc.ReadByte() : -1;
 
 
-                string newName = inc.ReadString();
-                byte teamID = inc.ReadByte();
+                string newName      = inc.ReadString();
+                byte teamID         = inc.ReadByte();
 
-                bool hasAi = inc.ReadBoolean();
-                bool isFemale = inc.ReadBoolean();
-                int headSpriteID = inc.ReadByte();
-                string jobName = inc.ReadString();
+                bool hasAi          = inc.ReadBoolean();
+                bool isFemale       = inc.ReadBoolean();
+                int headSpriteID    = inc.ReadByte();
+                string jobName      = inc.ReadString();
+
+                JobPrefab jobPrefab = null;
+                List<int> skillLevels = new List<int>();
+                if (!string.IsNullOrEmpty(jobName))
+                {
+                    jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
+                    int skillCount = inc.ReadByte();
+                    for (int i = 0; i < skillCount; i++)
+                    {
+                        skillLevels.Add(inc.ReadRangedInteger(0, 100));
+                    }
+                }
 
                 if (!spawn) return null;
 
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
 
                 CharacterInfo ch = new CharacterInfo(configPath, newName, isFemale ? Gender.Female : Gender.Male, jobPrefab);
                 ch.HeadSpriteId = headSpriteID;
 
-                character = Character.Create(configPath, position, ch, GameMain.Client.ID != ownerId, hasAi);
+                System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
+                if (ch.Job != null)
+                {
+                    for (int i = 0; i < skillLevels.Count && i < ch.Job.Skills.Count; i++)
+                    {
+                        ch.Job.Skills[i].Level = skillLevels[i];
+                    }
+                }
+
+                character = Create(configPath, position, ch, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = teamID;
 
