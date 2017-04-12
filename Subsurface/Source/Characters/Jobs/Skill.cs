@@ -23,6 +23,7 @@ namespace Barotrauma
         public int Level
         {
             get { return level; }
+            set { level = MathHelper.Clamp(value, 0, 100); }
         }
 
         public Skill(SkillPrefab prefab)
