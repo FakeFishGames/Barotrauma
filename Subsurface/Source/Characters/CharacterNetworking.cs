@@ -455,6 +455,8 @@ namespace Barotrauma
                 tempBuffer.Write(SimPosition.X);
                 tempBuffer.Write(SimPosition.Y);
 
+                tempBuffer.WritePadBits();
+
                 msg.Write((byte)tempBuffer.LengthBytes);
                 msg.Write(tempBuffer);
             }

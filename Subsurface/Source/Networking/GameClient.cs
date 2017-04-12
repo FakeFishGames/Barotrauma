@@ -932,6 +932,7 @@ namespace Barotrauma.Networking
                         //force to the correct position in case the entity doesn't exist 
                         //or the message wasn't read correctly for whatever reason
                         inc.Position = msgEndPos;
+                        inc.ReadPadBits();
                         break;
                     case ServerNetObject.ENTITY_EVENT:
                     case ServerNetObject.ENTITY_EVENT_INITIAL:
