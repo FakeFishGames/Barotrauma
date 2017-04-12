@@ -2289,6 +2289,8 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
 
             int index = components.IndexOf(ic);
+            if (index == -1) return;
+
             GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
 
@@ -2297,6 +2299,8 @@ namespace Barotrauma
             if (GameMain.Client == null) return;
             
             int index = components.IndexOf(ic);
+            if (index == -1) return;
+
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
 
