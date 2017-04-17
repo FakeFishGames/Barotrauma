@@ -1234,19 +1234,21 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;
 
+            float lowestSubPos = ConvertUnits.ToSimUnits(Submarine.Loaded.Min(s => s.HiddenSubPosition.Y - s.Borders.Height));
+
             for (int i = 0; i < character.MemState.Count; i++ )
             {
                 if (character.Submarine == null)
                 {
                     //transform in-sub coordinates to outside coordinates
-                    if (character.MemState[i].Position.Y > ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                    if (character.MemState[i].Position.Y > lowestSubPos)
                         character.MemState[i].TransformInToOutside();                    
                 }
                 else if (currentHull != null)
                 {
                     //transform outside coordinates to in-sub coordinates
-                    if (character.MemState[i].Position.Y <  ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
-                        character.MemState[i].TransformOutToInside(currentHull.Submarine);                    
+                    if (character.MemState[i].Position.Y <lowestSubPos)                    
+                        character.MemState[i].TransformOutToInside(currentHull.Submarine);
                 }
             }
 
@@ -1307,20 +1309,24 @@ namespace Barotrauma
                 //remove states with a timestamp (there may still timestamp-based states 
                 //in the list if the controlled character switches from timestamp-based interpolation to ID-based)
                 character.MemState.RemoveAll(m => m.Timestamp > 0.0f);
-
+                
                 for (int i = 0; i < character.MemLocalState.Count; i++)
                 {
                     if (character.Submarine == null)
                     {
                         //transform in-sub coordinates to outside coordinates
-                        if (character.MemLocalState[i].Position.Y > ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
+                        if (character.MemLocalState[i].Position.Y > lowestSubPos)
+                        {                            
                             character.MemLocalState[i].TransformInToOutside();
+                        }
                     }
                     else if (currentHull != null)
                     {
                         //transform outside coordinates to in-sub coordinates
-                        if (character.MemLocalState[i].Position.Y < ConvertUnits.ToSimUnits(Level.Loaded.Size.Y))                    
-                            character.MemLocalState[i].TransformOutToInside(currentHull.Submarine);                    
+                        if (character.MemLocalState[i].Position.Y < lowestSubPos)
+                        {
+                            character.MemLocalState[i].TransformOutToInside(currentHull.Submarine);
+                        }
                     }
                 }
 
