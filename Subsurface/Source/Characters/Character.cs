@@ -1728,6 +1728,8 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce = 0.0f)
         {
+            if (Removed) return new AttackResult();
+
             SetStun(stun);
 
             Limb closestLimb = null;

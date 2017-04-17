@@ -196,23 +196,23 @@ namespace Barotrauma
         
         private void UpdateAttack(float deltaTime)
         {
-            if (selectedAiTarget == null) 
+            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
             {
                 state = AiState.None;
                 return;
             }
-            
+
             selectedTargetMemory.Priority -= deltaTime;
-            
-            Vector2 attackSimPosition = Character.Submarine==null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
+
+            Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
             if (wallAttackPos != Vector2.Zero && targetEntity != null)
             {
                 attackSimPosition = wallAttackPos;
 
-                if (selectedAiTarget.Entity != null && Character.Submarine==null && selectedAiTarget.Entity.Submarine != null) attackSimPosition += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
+                if (selectedAiTarget.Entity != null && Character.Submarine == null && selectedAiTarget.Entity.Submarine != null) attackSimPosition += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
             }
 
-            if (coolDownTimer>0.0f)
+            if (coolDownTimer > 0.0f)
             {
                 UpdateCoolDown(attackSimPosition, deltaTime);
                 return;

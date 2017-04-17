@@ -16,9 +16,13 @@ namespace Barotrauma
         private ushort id;
 
         protected AITarget aiTarget;
-        //protected float soundRange;
-        //protected float sightRange;
-                
+
+        public bool Removed
+        {
+            get;
+            private set;
+        }
+
         public ushort ID
         {
             get 
@@ -125,6 +129,7 @@ namespace Barotrauma
         public virtual void Remove()
         {
             dictionary.Remove(ID);
+            Removed = true;
         }
 
         public static void DumpIds(int count)
