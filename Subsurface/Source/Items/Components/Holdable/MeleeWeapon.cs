@@ -3,6 +3,7 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -241,7 +242,15 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.Server != null)
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { Barotrauma.Networking.NetEntityEvent.Type.ApplyStatusEffect, target.ID });
+                GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, target.ID });
+
+                string logStr = picker?.Name + " used " + item.Name;
+                if (item.ContainedItems != null && item.ContainedItems.Length > 0)
+                {
+                    logStr += "(" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
+                }
+                logStr += " on " + target + ".";
+                Networking.GameServer.Log(logStr, Color.Orange);
             }
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, limb.character);
