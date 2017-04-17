@@ -1452,7 +1452,24 @@ namespace Barotrauma.Networking
 
                                 if (targetClient == null)
                                 {
-                                    AddChatMessage("Player \"" + command + "\" not found!", ChatMessageType.Error);
+                                    if (senderClient != null)
+                                    {
+                                        var chatMsg = ChatMessage.Create(
+                                            "", "Player \"" + command + "\" not found!",
+                                            ChatMessageType.Error, null);
+
+                                        chatMsg.NetStateID = senderClient.chatMsgQueue.Count > 0 ?
+                                            (ushort)(senderClient.chatMsgQueue.Last().NetStateID + 1) :
+                                            (ushort)(senderClient.lastRecvChatMsgID + 1);
+
+                                        senderClient.chatMsgQueue.Add(chatMsg);
+                                        senderClient.lastChatMsgQueueID = chatMsg.NetStateID;
+                                    }
+                                    else
+                                    {
+                                        AddChatMessage("Player \"" + command + "\" not found!", ChatMessageType.Error);
+                                    }
+
                                     return;
                                 }
                             }
