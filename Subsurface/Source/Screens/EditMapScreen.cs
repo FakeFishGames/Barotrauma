@@ -140,11 +140,20 @@ namespace Barotrauma
             selectedHullVolume.TextGetter = GetSelectedHullVolume;
 
             var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", GUI.Style, topPanel);
-            button.OnClicked = CreateLoadScreen;
+            button.OnClicked = (GUIButton btn, object data) =>
+            {
+                saveFrame = null;
+                selectedTab = -1;
+                CreateLoadScreen();
+
+                return true;
+            };
 
             button = new GUIButton(new Rectangle(80,0,70,20), "Save", GUI.Style, topPanel);
             button.OnClicked = (GUIButton btn, object data) =>
             {
+                loadFrame = null;
+                selectedTab = -1;
                 CreateSaveScreen();
 
                 return true;
@@ -503,7 +512,7 @@ namespace Barotrauma
 
         }
 
-        private bool CreateLoadScreen(GUIButton button, object obj)
+        private bool CreateLoadScreen()
         {
             if (characterMode) ToggleCharacterMode();
             if (wiringMode) ToggleWiringMode();
@@ -562,7 +571,7 @@ namespace Barotrauma
 
                 deleteButton.Enabled = false;
 
-                CreateLoadScreen(null, null);
+                CreateLoadScreen();
 
                 return true;
             };
@@ -604,6 +613,9 @@ namespace Barotrauma
         {
             if (characterMode) ToggleCharacterMode();
             if (wiringMode) ToggleWiringMode();
+
+            saveFrame = null;
+            loadFrame = null;
 
             selectedTab = (int)obj;
 
