@@ -15,6 +15,8 @@ namespace Barotrauma
 
     class Hull : MapEntity, IPropertyObject, IServerSerializable
     {
+        const float NetworkUpdateInterval = 0.5f;
+
         public static List<Hull> hullList = new List<Hull>();
         private static List<EntityGrid> entityGrids = new List<EntityGrid>();
         public static List<EntityGrid> EntityGrids
@@ -74,7 +76,7 @@ namespace Barotrauma
         float[] rightDelta;
 
         private float lastSentVolume, lastSentOxygen;
-        private float lastNetworkUpdate;
+        private float sendUpdateTimer;
         
         public List<Gap> ConnectedGaps;
 
@@ -361,8 +363,6 @@ namespace Barotrauma
                     entityGrid.RemoveEntity(this);
                 }
             }
-
-
         }
 
         public void AddFireSource(FireSource fireSource)
@@ -460,7 +460,17 @@ namespace Barotrauma
             if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
             {
-                if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this); 
+                if (GameMain.Server != null)
+                {
+                    sendUpdateTimer -= deltaTime;
+                    if (sendUpdateTimer < 0.0f)
+                    {
+                        GameMain.Server.CreateEntityEvent(this);
+                        lastSentVolume = volume;
+                        lastSentOxygen = OxygenPercentage;
+                        sendUpdateTimer = NetworkUpdateInterval;
+                    }
+                }
             }
 
             if (!update)
@@ -622,7 +632,7 @@ namespace Barotrauma
                     isHighlighted ? Color.LightBlue * 0.5f : Color.Red * 0.5f, true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
         }
-        
+                
         public void Render(GraphicsDevice graphicsDevice, Camera cam)
         {
             if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
@@ -842,9 +852,6 @@ namespace Barotrauma
                     message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 8);
                 }
             }
-
-            lastSentVolume = volume;
-            lastSentOxygen = OxygenPercentage;
         }
 
         public void ClientRead(ServerNetObject type, NetBuffer message, float sendingTime)
