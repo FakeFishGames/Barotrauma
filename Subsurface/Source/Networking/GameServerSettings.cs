@@ -315,7 +315,7 @@ namespace Barotrauma.Networking
             settingsTabs = new GUIFrame[tabNames.Length];
             for (int i = 0; i < tabNames.Length; i++)
             {
-                settingsTabs[i] = new GUIFrame(new Rectangle(0, 15, 0, innerFrame.Rect.Height - 120), null, Alignment.Center, "", innerFrame);
+                settingsTabs[i] = new GUIFrame(new Rectangle(0, 15, 0, innerFrame.Rect.Height - 120), null, Alignment.Center, "InnerFrame", innerFrame);
                 settingsTabs[i].Padding = new Vector4(40.0f, 20.0f, 40.0f, 40.0f);
 
                 var tabButton = new GUIButton(new Rectangle(85 * i, 35, 80, 20), tabNames[i], "", innerFrame);

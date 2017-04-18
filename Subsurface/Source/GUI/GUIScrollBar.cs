@@ -45,20 +45,21 @@ namespace Barotrauma
             set
             {
                 barScroll = MathHelper.Clamp(value, 0.0f, 1.0f);
-                int newX = bar.Rect.X - frame.Rect.X, newY = bar.Rect.Y - frame.Rect.Y;
+                int newX = bar.Rect.X - frame.Rect.X;
+                int newY = bar.Rect.Y - frame.Rect.Y;
 
                 float newScroll = step == 0.0f ? barScroll : MathUtils.RoundTowardsClosest(barScroll, step);
 
                 if (isHorizontal)
                 {
-                    newX = (int)(newScroll * (frame.Rect.Width - bar.Rect.Width));
-                    newX = MathHelper.Clamp(newX, 0, frame.Rect.Width - bar.Rect.Width);
+                    newX = (int)(frame.Padding.X + newScroll * (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z));
+                    newX = MathHelper.Clamp(newX, (int)frame.Padding.X, frame.Rect.Width - bar.Rect.Width - (int)frame.Padding.Z);
 
                 }
                 else
                 {
-                    newY = (int)(newScroll * (frame.Rect.Height - bar.Rect.Height));
-                    newY = MathHelper.Clamp(newY, 0, frame.Rect.Height - bar.Rect.Height);
+                    newY = (int)(frame.Padding.Y + newScroll * (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W));
+                    newY = MathHelper.Clamp(newY, (int)frame.Padding.Y, frame.Rect.Height - bar.Rect.Height - (int)frame.Padding.W);
 
                 }
                 bar.Rect = new Rectangle(newX + frame.Rect.X, newY + frame.Rect.Y, bar.Rect.Width, bar.Rect.Height);
@@ -111,18 +112,15 @@ namespace Barotrauma
                 parent.AddChild(this);
 
             isHorizontal = (rect.Width > rect.Height);
-            frame = new GUIFrame(new Rectangle(0,0,0,0), Color.Black*0.8f, style, this);
-            GUI.Style.Apply(frame, "", this);
-            //AddChild(frame);
-
-            //System.Diagnostics.Debug.WriteLine(frame.rect);
+            frame = new GUIFrame(new Rectangle(0,0,0,0), style, this);
+            GUI.Style.Apply(frame, isHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
 
             this.barSize = barSize;
 
             bar = new GUIButton(new Rectangle(0, 0, 0, 0), "", color, "", this);
+            GUI.Style.Apply(bar, isHorizontal ? "GUIButtonHorizontal" : "GUIButtoneVertical", this);
             
             bar.OnPressed = SelectBar;
-            //AddChild(bar);
 
             enabled = true;
 
@@ -131,17 +129,30 @@ namespace Barotrauma
 
         private void UpdateRect()
         {
-            
+            float width = frame.Rect.Width - frame.Padding.X - frame.Padding.Z;
+            float height = frame.Rect.Height - frame.Padding.Y - frame.Padding.W;
+
             bar.Rect = new Rectangle(
                 bar.Rect.X,
                 bar.Rect.Y,
-                isHorizontal ? (int)(frame.Rect.Width * barSize) : frame.Rect.Width,
-                isHorizontal ? frame.Rect.Height : (int)(frame.Rect.Height * barSize));
+                isHorizontal ? (int)(width * barSize) : (int)width,
+                isHorizontal ? (int)height : (int)(height * barSize));
+
+            ClampRect();
 
             foreach (GUIComponent child in bar.children)
             {
                 child.Rect = bar.Rect;
             }
+        }
+
+        private void ClampRect()
+        {
+            bar.Rect = new Rectangle(
+                (int)MathHelper.Clamp(bar.Rect.X, frame.Rect.X + frame.Padding.X, frame.Rect.Right - bar.Rect.Width - frame.Padding.X - frame.Padding.Z),
+                (int)MathHelper.Clamp(bar.Rect.Y, frame.Rect.Y + frame.Padding.Y, frame.Rect.Bottom - bar.Rect.Height - frame.Padding.Y - frame.Padding.W), 
+                bar.Rect.Width, 
+                bar.Rect.Height);
         }
 
         public override void Update(float deltaTime)
@@ -150,10 +161,21 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
-            if (draggingBar != this) return;
-            if (!PlayerInput.LeftButtonHeld()) draggingBar = null;
+            if (MouseOn == frame)
+            {
+                if (PlayerInput.LeftButtonClicked())
+                {
+                    MoveButton(new Vector2(
+                        Math.Sign(PlayerInput.MousePosition.X - bar.Rect.Center.X) * bar.Rect.Width,
+                        Math.Sign(PlayerInput.MousePosition.Y - bar.Rect.Center.Y) * bar.Rect.Height));
+                }
+            }
 
-            MoveButton();            
+            if (draggingBar == this)
+            {
+                if (!PlayerInput.LeftButtonHeld()) draggingBar = null;
+                MoveButton(PlayerInput.MouseSpeed);
+            }       
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -174,27 +196,22 @@ namespace Barotrauma
 
         }
 
-        private void MoveButton()
+        private void MoveButton(Vector2 moveAmount)
         {
-            float moveAmount;
             if (isHorizontal)
             {
-                moveAmount = PlayerInput.MouseSpeed.X;
-                barScroll += moveAmount / (frame.Rect.Width - bar.Rect.Width);
+                moveAmount.Y = 0.0f;
+                barScroll += moveAmount.X / (frame.Rect.Width - bar.Rect.Width - frame.Padding.X - frame.Padding.Z);
             }
             else
             {
-                moveAmount = PlayerInput.MouseSpeed.Y;
-                barScroll += moveAmount / (frame.Rect.Height - bar.Rect.Height);
+                moveAmount.X = 0.0f;
+                barScroll += moveAmount.Y / (frame.Rect.Height - bar.Rect.Height - frame.Padding.Y - frame.Padding.W);
             }
 
             BarScroll = barScroll;
 
-            if (moveAmount != 0 && OnMoved != null) OnMoved(this, BarScroll);
-
-
-            //bar.Rect = new Rectangle(newX + frame.Rect.X, newY + frame.Rect.Y, bar.Rect.Width, bar.Rect.Height);
-
+            if (moveAmount != Vector2.Zero && OnMoved != null) OnMoved(this, BarScroll);
         }
 
     }

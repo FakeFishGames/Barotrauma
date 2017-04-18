@@ -406,8 +406,8 @@ namespace Barotrauma
             var inputNames = Enum.GetNames(typeof(InputType));
             for (int i = 0; i< inputNames.Length; i++)
             {
-                new GUITextBlock(new Rectangle(x, y, 100, 20), inputNames[i]+": ", "", settingsFrame);
-                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 15), "", settingsFrame);
+                new GUITextBlock(new Rectangle(x, y, 100, 18), inputNames[i]+": ", "", Alignment.TopLeft, Alignment.CenterLeft, settingsFrame);
+                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 18), null,null, Alignment.TopLeft, Alignment.CenterLeft, "", settingsFrame);
 
                 keyBox.Text = keyMapping[i].ToString();
                 keyBox.UserData = i;

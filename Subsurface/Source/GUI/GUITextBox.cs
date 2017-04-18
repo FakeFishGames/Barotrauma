@@ -164,7 +164,7 @@ namespace Barotrauma
 
         }
 
-        public GUITextBox(Rectangle rect, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null)
+        public GUITextBox(Rectangle rect, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.CenterLeft, string style = null, GUIComponent parent = null)
             : base(style)
         {
             Enabled = true;
@@ -174,8 +174,6 @@ namespace Barotrauma
             if (color != null) this.color = (Color)color;
                         
             this.alignment = alignment;
-
-            //this.textAlignment = textAlignment;
             
             if (parent != null)
                 parent.AddChild(this);
@@ -186,11 +184,8 @@ namespace Barotrauma
 
             GUI.Style.Apply(textBlock, style == "" ? "GUITextBox" : style);
             textBlock.Padding = new Vector4(3.0f, 0.0f, 3.0f, 0.0f);
-
-            //previousMouse = PlayerInput.GetMouseState;
-
+            
             CaretEnabled = true;
-            //SetTextPos();
         }
 
         public void Select()

@@ -211,7 +211,7 @@ namespace Barotrauma
             {
                 var textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "",
+                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "ListBoxElement",
                     Alignment.Left, Alignment.Left, subList)
                 {
                     Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
@@ -396,7 +396,7 @@ namespace Barotrauma
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
                     saveFile,
-                    "",
+                    "ListBoxElement",
                     Alignment.Left,
                     Alignment.Left,
                     saveList);

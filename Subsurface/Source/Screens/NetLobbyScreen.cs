@@ -250,7 +250,7 @@ namespace Barotrauma
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    mode.Name, "",
+                    mode.Name, "ListBoxElement",
                     Alignment.TopLeft, Alignment.CenterLeft,
                     modeList);
                 textBlock.ToolTip = mode.Description;
@@ -673,7 +673,7 @@ namespace Barotrauma
         public void AddSubmarine(GUIComponent subList, Submarine sub)
         {
             var subTextBlock = new GUITextBlock(
-                new Rectangle(0, 0, 0, 25), ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "",
+                new Rectangle(0, 0, 0, 25), ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "ListBoxElement",
                 Alignment.TopLeft, Alignment.CenterLeft, subList)
             {
                 Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),

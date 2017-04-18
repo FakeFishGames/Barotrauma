@@ -55,15 +55,14 @@ namespace Barotrauma
             int x = 20, y = 20;
             int width = 800, height = 500;
             
-            frame = new GUIFrame(new Rectangle(x, y, width, height), new Color(0.4f, 0.4f, 0.4f, 0.5f));
-            frame.Color = Color.White * 0.4f;
+            frame = new GUIFrame(new Rectangle(x, y, width, height), new Color(0.4f, 0.4f, 0.4f, 0.8f));
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
             listBox = new GUIListBox(new Rectangle(0, 0, 0, frame.Rect.Height - 40), Color.Black, "", frame);
-            listBox.Color = Color.Black * 0.7f;
+            //listBox.Color = Color.Black * 0.7f;
             
             textBox = new GUITextBox(new Rectangle(0,0,0,20), Color.Black, Color.White, Alignment.BottomLeft, Alignment.Left, "", frame);
-            textBox.Color = Color.Black * 0.7f;
+            //textBox.Color = Color.Black * 0.7f;
 
             //messages already added before initialization -> add them to the listbox
             List<ColoredText> unInitializedMessages = new List<ColoredText>(Messages);
