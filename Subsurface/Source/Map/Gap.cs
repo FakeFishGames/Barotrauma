@@ -629,9 +629,12 @@ namespace Barotrauma
 
             float totalOxygen = hull1.Oxygen + hull2.Oxygen;
             float totalVolume = (hull1.FullVolume + hull2.FullVolume);
+            
+            float deltaOxygen = (totalOxygen * hull1.FullVolume / totalVolume) - hull1.Oxygen;
+            deltaOxygen = MathHelper.Clamp(deltaOxygen, -Hull.OxygenDistributionSpeed, Hull.OxygenDistributionSpeed);
 
-            hull1.Oxygen += Math.Sign(totalOxygen * hull1.FullVolume / (totalVolume) - hull1.Oxygen) * Hull.OxygenDistributionSpeed;
-            hull2.Oxygen += Math.Sign(totalOxygen * hull2.FullVolume / (totalVolume) - hull2.Oxygen) * Hull.OxygenDistributionSpeed;            
+            hull1.Oxygen += deltaOxygen;
+            hull2.Oxygen -= deltaOxygen;            
         }
 
         public static Gap FindAdjacent(List<Gap> gaps, Vector2 worldPos, float allowedOrthogonalDist)
