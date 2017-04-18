@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private GameMain game;
 
-        int selectedTab;
+        private Tab selectedTab;
 
         public MainMenuScreen(GameMain game)
         {
@@ -198,7 +198,6 @@ namespace Barotrauma
             UpdateSubList();
 
             SelectTab(null, 0);
-            //selectedTab = 0;
         }
 
         private void UpdateSubList()
@@ -273,42 +272,41 @@ namespace Barotrauma
                 return;
             }
 
-            selectedTab = (int)tab;
+            selectedTab = tab;
 
             switch (selectedTab)
             {
-                case (int)Tab.NewGame:
+                case Tab.NewGame:
                     saveNameBox.Text = SaveUtil.CreateSavePath();
                     break;
-                case (int)Tab.LoadGame:
+                case Tab.LoadGame:
                     UpdateLoadScreen();
                     break;
-                case (int)Tab.Settings:
+                case Tab.Settings:
                     GameMain.Config.ResetSettingsFrame();
                     menuTabs[(int)Tab.Settings] = GameMain.Config.SettingsFrame;
                     break;
             }
         }
 
-        private bool ApplySettings(GUIButton button, object obj)
+        private bool ApplySettings(GUIButton button, object userData)
         {
             GameMain.Config.Save("config.xml");
-            selectedTab = 0;
+            
+            if (userData is Tab) SelectTab((Tab)userData);            
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
                 new GUIMessageBox("Restart required", "You need to restart the game for the resolution changes to take effect.");
             }
 
-
-
             return true;
         }
 
-        private bool DiscardSettings(GUIButton button, object obj)
+        private bool DiscardSettings(GUIButton button, object userData)
         {
             GameMain.Config.Load("config.xml");
-            selectedTab = (int)obj;
+            if (userData is Tab) SelectTab((Tab)userData);
 
             return true;
         }
@@ -479,13 +477,13 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             buttonsTab.AddToGUIUpdateList();
-            if (selectedTab > 0) menuTabs[selectedTab].AddToGUIUpdateList();
+            if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
         {
             buttonsTab.Update((float)deltaTime);
-            if (selectedTab>0) menuTabs[selectedTab].Update((float)deltaTime);
+            if (selectedTab>0) menuTabs[(int)selectedTab].Update((float)deltaTime);
 
             GameMain.TitleScreen.TitlePosition =
                 Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
@@ -507,7 +505,7 @@ namespace Barotrauma
             spriteBatch.Begin(0, BlendState.AlphaBlend);
 
             buttonsTab.Draw(spriteBatch);
-            if (selectedTab>0) menuTabs[selectedTab].Draw(spriteBatch);
+            if (selectedTab>0) menuTabs[(int)selectedTab].Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
