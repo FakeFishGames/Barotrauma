@@ -52,7 +52,7 @@ namespace Barotrauma
             serverList = new GUIListBox(new Rectangle(middleX,60,0,height-160), "", menu);
             serverList.OnSelected = SelectServer;
 
-            float[] columnRelativeX = new float[] { 0.15f, 0.55f, 0.15f, 0.15f };
+            float[] columnRelativeX = new float[] { 0.15f, 0.5f, 0.15f, 0.2f };
             columnX = new int[columnRelativeX.Length];
             for (int n = 0; n < columnX.Length; n++)
             {
@@ -166,12 +166,10 @@ namespace Barotrauma
 
                 string hasPassWordStr = (arguments.Length > 6) ? arguments[6] : "";
 
-                var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 20), (i % 2 == 0) ? Color.Transparent : Color.White * 0.2f, null, serverList);
+                var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 30), (i % 2 == 0) ? Color.Transparent : Color.White * 0.2f, "ListBoxElement", serverList);
                 serverFrame.UserData = IP + ":" + port;
-                serverFrame.HoverColor = Color.Gold * 0.2f;
-                serverFrame.SelectedColor = Color.Gold * 0.5f;
 
-                var passwordBox = new GUITickBox(new Rectangle(columnX[0] / 2, 0, 20, 20), "", Alignment.TopLeft, serverFrame);
+                var passwordBox = new GUITickBox(new Rectangle(columnX[0] / 2, 0, 20, 20), "", Alignment.CenterLeft, serverFrame);
                 passwordBox.Selected = hasPassWordStr == "1";
                 passwordBox.Enabled = false;
                 passwordBox.UserData = "password";
@@ -184,7 +182,7 @@ namespace Barotrauma
 
                 new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
 
-                var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2])/ 2, 0, 20, 20), "", Alignment.TopLeft, serverFrame);
+                var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2])/ 2, 0, 20, 20), "", Alignment.CenterRight, serverFrame);
                 gameStartedBox.Selected = gameStarted == "1";
                 gameStartedBox.Enabled = false;
             

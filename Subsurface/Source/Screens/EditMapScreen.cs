@@ -189,7 +189,7 @@ namespace Barotrauma
                 GUItabs[i] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "");
                 GUItabs[i].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-                new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.TopRight, GUItabs[i], false, GUI.SmallFont);
+                new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.CenterRight, GUItabs[i], false, GUI.SmallFont);
 
                 GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), Alignment.TopRight, "", GUItabs[i]);
                 searchBox.Font = GUI.SmallFont;
@@ -206,22 +206,16 @@ namespace Barotrauma
                 foreach (MapEntityPrefab ep in MapEntityPrefab.list)
                 {
                     if (!ep.Category.HasFlag(category)) continue;
-
-                    Color color = ((itemList.CountChildren % 2) == 0) ? Color.Transparent : Color.White * 0.1f;
-
-                    GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, null, itemList);
+                    
+                    GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, "ListBoxElement", itemList);
                     frame.UserData = ep;
                     frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                    frame.Color = color;
-                    frame.HoverColor = Color.Gold * 0.2f;
-                    frame.SelectedColor = Color.Gold * 0.5f;
 
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(40, 0, 0, 25),
-                        ep.Name,
-                        Color.Transparent, Color.White,
-                        Alignment.Left, Alignment.Left,
-                        null, frame);
+                        ep.Name, "", 
+                        Alignment.Top, Alignment.CenterLeft, 
+                        frame);
                     textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
                     if (!string.IsNullOrWhiteSpace(ep.Description))
@@ -231,7 +225,7 @@ namespace Barotrauma
 
                     if (ep.sprite != null)
                     {
-                        GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.Left, frame);
+                        GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.CenterLeft, frame);
                         img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
                         img.Color = ep.SpriteColor;
                     }
@@ -242,7 +236,7 @@ namespace Barotrauma
                 i++;
             }
 
-            y+=50;
+            y += 50;
             button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, "", leftPanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
@@ -251,13 +245,13 @@ namespace Barotrauma
             button = new GUIButton(new Rectangle(0, y, 0, 20), "Wiring mode", Alignment.Left, "", leftPanel);
             //button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleWiringMode;
-            
-            y+=50;
+
+            y += 50;
             button = new GUIButton(new Rectangle(0, y, 0, 20), "Generate waypoints", Alignment.Left, "", leftPanel);
             button.ToolTip = "AI controlled crew members require waypoints to navigate around the sub.";
             button.OnClicked = GenerateWaypoints;
-            
-            y+=50;
+
+            y += 50;
 
             new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", "", leftPanel);
             

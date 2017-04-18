@@ -61,7 +61,7 @@
     selectedcolor="1.0,1.0,1.0,1.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="683, 74, 129, 41" slice="687, 78, 808, 109"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="888, 91, 129, 41" slice="897, 98, 1009, 125"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="888, 91, 129, 41" slice="893, 98, 1013, 125"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect ="553, 74, 129, 41" slice="557, 78, 676, 109"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect ="553, 74, 129, 41" slice="557, 78, 676, 109"/>
 
@@ -121,25 +121,24 @@
     selectedcolor="1.0,1.0,1.0,1.0"
     padding="5.0, 5.0, 5.0, 5.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="474, 544, 266, 52" slice="480, 552, 731, 584"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="474, 544, 266, 52" slice="480, 552, 731, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
   </ListBoxElement>
 
   <GUIScrollBar>
-    <GUIFrame
+    <GUIFrameHorizontal
       color="1.0,1.0,1.0,1.0"
-      textcolor="1.0, 1.0, 1.0, 1.0">
-      <Sprite texture="Content/UI/UI_Atlas.png" sourcerect="986, 874, 11, 148" slice="988, 881, 995, 1014"/>
-    </GUIFrame>
+      textcolor="1.0,1.0,1.0,1.0"
+      padding="9.0, 2.0, 9.0, 2.0">
+        <Sprite texture="Content/UI/UI_Atlas.png" sourcerect="0, 11, 307, 11" slice="7, 13, 299, 20"/>
+    </GUIFrameHorizontal>
 
-    <GUIButton
-      color="0.88, 0.25, 0.15, 0.8"
-      textcolor="1.0, 1.0, 1.0, 1.0"
-      outlinecolor="0.5, 0.57, 0.6, 1.0">
-      <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="950, 806, 9, 47" slice="953, 810, 956, 849"/>
-      <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect="843, 350, 9, 47" slice="846, 354, 849, 391"/>
-      <Sprite texture="Content/UI/UI_Atlas.png" state="Pressed" sourcerect="843, 350, 9, 47" slice="846, 354, 849, 391"/>
-    </GUIButton>
+    <GUIFrameVertical
+      color="1.0,1.0,1.0,1.0"
+      textcolor="1.0,1.0,1.0,1.0"
+      padding="2.0, 6.0, 2.0, 6.0">
+        <Sprite texture="Content/UI/UI_Atlas.png" sourcerect="986, 874, 11, 148" slice="988, 881, 995, 1014"/>
+    </GUIFrameVertical>
   </GUIScrollBar>
 
   <GUIDropDown
