@@ -8,7 +8,7 @@
   <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,0,64,128"/>
 
   <MiniMap MinVoltage="0.5" PowerConsumption="100" canbeselected = "true">
-    <GuiFrame rect="0,0,0.5,0.5" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+    <GuiFrame rect="0,0,0.5,0.5" alignment="Center" style="ItemUI"/>
   </MiniMap>
 
   <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">

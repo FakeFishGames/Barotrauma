@@ -14,6 +14,6 @@
   </Holdable>
 
   <Label canbeselected = "true">
-    <GuiFrame rect="0,0,0.4,0.4" alignment="Center" color="0.0,0.0,0.0,0.8"/>
+    <GuiFrame rect="0,0,0.4,0.4" alignment="Center" style="ItemUI"/>
   </Label>
 </Item>

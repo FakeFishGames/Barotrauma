@@ -11,7 +11,7 @@
 
 		<Fabricator canbeselected = "true" powerconsumption="500.0">
 
-      <GuiFrame rect="0,0,600,400" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+      <GuiFrame rect="0,0,600,400" alignment="Center" style="ItemUI"/>
 
       <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
 
@@ -92,7 +92,7 @@
     
     <Fabricator canbeselected = "true" powerconsumption="100.0">
 
-      <GuiFrame rect="0,0,600,400" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+      <GuiFrame rect="0,0,600,400" alignment="Center" style="ItemUI"/>
 
       <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
 
@@ -166,7 +166,7 @@
     <Deconstructor canbeselected = "true" powerconsumption="500.0">
       <sound file="deconstructor.ogg" type="OnActive" range="1000.0" loop="true"/>
       
-      <GuiFrame rect="0,0,300,200" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+      <GuiFrame rect="0,0,300,200" alignment="Center" style="ItemUI"/>
     </Deconstructor>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">

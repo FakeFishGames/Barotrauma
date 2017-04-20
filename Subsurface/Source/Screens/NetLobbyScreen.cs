@@ -170,12 +170,12 @@ namespace Barotrauma
 
             Rectangle panelRect = new Rectangle(0,0,width,height);
 
-            menu = new GUIFrame(panelRect, Color.Transparent, Alignment.Center);
+            menu = new GUIFrame(panelRect, Color.Transparent, Alignment.Center, null);
             //menu.Padding = GUI.style.smallPadding;
 
             //server info panel ------------------------------------------------------------
 
-            infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.7f), (int)(panelRect.Height * 0.6f)), GUI.Style, menu);
+            infoFrame = new GUIFrame(new Rectangle(0, 0, (int)(panelRect.Width * 0.7f), (int)(panelRect.Height * 0.6f)), "", menu);
             infoFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
             
             //chatbox ----------------------------------------------------------------------
@@ -183,11 +183,11 @@ namespace Barotrauma
                 new Rectangle(0, (int)(panelRect.Height * 0.6f + 20),
                     (int)(panelRect.Width * 0.7f),
                     (int)(panelRect.Height * 0.4f - 20)),
-                GUI.Style, menu);
+                "", menu);
             chatFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 40.0f);
 
-            chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, GUI.Style, chatFrame);            
-            textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, GUI.Style, chatFrame);
+            chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, "", chatFrame);            
+            textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, "", chatFrame);
             textBox.Font = GUI.SmallFont;
 
             //player info panel ------------------------------------------------------------
@@ -195,7 +195,7 @@ namespace Barotrauma
             myPlayerFrame = new GUIFrame(
                 new Rectangle((int)(panelRect.Width * 0.7f + 20), 0,
                     (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.6f)),
-                GUI.Style, menu);
+                "", menu);
             myPlayerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             //player list ------------------------------------------------------------------
@@ -203,11 +203,11 @@ namespace Barotrauma
             GUIFrame playerListFrame = new GUIFrame(
                 new Rectangle((int)(panelRect.Width * 0.7f + 20), (int)(panelRect.Height * 0.6f + 20),
                     (int)(panelRect.Width * 0.3f - 20), (int)(panelRect.Height * 0.4f - 20)),
-                GUI.Style, menu);
+                "", menu);
 
             playerListFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 40.0f);
 
-            playerList = new GUIListBox(new Rectangle(0,0,0,0), null, GUI.Style, playerListFrame);
+            playerList = new GUIListBox(new Rectangle(0,0,0,0), null, "", playerListFrame);
             playerList.OnSelected = SelectPlayer;
 
             //submarine list ------------------------------------------------------------------
@@ -215,11 +215,11 @@ namespace Barotrauma
             int columnWidth = infoFrame.Rect.Width / 3 - 5;
             int columnX = 0;
 
-            new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Submarine:", GUI.Style, infoFrame);
-            subList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), Color.White, GUI.Style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Submarine:", "", infoFrame);
+            subList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), Color.White, "", infoFrame);
             subList.OnSelected = VotableClicked;
 
-            var voteText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Votes: ", GUI.Style, Alignment.TopLeft, Alignment.TopRight, infoFrame);
+            var voteText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Votes: ", "", Alignment.TopLeft, Alignment.TopRight, infoFrame);
             voteText.UserData = "subvotes";
             voteText.Visible = false;
 
@@ -230,17 +230,17 @@ namespace Barotrauma
 
             //respawn shuttle ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 120, 20, 20), "Respawn shuttle:", GUI.Style, infoFrame);
-            shuttleList = new GUIDropDown(new Rectangle(columnX, 150, 200, 20), "", GUI.Style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 120, 20, 20), "Respawn shuttle:", "", infoFrame);
+            shuttleList = new GUIDropDown(new Rectangle(columnX, 150, 200, 20), "", "", infoFrame);
             
 
             //gamemode ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 180, 0, 30), "Game mode: ", GUI.Style, infoFrame);
-            modeList = new GUIListBox(new Rectangle(columnX, 200, columnWidth, infoFrame.Rect.Height - 300), GUI.Style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 180, 0, 30), "Game mode: ", "", infoFrame);
+            modeList = new GUIListBox(new Rectangle(columnX, 200, columnWidth, infoFrame.Rect.Height - 300), "", infoFrame);
             modeList.OnSelected = VotableClicked;
             
-            voteText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Votes: ", GUI.Style, Alignment.TopLeft, Alignment.TopRight, infoFrame);
+            voteText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Votes: ", "", Alignment.TopLeft, Alignment.TopRight, infoFrame);
             voteText.UserData = "modevotes";
             voteText.Visible = false;
 
@@ -250,8 +250,8 @@ namespace Barotrauma
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    mode.Name, GUI.Style,
-                    Alignment.Left, Alignment.Left,
+                    mode.Name, "ListBoxElement",
+                    Alignment.TopLeft, Alignment.CenterLeft,
                     modeList);
                 textBlock.ToolTip = mode.Description;
                 textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
@@ -260,17 +260,17 @@ namespace Barotrauma
                         
             //mission type ------------------------------------------------------------------
 
-            missionTypeBlock = new GUITextBlock(new Rectangle(columnX, 0, 300, 20), "Mission type:", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, infoFrame);
+            missionTypeBlock = new GUITextBlock(new Rectangle(columnX, 0, 300, 20), "Mission type:", "", Alignment.BottomLeft, Alignment.TopLeft, infoFrame);
             missionTypeBlock.UserData = 0;
                        
             missionTypeButtons = new GUIButton[2];
 
-            missionTypeButtons[0] = new GUIButton(new Rectangle(100, 0, 20, 20), "<", Alignment.BottomLeft, GUI.Style, missionTypeBlock);
+            missionTypeButtons[0] = new GUIButton(new Rectangle(100, 0, 20, 20), "<", Alignment.BottomLeft, "", missionTypeBlock);
             missionTypeButtons[0].UserData = -1;
 
-            new GUITextBlock(new Rectangle(120, 0, 80, 20), "Random", GUI.Style, Alignment.BottomLeft, Alignment.TopCenter, missionTypeBlock).UserData = 0;
+            new GUITextBlock(new Rectangle(120, 0, 80, 20), "Random", "", Alignment.BottomLeft, Alignment.TopCenter, missionTypeBlock).UserData = 0;
 
-            missionTypeButtons[1] = new GUIButton(new Rectangle(200, 0, 20, 20), ">", Alignment.BottomLeft, GUI.Style, missionTypeBlock);
+            missionTypeButtons[1] = new GUIButton(new Rectangle(200, 0, 20, 20), ">", Alignment.BottomLeft, "", missionTypeBlock);
             missionTypeButtons[1].UserData = 1;
             
             missionTypeBlock.Visible = false;
@@ -281,7 +281,7 @@ namespace Barotrauma
             
             //var modeDescription = new GUITextBlock(
             //    new Rectangle(columnX, 150, (int)(columnWidth * 1.2f), infoFrame.Rect.Height - 150 - 80), 
-            //    "", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, infoFrame, true, GUI.SmallFont);
+            //    "", "", Alignment.TopLeft, Alignment.TopLeft, infoFrame, true, GUI.SmallFont);
             //modeDescription.Color = Color.Black * 0.3f;
 
             //modeList.UserData = modeDescription;
@@ -291,25 +291,25 @@ namespace Barotrauma
             //seed ------------------------------------------------------------------
             
             new GUITextBlock(new Rectangle(columnX, 120, 180, 20),
-                "Level Seed: ", GUI.Style, Alignment.Left, Alignment.TopLeft, infoFrame);
+                "Level Seed: ", "", Alignment.Left, Alignment.TopLeft, infoFrame);
 
             seedBox = new GUITextBox(new Rectangle(columnX, 150, columnWidth/2, 20),
-                Alignment.TopLeft, GUI.Style, infoFrame);
+                Alignment.TopLeft, "", infoFrame);
             seedBox.OnTextChanged = SelectSeed;
             LevelSeed = ToolBox.RandomSeed(8);
 
             //traitor probability ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 180, 20, 20), "Traitors:", GUI.Style, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 180, 20, 20), "Traitors:", "", infoFrame);
 
             traitorProbabilityButtons = new GUIButton[2];
 
-            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 205, 20, 20), "<", GUI.Style, infoFrame);
+            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 205, 20, 20), "<", "", infoFrame);
             traitorProbabilityButtons[0].UserData = -1;
 
-            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX+20, 205, 80, 20), "No", null,null, Alignment.TopCenter, GUI.Style, infoFrame);
+            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX+20, 205, 80, 20), "No", null,null, Alignment.Center, "", infoFrame);
 
-            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 205, 20, 20), ">", GUI.Style, infoFrame);
+            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 205, 20, 20), ">", "", infoFrame);
             traitorProbabilityButtons[1].UserData = 1;
 
 
@@ -318,18 +318,18 @@ namespace Barotrauma
             autoRestartBox = new GUITickBox(new Rectangle(columnX, 240, 20, 20), "Automatic restart", Alignment.TopLeft, infoFrame);
             autoRestartBox.OnSelected = ToggleAutoRestart;
 
-            var restartText = new GUITextBlock(new Rectangle(columnX, 265, 20, 20), "", GUI.Style, infoFrame);
+            var restartText = new GUITextBlock(new Rectangle(columnX, 265, 20, 20), "", "", infoFrame);
             restartText.Font = GUI.SmallFont;
             restartText.TextGetter = AutoRestartText;
 
             //server info ------------------------------------------------------------------
             
-            var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame);
+            var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, "", infoFrame);
             serverName.TextGetter = GetServerName;
             serverName.Enabled = GameMain.Server != null;
             serverName.OnTextChanged = ChangeServerName;
 
-            serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, GUI.Style, infoFrame);
+            serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, "", infoFrame);
             serverMessage.Wrap = true;
             serverMessage.OnTextChanged = UpdateServerMessage;
 
@@ -397,10 +397,10 @@ namespace Barotrauma
                 missionTypeButtons[0].OnClicked = ToggleMissionType;
                 missionTypeButtons[1].OnClicked = ToggleMissionType;
 
-                StartButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, GUI.Style, infoFrame);
+                StartButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, "", infoFrame);
                 StartButton.OnClicked = GameMain.Server.StartGameClicked;
 
-                GUIButton settingsButton = new GUIButton(new Rectangle(-100, 0, 80, 30), "Settings", Alignment.BottomRight, GUI.Style, infoFrame);
+                GUIButton settingsButton = new GUIButton(new Rectangle(-100, 0, 80, 30), "Settings", Alignment.BottomRight, "", infoFrame);
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
                 settingsButton.UserData = "settingsButton";
 
@@ -422,7 +422,7 @@ namespace Barotrauma
 
                 if (myPlayerFrame.children.Find(c => c.UserData as string == "playyourself") == null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(0, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(0, 0, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
@@ -442,7 +442,7 @@ namespace Barotrauma
             {
                 if (GameMain.Client.GameStarted)
                 {
-                    GUIButton spectateButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Spectate", Alignment.BottomRight, GUI.Style, infoFrame);
+                    GUIButton spectateButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Spectate", Alignment.BottomRight, "", infoFrame);
                     spectateButton.OnClicked = GameMain.Client.SpectateClicked;
                     spectateButton.UserData = "spectateButton";
                 }
@@ -466,40 +466,40 @@ namespace Barotrauma
 
                 if (IsServer && GameMain.Server != null)
                 {
-                    var playYourself = new GUITickBox(new Rectangle(0, -10, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
+                    var playYourself = new GUITickBox(new Rectangle(0, 0, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
                     playYourself.Selected = GameMain.Server.CharacterInfo != null;
                     playYourself.OnSelected = TogglePlayYourself;
                     playYourself.UserData = "playyourself";
                 }
 
-                //new GUITextBlock(new Rectangle(100, 30, 200, 30), "Name: ", GUI.Style, myPlayerFrame);
+                //new GUITextBlock(new Rectangle(100, 30, 200, 30), "Name: ", "", myPlayerFrame);
 
-                //GUITextBox playerName = new GUITextBox(new Rectangle(100, 55, 0, 20), Alignment.TopLeft, GUI.Style, myPlayerFrame);
+                //GUITextBox playerName = new GUITextBox(new Rectangle(100, 55, 0, 20), Alignment.TopLeft, "", myPlayerFrame);
                 //playerName.Text = characterInfo.Name;
                 //playerName.OnEnterPressed += ChangeCharacterName;
 
-                GUIButton toggleHead = new GUIButton(new Rectangle(0, 50, 15, 15), "<", GUI.Style, myPlayerFrame);
+                GUIButton toggleHead = new GUIButton(new Rectangle(0, 50, 15, 15), "<", "", myPlayerFrame);
                 toggleHead.UserData = -1;
                 toggleHead.OnClicked = ToggleHead;
-                toggleHead = new GUIButton(new Rectangle(60, 50, 15, 15), ">", GUI.Style, myPlayerFrame);
+                toggleHead = new GUIButton(new Rectangle(60, 50, 15, 15), ">", "", myPlayerFrame);
                 toggleHead.UserData = 1;
                 toggleHead.OnClicked = ToggleHead;
 
-                new GUITextBlock(new Rectangle(100, 30, 200, 30), "Gender: ", GUI.Style, myPlayerFrame);
+                new GUITextBlock(new Rectangle(100, 30, 200, 30), "Gender: ", "", myPlayerFrame);
 
                 GUIButton maleButton = new GUIButton(new Rectangle(100, 50, 60, 20), "Male",
-                    Alignment.TopLeft, GUI.Style, myPlayerFrame);
+                    Alignment.TopLeft, "", myPlayerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
                 GUIButton femaleButton = new GUIButton(new Rectangle(170, 50, 60, 20), "Female",
-                    Alignment.TopLeft, GUI.Style, myPlayerFrame);
+                    Alignment.TopLeft, "", myPlayerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
-                new GUITextBlock(new Rectangle(0, 120, 20, 30), "Job preferences:", GUI.Style, myPlayerFrame);
+                new GUITextBlock(new Rectangle(0, 120, 20, 30), "Job preferences:", "", myPlayerFrame);
 
-                jobList = new GUIListBox(new Rectangle(0, 150, 0, 0), GUI.Style, myPlayerFrame);
+                jobList = new GUIListBox(new Rectangle(0, 150, 0, 0), "", myPlayerFrame);
                 jobList.Enabled = false;
 
 
@@ -507,22 +507,22 @@ namespace Barotrauma
                 foreach (JobPrefab job in JobPrefab.List)
                 {
                     GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20),  i + ". " + job.Name+"    ", 
-                        GUI.Style,Alignment.Left, Alignment.Right, jobList, false,
+                        "",Alignment.Left, Alignment.Right, jobList, false,
                         GameMain.GraphicsWidth<1000 ? GUI.SmallFont : GUI.Font);
                     jobText.UserData = job;
 
-                    GUIButton infoButton = new GUIButton(new Rectangle(0, 2, 15, 15), "?", GUI.Style, jobText);
+                    GUIButton infoButton = new GUIButton(new Rectangle(0, 2, 15, 15), "?", "", jobText);
                     infoButton.UserData = -1;
                     infoButton.OnClicked += ViewJobInfo;
 
-                    GUIButton upButton = new GUIButton(new Rectangle(30, 2, 15, 15), "", GUI.Style, jobText);
+                    GUIButton upButton = new GUIButton(new Rectangle(30, 2, 15, 15), "", "", jobText);
                     //TODO: make GUIImages align correctly when scaled/rotated 
                     //so there's no need to do this ↓
                     new GUIImage(new Rectangle(3,2,0,0), GUI.Arrow, Alignment.Center, upButton).Scale = 0.6f;
                     upButton.UserData = -1;
                     upButton.OnClicked += ChangeJobPreference;
 
-                    GUIButton downButton = new GUIButton(new Rectangle(50, 2, 15, 15), "", GUI.Style, jobText);
+                    GUIButton downButton = new GUIButton(new Rectangle(50, 2, 15, 15), "", "", jobText);
                     var downArrow = new GUIImage(new Rectangle(13,14,0,0), GUI.Arrow, Alignment.Center, downButton);
                     downArrow.Rotation = MathHelper.Pi;
                     downArrow.Scale = 0.6f;
@@ -673,8 +673,8 @@ namespace Barotrauma
         public void AddSubmarine(GUIComponent subList, Submarine sub)
         {
             var subTextBlock = new GUITextBlock(
-                new Rectangle(0, 0, 0, 25), ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), GUI.Style,
-                Alignment.Left, Alignment.CenterY | Alignment.Left, subList)
+                new Rectangle(0, 0, 0, 25), ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "ListBoxElement",
+                Alignment.TopLeft, Alignment.CenterLeft, subList)
             {
                 Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
                 ToolTip = sub.Description,
@@ -703,7 +703,7 @@ namespace Barotrauma
 
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
-                var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, subTextBlock, false, GUI.SmallFont);
+                var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", "", Alignment.Left, Alignment.CenterY | Alignment.Right, subTextBlock, false, GUI.SmallFont);
                 shuttleText.TextColor = subTextBlock.TextColor * 0.8f;
                 shuttleText.ToolTip = subTextBlock.ToolTip;
             }
@@ -756,7 +756,7 @@ namespace Barotrauma
         {
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(0, 0, playerList.Rect.Width-20, 25), name, 
-                 GUI.Style, Alignment.Left, Alignment.Left,
+                 "", Alignment.Left, Alignment.Left,
                 playerList);
 
             textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
@@ -783,24 +783,24 @@ namespace Barotrauma
 
             playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.6f);
 
-            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 280), null, Alignment.Center, GUI.Style, playerFrame);
+            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 280), null, Alignment.Center, "", playerFrame);
             playerFrameInner.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             new GUITextBlock(new Rectangle(0, 0, 200, 20), component.UserData.ToString(),
-                GUI.Style, Alignment.TopLeft, Alignment.TopLeft,
+                "", Alignment.TopLeft, Alignment.TopLeft,
                 playerFrameInner, false, GUI.LargeFont);
 
             if (GameMain.Server != null)
             {
                 var selectedClient = GameMain.Server.ConnectedClients.Find(c => c.name == component.UserData.ToString());
 
-                new GUITextBlock(new Rectangle(0, 25, 150, 15), selectedClient.Connection.RemoteEndPoint.Address.ToString(), GUI.Style, playerFrameInner);
+                new GUITextBlock(new Rectangle(0, 25, 150, 15), selectedClient.Connection.RemoteEndPoint.Address.ToString(), "", playerFrameInner);
 
-                var permissionsBox = new GUIFrame(new Rectangle(0, 60, 0, 90), GUI.Style, playerFrameInner);
+                var permissionsBox = new GUIFrame(new Rectangle(0, 60, 0, 90), "", playerFrameInner);
                 permissionsBox.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 permissionsBox.UserData = selectedClient;
 
-                new GUITextBlock(new Rectangle(0, 0, 0, 15), "Permissions:", GUI.Style, permissionsBox);
+                new GUITextBlock(new Rectangle(0, 0, 0, 15), "Permissions:", "", permissionsBox);
                 int x = 0, y = 0;
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
@@ -844,7 +844,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
             {
-                var kickButton = new GUIButton(new Rectangle(0, -50, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+                var kickButton = new GUIButton(new Rectangle(0, -50, 100, 20), "Kick", Alignment.BottomLeft, "", playerFrameInner);
                 kickButton.UserData = obj;
                 kickButton.OnClicked += KickPlayer;
                 kickButton.OnClicked += ClosePlayerFrame;
@@ -852,18 +852,18 @@ namespace Barotrauma
 
             if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Ban))
             {
-                var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+                var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomLeft, "", playerFrameInner);
                 banButton.UserData = obj;
                 banButton.OnClicked += BanPlayer;
                 banButton.OnClicked += ClosePlayerFrame;
 
-                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomLeft, GUI.Style, playerFrameInner);
+                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomLeft, "", playerFrameInner);
                 rangebanButton.UserData = obj;
                 rangebanButton.OnClicked += BanPlayerRange;
                 rangebanButton.OnClicked += ClosePlayerFrame;
             }
 
-            var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, GUI.Style, playerFrameInner);
+            var closeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Close", Alignment.BottomRight, "", playerFrameInner);
             closeButton.OnClicked = ClosePlayerFrame;
 
             return false;
@@ -1036,7 +1036,7 @@ namespace Barotrauma
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20),
                 message.TextWithSender, 
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, message.Color, 
-                Alignment.Left, GUI.Style, null, true);
+                Alignment.Left, "", null, true);
             msg.Font = GUI.SmallFont;
             msg.UserData = message.SenderName;
             msg.CanBeFocused = false;
@@ -1142,7 +1142,7 @@ namespace Barotrauma
             if (jobPrefab == null) return false;
 
             jobInfoFrame = jobPrefab.CreateInfoFrame();
-            GUIButton closeButton = new GUIButton(new Rectangle(0,0,100,20), "Close", Alignment.BottomRight, GUI.Style, jobInfoFrame.children[0]);
+            GUIButton closeButton = new GUIButton(new Rectangle(0,0,100,20), "Close", Alignment.BottomRight, "", jobInfoFrame.children[0]);
             closeButton.OnClicked = CloseJobInfo;
             return true;
         }

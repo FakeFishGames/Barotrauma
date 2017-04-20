@@ -272,28 +272,28 @@ namespace Barotrauma
 
             if (spawnType == SpawnType.Path)
             {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing waypoint", GUI.Style, editingHUD);
-                new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another waypoint", GUI.Style, editingHUD);
+                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing waypoint", "", editingHUD);
+                new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another waypoint", "", editingHUD);
             }
             else
             {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing spawnpoint", GUI.Style, editingHUD);
-                new GUITextBlock(new Rectangle(0, 25, 100, 20), "Spawn type: ", GUI.Style, editingHUD);
+                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing spawnpoint", "", editingHUD);
+                new GUITextBlock(new Rectangle(0, 25, 100, 20), "Spawn type: ", "", editingHUD);
 
-                var spawnTypeText = new GUITextBlock(new Rectangle(0, 25, 200, 20), spawnType.ToString(), GUI.Style, Alignment.Right, Alignment.TopLeft, editingHUD);
+                var spawnTypeText = new GUITextBlock(new Rectangle(0, 25, 200, 20), spawnType.ToString(), "", Alignment.Right, Alignment.TopLeft, editingHUD);
 
-                var button = new GUIButton(new Rectangle(-30,0,20,20), "-", Alignment.Right, GUI.Style, spawnTypeText);
+                var button = new GUIButton(new Rectangle(-30,0,20,20), "-", Alignment.Right, "", spawnTypeText);
                 button.UserData = -1;
                 button.OnClicked = ChangeSpawnType;
 
-                button = new GUIButton(new Rectangle(0, 0, 20, 20), "+", Alignment.Right, GUI.Style, spawnTypeText);
+                button = new GUIButton(new Rectangle(0, 0, 20, 20), "+", Alignment.Right, "", spawnTypeText);
                 button.UserData = 1;
                 button.OnClicked = ChangeSpawnType;
 
                 y = 40 + 20;
 
                 new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
+                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), "", editingHUD);
                 propertyBox.Text = string.Join(", ", idCardTags);
                 propertyBox.OnEnterPressed = EnterIDCardTags;
                 propertyBox.OnTextChanged = TextBoxChanged;
@@ -302,7 +302,7 @@ namespace Barotrauma
                 y = y + 30;
 
                 new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-                propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), GUI.Style, editingHUD);
+                propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), "", editingHUD);
                 propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
                 propertyBox.OnEnterPressed = EnterAssignedJob;
                 propertyBox.OnTextChanged = TextBoxChanged;

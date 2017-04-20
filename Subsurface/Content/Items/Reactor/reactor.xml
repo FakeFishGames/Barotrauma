@@ -22,7 +22,7 @@
     <Sprite texture = "reactor.png" sourcerect="0,0,321,192" depth="0.8"/>
 
     <Reactor canbeselected = "true">
-      <GuiFrame rect="0,0,760,460" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+      <GuiFrame rect="0,0,760,460" alignment="Center" style="ItemUI"/>
       <StatusEffect type="InWater" target="This" Temperature="-500.0"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="Fuel Rod, Heat Absorber, Temperature Control Circuit" Condition="-0.1" />
       <sound file="reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>

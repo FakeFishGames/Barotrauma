@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            var button = new GUIButton(new Rectangle(160, 40, 35, 30), "OUT", GUI.Style, GuiFrame);
+            var button = new GUIButton(new Rectangle(160, 40, 35, 30), "OUT", "", GuiFrame);
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 FlowPercentage -= 10.0f;
@@ -88,7 +88,7 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            button = new GUIButton(new Rectangle(210, 40, 35, 30), "IN", GUI.Style, GuiFrame);
+            button = new GUIButton(new Rectangle(210, 40, 35, 30), "IN", "", GuiFrame);
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 FlowPercentage += 10.0f;
