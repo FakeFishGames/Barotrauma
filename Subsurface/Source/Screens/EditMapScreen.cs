@@ -191,7 +191,7 @@ namespace Barotrauma
 
                 new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.CenterRight, GUItabs[i], false, GUI.SmallFont);
 
-                GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), Alignment.TopRight, "", GUItabs[i]);
+                GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), null,null, Alignment.TopRight, Alignment.CenterLeft, "", GUItabs[i]);
                 searchBox.Font = GUI.SmallFont;
                 searchBox.OnTextChanged = FilterMessages;
 

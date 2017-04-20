@@ -111,6 +111,11 @@ namespace Barotrauma
             set;
         }
 
+        public GUIComponentStyle Style
+        {
+            get { return style; }
+        }
+
         public bool Visible
         {
             get;

@@ -304,7 +304,7 @@ namespace Barotrauma.Networking
 
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
+            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f, null);
 
             GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 430), null, Alignment.Center, "", settingsFrame);
             innerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
@@ -327,7 +327,7 @@ namespace Barotrauma.Networking
 
             SelectSettingsTab(null, 0);
             
-            var closeButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Close", Alignment.BottomRight, "", innerFrame);
+            var closeButton = new GUIButton(new Rectangle(10, 0, 100, 20), "Close", Alignment.BottomRight, "", innerFrame);
             closeButton.OnClicked = ToggleSettingsFrame;
 
             //--------------------------------------------------------------------------------
@@ -378,9 +378,9 @@ namespace Barotrauma.Networking
             };
 
 
-            var votesRequiredText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Votes required: 50 %", "", settingsTabs[0], GUI.SmallFont);
+            var votesRequiredText = new GUITextBlock(new Rectangle(20, y + 15, 20, 20), "Votes required: 50 %", "", settingsTabs[0], GUI.SmallFont);
 
-            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), "", 0.1f, settingsTabs[0]);
+            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[0]);
             votesRequiredSlider.UserData = votesRequiredText;
             votesRequiredSlider.Step = 0.2f;
             votesRequiredSlider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
@@ -405,9 +405,9 @@ namespace Barotrauma.Networking
             };
 
 
-            var respawnIntervalText = new GUITextBlock(new Rectangle(20, y + 18, 20, 20), "Respawn interval", "", settingsTabs[0], GUI.SmallFont);
+            var respawnIntervalText = new GUITextBlock(new Rectangle(20, y + 13, 20, 20), "Respawn interval", "", settingsTabs[0], GUI.SmallFont);
 
-            var respawnIntervalSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 10), "", 0.1f, settingsTabs[0]);
+            var respawnIntervalSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 15), "", 0.1f, settingsTabs[0]);
             respawnIntervalSlider.UserData = respawnIntervalText;
             respawnIntervalSlider.Step = 0.05f;
             respawnIntervalSlider.BarScroll = RespawnInterval / 600.0f;
@@ -426,7 +426,7 @@ namespace Barotrauma.Networking
             var minRespawnText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Minimum players to respawn", "", settingsTabs[0]);
             minRespawnText.ToolTip = "What percentage of players has to be dead/spectating until a respawn shuttle is dispatched";
 
-            var minRespawnSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 10), "", 0.1f, settingsTabs[0]);
+            var minRespawnSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 15), "", 0.1f, settingsTabs[0]);
             minRespawnSlider.ToolTip = minRespawnText.ToolTip;
             minRespawnSlider.UserData = minRespawnText;
             minRespawnSlider.Step = 0.1f;
@@ -447,7 +447,7 @@ namespace Barotrauma.Networking
             respawnDurationText.ToolTip = "The amount of time respawned players have to navigate the respawn shuttle to the main submarine. " +
                 "After the duration expires, the shuttle will automatically head back out of the level.";
 
-            var respawnDurationSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 10), "", 0.1f, settingsTabs[0]);
+            var respawnDurationSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 15), "", 0.1f, settingsTabs[0]);
             respawnDurationSlider.ToolTip = minRespawnText.ToolTip;
             respawnDurationSlider.UserData = respawnDurationText;
             respawnDurationSlider.Step = 0.1f;
@@ -541,17 +541,16 @@ namespace Barotrauma.Networking
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 260, 25),
-                    pf.Name,
-                    "",
-                    Alignment.Left, Alignment.Left, cargoFrame);
-                textBlock.Padding = new Vector4(30.0f, 3.0f, 0.0f, 0.0f);
+                    pf.Name, "",
+                    Alignment.Left, Alignment.CenterLeft, cargoFrame, false, GUI.SmallFont);
+                textBlock.Padding = new Vector4(40.0f, 3.0f, 0.0f, 0.0f);
                 textBlock.UserData = cargoFrame;
                 textBlock.CanBeFocused = false;
 
                 if (pf.sprite != null)
                 {
                     float scale = Math.Min(Math.Min(30.0f / pf.sprite.SourceRect.Width, 30.0f / pf.sprite.SourceRect.Height), 1.0f);
-                    GUIImage img = new GUIImage(new Rectangle(-15-(int)(pf.sprite.SourceRect.Width*scale*0.5f), 12-(int)(pf.sprite.SourceRect.Height*scale*0.5f), 40, 40), pf.sprite, Alignment.Left, textBlock);
+                    GUIImage img = new GUIImage(new Rectangle(-20-(int)(pf.sprite.SourceRect.Width*scale*0.5f), 12-(int)(pf.sprite.SourceRect.Height*scale*0.5f), 40, 40), pf.sprite, Alignment.Left, textBlock);
                     img.Color = pf.SpriteColor;
                     img.Scale = scale;
                 }
@@ -559,12 +558,12 @@ namespace Barotrauma.Networking
                 int cargoVal = 0;
                 extraCargo.TryGetValue(pf.Name, out cargoVal);
                 var countText = new GUITextBlock(
-                    new Rectangle(180, 0, 50, 25),
+                    new Rectangle(160, 0, 55, 25),
                     cargoVal.ToString(),
                     "",
                     Alignment.Left, Alignment.Center, textBlock);
 
-                var incButton = new GUIButton(new Rectangle(220, 5, 10, 15), ">", "", textBlock);
+                var incButton = new GUIButton(new Rectangle(200, 5, 15, 15), ">", "", textBlock);
                 incButton.UserData = countText;
                 incButton.OnClicked = (button, obj) =>
                 {
@@ -582,7 +581,7 @@ namespace Barotrauma.Networking
                     return true;
                 };
 
-                var decButton = new GUIButton(new Rectangle(180, 5, 10, 15), "<", "", textBlock);
+                var decButton = new GUIButton(new Rectangle(160, 5, 15, 15), "<", "", textBlock);
                 decButton.UserData = countText;
                 decButton.OnClicked = (button, obj) =>
                 {
@@ -613,7 +612,7 @@ namespace Barotrauma.Networking
 
 
             var startIntervalText = new GUITextBlock(new Rectangle(-10, y, 100, 20), "Autorestart delay", "", settingsTabs[1]);
-            var startIntervalSlider = new GUIScrollBar(new Rectangle(10, y + 22, 100, 10), "", 0.1f, settingsTabs[1]);
+            var startIntervalSlider = new GUIScrollBar(new Rectangle(10, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
             startIntervalSlider.UserData = startIntervalText;
             startIntervalSlider.Step = 0.05f;
             startIntervalSlider.BarScroll = AutoRestartInterval / 300.0f;
@@ -651,7 +650,7 @@ namespace Barotrauma.Networking
 
             var kickVotesRequiredText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Votes required: 50 %", "", settingsTabs[1], GUI.SmallFont);
 
-            var kickVoteSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), "", 0.1f, settingsTabs[1]);
+            var kickVoteSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
             kickVoteSlider.UserData = kickVotesRequiredText;
             kickVoteSlider.Step = 0.2f;
             kickVoteSlider.BarScroll = (KickVoteRequiredRatio - 0.5f) * 2.0f;

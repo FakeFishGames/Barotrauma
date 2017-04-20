@@ -154,18 +154,18 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            new GUITextBlock(new Rectangle(0, -25, 90, 20), "Name:", "", Alignment.BottomLeft, Alignment.TopLeft, parent, false, GUI.Font);
-            nameBox = new GUITextBox(new Rectangle(100, -25, 170, 20), Alignment.BottomLeft, "", parent);
+            new GUITextBlock(new Rectangle(0, -35, 90, 20), "Name:", "", Alignment.BottomLeft, Alignment.CenterLeft, parent, false, GUI.Font);
+            nameBox = new GUITextBox(new Rectangle(100, -35, 170, 20), Alignment.BottomLeft, "", parent);
             nameBox.Font = GUI.Font;
 
-            new GUITextBlock(new Rectangle(0, 5, 90, 20), "IP Address:", "", Alignment.BottomLeft, Alignment.TopLeft, parent, false, GUI.Font);
-            ipBox = new GUITextBox(new Rectangle(100, 5, 170, 20), Alignment.BottomLeft, "", parent);
+            new GUITextBlock(new Rectangle(0, 0, 90, 20), "IP Address:", "", Alignment.BottomLeft, Alignment.CenterLeft, parent, false, GUI.Font);
+            ipBox = new GUITextBox(new Rectangle(100, 0, 170, 20), Alignment.BottomLeft, "", parent);
             ipBox.Font = GUI.Font;
 
-            var addnewButton = new GUIButton(new Rectangle(0, 45, 150, 20), "Add to whitelist", Alignment.BottomLeft, "", parent);
+            var addnewButton = new GUIButton(new Rectangle(0, 35, 150, 20), "Add to whitelist", Alignment.BottomLeft, "", parent);
             addnewButton.OnClicked = AddToWhiteList;
 
-            whitelistFrame = new GUIListBox(new Rectangle(0, 30, 0, parent.Rect.Height-100), "", parent);
+            whitelistFrame = new GUIListBox(new Rectangle(0, 30, 0, parent.Rect.Height-110), "", parent);
 
             foreach (WhiteListedPlayer wlp in whitelistedPlayers)
             {

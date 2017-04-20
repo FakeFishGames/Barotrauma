@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <style>
   <GUIFrame
-    padding="40.0, 40.0, 40.0, 40.0"
+    padding="40.0, 50.0, 40.0, 50.0"
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"
     selectedcolor="1.0,1.0,1.0,1.0"
@@ -151,6 +151,26 @@
         <Sprite texture="Content/UI/UI_Atlas.png" sourcerect="986, 874, 11, 148" slice="988, 881, 995, 1014"/>
     </GUIFrameVertical>
   </GUIScrollBar>
+
+  <GUISlider>
+    <GUIFrameHorizontal
+      color="1.0,1.0,1.0,1.0"
+      hovercolor="1.0,1.0,1.0,1.0"
+      selectedcolor="1.0,1.0,1.0,1.0"
+      textcolor="1.0,1.0,1.0,1.0"
+      padding="0.0, 0.0, 0.0, 0.0">
+      <Sprite texture="Content/UI/UI_Atlas.png" sourcerect="555, 61, 338, 13" slice="558, 64, 889, 69"/>
+    </GUIFrameHorizontal>
+
+    <GUIButtonHorizontal
+      color="1.0,1.0,1.0,1.0"
+      textcolor="1.0,1.0,1.0,1.0"
+      padding="2.0, 6.0, 2.0, 6.0">
+      <Sprite texture="Content/UI/UI_Atlas.png" state="None"  sourcerect="805, 318, 26, 15" slice="813,318,822,332"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect="795, 518, 26, 15" slice="813,518,822,532"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Selected" sourcerect="795, 518, 26, 15" slice="813,518,822,532"/>
+    </GUIButtonHorizontal>
+  </GUISlider>
 
   <GUIDropDown
     color="1.0,1.0,1.0,1.0"

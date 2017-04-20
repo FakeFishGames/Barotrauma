@@ -174,6 +174,14 @@ namespace Barotrauma
             Enabled = true;
         }
 
+        public override void ApplyStyle(GUIComponentStyle style)
+        {
+            base.ApplyStyle(style);
+
+            if (frame != null) frame.ApplyStyle(style);
+            if (textBlock != null) textBlock.ApplyStyle(style);
+        }
+
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
