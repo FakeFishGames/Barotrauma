@@ -36,14 +36,20 @@ namespace Barotrauma
             GUIComponentStyle componentStyle = null;  
             if (parent != null)
             {
-                string parentStyleName = parent.GetType().Name.ToLowerInvariant();
 
-                GUIComponentStyle parentStyle = null;
-                if (!componentStyles.TryGetValue(parentStyleName, out parentStyle))
+                GUIComponentStyle parentStyle = parent.Style;
+
+                if (parent.Style == null)
                 {
-                    DebugConsole.ThrowError("Couldn't find a GUI style \""+ parentStyleName + "\"");
-                    return;
+                    string parentStyleName = parent.GetType().Name.ToLowerInvariant();
+
+                    if (!componentStyles.TryGetValue(parentStyleName, out parentStyle))
+                    {
+                        DebugConsole.ThrowError("Couldn't find a GUI style \""+ parentStyleName + "\"");
+                        return;
+                    }
                 }
+
 
                 string childStyleName = string.IsNullOrEmpty(styleName) ? targetComponent.GetType().Name : styleName;
                 parentStyle.ChildStyles.TryGetValue(childStyleName.ToLowerInvariant(), out componentStyle);

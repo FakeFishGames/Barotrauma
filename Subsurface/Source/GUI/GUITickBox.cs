@@ -78,7 +78,7 @@ namespace Barotrauma
             GUI.Style.Apply(box, "GUITickBox");
             
             text = new GUITextBlock(new Rectangle(rect.Right, rect.Y, 20, rect.Height), label, "", Alignment.TopLeft, Alignment.Left | Alignment.CenterY, this, false, font);
-            GUI.Style.Apply(text, "", this);
+            GUI.Style.Apply(text, "GUIButtonHorizontal", this);
             
             this.rect = new Rectangle(box.Rect.X, box.Rect.Y, 240, rect.Height);
 
