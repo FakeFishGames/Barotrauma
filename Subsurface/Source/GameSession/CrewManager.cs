@@ -221,15 +221,13 @@ namespace Barotrauma
                     frame.UserData = character;
                     frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                     frame.Color = (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == character) ? Color.Gold * 0.2f : Color.Transparent;
-                    frame.HoverColor = Color.LightGray * 0.5f;
-                    frame.SelectedColor = Color.Gold * 0.5f;
 
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(40, 0, 0, 25),
                         ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, frame.Rect.Width-20),
-                        Color.Transparent, Color.White,
+                        null,null,
                         Alignment.Left, Alignment.Left,
-                        null, frame);
+                        "", frame);
                     textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
                     new GUIImage(new Rectangle(-10, 0, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);

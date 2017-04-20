@@ -97,7 +97,7 @@ namespace Barotrauma
 
         public void AddItem(string text, object userData = null)
         {
-            GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, "ListBoxElement", listBox);
+            GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox);
             textBlock.UserData = userData;
         }
 
