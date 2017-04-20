@@ -151,16 +151,16 @@ namespace Barotrauma.Tutorials
 
             height += wrappedText.Split('\n').Length * 25;
 
-            var infoBlock = new GUIFrame(new Rectangle(-20, 20, width, height), null, Alignment.TopRight, GUI.Style);
+            var infoBlock = new GUIFrame(new Rectangle(-20, 20, width, height), null, Alignment.TopRight, "");
             //infoBlock.Color = infoBlock.Color * 0.8f;
             infoBlock.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             infoBlock.Flash(Color.Green);
 
-            var textBlock = new GUITextBlock(new Rectangle(10, 10, width - 40, height), text, GUI.Style, infoBlock, true);
+            var textBlock = new GUITextBlock(new Rectangle(10, 10, width - 40, height), text, "", infoBlock, true);
 
             if (hasButton)
             {
-                var okButton = new GUIButton(new Rectangle(0, -40, 80, 25), "OK", Alignment.BottomCenter, GUI.Style, textBlock);
+                var okButton = new GUIButton(new Rectangle(0, -40, 80, 25), "OK", Alignment.BottomCenter, "", textBlock);
                 okButton.OnClicked = CloseInfoFrame;
             }
 

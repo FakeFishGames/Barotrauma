@@ -301,6 +301,11 @@ namespace Barotrauma
 
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color)
         {
+            DrawTiled(spriteBatch, pos, targetSize, startOffset, sourceRect, color);
+        }
+        
+        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Rectangle sourceRect, Color color)
+        {
             //pos.X = (int)pos.X;
             //pos.Y = (int)pos.Y;
 
