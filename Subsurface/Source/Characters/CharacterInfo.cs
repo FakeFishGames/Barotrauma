@@ -260,9 +260,9 @@ namespace Barotrauma
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(40, 0, 0, 25),
                 text,
-                Color.Transparent, Color.White,
+                null, null,
                 Alignment.Left, Alignment.Left,
-                null, frame, false);
+                "", frame, false);
             textBlock.Font = GUI.SmallFont;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 

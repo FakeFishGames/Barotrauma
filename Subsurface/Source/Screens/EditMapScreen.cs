@@ -126,7 +126,7 @@ namespace Barotrauma
 
             selectedTab = -1;
 
-            topPanel = new GUIFrame(new Rectangle(0, 0, 0, 50), "GUIFrameTop");
+            topPanel = new GUIFrame(new Rectangle(0, 0, 0, 35), "GUIFrameTop");
             topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
             hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 280, 70), "", topPanel);
@@ -150,7 +150,7 @@ namespace Barotrauma
                 return true;
             };
 
-            var nameLabel = new GUITextBlock(new Rectangle(170, -4, 150, 20), "", "", topPanel, GUI.LargeFont);
+            var nameLabel = new GUITextBlock(new Rectangle(170, 0, 150, 20), "", "", Alignment.TopLeft, Alignment.CenterLeft, topPanel, false, GUI.LargeFont);
             nameLabel.TextGetter = GetSubName;
 
             linkedSubBox = new GUIDropDown(new Rectangle(750, 0, 200, 20), "Add submarine", "", topPanel);
@@ -187,7 +187,7 @@ namespace Barotrauma
                 y+=25;
 
                 GUItabs[i] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "");
-                GUItabs[i].Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+                GUItabs[i].Padding = new Vector4(10.0f, 30.0f, 10.0f, 10.0f);
 
                 new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.CenterRight, GUItabs[i], false, GUI.SmallFont);
 
@@ -236,22 +236,22 @@ namespace Barotrauma
                 i++;
             }
 
-            y += 50;
+            y += 10;
             button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, "", leftPanel);
             button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleCharacterMode;
 
-            y += 35;
+            y += 25;
             button = new GUIButton(new Rectangle(0, y, 0, 20), "Wiring mode", Alignment.Left, "", leftPanel);
             //button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
             button.OnClicked = ToggleWiringMode;
 
-            y += 50;
+            y += 35;
             button = new GUIButton(new Rectangle(0, y, 0, 20), "Generate waypoints", Alignment.Left, "", leftPanel);
             button.ToolTip = "AI controlled crew members require waypoints to navigate around the sub.";
             button.OnClicked = GenerateWaypoints;
 
-            y += 50;
+            y += 30;
 
             new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", "", leftPanel);
             
@@ -277,7 +277,7 @@ namespace Barotrauma
             {
                 new GUITextBlock(new Rectangle(0, y, 0, 15), "Previously used:", "", leftPanel);
 
-                previouslyUsedList = new GUIListBox(new Rectangle(0, y + 15, 0, Math.Min(GameMain.GraphicsHeight - y - 40, 150)), "", leftPanel);
+                previouslyUsedList = new GUIListBox(new Rectangle(0, y + 20, 0, Math.Min(GameMain.GraphicsHeight - y - 80, 150)), "", leftPanel);
                 previouslyUsedList.OnSelected = SelectPrefab;
             }
 
@@ -732,7 +732,7 @@ namespace Barotrauma
 
         private GUIFrame CreateWiringPanel()
         {
-            GUIFrame frame = new GUIFrame(new Rectangle(0,0,65,300), null, Alignment.Right | Alignment.CenterY, "");
+            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 65, 300), null, Alignment.Right | Alignment.CenterY, "GUIFrameRight");
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
             GUIListBox listBox = new GUIListBox(Rectangle.Empty, "", frame);
@@ -872,9 +872,10 @@ namespace Barotrauma
             string name = ToolBox.LimitString(mapEntityPrefab.Name,15);
 
             var textBlock = new GUITextBlock(
-                new Rectangle(0,0,0,10), 
-                ToolBox.LimitString(name, GUI.SmallFont, previouslyUsedList.Rect.Width), 
-                "", previouslyUsedList, GUI.SmallFont);
+                new Rectangle(0,0,0,15), 
+                ToolBox.LimitString(name, GUI.SmallFont, previouslyUsedList.Rect.Width),
+                "", Alignment.TopLeft, Alignment.CenterLeft, 
+                previouslyUsedList, false, GUI.SmallFont);
 
             textBlock.UserData = mapEntityPrefab;
 

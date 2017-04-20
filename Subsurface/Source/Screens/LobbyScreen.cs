@@ -232,11 +232,11 @@ namespace Barotrauma
             {
                 var mission = GameMain.GameSession.Map.SelectedConnection.Mission;
 
-                new GUITextBlock(new Rectangle(0, 80, 0, 20), "Mission: "+mission.Name, Color.Black*0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
+                new GUITextBlock(new Rectangle(0, 80, 0, 20), "Mission: "+mission.Name, "", locationPanel);
 
-                new GUITextBlock(new Rectangle(0, 100, 0, 20), "Reward: " + mission.Reward+" credits", Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel);
+                new GUITextBlock(new Rectangle(0, 100, 0, 20), "Reward: " + mission.Reward+" credits", "", locationPanel);
 
-                new GUITextBlock(new Rectangle(0, 120, 0, 0), mission.Description, Color.Black * 0.8f, Color.White, Alignment.TopLeft, null, locationPanel, true);
+                new GUITextBlock(new Rectangle(0, 130, 0, 0), mission.Description, "", locationPanel, true);
 
             }
 
@@ -256,14 +256,9 @@ namespace Barotrauma
 
         private void CreateItemFrame(MapEntityPrefab ep, GUIListBox listBox, int width)
         {
-            Color color = ((listBox.CountChildren % 2) == 0) ? Color.Transparent : Color.White * 0.1f;
-
-            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), Color.Transparent, null, listBox);
+            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 50), "ListBoxElement", listBox);
             frame.UserData = ep;
             frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            frame.Color = color;
-            frame.HoverColor = Color.Gold * 0.2f;
-            frame.SelectedColor = Color.Gold * 0.5f;
 
             frame.ToolTip = ep.Description;
 
@@ -272,16 +267,16 @@ namespace Barotrauma
             GUITextBlock textBlock = new GUITextBlock(
                 new Rectangle(50, 0, 0, 25),
                 ep.Name,
-                Color.Transparent, Color.White,
+                null,null,
                 Alignment.Left, Alignment.CenterX | Alignment.Left,
-                null, frame);
+                "", frame);
             textBlock.Font = font;
             textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
             textBlock.ToolTip = ep.Description;
 
             if (ep.sprite != null)
             {
-                GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.Left, frame);
+                GUIImage img = new GUIImage(new Rectangle(0, 0, 40, 40), ep.sprite, Alignment.CenterLeft, frame);
                 img.Color = ep.SpriteColor;
                 img.Scale = Math.Min(Math.Min(40.0f / img.SourceRect.Width, 40.0f / img.SourceRect.Height), 1.0f);
             }

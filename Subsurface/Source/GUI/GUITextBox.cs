@@ -230,7 +230,6 @@ namespace Barotrauma
                 state = ComponentState.None;
             }
 
-            textBlock.State = state;
             
             if (CaretEnabled)
             {
@@ -240,6 +239,7 @@ namespace Barotrauma
             
             if (keyboardDispatcher.Subscriber == this)
             {
+                state = ComponentState.Selected;
                 Character.DisableControls = true;
                 if (OnEnterPressed != null &&  PlayerInput.KeyHit(Keys.Enter))
                 {
@@ -256,6 +256,7 @@ namespace Barotrauma
 
             }
 
+            textBlock.State = state;
             textBlock.Update(deltaTime);
         }
 

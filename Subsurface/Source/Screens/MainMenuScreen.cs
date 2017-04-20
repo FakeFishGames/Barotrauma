@@ -130,9 +130,7 @@ namespace Barotrauma
 
                     return true;
                 };
-
-                //            Submarine selectedSub = subList.SelectedData as Submarine;
-
+            
             //----------------------------------------------------------------------
 
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(panelRect, "");

@@ -8,8 +8,19 @@
   
     textcolor="0.0, 0.0, 0.0, 1.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 454" slice="87,576,430,960"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
   </GUIFrame>
+
+  <GUIFrameHeader
+    padding="40.0, 40.0, 40.0, 40.0"
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"
+  
+    textcolor="0.0, 0.0, 0.0, 1.0">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 780, 420, 220" slice="87,853,430,929"/>
+  </GUIFrameHeader>
 
   <GUIFrameTop
     padding="40.0, 40.0, 40.0, 40.0"
@@ -19,7 +30,7 @@
   
     textcolor="0.0, 0.0, 0.0, 1.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 576, 420, 454" slice="87,578,430,960"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 705, 420, 55" slice="87,706,430,739"/>
   </GUIFrameTop>
 
   <GUIFrameLeft
@@ -30,7 +41,7 @@
   
     textcolor="0.0, 0.0, 0.0, 1.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="87, 541, 365, 454" slice="88,576,430,960"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="87, 541, 365, 220" slice="88,576,430,687"/>
   </GUIFrameLeft>
 
   <GUIFrameRight
@@ -41,7 +52,7 @@
   
     textcolor="0.0, 0.0, 0.0, 1.0">
 
-    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 395, 454" slice="87,576,430,960"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 395, 220" slice="87,576,430,687"/>
   </GUIFrameRight>
 
   <InnerFrame
@@ -122,7 +133,7 @@
     padding="5.0, 5.0, 5.0, 5.0">
 
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="493, 544, 227, 52" slice="494, 552, 718, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="493, 490, 227, 52" slice="494, 497, 718, 529"/>
   </ListBoxElement>
 
   <GUIScrollBar>
@@ -160,7 +171,7 @@
     textcolor="0.5, 0.55, 0.6, 1.0">
     <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="470, 599, 274, 52" slice="480, 610, 731, 640"/>
     <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="470, 544, 274, 52" slice="480, 552, 731, 584"/>
-    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="470, 544, 274, 52" slice="480, 552, 731, 584"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="470, 490, 274, 52" slice="480, 497, 731, 529"/>
   </GUITextBox>
 
   <GUITickBox
