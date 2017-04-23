@@ -150,7 +150,7 @@ namespace Barotrauma
 
             scrollBar.IsHorizontal = isHorizontal;            
 
-            frame = new GUIFrame(Rectangle.Empty, style, this);
+            frame = new GUIFrame(new Rectangle(0, 0, this.rect.Width, this.rect.Height), style, this);
             if (style != null) GUI.Style.Apply(frame, style, this);
 
             UpdateScrollBarSize();

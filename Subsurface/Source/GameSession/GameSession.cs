@@ -282,6 +282,11 @@ namespace Barotrauma
         {
             if (infoFrame == null)
             {
+                if (CrewManager != null && CrewManager.CrewCommander!= null && CrewManager.CrewCommander.IsOpen)
+                {
+                    CrewManager.CrewCommander.ToggleGUIFrame();
+                }
+
                 CreateInfoFrame();
                 SelectInfoFrameTab(null, selectedTab);
             }
@@ -297,27 +302,31 @@ namespace Barotrauma
         {
             int width = 600, height = 400;
 
+
             infoFrame = new GUIFrame(
-                new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "");
+                Rectangle.Empty, Color.Black * 0.8f, null);
+            
+            var innerFrame = new GUIFrame(
+                new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", infoFrame);
 
-            infoFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            innerFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            var crewButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Crew", "", infoFrame);
+            var crewButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Crew", "", innerFrame);
             crewButton.UserData = InfoFrameTab.Crew;
             crewButton.OnClicked = SelectInfoFrameTab;
 
-            var missionButton = new GUIButton(new Rectangle(100, -30, 100, 20), "Mission", "", infoFrame);
+            var missionButton = new GUIButton(new Rectangle(100, -30, 100, 20), "Mission", "", innerFrame);
             missionButton.UserData = InfoFrameTab.Mission;
             missionButton.OnClicked = SelectInfoFrameTab;
 
             if (GameMain.Server != null)
             {
-                var manageButton = new GUIButton(new Rectangle(200, -30, 130, 20), "Manage players", "", infoFrame);
+                var manageButton = new GUIButton(new Rectangle(200, -30, 130, 20), "Manage players", "", innerFrame);
                 manageButton.UserData = InfoFrameTab.ManagePlayers;
                 manageButton.OnClicked = SelectInfoFrameTab;
             }
 
-            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, "", infoFrame);
+            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, "", innerFrame);
             closeButton.OnClicked = ToggleInfoFrame;
 
         }
@@ -331,13 +340,13 @@ namespace Barotrauma
             switch (selectedTab)
             {
                 case InfoFrameTab.Crew:
-                    CrewManager.CreateCrewFrame(CrewManager.characters, infoFrame);
+                    CrewManager.CreateCrewFrame(CrewManager.characters, infoFrame.children[0] as GUIFrame);
                     break;
                 case InfoFrameTab.Mission:
-                    CreateMissionInfo(infoFrame);
+                    CreateMissionInfo(infoFrame.children[0] as GUIFrame);
                     break;
                 case InfoFrameTab.ManagePlayers:
-                    GameMain.Server.ManagePlayersFrame(infoFrame);
+                    GameMain.Server.ManagePlayersFrame(infoFrame.children[0] as GUIFrame);
                     break;
             }
 
@@ -362,12 +371,10 @@ namespace Barotrauma
         
         public void AddToGUIUpdateList()
         {
-            if (CrewManager != null) CrewManager.AddToGUIUpdateList();
-
-            if (gameMode != null) gameMode.AddToGUIUpdateList();
-
             infoButton.AddToGUIUpdateList();
-
+            
+            if (gameMode != null) gameMode.AddToGUIUpdateList();
+            
             if (infoFrame != null) infoFrame.AddToGUIUpdateList();
         }
 
@@ -382,7 +389,15 @@ namespace Barotrauma
 
             if (gameMode != null)   gameMode.Update(deltaTime);
             if (Mission != null)    Mission.Update(deltaTime);
-            if (infoFrame != null)  infoFrame.Update(deltaTime);
+            if (infoFrame != null)
+            {
+                infoFrame.Update(deltaTime);
+
+                if (CrewManager != null && CrewManager.CrewCommander != null && CrewManager.CrewCommander.IsOpen)
+                {
+                    infoFrame = null;
+                }
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch)

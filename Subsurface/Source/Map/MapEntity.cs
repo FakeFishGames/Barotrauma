@@ -656,14 +656,14 @@ namespace Barotrauma
             highlightedList = highlightedEntities;
 
             highlightedListBox = new GUIListBox(
-                new Rectangle((int)PlayerInput.MousePosition.X+15, (int)PlayerInput.MousePosition.Y+15, 150, highlightedEntities.Count * 15), 
+                new Rectangle((int)PlayerInput.MousePosition.X+15, (int)PlayerInput.MousePosition.Y+15, 150, highlightedEntities.Count * 18 + 5), 
                 null, Alignment.TopLeft, "GUIToolTip", null, false);
             
             foreach (MapEntity entity in highlightedEntities)
             {
                 var textBlock = new GUITextBlock(
-                    new Rectangle(0,0,0,15), 
-                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), "", highlightedListBox, GUI.SmallFont);
+                    new Rectangle(0, 0, highlightedListBox.Rect.Width, 18),
+                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), "", Alignment.TopLeft, Alignment.CenterLeft, highlightedListBox, false, GUI.SmallFont);
 
                 textBlock.UserData = entity;
             }

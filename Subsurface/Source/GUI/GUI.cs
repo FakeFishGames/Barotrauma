@@ -434,24 +434,24 @@ namespace Barotrauma
                     "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
-                DrawString(spriteBatch, new Vector2(10, 20),
+                DrawString(spriteBatch, new Vector2(10, 25),
                     "Physics: " + GameMain.World.UpdateTime,
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
-                DrawString(spriteBatch, new Vector2(10, 30),
+                DrawString(spriteBatch, new Vector2(10, 40),
                     "Bodies: " + GameMain.World.BodyList.Count + " (" + GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count + " awake)",
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 if (Screen.Selected.Cam != null)
                 {
-                    DrawString(spriteBatch, new Vector2(10, 40),
+                    DrawString(spriteBatch, new Vector2(10, 55),
                         "Camera pos: " + Screen.Selected.Cam.Position.ToPoint(),
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
                 if (Submarine.MainSub != null)
                 {
-                    DrawString(spriteBatch, new Vector2(10, 50),
+                    DrawString(spriteBatch, new Vector2(10, 70),
                         "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
