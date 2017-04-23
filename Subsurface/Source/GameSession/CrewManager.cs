@@ -19,12 +19,13 @@ namespace Barotrauma
         
         private GUIFrame guiFrame;
         private GUIListBox listBox, orderListBox;
-
-        private bool crewFrameOpen;
-        //private GUIButton crewButton;
-        protected GUIFrame crewFrame;
-
+        
         private CrewCommander commander;
+
+        public CrewCommander CrewCommander
+        {
+            get { return commander; }
+        }
         
         public int Money
         {
@@ -143,7 +144,6 @@ namespace Barotrauma
         {
             guiFrame.AddToGUIUpdateList();
             if (commander.Frame != null) commander.Frame.AddToGUIUpdateList();
-            if (crewFrameOpen) crewFrame.AddToGUIUpdateList();
         }
 
         public void Update(float deltaTime)
@@ -166,7 +166,6 @@ namespace Barotrauma
             }
 
             if (commander.Frame != null) commander.Frame.Update(deltaTime);
-            if (crewFrameOpen) crewFrame.Update(deltaTime);
         }
 
         public void ReviveCharacter(Character revivedCharacter)
@@ -337,7 +336,6 @@ namespace Barotrauma
             else
             {
                 guiFrame.Draw(spriteBatch);
-                if (crewFrameOpen) crewFrame.Draw(spriteBatch);
             }
         }
 
