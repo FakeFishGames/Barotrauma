@@ -125,18 +125,18 @@ namespace Barotrauma
             get { return caretPos; }
         }
         
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, GUIComponent parent, ScalableFont font)
+        public GUITextBlock(Rectangle rect, string text, string style, GUIComponent parent, ScalableFont font)
             : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, false, font)
         {
         }
 
 
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null, bool wrap = false)
+        public GUITextBlock(Rectangle rect, string text, string style, GUIComponent parent = null, bool wrap = false)
             : this(rect, text, style, Alignment.TopLeft, Alignment.TopLeft, parent, wrap)
         {
         }
 
-        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)
+        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null, bool wrap = false)
             : this(rect, text,color, textColor, Alignment.TopLeft, textAlignment, style, parent, wrap)
         {
         }
@@ -150,21 +150,22 @@ namespace Barotrauma
 
         public override void ApplyStyle(GUIComponentStyle style)
         {
+            if (style == null) return;
             base.ApplyStyle(style);
 
             textColor = style.textColor;
         }
 
 
-        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null, bool wrap = false)
+        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null, bool wrap = false)
             : this (rect, text, style, alignment, textAlignment, parent, wrap, null)
         {
             if (color != null) this.color = (Color)color;
             if (textColor != null) this.textColor = (Color)textColor;
         }
 
-        public GUITextBlock(Rectangle rect, string text, GUIStyle style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, ScalableFont font = null)
-            :base (style)        
+        public GUITextBlock(Rectangle rect, string text, string style, Alignment alignment = Alignment.TopLeft, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null, bool wrap = false, ScalableFont font = null)
+            : base(style)        
         {
             this.Font = font == null ? GUI.Font : font;
 
@@ -173,6 +174,8 @@ namespace Barotrauma
             this.text = text;
 
             this.alignment = alignment;
+
+            this.padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
             this.textAlignment = textAlignment;
             
@@ -278,7 +281,7 @@ namespace Barotrauma
             Rectangle drawRect = rect;
             if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
 
-            if (currColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
+            //if (currColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
 
             base.Draw(spriteBatch);
 

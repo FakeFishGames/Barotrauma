@@ -107,22 +107,22 @@ namespace Barotrauma
             }
         }
 
-        public GUIListBox(Rectangle rect, GUIStyle style, GUIComponent parent = null)
+        public GUIListBox(Rectangle rect, string style, GUIComponent parent = null)
             : this(rect, style, Alignment.TopLeft, parent)
         {
         }
 
-        public GUIListBox(Rectangle rect, GUIStyle style, Alignment alignment, GUIComponent parent = null)
+        public GUIListBox(Rectangle rect, string style, Alignment alignment, GUIComponent parent = null)
             : this(rect, null, alignment, style, parent, false)
         {
         }
 
-        public GUIListBox(Rectangle rect, Color? color, GUIStyle style = null, GUIComponent parent = null)
+        public GUIListBox(Rectangle rect, Color? color, string style = null, GUIComponent parent = null)
             : this(rect, color, (Alignment.Left | Alignment.Top), style, parent)
         {
         }
 
-        public GUIListBox(Rectangle rect, Color? color, Alignment alignment, GUIStyle style = null, GUIComponent parent = null, bool isHorizontal = false)
+        public GUIListBox(Rectangle rect, Color? color, Alignment alignment, string style = null, GUIComponent parent = null, bool isHorizontal = false)
             : base(style)
         {
             this.rect = rect;
@@ -140,18 +140,18 @@ namespace Barotrauma
             if (isHorizontal)
             {
                 scrollBar = new GUIScrollBar(
-                    new Rectangle(this.rect.X, this.rect.Bottom - 20, this.rect.Width, 20), null, 1.0f, GUI.Style);
+                    new Rectangle(this.rect.X, this.rect.Bottom - 20, this.rect.Width, 20), null, 1.0f, "");
             }
             else
             {
                 scrollBar = new GUIScrollBar(
-                    new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height), null, 1.0f, GUI.Style);
+                    new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height), null, 1.0f, "");
             }
 
             scrollBar.IsHorizontal = isHorizontal;            
 
-            frame = new GUIFrame(Rectangle.Empty, style, this);
-            if (style != null) style.Apply(frame, this);
+            frame = new GUIFrame(new Rectangle(0, 0, this.rect.Width, this.rect.Height), style, this);
+            if (style != null) GUI.Style.Apply(frame, style, this);
 
             UpdateScrollBarSize();
 

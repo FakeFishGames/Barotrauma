@@ -36,7 +36,6 @@ namespace Barotrauma
             set
             {
                 enabled = value;
-                text.TextColor = enabled ? Color.White : Color.White * 0.5f;
             }
         }
 
@@ -71,13 +70,16 @@ namespace Barotrauma
             if (parent != null)
                 parent.AddChild(this);
 
-            box = new GUIFrame(rect, Color.DarkGray, null, this);
+            box = new GUIFrame(rect, Color.DarkGray, "", this);
             box.HoverColor = Color.Gray;
             box.SelectedColor = Color.DarkGray;
             box.CanBeFocused = false;
-            
-            text = new GUITextBlock(new Rectangle(rect.Right + 10, rect.Y+2, 20, rect.Height), label, GUI.Style, this, font);
 
+            GUI.Style.Apply(box, "GUITickBox");
+            
+            text = new GUITextBlock(new Rectangle(rect.Right, rect.Y, 20, rect.Height), label, "", Alignment.TopLeft, Alignment.Left | Alignment.CenterY, this, false, font);
+            GUI.Style.Apply(text, "GUIButtonHorizontal", this);
+            
             this.rect = new Rectangle(box.Rect.X, box.Rect.Y, 240, rect.Height);
 
             Enabled = true;
@@ -87,22 +89,14 @@ namespace Barotrauma
         {
             if (!Visible || !Enabled) return;
 
-            //if (MouseOn != null && MouseOn != this && !MouseOn.IsParentOf(this)) return;
-
-            //if (text.Rect.Contains(PlayerInput.MousePosition)) MouseOn = this;
-
-            if (MouseOn==this)//box.Rect.Contains(PlayerInput.MousePosition))
+            if (MouseOn == this)
             {
-                //ToolTip = this.ToolTip;
-                //MouseOn = this;
-
                 box.State = ComponentState.Hover;
 
                 if (PlayerInput.LeftButtonHeld())
                 {
                     box.State = ComponentState.Selected;                    
                 }
-
 
                 if (PlayerInput.LeftButtonClicked())
                 {
@@ -114,24 +108,18 @@ namespace Barotrauma
             {
                 box.State = ComponentState.None;
             }
-            
+
+            if (selected)
+            {
+                box.State = ComponentState.Selected;
+            }
         }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
-            DrawChildren(spriteBatch);
-
-            float alpha = enabled ? 1.0f : 0.8f;
-
-            GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 1, box.Rect.Y + 1, box.Rect.Width - 2, box.Rect.Height - 2),
-                (box.State == ComponentState.Hover ? new Color(50, 50, 50, 255) : Color.Black) * alpha, true);
-
-            if (!selected) return;
-            GUI.DrawRectangle(spriteBatch, new Rectangle(box.Rect.X + 5, box.Rect.Y + 5, box.Rect.Width - 10, box.Rect.Height - 10),
-                Color.Green * 0.8f * alpha, true);
-            
+            DrawChildren(spriteBatch);            
         }
     }
 }

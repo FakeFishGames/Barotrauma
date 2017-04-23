@@ -59,21 +59,21 @@ namespace Barotrauma.Networking
         {
             LogFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0,0,400, 400), null, Alignment.Center, GUI.Style, LogFrame);
+            GUIFrame innerFrame = new GUIFrame(new Rectangle(0,0,400, 400), null, Alignment.Center, "", LogFrame);
             innerFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            new GUITextBlock(new Rectangle(-200,0,100,15), "Filter", GUI.Style, Alignment.TopRight, Alignment.TopRight, innerFrame, false, GUI.SmallFont);
+            new GUITextBlock(new Rectangle(-200,0,100,15), "Filter", "", Alignment.TopRight, Alignment.TopRight, innerFrame, false, GUI.SmallFont);
 
-            GUITextBox searchBox = new GUITextBox(new Rectangle(-20,0,180,15), Alignment.TopRight, GUI.Style, innerFrame);
+            GUITextBox searchBox = new GUITextBox(new Rectangle(-20,0,180,15), Alignment.TopRight, "", innerFrame);
             searchBox.Font = GUI.SmallFont;
             searchBox.OnTextChanged = FilterMessages;
             GUIComponent.KeyboardDispatcher.Subscriber = searchBox;
 
-            var clearButton = new GUIButton(new Rectangle(0,0,15,15), "x", Alignment.TopRight, GUI.Style, innerFrame);
+            var clearButton = new GUIButton(new Rectangle(0,0,15,15), "x", Alignment.TopRight, "", innerFrame);
             clearButton.OnClicked = ClearFilter;
             clearButton.UserData = searchBox;
 
-            listBox = new GUIListBox(new Rectangle(0,20,0,335), GUI.Style, innerFrame);
+            listBox = new GUIListBox(new Rectangle(0,20,0,335), "", innerFrame);
 
             var currLines = lines.ToList();
 
@@ -86,7 +86,7 @@ namespace Barotrauma.Networking
 
             if (listBox.BarScroll==0.0f || listBox.BarScroll==1.0f) listBox.BarScroll = 1.0f;
 
-            GUIButton closeButton = new GUIButton(new Rectangle(0,0,100, 15), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
+            GUIButton closeButton = new GUIButton(new Rectangle(0,0,100, 15), "Close", Alignment.BottomRight, "", innerFrame);
             closeButton.OnClicked = (GUIButton button, object userData) =>
             {
                 LogFrame = null;
@@ -98,7 +98,7 @@ namespace Barotrauma.Networking
         {
             float prevSize = listBox.BarSize;
 
-            var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
+            var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, "", Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
             textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, Math.Max(13, textBlock.Rect.Height));
 
             //listBox.AddChild(textBlock);

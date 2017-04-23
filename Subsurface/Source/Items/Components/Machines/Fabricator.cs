@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
 
             GuiFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            itemList = new GUIListBox(new Rectangle(0,0,GuiFrame.Rect.Width/2-20,0), GUI.Style, GuiFrame);
+            itemList = new GUIListBox(new Rectangle(0,0,GuiFrame.Rect.Width/2-20,0), "", GuiFrame);
             itemList.OnSelected = SelectItem;
 
             foreach (FabricableItem fi in fabricableItems)
@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
 
             selectedItemFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            progressBar = new GUIProgressBar(new Rectangle(0, 0, 0, 20), Color.Green, GUI.Style, 0.0f, Alignment.BottomCenter, selectedItemFrame);
+            progressBar = new GUIProgressBar(new Rectangle(0, 0, 0, 20), Color.Green, "", 0.0f, Alignment.BottomCenter, selectedItemFrame);
             progressBar.IsHorizontal = true;
 
             if (targetItem.TargetItem.sprite != null)
@@ -184,7 +184,7 @@ namespace Barotrauma.Items.Components
                     var description = new GUITextBlock(
                         new Rectangle(0, y, 0, 0),
                         targetItem.TargetItem.Description, 
-                        GUI.Style, Alignment.TopLeft, Alignment.TopLeft, 
+                        "", Alignment.TopLeft, Alignment.TopLeft, 
                         selectedItemFrame, true, GUI.SmallFont);
 
                     y += description.Rect.Height + 10;
@@ -228,7 +228,7 @@ namespace Barotrauma.Items.Components
                     Alignment.TopLeft, null,
                     selectedItemFrame);
 
-                activateButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Create", Color.White, Alignment.CenterX | Alignment.Bottom, GUI.Style, selectedItemFrame);
+                activateButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Create", Color.White, Alignment.CenterX | Alignment.Bottom, "", selectedItemFrame);
                 activateButton.OnClicked = StartButtonClicked;
                 activateButton.UserData = targetItem;
                 activateButton.Enabled = false;

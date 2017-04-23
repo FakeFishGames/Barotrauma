@@ -19,12 +19,13 @@ namespace Barotrauma
         
         private GUIFrame guiFrame;
         private GUIListBox listBox, orderListBox;
-
-        private bool crewFrameOpen;
-        //private GUIButton crewButton;
-        protected GUIFrame crewFrame;
-
+        
         private CrewCommander commander;
+
+        public CrewCommander CrewCommander
+        {
+            get { return commander; }
+        }
         
         public int Money
         {
@@ -38,6 +39,7 @@ namespace Barotrauma
             characterInfos = new List<CharacterInfo>();
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
+            guiFrame.Padding = Vector4.One * 5.0f;
 
             listBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
             listBox.ScrollBarEnabled = false;
@@ -131,11 +133,8 @@ namespace Barotrauma
 
             character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
 
-            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, null, orderListBox);
-            frame.UserData = character;
-            //frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            frame.HoverColor = Color.LightGray * 0.5f;
-            frame.SelectedColor = Color.Gold * 0.5f;
+            GUIFrame orderFrame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, "ListBoxElement", orderListBox);
+            orderFrame.UserData = character;
 
             var ai = character.AIController as HumanAIController;
             if (ai == null)
@@ -150,7 +149,6 @@ namespace Barotrauma
         {
             guiFrame.AddToGUIUpdateList();
             if (commander.Frame != null) commander.Frame.AddToGUIUpdateList();
-            if (crewFrameOpen) crewFrame.AddToGUIUpdateList();
         }
 
         public void Update(float deltaTime)
@@ -174,7 +172,6 @@ namespace Barotrauma
             }
 
             if (commander.Frame != null) commander.Frame.Update(deltaTime);
-            if (crewFrameOpen) crewFrame.Update(deltaTime);
         }
 
         public void ReviveCharacter(Character revivedCharacter)
@@ -216,28 +213,30 @@ namespace Barotrauma
             {
                 if (teamIDs.Count > 1)
                 {
-                    new GUITextBlock(new Rectangle(0, y - 20, 100, 20), CombatMission.GetTeamName(teamIDs[i]), GUI.Style, crewFrame);
+                    new GUITextBlock(new Rectangle(0, y - 20, 100, 20), CombatMission.GetTeamName(teamIDs[i]), "", crewFrame);
                 }
 
-                GUIListBox crewList = new GUIListBox(new Rectangle(0, y, 280, listBoxHeight), Color.White * 0.7f, GUI.Style, crewFrame);
+                GUIListBox crewList = new GUIListBox(new Rectangle(0, y, 280, listBoxHeight), Color.White * 0.7f, "", crewFrame);
                 crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-                crewList.OnSelected = SelectCrewCharacter;
+                crewList.OnSelected = (component, obj) =>
+                {
+                    SelectCrewCharacter(component.UserData as Character, crewList);
+                    return true;
+                };
             
                 foreach (Character character in crew.FindAll(c => c.TeamID == teamIDs[i]))
                 {
-                    GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, crewList);
+                    GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, "ListBoxElement", crewList);
                     frame.UserData = character;
                     frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                     frame.Color = (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == character) ? Color.Gold * 0.2f : Color.Transparent;
-                    frame.HoverColor = Color.LightGray * 0.5f;
-                    frame.SelectedColor = Color.Gold * 0.5f;
 
                     GUITextBlock textBlock = new GUITextBlock(
                         new Rectangle(40, 0, 0, 25),
                         ToolBox.LimitString(character.Info.Name + " (" + character.Info.Job.Name + ")", GUI.Font, frame.Rect.Width-20),
-                        Color.Transparent, Color.White,
+                        null,null,
                         Alignment.Left, Alignment.Left,
-                        null, frame);
+                        "", frame);
                     textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
                     new GUIImage(new Rectangle(-10, 0, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, frame);
@@ -249,29 +248,20 @@ namespace Barotrauma
 
         }
 
-        protected virtual bool SelectCrewCharacter(GUIComponent component, object obj)
+        protected virtual bool SelectCrewCharacter(Character character, GUIComponent crewList)
         {
-            Character character = obj as Character;
-            if (character == null) return false;
-
-            var crewFrame = component.Parent;
-            while (crewFrame.Parent!=null)
-            {
-                crewFrame = crewFrame.Parent;
-            }
-
-            GUIComponent existingFrame = crewFrame.FindChild("selectedcharacter");
-            if (existingFrame != null) crewFrame.RemoveChild(existingFrame);
+            GUIComponent existingFrame = crewList.Parent.FindChild("selectedcharacter");
+            if (existingFrame != null) crewList.Parent.RemoveChild(existingFrame);
 
             var previewPlayer = new GUIFrame(
                 new Rectangle(0, 0, 230, 300),
-                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, GUI.Style, crewFrame);
+                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, "", crewList.Parent);
             previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
             previewPlayer.UserData = "selectedcharacter";
 
             character.Info.CreateInfoFrame(previewPlayer);
 
-            if (GameMain.NetworkMember != null) GameMain.NetworkMember.SelectCrewCharacter(component, obj);
+            if (GameMain.NetworkMember != null) GameMain.NetworkMember.SelectCrewCharacter(character, crewList);
 
             return true;
         }
@@ -347,7 +337,6 @@ namespace Barotrauma
             else
             {
                 guiFrame.Draw(spriteBatch);
-                if (crewFrameOpen) crewFrame.Draw(spriteBatch);
             }
         }
 

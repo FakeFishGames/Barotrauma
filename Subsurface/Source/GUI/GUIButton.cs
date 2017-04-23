@@ -133,63 +133,60 @@ namespace Barotrauma
 
         public bool Selected { get; set; }
 
-        public GUIButton(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null)
+        public GUIButton(Rectangle rect, string text, string style, GUIComponent parent = null)
             : this(rect, text, null, Alignment.Left, style, parent)
         {
         }
 
-        public GUIButton(Rectangle rect, string text, Alignment alignment, GUIStyle style, GUIComponent parent = null)
+        public GUIButton(Rectangle rect, string text, Alignment alignment, string style, GUIComponent parent = null)
             : this(rect, text, null, alignment, style, parent)
         {
         }
 
-        public GUIButton(Rectangle rect, string text, Color? color, GUIStyle style, GUIComponent parent = null)
+        public GUIButton(Rectangle rect, string text, Color? color, string style, GUIComponent parent = null)
             : this(rect, text, color, (Alignment.Left | Alignment.Top), style, parent)
         {
         }
 
-        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, GUIStyle style, GUIComponent parent = null)
-            :this(rect, text, color, alignment, Alignment.Center, style, parent)
+        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, string style = "", GUIComponent parent = null)
+            : this(rect, text, color, alignment, Alignment.Center, style, parent)
         {
 
         }
 
-        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, Alignment textAlignment, GUIStyle style, GUIComponent parent = null)
-            :base (style)
+        public GUIButton(Rectangle rect, string text, Color? color, Alignment alignment, Alignment textAlignment, string style = "", GUIComponent parent = null)
+            : base(style)
         {
             this.rect = rect;
-            if (color!=null) this.color = (Color)color;
+            if (color != null) this.color = (Color)color;
             this.alignment = alignment;
 
             if (parent != null) parent.AddChild(this);
 
             frame = new GUIFrame(Rectangle.Empty, style, this);
-            if (style != null) style.Apply(frame, this);
+            GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
 
             textBlock = new GUITextBlock(Rectangle.Empty, text,
                 Color.Transparent, (this.style == null) ? Color.Black : this.style.textColor,
-                textAlignment, style, this);
+                textAlignment, null, this);
+            GUI.Style.Apply(textBlock, style, this);
 
             Enabled = true;
         }
-        
+
+        public override void ApplyStyle(GUIComponentStyle style)
+        {
+            base.ApplyStyle(style);
+
+            if (frame != null) frame.ApplyStyle(style);
+            if (textBlock != null) textBlock.ApplyStyle(style);
+        }
+
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
             
-            //Color currColor = color;
-            //if (state == ComponentState.Hover) currColor = hoverColor;
-            //if (state == ComponentState.Selected) currColor = selectedColor;
-
-            //GUI.DrawRectangle(spriteBatch, rect, currColor * alpha, true);
-
-            ////spriteBatch.DrawString(HUD.font, text, new Vector2(rect.X+rect.Width/2, rect.Y+rect.Height/2), Color.Black, 0.0f, new Vector2(0.5f,0.5f), 1.0f, SpriteEffects.None, 0.0f);
-
-            //GUI.DrawRectangle(spriteBatch, rect, Color.Black * alpha, false);
-
             DrawChildren(spriteBatch);
-
-            //if (!Enabled) GUI.DrawRectangle(spriteBatch, rect, Color.Gray*0.5f, true);
         }
         
         public override void Update(float deltaTime)
@@ -203,7 +200,7 @@ namespace Barotrauma
                 {
                     if (OnPressed != null)
                     {
-                        if (OnPressed()) state = ComponentState.Selected;
+                        if (OnPressed()) state = ComponentState.Pressed;
                     }
                 }
                 else if (PlayerInput.LeftButtonClicked())

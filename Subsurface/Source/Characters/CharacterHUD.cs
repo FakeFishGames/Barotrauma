@@ -154,7 +154,7 @@ namespace Barotrauma
                     if (cprButton == null)
                     {
                         cprButton = new GUIButton(
-                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(320, -30), new Point(130, 20)), "Perform CPR", GUI.Style);
+                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(320, -30), new Point(130, 20)), "Perform CPR", "");
 
                         cprButton.OnClicked = (button, userData) =>
                         {
@@ -252,7 +252,7 @@ namespace Barotrauma
                 if (suicideButton == null)
                 {
                     suicideButton = new GUIButton(
-                        new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), "Give in", GUI.Style);
+                        new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), "Give in", "");
 
                     
                     suicideButton.ToolTip = GameMain.NetworkMember == null ?
@@ -287,10 +287,10 @@ namespace Barotrauma
             {
                 int width = 100, height = 20;
 
-                drowningBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 200, width, height), Color.Blue, GUI.Style, 1.0f, Alignment.TopLeft);
+                drowningBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 200, width, height), Color.Blue, "", 1.0f, Alignment.TopLeft);
                 new GUIImage(new Rectangle(-27, -7, 20, 20), new Rectangle(17, 0, 20, 24), statusIcons, Alignment.TopLeft, drowningBar);
 
-                healthBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 230, width, height), Color.Red, GUI.Style, 1.0f, Alignment.TopLeft);
+                healthBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 230, width, height), Color.Red, "", 1.0f, Alignment.TopLeft);
                 new GUIImage(new Rectangle(-26, -7, 20, 20), new Rectangle(0, 0, 13, 24), statusIcons, Alignment.TopLeft, healthBar);
             }
 

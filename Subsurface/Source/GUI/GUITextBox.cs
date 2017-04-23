@@ -152,19 +152,19 @@ namespace Barotrauma
             }
         }
 
-        public GUITextBox(Rectangle rect, GUIStyle style = null, GUIComponent parent = null)
+        public GUITextBox(Rectangle rect, string style = null, GUIComponent parent = null)
             : this(rect, null, null, Alignment.Left, Alignment.Left, style, parent)
         {
 
         }
 
-        public GUITextBox(Rectangle rect, Alignment alignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null)
+        public GUITextBox(Rectangle rect, Alignment alignment = Alignment.Left, string style = null, GUIComponent parent = null)
             : this(rect, null, null, alignment, Alignment.Left, style, parent)
         {
 
         }
 
-        public GUITextBox(Rectangle rect, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, GUIStyle style = null, GUIComponent parent = null)
+        public GUITextBox(Rectangle rect, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.CenterLeft, string style = null, GUIComponent parent = null)
             : base(style)
         {
             Enabled = true;
@@ -174,8 +174,6 @@ namespace Barotrauma
             if (color != null) this.color = (Color)color;
                         
             this.alignment = alignment;
-
-            //this.textAlignment = textAlignment;
             
             if (parent != null)
                 parent.AddChild(this);
@@ -184,13 +182,10 @@ namespace Barotrauma
 
             Font = GUI.Font;
 
-            if (style != null) style.Apply(textBlock, this);
+            GUI.Style.Apply(textBlock, style == "" ? "GUITextBox" : style);
             textBlock.Padding = new Vector4(3.0f, 0.0f, 3.0f, 0.0f);
-
-            //previousMouse = PlayerInput.GetMouseState;
-
+            
             CaretEnabled = true;
-            //SetTextPos();
         }
 
         public void Select()
@@ -235,7 +230,6 @@ namespace Barotrauma
                 state = ComponentState.None;
             }
 
-            textBlock.State = state;
             
             if (CaretEnabled)
             {
@@ -245,6 +239,7 @@ namespace Barotrauma
             
             if (keyboardDispatcher.Subscriber == this)
             {
+                state = ComponentState.Selected;
                 Character.DisableControls = true;
                 if (OnEnterPressed != null &&  PlayerInput.KeyHit(Keys.Enter))
                 {
@@ -261,6 +256,7 @@ namespace Barotrauma
 
             }
 
+            textBlock.State = state;
             textBlock.Update(deltaTime);
         }
 

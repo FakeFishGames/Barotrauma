@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private GameMain game;
 
-        int selectedTab;
+        private Tab selectedTab;
 
         public MainMenuScreen(GameMain game)
         {
@@ -42,41 +42,42 @@ namespace Barotrauma
             Rectangle panelRect = new Rectangle(
                 290, y,
                 500, 360);
-            
-            GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), "Tutorial", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
+
+            GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), "Tutorial", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+
             button.Color = button.Color * 0.8f;
             button.OnClicked = TutorialButtonClicked;
 
-            button = new GUIButton(new Rectangle(50, y + 60, 200, 30), "New Game", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 60, 200, 30), "New Game", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.NewGame;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 100, 200, 30), "Load Game", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 100, 200, 30), "Load Game", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.LoadGame;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 160, 200, 30), "Join Server", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 160, 200, 30), "Join Server", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             //button.UserData = (int)Tabs.JoinServer;
             button.OnClicked = JoinServerClicked;
 
-            button = new GUIButton(new Rectangle(50, y + 200, 200, 30), "Host Server", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 200, 200, 30), "Host Server", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.HostServer;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 260, 200, 30), "Submarine Editor", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 260, 200, 30), "Submarine Editor", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.OnClicked = (GUIButton btn, object userdata) => { GameMain.EditMapScreen.Select(); return true; };
 
-            button = new GUIButton(new Rectangle(50, y + 320, 200, 30), "Settings", null, Alignment.TopLeft, Alignment.Left, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 320, 200, 30), "Settings", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.Settings;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 0, 150, 30), "Quit", Alignment.BottomRight, GUI.Style, buttonsTab);
+            button = new GUIButton(new Rectangle(0, 0, 150, 30), "Quit", Alignment.BottomRight, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.OnClicked = QuitClicked;
 
@@ -84,31 +85,31 @@ namespace Barotrauma
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(panelRect, GUI.Style);
+            menuTabs[(int)Tab.NewGame] = new GUIFrame(panelRect, "");
             menuTabs[(int)Tab.NewGame].Padding = new Vector4(20.0f,20.0f,20.0f,20.0f);
 
-            //new GUITextBlock(new Rectangle(0, -20, 0, 30), "New Game", null, null, Alignment.CenterX, GUI.style, menuTabs[(int)Tabs.NewGame]);
+            //new GUITextBlock(new Rectangle(0, -20, 0, 30), "New Game", null, null, Alignment.CenterX, "", menuTabs[(int)Tabs.NewGame]);
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Selected submarine:", null, null, Alignment.Left, GUI.Style, menuTabs[(int)Tab.NewGame]);
-            subList = new GUIListBox(new Rectangle(0, 30, 230, panelRect.Height-100), GUI.Style, menuTabs[(int)Tab.NewGame]);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Selected submarine:", null, null, Alignment.Left, "", menuTabs[(int)Tab.NewGame]);
+            subList = new GUIListBox(new Rectangle(0, 30, 230, panelRect.Height-100), "", menuTabs[(int)Tab.NewGame]);
 
             UpdateSubList();
 
             new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 0, 100, 20),
-                "Save name: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
+                "Save name: ", "", Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
 
             saveNameBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 30, 180, 20),
-                Alignment.TopLeft, GUI.Style, menuTabs[(int)Tab.NewGame]);
+                Alignment.TopLeft, "", menuTabs[(int)Tab.NewGame]);
 
             new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 60, 100, 20),
-                "Map Seed: ", GUI.Style, Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
+                "Map Seed: ", "", Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
 
             seedBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 90, 180, 20),
-                Alignment.TopLeft, GUI.Style, menuTabs[(int)Tab.NewGame]);
+                Alignment.TopLeft, "", menuTabs[(int)Tab.NewGame]);
             seedBox.Text = ToolBox.RandomSeed(8);
 
 
-            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.Style,  menuTabs[(int)Tab.NewGame]);
+            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, "",  menuTabs[(int)Tab.NewGame]);
             button.OnClicked = (GUIButton btn, object userData) =>
                 {
                     Submarine selectedSub = subList.SelectedData as Submarine;
@@ -130,43 +131,41 @@ namespace Barotrauma
 
                     return true;
                 };
-
-                //            Submarine selectedSub = subList.SelectedData as Submarine;
-
+            
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tab.LoadGame] = new GUIFrame(panelRect, GUI.Style);
+            menuTabs[(int)Tab.LoadGame] = new GUIFrame(panelRect, "");
             //menuTabs[(int)Tabs.LoadGame].Padding = GUI.style.smallPadding;
 
 
-            menuTabs[(int)Tab.HostServer] = new GUIFrame(panelRect, GUI.Style);
+            menuTabs[(int)Tab.HostServer] = new GUIFrame(panelRect, "");
             //menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
 
-            //new GUITextBlock(new Rectangle(0, -25, 0, 30), "Host Server", GUI.style, Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer], false, GUI.LargeFont);
+            //new GUITextBlock(new Rectangle(0, -25, 0, 30), "Host Server", "", Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer], false, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 30), "Server Name:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 0, 100, 30), "Server Name:", "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
 
-            new GUITextBlock(new Rectangle(0, 50, 100, 30), "Server port:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            portBox = new GUITextBox(new Rectangle(160, 50, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 50, 100, 30), "Server port:", "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            portBox = new GUITextBox(new Rectangle(160, 50, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
             portBox.Text = NetConfig.DefaultPort.ToString();
             portBox.ToolTip = "Server port";
 
-            new GUITextBlock(new Rectangle(0, 100, 100, 30), "Max players:", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            maxPlayersBox = new GUITextBox(new Rectangle(195, 100, 30, 30), null, null, Alignment.TopLeft, Alignment.Center, GUI.Style, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 100, 100, 30), "Max players:", "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            maxPlayersBox = new GUITextBox(new Rectangle(195, 100, 30, 30), null, null, Alignment.TopLeft, Alignment.Center, "", menuTabs[(int)Tab.HostServer]);
             maxPlayersBox.Text = "8";
             maxPlayersBox.Enabled = false;
 
-            var minusPlayersBox = new GUIButton(new Rectangle(160, 100, 30, 30), "-", GUI.Style, menuTabs[(int)Tab.HostServer]);
+            var minusPlayersBox = new GUIButton(new Rectangle(160, 100, 30, 30), "-", "", menuTabs[(int)Tab.HostServer]);
             minusPlayersBox.UserData = -1;
             minusPlayersBox.OnClicked = ChangeMaxPlayers;
 
-            var plusPlayersBox = new GUIButton(new Rectangle(230, 100, 30, 30), "+", GUI.Style, menuTabs[(int)Tab.HostServer]);
+            var plusPlayersBox = new GUIButton(new Rectangle(230, 100, 30, 30), "+", "", menuTabs[(int)Tab.HostServer]);
             plusPlayersBox.UserData = 1;
             plusPlayersBox.OnClicked = ChangeMaxPlayers;
             
-            new GUITextBlock(new Rectangle(0, 150, 100, 30), "Password (optional):", GUI.Style, Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
-            passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, GUI.Style, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 150, 100, 30), "Password (optional):", "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
             
             isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), "Public server", Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
             isPublicBox.ToolTip = "Public servers are shown in the list of available servers in the \"Join Server\" -tab";
@@ -177,7 +176,7 @@ namespace Barotrauma
             + " However, UPnP isn't supported by all routers, so you may need to setup port forwards manually"
             +" if players are unable to join the server (see the readme for instructions).";
             
-            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, GUI.Style, menuTabs[(int)Tab.HostServer]);
+            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
             hostButton.OnClicked = HostServerClicked;
 
             this.game = game;
@@ -198,7 +197,6 @@ namespace Barotrauma
             UpdateSubList();
 
             SelectTab(null, 0);
-            //selectedTab = 0;
         }
 
         private void UpdateSubList()
@@ -211,7 +209,7 @@ namespace Barotrauma
             {
                 var textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
-                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), GUI.Style,
+                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "ListBoxElement",
                     Alignment.Left, Alignment.Left, subList)
                 {
                     Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
@@ -223,7 +221,7 @@ namespace Barotrauma
                 {
                     textBlock.TextColor = textBlock.TextColor * 0.85f;
 
-                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", GUI.Style, Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
+                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", "", Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
                     shuttleText.TextColor = textBlock.TextColor * 0.8f;
                     shuttleText.ToolTip = textBlock.ToolTip;
                 }
@@ -273,42 +271,41 @@ namespace Barotrauma
                 return;
             }
 
-            selectedTab = (int)tab;
+            selectedTab = tab;
 
             switch (selectedTab)
             {
-                case (int)Tab.NewGame:
+                case Tab.NewGame:
                     saveNameBox.Text = SaveUtil.CreateSavePath();
                     break;
-                case (int)Tab.LoadGame:
+                case Tab.LoadGame:
                     UpdateLoadScreen();
                     break;
-                case (int)Tab.Settings:
+                case Tab.Settings:
                     GameMain.Config.ResetSettingsFrame();
                     menuTabs[(int)Tab.Settings] = GameMain.Config.SettingsFrame;
                     break;
             }
         }
 
-        private bool ApplySettings(GUIButton button, object obj)
+        private bool ApplySettings(GUIButton button, object userData)
         {
             GameMain.Config.Save("config.xml");
-            selectedTab = 0;
+            
+            if (userData is Tab) SelectTab((Tab)userData);            
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
                 new GUIMessageBox("Restart required", "You need to restart the game for the resolution changes to take effect.");
             }
 
-
-
             return true;
         }
 
-        private bool DiscardSettings(GUIButton button, object obj)
+        private bool DiscardSettings(GUIButton button, object userData)
         {
             GameMain.Config.Load("config.xml");
-            selectedTab = (int)obj;
+            if (userData is Tab) SelectTab((Tab)userData);
 
             return true;
         }
@@ -388,7 +385,7 @@ namespace Barotrauma
 
             string[] saveFiles = SaveUtil.GetSaveFiles();
 
-            saveList = new GUIListBox(new Rectangle(0, 0, 200, menuTabs[(int)Tab.LoadGame].Rect.Height - 80), Color.White, GUI.Style, menuTabs[(int)Tab.LoadGame]);
+            saveList = new GUIListBox(new Rectangle(0, 0, 200, menuTabs[(int)Tab.LoadGame].Rect.Height - 80), Color.White, "", menuTabs[(int)Tab.LoadGame]);
             saveList.OnSelected = SelectSaveFile;
 
             foreach (string saveFile in saveFiles)
@@ -396,7 +393,7 @@ namespace Barotrauma
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
                     saveFile,
-                    GUI.Style,
+                    "ListBoxElement",
                     Alignment.Left,
                     Alignment.Left,
                     saveList);
@@ -404,7 +401,7 @@ namespace Barotrauma
                 textBlock.UserData = saveFile;
             }
 
-            var button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.Right | Alignment.Bottom, GUI.Style, menuTabs[(int)Tab.LoadGame]);
+            var button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.Right | Alignment.Bottom, "", menuTabs[(int)Tab.LoadGame]);
             button.OnClicked = LoadGame;
         }
 
@@ -428,22 +425,22 @@ namespace Barotrauma
 
             string mapseed = ToolBox.GetAttributeString(doc.Root, "mapseed", "unknown");
 
-            GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 0, 200, 230), Color.Black*0.4f, GUI.Style, menuTabs[(int)Tab.LoadGame]);
+            GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 0, 200, 230), Color.Black*0.4f, "", menuTabs[(int)Tab.LoadGame]);
             saveFileFrame.UserData = "savefileframe";
             saveFileFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0,0,0,20), fileName, GUI.Style, Alignment.TopLeft, Alignment.TopLeft, saveFileFrame, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0,0,0,20), fileName, "", Alignment.TopLeft, Alignment.TopLeft, saveFileFrame, false, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 35, 0, 20), "Submarine: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 52, 0, 20), subName, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 35, 0, 20), "Submarine: ", "", saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 52, 0, 20), subName, "", saveFileFrame).Font = GUI.SmallFont;
 
-            new GUITextBlock(new Rectangle(0, 70, 0, 20), "Last saved: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 85, 0, 20), saveTime, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 70, 0, 20), "Last saved: ", "", saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 85, 0, 20), saveTime, "", saveFileFrame).Font = GUI.SmallFont;
 
-            new GUITextBlock(new Rectangle(0, 105, 0, 20), "Map seed: ", GUI.Style, saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 120, 0, 20), mapseed, GUI.Style, saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 105, 0, 20), "Map seed: ", "", saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(15, 120, 0, 20), mapseed, "", saveFileFrame).Font = GUI.SmallFont;
 
-            var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Delete", Alignment.BottomCenter, GUI.Style, saveFileFrame);
+            var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Delete", Alignment.BottomCenter, "", saveFileFrame);
             deleteSaveButton.UserData = fileName;
             deleteSaveButton.OnClicked = DeleteSave;
 
@@ -479,24 +476,20 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             buttonsTab.AddToGUIUpdateList();
-            if (selectedTab > 0) menuTabs[selectedTab].AddToGUIUpdateList();
+            if (selectedTab > 0) menuTabs[(int)selectedTab].AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
         {
-            //GameMain.TitleScreen.Update();
             buttonsTab.Update((float)deltaTime);
-            if (selectedTab > 0)
-            {
-                menuTabs[selectedTab].Update((float)deltaTime);
-            }
+
+            if (selectedTab>0) menuTabs[(int)selectedTab].Update((float)deltaTime);
 
             GameMain.TitleScreen.TitlePosition =
                 Vector2.Lerp(GameMain.TitleScreen.TitlePosition, new Vector2(
                     GameMain.TitleScreen.TitleSize.X / 2.0f * GameMain.TitleScreen.Scale + 30.0f,
                     GameMain.TitleScreen.TitleSize.Y / 2.0f * GameMain.TitleScreen.Scale + 30.0f), 
-                    0.1f);
-                
+                    0.1f);                
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -511,7 +504,7 @@ namespace Barotrauma
             spriteBatch.Begin(0, BlendState.AlphaBlend);
 
             buttonsTab.Draw(spriteBatch);
-            if (selectedTab>0) menuTabs[selectedTab].Draw(spriteBatch);
+            if (selectedTab>0) menuTabs[(int)selectedTab].Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 

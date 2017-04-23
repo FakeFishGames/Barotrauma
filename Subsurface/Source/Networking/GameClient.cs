@@ -67,7 +67,7 @@ namespace Barotrauma.Networking
             endVoteTickBox.OnSelected = ToggleEndRoundVote;
             endVoteTickBox.Visible = false;
 
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "End round", Alignment.TopLeft, GUI.Style, inGameHUD);
+            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
             endRoundButton.OnClicked = (btn, userdata) => 
             {
                 if (!permissions.HasFlag(ClientPermissions.EndRound)) return false;
@@ -348,7 +348,7 @@ namespace Barotrauma.Networking
                     }
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { "OK", "Cancel" });
-                    var passwordBox = new GUITextBox(new Rectangle(0, 40, 150, 25), Alignment.TopLeft, GUI.Style, msgBox.children[0]);
+                    var passwordBox = new GUITextBox(new Rectangle(0, 40, 150, 25), Alignment.TopLeft, "", msgBox.children[0]);
                     passwordBox.UserData = "password";
 
                     var okButton = msgBox.Buttons[0];
@@ -1164,12 +1164,11 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override bool SelectCrewCharacter(GUIComponent component, object obj)
+        public override bool SelectCrewCharacter(Character character, GUIComponent crewFrame)
         {
-            var characterFrame = component.Parent.Parent.FindChild("selectedcharacter");
-
-            Character character = obj as Character;
             if (character == null) return false;
+
+            var characterFrame = crewFrame.FindChild("selectedcharacter");
 
             if (character != myCharacter)
             {
@@ -1178,19 +1177,19 @@ namespace Barotrauma.Networking
                 
                 if (HasPermission(ClientPermissions.Ban))
                 {
-                    var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, GUI.Style, characterFrame);
+                    var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, "", characterFrame);
                     banButton.UserData = character.Name;
                     banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;                    
                 }
                 if (HasPermission(ClientPermissions.Kick))
                 {
-                    var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+                    var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, "", characterFrame);
                     kickButton.UserData = character.Name;
                     kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
                 }
                 else if (Voting.AllowVoteKick)
                 {
-                    var kickVoteButton = new GUIButton(new Rectangle(0, 0, 120, 20), "Vote to Kick", Alignment.BottomLeft, GUI.Style, characterFrame);
+                    var kickVoteButton = new GUIButton(new Rectangle(0, 0, 120, 20), "Vote to Kick", Alignment.BottomLeft, "", characterFrame);
                 
                     if (GameMain.NetworkMember.ConnectedClients != null)
                     {

@@ -154,18 +154,18 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            new GUITextBlock(new Rectangle(0, -25, 90, 20), "Name:", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, parent, false, GUI.Font);
-            nameBox = new GUITextBox(new Rectangle(100, -25, 170, 20), Alignment.BottomLeft, GUI.Style, parent);
+            new GUITextBlock(new Rectangle(0, -35, 90, 20), "Name:", "", Alignment.BottomLeft, Alignment.CenterLeft, parent, false, GUI.Font);
+            nameBox = new GUITextBox(new Rectangle(100, -35, 170, 20), Alignment.BottomLeft, "", parent);
             nameBox.Font = GUI.Font;
 
-            new GUITextBlock(new Rectangle(0, 5, 90, 20), "IP Address:", GUI.Style, Alignment.BottomLeft, Alignment.TopLeft, parent, false, GUI.Font);
-            ipBox = new GUITextBox(new Rectangle(100, 5, 170, 20), Alignment.BottomLeft, GUI.Style, parent);
+            new GUITextBlock(new Rectangle(0, 0, 90, 20), "IP Address:", "", Alignment.BottomLeft, Alignment.CenterLeft, parent, false, GUI.Font);
+            ipBox = new GUITextBox(new Rectangle(100, 0, 170, 20), Alignment.BottomLeft, "", parent);
             ipBox.Font = GUI.Font;
 
-            var addnewButton = new GUIButton(new Rectangle(0, 45, 150, 20), "Add to whitelist", Alignment.BottomLeft, GUI.Style, parent);
+            var addnewButton = new GUIButton(new Rectangle(0, 35, 150, 20), "Add to whitelist", Alignment.BottomLeft, "", parent);
             addnewButton.OnClicked = AddToWhiteList;
 
-            whitelistFrame = new GUIListBox(new Rectangle(0, 30, 0, parent.Rect.Height-100), GUI.Style, parent);
+            whitelistFrame = new GUIListBox(new Rectangle(0, 30, 0, parent.Rect.Height-110), "", parent);
 
             foreach (WhiteListedPlayer wlp in whitelistedPlayers)
             {
@@ -174,12 +174,12 @@ namespace Barotrauma.Networking
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 0, 25),
                     blockText,
-                    GUI.Style,
+                    "",
                     Alignment.Left, Alignment.Left, whitelistFrame);
                 textBlock.Padding = new Vector4(10.0f, 10.0f, 0.0f, 0.0f);
                 textBlock.UserData = wlp;
 
-                var removeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Remove", Alignment.Right | Alignment.CenterY, GUI.Style, textBlock);
+                var removeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Remove", Alignment.Right | Alignment.CenterY, "", textBlock);
                 removeButton.UserData = wlp;
                 removeButton.OnClicked = RemoveFromWhiteList;
             }

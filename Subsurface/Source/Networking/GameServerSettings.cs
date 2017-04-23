@@ -300,21 +300,21 @@ namespace Barotrauma.Networking
 
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
+            settingsFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f, null);
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 430), null, Alignment.Center, GUI.Style, settingsFrame);
+            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 400, 430), null, Alignment.Center, "", settingsFrame);
             innerFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0, -5, 0, 20), "Settings", GUI.Style, innerFrame, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, -5, 0, 20), "Settings", "", innerFrame, GUI.LargeFont);
 
             string[] tabNames = { "Rounds", "Server", "Banlist", "Whitelist" };
             settingsTabs = new GUIFrame[tabNames.Length];
             for (int i = 0; i < tabNames.Length; i++)
             {
-                settingsTabs[i] = new GUIFrame(new Rectangle(0, 15, 0, innerFrame.Rect.Height - 120), null, Alignment.Center, GUI.Style, innerFrame);
+                settingsTabs[i] = new GUIFrame(new Rectangle(0, 15, 0, innerFrame.Rect.Height - 120), null, Alignment.Center, "InnerFrame", innerFrame);
                 settingsTabs[i].Padding = new Vector4(40.0f, 20.0f, 40.0f, 40.0f);
 
-                var tabButton = new GUIButton(new Rectangle(85 * i, 35, 80, 20), tabNames[i], GUI.Style, innerFrame);
+                var tabButton = new GUIButton(new Rectangle(85 * i, 35, 80, 20), tabNames[i], "", innerFrame);
                 tabButton.UserData = i;
                 tabButton.OnClicked = SelectSettingsTab;
             }
@@ -323,7 +323,7 @@ namespace Barotrauma.Networking
 
             SelectSettingsTab(null, 0);
             
-            var closeButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Close", Alignment.BottomRight, GUI.Style, innerFrame);
+            var closeButton = new GUIButton(new Rectangle(10, 0, 100, 20), "Close", Alignment.BottomRight, "", innerFrame);
             closeButton.OnClicked = ToggleSettingsFrame;
 
             //--------------------------------------------------------------------------------
@@ -334,7 +334,7 @@ namespace Barotrauma.Networking
 
             settingsTabs[0].Padding = new Vector4(40.0f, 5.0f, 40.0f, 40.0f);
 
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "Submarine selection:", GUI.Style, settingsTabs[0]);
+            new GUITextBlock(new Rectangle(0, y, 100, 20), "Submarine selection:", "", settingsTabs[0]);
             var selectionFrame = new GUIFrame(new Rectangle(0, y + 20, 300, 20), null, settingsTabs[0]);
             for (int i = 0; i < 3; i++)
             {
@@ -346,7 +346,7 @@ namespace Barotrauma.Networking
 
             y += 45;
 
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "Mode selection:", GUI.Style, settingsTabs[0]);
+            new GUITextBlock(new Rectangle(0, y, 100, 20), "Mode selection:", "", settingsTabs[0]);
             selectionFrame = new GUIFrame(new Rectangle(0, y + 20, 300, 20), null, settingsTabs[0]);
             for (int i = 0; i < 3; i++)
             {
@@ -374,9 +374,9 @@ namespace Barotrauma.Networking
             };
 
 
-            var votesRequiredText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Votes required: 50 %", GUI.Style, settingsTabs[0], GUI.SmallFont);
+            var votesRequiredText = new GUITextBlock(new Rectangle(20, y + 15, 20, 20), "Votes required: 50 %", "", settingsTabs[0], GUI.SmallFont);
 
-            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            var votesRequiredSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[0]);
             votesRequiredSlider.UserData = votesRequiredText;
             votesRequiredSlider.Step = 0.2f;
             votesRequiredSlider.BarScroll = (EndVoteRequiredRatio - 0.5f) * 2.0f;
@@ -401,9 +401,9 @@ namespace Barotrauma.Networking
             };
 
 
-            var respawnIntervalText = new GUITextBlock(new Rectangle(20, y + 18, 20, 20), "Respawn interval", GUI.Style, settingsTabs[0], GUI.SmallFont);
+            var respawnIntervalText = new GUITextBlock(new Rectangle(20, y + 13, 20, 20), "Respawn interval", "", settingsTabs[0], GUI.SmallFont);
 
-            var respawnIntervalSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            var respawnIntervalSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 15), "", 0.1f, settingsTabs[0]);
             respawnIntervalSlider.UserData = respawnIntervalText;
             respawnIntervalSlider.Step = 0.05f;
             respawnIntervalSlider.BarScroll = RespawnInterval / 600.0f;
@@ -419,10 +419,10 @@ namespace Barotrauma.Networking
             
             y += 35;
 
-            var minRespawnText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Minimum players to respawn", GUI.Style, settingsTabs[0]);
+            var minRespawnText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Minimum players to respawn", "", settingsTabs[0]);
             minRespawnText.ToolTip = "What percentage of players has to be dead/spectating until a respawn shuttle is dispatched";
 
-            var minRespawnSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            var minRespawnSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 15), "", 0.1f, settingsTabs[0]);
             minRespawnSlider.ToolTip = minRespawnText.ToolTip;
             minRespawnSlider.UserData = minRespawnText;
             minRespawnSlider.Step = 0.1f;
@@ -439,11 +439,11 @@ namespace Barotrauma.Networking
 
             y += 30;
 
-            var respawnDurationText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Duration of respawn transport", GUI.Style, settingsTabs[0]);
+            var respawnDurationText = new GUITextBlock(new Rectangle(0, y, 200, 20), "Duration of respawn transport", "", settingsTabs[0]);
             respawnDurationText.ToolTip = "The amount of time respawned players have to navigate the respawn shuttle to the main submarine. " +
                 "After the duration expires, the shuttle will automatically head back out of the level.";
 
-            var respawnDurationSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 10), GUI.Style, 0.1f, settingsTabs[0]);
+            var respawnDurationSlider = new GUIScrollBar(new Rectangle(150, y + 20, 100, 15), "", 0.1f, settingsTabs[0]);
             respawnDurationSlider.ToolTip = minRespawnText.ToolTip;
             respawnDurationSlider.UserData = respawnDurationText;
             respawnDurationSlider.Step = 0.1f;
@@ -469,9 +469,9 @@ namespace Barotrauma.Networking
 
             y += 35;
 
-            var monsterButton = new GUIButton(new Rectangle(0, y, 130, 20), "Monster Spawns", GUI.Style, settingsTabs[0]);
+            var monsterButton = new GUIButton(new Rectangle(0, y, 130, 20), "Monster Spawns", "", settingsTabs[0]);
             monsterButton.Enabled = !GameStarted;
-            var monsterFrame = new GUIListBox(new Rectangle(-290, 60, 280, 250), GUI.Style, settingsTabs[0]);
+            var monsterFrame = new GUIListBox(new Rectangle(-290, 60, 280, 250), "", settingsTabs[0]);
             monsterFrame.Visible = false;
             monsterButton.UserData = monsterFrame;
             monsterButton.OnClicked = (button, obj) =>
@@ -491,7 +491,7 @@ namespace Barotrauma.Networking
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 260, 25),
                     s,
-                    GUI.Style,
+                    "",
                     Alignment.Left, Alignment.Left, monsterFrame);
                 textBlock.Padding = new Vector4(35.0f, 3.0f, 0.0f, 0.0f);
                 textBlock.UserData = monsterFrame;
@@ -512,10 +512,10 @@ namespace Barotrauma.Networking
                 };
             }
 
-            var cargoButton = new GUIButton(new Rectangle(160, y, 130, 20), "Additional Cargo", GUI.Style, settingsTabs[0]);
+            var cargoButton = new GUIButton(new Rectangle(160, y, 130, 20), "Additional Cargo", "", settingsTabs[0]);
             cargoButton.Enabled = !GameStarted;
 
-            var cargoFrame = new GUIListBox(new Rectangle(300, 60, 280, 250), GUI.Style, settingsTabs[0]);
+            var cargoFrame = new GUIListBox(new Rectangle(300, 60, 280, 250), "", settingsTabs[0]);
             cargoFrame.Visible = false;
             cargoButton.UserData = cargoFrame;
             cargoButton.OnClicked = (button, obj) =>
@@ -537,17 +537,16 @@ namespace Barotrauma.Networking
 
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 260, 25),
-                    pf.Name,
-                    GUI.Style,
-                    Alignment.Left, Alignment.Left, cargoFrame);
-                textBlock.Padding = new Vector4(30.0f, 3.0f, 0.0f, 0.0f);
+                    pf.Name, "",
+                    Alignment.Left, Alignment.CenterLeft, cargoFrame, false, GUI.SmallFont);
+                textBlock.Padding = new Vector4(40.0f, 3.0f, 0.0f, 0.0f);
                 textBlock.UserData = cargoFrame;
                 textBlock.CanBeFocused = false;
 
                 if (pf.sprite != null)
                 {
                     float scale = Math.Min(Math.Min(30.0f / pf.sprite.SourceRect.Width, 30.0f / pf.sprite.SourceRect.Height), 1.0f);
-                    GUIImage img = new GUIImage(new Rectangle(-15-(int)(pf.sprite.SourceRect.Width*scale*0.5f), 12-(int)(pf.sprite.SourceRect.Height*scale*0.5f), 40, 40), pf.sprite, Alignment.Left, textBlock);
+                    GUIImage img = new GUIImage(new Rectangle(-20-(int)(pf.sprite.SourceRect.Width*scale*0.5f), 12-(int)(pf.sprite.SourceRect.Height*scale*0.5f), 40, 40), pf.sprite, Alignment.Left, textBlock);
                     img.Color = pf.SpriteColor;
                     img.Scale = scale;
                 }
@@ -555,12 +554,12 @@ namespace Barotrauma.Networking
                 int cargoVal = 0;
                 extraCargo.TryGetValue(pf.Name, out cargoVal);
                 var countText = new GUITextBlock(
-                    new Rectangle(180, 0, 50, 25),
+                    new Rectangle(160, 0, 55, 25),
                     cargoVal.ToString(),
-                    GUI.Style,
+                    "",
                     Alignment.Left, Alignment.Center, textBlock);
 
-                var incButton = new GUIButton(new Rectangle(220, 5, 10, 15), ">", GUI.Style, textBlock);
+                var incButton = new GUIButton(new Rectangle(200, 5, 15, 15), ">", "", textBlock);
                 incButton.UserData = countText;
                 incButton.OnClicked = (button, obj) =>
                 {
@@ -578,7 +577,7 @@ namespace Barotrauma.Networking
                     return true;
                 };
 
-                var decButton = new GUIButton(new Rectangle(180, 5, 10, 15), "<", GUI.Style, textBlock);
+                var decButton = new GUIButton(new Rectangle(160, 5, 15, 15), "<", "", textBlock);
                 decButton.UserData = countText;
                 decButton.OnClicked = (button, obj) =>
                 {
@@ -608,8 +607,8 @@ namespace Barotrauma.Networking
             y = 0;
 
 
-            var startIntervalText = new GUITextBlock(new Rectangle(-10, y, 100, 20), "Autorestart delay", GUI.Style, settingsTabs[1]);
-            var startIntervalSlider = new GUIScrollBar(new Rectangle(10, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[1]);
+            var startIntervalText = new GUITextBlock(new Rectangle(-10, y, 100, 20), "Autorestart delay", "", settingsTabs[1]);
+            var startIntervalSlider = new GUIScrollBar(new Rectangle(10, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
             startIntervalSlider.UserData = startIntervalText;
             startIntervalSlider.Step = 0.05f;
             startIntervalSlider.BarScroll = AutoRestartInterval / 300.0f;
@@ -645,9 +644,9 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            var kickVotesRequiredText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Votes required: 50 %", GUI.Style, settingsTabs[1], GUI.SmallFont);
+            var kickVotesRequiredText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Votes required: 50 %", "", settingsTabs[1], GUI.SmallFont);
 
-            var kickVoteSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 10), GUI.Style, 0.1f, settingsTabs[1]);
+            var kickVoteSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
             kickVoteSlider.UserData = kickVotesRequiredText;
             kickVoteSlider.Step = 0.2f;
             kickVoteSlider.BarScroll = (KickVoteRequiredRatio - 0.5f) * 2.0f;
@@ -831,7 +830,7 @@ namespace Barotrauma.Networking
         
         public void ManagePlayersFrame(GUIFrame infoFrame)
         {
-            GUIListBox cList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, GUI.Style, infoFrame);
+            GUIListBox cList = new GUIListBox(new Rectangle(0, 0, 0, 300), Color.White * 0.7f, "", infoFrame);
             cList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
             //crewList.OnSelected = SelectCrewCharacter;
 
@@ -850,15 +849,15 @@ namespace Barotrauma.Networking
                     Alignment.Left, Alignment.Left,
                     null, frame);
 
-                var banButton = new GUIButton(new Rectangle(-110, 0, 100, 20), "Ban", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
+                var banButton = new GUIButton(new Rectangle(-110, 0, 100, 20), "Ban", Alignment.Right | Alignment.CenterY, "", frame);
                 banButton.UserData = c.name;
                 banButton.OnClicked = GameMain.NetLobbyScreen.BanPlayer;
 
-                var rangebanButton = new GUIButton(new Rectangle(-220, 0, 100, 20), "Ban range", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
+                var rangebanButton = new GUIButton(new Rectangle(-220, 0, 100, 20), "Ban range", Alignment.Right | Alignment.CenterY, "", frame);
                 rangebanButton.UserData = c.name;
                 rangebanButton.OnClicked = GameMain.NetLobbyScreen.BanPlayerRange;
 
-                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.Right | Alignment.CenterY, GUI.Style, frame);
+                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.Right | Alignment.CenterY, "", frame);
                 kickButton.UserData = c.name;
                 kickButton.OnClicked = GameMain.NetLobbyScreen.KickPlayer;
 

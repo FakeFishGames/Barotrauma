@@ -151,12 +151,12 @@ namespace Barotrauma.Networking
                 GameMain.GraphicsWidth - 20 - width,
                 GameMain.GraphicsHeight - 40 - 25 - height,
                 width, height),
-                Color.White * 0.5f, GUI.Style, inGameHUD);
+                Color.White * 0.5f, "", inGameHUD);
             chatBox.Padding = Vector4.Zero;
 
             chatMsgBox = new GUITextBox(
                 new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
-                Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, GUI.Style, inGameHUD);
+                Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, "", inGameHUD);
             chatMsgBox.Font = GUI.SmallFont;
             chatMsgBox.Padding = Vector4.Zero;
             chatMsgBox.OnEnterPressed = EnterChatMessage;
@@ -363,7 +363,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public virtual bool SelectCrewCharacter(GUIComponent component, object obj)
+        public virtual bool SelectCrewCharacter(Character character, GUIComponent crewFrame)
         {
             return false;
         }
