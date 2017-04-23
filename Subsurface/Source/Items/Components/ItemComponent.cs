@@ -8,7 +8,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
 using System.IO;
-using System.Globalization;
 
 namespace Barotrauma.Items.Components
 {
@@ -286,6 +285,8 @@ namespace Barotrauma.Items.Components
                         if (components[1].Contains(".")) rect.Y *= GameMain.GraphicsHeight;
                         if (components[2].Contains(".")) rect.Z *= GameMain.GraphicsWidth;
                         if (components[3].Contains(".")) rect.W *= GameMain.GraphicsHeight;
+                        
+                        string style = ToolBox.GetAttributeString(subElement, "style", "");
 
                         Vector4 color = ToolBox.GetAttributeVector4(subElement, "color", Vector4.One);
 
@@ -301,9 +302,9 @@ namespace Barotrauma.Items.Components
                         }
 
                         guiFrame = new GUIFrame(
-                            new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W), 
-                            new Color(color.X, color.Y, color.Z) * color.W, alignment, GUI.Style);
-                        //guiFrame.Alpha = color.W;
+                            new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Z, (int)rect.W),
+                            new Color(color.X, color.Y, color.Z) * color.W, 
+                            alignment, style);
 
                         break;
                     case "sound":

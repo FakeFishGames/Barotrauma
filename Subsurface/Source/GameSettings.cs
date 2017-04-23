@@ -317,14 +317,14 @@ namespace Barotrauma
 
         private void CreateSettingsFrame()
         {
-            settingsFrame = new GUIFrame(new Rectangle(0, 0, 500, 500), null, Alignment.Center, GUI.Style);
+            settingsFrame = new GUIFrame(new Rectangle(0, 0, 500, 500), null, Alignment.Center, "");
 
-            new GUITextBlock(new Rectangle(0,-30,0,30), "Settings",GUI.Style,Alignment.TopCenter,  Alignment.TopCenter, settingsFrame, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, -30, 0, 30), "Settings", "", Alignment.TopCenter, Alignment.TopCenter, settingsFrame, false, GUI.LargeFont);
 
-            int x=0, y = 10;
+            int x = 0, y = 10;
 
-            new GUITextBlock(new Rectangle(0, y, 20, 20), "Resolution", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
-            var resolutionDD = new GUIDropDown(new Rectangle(0, y + 20, 180, 20), "", GUI.Style, settingsFrame);
+            new GUITextBlock(new Rectangle(0, y, 20, 20), "Resolution", "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
+            var resolutionDD = new GUIDropDown(new Rectangle(0, y + 20, 180, 20), "", "", settingsFrame);
             resolutionDD.OnSelected = SelectResolution;
 
             var supportedModes = new List<DisplayMode>();
@@ -349,8 +349,8 @@ namespace Barotrauma
             //fullScreenTick.OnSelected = ToggleFullScreen;
             //fullScreenTick.Selected = FullScreenEnabled;
 
-            new GUITextBlock(new Rectangle(x, y, 20, 20), "Display mode", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
-            var displayModeDD = new GUIDropDown(new Rectangle(x, y + 20, 180, 20), "", GUI.Style, settingsFrame);
+            new GUITextBlock(new Rectangle(x, y, 20, 20), "Display mode", "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
+            var displayModeDD = new GUIDropDown(new Rectangle(x, y + 20, 180, 20), "", "", settingsFrame);
             displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
             displayModeDD.AddItem("Windowed", WindowMode.Windowed);
             displayModeDD.AddItem("Borderless windowed", WindowMode.BorderlessWindowed);
@@ -375,14 +375,14 @@ namespace Barotrauma
 
             y += 70;
 
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "Sound volume:", GUI.Style, settingsFrame);
-            GUIScrollBar soundScrollBar = new GUIScrollBar(new Rectangle(0, y + 20, 150, 20), GUI.Style, 0.1f, settingsFrame);
+            new GUITextBlock(new Rectangle(0, y, 100, 20), "Sound volume:", "", settingsFrame);
+            GUIScrollBar soundScrollBar = new GUIScrollBar(new Rectangle(0, y + 20, 150, 20), "", 0.1f, settingsFrame);
             soundScrollBar.BarScroll = SoundVolume;
             soundScrollBar.OnMoved = ChangeSoundVolume;
             soundScrollBar.Step = 0.05f;
 
-            new GUITextBlock(new Rectangle(0, y + 40, 100, 20), "Music volume:", GUI.Style, settingsFrame);
-            GUIScrollBar musicScrollBar = new GUIScrollBar(new Rectangle(0, y + 60, 150, 20), GUI.Style, 0.1f, settingsFrame);
+            new GUITextBlock(new Rectangle(0, y + 40, 100, 20), "Music volume:", "", settingsFrame);
+            GUIScrollBar musicScrollBar = new GUIScrollBar(new Rectangle(0, y + 60, 150, 20), "", 0.1f, settingsFrame);
             musicScrollBar.BarScroll = MusicVolume;
             musicScrollBar.OnMoved = ChangeMusicVolume;
             musicScrollBar.Step = 0.05f;
@@ -390,8 +390,8 @@ namespace Barotrauma
             x = 200;
             y = 10;
 
-            new GUITextBlock(new Rectangle(x, y, 20, 20), "Content package", GUI.Style, Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
-            var contentPackageDD = new GUIDropDown(new Rectangle(x, y + 20, 200, 20), "", GUI.Style, settingsFrame);
+            new GUITextBlock(new Rectangle(x, y, 20, 20), "Content package", "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
+            var contentPackageDD = new GUIDropDown(new Rectangle(x, y + 20, 200, 20), "", "", settingsFrame);
 
             foreach (ContentPackage contentPackage in ContentPackage.list)
             {
@@ -401,13 +401,13 @@ namespace Barotrauma
             }
 
             y += 50;
-            new GUITextBlock(new Rectangle(x, y, 100, 20), "Controls:", GUI.Style, settingsFrame);
+            new GUITextBlock(new Rectangle(x, y, 100, 20), "Controls:", "", settingsFrame);
             y += 30;
             var inputNames = Enum.GetNames(typeof(InputType));
             for (int i = 0; i< inputNames.Length; i++)
             {
-                new GUITextBlock(new Rectangle(x, y, 100, 20), inputNames[i]+": ", GUI.Style, settingsFrame);
-                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 15), GUI.Style, settingsFrame);
+                new GUITextBlock(new Rectangle(x, y, 100, 18), inputNames[i]+": ", "", Alignment.TopLeft, Alignment.CenterLeft, settingsFrame);
+                var keyBox = new GUITextBox(new Rectangle(x + 100, y, 120, 18), null,null, Alignment.TopLeft, Alignment.CenterLeft, "", settingsFrame);
 
                 keyBox.Text = keyMapping[i].ToString();
                 keyBox.UserData = i;
@@ -417,7 +417,7 @@ namespace Barotrauma
                 y += 20;
             }
 
-            applyButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Apply", Alignment.BottomRight, GUI.Style, settingsFrame);
+            applyButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Apply", Alignment.BottomRight, "", settingsFrame);
             applyButton.OnClicked = ApplyClicked;
         }
 

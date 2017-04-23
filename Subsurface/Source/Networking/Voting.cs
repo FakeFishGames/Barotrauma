@@ -85,7 +85,7 @@ namespace Barotrauma
                 GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;
                 if (voteText == null)
                 {
-                    voteText = new GUITextBlock(new Rectangle(0, 0, 30, 0), "", GUI.Style, Alignment.Right, Alignment.Right, comp);
+                    voteText = new GUITextBlock(new Rectangle(0, 0, 30, 0), "", "", Alignment.Right, Alignment.Right, comp);
                     voteText.UserData = "votes";
                 }
 

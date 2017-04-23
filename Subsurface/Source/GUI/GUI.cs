@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 
@@ -10,10 +9,10 @@ namespace Barotrauma
     [Flags]
     public enum Alignment 
     { 
-        CenterX = 1, Left = 2, Right = 4, CenterY = 8, Top = 16, Bottom = 32 ,
-        TopRight = (Top | Right), TopLeft = (Top | Left), TopCenter = (CenterX | Top),
-        Center = (CenterX | CenterY),
-        BottomRight = (Bottom | Right), BottomLeft = (Bottom | Left), BottomCenter = (CenterX | Bottom)
+        CenterX = 1, Left = 2, Right = 4, CenterY = 8, Top = 16, Bottom = 32,
+        TopLeft = (Top | Left),         TopCenter = (CenterX | Top),        TopRight = (Top | Right),       
+        CenterLeft = (Left | CenterY),  Center = (CenterX | CenterY),       CenterRight = (Right | CenterY),
+        BottomLeft = (Bottom | Left),   BottomCenter = (CenterX | Bottom),  BottomRight = (Bottom | Right), 
     }
 
     public enum GUISoundType
@@ -136,15 +135,15 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                pauseMenu = new GUIFrame(new Rectangle(0, 0, 200, 300), null, Alignment.Center, Style);
+                pauseMenu = new GUIFrame(new Rectangle(0, 0, 200, 300), null, Alignment.Center, "");
 
                 int y = 0;
-                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, Style, pauseMenu);
+                var button = new GUIButton(new Rectangle(0, y, 0, 30), "Resume", Alignment.CenterX, "", pauseMenu);
                 button.OnClicked = TogglePauseMenu;
 
                 y += 60;
 
-                button = new GUIButton(new Rectangle(0, y, 0, 30), "Settings", Alignment.CenterX, Style, pauseMenu);
+                button = new GUIButton(new Rectangle(0, y, 0, 30), "Settings", Alignment.CenterX, "", pauseMenu);
                 button.OnClicked = (btn, userData) => 
                 {
                     TogglePauseMenu();
@@ -161,7 +160,7 @@ namespace Barotrauma
                     SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
                     if (spMode != null)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, Style, pauseMenu);
+                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, "", pauseMenu);
                         button.OnClicked += TogglePauseMenu;
                         button.OnClicked += GameMain.GameSession.LoadPrevious;
 
@@ -174,7 +173,7 @@ namespace Barotrauma
                     SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
                     if (spMode != null)
                     {
-                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, Style, pauseMenu);
+                        button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, "", pauseMenu);
                         button.OnClicked += QuitClicked;
                         button.OnClicked += TogglePauseMenu;
                         button.UserData = "save";
@@ -184,7 +183,7 @@ namespace Barotrauma
                 }
 
 
-                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, Style, pauseMenu);
+                button = new GUIButton(new Rectangle(0, y, 0, 30), "Quit", Alignment.CenterX, "", pauseMenu);
                 button.OnClicked += QuitClicked;
                 button.OnClicked += TogglePauseMenu;
             }
@@ -435,24 +434,24 @@ namespace Barotrauma
                     "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
-                DrawString(spriteBatch, new Vector2(10, 20),
+                DrawString(spriteBatch, new Vector2(10, 25),
                     "Physics: " + GameMain.World.UpdateTime,
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
-                DrawString(spriteBatch, new Vector2(10, 30),
+                DrawString(spriteBatch, new Vector2(10, 40),
                     "Bodies: " + GameMain.World.BodyList.Count + " (" + GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count + " awake)",
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 if (Screen.Selected.Cam != null)
                 {
-                    DrawString(spriteBatch, new Vector2(10, 40),
+                    DrawString(spriteBatch, new Vector2(10, 55),
                         "Camera pos: " + Screen.Selected.Cam.Position.ToPoint(),
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
                 if (Submarine.MainSub != null)
                 {
-                    DrawString(spriteBatch, new Vector2(10, 50),
+                    DrawString(spriteBatch, new Vector2(10, 70),
                         "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }

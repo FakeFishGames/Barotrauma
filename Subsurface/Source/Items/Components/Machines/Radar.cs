@@ -123,7 +123,7 @@ namespace Barotrauma.Items.Components
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             GuiFrame.Draw(spriteBatch);
-
+            
             if (voltage < minVoltage && powerConsumption > 0.0f) return;
 
             int radius = GuiFrame.Rect.Height / 2 - 30;

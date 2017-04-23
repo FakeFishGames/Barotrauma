@@ -224,7 +224,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="48,16,16,16"/>
 
     <RelayComponent canbeselected = "true">
-      <GuiFrame rect="0,0,200,160" alignment="Center" color="0.0,0.0,0.0,0.6"/>
+      <GuiFrame rect="0,0,200,160" alignment="Center" style="ItemUI"/>
     </RelayComponent>
 
     <fixrequirement name="Reset fuse">

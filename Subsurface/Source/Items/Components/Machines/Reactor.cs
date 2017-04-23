@@ -159,7 +159,7 @@ namespace Barotrauma.Items.Components
             
             IsActive = true;
 
-            var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", GUI.Style, GuiFrame);
+            var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>
             {
                 unsentChanges = true;
@@ -168,7 +168,7 @@ namespace Barotrauma.Items.Components
                 return false;
             };
 
-            button = new GUIButton(new Rectangle(460, 70, 40,40), "+", GUI.Style, GuiFrame);
+            button = new GUIButton(new Rectangle(460, 70, 40,40), "+", "", GuiFrame);
             button.OnPressed = () =>
             {
                 unsentChanges = true;
@@ -180,7 +180,7 @@ namespace Barotrauma.Items.Components
             autoTempTickBox = new GUITickBox(new Rectangle(410, 170, 20, 20), "Automatic temperature control", Alignment.TopLeft, GuiFrame);
             autoTempTickBox.OnSelected = ToggleAutoTemp;
 
-            button = new GUIButton(new Rectangle(210, 290, 40, 40), "+", GUI.Style, GuiFrame);
+            button = new GUIButton(new Rectangle(210, 290, 40, 40), "+", "", GuiFrame);
             button.OnPressed = () =>
             {
                 unsentChanges = true;
@@ -189,7 +189,7 @@ namespace Barotrauma.Items.Components
                 return false;
             };
 
-            button = new GUIButton(new Rectangle(210, 340, 40, 40), "-", GUI.Style, GuiFrame);
+            button = new GUIButton(new Rectangle(210, 340, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>
             {
                 unsentChanges = true;
@@ -198,7 +198,7 @@ namespace Barotrauma.Items.Components
                 return false;
             };
 
-            button = new GUIButton(new Rectangle(500, 290, 40, 40), "+", GUI.Style, GuiFrame);
+            button = new GUIButton(new Rectangle(500, 290, 40, 40), "+", "", GuiFrame);
             button.OnPressed = () =>
             {
                 unsentChanges = true;
@@ -207,7 +207,7 @@ namespace Barotrauma.Items.Components
                 return false;
             };
 
-            button = new GUIButton(new Rectangle(500, 340, 40, 40), "-", GUI.Style, GuiFrame);
+            button = new GUIButton(new Rectangle(500, 340, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>
             {
                 unsentChanges = true;

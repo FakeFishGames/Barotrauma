@@ -56,7 +56,7 @@ namespace Barotrauma
 
             CargoManager = new CargoManager();
 
-            endShiftButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End shift", Alignment.TopLeft, GUI.Style);
+            endShiftButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End shift", null, Alignment.TopLeft, Alignment.Center, "");
             endShiftButton.Font = GUI.SmallFont;
             endShiftButton.OnClicked = TryEndShift;
 
@@ -301,11 +301,11 @@ namespace Barotrauma
                     summaryScreen = summaryScreen.children[0];
                     summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
 
-                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), "Load game", Alignment.BottomRight, GUI.Style, summaryScreen);
+                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), "Load game", Alignment.BottomRight, "", summaryScreen);
                     okButton.OnClicked += GameMain.GameSession.LoadPrevious;
                     okButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
 
-                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Quit", Alignment.BottomRight, GUI.Style, summaryScreen);
+                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Quit", Alignment.BottomRight, "", summaryScreen);
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
                 }

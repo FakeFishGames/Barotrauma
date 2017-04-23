@@ -74,24 +74,20 @@ namespace Barotrauma
             }
         }
         
-        public GUIDropDown(Rectangle rect, string text, GUIStyle style, GUIComponent parent = null)
+        public GUIDropDown(Rectangle rect, string text, string style, GUIComponent parent = null)
             : base(style)
         {
             this.rect = rect;
 
             if (parent != null) parent.AddChild(this);
 
-            button = new GUIButton(this.rect, text, Color.White, Alignment.TopLeft, Alignment.TopLeft, null, null);
-
-            button.TextColor = Color.White;
-            button.Color = Color.Black * 0.8f;
-            button.HoverColor = Color.DarkGray * 0.8f;
-            button.OutlineColor = Color.LightGray * 0.8f;
+            button = new GUIButton(this.rect, text, Color.White, Alignment.TopLeft, Alignment.CenterLeft, "GUIDropDown", null);
+            GUI.Style.Apply(button, style, this);
+            
             button.OnClicked = OnClicked;
 
             listBox = new GUIListBox(new Rectangle(this.rect.X, this.rect.Bottom, this.rect.Width, 200), style, null);
             listBox.OnSelected = SelectItem;
-            //listBox.ScrollBarEnabled = false;
         }
 
         public override void AddChild(GUIComponent child)
@@ -101,7 +97,7 @@ namespace Barotrauma
 
         public void AddItem(string text, object userData = null)
         {
-            GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, GUI.Style, listBox);
+            GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox);
             textBlock.UserData = userData;
         }
 

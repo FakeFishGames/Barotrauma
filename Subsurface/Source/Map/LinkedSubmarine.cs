@@ -187,18 +187,18 @@ namespace Barotrauma
             int width = 450;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
             
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 100), GUI.Style);
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, 100), "");
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Linked submarine", GUI.Style,
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Linked submarine", "",
                 Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);
 
-            var pathBox = new GUITextBox(new Rectangle(10,30,300,20), GUI.Style, editingHUD);
+            var pathBox = new GUITextBox(new Rectangle(10,30,300,20), "", editingHUD);
             pathBox.Font = GUI.SmallFont;
             pathBox.Text = filePath;
 
-            var reloadButton = new GUIButton(new Rectangle(320,30,80,20), "Refresh", GUI.Style, editingHUD);
+            var reloadButton = new GUIButton(new Rectangle(320,30,80,20), "Refresh", "", editingHUD);
             reloadButton.OnClicked = Reload;
             reloadButton.UserData = pathBox;
 
@@ -209,7 +209,7 @@ namespace Barotrauma
             if (!inGame)
             {
                 new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to a docking port",
-                    GUI.Style, Alignment.TopRight, Alignment.TopRight, editingHUD, false, GUI.SmallFont);
+                    "", Alignment.TopRight, Alignment.TopRight, editingHUD, false, GUI.SmallFont);
                 y += 25;
                 
             }
