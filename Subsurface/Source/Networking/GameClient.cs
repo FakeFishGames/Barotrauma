@@ -910,12 +910,11 @@ namespace Barotrauma.Networking
         }
 
 
-        public override bool SelectCrewCharacter(GUIComponent component, object obj)
+        public override bool SelectCrewCharacter(Character character, GUIComponent crewFrame)
         {
-            var characterFrame = component.Parent.Parent.FindChild("selectedcharacter");
-
-            Character character = obj as Character;
             if (character == null) return false;
+
+            var characterFrame = crewFrame.FindChild("selectedcharacter");
 
             if (character != myCharacter)
             {

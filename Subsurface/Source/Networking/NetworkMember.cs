@@ -427,7 +427,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public virtual bool SelectCrewCharacter(GUIComponent component, object obj)
+        public virtual bool SelectCrewCharacter(Character character, GUIComponent crewFrame)
         {
             return false;
         }
