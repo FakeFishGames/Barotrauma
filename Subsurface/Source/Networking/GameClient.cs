@@ -1147,7 +1147,7 @@ namespace Barotrauma.Networking
             client.Shutdown("");
             GameMain.NetworkMember = null;
         }
-
+        
         public void WriteCharacterInfo(NetOutgoingMessage msg)
         {
             if (characterInfo == null) return;
