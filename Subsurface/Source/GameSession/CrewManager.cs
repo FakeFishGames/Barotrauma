@@ -250,6 +250,8 @@ namespace Barotrauma
 
         protected virtual bool SelectCrewCharacter(Character character, GUIComponent crewList)
         {
+            if (character == null) return false;
+
             GUIComponent existingFrame = crewList.Parent.FindChild("selectedcharacter");
             if (existingFrame != null) crewList.Parent.RemoveChild(existingFrame);
 
