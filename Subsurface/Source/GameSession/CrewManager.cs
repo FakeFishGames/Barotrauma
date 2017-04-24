@@ -212,11 +212,15 @@ namespace Barotrauma
 
                 GUIListBox crewList = new GUIListBox(new Rectangle(0, y, 280, listBoxHeight), Color.White * 0.7f, "", crewFrame);
                 crewList.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
-                crewList.OnSelected = SelectCrewCharacter;
+                crewList.OnSelected = (component, obj) =>
+                {
+                    SelectCrewCharacter(component.UserData as Character, crewList);
+                    return true;
+                };
             
                 foreach (Character character in crew.FindAll(c => c.TeamID == teamIDs[i]))
                 {
-                    GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, null, crewList);
+                    GUIFrame frame = new GUIFrame(new Rectangle(0, 0, 0, 40), Color.Transparent, "ListBoxElement", crewList);
                     frame.UserData = character;
                     frame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                     frame.Color = (GameMain.NetworkMember != null && GameMain.NetworkMember.Character == character) ? Color.Gold * 0.2f : Color.Transparent;
@@ -238,29 +242,22 @@ namespace Barotrauma
 
         }
 
-        protected virtual bool SelectCrewCharacter(GUIComponent component, object obj)
+        protected virtual bool SelectCrewCharacter(Character character, GUIComponent crewList)
         {
-            Character character = obj as Character;
             if (character == null) return false;
-
-            var crewFrame = component.Parent;
-            while (crewFrame.Parent!=null)
-            {
-                crewFrame = crewFrame.Parent;
-            }
-
-            GUIComponent existingFrame = crewFrame.FindChild("selectedcharacter");
-            if (existingFrame != null) crewFrame.RemoveChild(existingFrame);
+            
+            GUIComponent existingFrame = crewList.Parent.FindChild("selectedcharacter");
+            if (existingFrame != null) crewList.Parent.RemoveChild(existingFrame);
 
             var previewPlayer = new GUIFrame(
                 new Rectangle(0, 0, 230, 300),
-                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, "", crewFrame);
+                new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, "", crewList.Parent);
             previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
             previewPlayer.UserData = "selectedcharacter";
 
             character.Info.CreateInfoFrame(previewPlayer);
 
-            if (GameMain.NetworkMember != null) GameMain.NetworkMember.SelectCrewCharacter(component, obj);
+            if (GameMain.NetworkMember != null) GameMain.NetworkMember.SelectCrewCharacter(character, crewList);
 
             return true;
         }

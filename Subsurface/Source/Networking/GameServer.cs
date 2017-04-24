@@ -1544,15 +1544,11 @@ namespace Barotrauma.Networking
             SaveClientPermissions();
         }
 
-        public override bool SelectCrewCharacter(GUIComponent component, object obj)
+        public override bool SelectCrewCharacter(Character character, GUIComponent crewFrame)
         {
-            base.SelectCrewCharacter(component, obj);
-
-            var characterFrame = component.Parent.Parent.FindChild("selectedcharacter");
-
-            Character character = obj as Character;
             if (character == null) return false;
 
+            var characterFrame = crewFrame.FindChild("selectedcharacter");
             if (character != myCharacter)
             {
                 var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, "", characterFrame);
