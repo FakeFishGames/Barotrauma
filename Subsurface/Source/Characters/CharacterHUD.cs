@@ -264,8 +264,15 @@ namespace Barotrauma
                         GUIComponent.ForceMouseOn(null);
                         if (Character.Controlled != null)
                         {
-                            Character.Controlled.Kill(Character.Controlled.CauseOfDeath);
-                            Character.Controlled = null;
+                            if (GameMain.Client != null)
+                            {
+                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Status });
+                            }
+                            else
+                            {
+                                Character.Controlled.Kill(Character.Controlled.CauseOfDeath);
+                                Character.Controlled = null;
+                            }
                         }
                         return true;
                     };

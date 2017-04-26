@@ -107,13 +107,21 @@ namespace Barotrauma.Networking
         {
             foreach (BufferedEvent bufferedEvent in bufferedEvents)
             {
-                if (bufferedEvent.Character == null)
+                if (bufferedEvent.Character == null || bufferedEvent.Character.IsDead)
                 {
                     bufferedEvent.IsProcessed = true;
                     continue;
                 }
 
-                if (NetIdUtils.IdMoreRecent(bufferedEvent.CharacterStateID, bufferedEvent.Character.LastProcessedID)) continue;
+                //delay reading the events until the inputs for the corresponding frame have been processed
+
+                //UNLESS the character is unconscious, in which case we'll read the messages immediately (because further inputs will be ignored)
+                //atm the "give in" command is the only thing unconscious characters can do, other types of events are ignored
+                if (!bufferedEvent.Character.IsUnconscious &&
+                    NetIdUtils.IdMoreRecent(bufferedEvent.CharacterStateID, bufferedEvent.Character.LastProcessedID))
+                {
+                    continue;
+                }
                 
                 try
                 {
