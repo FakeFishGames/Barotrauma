@@ -235,15 +235,19 @@ namespace Barotrauma
 
             if (extraData != null)
             {
-                if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.InventoryState)
+                switch ((NetEntityEvent.Type)extraData[0])
                 {
-                    msg.Write(true);
-                    inventory.ClientWrite(msg, extraData);
-                }
-                else if ((NetEntityEvent.Type)extraData[0] == NetEntityEvent.Type.Repair)
-                {
-                    msg.Write(false);
-                    msg.Write(AnimController.Anim == AnimController.Animation.CPR);
+                    case NetEntityEvent.Type.InventoryState:
+                        msg.WriteRangedInteger(0, 2, 0);
+                        inventory.ClientWrite(msg, extraData);
+                        break;
+                    case NetEntityEvent.Type.Repair:
+                        msg.WriteRangedInteger(0, 2, 1);
+                        msg.Write(AnimController.Anim == AnimController.Animation.CPR);
+                        break;
+                    case NetEntityEvent.Type.Status:
+                        msg.WriteRangedInteger(0, 2, 2);
+                        break;
                 }
                 msg.WritePadBits();
             }
@@ -338,24 +342,41 @@ namespace Barotrauma
                     break;
 
                 case ClientNetObject.ENTITY_STATE:
-                    bool isInventoryUpdate = msg.ReadBoolean();
-                    if (isInventoryUpdate)
+                    int eventType = msg.ReadRangedInteger(0,2);
+                    switch (eventType)
                     {
-                        inventory.ServerRead(type, msg, c);
-                    }
-                    else
-                    {
-                        if (c.Character != this)
-                        {
+                        case 0:
+                            inventory.ServerRead(type, msg, c);
+                            break;
+                        case 1:
+                            if (c.Character != this)
+                            {
 #if DEBUG
-                            DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+                                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
 #endif
-                            return;
-                        }
+                                return;
+                            }
 
-                        bool doingCPR = msg.ReadBoolean();
-                        AnimController.Anim = doingCPR ? AnimController.Animation.CPR : AnimController.Animation.None;
+                            bool doingCPR = msg.ReadBoolean();
+                            AnimController.Anim = doingCPR ? AnimController.Animation.CPR : AnimController.Animation.None;
+                            break;
+                        case 2:
+                            if (c.Character != this)
+                            {
+#if DEBUG
+                                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+#endif
+                                return;
+                            }
+
+                            if (IsUnconscious)
+                            {
+                                Kill(lastAttackCauseOfDeath);
+                            }
+                            break;
+
                     }
+
                     msg.ReadPadBits();
                     break;
             }
