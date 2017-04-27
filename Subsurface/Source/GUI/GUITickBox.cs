@@ -59,6 +59,20 @@ namespace Barotrauma
             get { return box.Rect; }
         }
 
+        public override ScalableFont Font
+        {
+            get
+            {
+                return base.Font;
+            }
+
+            set
+            {
+                base.Font = value;
+                if (text != null) text.Font = value;
+            }
+        }
+
         public GUITickBox(Rectangle rect, string label, Alignment alignment, GUIComponent parent)
             : this(rect, label, alignment, GUI.Font, parent)
         {

@@ -1044,47 +1044,53 @@ namespace Barotrauma
             if (editingHUD != null) editingHUD.Draw(spriteBatch);
         }
 
-        private GUIComponent CreateEditingHUD(bool inGame=false)
+        private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450;
-            int x = GameMain.GraphicsWidth/2-width/2, y = 10;
-
             List<ObjectProperty> editableProperties = inGame ? GetProperties<InGameEditable>() : GetProperties<Editable>();
-            
+
             int requiredItemCount = 0;
             if (!inGame)
             {
                 foreach (ItemComponent ic in components)
                 {
-                    requiredItemCount += ic.requiredItems.Count;                    
+                    requiredItemCount += ic.requiredItems.Count;
                 }
             }
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, 70 + (editableProperties.Count() + requiredItemCount) * 30), "");
+            int width = 450;
+            int height = 80 + requiredItemCount * 20;
+            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
+            foreach (var objectProperty in editableProperties)
+            {
+                var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault();
+                if (editable != null) height += (int)(Math.Ceiling(editable.MaxLength / 40.0f) * 18.0f) + 5;
+            }
+
+            editingHUD = new GUIFrame(new Rectangle(x, y, width, height), "");
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
-            
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, "", 
+
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, "",
                 Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);
 
-            y += 20;
+            y += 25;
 
             if (!inGame)
             {
-                if (prefab.IsLinkable) 
+                if (prefab.IsLinkable)
                 {
-                    new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", 
+                    new GUITextBlock(new Rectangle(0, 5, 0, 20), "Hold space to link to another item",
                         "", Alignment.TopRight, Alignment.TopRight, editingHUD).Font = GUI.SmallFont;
-                    y += 25;
                 }
                 foreach (ItemComponent ic in components)
                 {
                     foreach (RelatedItem relatedItem in ic.requiredItems)
                     {
-                        new GUITextBlock(new Rectangle(0, y, 100, 20), ic.Name + ": " + relatedItem.Type.ToString() + " required", "", editingHUD);
-                        GUITextBox namesBox = new GUITextBox(new Rectangle(-10, y, 160, 20), Alignment.Right, "", editingHUD);
+                        new GUITextBlock(new Rectangle(0, y, 100, 15), ic.Name + ": " + relatedItem.Type.ToString() + " required", "", Alignment.TopLeft, Alignment.CenterLeft, editingHUD, false, GUI.SmallFont);
+                        GUITextBox namesBox = new GUITextBox(new Rectangle(-10, y, 160, 15), Alignment.Right, "", editingHUD);
+                        namesBox.Font = GUI.SmallFont;
 
-                        PropertyDescriptorCollection properties = TypeDescriptor.GetProperties (relatedItem);
+                        PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(relatedItem);
                         PropertyDescriptor property = properties.Find("JoinedNames", false);
 
                         namesBox.Text = relatedItem.JoinedNames;
@@ -1092,24 +1098,25 @@ namespace Barotrauma
                         namesBox.OnEnterPressed = EnterProperty;
                         namesBox.OnTextChanged = PropertyChanged;
 
-                        y += 30;
+                        y += 20;
                     }
                 }
-
+                if (requiredItemCount > 0) y += 10;
             }
 
             foreach (var objectProperty in editableProperties)
             {
-                int height = 20;
+                int boxHeight = 18;
                 var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault();
-                if (editable != null) height = (int)(Math.Ceiling(editable.MaxLength / 20.0f) * 20.0f);
+                if (editable != null) boxHeight = (int)(Math.Ceiling(editable.MaxLength / 40.0f) * 18.0f);
 
                 object value = objectProperty.GetValue();
 
                 if (value is bool)
                 {
-                    GUITickBox propertyTickBox = new GUITickBox(new Rectangle(10, y, 20, 20), objectProperty.Name,
+                    GUITickBox propertyTickBox = new GUITickBox(new Rectangle(10, y, 18, 18), objectProperty.Name,
                         Alignment.Left, editingHUD);
+                    propertyTickBox.Font = GUI.SmallFont;
 
                     propertyTickBox.Selected = (bool)value;
 
@@ -1118,11 +1125,11 @@ namespace Barotrauma
                 }
                 else
                 {
+                    new GUITextBlock(new Rectangle(0, y, 100, 18), objectProperty.Name, "", Alignment.TopLeft, Alignment.Left, editingHUD, false, GUI.SmallFont);
 
-                    new GUITextBlock(new Rectangle(0, y, 100, 20), objectProperty.Name, Color.Transparent, Color.White, Alignment.Left, "", editingHUD);
-
-                    GUITextBox propertyBox = new GUITextBox(new Rectangle(180, y, 250, height), "", editingHUD);
-                    if (height > 20) propertyBox.Wrap = true;
+                    GUITextBox propertyBox = new GUITextBox(new Rectangle(180, y, 250, boxHeight), "", editingHUD);
+                    propertyBox.Font = GUI.SmallFont;
+                    if (boxHeight > 18) propertyBox.Wrap = true;
 
                     if (value != null)
                     {
@@ -1142,12 +1149,11 @@ namespace Barotrauma
                     propertyBox.OnTextChanged = PropertyChanged;
 
                 }
-                y = y + height + 10;   
+                y = y + boxHeight + 5;
 
             }
             return editingHUD;
         }
-
         public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
             if (condition <= 0.0f)

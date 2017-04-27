@@ -13,7 +13,7 @@ namespace Barotrauma
     
     class EnemyAIController : AIController
     {
-        private const float UpdateTargetsInterval = 5.0f;
+        private const float UpdateTargetsInterval = 0.5f;
 
         private const float RaycastInterval = 1.0f;
 
@@ -32,7 +32,6 @@ namespace Barotrauma
         private float raycastTimer;
 
         private Vector2 prevPosition;
-        private float distanceAccumulator;
 
         //a timer for attacks such as biting that last for a specific amount of time
         //the duration is determined by the attackDuration of the attacking limb
@@ -106,8 +105,6 @@ namespace Barotrauma
         
         public override void Update(float deltaTime)
         {
-            UpdateDistanceAccumulator();
-
             bool ignorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
             if (steeringManager is IndoorsSteeringManager)
@@ -185,14 +182,6 @@ namespace Barotrauma
 
             coolDownTimer -= deltaTime;  
         }
-
-        private void UpdateDistanceAccumulator()
-        {
-            Limb limb = Character.AnimController.Limbs[0];
-            distanceAccumulator += (limb.SimPosition - prevPosition).Length();
-
-            prevPosition = limb.body.SimPosition;
-        }
         
         private void UpdateAttack(float deltaTime)
         {
@@ -210,6 +199,11 @@ namespace Barotrauma
                 attackSimPosition = wallAttackPos;
 
                 if (selectedAiTarget.Entity != null && Character.Submarine == null && selectedAiTarget.Entity.Submarine != null) attackSimPosition += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
+            }
+            
+            if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater)
+            {
+                Character.AnimController.TargetDir = Character.SimPosition.X < attackSimPosition.X ? Direction.Right : Direction.Left;
             }
 
             if (coolDownTimer > 0.0f)
@@ -377,15 +371,6 @@ namespace Barotrauma
         //sight/hearing range
         public void UpdateTargets(Character character)
         {
-            if (distanceAccumulator<5.0f && Rand.Range(1,3)==1)
-            {
-                selectedAiTarget = null;
-                character.AnimController.TargetMovement = -character.AnimController.TargetMovement;
-                state = AiState.None;
-                return;
-            }
-            distanceAccumulator = 0.0f;
-
             wallAttackPos = Vector2.Zero;
 
             selectedAiTarget = null;
@@ -426,13 +411,11 @@ namespace Barotrauma
                     valueModifier = attackRooms;
                 }
 
-                dist = Vector2.Distance(
-                    character.WorldPosition,
-                    target.WorldPosition);
+                dist = Vector2.Distance(character.WorldPosition, target.WorldPosition);
 
                 //if the target has been within range earlier, the character will notice it more easily
                 //(i.e. remember where the target was)
-                if (targetMemories.ContainsKey(target)) dist *= 0.5f;
+                if (targetMemories.ContainsKey(target)) dist *= 0.1f;
 
                 //ignore target if it's too far to see or hear
                 if (dist > target.SightRange * sight && dist > target.SoundRange * hearing) continue;
