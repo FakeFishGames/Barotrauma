@@ -220,7 +220,10 @@ namespace Barotrauma
                     NewMessage(" ", Color.Cyan);
 
                     NewMessage("heal: restore the controlled character to full health", Color.Cyan);
+                    NewMessage("heal [character name]: restore the specified character to full health", Color.Cyan);
                     NewMessage("revive: bring the controlled character back from the dead", Color.Cyan);
+                    NewMessage("revive [character name]: bring the specified character back from the dead", Color.Cyan);
+                    NewMessage("killmonsters: immediately kills all AI-controlled enemies in the level", Color.Cyan);
 
                     NewMessage(" ", Color.Cyan);
                     
@@ -458,44 +461,11 @@ namespace Barotrauma
                 case "control":
                     if (commands.Length < 2) break;
 
-                    int characterIndex;
-                    string characterName;
-                    if (int.TryParse(commands.Last(), out characterIndex))
-                    {
-                        characterName = string.Join(" ", commands.Skip(1).Take(commands.Length-2)).ToLowerInvariant();
-                    }
-                    else
-                    {
-                        characterName = string.Join(" ", commands.Skip(1)).ToLowerInvariant();
-                        characterIndex = -1;
-                    }
+                    var character = FindMatchingCharacter(commands);
 
-                    var matchingCharacters = Character.CharacterList.FindAll(c => !c.IsRemotePlayer && c.Name.ToLowerInvariant() == characterName);
-
-                    if (!matchingCharacters.Any())
+                    if (character != null)
                     {
-                        ThrowError("Matching characters not found");
-                        return;
-                    }
-
-                    if (characterIndex==-1)
-                    {
-                        Character.Controlled = matchingCharacters.First();
-                        if (matchingCharacters.Count > 1)
-                        {
-                            NewMessage(
-                                "Found multiple matching characters. "+
-                                "Use \"control [charactername] [0-"+(matchingCharacters.Count-1)+"]\" to choose which character to control.", 
-                                Color.LightGray);
-                        }
-                    }
-                    else if (characterIndex<0 || characterIndex>= matchingCharacters.Count)
-                    {
-                        ThrowError("Character index out of range. Select an index between 0 and " + (matchingCharacters.Count - 1));
-                    }
-                    else
-                    {
-                        Character.Controlled = matchingCharacters[characterIndex];
+                        Character.Controlled = character;
                     }
                     
                     break;
@@ -522,18 +492,39 @@ namespace Barotrauma
                     }
                     break;
                 case "heal":
-                    if (Character.Controlled != null)
+                    Character healedCharacter = null;
+                    if (commands.Length == 1)
                     {
-                        Character.Controlled.AddDamage(CauseOfDeath.Damage, -Character.Controlled.MaxHealth, null);
-                        Character.Controlled.Oxygen = 100.0f;
-                        Character.Controlled.Bleeding = 0.0f;
-                        Character.Controlled.SetStun(0.0f, true);
+                        healedCharacter = Character.Controlled;
                     }
+                    else
+                    {
+                        healedCharacter = FindMatchingCharacter(commands);
+                    }
+
+                    if (healedCharacter != null)
+                    {
+                        healedCharacter.AddDamage(CauseOfDeath.Damage, -healedCharacter.MaxHealth, null);
+                        healedCharacter.Oxygen = 100.0f;
+                        healedCharacter.Bleeding = 0.0f;
+                        healedCharacter.Stun = 0.0f;
+                    }
+
                     break;
                 case "revive":
-                    if (Character.Controlled != null)
+                    Character reveivedCharacter = null;
+                    if (commands.Length == 1)
                     {
-                        Character.Controlled.Revive(false);
+                        reveivedCharacter = Character.Controlled;
+                    }
+                    else
+                    {
+                        reveivedCharacter = FindMatchingCharacter(commands);
+                    }
+
+                    if (reveivedCharacter != null)
+                    {
+                        reveivedCharacter.Revive(false);
                     }
                     break;
                 case "freeze":
@@ -833,6 +824,53 @@ namespace Barotrauma
                     NewMessage("Command not found", Color.Red);
                     break;
             }
+        }
+        
+        private static Character FindMatchingCharacter(string[] commands)
+        {
+            if (commands.Length < 2) return null;
+
+            int characterIndex;
+            string characterName;
+            if (int.TryParse(commands.Last(), out characterIndex))
+            {
+                characterName = string.Join(" ", commands.Skip(1).Take(commands.Length - 2)).ToLowerInvariant();
+            }
+            else
+            {
+                characterName = string.Join(" ", commands.Skip(1)).ToLowerInvariant();
+                characterIndex = -1;
+            }
+
+            var matchingCharacters = Character.CharacterList.FindAll(c => !c.IsRemotePlayer && c.Name.ToLowerInvariant() == characterName);
+
+            if (!matchingCharacters.Any())
+            {
+                NewMessage("Matching characters not found", Color.Red);
+                return null;
+            }
+
+            if (characterIndex == -1)
+            {
+                if (matchingCharacters.Count > 1)
+                {
+                    NewMessage(
+                        "Found multiple matching characters. " +
+                        "Use \"" + commands[0] + " [charactername] [0-" + (matchingCharacters.Count - 1) + "]\" to choose a specific character.",
+                        Color.LightGray);
+                }
+                return matchingCharacters[0];
+            }
+            else if (characterIndex < 0 || characterIndex >= matchingCharacters.Count)
+            {
+                ThrowError("Character index out of range. Select an index between 0 and " + (matchingCharacters.Count - 1));
+            }
+            else
+            {
+                return matchingCharacters[characterIndex];
+            }
+
+            return null;
         }
 
         public static void NewMessage(string msg, Color color)
