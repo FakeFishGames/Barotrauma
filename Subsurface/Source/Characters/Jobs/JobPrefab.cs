@@ -107,6 +107,7 @@ namespace Barotrauma
             int width = 500, height = 400;
 
             GUIFrame backFrame = new GUIFrame(Rectangle.Empty, Color.Black*0.5f);
+            backFrame.Padding = Vector4.Zero;
 
             GUIFrame frame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", backFrame);
             frame.Padding = new Vector4(30.0f, 30.0f, 30.0f, 30.0f);

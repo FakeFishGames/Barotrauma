@@ -260,7 +260,8 @@ namespace Barotrauma
                         
             //mission type ------------------------------------------------------------------
 
-            missionTypeBlock = new GUITextBlock(new Rectangle(columnX, 0, 300, 20), "Mission type:", "", Alignment.BottomLeft, Alignment.TopLeft, infoFrame);
+            missionTypeBlock = new GUITextBlock(new Rectangle(columnX, -10, 300, 20), "Mission type:", "", Alignment.BottomLeft, Alignment.CenterLeft, infoFrame);
+            missionTypeBlock.Padding = Vector4.Zero;
             missionTypeBlock.UserData = 0;
                        
             missionTypeButtons = new GUIButton[2];
@@ -268,7 +269,7 @@ namespace Barotrauma
             missionTypeButtons[0] = new GUIButton(new Rectangle(100, 0, 20, 20), "<", Alignment.BottomLeft, "", missionTypeBlock);
             missionTypeButtons[0].UserData = -1;
 
-            new GUITextBlock(new Rectangle(120, 0, 80, 20), "Random", "", Alignment.BottomLeft, Alignment.TopCenter, missionTypeBlock).UserData = 0;
+            new GUITextBlock(new Rectangle(120, 0, 80, 20), "Random", "", Alignment.BottomLeft, Alignment.Center, missionTypeBlock).UserData = 0;
 
             missionTypeButtons[1] = new GUIButton(new Rectangle(200, 0, 20, 20), ">", Alignment.BottomLeft, "", missionTypeBlock);
             missionTypeButtons[1].UserData = 1;
@@ -342,6 +343,8 @@ namespace Barotrauma
 
         public override void Select()
         {
+            if (GameMain.NetworkMember == null) return;
+
             GameMain.LightManager.LosEnabled = false;
             
             textBox.Select();
