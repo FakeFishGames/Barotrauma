@@ -310,15 +310,19 @@ namespace Barotrauma
                         int centerWidth = Math.Max(rect.Width - uiSprite.Slices[0].Width - uiSprite.Slices[2].Width, 0);
                         int centerHeight = Math.Max(rect.Height - uiSprite.Slices[0].Height - uiSprite.Slices[8].Height, 0);
 
+                        Vector2 scale = new Vector2(
+                            MathHelper.Clamp((float)rect.Width / (uiSprite.Slices[0].Width + uiSprite.Slices[2].Width),0, 1),
+                            MathHelper.Clamp((float)rect.Height / (uiSprite.Slices[0].Height + uiSprite.Slices[6].Height), 0, 1));
+
                         for (int x = 0; x < 3; x++)
                         {
-                            int width = x == 1 ? centerWidth : uiSprite.Slices[x].Width;
+                            float width = (x == 1 ? centerWidth : uiSprite.Slices[x].Width) * scale.X;
                             for (int y = 0; y < 3; y++)
                             {
-                                int height = y == 1 ? centerHeight : uiSprite.Slices[x + y * 3].Height;
+                                float height = (y == 1 ? centerHeight : uiSprite.Slices[x + y * 3].Height) * scale.Y;
 
                                 spriteBatch.Draw(uiSprite.Sprite.Texture,
-                                    new Rectangle((int)pos.X, (int)pos.Y, width, height),
+                                    new Rectangle((int)pos.X, (int)pos.Y, (int)width, (int)height),
                                     uiSprite.Slices[x + y * 3],
                                     currColor * (currColor.A / 255.0f));
                                 
