@@ -57,10 +57,10 @@ namespace Barotrauma.Items.Components
             string signalOut = sendOutput ? output : falseOutput;
             if (string.IsNullOrEmpty(signalOut)) return;
 
-            item.SendSignal(0, signalOut, "signal_out");
+            item.SendSignal(0, signalOut, "signal_out", null);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
             switch (connection.Name)
             {

@@ -155,7 +155,7 @@ namespace Barotrauma.Items.Components
             Wires[index] = wire;
         }
         
-        public void SendSignal(int stepsTaken, string signal, Item sender, float power)
+        public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power)
         {
             for (int i = 0; i < MaxLinked; i++)
             {
@@ -163,11 +163,11 @@ namespace Barotrauma.Items.Components
 
                 Connection recipient = Wires[i].OtherConnection(this);
                 if (recipient == null) continue;
-                if (recipient.item == this.item || recipient.item == sender) continue;
+                if (recipient.item == this.item || recipient.item == source) continue;
 
                 foreach (ItemComponent ic in recipient.item.components)
                 {
-                    ic.ReceiveSignal(stepsTaken, signal, recipient, this.item, power);
+                    ic.ReceiveSignal(stepsTaken, signal, recipient, item, sender, power);
                 }
 
                 foreach (StatusEffect effect in recipient.effects)

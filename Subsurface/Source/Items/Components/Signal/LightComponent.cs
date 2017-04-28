@@ -193,9 +193,9 @@ namespace Barotrauma.Items.Components
             light.Remove();
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
 
             switch (connection.Name)
             {

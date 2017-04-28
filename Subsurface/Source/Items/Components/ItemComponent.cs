@@ -499,7 +499,7 @@ namespace Barotrauma.Items.Components
         //called then the item is dropped or dragged out of a "limbslot"
         public virtual void Unequip(Character character) { }
         
-        public virtual void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f) 
+        public virtual void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f) 
         {
         
             switch (connection.Name)

@@ -583,20 +583,34 @@ namespace Barotrauma
 
             GameMain.Server.CreateEntityEvent(Owner as IServerSerializable, new object[] { NetEntityEvent.Type.InventoryState });
 
-            foreach (Item item in Items)
+            foreach (Item item in Items.Distinct())
             {
                 if (item == null) continue;
                 if (!prevItems.Contains(item))
                 {
-                    GameServer.Log(c.Character + " placed " + item.Name + " in " + Owner, Color.Orange);
+                    if (Owner == c.Character)
+                    {
+                        GameServer.Log(c.Character + " picked up " + item.Name, Color.Orange);
+                    }
+                    else
+                    {
+                        GameServer.Log(c.Character + " placed " + item.Name + " in " + Owner, Color.Orange);
+                    }
                 }
             }
-            foreach (Item item in prevItems)
+            foreach (Item item in prevItems.Distinct())
             {
                 if (item == null) continue;
                 if (!Items.Contains(item))
                 {
-                    GameServer.Log(c.Character + " removed " + item.Name + " from " + Owner.ToString(), Color.Orange);
+                    if (Owner == c.Character)
+                    {
+                        GameServer.Log(c.Character + " dropped " + item.Name, Color.Orange);
+                    }
+                    else
+                    {
+                        GameServer.Log(c.Character + " removed " + item.Name + " from " + Owner, Color.Orange);
+                    }
                 }
             }
         }

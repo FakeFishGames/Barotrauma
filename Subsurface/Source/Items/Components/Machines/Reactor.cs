@@ -308,7 +308,7 @@ namespace Barotrauma.Items.Components
             ExtraCooling = 0.0f;
             AvailableFuel = 0.0f;
 
-            item.SendSignal(0, ((int)temperature).ToString(), "temperature_out");
+            item.SendSignal(0, ((int)temperature).ToString(), "temperature_out", null);
               
             sendUpdateTimer = Math.Max(sendUpdateTimer - deltaTime, 0.0f);
 
@@ -532,7 +532,7 @@ namespace Barotrauma.Items.Components
             GUI.DrawLine(spriteBatch, prevPoint, lastPoint, color);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
         {
             switch (connection.Name)
             {

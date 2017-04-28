@@ -323,7 +323,7 @@ namespace Barotrauma.Items.Components
 
             //don't use the predicted state here, because it might set
             //other items to an incorrect state if the prediction is wrong
-            item.SendSignal(0, (isOpen) ? "1" : "0", "state_out");
+            item.SendSignal(0, (isOpen) ? "1" : "0", "state_out", null);
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -484,9 +484,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f)
         {
             if (isStuck) return;
+
+            bool wasOpen = isOpen;
 
             if (connection.Name == "toggle")
             {
@@ -495,6 +497,11 @@ namespace Barotrauma.Items.Components
             else if (connection.Name == "set_state")
             {
                 SetState(signal != "0", false, true);
+            }
+
+            if (sender != null && wasOpen != isOpen)
+            {
+                GameServer.Log(sender.Name + (isOpen ? " opened " : " closed ") + item.Name, Color.White);
             }
         }
 

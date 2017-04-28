@@ -192,6 +192,11 @@ namespace Barotrauma.Items.Components
          
             Launch(projectiles[0].Item);
 
+            if (character != null)
+            {
+                GameServer.Log(character.Name + " launched " + item.Name, Color.Orange);
+            }
+
             return true;
         }
 
@@ -364,7 +369,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
         {
             switch (connection.Name)
             {
@@ -382,7 +387,7 @@ namespace Barotrauma.Items.Components
 
                     break;
                 case "trigger_in":
-                    item.Use((float)Timing.Step, null);
+                    item.Use((float)Timing.Step, sender);
                     break;
             }
         }

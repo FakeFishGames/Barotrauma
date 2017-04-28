@@ -586,9 +586,8 @@ namespace Barotrauma.Items.Components
                 dockingState = MathHelper.Lerp(dockingState, 0.0f, deltaTime * 10.0f);
                 if (dockingState < 0.01f) docked = false;
 
-                item.SendSignal(0, "0", "state_out");
-
-                item.SendSignal(0, (FindAdjacentPort() != null) ? "1" : "0", "proximity_sensor");
+                item.SendSignal(0, "0", "state_out", null);
+                item.SendSignal(0, (FindAdjacentPort() != null) ? "1" : "0", "proximity_sensor", null);
 
             }
             else
@@ -601,7 +600,7 @@ namespace Barotrauma.Items.Components
 
                 if (joint is DistanceJoint)
                 {
-                    item.SendSignal(0, "0", "state_out");
+                    item.SendSignal(0, "0", "state_out", null);
                     dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
 
                     if (Vector2.Distance(joint.WorldAnchorA, joint.WorldAnchorB) < 0.05f)
@@ -616,7 +615,7 @@ namespace Barotrauma.Items.Components
                         doorBody.Enabled = dockingTarget.door.Body.Enabled;
                     }
 
-                    item.SendSignal(0, "1", "state_out");
+                    item.SendSignal(0, "1", "state_out", null);
 
                     dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
                 }
@@ -730,9 +729,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f)
         {
             if (GameMain.Client != null) return;
+
+            bool wasDocked = docked;
+            DockingPort prevDockingTarget = dockingTarget;
 
             switch (connection.Name)
             {
@@ -743,6 +745,20 @@ namespace Barotrauma.Items.Components
                 case "set_state":
                     Docked = signal != "0";
                     break;
+            }
+
+            if (sender != null && docked != wasDocked)
+            {
+                if (docked)
+                {
+                    if (item.Submarine != null && dockingTarget?.item?.Submarine != null)
+                        GameServer.Log(sender.Name + " docked "+item.Submarine.Name+" to "+dockingTarget.item.Submarine, Color.White);
+                }
+                else
+                {
+                    if (item.Submarine != null && prevDockingTarget?.item?.Submarine != null)
+                        GameServer.Log(sender.Name + " undocked " + item.Submarine.Name + " from " + prevDockingTarget.item.Submarine, Color.White);
+                }
             }
         }
 

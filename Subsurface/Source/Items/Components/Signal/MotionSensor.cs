@@ -54,15 +54,15 @@ namespace Barotrauma.Items.Components
         {
             if (motionDetected)
             {
-                item.SendSignal(1, output, "state_out");
+                item.SendSignal(1, output, "state_out", null);
             }
             else if (!string.IsNullOrWhiteSpace(falseOutput))
             {
-                item.SendSignal(1, falseOutput, "state_out");
+                item.SendSignal(1, falseOutput, "state_out", null);
             }
 
             updateTimer -= deltaTime;
-            if (updateTimer>0.0f) return;
+            if (updateTimer > 0.0f) return;
 
             motionDetected = false;
             updateTimer = UpdateInterval;

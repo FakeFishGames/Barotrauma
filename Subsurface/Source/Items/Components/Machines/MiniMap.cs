@@ -194,9 +194,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power = 0)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, sender, power);
+            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
 
             if (sender == null || sender.CurrentHull == null) return;
 
@@ -213,7 +213,7 @@ namespace Barotrauma.Items.Components
             {
                 case "water_data_in":
                     //cheating a bit because water detectors don't actually send the water level
-                    if (sender.GetComponent<WaterDetector>() == null)
+                    if (source.GetComponent<WaterDetector>() == null)
                     {
                         hullData.Water = Rand.Range(0.0f, 1.0f);
                     }
