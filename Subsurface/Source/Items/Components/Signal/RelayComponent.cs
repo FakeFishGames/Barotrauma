@@ -49,10 +49,10 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
 
-            item.SendSignal(0, IsOn ? "1" : "0", "state_out");
+            item.SendSignal(0, IsOn ? "1" : "0", "state_out", null);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
             if (connection.IsPower && connection.Name.Contains("_out")) return;
 
@@ -71,7 +71,7 @@ namespace Barotrauma.Items.Components
 
                 if (connectionNumber > 0) outConnection += connectionNumber;
 
-                item.SendSignal(stepsTaken, signal, outConnection, power);
+                item.SendSignal(stepsTaken, signal, outConnection, sender,  power);
             }
             else if (connection.Name == "toggle")
             {

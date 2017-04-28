@@ -9,11 +9,11 @@ namespace Barotrauma.Items.Components
         {
         }
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
             if (connection.Name != "signal_in") return;
             
-            item.SendSignal(stepsTaken, signal=="0" ? "1" : "0", "signal_out");
+            item.SendSignal(stepsTaken, signal=="0" ? "1" : "0", "signal_out", sender);
         }
     }
 }

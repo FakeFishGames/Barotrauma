@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
             return HasRequiredContainedItems(true);
         }
 
-        public void Transmit(string signal)
+        /*public void Transmit(string signal)
         {
             if (!CanTransmit()) return;
 
@@ -59,9 +59,9 @@ namespace Barotrauma.Items.Components
             {
                 var connections = w.item.Connections;
 
-                w.ReceiveSignal(1, signal, connections == null ? null : connections.Find(c => c.Name == "signal_in"), item);
+                w.ReceiveSignal(1, signal, connections == null ? null : connections.Find(c => c.Name == "signal_in"), item, null);
             }
-        }
+        }*/
 
         private List<WifiComponent> GetReceiversInRange()
         {
@@ -77,9 +77,9 @@ namespace Barotrauma.Items.Components
             return Vector2.Distance(item.WorldPosition, sender.item.WorldPosition) <= sender.Range;
         }
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
-            var senderComponent = sender.GetComponent<WifiComponent>();
+            var senderComponent = source.GetComponent<WifiComponent>();
             if (senderComponent != null && !CanReceive(senderComponent)) return;
 
             if (LinkToChat)
@@ -107,7 +107,7 @@ namespace Barotrauma.Items.Components
 
                     foreach (WifiComponent wifiComp in receivers)
                     {
-                        wifiComp.item.SendSignal(stepsTaken, signal, "signal_out");
+                        wifiComp.item.SendSignal(stepsTaken, signal, "signal_out", sender);
                     }
                     break;
             }

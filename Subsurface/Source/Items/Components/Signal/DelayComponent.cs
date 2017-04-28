@@ -42,11 +42,11 @@ namespace Barotrauma.Items.Components
             {
                 var signalOut = signalQueue.Dequeue();
 
-                item.SendSignal(0, signalOut.Item1, "signal_out");
+                item.SendSignal(0, signalOut.Item1, "signal_out", null);
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
             switch (connection.Name)
             {

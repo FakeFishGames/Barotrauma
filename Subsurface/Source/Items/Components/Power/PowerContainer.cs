@@ -224,7 +224,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
         {
             if (!connection.IsPower) return;
 
@@ -236,8 +236,6 @@ namespace Barotrauma.Items.Components
             {
                 outputVoltage = power;
             }
-            //if (currPowerConsumption == 0.0f) voltage = 0.0f;
-            //if (connection.IsPower) voltage = power;    
         }
         
         public void Draw(SpriteBatch spriteBatch, bool editing = false)

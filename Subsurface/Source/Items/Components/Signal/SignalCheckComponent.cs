@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
         {
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item sender, float power=0.0f)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
             switch (connection.Name)
             {
@@ -41,7 +41,7 @@ namespace Barotrauma.Items.Components
                     string signalOut = (signal == targetSignal) ? output : falseOutput;
 
                     if (string.IsNullOrWhiteSpace(signalOut)) return;
-                    item.SendSignal(stepsTaken, signalOut, "signal_out");
+                    item.SendSignal(stepsTaken, signalOut, "signal_out", sender);
 
                     break;
                 case "set_output":
