@@ -26,8 +26,8 @@ namespace Barotrauma
 
         public bool Wrap;
 
-        private bool overflowScrollActive;
-        public bool OverflowScroll;
+        private bool overflowClipActive;
+        public bool OverflowClip;
 
         private float textDepth;
 
@@ -195,7 +195,7 @@ namespace Barotrauma
         {
             if (text == null) return;
 
-            overflowScrollActive = false;
+            overflowClipActive = false;
 
             wrappedText = text;
 
@@ -206,18 +206,18 @@ namespace Barotrauma
                 wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font, textScale);
                 size = MeasureText(wrappedText);
             }
-            else if (OverflowScroll)
+            else if (OverflowClip)
             {
-                overflowScrollActive = size.X > rect.Width;
+                overflowClipActive = size.X > rect.Width;
             }
                      
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
             origin = size * 0.5f;
 
-            if (textAlignment.HasFlag(Alignment.Left) && !overflowScrollActive)
+            if (textAlignment.HasFlag(Alignment.Left) && !overflowClipActive)
                 origin.X += (rect.Width / 2.0f - padding.X) - size.X / 2;
             
-            if (textAlignment.HasFlag(Alignment.Right) || overflowScrollActive)
+            if (textAlignment.HasFlag(Alignment.Right) || overflowClipActive)
                 origin.X -= (rect.Width / 2.0f - padding.Z) - size.X / 2;
 
             if (textAlignment.HasFlag(Alignment.Top))
@@ -279,7 +279,7 @@ namespace Barotrauma
 
             if (TextGetter != null) text = TextGetter();
 
-            if (overflowScrollActive) GameMain.CurrGraphicsDevice.ScissorRectangle = rect;
+            if (overflowClipActive) GameMain.CurrGraphicsDevice.ScissorRectangle = rect;
 
             if (!string.IsNullOrEmpty(text))
             {
@@ -291,7 +291,7 @@ namespace Barotrauma
                     SpriteEffects.None, textDepth);
             }
 
-            if (overflowScrollActive) GameMain.CurrGraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            if (overflowClipActive) GameMain.CurrGraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             DrawChildren(spriteBatch);
 
