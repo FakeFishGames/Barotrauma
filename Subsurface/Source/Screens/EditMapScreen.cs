@@ -193,10 +193,10 @@ namespace Barotrauma
                 var catButton = new GUIButton(new Rectangle(0, y, 0, 20), category.ToString(), Alignment.Left, "", leftPanel);
                 catButton.UserData = i;
                 catButton.OnClicked = SelectTab;
-                y+=25;
+                y += 25;
 
                 GUItabs[i] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "");
-                GUItabs[i].Padding = new Vector4(10.0f, 30.0f, 10.0f, 10.0f);
+                GUItabs[i].Padding = new Vector4(10.0f, 30.0f, 10.0f, 20.0f);
 
                 new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.CenterRight, GUItabs[i], false, GUI.SmallFont);
 

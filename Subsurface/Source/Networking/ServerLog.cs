@@ -59,21 +59,21 @@ namespace Barotrauma.Networking
         {
             LogFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0,0,400, 400), null, Alignment.Center, "", LogFrame);
-            innerFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
+            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 500, 400), null, Alignment.Center, "", LogFrame);
+            innerFrame.Padding = new Vector4(10.0f, 20.0f, 10.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(-200,0,100,15), "Filter", "", Alignment.TopRight, Alignment.TopRight, innerFrame, false, GUI.SmallFont);
+            new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.TopRight, innerFrame, false, GUI.SmallFont);
 
-            GUITextBox searchBox = new GUITextBox(new Rectangle(-20,0,180,15), Alignment.TopRight, "", innerFrame);
+            GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), Alignment.TopRight, "", innerFrame);
             searchBox.Font = GUI.SmallFont;
             searchBox.OnTextChanged = FilterMessages;
             GUIComponent.KeyboardDispatcher.Subscriber = searchBox;
 
-            var clearButton = new GUIButton(new Rectangle(0,0,15,15), "x", Alignment.TopRight, "", innerFrame);
+            var clearButton = new GUIButton(new Rectangle(0, 0, 15, 15), "x", Alignment.TopRight, "", innerFrame);
             clearButton.OnClicked = ClearFilter;
             clearButton.UserData = searchBox;
 
-            listBox = new GUIListBox(new Rectangle(0,20,0,335), "", innerFrame);
+            listBox = new GUIListBox(new Rectangle(0, 30, 0, 310), "", innerFrame);
 
             var currLines = lines.ToList();
 

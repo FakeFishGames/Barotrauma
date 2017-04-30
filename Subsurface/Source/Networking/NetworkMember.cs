@@ -147,6 +147,7 @@ namespace Barotrauma.Networking
                 new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
                 Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, "", inGameHUD);
             chatMsgBox.Font = GUI.SmallFont;
+            chatMsgBox.MaxTextWidth = chatBox.Rect.Width * 2;
             chatMsgBox.Padding = Vector4.Zero;
             chatMsgBox.OnEnterPressed = EnterChatMessage;
             chatMsgBox.OnTextChanged = TypingChatMessage;
@@ -309,10 +310,9 @@ namespace Barotrauma.Networking
                 displayedText = message.SenderName + ": " + displayedText;
             }
             
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 20), displayedText,
+            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 40, 0), displayedText,
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
-                Alignment.Left, null, null, true);
-            msg.Font = GUI.SmallFont;
+                Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
             msg.UserData = message.SenderName;
 
             msg.Padding = new Vector4(20.0f, 0, 0, 0);

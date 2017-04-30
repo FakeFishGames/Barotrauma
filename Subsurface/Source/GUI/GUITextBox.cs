@@ -27,6 +27,8 @@ namespace Barotrauma
         public OnTextChangedHandler OnTextChanged;
 
         public bool CaretEnabled;
+
+        private int? maxTextWidth;
         
         public GUITextBlock.TextGetterHandler TextGetter
         {
@@ -40,12 +42,17 @@ namespace Barotrauma
             set { textBlock.Wrap = value; }
         }
 
-        public bool LimitText
+        public int? MaxTextWidth
         {
-            get { return textBlock.LimitText; }
-            set { textBlock.LimitText = value; }
+            get { return maxTextWidth; }
+            set
+            {
+                textBlock.OverflowClip = value != null && (int)value > textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z;
+                
+                maxTextWidth = value;
+            }
         }
-
+        
         public bool Enabled
         {
             get;
@@ -118,7 +125,7 @@ namespace Barotrauma
             }
         }
         
-        public String Text
+        public string Text
         {
             get
             {
@@ -126,28 +133,22 @@ namespace Barotrauma
             }
             set
             {
+                if (textBlock.Text == value) return;
+
                 textBlock.Text = value;
                 if (textBlock.Text == null) textBlock.Text = "";
 
                 if (textBlock.Text != "")
                 {
-                    /*//if you attempt to display a Character that is not in your font
-                    //you will get an exception, so we filter the characters
-                    //remove the filtering if you're using a default Character in your spritefont
-                    String filtered = "";
-                    foreach (char c in value)
+                    if (!Wrap)
                     {
-                        if (Font.Characters.Contains(c)) filtered += c;
-                    }
+                        int maxWidth = MaxTextWidth == null ? (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z) : (int)MaxTextWidth;
 
-                    textBlock.Text = filtered;*/
-
-                    if (!Wrap && Font.MeasureString(textBlock.Text).X > rect.Width)
-                    {
-                        //ensure that text cannot be larger than the box
-                        Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
+                        if (Font.MeasureString(textBlock.Text).X > maxWidth)
+                        {
+                            Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
+                        }
                     }
-                    
                 }
             }
         }
@@ -178,8 +179,9 @@ namespace Barotrauma
             if (parent != null)
                 parent.AddChild(this);
 
-            textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
 
+            textBlock = new GUITextBlock(new Rectangle(0,0,0,0), "", color, textColor, textAlignment, style, this);
+            
             Font = GUI.Font;
 
             GUI.Style.Apply(textBlock, style == "" ? "GUITextBox" : style);
