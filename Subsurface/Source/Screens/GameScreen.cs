@@ -199,7 +199,7 @@ namespace Barotrauma
 
             DrawMap(graphics, spriteBatch);
 
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
             {
