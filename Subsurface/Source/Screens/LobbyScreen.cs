@@ -369,10 +369,8 @@ namespace Barotrauma
             }
 
             graphics.Clear(Color.Black);
-
-            //GameMain.GameScreen.DrawMap(graphics, spriteBatch);
-
-            spriteBatch.Begin();
+            
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
             Sprite backGround = GameMain.GameSession.Map.CurrentLocation.Type.Background;
             spriteBatch.Draw(backGround.Texture, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero,

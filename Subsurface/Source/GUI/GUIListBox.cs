@@ -207,31 +207,7 @@ namespace Barotrauma
                 {
                     y += child.Rect.Height + spacing;
                 }
-
-
-                if (scrollBar.IsHorizontal)
-                {
-                    if (child.Rect.Right < rect.X) continue;
-                    if (child.Rect.Right > rect.Right) break;
-
-                    if (child.Rect.X < rect.X && child.Rect.Right >= rect.X)
-                    {
-                        x = rect.X;
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (child.Rect.Y + child.Rect.Height < rect.Y) continue;
-                    if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) break;
-
-                    if (child.Rect.Y < rect.Y && child.Rect.Y + child.Rect.Height >= rect.Y)
-                    {
-                        y = rect.Y;
-                        continue;
-                    }
-                }
-
+                
                 if (deltaTime>0.0f) child.Update(deltaTime);
                 if (enabled && child.CanBeFocused &&
                     (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
@@ -415,6 +391,8 @@ namespace Barotrauma
 
             if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
 
+            GameMain.CurrGraphicsDevice.ScissorRectangle = frame.Rect;
+
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
             {
@@ -430,6 +408,8 @@ namespace Barotrauma
                 lastVisible = i;         
                 child.Draw(spriteBatch);
             }
+            
+            GameMain.CurrGraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
         private bool IsChildVisible(GUIComponent child)
@@ -439,22 +419,12 @@ namespace Barotrauma
             if (scrollBar.IsHorizontal)
             {
                 if (child.Rect.Right < rect.X) return false;
-                if (child.Rect.Right > rect.Right) return false;
-
-                if (child.Rect.X < rect.X && child.Rect.Right >= rect.X)
-                {
-                    return false;
-                }
+                if (child.Rect.X > rect.Right) return false;
             }
             else
             {
-                if (child.Rect.Y + child.Rect.Height < rect.Y) return false;
-                if (child.Rect.Y + child.Rect.Height > rect.Y + rect.Height) return false;
-
-                if (child.Rect.Y < rect.Y && child.Rect.Y + child.Rect.Height >= rect.Y)
-                {
-                    return false;
-                }
+                if (child.Rect.Bottom < rect.Y) return false;
+                if (child.Rect.Y > rect.Bottom) return false;
             }
 
             return true;

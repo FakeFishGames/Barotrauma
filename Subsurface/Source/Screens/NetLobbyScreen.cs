@@ -1005,7 +1005,7 @@ namespace Barotrauma
         {
             graphics.Clear(Color.Black);
             
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
             if (backgroundSprite!=null)
             {
