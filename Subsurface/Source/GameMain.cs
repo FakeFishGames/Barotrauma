@@ -104,7 +104,16 @@ namespace Barotrauma
         {
             get { return NetworkMember as GameClient; }
         }
+        
+        public static RasterizerState ScissorTestEnable
+        {
+            get;
+            private set;
+        }
 
+        /// <summary>
+        /// Total seconds elapsed after startup
+        /// </summary>
         public double TotalElapsedTime
         {
             get;
@@ -178,6 +187,8 @@ namespace Barotrauma
             base.Initialize();
 
             CurrGraphicsDevice = GraphicsDevice;
+
+            ScissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Item));

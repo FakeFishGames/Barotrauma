@@ -145,7 +145,7 @@ namespace Barotrauma
 
             //-------------------- HUD -----------------------------
 
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
             GUIpanel.Draw(spriteBatch);
 

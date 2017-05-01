@@ -322,7 +322,7 @@ namespace Barotrauma
             GameMain.TitleScreen.DrawLoadingText = false;
             GameMain.TitleScreen.Draw(spriteBatch, graphics, (float)deltaTime);
 
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
             menu.Draw(spriteBatch);
             
