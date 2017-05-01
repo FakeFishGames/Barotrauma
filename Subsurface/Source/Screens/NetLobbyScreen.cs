@@ -3,9 +3,6 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
-using FarseerPhysics;
-using FarseerPhysics.Factories;
-using FarseerPhysics.Dynamics;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
@@ -198,6 +195,7 @@ namespace Barotrauma
 
             chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, "", chatFrame);            
             textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, "", chatFrame);
+            textBox.MaxTextWidth = textBox.Rect.Width * 2;
             textBox.Font = GUI.SmallFont;
 
             //player info panel ------------------------------------------------------------
@@ -1015,7 +1013,7 @@ namespace Barotrauma
         {
             graphics.Clear(Color.Black);
             
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
             if (backgroundSprite!=null)
             {
@@ -1041,16 +1039,15 @@ namespace Barotrauma
         {
             float prevSize = chatBox.BarSize;
 
-            while (chatBox.CountChildren>20)
+            while (chatBox.CountChildren > 20)
             {
                 chatBox.RemoveChild(chatBox.children[1]);
             }
-
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width, 0),
+            
+            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width-20, 0),
                 message.TextWithSender, 
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black*0.1f, message.Color, 
-                Alignment.Left, "", null, true);
-            msg.Font = GUI.SmallFont;
+                Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
             msg.UserData = message;
             msg.CanBeFocused = false;
 

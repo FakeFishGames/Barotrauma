@@ -26,6 +26,9 @@ namespace Barotrauma
 
         public bool Wrap;
 
+        private bool overflowClipActive;
+        public bool OverflowClip;
+
         private float textDepth;
 
         public override Vector4 Padding
@@ -84,13 +87,7 @@ namespace Barotrauma
             get { return textDepth; }
             set { textDepth = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
-
-        public bool LimitText
-        {
-            get;
-            set;
-        }
-
+        
         public Vector2 TextPos
         {
             get { return textPos; }
@@ -157,8 +154,8 @@ namespace Barotrauma
         }
 
 
-        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null, bool wrap = false)
-            : this (rect, text, style, alignment, textAlignment, parent, wrap, null)
+        public GUITextBlock(Rectangle rect, string text, Color? color, Color? textColor, Alignment alignment, Alignment textAlignment = Alignment.Left, string style = null, GUIComponent parent = null, bool wrap = false, ScalableFont font = null)
+            : this (rect, text, style, alignment, textAlignment, parent, wrap, font)
         {
             if (color != null) this.color = (Color)color;
             if (textColor != null) this.textColor = (Color)textColor;
@@ -198,32 +195,29 @@ namespace Barotrauma
         {
             if (text == null) return;
 
+            overflowClipActive = false;
+
             wrappedText = text;
 
-            Vector2 size = MeasureText(text);
+            Vector2 size = MeasureText(text);           
 
             if (Wrap && rect.Width > 0)
             {
                 wrappedText = ToolBox.WrapText(text, rect.Width - padding.X - padding.Z, Font, textScale);
-
-                Vector2 newSize = MeasureText(wrappedText);
-
-                size = newSize;
+                size = MeasureText(wrappedText);
             }
-
-            if (LimitText && text.Length>1 && size.Y > rect.Height)
+            else if (OverflowClip)
             {
-                string[] lines = text.Split('\n');
-                text = string.Join("\n", lines, 0, lines.Length-1);
+                overflowClipActive = size.X > rect.Width;
             }
-         
+                     
             textPos = new Vector2(rect.Width / 2.0f, rect.Height / 2.0f);
             origin = size * 0.5f;
 
-            if (textAlignment.HasFlag(Alignment.Left))
+            if (textAlignment.HasFlag(Alignment.Left) && !overflowClipActive)
                 origin.X += (rect.Width / 2.0f - padding.X) - size.X / 2;
             
-            if (textAlignment.HasFlag(Alignment.Right))
+            if (textAlignment.HasFlag(Alignment.Right) || overflowClipActive)
                 origin.X -= (rect.Width / 2.0f - padding.Z) - size.X / 2;
 
             if (textAlignment.HasFlag(Alignment.Top))
@@ -253,7 +247,7 @@ namespace Barotrauma
 
         private Vector2 MeasureText(string text) 
         {
-            if (Font==null) return Vector2.Zero;
+            if (Font == null) return Vector2.Zero;
 
             Vector2 size = Vector2.Zero;
             while (size == Vector2.Zero)
@@ -280,12 +274,12 @@ namespace Barotrauma
 
             Rectangle drawRect = rect;
             if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
-
-            //if (currColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
-
+            
             base.Draw(spriteBatch);
 
             if (TextGetter != null) Text = TextGetter();
+
+            if (overflowClipActive) GameMain.CurrGraphicsDevice.ScissorRectangle = rect;
 
             if (!string.IsNullOrEmpty(text))
             {
@@ -296,6 +290,8 @@ namespace Barotrauma
                     0.0f, origin, TextScale,
                     SpriteEffects.None, textDepth);
             }
+
+            if (overflowClipActive) GameMain.CurrGraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             DrawChildren(spriteBatch);
 

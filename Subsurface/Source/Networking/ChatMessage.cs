@@ -2,8 +2,6 @@
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace Barotrauma.Networking
@@ -17,15 +15,15 @@ namespace Barotrauma.Networking
     class ChatMessage
     {
         public const float SpeakRange = 2000.0f;
-
+        
         public static Color[] MessageColor = 
-        { 
-            Color.White,                //default
-            Color.Red,                  //error
+        {
+            new Color(125, 140, 153),   //default
+            new Color(204, 74, 78),     //error
             new Color(63, 72, 204),     //dead
-            Color.LightGreen,           //server
-            Color.Yellow,               //radio
-            new Color(153, 217, 234)    //private 
+            new Color(157, 225, 160),   //server
+            new Color(148, 230, 7),     //radio
+            new Color(228, 199, 27)     //private
         };
         
         public readonly string Text;
