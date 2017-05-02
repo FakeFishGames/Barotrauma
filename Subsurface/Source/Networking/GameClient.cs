@@ -561,7 +561,7 @@ namespace Barotrauma.Networking
                     case (byte)PacketTypes.StartGame:
                         if (Screen.Selected == GameMain.GameScreen) continue;
 
-                        startGameCoroutine = GameMain.ShowLoading(StartGame(inc), false);
+                        startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(inc), false);
 
                         break;
                     case (byte)PacketTypes.EndGame:

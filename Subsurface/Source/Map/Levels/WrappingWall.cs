@@ -113,13 +113,13 @@ namespace Barotrauma
 
         public void SetWallVertices(VertexPositionTexture[] vertices)
         {
-            wallVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            wallVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
             wallVertices.SetData(vertices);
         }
 
         public void SetBodyVertices(VertexPositionColor[] vertices)
         {
-            bodyVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            bodyVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
             bodyVertices.SetData(vertices);
         }
 
