@@ -693,6 +693,7 @@ namespace Barotrauma.Networking
                             {
                                 c.NeedsMidRoundSync = false;
                                 lastRecvEntityEventID = (UInt16)(c.FirstNewEventID - 1);
+                                c.lastRecvEntityEventID = lastRecvEntityEventID;
                             }
                             else
                             {
@@ -700,21 +701,33 @@ namespace Barotrauma.Networking
                             }
                         }
 
+                        if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastRecvChatMsgID) &&   //more recent than the last ID received by the client
+                            !NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastChatMsgQueueID)) //NOT more recent than the latest existing ID
+                        {
+                            c.lastRecvChatMsgID = lastRecvChatMsgID;
+                        }
 #if DEBUG
-                        //client thinks they've received a msg we haven't sent yet (corrupted packet, msg read/written incorrectly?)
-                        if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastChatMsgQueueID))
-                            DebugConsole.ThrowError("client.lastRecvChatMsgID > lastChatMsgQueueID (" + lastRecvChatMsgID + " > " + c.lastChatMsgQueueID + ")");
-
-                        if (lastRecvEntityEventID > lastEntityEventID)
-                            DebugConsole.ThrowError("client.lastRecvEntityEventID > lastEntityEventID (" + lastRecvEntityEventID + " > " + lastEntityEventID + ")");
+                        else if (lastRecvChatMsgID != c.lastRecvChatMsgID)
+                        {
+                            DebugConsole.ThrowError(
+                                "Invalid lastRecvChatMsgID  " + lastRecvChatMsgID + 
+                                " (previous: " + c.lastChatMsgQueueID + ", latest: "+c.lastChatMsgQueueID+")");
+                        }
 #endif
 
-                        if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.lastRecvChatMsgID)) c.lastRecvChatMsgID = lastRecvChatMsgID;
-                        if (NetIdUtils.IdMoreRecent(c.lastRecvChatMsgID, c.lastChatMsgQueueID)) c.lastRecvChatMsgID = c.lastChatMsgQueueID;
-                        
-                        if (NetIdUtils.IdMoreRecent(lastRecvEntityEventID, c.lastRecvEntityEventID)) c.lastRecvEntityEventID = lastRecvEntityEventID;
-                        if (NetIdUtils.IdMoreRecent(c.lastRecvEntityEventID, lastEntityEventID)) c.lastRecvEntityEventID = lastEntityEventID;
-
+                        if (NetIdUtils.IdMoreRecent(lastRecvEntityEventID, c.lastRecvEntityEventID) &&
+                            !NetIdUtils.IdMoreRecent(lastRecvEntityEventID, lastEntityEventID))
+                        {
+                            c.lastRecvEntityEventID = lastRecvEntityEventID;
+                        }
+#if DEBUG
+                        else if (lastRecvEntityEventID != c.lastRecvEntityEventID)
+                        {
+                            DebugConsole.ThrowError(
+                                "Invalid lastRecvEntityEventID  " + lastRecvEntityEventID + 
+                                " (previous: " + c.lastRecvEntityEventID + ", latest: " + lastEntityEventID + ")");
+                        }
+#endif
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
