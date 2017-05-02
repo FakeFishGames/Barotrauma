@@ -103,9 +103,7 @@ namespace Barotrauma.Networking
                     {
                         //disconnect and ban after too many failed attempts
                         banList.BanPlayer("Unnamed", unauthClient.Connection.RemoteEndPoint.Address.ToString());
-                        unauthClient.Connection.Disconnect("Too many failed login attempts. You have been automatically banned from the server.");
-                        unauthenticatedClients.Remove(unauthClient);
-                        unauthClient = null;
+                        DisconnectUnauthClient(inc, unauthClient, "Too many failed login attempts. You have been automatically banned from the server.");
                         return;
                     }
                     else
@@ -127,48 +125,47 @@ namespace Barotrauma.Networking
             string clName = Client.SanitizeName(inc.ReadString());
             if (string.IsNullOrWhiteSpace(clName))
             {
-                unauthClient.Connection.Disconnect("You need a name.");
-                unauthenticatedClients.Remove(unauthClient);
-                unauthClient = null;
+                DisconnectUnauthClient(inc, unauthClient, "You need a name.");
+
+                Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " couldn't join the server (no name given)", Color.Red);
                 return;
             }
 
             if (clVersion != GameMain.Version.ToString())
             {
-                inc.SenderConnection.Disconnect("Version " + GameMain.Version + " required to connect to the server (Your version: " + clVersion + ")");
-                unauthenticatedClients.Remove(unauthClient);
-                unauthClient = null;
-                DebugConsole.NewMessage(clName + " couldn't join the server (wrong game version)", Color.Red);
+                DisconnectUnauthClient(inc, unauthClient, "Version " + GameMain.Version + " required to connect to the server (Your version: " + clVersion + ")");
+                Log(clName + " couldn't join the server (wrong game version)", Color.Red);
                 return;
             }
             if (clPackageName != GameMain.SelectedPackage.Name)
             {
-                inc.SenderConnection.Disconnect("Your content package (" + clPackageName + ") doesn't match the server's version (" + GameMain.SelectedPackage.Name + ")");
-                unauthenticatedClients.Remove(unauthClient);
-                unauthClient = null;
-                DebugConsole.NewMessage(clName + " couldn't join the server (wrong content package name)", Color.Red);
+                DisconnectUnauthClient(inc, unauthClient, "Your content package (" + clPackageName + ") doesn't match the server's version (" + GameMain.SelectedPackage.Name + ")");
+                Log(clName + " couldn't join the server (wrong content package name)", Color.Red);
                 return;
             }
             if (clPackageHash != GameMain.SelectedPackage.MD5hash.Hash)
             {
-                unauthClient.Connection.Disconnect("Your content package (MD5: " + clPackageHash + ") doesn't match the server's version (MD5: " + GameMain.SelectedPackage.MD5hash.Hash + ")");
-                unauthenticatedClients.Remove(unauthClient);
-                unauthClient = null;
-                DebugConsole.NewMessage(clName + " couldn't join the server (wrong content package hash)", Color.Red);
+                DisconnectUnauthClient(inc, unauthClient, "Your content package (MD5: " + clPackageHash + ") doesn't match the server's version (MD5: " + GameMain.SelectedPackage.MD5hash.Hash + ")");
+                Log(clName + " couldn't join the server (wrong content package hash)", Color.Red);
                 return;
             }
             
             if (!whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
             {
-                inc.SenderConnection.Disconnect("You're not in this server's whitelist.");
-                DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", Color.Red);
+                DisconnectUnauthClient(inc, unauthClient, "You're not in this server's whitelist.");
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", Color.Red);
                 return;
             }
             if (!Client.IsValidName(clName))
             {
-                unauthClient.Connection.Disconnect("Your name contains illegal symbols.");
-                unauthenticatedClients.Remove(unauthClient);
-                unauthClient = null;
+                DisconnectUnauthClient(inc, unauthClient, "Your name contains illegal symbols.");
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
+                return;
+            }
+            if (clName.ToLower() == Name.ToLower())
+            {
+                DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", Color.Red);
                 return;
             }
             Client nameTaken = ConnectedClients.Find(c => c.name.ToLower() == clName.ToLower());
@@ -187,9 +184,8 @@ namespace Barotrauma.Networking
                 else
                 {
                     //can't authorize this client
-                    unauthClient.Connection.Disconnect("That name is taken.");
-                    unauthenticatedClients.Remove(unauthClient);
-                    unauthClient = null;
+                    DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
+                    Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name already taken)", Color.Red);
                     return;
                 }
             }
@@ -214,6 +210,16 @@ namespace Barotrauma.Networking
             else
             {
                 newClient.SetPermissions(ClientPermissions.None);
+            }
+        }
+
+        private void DisconnectUnauthClient(NetIncomingMessage inc, UnauthenticatedClient unauthClient, string reason)
+        {
+            inc.SenderConnection.Disconnect(reason);
+
+            if (unauthClient != null)
+            {
+                unauthenticatedClients.Remove(unauthClient);
             }
         }
     }

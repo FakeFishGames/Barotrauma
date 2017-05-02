@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
             new Color(204, 74, 78),     //error
             new Color(63, 72, 204),     //dead
             new Color(157, 225, 160),   //server
-            new Color(148, 230, 7),     //radio
+            new Color(238, 208, 0),     //radio
             new Color(228, 199, 27)     //private
         };
         
