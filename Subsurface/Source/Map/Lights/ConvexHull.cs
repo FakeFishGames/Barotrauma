@@ -173,12 +173,12 @@ namespace Barotrauma.Lights
         {
             if (shadowEffect == null)
             {
-                shadowEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
+                shadowEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
                 shadowEffect.VertexColorEnabled = true;
             }
             if (penumbraEffect == null)
             {
-                penumbraEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
+                penumbraEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
                 penumbraEffect.TextureEnabled = true;
                 //shadowEffect.VertexColorEnabled = true;
                 penumbraEffect.LightingEnabled = false;
@@ -601,7 +601,7 @@ namespace Barotrauma.Lights
             }
             
             CalculateShadowVertices(lightSourcePos, los);
-            ShadowBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, 6 * 2, BufferUsage.None);
+            ShadowBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, 6 * 2, BufferUsage.None);
             ShadowBuffer.SetData(shadowVertices, 0, shadowVertices.Length);
             
             graphicsDevice.SetVertexBuffer(ShadowBuffer);

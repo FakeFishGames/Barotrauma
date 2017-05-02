@@ -48,7 +48,7 @@ namespace Barotrauma
 
             if (basicEffect == null)
             {
-                basicEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
+                basicEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
                 basicEffect.VertexColorEnabled = false;
 
                 basicEffect.TextureEnabled = true;

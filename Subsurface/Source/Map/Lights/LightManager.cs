@@ -64,7 +64,7 @@ namespace Barotrauma.Lights
 
             if (lightEffect == null)
             {
-                lightEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
+                lightEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
                 lightEffect.VertexColorEnabled = false;
 
                 lightEffect.TextureEnabled = true;

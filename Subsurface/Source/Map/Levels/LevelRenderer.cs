@@ -41,7 +41,7 @@ namespace Barotrauma
 
             if (wallEdgeEffect == null)
             {
-                wallEdgeEffect = new BasicEffect(GameMain.CurrGraphicsDevice)
+                wallEdgeEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
                 {
                     DiffuseColor = new Vector3(0.8f, 0.8f, 0.8f),
                     VertexColorEnabled = false,
@@ -53,7 +53,7 @@ namespace Barotrauma
 
             if (wallCenterEffect == null)
             {
-                wallCenterEffect = new BasicEffect(GameMain.CurrGraphicsDevice)
+                wallCenterEffect = new BasicEffect(GameMain.Instance.GraphicsDevice)
                 {
                     VertexColorEnabled = false,
                     TextureEnabled = true,
@@ -90,13 +90,13 @@ namespace Barotrauma
 
         public void SetWallVertices(VertexPositionTexture[] vertices)
         {
-            wallVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length,BufferUsage.WriteOnly);
+            wallVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length,BufferUsage.WriteOnly);
             wallVertices.SetData(vertices);
         }
 
         public void SetBodyVertices(VertexPositionTexture[] vertices)
         {
-            bodyVertices = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+            bodyVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
             bodyVertices.SetData(vertices);
         }
 
@@ -164,7 +164,7 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            RenderWalls(GameMain.CurrGraphicsDevice, cam);
+            RenderWalls(GameMain.Instance.GraphicsDevice, cam);
         }
 
         public void Draw(SpriteBatch spriteBatch)

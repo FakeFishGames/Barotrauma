@@ -932,7 +932,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            startGameCoroutine = GameMain.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
+            startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
 
             yield return CoroutineStatus.Success;
         }
