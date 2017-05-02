@@ -96,7 +96,7 @@ namespace Barotrauma.Networking
             if (!uniqueEvents.Any(e => e.IsDuplicate(newEvent)))
             {
                 //create a copy of the event and give it a new ID
-                var uniqueEvent = new ServerEntityEvent(entity, (UInt16)uniqueEvents.Count);
+                var uniqueEvent = new ServerEntityEvent(entity, (UInt16)(uniqueEvents.Count + 1));
                 uniqueEvent.SetData(extraData);
 
                 uniqueEvents.Add(uniqueEvent);
