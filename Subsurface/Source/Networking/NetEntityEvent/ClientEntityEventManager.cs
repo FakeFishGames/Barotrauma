@@ -130,9 +130,11 @@ namespace Barotrauma.Networking
             {
                 UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);
                 UInt16 entityID = msg.ReadUInt16();
-
-                if (entityID == 0)
+                
+                if (entityID == 0 && thisEventID == (UInt16)(lastReceivedID + 1))
                 {
+                    DebugConsole.NewMessage("received empty event " + thisEventID,  Microsoft.Xna.Framework.Color.Orange);
+
                     msg.ReadPadBits();
                     lastReceivedID++;
                     continue;

@@ -45,9 +45,11 @@ namespace Barotrauma.Networking
                     tempBuffer.LengthBytes < 128, 
                     "Maximum EntityEvent size exceeded when serializing \""+e.Entity+"\"!");
 
+                //the ID has been taken by another entity (the original entity has been removed) -> write an empty event
                 if (Entity.FindEntityByID(e.Entity.ID) != e.Entity)
                 {
-                    //DebugConsole.ThrowError("Error in NetEntityEventManager.Write (FindEntityByID(e.Entity.ID) != e.Entity)");
+                    //technically the clients don't have any use for these, but removing events and shifting the IDs of all 
+                    //consecutive ones is so error-prone that I think this is a safer option
                     msg.Write((UInt16)0);
                     msg.WritePadBits();
                 }
