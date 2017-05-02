@@ -137,21 +137,19 @@ namespace Barotrauma.Networking
 
                 bufferedEvent.IsProcessed = true;
             }
-
+            
             var inGameClients = clients.FindAll(c => c.inGame && !c.NeedsMidRoundSync);
             if (inGameClients.Count > 0)
             {
                 lastSentToAll = inGameClients[0].lastRecvEntityEventID;
                 inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.lastRecvEntityEventID)) lastSentToAll = c.lastRecvEntityEventID; });
 
-                ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (lastSentToAll + 1));
+                ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
                 if (firstEventToResend != null && (Timing.TotalTime - firstEventToResend.CreateTime) > 10.0f)
                 {
                     //it's been 10 seconds since this event was created
                     //kick everyone that hasn't received it yet, this is way too old
-                    List<Client> toKick = inGameClients.FindAll(c => 
-                        NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.lastRecvEntityEventID) && 
-                        (Timing.TotalTime - c.MidRoundSyncTimeOut) > 10.0f); //give mid-round joining players extra 10 seconds to receive the events
+                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.lastRecvEntityEventID));
 
                     if (toKick != null) toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
                 }
@@ -322,9 +320,9 @@ namespace Barotrauma.Networking
                 IClientSerializable entity = Entity.FindEntityByID(entityID) as IClientSerializable;
 
                 //skip the event if we've already received it or if the entity isn't found
-                if (thisEventID != sender.lastSentEntityEventID + 1 || entity == null)
+                if (thisEventID != (UInt16)(sender.lastSentEntityEventID + 1) || entity == null)
                 {
-                    if (thisEventID != sender.lastSentEntityEventID + 1)
+                    if (thisEventID != (UInt16)(sender.lastSentEntityEventID + 1))
                     {
                         DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
                     }

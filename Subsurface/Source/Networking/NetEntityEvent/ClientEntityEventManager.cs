@@ -145,9 +145,9 @@ namespace Barotrauma.Networking
                 IServerSerializable entity = Entity.FindEntityByID(entityID) as IServerSerializable;
 
                 //skip the event if we've already received it or if the entity isn't found
-                if (thisEventID != lastReceivedID + 1 || entity == null)
+                if (thisEventID != (UInt16)(lastReceivedID + 1) || entity == null)
                 {
-                    if (thisEventID != lastReceivedID + 1)
+                    if (thisEventID != (UInt16)(lastReceivedID + 1))
                     {
                         DebugConsole.NewMessage("received msg " + thisEventID + " (waiting for "+ (lastReceivedID+1) + ")", thisEventID<lastReceivedID+1 ? Microsoft.Xna.Framework.Color.Yellow : Microsoft.Xna.Framework.Color.Red);
                     }
