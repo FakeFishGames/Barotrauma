@@ -151,7 +151,7 @@ namespace Barotrauma.Lights
             {
                 if (enabled == value) return;
                 enabled = value;
-                LastVertexChangeTime = (float)GameMain.Instance.TotalElapsedTime;
+                LastVertexChangeTime = (float)Timing.TotalTime;
             }
         }
 
@@ -264,7 +264,7 @@ namespace Barotrauma.Lights
                 segments[i].End.Pos     += amount;
             }
 
-            LastVertexChangeTime = (float)GameMain.Instance.TotalElapsedTime;
+            LastVertexChangeTime = (float)Timing.TotalTime;
 
             CalculateDimensions();
         }
@@ -273,7 +273,7 @@ namespace Barotrauma.Lights
         {
             Debug.Assert(points.Length == 4, "Only rectangular convex hulls are supported");
 
-            LastVertexChangeTime = (float)GameMain.Instance.TotalElapsedTime;
+            LastVertexChangeTime = (float)Timing.TotalTime;
 
             for (int i = 0; i < 4; i++)
             {

@@ -11,6 +11,8 @@ namespace Barotrauma
     {
         private static double alpha;
 
+        public static double TotalTime;
+
         public static double Accumulator;
         public static double Step = 1.0 / 60.0;
 
@@ -28,6 +30,13 @@ namespace Barotrauma
         public static float Interpolate(float previous, float current)
         {
             return current * (float)alpha + previous * (1.0f - (float)alpha);
+        }
+
+        public static float InterpolateRotation(float previous, float current)
+        {
+            float angleDiff = MathUtils.GetShortestAngle(previous, current);
+
+            return previous + angleDiff * (float)alpha;
         }
 
         public static Vector2 Interpolate(Vector2 previous, Vector2 current)

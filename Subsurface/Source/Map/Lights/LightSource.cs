@@ -549,7 +549,7 @@ namespace Barotrauma.Lights
                 var verts = FindRaycastHits();
                 CalculateLightVertices(verts);
 
-                lastRecalculationTime = (float)GameMain.Instance.TotalElapsedTime;
+                lastRecalculationTime = (float)Timing.TotalTime;
                 NeedsRecalculation = false;
             }
             
