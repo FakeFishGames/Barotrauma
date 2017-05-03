@@ -11,7 +11,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
+    class Wire : ItemComponent, IDrawableComponent, IServerSerializable
     {
         class WireSection
         {
@@ -201,10 +201,6 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                }
-                else if (GameMain.Client != null)
-                {
-                    item.CreateClientEvent(this);
                 }
                 //the wire is active if only one end has been connected
                 IsActive = connections[0] == null ^ connections[1] == null;
@@ -715,8 +711,8 @@ namespace Barotrauma.Items.Components
 
             base.RemoveComponentSpecific();
         }
-
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
+        
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write((byte)Math.Min(nodes.Count, 255));
             for (int i = 0; i < Math.Min(nodes.Count, 255); i++)
@@ -726,7 +722,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             nodes.Clear();
 
@@ -735,33 +731,12 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < nodeCount; i++)
             {
-                nodePositions[i] = new Vector2(msg.ReadFloat(), msg.ReadFloat());         
+                nodePositions[i] = new Vector2(msg.ReadFloat(), msg.ReadFloat());
             }
-
-            if (!item.CanClientAccess(c)) return;
+            
             if (nodePositions.Any(n => !MathUtils.IsValid(n))) return;
 
             nodes = nodePositions.ToList();
-
-            UpdateSections();
-            Drawable = nodes.Any();
-        }
-
-        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
-        {
-            ClientWrite(msg, extraData);
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            nodes.Clear();
-
-            int nodeCount = msg.ReadByte();
-            for (int i = 0; i < nodeCount; i++)
-            {
-                Vector2 newNode = new Vector2(msg.ReadFloat(), msg.ReadFloat());
-                if (MathUtils.IsValid(newNode)) nodes.Add(newNode);
-            }
 
             UpdateSections();
             Drawable = nodes.Any();
