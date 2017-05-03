@@ -140,7 +140,7 @@ namespace Barotrauma.Items.Components
                 prevPingRadius = pingRadius;
             }
 
-            float passivePingRadius = (float)Math.Sin(GameMain.Instance.TotalElapsedTime*10);
+            float passivePingRadius = (float)Math.Sin(Timing.TotalTime * 10);
             if (passivePingRadius > 0.0f)
             {
                 foreach (AITarget t in AITarget.List)
