@@ -227,7 +227,7 @@ namespace Barotrauma.Items.Components
                     if (wires[i, j] == null) continue;
 
                     Connections[i].Wires[j] = wires[i,j];
-                    wires[i, j].Connect(Connections[i], false);
+                    wires[i, j].Connect(Connections[i], true);
 
                     var otherConnection = Connections[i].Wires[j].OtherConnection(Connections[i]);
 
