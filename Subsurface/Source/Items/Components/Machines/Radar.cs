@@ -28,6 +28,8 @@ namespace Barotrauma.Items.Components
         private Vector2 center;
         private float displayRadius;
         private float displayScale;
+        
+        private float displayBorderSize;
                 
         [HasDefaultValue(10000.0f, false)]
         public float Range
@@ -61,6 +63,8 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             radarBlips = new List<RadarBlip>();
+
+            displayBorderSize = ToolBox.GetAttributeFloat(element, "displaybordersize", 0.0f);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -167,26 +171,20 @@ namespace Barotrauma.Items.Components
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             GuiFrame.Draw(spriteBatch);
-
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
-
-            int radius = GuiFrame.Rect.Height / 2 - 30;
+            
+            int radius = GuiFrame.Rect.Height / 2 - 10;
             DrawRadar(spriteBatch, new Rectangle((int)GuiFrame.Center.X - radius, (int)GuiFrame.Center.Y - radius, radius * 2, radius * 2));
-
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
         }
 
         private void DrawRadar(SpriteBatch spriteBatch, Rectangle rect)
         {
             center = new Vector2(rect.X + rect.Width * 0.5f, rect.Center.Y);
-            displayRadius = rect.Width / 2.0f;
+            displayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
             displayScale = displayRadius / range;
 
             if (IsActive)
             {
-                pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState), 0.0f, (rect.Width / pingCircle.size.X) * pingState);
+                pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingState), 0.0f, (displayRadius*2 / pingCircle.size.X) * pingState);
             }
                      
             if (item.Submarine != null && !DetectSubmarineWalls)
@@ -206,14 +204,23 @@ namespace Barotrauma.Items.Components
                         Vector2 end = (submarine.HullVertices[(i + 1) % submarine.HullVertices.Count] + offset) * simScale;
                         end.Y = -end.Y;
 
-                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.Green);
+                        GUI.DrawLine(spriteBatch, center + start, center + end, Color.LightBlue);
                     }
                 }
             }
 
-            foreach (RadarBlip radarBlip in radarBlips)
+            if (radarBlips.Count > 0)
             {
-                DrawBlip(spriteBatch, radarBlip, center, radarBlip.FadeTimer / 2.0f);                
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
+
+                foreach (RadarBlip radarBlip in radarBlips)
+                {
+                    DrawBlip(spriteBatch, radarBlip, center, radarBlip.FadeTimer / 2.0f);
+                }
+
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
             }
 
             if (GameMain.DebugDraw)
@@ -500,7 +507,7 @@ namespace Barotrauma.Items.Components
             markerPos.X = (int)markerPos.X;
             markerPos.Y = (int)markerPos.Y;
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightGreen * textAlpha);
+            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X, (int)markerPos.Y, 5, 5), Color.LightBlue);
 
             if (dir.X < 0.0f) markerPos.X -= GUI.SmallFont.MeasureString(label).X+10;
 
@@ -511,7 +518,7 @@ namespace Barotrauma.Items.Components
             GUI.DrawString(spriteBatch, 
                 new Vector2(markerPos.X + 10, markerPos.Y), 
                 wrappedLabel, 
-                Color.LightGreen * textAlpha, Color.Black * textAlpha * 0.5f, 
+                Color.LightBlue * textAlpha, Color.Black * textAlpha * 0.5f, 
                 2, GUI.SmallFont);              
         }
 
