@@ -80,8 +80,13 @@ namespace Barotrauma.Networking
             
             //remove events that have been sent to all clients, they are redundant now
             //keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
-            events.RemoveAll(e => NetIdUtils.IdMoreRecent(lastSentToAll, e.ID)); 
-            
+            events.RemoveAll(e => NetIdUtils.IdMoreRecent(lastSentToAll, e.ID));
+
+            if (server.ConnectedClients.Count(c => c.inGame) == 0 && events.Count > 1)
+            {
+                events.RemoveRange(0, events.Count - 1);
+            }
+
             for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
@@ -189,8 +194,6 @@ namespace Barotrauma.Networking
         /// </summary>
         public void Write(Client client, NetOutgoingMessage msg)
         {
-            if (events.Count == 0) return;
-
             List<NetEntityEvent> eventsToSync = null;
             if (client.NeedsMidRoundSync)
             {
@@ -246,6 +249,7 @@ namespace Barotrauma.Networking
         private List<NetEntityEvent> GetEventsToSync(Client client, List<ServerEntityEvent> eventList)
         {
             List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
+            if (eventList.Count == 0) return eventsToSync;
 
             //find the index of the first event the client hasn't received
             int startIndex = eventList.Count;
