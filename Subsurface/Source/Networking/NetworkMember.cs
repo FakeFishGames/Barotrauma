@@ -158,7 +158,7 @@ namespace Barotrauma.Networking
                 new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
                 Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, "", inGameHUD);
             chatMsgBox.Font = GUI.SmallFont;
-            chatMsgBox.MaxTextWidth = chatBox.Rect.Width * 2;
+            chatMsgBox.MaxTextLength = ChatMessage.MaxLength;
             chatMsgBox.Padding = Vector4.Zero;
             chatMsgBox.OnEnterPressed = EnterChatMessage;
             chatMsgBox.OnTextChanged = TypingChatMessage;

@@ -195,7 +195,7 @@ namespace Barotrauma
 
             chatBox = new GUIListBox(new Rectangle(0,0,0,chatFrame.Rect.Height-80), Color.White, "", chatFrame);            
             textBox = new GUITextBox(new Rectangle(0, 25, 0, 25), Alignment.Bottom, "", chatFrame);
-            textBox.MaxTextWidth = textBox.Rect.Width * 2;
+            textBox.MaxTextLength = ChatMessage.MaxLength;
             textBox.Font = GUI.SmallFont;
 
             //player info panel ------------------------------------------------------------

@@ -6,7 +6,6 @@ using System.Text;
 
 namespace Barotrauma.Networking
 {
-
     enum ChatMessageType
     {
         Default, Error, Dead, Server, Radio, Private
@@ -14,6 +13,8 @@ namespace Barotrauma.Networking
 
     class ChatMessage
     {
+        public const int MaxLength = 150;
+
         public const float SpeakRange = 2000.0f;
         
         public static Color[] MessageColor = 
@@ -138,6 +139,12 @@ namespace Barotrauma.Networking
         {
             UInt16 ID = msg.ReadUInt16();
             string txt = msg.ReadString();
+
+            if (txt.Length > MaxLength)
+            {
+                txt = txt.Substring(0, MaxLength);
+            }
+
             if (NetIdUtils.IdMoreRecent(ID, c.lastSentChatMsgID))
             {
                 //this chat message is new to the server
