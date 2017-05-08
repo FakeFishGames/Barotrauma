@@ -20,6 +20,8 @@ namespace Barotrauma.Networking
 
         private readonly Queue<ColoredText> lines;
 
+        private int unsavedLineCount;
+
         public int LinesPerFile
         {
             get { return linesPerFile; }
@@ -38,7 +40,7 @@ namespace Barotrauma.Networking
             string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
 
             var newText = new ColoredText(logLine, color == null ? Color.White : (Color)color);
-
+            
             lines.Enqueue(newText);
 
             if (LogFrame != null)
@@ -47,11 +49,19 @@ namespace Barotrauma.Networking
 
                 listBox.UpdateScrollBarSize();
             }
+            
+            unsavedLineCount++;
 
-            if (lines.Count >= LinesPerFile)
+            if (unsavedLineCount >= LinesPerFile)
             {
                 Save();
-                lines.Clear();
+                unsavedLineCount = 0;
+            }
+
+            while (lines.Count > LinesPerFile)
+            {
+                listBox.RemoveChild(listBox.children[0]);
+                lines.Dequeue();
             }
         }
 
@@ -59,10 +69,10 @@ namespace Barotrauma.Networking
         {
             LogFrame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f);
 
-            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 500, 400), null, Alignment.Center, "", LogFrame);
+            GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, 500, 420), null, Alignment.Center, "", LogFrame);
             innerFrame.Padding = new Vector4(10.0f, 20.0f, 10.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.TopRight, innerFrame, false, GUI.SmallFont);
+            new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.CenterRight, innerFrame, false, GUI.SmallFont);
 
             GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), Alignment.TopRight, "", innerFrame);
             searchBox.Font = GUI.SmallFont;
@@ -73,7 +83,7 @@ namespace Barotrauma.Networking
             clearButton.OnClicked = ClearFilter;
             clearButton.UserData = searchBox;
 
-            listBox = new GUIListBox(new Rectangle(0, 30, 0, 310), "", innerFrame);
+            listBox = new GUIListBox(new Rectangle(0, 30, 0, 320), "", innerFrame);
 
             var currLines = lines.ToList();
 
@@ -84,9 +94,9 @@ namespace Barotrauma.Networking
 
             listBox.UpdateScrollBarSize();
 
-            if (listBox.BarScroll==0.0f || listBox.BarScroll==1.0f) listBox.BarScroll = 1.0f;
+            if (listBox.BarScroll == 0.0f || listBox.BarScroll == 1.0f) listBox.BarScroll = 1.0f;
 
-            GUIButton closeButton = new GUIButton(new Rectangle(0,0,100, 15), "Close", Alignment.BottomRight, "", innerFrame);
+            GUIButton closeButton = new GUIButton(new Rectangle(-100, 10, 100, 15), "Close", Alignment.BottomRight, "", innerFrame);
             closeButton.OnClicked = (GUIButton button, object userData) =>
             {
                 LogFrame = null;
@@ -173,8 +183,6 @@ namespace Barotrauma.Networking
             {
                 DebugConsole.ThrowError("Saving the server log to " + filePath + " failed", e);
             }
-
-            lines.Clear();
         }
     }
 }

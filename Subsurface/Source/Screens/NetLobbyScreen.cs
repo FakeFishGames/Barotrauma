@@ -341,7 +341,22 @@ namespace Barotrauma
             serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, "", infoFrame);
             serverMessage.Wrap = true;
             serverMessage.OnTextChanged = UpdateServerMessage;
-
+            
+            var showLogButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Server Log", Alignment.TopRight, "", infoFrame);
+            showLogButton.UserData = "showlog";
+            showLogButton.OnClicked = (GUIButton button, object userData) =>
+            {
+                if (GameMain.Server.ServerLog.LogFrame == null)
+                {
+                    GameMain.Server.ServerLog.CreateLogFrame();
+                }
+                else
+                {
+                    GameMain.Server.ServerLog.LogFrame = null;
+                    GUIComponent.KeyboardDispatcher.Subscriber = null;
+                }
+                return true;
+            };
         }
 
         public override void Deselect()
@@ -382,6 +397,8 @@ namespace Barotrauma
             infoFrame.RemoveChild(StartButton);
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "settingsButton"));
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
+
+            InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
 
             //playerList.Parent.RemoveChild(playerList.Parent.children.Find(c => c.UserData as string == "banListButton"));
 

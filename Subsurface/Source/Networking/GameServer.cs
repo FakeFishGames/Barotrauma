@@ -65,6 +65,11 @@ namespace Barotrauma.Networking
             get { return entityEventManager; }
         }
 
+        public ServerLog ServerLog
+        {
+            get { return log; }
+        }
+
         public TimeSpan UpdateInterval
         {
             get { return updateInterval; }
@@ -194,7 +199,7 @@ namespace Barotrauma.Networking
                 GameMain.NetworkMember = null;
                 yield return CoroutineStatus.Success;
             }
-
+            
             if (config.EnableUPnP)
             {
                 server.UPnP.ForwardPort(config.Port, "barotrauma");
@@ -228,7 +233,7 @@ namespace Barotrauma.Networking
                         
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
-            DebugConsole.NewMessage("Server started", Color.Green);
+            Log("Server started", Color.Cyan);
                         
             GameMain.NetLobbyScreen.Select();
             started = true;

@@ -55,6 +55,10 @@ namespace Barotrauma.Items.Components
         private bool unsentChanges;
         private float sendUpdateTimer;
 
+        private Character lastUser;
+        private float? nextServerLogWriteTime;
+        private float lastServerLogWriteTime;
+
         [Editable, HasDefaultValue(9500.0f, true)]
         public float MeltDownTemp
         {
@@ -162,6 +166,11 @@ namespace Barotrauma.Items.Components
             var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>
             {
+                lastUser = Character.Controlled;
+                if (nextServerLogWriteTime == null)
+                {
+                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                }
                 unsentChanges = true;
                 ShutDownTemp -= 100.0f;
 
@@ -171,6 +180,11 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(460, 70, 40,40), "+", "", GuiFrame);
             button.OnPressed = () =>
             {
+                lastUser = Character.Controlled;
+                if (nextServerLogWriteTime == null)
+                {
+                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                }
                 unsentChanges = true;
                 ShutDownTemp += 100.0f;
 
@@ -183,6 +197,11 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(210, 290, 40, 40), "+", "", GuiFrame);
             button.OnPressed = () =>
             {
+                lastUser = Character.Controlled;
+                if (nextServerLogWriteTime == null)
+                {
+                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                }
                 unsentChanges = true;
                 FissionRate += 1.0f;
 
@@ -192,6 +211,11 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(210, 340, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>
             {
+                lastUser = Character.Controlled;
+                if (nextServerLogWriteTime == null)
+                {
+                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                }
                 unsentChanges = true;
                 FissionRate -= 1.0f;
 
@@ -201,6 +225,11 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(500, 290, 40, 40), "+", "", GuiFrame);
             button.OnPressed = () =>
             {
+                lastUser = Character.Controlled;
+                if (nextServerLogWriteTime == null)
+                {
+                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                }
                 unsentChanges = true;
                 CoolingRate += 1.0f;
 
@@ -210,6 +239,11 @@ namespace Barotrauma.Items.Components
             button = new GUIButton(new Rectangle(500, 340, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>
             {
+                lastUser = Character.Controlled;
+                if (nextServerLogWriteTime == null)
+                {
+                    nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+                }
                 unsentChanges = true;
                 CoolingRate -= 1.0f;
 
@@ -219,6 +253,23 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
+            if (GameMain.Server != null && nextServerLogWriteTime != null)
+            {
+                if (Timing.TotalTime >= (float)nextServerLogWriteTime)
+                {
+                    GameServer.Log(lastUser + " adjusted reactor settings: " +
+                            "Temperature: " + (int)temperature +
+                            ", Fission rate: " + (int)fissionRate +
+                            ", Cooling rate: " + (int)coolingRate +
+                            ", Cooling rate: " + coolingRate +
+                            ", Shutdown temp: " + shutDownTemp, 
+                            Color.Orange);
+                    
+                    nextServerLogWriteTime = null;
+                    lastServerLogWriteTime = (float)Timing.TotalTime;
+                }
+            }
+
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             
             fissionRate = Math.Min(fissionRate, AvailableFuel);
@@ -571,6 +622,12 @@ namespace Barotrauma.Items.Components
 
             CoolingRate = coolingRate;
             FissionRate = fissionRate;
+
+            lastUser = c.Character;
+            if (nextServerLogWriteTime == null)
+            {
+                nextServerLogWriteTime = Math.Max(lastServerLogWriteTime + 1.0f, (float)Timing.TotalTime);
+            }
 
             //need to create a server event to notify all clients of the changed state
             unsentChanges = true;
