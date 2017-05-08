@@ -60,6 +60,7 @@
     <ItemContainer hideitems="false" drawinventory="true" capacity="6" slotsperrow="6" itempos="24,-75" iteminterval="26,0" itemrotation="90" canbeselected = "true">
       <Containable name="Railgun Shell"/>
       <Containable name="Nuclear Shell"/>
+      <Containable name="Ancient Weapon"/>
     </ItemContainer>      
   </Item>
   
