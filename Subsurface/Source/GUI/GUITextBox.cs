@@ -28,7 +28,7 @@ namespace Barotrauma
 
         public bool CaretEnabled;
 
-        private int? maxTextWidth;
+        private int? maxTextLength;
         
         public GUITextBlock.TextGetterHandler TextGetter
         {
@@ -42,14 +42,13 @@ namespace Barotrauma
             set { textBlock.Wrap = value; }
         }
 
-        public int? MaxTextWidth
+        public int? MaxTextLength
         {
-            get { return maxTextWidth; }
+            get { return maxTextLength; }
             set
             {
-                textBlock.OverflowClip = value != null && (int)value > textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z;
-                
-                maxTextWidth = value;
+                textBlock.OverflowClip = true;                
+                maxTextLength = value;
             }
         }
         
@@ -142,9 +141,14 @@ namespace Barotrauma
                 {
                     if (!Wrap)
                     {
-                        int maxWidth = MaxTextWidth == null ? (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z) : (int)MaxTextWidth;
-
-                        if (Font.MeasureString(textBlock.Text).X > maxWidth)
+                        if (maxTextLength != null)
+                        {
+                            if (Text.Length > maxTextLength)
+                            {
+                                Text = textBlock.Text.Substring(0, (int)maxTextLength);
+                            }
+                        }
+                        else if (Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
                         {
                             Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
                         }

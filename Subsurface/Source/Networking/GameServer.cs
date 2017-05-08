@@ -841,11 +841,13 @@ namespace Barotrauma.Networking
             outmsg.Write(c.lastSentEntityEventID);
 
             c.chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.lastRecvChatMsgID));
-            foreach (ChatMessage cMsg in c.chatMsgQueue)
+
+            int maxChatMsgsPerPacket = 50;
+            for (int i = 0; i < c.chatMsgQueue.Count && i < maxChatMsgsPerPacket; i++)
             {
-                cMsg.ServerWrite(outmsg, c);
-            }            
-            
+                c.chatMsgQueue[i].ServerWrite(outmsg, c);
+            }
+
             //don't send position updates to characters who are still midround syncing
             //characters or items spawned mid-round don't necessarily exist at the client's end yet
             if (!c.NeedsMidRoundSync)

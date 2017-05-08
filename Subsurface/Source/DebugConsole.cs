@@ -735,6 +735,24 @@ namespace Barotrauma
                         GameMain.Server.CreateEntityEvent(wall);
                     }
                     break;
+                case "spamchatmessages":
+                    int msgCount = 1000;
+                    if (commands.Length > 1) int.TryParse(commands[1], out msgCount);
+                    int msgLength = 50;
+                    if (commands.Length > 2) int.TryParse(commands[2], out msgLength);
+
+                    for (int i = 0; i < msgCount; i++)
+                    {
+                        if (GameMain.Server != null)
+                        {
+                            GameMain.Server.SendChatMessage(ToolBox.RandomSeed(msgLength), ChatMessageType.Default);
+                        }
+                        else
+                        {
+                            GameMain.Client.SendChatMessage(ToolBox.RandomSeed(msgLength));
+                        }
+                    }
+                    break;
 #endif
                 case "cleanbuild":
                     GameMain.Config.MusicVolume = 0.5f;
