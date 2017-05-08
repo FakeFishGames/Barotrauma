@@ -271,7 +271,7 @@ namespace Barotrauma
         {
             get
             {
-                return Rectangle.Empty;
+                return rect;
             }
         }
 

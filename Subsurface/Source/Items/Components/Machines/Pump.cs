@@ -77,6 +77,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
+                    GameServer.Log(Character.Controlled + (IsActive ? " turned on " : " turned off ") + item.Name, Color.Orange);
                 }
                 else if (GameMain.Client != null)
                 {
@@ -95,6 +96,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
+                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", Color.Orange);
                 }
                 else if (GameMain.Client != null)
                 {
@@ -113,6 +115,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
+                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", Color.Orange);
                 }
                 else if (GameMain.Client != null)
                 {
@@ -239,14 +242,24 @@ namespace Barotrauma.Items.Components
 
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
         {
-            float flowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
-            bool isActive        = msg.ReadBoolean();
+            float newFlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
+            bool newIsActive        = msg.ReadBoolean();
 
-            if (!item.CanClientAccess(c)) return;       
+            if (item.CanClientAccess(c))
+            {
+                if (newFlowPercentage != FlowPercentage)
+                {
+                    GameServer.Log(c.Character + " set the pumping speed of " + item.Name + " to " + (int)(newFlowPercentage) + " %", Color.Orange);
+                }
+                if (newIsActive != IsActive)
+                {
+                    GameServer.Log(c.Character + (newIsActive ? " turned on " : " turned off ") + item.Name, Color.Orange);
+                }
 
-            FlowPercentage  = flowPercentage;
-            IsActive        = isActive;
-
+                FlowPercentage  = newFlowPercentage;
+                IsActive        = newIsActive;
+            } 
+            
             //notify all clients of the changed state
             item.CreateServerEvent(this);
         }
