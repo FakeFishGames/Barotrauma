@@ -5,8 +5,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
@@ -202,6 +200,7 @@ namespace Barotrauma.Networking
 
             if (shuttleTransportTimer <= 0.0f)
             {
+                GameServer.Log("The respawn shuttle is leaving.", ServerLog.MessageType.ServerMessage);
                 state = State.Returning;
 
                 server.CreateEntityEvent(this);
@@ -269,6 +268,7 @@ namespace Barotrauma.Networking
                     ResetShuttle();
 
                     state = State.Waiting;
+                    GameServer.Log("The respawn shuttle has left.", ServerLog.MessageType.ServerMessage);
                     server.CreateEntityEvent(this);
 
                     respawnTimer = respawnInterval;
@@ -288,6 +288,8 @@ namespace Barotrauma.Networking
             ResetShuttle();
 
             shuttleSteering.TargetVelocity = Vector2.Zero;
+
+            GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.ServerMessage);
 
             RespawnCharacters();
 
@@ -403,6 +405,8 @@ namespace Barotrauma.Networking
 
             List<CharacterInfo> characterInfos = clients.Select(c => c.characterInfo).ToList();
             if (server.Character != null && server.Character.IsDead) characterInfos.Add(server.CharacterInfo);
+
+            GameServer.Log("Respawning characters: "+string.Join(", ", characterInfos.Select(ci => ci.Name)), ServerLog.MessageType.ServerMessage);
 
             server.AssignJobs(clients, server.Character != null && server.Character.IsDead);
             foreach (Client c in clients)

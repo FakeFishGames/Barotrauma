@@ -752,17 +752,17 @@ namespace Barotrauma.Items.Components
                 if (docked)
                 {
                     if (item.Submarine != null && dockingTarget?.item?.Submarine != null)
-                        GameServer.Log(sender.Name + " docked " + item.Submarine.Name + " to " + dockingTarget.item.Submarine, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(sender.Name + " docked " + item.Submarine.Name + " to " + dockingTarget.item.Submarine.Name, ServerLog.MessageType.ItemInteraction);
                 }
                 else
                 {
                     if (item.Submarine != null && prevDockingTarget?.item?.Submarine != null)
-                        GameServer.Log(sender.Name + " undocked " + item.Submarine.Name + " from " + prevDockingTarget.item.Submarine, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(sender.Name + " undocked " + item.Submarine.Name + " from " + prevDockingTarget.item.Submarine.Name, ServerLog.MessageType.ItemInteraction);
                 }
             }
         }
 
-        public void ServerWrite(Lidgren.Network.NetBuffer msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerWrite(Lidgren.Network.NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write(docked);
 

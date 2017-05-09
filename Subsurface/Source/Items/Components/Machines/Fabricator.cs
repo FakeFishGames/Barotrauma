@@ -282,28 +282,33 @@ namespace Barotrauma.Items.Components
         {
             if (fabricatedItem == null)
             {
-                StartFabricating(obj as FabricableItem);
+                StartFabricating(obj as FabricableItem, Character.Controlled);
             }
             else
             {
-                CancelFabricating();
+                CancelFabricating(Character.Controlled);
             }
 
             if (GameMain.Server != null)
             {
-                item.CreateServerEvent<Fabricator>(this);
+                item.CreateServerEvent(this);
             }
             else if (GameMain.Client != null)
             {
-                item.CreateClientEvent<Fabricator>(this);
+                item.CreateClientEvent(this);
             }
             
             return true;
         }
 
-        private void StartFabricating(FabricableItem selectedItem)
+        private void StartFabricating(FabricableItem selectedItem, Character user = null)
         {
             if (selectedItem == null) return;
+
+            if (user != null)
+            {
+                GameServer.Log(user.Name + " started fabricating " + selectedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+            }
 
             itemList.Enabled = false;
 
@@ -321,8 +326,13 @@ namespace Barotrauma.Items.Components
             currPowerConsumption = powerConsumption;
         }
 
-        private void CancelFabricating()
+        private void CancelFabricating(Character user = null)
         {
+            if (fabricatedItem != null && user != null)
+            {
+                GameServer.Log(user.Name + " cancelled the fabrication of " + fabricatedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+            }
+
             itemList.Enabled = true;
             IsActive = false;
             fabricatedItem = null;
@@ -387,7 +397,7 @@ namespace Barotrauma.Items.Components
                 Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory);
             }
 
-            CancelFabricating();
+            CancelFabricating(null);
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
@@ -464,13 +474,13 @@ namespace Barotrauma.Items.Components
         {
             int itemIndex = msg.ReadRangedInteger(-1, fabricableItems.Count - 1);
 
-            item.CreateServerEvent<Fabricator>(this);
+            item.CreateServerEvent(this);
 
             if (!item.CanClientAccess(c)) return;
 
             if (itemIndex == -1)
             {
-                CancelFabricating();
+                CancelFabricating(c.Character);
             }
             else
             {
@@ -479,7 +489,7 @@ namespace Barotrauma.Items.Components
                 if (itemIndex < 0 || itemIndex >= fabricableItems.Count) return;
 
                 SelectItem(null, fabricableItems[itemIndex]);
-                StartFabricating(fabricableItems[itemIndex]);
+                StartFabricating(fabricableItems[itemIndex], c.Character);
             }
         }
 
