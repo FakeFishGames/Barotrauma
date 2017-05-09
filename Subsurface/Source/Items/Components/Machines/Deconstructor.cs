@@ -105,23 +105,23 @@ namespace Barotrauma.Items.Components
 
         private bool ToggleActive(GUIButton button, object obj)
         {
-            SetActive(!IsActive);
+            SetActive(!IsActive, Character.Controlled);
 
             currPowerConsumption = IsActive ? powerConsumption : 0.0f;
 
             if (GameMain.Server != null)
             {
-                item.CreateServerEvent<Deconstructor>(this);
+                item.CreateServerEvent(this);
             }
             else if (GameMain.Client != null)
             {
-                item.CreateClientEvent<Deconstructor>(this);
+                item.CreateClientEvent(this);
             }
             
             return true;
         }
 
-        private void SetActive(bool active)
+        private void SetActive(bool active, Character user = null)
         {
             container = item.GetComponent<ItemContainer>();
             if (container == null)
@@ -133,6 +133,11 @@ namespace Barotrauma.Items.Components
             if (container.Inventory.Items.All(i => i == null)) active = false;
 
             IsActive = active;
+
+            if (user != null)
+            {
+                GameServer.Log(user.Name + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
+            }
 
             if (!IsActive)
             {
@@ -160,11 +165,11 @@ namespace Barotrauma.Items.Components
         {
             bool active = msg.ReadBoolean();
 
-            item.CreateServerEvent<Deconstructor>(this);
+            item.CreateServerEvent(this);
 
             if (item.CanClientAccess(c))
             {
-                SetActive(active);
+                SetActive(active, c.Character);
             }
         }
 
