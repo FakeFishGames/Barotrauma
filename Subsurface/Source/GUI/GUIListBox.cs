@@ -406,7 +406,7 @@ namespace Barotrauma
 
         private bool IsChildVisible(GUIComponent child)
         {
-            if (child == null || !child.Visible) return false;
+            if (child == null) return false;
 
             if (scrollBar.IsHorizontal)
             {
