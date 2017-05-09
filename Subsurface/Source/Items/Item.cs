@@ -1875,7 +1875,7 @@ namespace Barotrauma
 
                     ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, c.Character);
 
-                    GameServer.Log(c.Character.Name +" used item "+Name, Color.White);
+                    GameServer.Log(c.Character.Name + " used item " + Name, ServerLog.MessageType.ItemInteraction);
 
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, c.Character.ID });
                     

@@ -262,8 +262,8 @@ namespace Barotrauma.Items.Components
                             ", Fission rate: " + (int)fissionRate +
                             ", Cooling rate: " + (int)coolingRate +
                             ", Cooling rate: " + coolingRate +
-                            ", Shutdown temp: " + shutDownTemp, 
-                            Color.Orange);
+                            ", Shutdown temp: " + shutDownTemp,
+                            ServerLog.MessageType.ItemInteraction);
                     
                     nextServerLogWriteTime = null;
                     lastServerLogWriteTime = (float)Timing.TotalTime;
@@ -414,7 +414,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Condition <= 0.0f) return;
 
-            GameServer.Log("Reactor meltdown!", Color.Red);
+            GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
  
             new RepairTask(item, 60.0f, "Reactor meltdown!");
             item.Condition = 0.0f;

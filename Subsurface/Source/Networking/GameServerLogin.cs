@@ -127,45 +127,45 @@ namespace Barotrauma.Networking
             {
                 DisconnectUnauthClient(inc, unauthClient, "You need a name.");
 
-                Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " couldn't join the server (no name given)", Color.Red);
+                Log(inc.SenderConnection.RemoteEndPoint.Address.ToString() + " couldn't join the server (no name given)", ServerLog.MessageType.Error);
                 return;
             }
 
             if (clVersion != GameMain.Version.ToString())
             {
                 DisconnectUnauthClient(inc, unauthClient, "Version " + GameMain.Version + " required to connect to the server (Your version: " + clVersion + ")");
-                Log(clName + " couldn't join the server (wrong game version)", Color.Red);
+                Log(clName + " couldn't join the server (wrong game version)", ServerLog.MessageType.Error);
                 return;
             }
             if (clPackageName != GameMain.SelectedPackage.Name)
             {
                 DisconnectUnauthClient(inc, unauthClient, "Your content package (" + clPackageName + ") doesn't match the server's version (" + GameMain.SelectedPackage.Name + ")");
-                Log(clName + " couldn't join the server (wrong content package name)", Color.Red);
+                Log(clName + " couldn't join the server (wrong content package name)", ServerLog.MessageType.Error);
                 return;
             }
             if (clPackageHash != GameMain.SelectedPackage.MD5hash.Hash)
             {
                 DisconnectUnauthClient(inc, unauthClient, "Your content package (MD5: " + clPackageHash + ") doesn't match the server's version (MD5: " + GameMain.SelectedPackage.MD5hash.Hash + ")");
-                Log(clName + " couldn't join the server (wrong content package hash)", Color.Red);
+                Log(clName + " couldn't join the server (wrong content package hash)", ServerLog.MessageType.Error);
                 return;
             }
             
             if (!whitelist.IsWhiteListed(clName, inc.SenderConnection.RemoteEndPoint.Address.ToString()))
             {
                 DisconnectUnauthClient(inc, unauthClient, "You're not in this server's whitelist.");
-                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", Color.Red);
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (not in whitelist)", ServerLog.MessageType.Error);
                 return;
             }
             if (!Client.IsValidName(clName))
             {
                 DisconnectUnauthClient(inc, unauthClient, "Your name contains illegal symbols.");
-                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", ServerLog.MessageType.Error);
                 return;
             }
             if (clName.ToLower() == Name.ToLower())
             {
                 DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
-                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", Color.Red);
+                Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Error);
                 return;
             }
             Client nameTaken = ConnectedClients.Find(c => c.name.ToLower() == clName.ToLower());
@@ -185,7 +185,7 @@ namespace Barotrauma.Networking
                 {
                     //can't authorize this client
                     DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
-                    Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name already taken)", Color.Red);
+                    Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name already taken)", ServerLog.MessageType.Error);
                     return;
                 }
             }

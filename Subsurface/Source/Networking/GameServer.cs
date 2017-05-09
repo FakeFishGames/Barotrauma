@@ -164,7 +164,7 @@ namespace Barotrauma.Networking
             bool error = false;
             try
             {
-                Log("Starting the server...", Color.Cyan);
+                Log("Starting the server...", ServerLog.MessageType.ServerMessage);
                 server = new NetServer(config);
                 netPeer = server;
 
@@ -176,7 +176,7 @@ namespace Barotrauma.Networking
             }
             catch (Exception e)
             {
-                Log("Error while starting the server (" + e.Message + ")", Color.Red);
+                Log("Error while starting the server (" + e.Message + ")", ServerLog.MessageType.Error);
 
                 System.Net.Sockets.SocketException socketException = e as System.Net.Sockets.SocketException;
 
@@ -233,7 +233,7 @@ namespace Barotrauma.Networking
                         
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
-            Log("Server started", Color.Cyan);
+            Log("Server started", ServerLog.MessageType.ServerMessage);
                         
             GameMain.NetLobbyScreen.Select();
             started = true;
@@ -266,7 +266,7 @@ namespace Barotrauma.Networking
                 {
                     restRequestHandle.Abort();
                     DebugConsole.NewMessage("Couldn't register to master server (request timed out)", Color.Red);
-                    Log("Couldn't register to master server (request timed out)", Color.Red);
+                    Log("Couldn't register to master server (request timed out)", ServerLog.MessageType.Error);
                     yield return CoroutineStatus.Success;
                 }
 
@@ -304,7 +304,7 @@ namespace Barotrauma.Networking
             request.AddParameter("currplayers", connectedClients.Count);
             request.AddParameter("maxplayers", MaxPlayers);
 
-            Log("Refreshing connection with master server...", Color.Cyan);
+            Log("Refreshing connection with master server...", ServerLog.MessageType.ServerMessage);
 
             var sw = new Stopwatch();
             sw.Start();
@@ -320,7 +320,7 @@ namespace Barotrauma.Networking
                 {
                     restRequestHandle.Abort();
                     DebugConsole.NewMessage("Couldn't connect to master server (request timed out)", Color.Red);
-                    Log("Couldn't connect to master server (request timed out)", Color.Red);
+                    Log("Couldn't connect to master server (request timed out)", ServerLog.MessageType.Error);
                     yield return CoroutineStatus.Success;
                 }
                 
@@ -329,22 +329,22 @@ namespace Barotrauma.Networking
 
             if (masterServerResponse.Content == "Error: server not found")
             {
-                Log("Not registered to master server, re-registering...", Color.Red);
+                Log("Not registered to master server, re-registering...", ServerLog.MessageType.Error);
                 CoroutineManager.StartCoroutine(RegisterToMasterServer());
             }
             else if (masterServerResponse.ErrorException != null)
             {
                 DebugConsole.NewMessage("Error while registering to master server (" + masterServerResponse.ErrorException + ")", Color.Red);
-                Log("Error while registering to master server (" + masterServerResponse.ErrorException + ")", Color.Red);
+                Log("Error while registering to master server (" + masterServerResponse.ErrorException + ")", ServerLog.MessageType.Error);
             }
             else if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 DebugConsole.NewMessage("Error while reporting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")", Color.Red);
-                Log("Error while reporting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")", Color.Red);
+                Log("Error while reporting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")", ServerLog.MessageType.Error);
             }
             else
             {
-                Log("Master server responded", Color.Cyan);
+                Log("Master server responded", ServerLog.MessageType.ServerMessage);
             }
 
             System.Diagnostics.Debug.WriteLine("took "+sw.ElapsedMilliseconds+" ms");
@@ -406,11 +406,11 @@ namespace Barotrauma.Networking
                 {
                     if (AutoRestart && isCrewDead)
                     {
-                        Log("Ending round (entire crew dead)", Color.Cyan);
+                        Log("Ending round (entire crew dead)", ServerLog.MessageType.ServerMessage);
                     }
                     else
                     {
-                        Log("Ending round (submarine reached the end of the level)", Color.Cyan);
+                        Log("Ending round (submarine reached the end of the level)", ServerLog.MessageType.ServerMessage);
                     }
 
                     EndGame();
@@ -777,7 +777,7 @@ namespace Barotrauma.Networking
 
             if (!c.HasPermission(command))
             {
-                Log("Client \""+c.name+"\" sent a server command \""+command+"\". Permission denied.", Color.Red);
+                Log("Client \""+c.name+"\" sent a server command \""+command+"\". Permission denied.", ServerLog.MessageType.ServerMessage);
                 return;
             }
 
@@ -788,7 +788,7 @@ namespace Barotrauma.Networking
                     var kickedClient = connectedClients.Find(cl => cl != c && cl.name == kickedName);
                     if (kickedClient != null)
                     {
-                        Log("Client \"" + c.name + "\" kicked \"" + kickedClient.name + "\".", Color.Red);
+                        Log("Client \"" + c.name + "\" kicked \"" + kickedClient.name + "\".", ServerLog.MessageType.ServerMessage);
                         KickClient(kickedClient, false, false);
                     }
                     break;
@@ -797,14 +797,14 @@ namespace Barotrauma.Networking
                     var bannedClient = connectedClients.Find(cl => cl != c && cl.name == bannedName);
                     if (bannedClient != null)
                     {
-                        Log("Client \"" + c.name + "\" banned \"" + bannedClient.name + "\".", Color.Red);
+                        Log("Client \"" + c.name + "\" banned \"" + bannedClient.name + "\".", ServerLog.MessageType.ServerMessage);
                         KickClient(bannedClient, true, false);
                     }
                     break;
                 case ClientPermissions.EndRound:
                     if (gameStarted)
                     {
-                        Log("Client \"" + c.name + "\" ended the round.", Color.Cyan);
+                        Log("Client \"" + c.name + "\" ended the round.", ServerLog.MessageType.ServerMessage);
                         EndGame();
                     }
                     break;
@@ -1088,10 +1088,10 @@ namespace Barotrauma.Networking
 
             GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
 
-            GameServer.Log("Starting a new round...", Color.Cyan);
-            GameServer.Log("Submarine: " + selectedSub.Name, Color.Cyan);
-            GameServer.Log("Game mode: " + selectedMode.Name, Color.Cyan);
-            GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, Color.Cyan);
+            GameServer.Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
+            GameServer.Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
+            GameServer.Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
+            GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
 
             bool missionAllowRespawn = 
                 !(GameMain.GameSession.gameMode is MissionMode) || 
@@ -1166,7 +1166,7 @@ namespace Barotrauma.Networking
 
                 if (TraitorManager.TraitorCharacter!=null && TraitorManager.TargetCharacter != null)
                 {
-                    Log(TraitorManager.TraitorCharacter.Name + " is the traitor and the target is " + TraitorManager.TargetCharacter.Name, Color.Cyan);
+                    Log(TraitorManager.TraitorCharacter.Name + " is the traitor and the target is " + TraitorManager.TargetCharacter.Name, ServerLog.MessageType.ServerMessage);
                 }
             }
 
@@ -1409,7 +1409,7 @@ namespace Barotrauma.Networking
             if (string.IsNullOrWhiteSpace(msg)) msg = client.name + " has left the server";
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
 
-            Log(msg, ChatMessage.MessageColor[(int)ChatMessageType.Server]);
+            Log(msg, ServerLog.MessageType.ServerMessage);
 
             client.Connection.Disconnect(targetmsg);
 
@@ -1818,7 +1818,7 @@ namespace Barotrauma.Networking
             if (Voting.AllowEndVoting && EndVoteMax > 0 &&
                 ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
             {
-                Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", Color.Cyan);
+                Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", ServerLog.MessageType.ServerMessage);
                 EndGame();
             }
         }
@@ -2005,11 +2005,11 @@ namespace Barotrauma.Networking
             return preferredClient;
         }
 
-        public static void Log(string line, Color? color)
+        public static void Log(string line, ServerLog.MessageType messageType)
         {
             if (GameMain.Server == null || !GameMain.Server.SaveServerLogs) return;
 
-            GameMain.Server.log.WriteLine(line, color);
+            GameMain.Server.log.WriteLine(line, messageType);
         }
 
         public override void Disconnect()
@@ -2029,7 +2029,7 @@ namespace Barotrauma.Networking
 
             if (SaveServerLogs)
             {
-                Log("Shutting down server...", Color.Cyan);
+                Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
                 log.Save();
             }
                         

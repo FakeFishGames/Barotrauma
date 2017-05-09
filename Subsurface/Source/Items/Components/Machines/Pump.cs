@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled + (IsActive ? " turned on " : " turned off ") + item.Name, Color.Orange);
+                    GameServer.Log(Character.Controlled + (IsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
                 }
                 else if (GameMain.Client != null)
                 {
@@ -96,7 +96,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", Color.Orange);
+                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (GameMain.Client != null)
                 {
@@ -115,7 +115,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", Color.Orange);
+                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (GameMain.Client != null)
                 {
@@ -249,11 +249,11 @@ namespace Barotrauma.Items.Components
             {
                 if (newFlowPercentage != FlowPercentage)
                 {
-                    GameServer.Log(c.Character + " set the pumping speed of " + item.Name + " to " + (int)(newFlowPercentage) + " %", Color.Orange);
+                    GameServer.Log(c.Character + " set the pumping speed of " + item.Name + " to " + (int)(newFlowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
                 }
                 if (newIsActive != IsActive)
                 {
-                    GameServer.Log(c.Character + (newIsActive ? " turned on " : " turned off ") + item.Name, Color.Orange);
+                    GameServer.Log(c.Character + (newIsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
                 }
 
                 FlowPercentage  = newFlowPercentage;

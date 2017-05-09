@@ -86,7 +86,7 @@ namespace Barotrauma.Networking
 
         public void Save()
         {
-            GameServer.Log("Saving whitelist", null);
+            GameServer.Log("Saving whitelist", ServerLog.MessageType.ServerMessage);
 
             List<string> lines = new List<string>();
 
@@ -193,7 +193,7 @@ namespace Barotrauma.Networking
             if (wlp == null) return false;
 
             DebugConsole.Log("Removing " + wlp.Name + " from whitelist");
-            GameServer.Log("Removing " + wlp.Name + " from whitelist", null);
+            GameServer.Log("Removing " + wlp.Name + " from whitelist", ServerLog.MessageType.ServerMessage);
 
             whitelistedPlayers.Remove(wlp);
             Save();

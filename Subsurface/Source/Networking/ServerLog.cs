@@ -8,6 +8,36 @@ namespace Barotrauma.Networking
 {
     class ServerLog
     {
+        private struct LogMessage
+        {
+            public readonly string Text;
+            public readonly MessageType Type;
+
+            public LogMessage(string text, MessageType type)
+            {
+                Text = "[" + DateTime.Now.ToString() + "] " + text;
+                Type = type;
+            }
+        }
+
+        public enum MessageType
+        {
+            Chat,
+            ItemInteraction,
+            Attack,
+            ServerMessage,
+            Error
+        }
+
+        private Color[] MessageColor = new Color[] 
+        {
+            Color.LightBlue,
+            new Color(238, 208, 0),
+            new Color(204, 74, 78),
+            new Color(157, 225, 160),
+            Color.Red
+        };
+
         private int linesPerFile = 800;
 
         public const string SavePath = "ServerLogs";
@@ -18,7 +48,7 @@ namespace Barotrauma.Networking
 
         private GUIListBox listBox;
 
-        private readonly Queue<ColoredText> lines;
+        private readonly Queue<LogMessage> lines;
 
         private int unsavedLineCount;
 
@@ -32,14 +62,14 @@ namespace Barotrauma.Networking
         {
             this.serverName = serverName;
 
-            lines = new Queue<ColoredText>();
+            lines = new Queue<LogMessage>();
         }
 
-        public void WriteLine(string line, Color? color)
+        public void WriteLine(string line, MessageType messageType)
         {
-            string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
+            //string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
 
-            var newText = new ColoredText(logLine, color == null ? Color.White : (Color)color);
+            var newText = new LogMessage(line, messageType);
             
             lines.Enqueue(newText);
 
@@ -62,7 +92,7 @@ namespace Barotrauma.Networking
             {
                 listBox.RemoveChild(listBox.children[0]);
                 lines.Dequeue();
-            }
+            }            
         }
 
         public void CreateLogFrame()
@@ -83,11 +113,11 @@ namespace Barotrauma.Networking
             clearButton.OnClicked = ClearFilter;
             clearButton.UserData = searchBox;
 
-            listBox = new GUIListBox(new Rectangle(0, 30, 0, 320), "", innerFrame);
+            listBox = new GUIListBox(new Rectangle(0, 30, 0, 340), "", innerFrame);
 
             var currLines = lines.ToList();
 
-            foreach (ColoredText line in currLines)
+            foreach (LogMessage line in currLines)
             {
                 AddLine(line);
             }
@@ -104,16 +134,14 @@ namespace Barotrauma.Networking
             };
         }
 
-        private void AddLine(ColoredText line)
+        private void AddLine(LogMessage line)
         {
             float prevSize = listBox.BarSize;
 
             var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, "", Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
             textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, Math.Max(13, textBlock.Rect.Height));
-
-            //listBox.AddChild(textBlock);
-
-            textBlock.TextColor = line.Color;
+            
+            textBlock.TextColor = MessageColor[(int)line.Type];
             textBlock.CanBeFocused = false;
 
             if ((prevSize == 1.0f && listBox.BarScroll == 0.0f) || (prevSize < 1.0f && listBox.BarScroll == 1.0f)) listBox.BarScroll = 1.0f;

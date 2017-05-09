@@ -501,7 +501,7 @@ namespace Barotrauma.Items.Components
 
             if (sender != null && wasOpen != isOpen)
             {
-                GameServer.Log(sender.Name + (isOpen ? " opened " : " closed ") + item.Name, Color.White);
+                GameServer.Log(sender.Name + (isOpen ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
         }
 

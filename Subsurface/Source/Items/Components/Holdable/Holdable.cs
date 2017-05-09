@@ -167,7 +167,7 @@ namespace Barotrauma.Items.Components
                 item.body.Enabled = true;
                 IsActive = true;
 
-                if (!alreadySelected) Barotrauma.Networking.GameServer.Log(character.Name+" equipped "+item.Name, Color.Orange);
+                if (!alreadySelected) Networking.GameServer.Log(character.Name + " equipped " + item.Name, Networking.ServerLog.MessageType.ItemInteraction);
             }
         }
 
@@ -177,7 +177,7 @@ namespace Barotrauma.Items.Components
 
             picker.DeselectItem(item);
 
-            Barotrauma.Networking.GameServer.Log(character.Name + " unequipped " + item.Name, Color.Orange);
+            Networking.GameServer.Log(character.Name + " unequipped " + item.Name, Networking.ServerLog.MessageType.ItemInteraction);
 
             item.body.Enabled = false;
             IsActive = false;

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -243,7 +244,7 @@ namespace Barotrauma
             string header = index < headers.Count ? headers[index] : "";
             string message = index < messages.Count ? messages[index] : "";
 
-            Barotrauma.Networking.GameServer.Log("Mission info: " + header + " - " + message, Color.Cyan);
+            GameServer.Log("Mission info: " + header + " - " + message, ServerLog.MessageType.Error);
 
             new GUIMessageBox(header, message);
         }
