@@ -1720,7 +1720,7 @@ namespace Barotrauma
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
-                GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, Color.Orange);
+                GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
             }
 
             return attackResult;
@@ -1857,7 +1857,7 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            GameServer.Log(Name+" has died (Cause of death: "+causeOfDeath+")", Color.Red);
+            GameServer.Log(Name+" has died (Cause of death: "+causeOfDeath+")", ServerLog.MessageType.Attack);
 
             if (OnDeath != null) OnDeath(this, causeOfDeath);
             

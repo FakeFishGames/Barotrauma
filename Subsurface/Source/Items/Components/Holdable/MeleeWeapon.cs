@@ -250,7 +250,7 @@ namespace Barotrauma.Items.Components
                     logStr += "(" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
                 }
                 logStr += " on " + target + ".";
-                Networking.GameServer.Log(logStr, Color.Orange);
+                Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
             }
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, limb.character);

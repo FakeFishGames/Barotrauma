@@ -125,7 +125,7 @@ namespace Barotrauma.Networking
             if (banned == null) return false;
 
             DebugConsole.Log("Removing ban from " + banned.Name);
-            GameServer.Log("Removing ban from " + banned.Name, null);
+            GameServer.Log("Removing ban from " + banned.Name, ServerLog.MessageType.ServerMessage);
 
             bannedPlayers.Remove(banned);
 
@@ -189,7 +189,7 @@ namespace Barotrauma.Networking
 
         public void Save()
         {
-            GameServer.Log("Saving banlist", null);
+            GameServer.Log("Saving banlist", ServerLog.MessageType.ServerMessage);
 
             List<string> lines = new List<string>();
 

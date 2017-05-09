@@ -194,7 +194,7 @@ namespace Barotrauma.Items.Components
 
             if (character != null)
             {
-                GameServer.Log(character.Name + " launched " + item.Name, Color.Orange);
+                GameServer.Log(character.Name + " launched " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
             return true;

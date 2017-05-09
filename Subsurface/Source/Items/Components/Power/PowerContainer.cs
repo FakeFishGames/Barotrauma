@@ -102,7 +102,7 @@ namespace Barotrauma.Items.Components
                     if (GameMain.Server != null)
                     {
                         item.CreateServerEvent(this);
-                        GameServer.Log(Character.Controlled + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", Color.Orange);
+                        GameServer.Log(Character.Controlled + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
                     }
                     else if (GameMain.Client != null)
                     {
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
                     if (GameMain.Server != null)
                     {
                         item.CreateServerEvent(this);
-                        GameServer.Log(Character.Controlled + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", Color.Orange);
+                        GameServer.Log(Character.Controlled + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
                     }
                     else if (GameMain.Client != null)
                     {
@@ -289,7 +289,7 @@ namespace Barotrauma.Items.Components
             if (item.CanClientAccess(c))
             {
                 RechargeSpeed = newRechargeSpeed;
-                GameServer.Log(c.Character + " set the recharge speed of "+item.Name+" to "+ (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", Color.Orange);
+                GameServer.Log(c.Character + " set the recharge speed of "+item.Name+" to "+ (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
             }
 
             item.CreateServerEvent(this);

@@ -227,7 +227,7 @@ namespace Barotrauma.Networking
         
         public void AddChatMessage(ChatMessage message)
         {
-            GameServer.Log(message.TextWithSender, message.Color);
+            GameServer.Log(message.TextWithSender, ServerLog.MessageType.Chat);
 
             string displayedText = message.Text;
 

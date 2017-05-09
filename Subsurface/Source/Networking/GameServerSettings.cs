@@ -741,7 +741,7 @@ namespace Barotrauma.Networking
         
         public void SaveClientPermissions()
         {
-            GameServer.Log("Saving client permissions", null);
+            GameServer.Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
 
             List<string> lines = new List<string>();
 

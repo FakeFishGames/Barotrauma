@@ -215,7 +215,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Networking.GameServer.Log(item.Name + " rewired by " + c.Character.Name, Color.Orange);
+            Networking.GameServer.Log(item.Name + " rewired by " + c.Character.Name, ServerLog.MessageType.ItemInteraction);
 
             //update the connections
             for (int i = 0; i < Connections.Count; i++)
@@ -233,7 +233,7 @@ namespace Barotrauma.Items.Components
 
                     Networking.GameServer.Log(
                         item.Name + " (" + Connections[i].Name + ") -> " +
-                        (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), Color.Orange);
+                        (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), ServerLog.MessageType.ItemInteraction);
                 }
             }
             
