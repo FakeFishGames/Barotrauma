@@ -54,6 +54,12 @@ namespace Barotrauma
             }
         }
 
+        public Color TextColor
+        {
+            get { return text.TextColor; }
+            set { text.TextColor = value; }
+        }
+
         public override Rectangle MouseRect
         {
             get { return box.Rect; }
