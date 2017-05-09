@@ -29,13 +29,22 @@ namespace Barotrauma.Networking
             Error
         }
 
-        private Color[] MessageColor = new Color[] 
+        private Color[] messageColor = new Color[]
         {
             Color.LightBlue,
             new Color(238, 208, 0),
             new Color(204, 74, 78),
             new Color(157, 225, 160),
             Color.Red
+        };
+
+        private string[] messageTypeName = new string[]
+        {
+            "Chat message",
+            "Item interaction",
+            "Attack & death",
+            "Server message",
+            "Error"
         };
 
         private int linesPerFile = 800;
@@ -126,9 +135,9 @@ namespace Barotrauma.Networking
             int y = 30;
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new Rectangle(0,y,20,20), msgType.ToString(), Alignment.TopLeft, GUI.SmallFont, innerFrame);
+                var tickBox = new GUITickBox(new Rectangle(0, y, 20, 20), messageTypeName[(int)msgType], Alignment.TopLeft, GUI.SmallFont, innerFrame);
                 tickBox.Selected = true;
-                tickBox.TextColor = MessageColor[(int)msgType];
+                tickBox.TextColor = messageColor[(int)msgType];
 
                 tickBox.OnSelected += (GUITickBox tb) =>
                 {
@@ -167,7 +176,7 @@ namespace Barotrauma.Networking
 
             var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 0), line.Text, "", Alignment.TopLeft, Alignment.TopLeft, listBox, true, GUI.SmallFont);
             textBlock.Rect = new Rectangle(textBlock.Rect.X, textBlock.Rect.Y, textBlock.Rect.Width, Math.Max(13, textBlock.Rect.Height));            
-            textBlock.TextColor = MessageColor[(int)line.Type];
+            textBlock.TextColor = messageColor[(int)line.Type];
             textBlock.CanBeFocused = false;
             textBlock.UserData = line;
 
