@@ -2133,21 +2133,27 @@ namespace Barotrauma
 
         public void ClientReadPosition(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-            Vector2 newPosition = new Vector2(
-                msg.ReadFloat(),
-                msg.ReadFloat());
-
-            float newRotation = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);
-            
-            body.FarseerBody.Awake = msg.ReadBoolean();
-
+            Vector2 newPosition = new Vector2(msg.ReadFloat(), msg.ReadFloat());
+            float newRotation   = msg.ReadRangedSingle(0.0f, MathHelper.TwoPi, 7);            
+            bool awake          = msg.ReadBoolean();
             Vector2 newVelocity = Vector2.Zero;
-            
-            if (body.FarseerBody.Awake)
+
+            if (awake)
             {
                 newVelocity = new Vector2(
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
                     msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
+            }
+            
+            if (body == null)
+            {
+                DebugConsole.ThrowError("Received a position update for an item with no physics body ("+Name+")");
+                return;
+            }
+
+            body.FarseerBody.Awake = awake;
+            if (body.FarseerBody.Awake)
+            {
                 if ((newVelocity - body.LinearVelocity).Length() > 8.0f) body.LinearVelocity = newVelocity;
             }
             else
@@ -2159,29 +2165,6 @@ namespace Barotrauma
             {
                 body.SetTransform(newPosition,newRotation);
             }
-
-            //DebugConsole.NewMessage("Received item pos, t: "+sendingTime+ " ("+Name+")", Color.LightGreen);            
-
-            /*//already interpolating with more up-to-date data -> ignore
-            if (MemPos.Count > 1 && MemPos[0].Timestamp > sendingTime)
-            {
-                return;
-            }
-
-            int index = 0;
-            while (index < MemPos.Count && sendingTime > MemPos[index].Timestamp)
-            {
-                index++;
-            }
-
-            //position with the same timestamp already in the buffer (duplicate packet?)
-            //  -> no need to add again
-            if (index < MemPos.Count && sendingTime == MemPos[index].Timestamp)
-            {
-                return;
-            }
-
-            MemPos.Insert(index, new PosInfo(newTargetPosition, Direction.None, sendingTime));*/
         }
 
         public static void Load(XElement element, Submarine submarine)
