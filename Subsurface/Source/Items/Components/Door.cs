@@ -488,26 +488,27 @@ namespace Barotrauma.Items.Components
         {
             if (isStuck) return;
 
-            bool wasOpen = isOpen;
+            bool wasOpen = predictedState == null ? isOpen : predictedState.Value;
 
             if (connection.Name == "toggle")
             {
-                SetState(!isOpen, false, true);
+                SetState(!wasOpen, false, true);
             }
             else if (connection.Name == "set_state")
             {
                 SetState(signal != "0", false, true);
             }
 
-            if (sender != null && wasOpen != isOpen)
+            bool newState = predictedState == null ? isOpen : predictedState.Value;
+            if (sender != null && wasOpen != newState)
             {
-                GameServer.Log(sender.Name + (isOpen ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(sender.Name + (newState ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
         }
 
         public void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage = false)
         {
-            if (isStuck || isOpen == open) return;
+            if (isStuck || (predictedState == null && isOpen == open) || (predictedState != null && isOpen == predictedState.Value)) return;
 
             if (GameMain.Client != null && !isNetworkMessage)
             {
