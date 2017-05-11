@@ -237,7 +237,7 @@ namespace Barotrauma
 
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
-
+            
             float getUpSpeed = 0.3f;
             float walkCycleSpeed = movement.X * walkAnimSpeed;
             if (stairs != null)
@@ -322,8 +322,11 @@ namespace Barotrauma
             torso.pullJoint.Enabled = true;
             head.pullJoint.Enabled = true;
             waist.pullJoint.Enabled = true;
+            
+            float floorPos = GetFloorY(colliderPos + new Vector2(Math.Sign(movement.X) * 0.5f, 1.0f));
+            bool onSlope = floorPos > GetColliderBottom().Y + 0.05f;
 
-            if (stairs != null)
+            if (stairs != null || onSlope)
             {
                 torso.pullJoint.WorldAnchorB = new Vector2(
                     MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * 0.25f, getUpSpeed * 0.8f),
@@ -369,20 +372,23 @@ namespace Barotrauma
                 //progress the walking animation
                 walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
 
-                MoveLimb(leftFoot,
-                    colliderPos + new Vector2(
-                        stepSize.X,
-                        (stepSize.Y > 0.0f) ? stepSize.Y : -0.15f),
-                    15.0f, true);
+                for (int i = -1; i < 2; i += 2)
+                {
+                    Limb foot = i == -1 ? leftFoot : rightFoot;
+                    Limb leg = i == -1 ? leftLeg : rightLeg;
 
-                MoveLimb(rightFoot,
-                    colliderPos + new Vector2(
-                        -stepSize.X,
-                        (-stepSize.Y > 0.0f) ? -stepSize.Y : -0.15f),
-                    15.0f, true);
+                    Vector2 footPos = stepSize * -i;
+                    if (stepSize.Y > 0.0f) stepSize.Y = -0.15f;
 
-                leftFoot.body.SmoothRotate(leftLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20.0f * runningModifier);
-                rightFoot.body.SmoothRotate(rightLeg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20.0f * runningModifier);
+                    if (onSlope && stairs == null)
+                    {
+                        footPos.Y *= 2.0f;
+                    }
+                    footPos.Y = Math.Min(waist.SimPosition.Y - colliderPos.Y - 0.4f, footPos.Y);
+
+                    MoveLimb(foot, footPos + colliderPos, 15.0f, true);
+                    foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20.0f * runningModifier);
+                }
 
                 if (runningModifier > 1.0f)
                 {
@@ -453,7 +459,11 @@ namespace Barotrauma
                     {
                         footPos = new Vector2(GetCenterOfMass().X + stepSize.X * i * 0.2f, colliderPos.Y - 0.1f);
                     }
-                    
+
+                    if (stairs == null)
+                    {
+                        footPos.Y = Math.Max(Math.Min(floorPos, footPos.Y + 0.5f), footPos.Y);
+                    }
 
                     var foot = i == -1 ? rightFoot : leftFoot;
 
