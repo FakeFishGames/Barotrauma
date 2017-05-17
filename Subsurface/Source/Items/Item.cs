@@ -2163,7 +2163,11 @@ namespace Barotrauma
 
             if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 2.0f)
             {
-                body.SetTransform(newPosition,newRotation);
+                body.SetTransform(newPosition, newRotation);
+
+                Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+                rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+                rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
             }
         }
 
