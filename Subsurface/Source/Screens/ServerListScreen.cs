@@ -139,7 +139,6 @@ namespace Barotrauma
             if (string.IsNullOrWhiteSpace(masterServerData))
             {
                 new GUITextBlock(new Rectangle(0, 0, 0, 20), "Couldn't find any servers", "", serverList);
-
                 return;
             }
 
@@ -206,16 +205,9 @@ namespace Barotrauma
 
 
             var request = new RestRequest("masterserver2.php", Method.GET);
-            request.AddParameter("gamename", "barotrauma"); // adds to POST or URL querystring based on Method
-            request.AddParameter("action", "listservers"); // adds to POST or URL querystring based on Method
-
-
-            // easily add HTTP Headers
-            //request.AddHeader("header", "value");
-
-            //// add files to upload (works with compatible verbs)
-            //request.AddFile(path);
-
+            request.AddParameter("gamename", "barotrauma");
+            request.AddParameter("action", "listservers");
+            
             // execute the request
             masterServerResponded = false;
             var restRequestHandle = client.ExecuteAsync(request, response => MasterServerCallBack(response));
@@ -224,10 +216,10 @@ namespace Barotrauma
             while (!masterServerResponded)
             {
                 if (DateTime.Now > timeOut)
-                { 
+                {
                     serverList.ClearChildren();
                     restRequestHandle.Abort();
-                    DebugConsole.ThrowError("Couldn't connect to master server (request timed out)");
+                    new GUIMessageBox("Connection error", "Couldn't connect to master server (request timed out).");
                     yield return CoroutineStatus.Success;
                 }
                 yield return CoroutineStatus.Running;
@@ -236,7 +228,7 @@ namespace Barotrauma
             if (masterServerResponse.ErrorException != null)
             {
                 serverList.ClearChildren();
-                DebugConsole.ThrowError("Error while connecting to master server", masterServerResponse.ErrorException);
+                new GUIMessageBox("Connection error", "Error while connecting to master server {" + masterServerResponse.ErrorException + "}");
             }
             else if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
             {
@@ -245,14 +237,17 @@ namespace Barotrauma
                 switch (masterServerResponse.StatusCode)
                 {
                     case System.Net.HttpStatusCode.NotFound:
-                        DebugConsole.ThrowError("Error while connecting to master server (404 - \"" + NetConfig.MasterServerUrl + "\" not found)");
+                        new GUIMessageBox("Connection error",
+                            "Error while connecting to master server (404 - \"" + NetConfig.MasterServerUrl + "\" not found)");
                         break;
                     case System.Net.HttpStatusCode.ServiceUnavailable:
-                        DebugConsole.ThrowError("Error while connecting to master server (505 - Service Unavailable)");
-                        DebugConsole.ThrowError("The master server may be down for maintenance or temporarily overloaded. Please try again after in a few moments.");
+                        new GUIMessageBox("Connection error",
+                            "Error while connecting to master server (505 - Service Unavailable) " +
+                            "The master server may be down for maintenance or temporarily overloaded. Please try again after in a few moments.");
                         break;
                     default:
-                        DebugConsole.ThrowError("Error while connecting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")");
+                        new GUIMessageBox("Connection error",
+                            "Error while connecting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")");
                         break;
                 }
             }

@@ -1,9 +1,7 @@
 ﻿using System;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
-using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
