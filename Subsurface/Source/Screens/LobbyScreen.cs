@@ -524,11 +524,8 @@ namespace Barotrauma
         {
             if (GameMain.GameSession.Map.SelectedConnection == null) return false;
 
-            GameMain.ShowLoading(ShiftLoading());
-
-            //GameMain.GameSession.StartShift(selectedLevel, false);
-            //GameMain.GameScreen.Select();
-            
+            GameMain.Instance.ShowLoading(ShiftLoading());
+                        
             return true;
         }
 

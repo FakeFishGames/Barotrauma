@@ -383,7 +383,8 @@ namespace Barotrauma
 
             if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
 
-            GameMain.CurrGraphicsDevice.ScissorRectangle = frame.Rect;
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            spriteBatch.GraphicsDevice.ScissorRectangle = frame.Rect;
 
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
@@ -400,8 +401,8 @@ namespace Barotrauma
                 lastVisible = i;         
                 child.Draw(spriteBatch);
             }
-            
-            GameMain.CurrGraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
+            spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
         }
 
         private bool IsChildVisible(GUIComponent child)

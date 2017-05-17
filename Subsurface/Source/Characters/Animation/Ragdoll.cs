@@ -1100,7 +1100,12 @@ namespace Barotrauma
         {
             PhysicsBody refBody = refLimb == null ? Collider : refLimb.body;
 
-            Vector2 rayStart = refBody.SimPosition; 
+            return GetFloorY(refBody.SimPosition);            
+        }
+
+        protected float GetFloorY(Vector2 simPosition)
+        {
+            Vector2 rayStart = simPosition;
             Vector2 rayEnd = rayStart - new Vector2(0.0f, TorsoPosition);
 
             var lowestLimb = FindLowestLimb();
@@ -1129,7 +1134,7 @@ namespace Barotrauma
                 }
 
                 return closestFraction;
-            } 
+            }
             , rayStart, rayEnd);
 
 
@@ -1141,7 +1146,6 @@ namespace Barotrauma
             {
                 return rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
             }
-            
         }
 
         public void SetPosition(Vector2 simPosition, bool lerp = false)

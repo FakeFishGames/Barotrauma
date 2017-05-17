@@ -20,12 +20,7 @@ namespace Barotrauma
             
             selectedMission = gameSession.Mission;
         }
-
-
-        //public void AddCasualty(Character character, CauseOfDeath causeOfDeath)
-        //{
-        //    casualties.Add(new Casualty(character.Info, causeOfDeath, ""));
-        //}
+        
 
         public GUIFrame CreateSummaryFrame(string endMessage)
         {
@@ -90,7 +85,6 @@ namespace Barotrauma
                 }
                 else
                 {
-
                     if (character.IsUnconscious)
                     {
                         statusText = "Unconscious";
@@ -101,11 +95,12 @@ namespace Barotrauma
                         statusText = "Injured";
                         statusColor = Color.DarkOrange;
                     }
-
                 }
 
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), statusText,
-                    "", Alignment.BottomLeft, Alignment.TopCenter, characterFrame, true, GUI.SmallFont).Color = statusColor * 0.7f;
+                new GUITextBlock(
+                    new Rectangle(0, 0, 0, 20), statusText, statusColor * 0.8f, Color.White,
+                    Alignment.BottomLeft, Alignment.Center,
+                    null, characterFrame, true, GUI.SmallFont);
 
                 x += characterFrame.Rect.Width + 10;                
             }
@@ -120,12 +115,10 @@ namespace Barotrauma
                 new GUITextBlock(new Rectangle(0, y, innerFrame.Rect.Width - 170, 0),
                     (GameMain.GameSession.Mission.Completed) ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
                     "", innerFrame, true);
-                //y += 50;
 
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
                     new GUITextBlock(new Rectangle(0, 0, 0, 30), "Reward: " + GameMain.GameSession.Mission.Reward, "", Alignment.BottomLeft, Alignment.BottomLeft, innerFrame);
-                    //y += 30;
                 }  
             }
 

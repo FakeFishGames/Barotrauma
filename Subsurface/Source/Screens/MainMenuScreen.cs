@@ -509,7 +509,7 @@ namespace Barotrauma
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
             GUI.Font.DrawString(spriteBatch, "Barotrauma v"+GameMain.Version, new Vector2(10, GameMain.GraphicsHeight-20), Color.White);
-
+            
             spriteBatch.End();
         }
 

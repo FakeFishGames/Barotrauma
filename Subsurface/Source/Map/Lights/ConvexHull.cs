@@ -151,7 +151,7 @@ namespace Barotrauma.Lights
             {
                 if (enabled == value) return;
                 enabled = value;
-                LastVertexChangeTime = (float)GameMain.Instance.TotalElapsedTime;
+                LastVertexChangeTime = (float)Timing.TotalTime;
             }
         }
 
@@ -173,12 +173,12 @@ namespace Barotrauma.Lights
         {
             if (shadowEffect == null)
             {
-                shadowEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
+                shadowEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
                 shadowEffect.VertexColorEnabled = true;
             }
             if (penumbraEffect == null)
             {
-                penumbraEffect = new BasicEffect(GameMain.CurrGraphicsDevice);
+                penumbraEffect = new BasicEffect(GameMain.Instance.GraphicsDevice);
                 penumbraEffect.TextureEnabled = true;
                 //shadowEffect.VertexColorEnabled = true;
                 penumbraEffect.LightingEnabled = false;
@@ -264,7 +264,7 @@ namespace Barotrauma.Lights
                 segments[i].End.Pos     += amount;
             }
 
-            LastVertexChangeTime = (float)GameMain.Instance.TotalElapsedTime;
+            LastVertexChangeTime = (float)Timing.TotalTime;
 
             CalculateDimensions();
         }
@@ -273,7 +273,7 @@ namespace Barotrauma.Lights
         {
             Debug.Assert(points.Length == 4, "Only rectangular convex hulls are supported");
 
-            LastVertexChangeTime = (float)GameMain.Instance.TotalElapsedTime;
+            LastVertexChangeTime = (float)Timing.TotalTime;
 
             for (int i = 0; i < 4; i++)
             {
@@ -601,7 +601,7 @@ namespace Barotrauma.Lights
             }
             
             CalculateShadowVertices(lightSourcePos, los);
-            ShadowBuffer = new VertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionColor.VertexDeclaration, 6 * 2, BufferUsage.None);
+            ShadowBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, 6 * 2, BufferUsage.None);
             ShadowBuffer.SetData(shadowVertices, 0, shadowVertices.Length);
             
             graphicsDevice.SetVertexBuffer(ShadowBuffer);
