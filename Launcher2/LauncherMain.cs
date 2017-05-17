@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Input;
 using Barotrauma;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using System.Linq;
 using System.Diagnostics;
@@ -25,7 +24,7 @@ namespace Launcher2
         string version = AssemblyName.GetAssemblyName("Barotrauma.exe").Version.ToString();
 
         private const string configPath = "config.xml";
-        private Barotrauma.GameSettings settings;
+        private GameSettings settings;
 
         private string latestVersionFileList, latestVersionFolder;
         
@@ -38,28 +37,24 @@ namespace Launcher2
         private GUIProgressBar progressBar;
         private GUIButton downloadButton;
 
-        GUIButton launchButton;
-
-        //public bool FullScreenEnabled
-        //{
-        //    get { return settings.FullScreenEnabled; }
-        //    set { settings.FullScreenEnabled = value; }
-        //}
-
+        private GUIButton launchButton;
+        
         public bool AutoCheckUpdates
         {
             get { return settings.AutoCheckUpdates; }
             set { settings.AutoCheckUpdates = value; }
         }
 
-        Texture2D backgroundTexture, titleTexture;
+        private Texture2D backgroundTexture, titleTexture;
 
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        private GraphicsDeviceManager graphics;
+        private SpriteBatch spriteBatch;
 
-        int graphicsWidth, graphicsHeight;
+        private RasterizerState scissorTestEnable;
 
-        GUIFrame guiRoot;
+        private int graphicsWidth, graphicsHeight;
+
+        private GUIFrame guiRoot;
 
         public LauncherMain()
             : base()
@@ -67,6 +62,8 @@ namespace Launcher2
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferWidth = 640;
             graphics.PreferredBackBufferHeight = 400;
+            
+            scissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
             IsMouseVisible = true;
 
@@ -210,7 +207,7 @@ namespace Launcher2
         {
             GraphicsDevice.Clear(Color.Black);
 
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, scissorTestEnable);
 
             spriteBatch.Draw(backgroundTexture,
                 new Rectangle(0, 0, graphicsWidth, graphicsHeight),

@@ -490,16 +490,16 @@ namespace Barotrauma.Lights
             //now we just create a buffer for 64 verts and make it larger if needed
             if (lightVolumeBuffer == null)
             {
-                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, Math.Max(64, (int)(vertexCount*1.5)), BufferUsage.None);
-                lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.CurrGraphicsDevice, typeof(short), Math.Max(64*3, (int)(indexCount * 1.5)), BufferUsage.None);
+                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionTexture.VertexDeclaration, Math.Max(64, (int)(vertexCount*1.5)), BufferUsage.None);
+                lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.Instance.GraphicsDevice, typeof(short), Math.Max(64*3, (int)(indexCount * 1.5)), BufferUsage.None);
             }
             else if (vertexCount > lightVolumeBuffer.VertexCount)
             {
                 lightVolumeBuffer.Dispose();
                 lightVolumeIndexBuffer.Dispose();
 
-                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.CurrGraphicsDevice, VertexPositionTexture.VertexDeclaration, (int)(vertexCount*1.5), BufferUsage.None);
-                lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.CurrGraphicsDevice, typeof(short), (int)(indexCount * 1.5), BufferUsage.None);
+                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionTexture.VertexDeclaration, (int)(vertexCount*1.5), BufferUsage.None);
+                lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.Instance.GraphicsDevice, typeof(short), (int)(indexCount * 1.5), BufferUsage.None);
             }
                         
             lightVolumeBuffer.SetData<VertexPositionTexture>(vertices.ToArray());
@@ -549,7 +549,7 @@ namespace Barotrauma.Lights
                 var verts = FindRaycastHits();
                 CalculateLightVertices(verts);
 
-                lastRecalculationTime = (float)GameMain.Instance.TotalElapsedTime;
+                lastRecalculationTime = (float)Timing.TotalTime;
                 NeedsRecalculation = false;
             }
             
@@ -566,10 +566,10 @@ namespace Barotrauma.Lights
             }
             lightEffect.CurrentTechnique.Passes[0].Apply();
 
-            GameMain.CurrGraphicsDevice.SetVertexBuffer(lightVolumeBuffer);
-            GameMain.CurrGraphicsDevice.Indices = lightVolumeIndexBuffer;
-            
-            GameMain.CurrGraphicsDevice.DrawIndexedPrimitives
+            GameMain.Instance.GraphicsDevice.SetVertexBuffer(lightVolumeBuffer);
+            GameMain.Instance.GraphicsDevice.Indices = lightVolumeIndexBuffer;
+
+            GameMain.Instance.GraphicsDevice.DrawIndexedPrimitives
             (
                 PrimitiveType.TriangleList, 0, 0, indexCount / 3
             );

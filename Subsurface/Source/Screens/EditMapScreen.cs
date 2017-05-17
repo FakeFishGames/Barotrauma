@@ -550,23 +550,13 @@ namespace Barotrauma
             deleteButton.UserData = "delete";
             deleteButton.OnClicked = (btn, userdata) =>
             {
-                if (subList.Selected!=null)
+                if (subList.Selected != null)
                 {
-                    Submarine sub = subList.Selected.UserData as Submarine;
-                    try
-                    {
-                        File.Delete(sub.FilePath);
-                    }
-                    catch (Exception e)
-                    {
-                        DebugConsole.ThrowError("Couldn't delete file \""+sub.FilePath+"\"!", e);
-                    }
+                    TryDeleteSub(subList.Selected.UserData as Submarine);
                 }
 
                 deleteButton.Enabled = false;
-
-                CreateLoadScreen();
-
+                
                 return true;
             };
 
@@ -601,6 +591,29 @@ namespace Barotrauma
             loadFrame = null;
 
             return true;
+        }
+
+        private void TryDeleteSub(Submarine sub)
+        {
+            if (sub == null) return;
+            
+            var msgBox = new GUIMessageBox("Delete file?", "Are you sure you want to delete \"" + sub.Name + "\"", new string[] { "OK", "Cancel" });
+            msgBox.Buttons[0].OnClicked += (btn, userData) => 
+            {
+                try
+                {
+                    sub.Remove();
+                    File.Delete(sub.FilePath);
+                    CreateLoadScreen();
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Couldn't delete file \"" + sub.FilePath + "\"!", e);
+                }
+                return true;
+            };
+            msgBox.Buttons[0].OnClicked += msgBox.Close;
+            msgBox.Buttons[1].OnClicked += msgBox.Close;            
         }
 
         private bool SelectTab(GUIButton button, object obj)

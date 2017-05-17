@@ -276,10 +276,14 @@ namespace Barotrauma
             if (offset != Vector2.Zero) drawRect.Location += offset.ToPoint();
             
             base.Draw(spriteBatch);
-
+            
             if (TextGetter != null) Text = TextGetter();
-
-            if (overflowClipActive) GameMain.CurrGraphicsDevice.ScissorRectangle = rect;
+            
+            Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
+            if (overflowClipActive)
+            {
+                spriteBatch.GraphicsDevice.ScissorRectangle = rect;
+            }
 
             if (!string.IsNullOrEmpty(text))
             {
@@ -291,7 +295,10 @@ namespace Barotrauma
                     SpriteEffects.None, textDepth);
             }
 
-            if (overflowClipActive) GameMain.CurrGraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            if (overflowClipActive)
+            {
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            }
 
             DrawChildren(spriteBatch);
 

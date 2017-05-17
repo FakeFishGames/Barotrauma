@@ -7,30 +7,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
 using Barotrauma.Particles;
-using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
-using System.Xml;
 
 namespace Barotrauma
 {
     class GameMain : Game
     {
-        public static GraphicsDeviceManager Graphics;
-        static int graphicsWidth, graphicsHeight;
-        static SpriteBatch spriteBatch;
-
-        public static GameMain Instance;
-
-        public static bool WindowActive
-        {
-            get { return Instance == null || Instance.IsActive; }
-        }
-
         public static bool DebugDraw;
-
-        public static GraphicsDevice CurrGraphicsDevice;
-
+        
         public static FrameCounter FrameCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
@@ -51,21 +36,17 @@ namespace Barotrauma
         {
             get { return Config.SelectedContentPackage; }
         }
-
-        public static Level Level;
-
+        
         public static GameSession GameSession;
 
         public static NetworkMember NetworkMember;
 
         public static ParticleManager ParticleManager;
-
-        //public static TextureLoader TextureLoader;
         
         public static World World;
 
         public static LoadingScreen TitleScreen;
-        private static bool loadingScreenOpen;
+        private bool loadingScreenOpen;
 
         public static GameSettings Config;
 
@@ -74,25 +55,35 @@ namespace Barotrauma
 
         private GameTime fixedTime;
 
-        //public static Random localRandom;
-        //public static Random random;
+        private static SpriteBatch spriteBatch;
 
-        //private Stopwatch renderTimer;
-        //public static int renderTimeElapsed;
-
-        public Camera Cam
+        public static GameMain Instance
         {
-            get { return GameScreen.Cam; }
+            get;
+            private set;
         }
 
+        public static GraphicsDeviceManager GraphicsDeviceManager
+        {
+            get;
+            private set;
+        }
+        
         public static int GraphicsWidth
         {
-            get { return graphicsWidth; }
+            get;
+            private set;
         }
 
         public static int GraphicsHeight
         {
-            get { return graphicsHeight; }
+            get;
+            private set;
+        }
+
+        public static bool WindowActive
+        {
+            get { return Instance == null || Instance.IsActive; }
         }
 
         public static GameServer Server
@@ -110,23 +101,10 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        /// <summary>
-        /// Total seconds elapsed after startup
-        /// </summary>
-        public double TotalElapsedTime
-        {
-            get;
-            private set;
-        }
-                        
+                                
         public GameMain()
         {
-            Graphics = new GraphicsDeviceManager(this)
-            {
-                SynchronizeWithVerticalRetrace = false,
-            };
-
+            GraphicsDeviceManager = new GraphicsDeviceManager(this);
             Window.Title = "Barotrauma";
 
             Instance = this;
@@ -144,11 +122,8 @@ namespace Barotrauma
             Content.RootDirectory = "Content";
 
             FrameCounter = new FrameCounter();
-
-            //IsMouseVisible = true;
-
+            
             IsFixedTimeStep = false;
-            //TargetElapsedTime = new TimeSpan(0, 0, 0, 0, 55);
 
             Timing.Accumulator = 0.0f;
             fixedTime = new GameTime();
@@ -158,22 +133,21 @@ namespace Barotrauma
             FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
-
         }
 
         public void ApplyGraphicsSettings()
         {
-            graphicsWidth = Config.GraphicsWidth;
-            graphicsHeight = Config.GraphicsHeight;
-            Graphics.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
-            
-            Graphics.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+            GraphicsWidth = Config.GraphicsWidth;
+            GraphicsHeight = Config.GraphicsHeight;
+            GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
 
-            Graphics.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
-            Graphics.PreferredBackBufferWidth = graphicsWidth;
-            Graphics.PreferredBackBufferHeight = graphicsHeight;
-            
-            Graphics.ApplyChanges();
+            GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+
+            GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
+            GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
+            GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
+
+            GraphicsDeviceManager.ApplyChanges();
         }
 
         /// <summary>
@@ -185,9 +159,7 @@ namespace Barotrauma
         protected override void Initialize()
         {
             base.Initialize();
-
-            CurrGraphicsDevice = GraphicsDevice;
-
+            
             ScissorTestEnable = new RasterizerState() { ScissorTestEnable = true };
 
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
@@ -202,25 +174,25 @@ namespace Barotrauma
         /// </summary>
         protected override void LoadContent()
         {
-            graphicsWidth   = GraphicsDevice.Viewport.Width;
-            graphicsHeight  = GraphicsDevice.Viewport.Height;
-                        
+            GraphicsWidth = GraphicsDevice.Viewport.Width;
+            GraphicsHeight = GraphicsDevice.Viewport.Height;
+
             Sound.Init();
 
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
-                        
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-            TextureLoader.Init(GraphicsDevice);
+
+            spriteBatch = new SpriteBatch(base.GraphicsDevice);
+            TextureLoader.Init(base.GraphicsDevice);
 
             loadingScreenOpen = true;
-            TitleScreen = new LoadingScreen(GraphicsDevice);
+            TitleScreen = new LoadingScreen(base.GraphicsDevice);
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
         }
 
         public IEnumerable<object> Load()
         {
-            GUI.GraphicsDevice = GraphicsDevice;
+            GUI.GraphicsDevice = base.GraphicsDevice;
             GUI.Init(Content);
 
             GUIComponent.Init(Window);
@@ -228,9 +200,9 @@ namespace Barotrauma
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
 
-            LightManager = new Lights.LightManager(GraphicsDevice);
+            LightManager = new Lights.LightManager(base.GraphicsDevice);
 
-            Hull.renderer = new WaterRenderer(GraphicsDevice, Content);
+            Hull.renderer = new WaterRenderer(base.GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
         yield return CoroutineStatus.Running;
 
@@ -275,7 +247,7 @@ namespace Barotrauma
             TitleScreen.LoadState = 80.0f;
         yield return CoroutineStatus.Running;
 
-            GameScreen          =   new GameScreen(Graphics.GraphicsDevice, Content);
+            GameScreen          =   new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
             TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 
@@ -289,7 +261,7 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
-            ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", Cam);
+            ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", GameScreen.Cam);
         yield return CoroutineStatus.Running;
 
             LocationType.Init();
@@ -325,8 +297,6 @@ namespace Barotrauma
 
             while (Timing.Accumulator >= Timing.Step)
             {
-                TotalElapsedTime = gameTime.TotalGameTime.TotalSeconds;
-
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
                 fixedTime.ElapsedGameTime = addTime;
@@ -415,11 +385,11 @@ namespace Barotrauma
 
             if (loadingScreenOpen)
             {
-                TitleScreen.Draw(spriteBatch, GraphicsDevice, (float)deltaTime);
+                TitleScreen.Draw(spriteBatch, base.GraphicsDevice, (float)deltaTime);
             }
             else if (hasLoaded)
             {
-                Screen.Selected.Draw(deltaTime, GraphicsDevice, spriteBatch);
+                Screen.Selected.Draw(deltaTime, base.GraphicsDevice, spriteBatch);
             }
 
             if (!DebugDraw) return;
@@ -432,7 +402,7 @@ namespace Barotrauma
         }
 
         static bool waitForKeyHit = true;
-        public static CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
+        public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             waitForKeyHit = waitKeyHit;
             loadingScreenOpen = true;

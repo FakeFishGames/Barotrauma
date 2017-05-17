@@ -365,8 +365,8 @@ namespace Barotrauma
             vsyncTickBox.OnSelected = (GUITickBox box) =>
             {
                 VSyncEnabled = !VSyncEnabled;
-                GameMain.Graphics.SynchronizeWithVerticalRetrace = VSyncEnabled;
-                GameMain.Graphics.ApplyChanges();
+                GameMain.GraphicsDeviceManager.SynchronizeWithVerticalRetrace = VSyncEnabled;
+                GameMain.GraphicsDeviceManager.ApplyChanges();
                 UnsavedSettings = true;
 
                 return true;
