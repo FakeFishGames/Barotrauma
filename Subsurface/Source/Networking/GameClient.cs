@@ -538,7 +538,7 @@ namespace Barotrauma.Networking
                                 
                                 break;
                             case ServerPacketHeader.STARTGAME:
-                                startGameCoroutine = GameMain.ShowLoading(StartGame(inc), false);
+                                startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(inc), false);
                                 break;
                             case ServerPacketHeader.ENDGAME:
                                 string endMessage = inc.ReadString();
