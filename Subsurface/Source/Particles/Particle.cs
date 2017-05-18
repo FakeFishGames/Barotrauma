@@ -182,7 +182,7 @@ namespace Barotrauma.Particles
             
             if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
-                Vector2 edgePos =  position + prefab.CollisionRadius * Vector2.Normalize(velocity) * size.X;
+                //Vector2 edgePos =  position + prefab.CollisionRadius * Vector2.Normalize(velocity) * size.X;
 
                 if (currentHull == null)
                 {
@@ -194,38 +194,68 @@ namespace Barotrauma.Particles
                     }                   
 
                 }
-                else if (!Submarine.RectContains(currentHull.WorldRect, edgePos))
+                else
                 {
-                    if (prefab.DeleteOnCollision) return false;
-
-                    bool gapFound = false;
-                    foreach (Gap gap in hullGaps)
+                    Vector2 collisionNormal = Vector2.Zero;
+                    if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < currentHull.WorldRect.Y - currentHull.WorldRect.Height)
                     {
-                        if (!gap.isHorizontal)
+                        if (prefab.DeleteOnCollision) return false;
+                        collisionNormal = new Vector2(0.0f, 1.0f);
+                    }
+                    else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > currentHull.WorldRect.Y)
+                    {
+                        if (prefab.DeleteOnCollision) return false;
+                        collisionNormal = new Vector2(0.0f, -1.0f);
+                    }
+                    else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < currentHull.WorldRect.X)
+                    {
+                        if (prefab.DeleteOnCollision) return false;
+                        collisionNormal = new Vector2(1.0f, 0.0f);
+                    }
+                    else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > currentHull.WorldRect.Right)
+                    {
+                        if (prefab.DeleteOnCollision) return false;
+                        collisionNormal = new Vector2(-1.0f, 0.0f);
+                    }
+
+                    if (collisionNormal != Vector2.Zero)
+                    {
+                        bool gapFound = false;
+                        foreach (Gap gap in hullGaps)
                         {
-                            if (gap.WorldRect.X > position.X || gap.WorldRect.Right < position.X) continue;
-                            if (Math.Sign(velocity.Y) != Math.Sign(gap.WorldRect.Y - (currentHull.WorldRect.Y - currentHull.WorldRect.Height))) continue;
+                            if (gap.isHorizontal != (collisionNormal.X != 0.0f)) continue;
+
+                            if (gap.isHorizontal)
+                            {
+                                if (gap.WorldRect.Y < position.Y || gap.WorldRect.Y - gap.WorldRect.Height > position.Y) continue;
+                                int gapDir = Math.Sign(gap.WorldRect.Center.X - currentHull.WorldRect.Center.X);
+                                if (Math.Sign(velocity.X) != gapDir || Math.Sign(position.X - currentHull.WorldRect.Center.X) != gapDir) continue;
+                            }
+                            else
+                            {
+                                if (gap.WorldRect.X > position.X || gap.WorldRect.Right < position.X) continue;
+                                float hullCenterY = currentHull.WorldRect.Y - currentHull.WorldRect.Height / 2;
+                                int gapDir = Math.Sign(gap.WorldRect.Y - hullCenterY);
+                                if (Math.Sign(velocity.Y) != gapDir || Math.Sign(position.Y - hullCenterY) != gapDir) continue;
+                            }
+
+                            gapFound = true;
+                            break;
+                        }
+
+                        if (!gapFound)
+                        {
+                            OnWallCollisionInside(currentHull, collisionNormal);
                         }
                         else
                         {
-                            if (gap.WorldRect.Y < position.Y || gap.WorldRect.Y - gap.WorldRect.Height > position.Y) continue;
-                            if (Math.Sign(velocity.X) != Math.Sign(gap.WorldRect.Center.X - currentHull.WorldRect.Center.X)) continue;
+                            Hull newHull = Hull.FindHull(position);
+                            if (newHull != currentHull)
+                            {
+                                hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
+                                OnChangeHull?.Invoke(position, currentHull);
+                            }
                         }
-
-                        gapFound = true;
-                        break;
-                    }
-
-                    if (!gapFound)
-                    {
-                        OnWallCollisionInside(currentHull, edgePos);
-                    }
-                    else
-                    {
-                        currentHull = Hull.FindHull(position);
-                        hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
-
-                        if (OnChangeHull != null) OnChangeHull(edgePos, currentHull);
                     }
                 }
             }
@@ -242,41 +272,43 @@ namespace Barotrauma.Particles
             if (Math.Abs(velocity.X) < 0.0001f && Math.Abs(velocity.Y) < 0.0001f) return;
             float speed = velocity.Length();
 
-            velocity -= (velocity / speed) * Math.Min(speed * speed * prefab.WaterDrag * deltaTime, 1.0f);
+            velocity -= (velocity / speed) * Math.Min(speed * speed * dragCoefficient * deltaTime, 1.0f);
         }
 
-        private void OnWallCollisionInside(Hull prevHull, Vector2 edgePos)
+        private void OnWallCollisionInside(Hull prevHull, Vector2 collisionNormal)
         {
             Rectangle prevHullRect = prevHull.WorldRect;
 
             Vector2 subVel = ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity);
-
             velocity -= subVel;
 
-            if (edgePos.Y < prevHullRect.Y - prevHullRect.Height)
+            if (Math.Abs(collisionNormal.X) > Math.Abs(collisionNormal.Y))
             {
-                position.Y = prevHullRect.Y - prevHullRect.Height + prefab.CollisionRadius;
-                velocity.Y = -velocity.Y;
+                if (collisionNormal.X > 0.0f)
+                {
+                    position.X = Math.Max(position.X, prevHullRect.X + prefab.CollisionRadius * size.X);
+                }
+                else
+                {
+                    position.X = Math.Min(position.X, prevHullRect.Right - prefab.CollisionRadius * size.X);
+                }
+                velocity.X = Math.Sign(collisionNormal.X) * Math.Abs(velocity.X) * prefab.Restitution;
+                velocity.Y *= (1.0f - prefab.Friction);
             }
-            else if (edgePos.Y > prevHullRect.Y)
+            else
             {
-                position.Y = prevHullRect.Y - prefab.CollisionRadius;
-                velocity.X = Math.Abs(velocity.Y) * Math.Sign(velocity.X);
-                velocity.Y = -velocity.Y * 0.1f;
-            }
+                if (collisionNormal.Y > 0.0f)
+                {
+                    position.Y = Math.Max(position.Y, prevHullRect.Y - prevHullRect.Height + prefab.CollisionRadius * size.Y);
+                }
+                else
+                {
+                    position.Y = Math.Min(position.Y, prevHullRect.Y - prefab.CollisionRadius * size.Y);
 
-            if (edgePos.X < prevHullRect.X)
-            {
-                position.X = prevHullRect.X + prefab.CollisionRadius;
-                velocity.X = -velocity.X;
+                }
+                velocity.X *= (1.0f - prefab.Friction);
+                velocity.Y = Math.Sign(collisionNormal.Y) * Math.Abs(velocity.Y) * prefab.Restitution;
             }
-            else if (edgePos.X > prevHullRect.X + prevHullRect.Width)
-            {
-                position.X = prevHullRect.X + prevHullRect.Width - prefab.CollisionRadius;
-                velocity.X = -velocity.X;
-            }
-
-            velocity *= prefab.Restitution;
 
             velocity += subVel;
         }
@@ -347,8 +379,6 @@ namespace Barotrauma.Particles
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }
-
-
         }
     }
 }

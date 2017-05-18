@@ -266,7 +266,7 @@ namespace Barotrauma
 
             lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime);
 
-            if (LerpedFlowForce.LengthSquared() > 10000.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
+            if (LerpedFlowForce.LengthSquared() > 20000.0f && flowTargetHull != null && flowTargetHull.Volume < flowTargetHull.FullVolume)
             {
                 //UpdateFlowForce();
 
@@ -274,7 +274,7 @@ namespace Barotrauma
                 if (isHorizontal)
                 {
                     pos.X += Math.Sign(flowForce.X);
-                    pos.Y = MathHelper.Clamp((higherSurface + lowerSurface) / 2.0f, rect.Y - rect.Height, rect.Y);
+                    pos.Y = MathHelper.Clamp((higherSurface + lowerSurface) / 2.0f, rect.Y - rect.Height, rect.Y) + 10;
 
                     Vector2 velocity = new Vector2(
                         MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
@@ -283,7 +283,7 @@ namespace Barotrauma
                     var particle = GameMain.ParticleManager.CreateParticle(
                         "watersplash",
                         (Submarine == null ? pos : pos + Submarine.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
-                        velocity);
+                        velocity, 0, flowTargetHull);
 
                     if (particle != null)
                     {
@@ -298,7 +298,7 @@ namespace Barotrauma
                         GameMain.ParticleManager.CreateParticle(
                           "bubbles",
                           Submarine == null ? pos : pos + Submarine.Position,
-                          flowForce / 10.0f);  
+                          flowForce / 10.0f, 0, flowTargetHull);  
                     }
                 }
                 else

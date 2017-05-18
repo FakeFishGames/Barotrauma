@@ -9,6 +9,8 @@
     lifetime="2"
     growtime ="0.2"
     collideswithwalls="true"
+    friction="0.01"
+    restitution="0.2"
     collisionradius="30.0"
     velocitychange="0.0, -9.8">
     <sprite texture="Content/Particles/spatter.png" sourcerect="0,0,128,128"/>
@@ -153,7 +155,8 @@
     collisionradius="80.0"
     velocitychange="0.0, 2.5"
     animduration="4"
-    restitution="0.98"
+    friction="0.01"
+    restitution="0.01"
     loopanim="false">
     <animatedsprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="0,0,1024,1024" columns="5" rows="5"/>
   </smoke>  
@@ -222,6 +225,7 @@
     growtime ="0.3"
     lifetime="3"
     collisionradius="30.0"
+    friction="0.01"
     restitution="0.1"
     velocitychange="0.0, -0.5">
     <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
@@ -250,7 +254,7 @@
     lifetime="10.0"
     drawtarget="both"    
     collideswithwalls="true"
-    collisionradius="10.0"    
+    collisionradius="10.0"
     restitution="0.2"
     waterdrag="0.1"
     growtime ="0.0"

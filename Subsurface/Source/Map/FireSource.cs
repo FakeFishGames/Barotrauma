@@ -195,7 +195,7 @@ namespace Barotrauma
                 if (Rand.Int(5) == 1)
                 {
                     var smokeParticle = GameMain.ParticleManager.CreateParticle("smoke",
-                    particlePos, particleVel * 0.1f, 0.0f, hull);
+                    particlePos, new Vector2(particleVel.X, particleVel.Y * 0.1f), 0.0f, hull);
 
                     if (smokeParticle != null)
                     {
@@ -236,9 +236,10 @@ namespace Barotrauma
         {
             if (particleHull == hull || particleHull==null) return;
 
-            if (particleHull.FireSources.Find(fs => pos.X > fs.position.X-100.0f && pos.X < fs.position.X+fs.size.X+100.0f)!=null) return;
+            //hull already has a firesource roughly at the particles position -> don't create a new one
+            if (particleHull.FireSources.Find(fs => pos.X > fs.position.X - 100.0f && pos.X < fs.position.X + fs.size.X + 100.0f) != null) return;
 
-            new FireSource(new Vector2(pos.X, particleHull.WorldRect.Y-particleHull.Rect.Height + 5.0f));
+            new FireSource(new Vector2(pos.X, particleHull.WorldRect.Y - particleHull.Rect.Height + 5.0f));
         }
 
         private void DamageCharacters(float deltaTime)
@@ -293,7 +294,7 @@ namespace Barotrauma
             {
                 Vector2 spawnPos = new Vector2(
                     WorldPosition.X + Rand.Range(0.0f, size.X), 
-                    Rand.Range(position.Y - size.Y, WorldPosition.Y) + 10.0f);
+                    WorldPosition.Y + 10.0f);
 
                 Vector2 speed = new Vector2((spawnPos.X - (WorldPosition.X + size.X / 2.0f)), (float)Math.Sqrt(size.X) * Rand.Range(20.0f, 25.0f));
 
