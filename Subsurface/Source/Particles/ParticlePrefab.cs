@@ -38,6 +38,7 @@ namespace Barotrauma.Particles
         public readonly bool DeleteOnCollision;
         public readonly bool CollidesWithWalls;
 
+        public readonly float Friction;
         public readonly float Restitution;
 
         public readonly Vector2 VelocityChange;
@@ -107,6 +108,7 @@ namespace Barotrauma.Particles
             Drag = ToolBox.GetAttributeFloat(element, "drag", 0.0f);
             WaterDrag = ToolBox.GetAttributeFloat(element, "waterdrag", 0.0f);
             
+            Friction = ToolBox.GetAttributeFloat(element, "friction", 0.5f);
             Restitution = ToolBox.GetAttributeFloat(element, "restitution", 0.5f);
 
             switch (ToolBox.GetAttributeString(element, "blendstate", "alphablend"))
