@@ -1,4 +1,63 @@
 ---------------------------------------------------------------------------------------------------------
+v0.6.0.0
+---------------------------------------------------------------------------------------------------------
+
+Rewritten networking code:
+	- much more robust syncing logic
+	- proper authoritative servers (i.e. much more more hack-proof)
+	- the server can transfer multiple files to a client simultaneously
+	- having multiple submarines with the same name (but different MD5 hash) in the submarine folder
+	doesn't prevent clients from loading the correct one
+	- server logs can be viewed in the server lobby, not just in-game
+	- logs can be filtered by message type
+	- door, docking port and railgun usage are logged
+	- the in-game log view isn't cleared when the log is written to a file
+	- character skill levels are synced
+	- clients can't vote multiple times by disconnecting and reconnecting
+
+UI:
+	- new UI graphics
+	- smoothly scrolling listboxes
+	- multi-line chat messages don't overlap
+
+Items:
+	- passive sonar: when not active, the sonar shows nearby sources of sound and a faint outline of the 
+	structures around them. Now it's much easier to monitor how much noise the submarine is making and to
+	hide from enemies.
+	- new sonar visuals
+	- texts in labels can be resized
+	- alien weapons can be used as railgun ammo
+	- nerfed oxygen and welding fuel tank explosions
+
+Submarine editor:
+	- items/structures that have been copy-pasted from another submarine don't disappear when saving and 
+	loading the sub
+	- fixed crashes when attempting to load a submarine with no walls
+	- placing a resizable structure with a height/width of zero is not allowed
+	- "are you sure" prompt when trying to delete subs
+	- open menus are closed when opening another one (e.g. the save dialog box is automatically closed if
+	the item selection menu is opened)
+
+	
+- background ice formations with a parallax effect
+
+- swimming animation fix: characters don't swim with their legs extended up over their shoulders after a
+sharp turn
+
+- the level generation algorithm doesn't place walls behind alien ruins
+
+- improved fire & smoke particles
+
+- water puts out fires more slowly
+
+- explosion damage is reduced if there are walls or other solid obstacles between and explosion and a character
+
+- heal and revive commands can also be used on other characters than the controlled one
+
+- fixed fires occasionally causing incorrect sound clips to loop continuously
+
+
+---------------------------------------------------------------------------------------------------------
 v0.5.4.5
 ---------------------------------------------------------------------------------------------------------
 
