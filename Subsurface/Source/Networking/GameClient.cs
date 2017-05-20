@@ -1024,7 +1024,7 @@ namespace Barotrauma.Networking
 
         public void CancelFileTransfer(FileReceiver.FileTransferIn transfer)
         {
-            CancelFileTransfer(transfer);
+            CancelFileTransfer(transfer.SequenceChannel);
         }
 
         public void CancelFileTransfer(int sequenceChannel)
