@@ -56,6 +56,11 @@ namespace Barotrauma
             }
         }
 
+        public float DamageRange
+        {
+            get {  return (float)Math.Sqrt(size.X) * 20.0f; }
+        }
+
         public Hull Hull
         {
             get { return hull; }
@@ -125,12 +130,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        public bool Contains(Vector2 pos)
-        {
-            return pos.X > position.X &&  pos.X<position.X + size.X;
-        }
-
+        
         private bool CheckOverLap(FireSource fireSource)
         {
             return !(position.X > fireSource.position.X + fireSource.size.X ||
@@ -251,7 +251,7 @@ namespace Barotrauma
                 Character c = Character.CharacterList[i];
                 if (c.AnimController.CurrentHull == null || c.IsDead) continue;
 
-                float range = (float)Math.Sqrt(size.X) * 20.0f;
+                float range = DamageRange;
                 if (c.Position.X < position.X - range || c.Position.X > position.X + size.X + range) continue;
                 if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) continue;
 
@@ -260,7 +260,7 @@ namespace Barotrauma
                 {
                     if (limb.WearingItems.Find(w => w != null && w.WearableComponent.Item.FireProof) != null) continue;
                     limb.Burnt += dmg * 10.0f;
-                    c.AddDamage(limb.SimPosition, DamageType.None, dmg, 0, 0, false);
+                    c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
                 }
             }
         }

@@ -155,6 +155,23 @@ namespace Barotrauma
             currenthullSafety = GetHullSafety(character.AnimController.CurrentHull, character);
             priority = 100.0f - currenthullSafety;
 
+            var nearbyHulls = character.AnimController.CurrentHull.GetConnectedHulls(3);
+
+            foreach (Hull hull in nearbyHulls)
+            {
+                foreach (FireSource fireSource in hull.FireSources)
+                {
+                    //increase priority if almost within damage range of a fire
+                    if (character.Position.X > fireSource.Position.X - fireSource.DamageRange * 2 &&
+                        character.Position.X < fireSource.Position.X + fireSource.Size.X + fireSource.DamageRange * 2 &&
+                        character.Position.Y > hull.Rect.Y - hull.Rect.Height &&
+                        character.Position.Y < hull.Rect.Y)
+                    {
+                        priority += Math.Max(fireSource.Size.X, 50.0f);
+                    }
+                }
+            }
+
 
             if (NeedsDivingGear())
             {
@@ -164,16 +181,28 @@ namespace Barotrauma
             return priority;
         }
 
-        public static float GetHullSafety(Hull hull, Character character)
+        private static float GetHullSafety(Hull hull, Character character)
         {
             if (hull == null) return 0.0f;
 
             float waterPercentage = (hull.Volume / hull.FullVolume) * 100.0f;
             float fireAmount = 0.0f;
 
-            foreach (FireSource fireSource in hull.FireSources)
+            var nearbyHulls = character.AnimController.CurrentHull.GetConnectedHulls(3);
+
+            foreach (Hull hull2 in nearbyHulls)
             {
-                fireAmount += Math.Max(fireSource.Size.X, 50.0f);
+                foreach (FireSource fireSource in hull2.FireSources)
+                {
+                    //increase priority if almost within damage range of a fire
+                    if (character.Position.X > fireSource.Position.X - fireSource.DamageRange * 2 &&
+                        character.Position.X < fireSource.Position.X + fireSource.Size.X + fireSource.DamageRange * 2 &&
+                        character.Position.Y > hull2.Rect.Y - hull2.Rect.Height &&
+                        character.Position.Y < hull2.Rect.Y)
+                    {
+                        fireAmount += Math.Max(fireSource.Size.X, 50.0f);
+                    }
+                }
             }
 
             float safety = 100.0f - fireAmount;

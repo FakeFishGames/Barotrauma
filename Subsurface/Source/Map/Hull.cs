@@ -348,6 +348,7 @@ namespace Barotrauma
             {
                 fireSource.Remove();
             }
+            fireSources.Clear();
 
             if (soundIndex > -1)
             {
@@ -399,7 +400,7 @@ namespace Barotrauma
                 {
                     if (PlayerInput.LeftButtonClicked())
                     {
-                        new FireSource(position);
+                        new FireSource(position, this);
                     }
                 }
             }
@@ -560,7 +561,6 @@ namespace Barotrauma
                 //pos.Normalize();
                 item.body.ApplyForce((gap.LerpedFlowForce/distance) * deltaTime);
             }
-
         }
 
         public void Extinquish(float deltaTime, float amount, Vector2 position)
@@ -576,6 +576,33 @@ namespace Barotrauma
             fireSources.Remove(fire);
 
             if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this);
+        }
+
+        public List<Hull> GetConnectedHulls(int? searchDepth)
+        {
+            return GetAdjacentHulls(new List<Hull>(), 0, searchDepth);
+
+        }
+
+        private List<Hull> GetAdjacentHulls(List<Hull> connectedHulls, int steps, int? searchDepth)
+        {
+            connectedHulls.Add(this);
+
+            if (searchDepth != null && steps >= searchDepth.Value) return connectedHulls;
+
+            foreach (Gap g in ConnectedGaps)
+            {
+                for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
+                {
+                    Hull hull = g.linkedTo[i] as Hull;
+                    if (hull != null && !connectedHulls.Contains(hull))
+                    {
+                        hull.GetAdjacentHulls(connectedHulls, steps++, searchDepth);
+                    }                    
+                }
+            }
+
+            return connectedHulls;
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
