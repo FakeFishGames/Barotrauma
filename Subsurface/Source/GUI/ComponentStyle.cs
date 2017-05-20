@@ -59,9 +59,7 @@ namespace Barotrauma
         public readonly Color OutlineColor;
 
         public readonly Dictionary<GUIComponent.ComponentState, List<UISprite>> Sprites;
-
-        public readonly bool TileSprites;
-
+        
         public Dictionary<string, GUIComponentStyle> ChildStyles;
 
         public GUIComponentStyle(XElement element)

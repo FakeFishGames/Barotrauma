@@ -261,7 +261,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.NewMessage("Error in AddToGUIUpdateList! GUIComponent runtime type: " + this.GetType().ToString() + "; children count: " + children.Count.ToString(), Color.Red);
-                throw e;
+                throw;
             }
 
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();

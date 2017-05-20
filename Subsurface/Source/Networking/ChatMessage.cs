@@ -1,5 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Text;

@@ -48,7 +48,7 @@ namespace Barotrauma.Sounds
             catch (DllNotFoundException e)
             {
                 Program.CrashMessageBox("OpenAL32.dll not found");
-                throw e;
+                throw;
             }
 
             for (int i = 0 ; i < DefaultSourceCount; i++)

@@ -95,8 +95,6 @@ namespace Barotrauma.Items.Components
 
             if (userPos != Vector2.Zero)
             {
-                float torsoX = character.Position.X;
-
                 Vector2 diff = (item.WorldPosition + userPos) - character.WorldPosition;
 
                 if (character.AnimController.InWater)

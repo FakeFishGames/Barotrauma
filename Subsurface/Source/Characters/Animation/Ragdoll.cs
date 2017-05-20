@@ -857,7 +857,7 @@ namespace Barotrauma
                 headInWater = false;
 
                 inWater = false;
-                if (inWater = currentHull.Volume > currentHull.FullVolume * 0.95f)
+                if (currentHull.Volume > currentHull.FullVolume * 0.95f)
                 {
                     inWater = true;
                 }
@@ -1435,8 +1435,6 @@ namespace Barotrauma
 
         public Vector2 GetColliderBottom()
         {
-            float halfHeight = Collider.height * 0.5f + Collider.radius;
-
             float offset = 0.0f;
 
             if (!character.IsUnconscious && !character.IsDead && character.Stun <= 0.0f)

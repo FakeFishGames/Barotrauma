@@ -872,7 +872,7 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime) 
         {
-            for (int i = 0; i < sections.Count(); i++)
+            for (int i = 0; i < sections.Length; i++)
             {
                 float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
 

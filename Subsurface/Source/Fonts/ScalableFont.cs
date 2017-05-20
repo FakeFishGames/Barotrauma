@@ -114,7 +114,7 @@ namespace Barotrauma
             face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
             baseHeight = face.Glyph.Metrics.Height.ToInt32();
             //lineHeight = baseHeight;
-            for (int i = 0; i < charRanges.Count(); i += 2)
+            for (int i = 0; i < charRanges.Length; i += 2)
             {
                 uint start = charRanges[i];
                 uint end = charRanges[i + 1];
@@ -139,7 +139,7 @@ namespace Barotrauma
                     face.Glyph.RenderGlyph(RenderMode.Normal);
                     byte[] bitmap = face.Glyph.Bitmap.BufferData;
                     int glyphWidth = face.Glyph.Bitmap.Width;
-                    int glyphHeight = bitmap.Count() / glyphWidth;
+                    int glyphHeight = bitmap.Length / glyphWidth;
 
                     //if (glyphHeight>lineHeight) lineHeight=glyphHeight;
 

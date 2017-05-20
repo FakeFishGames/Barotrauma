@@ -48,13 +48,7 @@ namespace Barotrauma
         public readonly LimbType type;
 
         public readonly bool ignoreCollisions;
-
-        //private readonly float maxHealth;
-        //private float damage;
-        //private float bleeding;
-
-        public readonly float impactTolerance;
-
+        
         private float damage, burnt;
 
         private readonly Vector2 armorSector;

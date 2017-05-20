@@ -161,9 +161,9 @@ namespace Barotrauma
 
         public void StartShift(string levelSeed, bool loadSecondSub = false)
         {
-            Level level = Level.CreateRandom(levelSeed);
+            Level randomLevel = Level.CreateRandom(levelSeed);
 
-            StartShift(level,true,loadSecondSub);
+            StartShift(randomLevel, true, loadSecondSub);
         }
 
         public void StartShift(Level level, bool reloadSub = true, bool loadSecondSub = false)

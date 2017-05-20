@@ -30,9 +30,7 @@ namespace Barotrauma
         private float updateTargetsTimer;
 
         private float raycastTimer;
-
-        private Vector2 prevPosition;
-
+        
         //a timer for attacks such as biting that last for a specific amount of time
         //the duration is determined by the attackDuration of the attacking limb
         private float attackTimer;

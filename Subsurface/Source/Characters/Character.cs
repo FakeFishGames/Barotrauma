@@ -37,9 +37,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        public List<Item> SpawnItems = new List<Item>();
-
+        
         private bool enabled = true;
         public bool Enabled
         {

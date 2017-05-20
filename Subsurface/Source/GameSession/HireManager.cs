@@ -6,7 +6,7 @@ namespace Barotrauma
     {
         public List<CharacterInfo> availableCharacters;
 
-        const int MaxAvailableCharacters = 10;
+        public const int MaxAvailableCharacters = 10;
 
         public HireManager()
         {

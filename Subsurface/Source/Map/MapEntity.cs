@@ -362,9 +362,7 @@ namespace Barotrauma
                 linkedTo.Clear();
             }
         }
-
-        static Dictionary<string, float> timeElapsed = new Dictionary<string, float>();
-
+        
         /// <summary>
         /// Call Update() on every object in Entity.list
         /// </summary>

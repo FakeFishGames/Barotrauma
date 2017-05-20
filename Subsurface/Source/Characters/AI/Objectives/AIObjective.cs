@@ -48,7 +48,6 @@ namespace Barotrauma
         /// makes the character act according to the objective, or according to any subobjectives that
         /// need to be completed before this one
         /// </summary>
-        /// <param name="character">the character who's trying to achieve the objective</param>
         public void TryComplete(float deltaTime)
         {
             subObjectives.RemoveAll(s => s.IsCompleted() || !s.CanBeCompleted);

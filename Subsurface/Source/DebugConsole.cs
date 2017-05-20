@@ -367,7 +367,7 @@ namespace Barotrauma
                     }
                     else if (spawnInventory != null)
                     {
-                        Item.Spawner.AddToSpawnQueue(itemPrefab, (Inventory)spawnInventory);
+                        Item.Spawner.AddToSpawnQueue(itemPrefab, spawnInventory);
                     }
 
                     break;
