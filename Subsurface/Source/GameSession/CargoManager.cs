@@ -41,7 +41,7 @@ namespace Barotrauma
                     Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20),
                     cargoRoom.Rect.Y - cargoRoom.Rect.Height + prefab.Size.Y/2);
 
-                new Item(prefab as ItemPrefab, position, wp.Submarine);
+                new Item(prefab, position, wp.Submarine);
             }
 
             purchasedItems.Clear();

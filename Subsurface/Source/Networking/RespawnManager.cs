@@ -392,12 +392,8 @@ namespace Barotrauma.Networking
         {
             var server = networkMember as GameServer;
             if (server == null) return;
-
-            List<Item> spawnedItems             = new List<Item>();
-            List<Character> spawnedCharacters   = new List<Character>();
-
+            
             var clients = GetClientsToRespawn();
-
             foreach (Client c in clients)
             {
                 if (c.characterInfo == null) c.characterInfo = new CharacterInfo(Character.HumanConfigFile, c.name);

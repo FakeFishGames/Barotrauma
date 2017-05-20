@@ -1094,8 +1094,7 @@ namespace Barotrauma.Networking
                 for (int i = 0; i < fileReceiver.ActiveTransfers.Count; i++)
                 {
                     var transfer = fileReceiver.ActiveTransfers[i];
-
-                    GameMain.NetLobbyScreen.SubList.children.Find(c => c is GUITextBlock && ((GUITextBlock)c).Text == transfer.FileName);
+                    
                     GUI.DrawString(spriteBatch,
                         pos,
                         ToolBox.LimitString("Downloading " + transfer.FileName, GUI.SmallFont, 200),
@@ -1221,9 +1220,6 @@ namespace Barotrauma.Networking
             if (votedClient == null) return false;
 
             votedClient.AddKickVote(new Client(name, ID));
-
-            if (votedClient == null) return false;
-
             Vote(VoteType.Kick, votedClient);
 
             button.Enabled = false;

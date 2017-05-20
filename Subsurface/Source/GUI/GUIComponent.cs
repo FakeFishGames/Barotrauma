@@ -40,7 +40,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.NewMessage("Error in AddToGUIUPdateList! GUIComponent runtime type: "+this.GetType().ToString()+"; children count: "+children.Count.ToString(),Color.Red);
-                throw e;
+                throw;
             }
         }
 
@@ -427,7 +427,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.NewMessage("Error in Update! GUIComponent runtime type: " + this.GetType().ToString() + "; children count: " + children.Count.ToString(), Color.Red);
-                throw e;
+                throw;
             }
         }
 

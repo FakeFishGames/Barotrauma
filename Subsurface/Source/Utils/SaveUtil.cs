@@ -22,9 +22,7 @@ namespace Barotrauma
             fileName = Path.Combine(SaveFolder, fileName);
 
             string tempPath = Path.Combine(SaveFolder, "temp");
-
-            DirectoryInfo dir = new DirectoryInfo(tempPath);
-
+            
             Directory.CreateDirectory(tempPath);
             try
             {

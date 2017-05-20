@@ -714,7 +714,6 @@ namespace Barotrauma.Items.Components
                 if (gap != null)
                 {
                     gap.Remove();
-                    gap.linkedTo.Remove(hull);
                     continue;
                 }
 

@@ -78,8 +78,7 @@ namespace Barotrauma
 
         private Vector2 drawPosition;
         private float drawRotation;
-
-        private float lastNetworkUpdateTime;
+        
         public Vector2 LastSentPosition
         {
             get;

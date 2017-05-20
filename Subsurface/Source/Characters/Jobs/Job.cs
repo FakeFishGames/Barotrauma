@@ -131,9 +131,7 @@ namespace Barotrauma
                     item.AddTag(s);
                 }
             }
-
-            character.SpawnItems.Add(item);
-
+            
             if (parentItem != null) parentItem.Combine(item);
 
             foreach (XElement childItemElement in itemElement.Elements())
@@ -142,7 +140,7 @@ namespace Barotrauma
             } 
         }
 
-        public virtual XElement Save(XElement parentElement)
+        public XElement Save(XElement parentElement)
         {
             XElement jobElement = new XElement("job");
 

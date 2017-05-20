@@ -1120,10 +1120,9 @@ namespace Barotrauma
             //}
 
             GameModePreset modePreset = obj as GameModePreset;
-            missionTypeBlock.Visible = modePreset.Name == "Mission";
-
             if (modePreset == null) return false;
 
+            missionTypeBlock.Visible = modePreset.Name == "Mission";
             lastUpdateID++;
 
             return true;

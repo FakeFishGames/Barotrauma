@@ -239,15 +239,15 @@ namespace Barotrauma.Lights
         
         private void CalculateDimensions()
         {
-            float? minX = null, minY = null, maxX = null, maxY = null;
+            float minX = vertices[0].Pos.X, minY = vertices[0].Pos.Y, maxX = vertices[0].Pos.X, maxY = vertices[0].Pos.Y;
 
-            for (int i = 0; i < vertices.Length; i++)
+            for (int i = 1; i < vertices.Length; i++)
             {
-                if (minX == null || vertices[i].Pos.X < minX) minX = vertices[i].Pos.X;
-                if (minY == null || vertices[i].Pos.Y < minY) minY = vertices[i].Pos.Y;
+                if (vertices[i].Pos.X < minX) minX = vertices[i].Pos.X;
+                if (vertices[i].Pos.Y < minY) minY = vertices[i].Pos.Y;
 
-                if (maxX == null || vertices[i].Pos.X > maxX) maxX = vertices[i].Pos.X;
-                if (maxY == null || vertices[i].Pos.Y > minY) maxY = vertices[i].Pos.Y;
+                if (vertices[i].Pos.X > maxX) maxX = vertices[i].Pos.X;
+                if (vertices[i].Pos.Y > minY) maxY = vertices[i].Pos.Y;
             }
 
             boundingBox = new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));

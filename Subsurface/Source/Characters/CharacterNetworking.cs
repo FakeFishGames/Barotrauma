@@ -70,7 +70,6 @@ namespace Barotrauma
             public InputNetFlags states; //keys pressed/other boolean states at this step
             public UInt16 intAim; //aim angle, represented as an unsigned short where 0=0º, 65535=just a bit under 360º
             public UInt16 interact; //id of the entity being interacted with
-            public AnimController.Animation? animation;
 
             public UInt16 networkUpdateID;
         }

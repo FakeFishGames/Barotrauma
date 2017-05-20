@@ -148,9 +148,7 @@ namespace Barotrauma.Items.Components
                 radarBlips[i].FadeTimer -= (float)Timing.Step * 0.5f;
                 if (radarBlips[i].FadeTimer <= 0.0f) radarBlips.RemoveAt(i);
             }
-
-            float radius = (GuiFrame.Rect.Height / 2 - 30);
-
+            
             if (IsActive)
             {
                 float pingRadius = displayRadius * pingState;

@@ -33,9 +33,7 @@ namespace Barotrauma.Items.Components
         private bool isHorizontal;
 
         private bool isStuck;
-
-        private float lastReceivedMessage;
-
+        
         private bool? predictedState;
         private float resetPredictionTimer;
 

@@ -40,8 +40,8 @@ namespace Barotrauma.Lights
 
         private Texture2D visionCircle;
         
-        private Dictionary<Hull, Color> hullAmbientLights = new Dictionary<Hull, Color>();
-        private Dictionary<Hull, Color> smoothedHullAmbientLights = new Dictionary<Hull, Color>();
+        private Dictionary<Hull, Color> hullAmbientLights;
+        private Dictionary<Hull, Color> smoothedHullAmbientLights;
 
         private float ambientLightUpdateTimer;
 
@@ -133,10 +133,7 @@ namespace Barotrauma.Lights
         public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, Effect blur)
         {
             if (!LightingEnabled) return;
-
-            Matrix shadowTransform = cam.ShaderTransform
-                * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
-
+            
             graphics.SetRenderTarget(lightMap);
 
             Rectangle viewRect = cam.WorldView;
@@ -337,20 +334,12 @@ namespace Barotrauma.Lights
 
             return hullAmbientLight;
         }
-
-        private void ClearAlphaToOne(GraphicsDevice graphics, SpriteBatch spriteBatch)
-        {
-            spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.WriteToAlpha);
-            spriteBatch.Draw(alphaClearTexture, new Rectangle(0, 0,graphics.Viewport.Width, graphics.Viewport.Height), Color.White);
-            spriteBatch.End();
-        }
-
+        
         public void DrawLightMap(SpriteBatch spriteBatch, Effect effect)
         {
             if (!LightingEnabled) return;
 
             spriteBatch.Begin(SpriteSortMode.Deferred, CustomBlendStates.Multiplicative, null, null, null, effect);
-            //effect.CurrentTechnique.Passes[0].Apply();
             spriteBatch.Draw(lightMap, Vector2.Zero, Color.White);            
             spriteBatch.End();
         }

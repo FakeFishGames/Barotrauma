@@ -262,13 +262,7 @@ namespace Barotrauma
         {
             get { return prefab.ConfigFile; }
         }
-
-        public bool Removed
-        {
-            get;
-            private set;
-        }
-
+        
         //which type of inventory slots (head, torso, any, etc) the item can be placed in
         public List<InvSlotType> AllowedSlots
         {
@@ -278,16 +272,7 @@ namespace Barotrauma
                 return (p==null) ? new List<InvSlotType>() { InvSlotType.Any } : p.AllowedSlots;
             }
         }
-
-        public int Capacity
-        {
-            get
-            {
-                ItemContainer c = GetComponent<ItemContainer>();
-                return (c == null) ? 0 : c.Capacity;
-            }
-        }
-
+        
         public List<Connection> Connections
         {
             get 
@@ -570,11 +555,11 @@ namespace Barotrauma
             {
                 if (parentInventory.Owner is Character)
                 {
-                    CurrentHull = (parentInventory.Owner as Character).AnimController.CurrentHull;
+                    CurrentHull = ((Character)parentInventory.Owner).AnimController.CurrentHull;
                 }
                 else if (parentInventory.Owner is Item)
                 {
-                    CurrentHull = (parentInventory.Owner as Item).CurrentHull;
+                    CurrentHull = ((Item)parentInventory.Owner).CurrentHull;
                 }
 
                 Submarine = parentInventory.Owner.Submarine;
@@ -2306,9 +2291,7 @@ namespace Barotrauma
         public override void ShallowRemove()
         {
             base.ShallowRemove();
-
-            Removed = true;
-
+            
             foreach (ItemComponent ic in components)
             {
                 ic.ShallowRemove();
@@ -2325,9 +2308,7 @@ namespace Barotrauma
         public override void Remove()
         {
             base.Remove();
-
-            Removed = true;
-
+            
             if (parentInventory != null)
             {
                 parentInventory.RemoveItem(this);

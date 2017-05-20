@@ -49,7 +49,7 @@ namespace Barotrauma
             if (type.HasHireableCharacters)
             {
                 hireManager = new HireManager();
-                hireManager.GenerateCharacters(this, 10);
+                hireManager.GenerateCharacters(this, HireManager.MaxAvailableCharacters);
             }
 
             Connections = new List<LocationConnection>();
@@ -62,9 +62,9 @@ namespace Barotrauma
 
         private string RandomName(LocationType type)
         {
-            string name = ToolBox.GetRandomLine("Content/Map/locationNames.txt");
+            string randomName = ToolBox.GetRandomLine("Content/Map/locationNames.txt");
             int nameFormatIndex = Rand.Int(type.NameFormats.Count, false);
-            return type.NameFormats[nameFormatIndex].Replace("[name]", name);
+            return type.NameFormats[nameFormatIndex].Replace("[name]", randomName);
         }
     }
 }

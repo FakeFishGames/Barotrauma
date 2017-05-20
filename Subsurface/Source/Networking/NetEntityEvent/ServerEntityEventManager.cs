@@ -156,7 +156,7 @@ namespace Barotrauma.Networking
                     //kick everyone that hasn't received it yet, this is way too old
                     List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.lastRecvEntityEventID));
 
-                    if (toKick != null) toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
+                    toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
                 }
 
                 if (events.Count > 0)
@@ -164,12 +164,12 @@ namespace Barotrauma.Networking
                     //the client is waiting for an event that we don't have anymore
                     //(the ID they're expecting is smaller than the ID of the first event in our list)
                     List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent(events[0].ID, (UInt16)(c.lastRecvEntityEventID+1)));
-                    if (toKick != null) toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
+                    toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
                 }
             }
             
             var timedOutClients = clients.FindAll(c => c.inGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
-            if (timedOutClients != null) timedOutClients.ForEach(c => GameMain.Server.DisconnectClient(c, "", "You have been disconnected because syncing your client with the server took too long."));
+            timedOutClients.ForEach(c => GameMain.Server.DisconnectClient(c, "", "You have been disconnected because syncing your client with the server took too long."));
             
             bufferedEvents.RemoveAll(b => b.IsProcessed);           
         }
