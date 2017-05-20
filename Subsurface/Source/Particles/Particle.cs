@@ -252,6 +252,7 @@ namespace Barotrauma.Particles
                             Hull newHull = Hull.FindHull(position);
                             if (newHull != currentHull)
                             {
+                                currentHull = newHull;
                                 hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
                                 OnChangeHull?.Invoke(position, currentHull);
                             }

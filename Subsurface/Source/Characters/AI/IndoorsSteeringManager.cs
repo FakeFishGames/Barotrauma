@@ -192,8 +192,6 @@ namespace Barotrauma
         {
             for (int i = 0; i < 2; i++)
             {
-
-
                 WayPoint node = null;
                 WayPoint nextNode = null;
                 
@@ -268,11 +266,16 @@ namespace Barotrauma
         private float? GetNodePenalty(PathNode node, PathNode nextNode)
         {
             if (character == null) return 0.0f;
-            if (nextNode.Waypoint.ConnectedGap != null)
+            
+            float penalty = 0.0f;
+            if (nextNode.Waypoint.ConnectedGap != null && nextNode.Waypoint.ConnectedGap.Open < 0.9f)
             {
-                if (nextNode.Waypoint.ConnectedGap.Open > 0.9f) return 0.0f;
-                if (nextNode.Waypoint.ConnectedGap.ConnectedDoor == null) return 100.0f;
+                if (nextNode.Waypoint.ConnectedGap.ConnectedDoor == null)
+                {
+                    penalty = 100.0f;
+                }
 
+                //door closed and the character can't open doors -> node can't be traversed
                 if (!canOpenDoors || character.LockHands) return null;
 
                 var doorButtons = nextNode.Waypoint.ConnectedGap.ConnectedDoor.Item.GetConnectedComponents<Controller>();
@@ -291,16 +294,20 @@ namespace Barotrauma
             {
                 var hull = node.Waypoint.CurrentHull;
 
-                float penalty = hull.FireSources.Any() ? 1000.0f : 0.0f;
+                if (hull.FireSources.Count > 0)
+                {
+                    foreach (FireSource fs in hull.FireSources)
+                    {
+                        penalty += fs.Size.X * 10.0f;
+                    }
+                }
 
                 if (character.NeedsAir && hull.Volume / hull.Rect.Width > 100.0f) penalty += 500.0f;
                 if (character.PressureProtection < 10.0f && hull.Volume > hull.FullVolume) penalty += 1000.0f;
             }
 
-            return 0.0f;
+            return penalty;
         }
-
-
     }
     
 }
