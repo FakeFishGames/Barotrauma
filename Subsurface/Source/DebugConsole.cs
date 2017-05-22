@@ -461,7 +461,7 @@ namespace Barotrauma
                 case "control":
                     if (commands.Length < 2) break;
 
-                    var character = FindMatchingCharacter(commands);
+                    var character = FindMatchingCharacter(commands, true);
 
                     if (character != null)
                     {
@@ -844,7 +844,7 @@ namespace Barotrauma
             }
         }
         
-        private static Character FindMatchingCharacter(string[] commands)
+        private static Character FindMatchingCharacter(string[] commands, bool ignoreRemotePlayers = false)
         {
             if (commands.Length < 2) return null;
 
@@ -860,7 +860,7 @@ namespace Barotrauma
                 characterIndex = -1;
             }
 
-            var matchingCharacters = Character.CharacterList.FindAll(c => !c.IsRemotePlayer && c.Name.ToLowerInvariant() == characterName);
+            var matchingCharacters = Character.CharacterList.FindAll(c => (!ignoreRemotePlayers || !c.IsRemotePlayer) && c.Name.ToLowerInvariant() == characterName);
 
             if (!matchingCharacters.Any())
             {
