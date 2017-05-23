@@ -45,7 +45,7 @@ namespace Barotrauma.Sounds
                 AC = new AudioContext();                
                 ALHelper.Check();
             }
-            catch (DllNotFoundException e)
+            catch (DllNotFoundException)
             {
                 Program.CrashMessageBox("OpenAL32.dll not found");
                 throw;
@@ -76,28 +76,56 @@ namespace Barotrauma.Sounds
         public static int Play(Sound sound, Vector2 position, float volume = 1.0f, float lowPassGain = 0.0f, bool loop=false)
         {
             if (Disabled || sound.AlBufferId == -1) return -1;
-            
-            for (int i = 1; i < DefaultSourceCount; i++)
+
+            int sourceIndex = FindAudioSource(volume);
+            if (sourceIndex > -1)
             {
-                //find a source that's free to use (not playing or paused)
-                if (OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) == OpenTK.Audio.OpenAL.ALSourceState.Playing
-                    || OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) == OpenTK.Audio.OpenAL.ALSourceState.Paused) continue;
-
-                soundsPlaying[i] = sound;
-
-                alBuffers[i] = sound.AlBufferId;
-                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourceb.Looping, loop);
-
-                OpenTK.Audio.OpenAL.AL.Source(alSources[i], OpenTK.Audio.OpenAL.ALSourcei.Buffer, sound.AlBufferId);
+                soundsPlaying[sourceIndex] = sound;
+                alBuffers[sourceIndex] = sound.AlBufferId;
+                OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourceb.Looping, loop);
+                OpenTK.Audio.OpenAL.AL.Source(alSources[sourceIndex], OpenTK.Audio.OpenAL.ALSourcei.Buffer, sound.AlBufferId);
                 
-                UpdateSoundPosition(i, position, volume);
+                UpdateSoundPosition(sourceIndex, position, volume);
 
-                OpenTK.Audio.OpenAL.AL.SourcePlay(alSources[i]);
-
-                return i;
+                OpenTK.Audio.OpenAL.AL.SourcePlay(alSources[sourceIndex]);
+ 
             }
 
-            return -1;
+            return sourceIndex;
+        }
+
+        private static int FindAudioSource(float volume)
+        {
+            //find a source that's free to use (not playing or paused)
+            for (int i = 1; i < DefaultSourceCount; i++)
+            {
+                if (OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) == OpenTK.Audio.OpenAL.ALSourceState.Initial
+                    || OpenTK.Audio.OpenAL.AL.GetSourceState(alSources[i]) == OpenTK.Audio.OpenAL.ALSourceState.Stopped)
+                {
+                    return i;
+                }
+            }
+
+            //not found -> take up the channel that is playing at the lowest volume
+            float lowestVolume = volume;
+            int quietestSourceIndex = -1;
+            for (int i = 1; i < DefaultSourceCount; i++)
+            {
+                float vol;
+                OpenTK.Audio.OpenAL.AL.GetSource(alSources[i], ALSourcef.Gain, out vol);
+                if (vol < lowestVolume)
+                {
+                    quietestSourceIndex = i;
+                    lowestVolume = vol;
+                }
+            }
+
+            if (quietestSourceIndex > -1)
+            {
+                Stop(quietestSourceIndex);
+            }
+
+            return quietestSourceIndex;
         }
 
         public static int Loop(Sound sound, int sourceIndex, float volume = 1.0f)
@@ -116,7 +144,7 @@ namespace Barotrauma.Sounds
                 volume = 0.0f;
             }
 
-            if (sourceIndex<1)
+            if (sourceIndex<1 || soundsPlaying[sourceIndex] != sound)
             {
                 sourceIndex = Play(sound, position, volume, 0.0f, true);
             }
@@ -208,15 +236,7 @@ namespace Barotrauma.Sounds
 
             return isLooping;
         }
-
-        public static void Volume(int sourceIndex, float volume)
-        {
-            if (Disabled) return;
-
-            AL.Source(alSources[sourceIndex], ALSourcef.Gain, volume * MasterVolume);
-            ALHelper.Check();
-        }
-
+        
         static float lowPassHfGain;
         public static float LowPassHFGain
         {
