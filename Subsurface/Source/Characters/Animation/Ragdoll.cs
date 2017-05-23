@@ -267,17 +267,6 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        public float StrongestImpact
-        {
-            get { return strongestImpact; }
-            set { strongestImpact = Math.Max(value, strongestImpact); }
-        }
-
-        public Structure Stairs
-        {
-            get { return stairs; }
-        }
         
         public Ragdoll(Character character, XElement element)
         {
@@ -1283,6 +1272,7 @@ namespace Barotrauma
                         {
                             newSelectedConstruction.Pick(character, true, true);
                         }
+                        character.SelectedConstruction = newSelectedConstruction;
                     }
 
                     if (character.MemState[0].Animation == AnimController.Animation.CPR)
@@ -1367,14 +1357,14 @@ namespace Barotrauma
                         {
                             character.SelectCharacter((Character)serverPos.Interact);
                         }
-                        else if (serverPos.Interact is Item)
+                        else
                         {
                             var newSelectedConstruction = (Item)serverPos.Interact;
-                            if (newSelectedConstruction != null && 
-                                character.SelectedConstruction != newSelectedConstruction)
+                            if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                             {
                                 newSelectedConstruction.Pick(character, true, true);
                             }
+                            character.SelectedConstruction = newSelectedConstruction;
                         }
                     }
 
