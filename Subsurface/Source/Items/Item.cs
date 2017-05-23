@@ -779,8 +779,6 @@ namespace Barotrauma
 
             isHighlighted = false;
             
-            isHighlighted = false;
-
             if (body == null || !body.Enabled) return;
 
             System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
@@ -812,14 +810,12 @@ namespace Barotrauma
                 }
             }
 
-            UpdateNetPosition(deltaTime);
+            UpdateNetPosition();
             
-            if (!inWater || Container != null) return;
+            if (!inWater || ParentInventory != null) return;
             
             ApplyWaterForces();
-
-            if(CurrentHull != null) CurrentHull.ApplyFlowForces(deltaTime, this);
-
+            CurrentHull?.ApplyFlowForces(deltaTime, this);
         }
 
         /// <summary>
@@ -827,8 +823,6 @@ namespace Barotrauma
         /// </summary>
         private void ApplyWaterForces()
         {
-            if (!InWater || Container != null || body == null || !body.Enabled) return;
-
             float forceFactor = 1.0f;
             if (CurrentHull != null)
             {
@@ -2060,15 +2054,11 @@ namespace Barotrauma
             return item;
         }
 
-        private void UpdateNetPosition(float deltaTime)
+        private void UpdateNetPosition()
         {
-            if (GameMain.Server == null) return;
-            if (body == null || !body.Enabled || parentInventory != null) return;
+            if (GameMain.Server == null || parentInventory != null) return;
             
-            float minDistance = !body.FarseerBody.Awake && prevBodyAwake ?
-                0.1f : NetConfig.ItemPosUpdateDistance;
-
-            if (Vector2.Distance(lastSentPos, SimPosition) > minDistance)
+            if (prevBodyAwake != body.FarseerBody.Awake || Vector2.Distance(lastSentPos, SimPosition) > NetConfig.ItemPosUpdateDistance)
             {
                 needsPositionUpdate = true;
             }
