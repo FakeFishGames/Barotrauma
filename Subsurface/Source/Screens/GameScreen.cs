@@ -1,19 +1,16 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Barotrauma.Lights;
-using System.Diagnostics;
 using Microsoft.Xna.Framework.Content;
-using System.Collections.Generic;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
     class GameScreen : Screen
     {
-        Camera cam;
+        private Camera cam;
 
-        Color waterColor = new Color(0.75f, 0.8f, 0.9f, 1.0f);
+        private Color waterColor = new Color(0.75f, 0.8f, 0.9f, 1.0f);
 
         readonly RenderTarget2D renderTargetBackground;
         readonly RenderTarget2D renderTarget;
