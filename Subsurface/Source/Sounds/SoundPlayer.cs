@@ -233,7 +233,7 @@ namespace Barotrauma
 
             foreach (Submarine sub in Submarine.Loaded)
             {
-                float movementFactor = (sub.Velocity == Vector2.Zero) ? 0.0f : sub.Velocity.Length() / 5.0f;
+                float movementFactor = (sub.Velocity == Vector2.Zero) ? 0.0f : sub.Velocity.Length() / 10.0f;
                 movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
 
                 if (Character.Controlled==null || Character.Controlled.Submarine != sub)

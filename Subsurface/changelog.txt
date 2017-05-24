@@ -38,23 +38,16 @@ Submarine editor:
 	- open menus are closed when opening another one (e.g. the save dialog box is automatically closed if
 	the item selection menu is opened)
 
-	
-- background ice formations with a parallax effect
-
-- swimming animation fix: characters don't swim with their legs extended up over their shoulders after a
-sharp turn
-
-- the level generation algorithm doesn't place walls behind alien ruins
-
-- improved fire & smoke particles
-
-- water puts out fires more slowly
-
-- explosion damage is reduced if there are walls or other solid obstacles between and explosion and a character
-
-- heal and revive commands can also be used on other characters than the controlled one
-
-- fixed fires occasionally causing incorrect sound clips to loop continuously
+Misc:
+	- background ice formations with a parallax effect
+	- the level generation algorithm doesn't place walls behind alien ruins
+	- improved fire & smoke particles
+	- water puts out fires more slowly
+	- explosion damage is reduced if there are walls or other solid obstacles between and explosion and a character
+	- heal and revive commands can also be used on other characters than the controlled one
+	- fixed fires occasionally causing incorrect sound clips to loop continuously
+	- swimming animation fix: characters don't swim with their legs extended up over their shoulders 
+	after a sharp turn
 
 
 ---------------------------------------------------------------------------------------------------------

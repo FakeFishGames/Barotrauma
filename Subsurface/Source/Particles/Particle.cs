@@ -180,90 +180,86 @@ namespace Barotrauma.Particles
                 animFrame = (int)Math.Min(Math.Floor(animState / prefab.AnimDuration * frameCount), frameCount - 1);
             }
             
-            if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
+            lifeTime -= deltaTime;
+            if (lifeTime <= 0.0f || alpha <= 0.0f || size.X <= 0.0f || size.Y <= 0.0f) return false;
+
+            if (!prefab.DeleteOnCollision && !prefab.CollidesWithWalls) return true;
+            
+            if (currentHull == null)
             {
-                //Vector2 edgePos =  position + prefab.CollisionRadius * Vector2.Normalize(velocity) * size.X;
-
-                if (currentHull == null)
+                Hull collidedHull = Hull.FindHull(position);
+                if (collidedHull != null)
                 {
-                    Hull collidedHull = Hull.FindHull(position);
-                    if (collidedHull != null)
-                    {
-                        if (prefab.DeleteOnCollision) return false;
-                        OnWallCollisionOutside(collidedHull);
-                    }                   
+                    if (prefab.DeleteOnCollision) return false;
+                    OnWallCollisionOutside(collidedHull);
+                }                   
 
+            }
+            else
+            {
+                Vector2 collisionNormal = Vector2.Zero;
+                if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < currentHull.WorldRect.Y - currentHull.WorldRect.Height)
+                {
+                    if (prefab.DeleteOnCollision) return false;
+                    collisionNormal = new Vector2(0.0f, 1.0f);
                 }
-                else
+                else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > currentHull.WorldRect.Y)
                 {
-                    Vector2 collisionNormal = Vector2.Zero;
-                    if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < currentHull.WorldRect.Y - currentHull.WorldRect.Height)
-                    {
-                        if (prefab.DeleteOnCollision) return false;
-                        collisionNormal = new Vector2(0.0f, 1.0f);
-                    }
-                    else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > currentHull.WorldRect.Y)
-                    {
-                        if (prefab.DeleteOnCollision) return false;
-                        collisionNormal = new Vector2(0.0f, -1.0f);
-                    }
-                    else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < currentHull.WorldRect.X)
-                    {
-                        if (prefab.DeleteOnCollision) return false;
-                        collisionNormal = new Vector2(1.0f, 0.0f);
-                    }
-                    else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > currentHull.WorldRect.Right)
-                    {
-                        if (prefab.DeleteOnCollision) return false;
-                        collisionNormal = new Vector2(-1.0f, 0.0f);
-                    }
+                    if (prefab.DeleteOnCollision) return false;
+                    collisionNormal = new Vector2(0.0f, -1.0f);
+                }
+                else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < currentHull.WorldRect.X)
+                {
+                    if (prefab.DeleteOnCollision) return false;
+                    collisionNormal = new Vector2(1.0f, 0.0f);
+                }
+                else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > currentHull.WorldRect.Right)
+                {
+                    if (prefab.DeleteOnCollision) return false;
+                    collisionNormal = new Vector2(-1.0f, 0.0f);
+                }
 
-                    if (collisionNormal != Vector2.Zero)
+                if (collisionNormal != Vector2.Zero)
+                {
+                    bool gapFound = false;
+                    foreach (Gap gap in hullGaps)
                     {
-                        bool gapFound = false;
-                        foreach (Gap gap in hullGaps)
+                        if (gap.isHorizontal != (collisionNormal.X != 0.0f)) continue;
+
+                        if (gap.isHorizontal)
                         {
-                            if (gap.isHorizontal != (collisionNormal.X != 0.0f)) continue;
-
-                            if (gap.isHorizontal)
-                            {
-                                if (gap.WorldRect.Y < position.Y || gap.WorldRect.Y - gap.WorldRect.Height > position.Y) continue;
-                                int gapDir = Math.Sign(gap.WorldRect.Center.X - currentHull.WorldRect.Center.X);
-                                if (Math.Sign(velocity.X) != gapDir || Math.Sign(position.X - currentHull.WorldRect.Center.X) != gapDir) continue;
-                            }
-                            else
-                            {
-                                if (gap.WorldRect.X > position.X || gap.WorldRect.Right < position.X) continue;
-                                float hullCenterY = currentHull.WorldRect.Y - currentHull.WorldRect.Height / 2;
-                                int gapDir = Math.Sign(gap.WorldRect.Y - hullCenterY);
-                                if (Math.Sign(velocity.Y) != gapDir || Math.Sign(position.Y - hullCenterY) != gapDir) continue;
-                            }
-
-                            gapFound = true;
-                            break;
-                        }
-
-                        if (!gapFound)
-                        {
-                            OnWallCollisionInside(currentHull, collisionNormal);
+                            if (gap.WorldRect.Y < position.Y || gap.WorldRect.Y - gap.WorldRect.Height > position.Y) continue;
+                            int gapDir = Math.Sign(gap.WorldRect.Center.X - currentHull.WorldRect.Center.X);
+                            if (Math.Sign(velocity.X) != gapDir || Math.Sign(position.X - currentHull.WorldRect.Center.X) != gapDir) continue;
                         }
                         else
                         {
-                            Hull newHull = Hull.FindHull(position);
-                            if (newHull != currentHull)
-                            {
-                                currentHull = newHull;
-                                hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
-                                OnChangeHull?.Invoke(position, currentHull);
-                            }
+                            if (gap.WorldRect.X > position.X || gap.WorldRect.Right < position.X) continue;
+                            float hullCenterY = currentHull.WorldRect.Y - currentHull.WorldRect.Height / 2;
+                            int gapDir = Math.Sign(gap.WorldRect.Y - hullCenterY);
+                            if (Math.Sign(velocity.Y) != gapDir || Math.Sign(position.Y - hullCenterY) != gapDir) continue;
+                        }
+
+                        gapFound = true;
+                        break;
+                    }
+
+                    if (!gapFound)
+                    {
+                        OnWallCollisionInside(currentHull, collisionNormal);
+                    }
+                    else
+                    {
+                        Hull newHull = Hull.FindHull(position);
+                        if (newHull != currentHull)
+                        {
+                            currentHull = newHull;
+                            hullGaps = currentHull == null ? new List<Gap>() : currentHull.ConnectedGaps;
+                            OnChangeHull?.Invoke(position, currentHull);
                         }
                     }
                 }
             }
-
-            lifeTime -= deltaTime;
-
-            if (lifeTime <= 0.0f || alpha <= 0.0f || size.X <= 0.0f || size.Y <= 0.0f) return false;
 
             return true;
         }

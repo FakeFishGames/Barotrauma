@@ -177,17 +177,17 @@ namespace Barotrauma.Items.Components
                             "Hull breach", Color.Red, Color.Black * 0.5f, 2, GUI.SmallFont);  
                     }
 
-                    GUI.DrawString(spriteBatch, 
-                        new Vector2(x+10, y+height-40), 
-                        oxygenAmount == null ? "Air quality data not available" : "Air quality: "+(int)oxygenAmount+" %",
+                    GUI.DrawString(spriteBatch,
+                        new Vector2(x + 10, y + height - 60),
+                        oxygenAmount == null ? "Air quality data not available" : "Air quality: " + (int)oxygenAmount + " %",
                         oxygenAmount == null ? Color.Red : Color.Lerp(Color.Red, Color.LightGreen, (float)oxygenAmount / 100.0f),
                         Color.Black * 0.5f, 2, GUI.SmallFont);
 
                     GUI.DrawString(spriteBatch,
-                        new Vector2(x + 10, y + height - 20),
-                        waterAmount == null ? "Water level data not available" : "Water level: " + (int)(waterAmount*100.0f) + " %",
+                        new Vector2(x + 10, y + height - 40),
+                        waterAmount == null ? "Water level data not available" : "Water level: " + (int)(waterAmount * 100.0f) + " %",
                         waterAmount == null ? Color.Red : Color.Lerp(Color.LightGreen, Color.Red, (float)waterAmount),
-                        Color.Black * 0.5f, 2, GUI.SmallFont);                    
+                        Color.Black * 0.5f, 2, GUI.SmallFont);
                 }
                                 
                 GUI.DrawRectangle(spriteBatch, hullRect, borderColor, false, 0.0f, 2);
