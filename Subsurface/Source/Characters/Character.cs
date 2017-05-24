@@ -1774,9 +1774,12 @@ namespace Barotrauma
             }
 
             if (Math.Sign(newStun) != Math.Sign(stunTimer)) AnimController.ResetPullJoints();
+
             stunTimer = newStun;
-                
-            selectedConstruction = null;
+            if (newStun > 0.0f)
+            {
+                selectedConstruction = null;
+            }
         }
 
         private void Implode(bool isNetworkMessage = false)
