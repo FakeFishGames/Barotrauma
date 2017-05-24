@@ -242,7 +242,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.Server != null)
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, target.ID });
+                GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, target.ID });
 
                 string logStr = picker?.Name + " used " + item.Name;
                 if (item.ContainedItems != null && item.ContainedItems.Length > 0)

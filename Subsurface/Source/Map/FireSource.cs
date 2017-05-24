@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -267,7 +268,7 @@ namespace Barotrauma
 
         private void DamageItems(float deltaTime)
         {
-            if (size.X <= 0.0f) return;
+            if (size.X <= 0.0f || GameMain.Client != null) return;
 
             foreach (Item item in Item.ItemList)
             {
@@ -277,8 +278,12 @@ namespace Barotrauma
                 float range = (float)Math.Sqrt(size.X) * 10.0f;
                 if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) continue;
                 if (item.Position.Y < position.Y - size.Y || item.Position.Y > hull.Rect.Y) continue;
-                
-                if (GameMain.Client == null) item.ApplyStatusEffects(ActionType.OnFire, deltaTime);
+
+                item.ApplyStatusEffects(ActionType.OnFire, deltaTime);
+                if (item.Condition <= 0.0f)
+                {
+                    GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                }
             }
         }
 

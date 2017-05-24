@@ -3,6 +3,7 @@ using Barotrauma.Lights;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 using FarseerPhysics;
 
 namespace Barotrauma
@@ -91,6 +92,11 @@ namespace Barotrauma
                     if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
 
                     item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
+
+                    if (item.Condition <= 0.0f)
+                    {
+                        GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                    }
                 }
             }
 
