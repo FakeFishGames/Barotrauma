@@ -25,6 +25,8 @@ namespace Barotrauma
         //negative values = escapes targets of this type        
         private float attackRooms, attackHumans, attackWeaker, attackStronger;
 
+        private float combatStrength;
+
         private SteeringManager outsideSteering, insideSteering;
 
         private float updateTargetsTimer;
@@ -73,10 +75,12 @@ namespace Barotrauma
             XElement aiElement = doc.Root.Element("ai");
             if (aiElement == null) return;
 
-            attackRooms     = ToolBox.GetAttributeFloat(aiElement, "attackrooms", 0.0f) / 100.0f;
-            attackHumans    = ToolBox.GetAttributeFloat(aiElement, "attackhumans", 0.0f) / 100.0f;
-            attackWeaker    = ToolBox.GetAttributeFloat(aiElement, "attackweaker", 0.0f) / 100.0f;
-            attackStronger  = ToolBox.GetAttributeFloat(aiElement, "attackstronger", 0.0f) / 100.0f;
+            attackRooms     = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackrooms", "attackpriorityrooms") / 100.0f;
+            attackHumans    = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackhumans", "attackpriorityhumans") / 100.0f;
+            attackWeaker    = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackweaker", "attackpriorityweaker") / 100.0f;
+            attackStronger  = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackstronger", "attackprioritystronger") / 100.0f;
+
+            combatStrength = ToolBox.GetAttributeFloat(aiElement, "combatstrength", 1.0f);
 
             attackCoolDown  = ToolBox.GetAttributeFloat(aiElement, "attackcooldown", 5.0f);
 
@@ -157,6 +161,11 @@ namespace Barotrauma
                 case AiState.Attack:
                     UpdateAttack(deltaTime);
                     break;
+                case AiState.Escape:
+                    UpdateEscape(deltaTime);
+                    break;
+                default:
+                    throw new NotImplementedException();
             }
 
             steeringManager.Update();
@@ -258,6 +267,13 @@ namespace Barotrauma
 
                 if (attackingLimb != null) UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
             }   
+        }
+
+        private void UpdateEscape(float deltaTime)
+        {
+            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition));
+            SteeringManager.SteeringWander(1.0f);
+            SteeringManager.SteeringAvoid(deltaTime, 2f);
         }
 
         private void UpdateCoolDown(Vector2 attackPosition, float deltaTime)
@@ -397,9 +413,30 @@ namespace Barotrauma
                                 
                 if (targetCharacter!=null)
                 {
-                    if (attackHumans == 0.0f || targetCharacter.SpeciesName != "human") continue;
-                    
-                    valueModifier = attackHumans;                  
+                    if (targetCharacter.SpeciesName == "human")
+                    {
+                        if (attackHumans == 0.0f) continue;
+                        valueModifier = attackHumans;
+                    }
+                    else
+                    {
+                        EnemyAIController enemy = targetCharacter.AIController as EnemyAIController;
+                        if (enemy != null)
+                        {
+                            if (enemy.combatStrength > combatStrength)
+                            {
+                                valueModifier = attackStronger;
+                            }
+                            else if (enemy.combatStrength < combatStrength)
+                            {
+                                valueModifier = attackWeaker;
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+                    }                
                 }
                 else if (target.Entity!=null && attackRooms != 0.0f)
                 {
@@ -409,11 +446,13 @@ namespace Barotrauma
                     valueModifier = attackRooms;
                 }
 
+                if (valueModifier == 0.0f) continue;
+
                 dist = Vector2.Distance(character.WorldPosition, target.WorldPosition);
 
                 //if the target has been within range earlier, the character will notice it more easily
                 //(i.e. remember where the target was)
-                if (targetMemories.ContainsKey(target)) dist *= 0.1f;
+                if (targetMemories.ContainsKey(target)) dist *= 0.5f;
 
                 //ignore target if it's too far to see or hear
                 if (dist > target.SightRange * sight && dist > target.SoundRange * hearing) continue;
@@ -434,19 +473,21 @@ namespace Barotrauma
                     Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
                     Structure closestStructure = (closestBody == null) ? null : closestBody.UserData as Structure;
 
+                   /* float targetStrength = 0.0f;
                     if (targetDamageable != null)
                     {
-                        valueModifier = valueModifier / targetDamageable.Health;                            
+                        targetStrength = targetDamageable.Health;                            
                     }
                     else if (closestStructure!=null)
                     {
-                        valueModifier = valueModifier / ((IDamageable)closestStructure).Health;
+                        targetStrength = ((IDamageable)closestStructure).Health;
                     }
                     else
                     {
-                        valueModifier = valueModifier / 1000.0f;
-                    }
-
+                        targetStrength = 1000.0f;
+                    }*/
+;
+                    
                     if (selectedAiTarget == null || Math.Abs(valueModifier) > Math.Abs(targetValue))
                     {
                         selectedAiTarget = target;

@@ -85,11 +85,16 @@
 
     <joint limb1="0" limb1anchor="43,-67" limb2="9" limb2anchor="0,21" lowerlimit="-180" upperlimit="-10"/>
     <joint limb1="9" limb1anchor="0,-28" limb2="10" limb2anchor="-11,-46" lowerlimit="-190" upperlimit="-50"/>  
-    
   </ragdoll>
 
-  <ai attackhumans="500" attackrooms="50.0" attackweaker="50" attackstronger="-30" 
-      sight="0.5" hearing="1.0"
-      attackcooldown="1.0"/>
+  <ai
+    combatstrength="250"
+    attackpriorithumans="500.0"
+    attackpriorityrooms="50.0"
+    attackpriorityweaker="60"
+    attackprioritystronger="-30"
+    attackcooldown="1.0"
+    sight="0.5"
+    hearing="1.0"/>
 </Character>
 

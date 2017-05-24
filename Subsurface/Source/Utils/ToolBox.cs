@@ -162,6 +162,35 @@ namespace Barotrauma
             return value;
         }
 
+        public static float GetAttributeFloat(XElement element, float defaultValue, params string[] matchingAttributeName)
+        {
+            if (element == null) return defaultValue;
+
+            foreach (string name in matchingAttributeName)
+            {
+                if (element.Attribute(name) == null) continue;
+
+                float val = defaultValue;
+
+                try
+                {
+                    if (!float.TryParse(element.Attribute(name).Value, NumberStyles.Float, CultureInfo.InvariantCulture, out val))
+                    {
+                        continue;
+                    }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Error in "+element+"!", e);
+                    continue;
+                }
+            
+                return val;   
+            }
+
+            return defaultValue;
+        }
+
         public static float GetAttributeFloat(XElement element, string name, float defaultValue)
         {
             if (element == null || element.Attribute(name) == null) return defaultValue;
