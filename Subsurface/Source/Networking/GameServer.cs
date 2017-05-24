@@ -1157,7 +1157,37 @@ namespace Barotrauma.Networking
                     GameMain.GameSession.CrewManager.characters.Add(myCharacter);
                 }
             }
-                        
+
+
+            foreach (Submarine sub in Submarine.MainSubs)
+            {
+                if (sub == null) continue;
+
+                WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, sub);
+
+                if (cargoSpawnPos?.CurrentHull == null)
+                {
+                    DebugConsole.ThrowError("Couldn't spawn additional cargo (no cargo spawnpoint inside any of the hulls)");
+                    continue;
+                }
+
+                var cargoRoom = cargoSpawnPos.CurrentHull;
+                Vector2 position = new Vector2(
+                    cargoSpawnPos.Position.X,
+                    cargoRoom.Rect.Y - cargoRoom.Rect.Height);
+
+                foreach (string s in extraCargo.Keys)
+                {
+                    ItemPrefab itemPrefab = MapEntityPrefab.list.Find(ip => ip.Name == s) as ItemPrefab;
+                    if (itemPrefab == null) continue;
+
+                    for (int i = 0; i < extraCargo[s]; i++)
+                    {
+                        Entity.Spawner.AddToSpawnQueue(itemPrefab,  position + new Vector2(Rand.Range(-20.0f, 20.0f), itemPrefab.Size.Y / 2), sub);
+                    }
+                }
+            }
+
             TraitorManager = null;
             if (TraitorsEnabled == YesNoMaybe.Yes ||
                 (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
@@ -1171,20 +1201,9 @@ namespace Barotrauma.Networking
             }
 
             SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
-            //var startMessage = CreateStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset);
-            //server.SendMessage(startMessage, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
 
             yield return CoroutineStatus.Running;
-
-            //UpdateCrewFrame();
-
-            //TraitorManager = null;
-            //if (TraitorsEnabled == YesNoMaybe.Yes ||
-            //    (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
-            //{
-            //    TraitorManager = new TraitorManager(this);
-            //}
-
+            
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.GameScreen.Select();
 
