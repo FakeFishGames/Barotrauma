@@ -645,7 +645,7 @@ namespace Barotrauma
         }
 
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
         {
             if (statusEffectLists == null) return;
 
@@ -654,13 +654,16 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
-                ApplyStatusEffect(effect, type, deltaTime, character);
+                ApplyStatusEffect(effect, type, deltaTime, character, isNetworkEvent);
             }
         }
         
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
         {
-            if (condition == 0.0f && effect.type != ActionType.OnBroken) return;
+            if (!isNetworkEvent)
+            {
+                if (condition == 0.0f && effect.type != ActionType.OnBroken) return;
+            }
             if (effect.type != type) return;
             
             bool hasTargets = (effect.TargetNames == null);
@@ -1718,7 +1721,10 @@ namespace Barotrauma
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
-                    ushort targetID = (ushort)extraData[1];
+                    ActionType actionType = (ActionType)extraData[1];
+                    ushort targetID = extraData.Length > 2 ? (ushort)extraData[2] : (ushort)0;
+
+                    msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
                     msg.Write(targetID);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
@@ -1765,13 +1771,11 @@ namespace Barotrauma
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
+                    ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length -1);
                     ushort targetID = msg.ReadUInt16();
 
                     Character target = FindEntityByID(targetID) as Character;
-
-                    if (target == null) return;
-
-                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, target);
+                    ApplyStatusEffects(actionType, (float)Timing.Step, target, true);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg);
@@ -1856,7 +1860,7 @@ namespace Barotrauma
 
                     GameServer.Log(c.Character.Name + " used item " + Name, ServerLog.MessageType.ItemInteraction);
 
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, c.Character.ID });
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, c.Character.ID });
                     
                     break;
                 case NetEntityEvent.Type.ChangeProperty:

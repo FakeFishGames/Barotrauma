@@ -104,7 +104,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                GameMain.Server.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID });
+                GameMain.Server.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID });
             }
 
             Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
