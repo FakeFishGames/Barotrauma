@@ -5,17 +5,17 @@
   
   <ragdoll waveamplitude="150.0" wavelength="10000" swimspeed="4.0" scale="1.5" canentersubmarine="false">
 
-    <collider radius="100"/>
+    <collider radius="80" height="440"/>
     
     <!-- body -->
-    <limb id = "0" radius="100" height="470" type="Torso" steerforce="1.0" pullpos="0,250">
+    <limb id = "0" radius="100" height="470" type="Torso" steerforce="1.0">
       <sprite texture="Content/Characters/Charybdis/charybdis.png" sourcerect="160,0,242,688" depth="0.015" origin="0.5,0.5"/>
     </limb>
     
     <!-- lower yaw -->
     <limb id = "1" radius="70" height="100">
       <sprite texture="Content/Characters/Charybdis/charybdis.png" sourcerect="416,0,192,256" depth="0.025" origin="0.65,0.5"/>
-      <attack range="500" duration="0.5" damage="5.00" bleedingdamage="50" structuredamage="500" damagetype="slash" torque="200" targetforce="-50"/>
+      <attack range="500" duration="0.5" damage="5.00" bleedingdamage="50" structuredamage="500" damagetype="slash" torque="200" force="50" targetforce="-50"/>
     </limb>
 
     <!-- front fins -->    
