@@ -1256,7 +1256,7 @@ namespace Barotrauma
                 //use simple interpolation for other players' characters and characters that can't move
                 if (character.MemState.Count > 0)
                 {
-                    if (character.MemState[0].Interact == null)
+                    if (character.MemState[0].Interact == null || character.MemState[0].Interact.Removed)
                     {
                         character.DeselectCharacter();
                         character.SelectedConstruction = null;
@@ -1348,7 +1348,7 @@ namespace Barotrauma
                     //the entity we're interacting with doesn't match the server's
                     if (localPos.Interact != serverPos.Interact)
                     {
-                        if (serverPos.Interact == null)
+                        if (serverPos.Interact == null || serverPos.Interact.Removed)
                         {
                             character.DeselectCharacter();
                             character.SelectedConstruction = null;

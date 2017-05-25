@@ -440,7 +440,7 @@ namespace Barotrauma
         {
             get
             {
-                return isDead || Stun > 0.0f || LockHands || IsUnconscious;
+                return isDead || Stun > 0.0f || LockHands || IsUnconscious || Removed;
             }
         }
 
@@ -932,7 +932,7 @@ namespace Barotrauma
                 if (selectedConstruction != null && IsKeyDown(InputType.Aim)) selectedConstruction.SecondaryUse(deltaTime, this);
             }
 
-            if (selectedCharacter!=null)
+            if (selectedCharacter != null)
             {
                 if (Vector2.DistanceSquared(selectedCharacter.WorldPosition, WorldPosition) > 90000.0f || !selectedCharacter.CanBeSelected)
                 {
@@ -1123,10 +1123,13 @@ namespace Barotrauma
         public void DeselectCharacter()
         {
             if (selectedCharacter == null) return;
-            
-            foreach (Limb limb in selectedCharacter.AnimController.Limbs)
+
+            if (SelectedCharacter.AnimController != null)
             {
-                if (limb.pullJoint != null) limb.pullJoint.Enabled = false;
+                foreach (Limb limb in selectedCharacter.AnimController.Limbs)
+                {
+                    if (limb.pullJoint != null) limb.pullJoint.Enabled = false;
+                }
             }
 
             selectedCharacter = null;
