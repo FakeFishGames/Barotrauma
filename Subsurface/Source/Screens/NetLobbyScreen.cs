@@ -732,19 +732,19 @@ namespace Barotrauma
 
             if (matchingSub == null)
             {
-                subTextBlock.TextColor = Color.Gray;
+                subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
                 subTextBlock.ToolTip = "Submarine not found in your submarine folder";
             }
             else if (matchingSub.MD5Hash.Hash != sub.MD5Hash.Hash)
             {
-                subTextBlock.TextColor = Color.LightGray;
+                subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
                 subTextBlock.ToolTip = "Your version of the submarine doesn't match the servers version";
             }
             else
             {
                 if (subList == shuttleList || subList == shuttleList.ListBox)
                 {
-                    subTextBlock.TextColor = sub.HasTag(SubmarineTag.Shuttle) ? Color.White : Color.DarkGray;
+                    subTextBlock.TextColor = new Color(subTextBlock.TextColor, sub.HasTag(SubmarineTag.Shuttle) ? 1.0f : 0.6f);
                 }
             }
 
