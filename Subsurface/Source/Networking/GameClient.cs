@@ -1057,7 +1057,7 @@ namespace Barotrauma.Networking
                             ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash) as GUITextBlock;
 
                         if (textBlock == null) continue;
-                        textBlock.TextColor = Color.White;
+                        textBlock.TextColor = new Color(textBlock.TextColor, 1.0f);
 
                         textBlock.UserData = newSub;
                         textBlock.ToolTip = newSub.Description;
