@@ -231,7 +231,7 @@ namespace Barotrauma.Networking
 
             string displayedText = message.Text;
 
-            if (message.Sender != null)
+            if (message.Sender != null && !message.Sender.IsDead)
             {
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
             }
