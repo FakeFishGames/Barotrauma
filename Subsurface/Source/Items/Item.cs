@@ -408,15 +408,27 @@ namespace Barotrauma
                         break;
                 }
             }
-            
+
+            //cache connections into a dictionary for faster lookups
+            var connectionPanel = GetComponent<ConnectionPanel>();
+            if (connectionPanel != null)
+            {
+                connections = new Dictionary<string, Connection>();
+                foreach (Connection c in connectionPanel.Connections)
+                {
+                    if (!connections.ContainsKey(c.Name))
+                        connections.Add(c.Name, c);
+                }
+            }
+
             //containers need to handle collision events to notify items inside them about the impact
-            if (ImpactTolerance > 0.0f || GetComponent<ItemContainer>() != null)
+            var itemContainer = GetComponent<ItemContainer>();
+            if (ImpactTolerance > 0.0f || itemContainer != null)
             {
                 if (body != null) body.FarseerBody.OnCollision += OnCollision;
             }
 
-            var itemContainer = GetComponent<ItemContainer>();
-            if (itemContainer!=null)
+            if (itemContainer != null)
             {
                 ownInventory = itemContainer.Inventory;
             }
@@ -2243,17 +2255,6 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 ic.OnMapLoaded();
-            }
-
-            //cache connections into a dictionary for faster lookups
-            var connectionPanel = GetComponent<ConnectionPanel>();
-            connections = new Dictionary<string, Connection>();
-            
-            if (connectionPanel == null) return;
-            foreach (Connection c in connectionPanel.Connections)
-            {
-                if (!connections.ContainsKey(c.Name))
-                    connections.Add(c.Name, c);
             }
         }
         
