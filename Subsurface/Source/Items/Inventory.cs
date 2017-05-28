@@ -590,11 +590,11 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
-                        GameServer.Log(c.Character + " picked up " + item.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(c.Character + " picked up " + item.Name, ServerLog.MessageType.Inventory);
                     }
                     else
                     {
-                        GameServer.Log(c.Character + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(c.Character + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
                     }
                 }
             }
@@ -605,11 +605,11 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
-                        GameServer.Log(c.Character + " dropped " + item.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(c.Character + " dropped " + item.Name, ServerLog.MessageType.Inventory);
                     }
                     else
                     {
-                        GameServer.Log(c.Character + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(c.Character + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
                     }
                 }
             }

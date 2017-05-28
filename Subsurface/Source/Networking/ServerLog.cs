@@ -24,6 +24,7 @@ namespace Barotrauma.Networking
         {
             Chat,
             ItemInteraction,
+            Inventory,
             Attack,
             ServerMessage,
             Error
@@ -32,6 +33,7 @@ namespace Barotrauma.Networking
         private Color[] messageColor = new Color[]
         {
             Color.LightBlue,
+            new Color(255, 142, 0),
             new Color(238, 208, 0),
             new Color(204, 74, 78),
             new Color(157, 225, 160),
@@ -42,6 +44,7 @@ namespace Barotrauma.Networking
         {
             "Chat message",
             "Item interaction",
+            "Inventory usage",
             "Attack & death",
             "Server message",
             "Error"
