@@ -360,7 +360,7 @@ namespace Barotrauma
                     Limb leg = i == -1 ? leftLeg : rightLeg;
 
                     Vector2 footPos = stepSize * -i;
-                    if (stepSize.Y > 0.0f) stepSize.Y = -0.15f;
+                    if (stepSize.Y < 0.0f) stepSize.Y = -0.15f;
 
                     if (onSlope && stairs == null)
                     {
