@@ -1294,7 +1294,7 @@ namespace Barotrauma
                                 (c2.IsRemotePlayer || c2 == GameMain.Server.Character) && 
                                 Vector2.Distance(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistance);
                     }
-                    else
+                    else if (Submarine.MainSub != null)
                     {
                         //disable AI characters that are far away from the sub and the controlled character
                         c.Enabled = Vector2.Distance(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistance ||
