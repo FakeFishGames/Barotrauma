@@ -500,7 +500,6 @@ namespace Barotrauma
             if (LightSource != null)
             {
                 LightSource.Position = body.DrawPosition;
-                LightSource.Rotation = body.DrawRotation;
             }
 
             foreach (WearableSprite wearable in wearingItems)

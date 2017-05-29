@@ -19,8 +19,7 @@ namespace Barotrauma.Lights
         
         private Sprite overrideLightTexture;
         private Texture2D texture;
-
-        public SpriteEffects SpriteEffect = SpriteEffects.None;
+        
         public Sprite LightSprite;
 
         public Submarine ParentSub;
@@ -520,7 +519,7 @@ namespace Barotrauma.Lights
 
             drawPos.Y = -drawPos.Y;
             
-            if (range > 1.0f && false)
+            /*if (range > 1.0f)
             {
                 if (overrideLightTexture == null)
                 {
@@ -534,15 +533,14 @@ namespace Barotrauma.Lights
                     overrideLightTexture.Draw(spriteBatch,
                         drawPos, color * (color.A / 255.0f),
                         overrideLightTexture.Origin, -Rotation,
-                        new Vector2(overrideLightTexture.size.X / overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y / overrideLightTexture.SourceRect.Height),
-                        SpriteEffect);
+                        new Vector2(overrideLightTexture.size.X / overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y / overrideLightTexture.SourceRect.Height));
                 }
             }
 
             if (LightSprite != null)
             {
-                //LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1, SpriteEffect);
-            }
+                LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1);
+            }*/
 
             if (NeedsRecalculation)
             {
@@ -575,9 +573,8 @@ namespace Barotrauma.Lights
             );
         }
 
-        public void FlipX()
+        /*public void FlipX()
         {
-            SpriteEffect = SpriteEffect == SpriteEffects.None ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             if (LightSprite != null)
             {
                 Vector2 lightOrigin = LightSprite.Origin;
@@ -591,7 +588,7 @@ namespace Barotrauma.Lights
                 lightOrigin.X = overrideLightTexture.SourceRect.Width - lightOrigin.X;
                 overrideLightTexture.Origin = lightOrigin;
             }
-        }
+        }*/
 
         public void Remove()
         {
