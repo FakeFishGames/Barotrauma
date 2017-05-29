@@ -1277,9 +1277,25 @@ namespace Barotrauma
 
             if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
-            Entity.RemoveAll();
+            RemoveAll();
 
-            System.Diagnostics.Debug.Assert(Item.ItemList.Count == 0);
+            if (Item.ItemList.Count > 0)
+            {
+                List<Item> items = new List<Item>(Item.ItemList);
+                foreach (Item item in items)
+                {
+                    DebugConsole.ThrowError("Error while unloading submarines - item \""+item.Name+"\" not removed");
+                    try
+                    {
+                        item.Remove();
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("Error while removing \"" + item.Name + "\"!", e);
+                    }
+                }
+                Item.ItemList.Clear();
+            }
             
             PhysicsBody.list.Clear();
 
