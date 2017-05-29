@@ -645,10 +645,10 @@ namespace Barotrauma
 
                 limb.Dir = Dir;
 
-                if (limb.LightSource != null)
+                /*if (limb.LightSource != null)
                 {
                     limb.LightSource.FlipX();
-                }
+                }*/
 
                 if (limb.pullJoint != null)
                 {
@@ -943,7 +943,7 @@ namespace Barotrauma
 
                 if (limb.LightSource != null)
                 {
-                    limb.LightSource.Rotation = limb.Rotation;
+                    limb.LightSource.Rotation = dir == Direction.Right ? limb.body.DrawRotation : limb.body.DrawRotation - MathHelper.Pi;
                 }
                 limb.Update(deltaTime);
             }
