@@ -45,6 +45,12 @@ namespace Barotrauma
             var nodes = new Dictionary<int, PathNode>();
             foreach (WayPoint wayPoint in wayPoints)
             {
+                if (wayPoint == null) continue;
+                if (nodes.ContainsKey(wayPoint.ID))
+                {
+                    DebugConsole.ThrowError("Error in PathFinder.GenerateNodes (duplicate ID \"" + wayPoint.ID + "\")");
+                    continue;
+                }
                 nodes.Add(wayPoint.ID, new PathNode(wayPoint));
             }
 

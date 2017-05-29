@@ -452,7 +452,34 @@ namespace Barotrauma
                 }
             }
         }
-        
+
+        public override void ShallowRemove()
+        {
+            base.ShallowRemove();
+
+            if (WallList.Contains(this)) WallList.Remove(this);
+
+            if (bodies != null)
+            {
+                foreach (Body b in bodies)
+                    GameMain.World.RemoveBody(b);
+            }
+
+            if (sections != null)
+            {
+                foreach (WallSection s in sections)
+                {
+                    if (s.gap != null)
+                    {
+                        s.gap.Remove();
+                        s.gap = null;
+                    }
+                }
+            }
+
+            if (convexHulls != null) convexHulls.ForEach(x => x.Remove());
+        }
+
         public override void Remove()
         {
             base.Remove();

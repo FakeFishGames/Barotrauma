@@ -670,19 +670,27 @@ namespace Barotrauma
             return null;
         }
 
-        public override void Remove()
+        public override void ShallowRemove()
         {
-            base.Remove();
-
+            base.ShallowRemove();
             GapList.Remove(this);
 
             foreach (Hull hull in Hull.hullList)
             {
                 hull.ConnectedGaps.Remove(this);
             }
-
         }
 
+        public override void Remove()
+        {
+            base.Remove();
+            GapList.Remove(this);
+
+            foreach (Hull hull in Hull.hullList)
+            {
+                hull.ConnectedGaps.Remove(this);
+            }
+        }
 
         public override void OnMapLoaded()
         {

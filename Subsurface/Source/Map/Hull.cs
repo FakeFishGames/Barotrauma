@@ -332,6 +332,39 @@ namespace Barotrauma
             Pressure = surface;
         }
 
+        public override void ShallowRemove()
+        {
+            base.Remove();
+            hullList.Remove(this);
+
+            if (Submarine == null || (!Submarine.Loading && !Submarine.Unloading))
+            {
+                Item.UpdateHulls();
+                Gap.UpdateHulls();
+            }
+
+            List<FireSource> fireSourcesToRemove = new List<FireSource>(fireSources);
+            foreach (FireSource fireSource in fireSourcesToRemove)
+            {
+                fireSource.Remove();
+            }
+            fireSources.Clear();
+
+            if (soundIndex > -1)
+            {
+                Sounds.SoundManager.Stop(soundIndex);
+                soundIndex = -1;
+            }
+            
+            if (entityGrids != null)
+            {
+                foreach (EntityGrid entityGrid in entityGrids)
+                {
+                    entityGrid.RemoveEntity(this);
+                }
+            }
+        }
+
         public override void Remove()
         {
             base.Remove();
@@ -355,8 +388,7 @@ namespace Barotrauma
                 Sounds.SoundManager.Stop(soundIndex);
                 soundIndex = -1;
             }
-
-            //renderer.Dispose();
+            
             if (entityGrids != null)
             {
                 foreach (EntityGrid entityGrid in entityGrids)
