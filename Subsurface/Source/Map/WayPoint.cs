@@ -820,6 +820,13 @@ namespace Barotrauma
             }
         }
 
+        public override void ShallowRemove()
+        {
+            base.ShallowRemove();
+
+            WayPointList.Remove(this);
+        }
+
         public override void Remove()
         {
             base.Remove();
