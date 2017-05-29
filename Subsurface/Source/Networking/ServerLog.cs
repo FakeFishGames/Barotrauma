@@ -30,7 +30,7 @@ namespace Barotrauma.Networking
             Error
         }
 
-        private Color[] messageColor = new Color[]
+        private readonly Color[] messageColor =
         {
             Color.LightBlue,
             new Color(255, 142, 0),
@@ -40,7 +40,7 @@ namespace Barotrauma.Networking
             Color.Red
         };
 
-        private string[] messageTypeName = new string[]
+        private readonly string[] messageTypeName =
         {
             "Chat message",
             "Item interaction",
@@ -105,9 +105,13 @@ namespace Barotrauma.Networking
 
             while (lines.Count > LinesPerFile)
             {
-                listBox.RemoveChild(listBox.children[0]);
                 lines.Dequeue();
-            }            
+            }
+
+            while (listBox != null && listBox.children.Count > LinesPerFile)
+            {
+                listBox.RemoveChild(listBox.children[0]);
+            }          
         }
 
         public void CreateLogFrame()
@@ -164,7 +168,7 @@ namespace Barotrauma.Networking
             if (listBox.BarScroll == 0.0f || listBox.BarScroll == 1.0f) listBox.BarScroll = 1.0f;
 
             GUIButton closeButton = new GUIButton(new Rectangle(-100, 10, 100, 15), "Close", Alignment.BottomRight, "", innerFrame);
-            closeButton.OnClicked = (GUIButton button, object userData) =>
+            closeButton.OnClicked = (button, userData) =>
             {
                 LogFrame = null;
                 return true;
