@@ -188,7 +188,7 @@ namespace Barotrauma
             float waterPercentage = (hull.Volume / hull.FullVolume) * 100.0f;
             float fireAmount = 0.0f;
 
-            var nearbyHulls = character.AnimController.CurrentHull.GetConnectedHulls(3);
+            var nearbyHulls = hull.GetConnectedHulls(3);
 
             foreach (Hull hull2 in nearbyHulls)
             {
