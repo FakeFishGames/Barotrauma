@@ -850,7 +850,7 @@ namespace Barotrauma
 
             int characterIndex;
             string characterName;
-            if (int.TryParse(commands.Last(), out characterIndex))
+            if (int.TryParse(commands.Last(), out characterIndex) && commands.Length > 2)
             {
                 characterName = string.Join(" ", commands.Skip(1).Take(commands.Length - 2)).ToLowerInvariant();
             }
