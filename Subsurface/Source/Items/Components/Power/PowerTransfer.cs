@@ -127,45 +127,48 @@ namespace Barotrauma.Items.Components
 
                     if (it.Condition <= 0.0f) continue;
 
-                    Powered powered = it.GetComponent<Powered>();
-                    if (powered == null || !powered.IsActive) continue;
-
-                    if (connectedList.Contains(powered)) continue;
-
-                    PowerTransfer powerTransfer = powered as PowerTransfer;
-                    if (powerTransfer != null)
+                    foreach (Powered powered in it.GetComponents<Powered>())
                     {
-                        powerTransfer.CheckJunctions(deltaTime);
-                        continue;
-                    }
-                    
-                    PowerContainer powerContainer = powered as PowerContainer;
-                    if (powerContainer != null)
-                    {
-                        if (recipient.Name == "power_in")
+                        if (powered == null || !powered.IsActive) continue;
+
+                        if (connectedList.Contains(powered)) continue;
+
+                        PowerTransfer powerTransfer = powered as PowerTransfer;
+                        if (powerTransfer != null)
                         {
-                            fullLoad += powerContainer.CurrPowerConsumption;
+                            powerTransfer.CheckJunctions(deltaTime);
+                            continue;
+                        }
+
+                        PowerContainer powerContainer = powered as PowerContainer;
+                        if (powerContainer != null)
+                        {
+                            if (recipient.Name == "power_in")
+                            {
+                                fullLoad += powerContainer.CurrPowerConsumption;
+                            }
+                            else
+                            {
+                                fullPower += powerContainer.CurrPowerOutput;
+                            }
                         }
                         else
                         {
-                            fullPower += powerContainer.CurrPowerOutput;
+                            connectedList.Add(powered);
+                            //positive power consumption = the construction requires power -> increase load
+                            if (powered.CurrPowerConsumption > 0.0f)
+                            {
+                                fullLoad += powered.CurrPowerConsumption;
+                            }
+                            else if (powered.CurrPowerConsumption < 0.0f)
+                            //negative power consumption = the construction is a 
+                            //generator/battery or another junction box
+                            {
+                                fullPower -= powered.CurrPowerConsumption;
+                            }
                         }
                     }
-                    else
-                    {
-                        connectedList.Add(powered);
-                        //positive power consumption = the construction requires power -> increase load
-                        if (powered.CurrPowerConsumption > 0.0f)
-                        {
-                            fullLoad += powered.CurrPowerConsumption;
-                        }
-                        else if (powered.CurrPowerConsumption < 0.0f)
-                        //negative power consumption = the construction is a 
-                        //generator/battery or another junction box
-                        {
-                            fullPower -= powered.CurrPowerConsumption;
-                        }
-                    }
+
                 }
             }
         }
