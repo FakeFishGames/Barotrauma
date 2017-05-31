@@ -369,7 +369,7 @@ namespace Barotrauma
         //sight/hearing range
         public void UpdateTargets(Character character)
         {
-            wallAttackPos = Vector2.Zero;
+            var prevAiTarget = selectedAiTarget;
 
             selectedAiTarget = null;
             selectedTargetMemory = null;
@@ -455,6 +455,11 @@ namespace Barotrauma
                         targetValue = valueModifier;
                     }
                 }
+            }
+
+            if (selectedAiTarget != prevAiTarget)
+            {
+                wallAttackPos = Vector2.Zero;
             }
            
         }
