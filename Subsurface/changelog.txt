@@ -28,6 +28,7 @@ Items:
 	- texts in labels can be resized
 	- alien weapons can be used as railgun ammo
 	- nerfed oxygen and welding fuel tank explosions
+	- buttons created in fabricators work now
 
 Submarine editor:
 	- items/structures that have been copy-pasted from another submarine don't disappear when saving and 
@@ -37,6 +38,7 @@ Submarine editor:
 	- "are you sure" prompt when trying to delete subs
 	- open menus are closed when opening another one (e.g. the save dialog box is automatically closed if
 	the item selection menu is opened)
+	- fixed crashes when switching to character or wiring mode after copypasting waypoints
 
 Misc:
 	- background ice formations with a parallax effect
@@ -46,6 +48,7 @@ Misc:
 	- explosion damage is reduced if there are walls or other solid obstacles between and explosion and a character
 	- heal and revive commands can also be used on other characters than the controlled one
 	- fixed fires occasionally causing incorrect sound clips to loop continuously
+	- AI controlled crew members are better at avoiding hazards such as water and fire
 	- swimming animation fix: characters don't swim with their legs extended up over their shoulders 
 	after a sharp turn
 
