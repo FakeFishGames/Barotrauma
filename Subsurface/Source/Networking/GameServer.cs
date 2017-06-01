@@ -1451,7 +1451,17 @@ namespace Barotrauma.Networking
                 if (c.Character == null || !c.inGame) continue;
             }
         }
-        
+
+        public void SendChatMessage(ChatMessage msg, Client recipient)
+        {
+            msg.NetStateID = recipient.chatMsgQueue.Count > 0 ?
+                (ushort)(recipient.chatMsgQueue.Last().NetStateID + 1) :
+                (ushort)(recipient.lastRecvChatMsgID + 1);
+
+            recipient.chatMsgQueue.Add(msg);
+            recipient.lastChatMsgQueueID = msg.NetStateID;
+        }
+
         /// <summary>
         /// Add the message to the chatbox and pass it to all clients who can receive it
         /// </summary>
@@ -1628,13 +1638,8 @@ namespace Barotrauma.Networking
                     modifiedMessage, 
                     (ChatMessageType)type,
                     senderCharacter);
-                
-                chatMsg.NetStateID = client.chatMsgQueue.Count > 0 ?
-                    (ushort)(client.chatMsgQueue.Last().NetStateID + 1) :
-                    (ushort)(client.lastRecvChatMsgID + 1);
 
-                client.chatMsgQueue.Add(chatMsg);
-                client.lastChatMsgQueueID = chatMsg.NetStateID;
+                SendChatMessage(chatMsg, client);
             }
 
             string myReceivedMessage = message;

@@ -39,6 +39,10 @@ namespace Barotrauma.Networking
         
         public List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
         public UInt16 lastChatMsgQueueID;
+
+
+        //latest chat messages sent by this client
+        public List<string> lastSentChatMessages = new List<string>(); 
         public float ChatSpamSpeed;
         public float ChatSpamTimer;
         public int ChatSpamCount;
