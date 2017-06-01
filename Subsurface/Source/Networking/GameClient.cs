@@ -958,12 +958,17 @@ namespace Barotrauma.Networking
             outmsg.Write(ChatMessage.LastID);
 
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
-
-            foreach (ChatMessage cMsg in chatMsgQueue)
+            for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
-                cMsg.ClientWrite(outmsg);
+                chatMsgQueue[i].ClientWrite(outmsg);
             }
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
+            
+            if (outmsg.LengthBytes > client.Configuration.MaximumTransmissionUnit)
+            {
+                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + client.Configuration.MaximumTransmissionUnit);
+            }
+
             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
         }
 
@@ -978,20 +983,22 @@ namespace Barotrauma.Networking
             outmsg.Write(entityEventManager.LastReceivedID);
 
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
-
-            foreach (ChatMessage cMsg in chatMsgQueue)
+            for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
-                cMsg.ClientWrite(outmsg);
+                chatMsgQueue[i].ClientWrite(outmsg);
             }
-
-            if (Character.Controlled != null)
-            {
-                Character.Controlled.ClientWrite(outmsg);
-            }
+            
+            Character.Controlled?.ClientWrite(outmsg);
 
             entityEventManager.Write(outmsg, client.ServerConnection);
 
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
+
+            if (outmsg.LengthBytes > client.Configuration.MaximumTransmissionUnit)
+            {
+                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + client.Configuration.MaximumTransmissionUnit);
+            }
+
             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
         }
 

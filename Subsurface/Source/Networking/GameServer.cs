@@ -652,8 +652,10 @@ namespace Barotrauma.Networking
                         break;
                     default:
                         return;
-                        //break;
                 }
+
+                //don't read further messages if the client has been disconnected (kicked due to spam for example)
+                if (!connectedClients.Contains(c)) break;
             }
         }
 
@@ -752,6 +754,9 @@ namespace Barotrauma.Networking
                     default:
                         return;
                 }
+
+                //don't read further messages if the client has been disconnected (kicked due to spam for example)
+                if (!connectedClients.Contains(c)) break;
             }
         }
 
@@ -846,9 +851,8 @@ namespace Barotrauma.Networking
             outmsg.Write(c.lastSentEntityEventID);
 
             c.chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.lastRecvChatMsgID));
-
-            int maxChatMsgsPerPacket = 50;
-            for (int i = 0; i < c.chatMsgQueue.Count && i < maxChatMsgsPerPacket; i++)
+            
+            for (int i = 0; i < c.chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
                 c.chatMsgQueue[i].ServerWrite(outmsg, c);
             }
@@ -897,6 +901,12 @@ namespace Barotrauma.Networking
             entityEventManager.Write(c, outmsg);
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
+            {
+                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit);
+            }
+
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
         }
 
@@ -959,12 +969,19 @@ namespace Barotrauma.Networking
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
 
             c.chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.lastRecvChatMsgID));
-            foreach (ChatMessage cMsg in c.chatMsgQueue)
+            
+            for (int i = 0; i < c.chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
-                cMsg.ServerWrite(outmsg, c);
-            } 
+                c.chatMsgQueue[i].ServerWrite(outmsg, c);
+            }
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
+            {
+                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit);
+            }
+
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
         }
 
