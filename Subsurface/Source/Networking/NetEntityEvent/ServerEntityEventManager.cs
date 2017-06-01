@@ -340,7 +340,9 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
+#if DEBUG
                     DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Green);
+#endif
 
                     UInt16 characterStateID = msg.ReadUInt16();
 
