@@ -14,6 +14,8 @@ namespace Barotrauma.Networking
     {
         public const int MaxLength = 150;
 
+        public const int MaxMessagesPerPacket = 10;
+
         public const float SpeakRange = 2000.0f;
         
         public static Color[] MessageColor = 
@@ -138,32 +140,23 @@ namespace Barotrauma.Networking
         {
             UInt16 ID = msg.ReadUInt16();
             string txt = msg.ReadString();
+            if (txt == null) txt = "";
+
+            if (!NetIdUtils.IdMoreRecent(ID, c.lastSentChatMsgID)) return;
+
+            c.lastSentChatMsgID = ID;
+
             if (txt.Length > MaxLength)
             {
                 txt = txt.Substring(0, MaxLength);
             }
-
-            if (!NetIdUtils.IdMoreRecent(ID, c.lastSentChatMsgID)) return;
 
             c.lastSentChatMessages.Add(txt);
             if (c.lastSentChatMessages.Count > 10)
             {
                 c.lastSentChatMessages.RemoveRange(0, c.lastSentChatMessages.Count-10);
             }
-
-
-            c.lastSentChatMsgID = ID;
-
-            //SPAM FILTER
-            if (c.ChatSpamTimer > 0.0f)
-            {
-                //player has already been spamming, stop again
-                ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
-                c.ChatSpamTimer = 10.0f;
-                GameMain.Server.SendChatMessage(denyMsg, c);
-                return;
-            }
-
+            
             float similarity = 0.0f;
             for (int i = 0; i < c.lastSentChatMessages.Count; i++)
             {
@@ -190,7 +183,15 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            c.ChatSpamSpeed += similarity;
+            c.ChatSpamSpeed += similarity + 0.5f;
+
+            if (c.ChatSpamTimer > 0.0f)
+            {
+                ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                c.ChatSpamTimer = 10.0f;
+                GameMain.Server.SendChatMessage(denyMsg, c);
+                return;
+            }
 
             GameMain.Server.SendChatMessage(txt, null, c);
         }
@@ -213,7 +214,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        static public void ClientRead(NetIncomingMessage msg)
+        public static void ClientRead(NetIncomingMessage msg)
         {
             UInt16 ID = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();           
