@@ -134,23 +134,65 @@ namespace Barotrauma.Networking
             msg.Write(Text);
         }
 
-        static public void ServerRead(NetIncomingMessage msg, Client c)
+        public static void ServerRead(NetIncomingMessage msg, Client c)
         {
             UInt16 ID = msg.ReadUInt16();
             string txt = msg.ReadString();
-
             if (txt.Length > MaxLength)
             {
                 txt = txt.Substring(0, MaxLength);
             }
 
-            if (NetIdUtils.IdMoreRecent(ID, c.lastSentChatMsgID))
+            if (!NetIdUtils.IdMoreRecent(ID, c.lastSentChatMsgID)) return;
+
+            c.lastSentChatMessages.Add(txt);
+            if (c.lastSentChatMessages.Count > 10)
             {
-                //this chat message is new to the server
-                GameMain.Server.SendChatMessage(txt, null, c);
-                //GameMain.Server.AddChatMessage(txt, ChatMessageType.Default, c.name);
-                c.lastSentChatMsgID = ID;
+                c.lastSentChatMessages.RemoveRange(0, c.lastSentChatMessages.Count-10);
             }
+
+
+            c.lastSentChatMsgID = ID;
+
+            //SPAM FILTER
+            if (c.ChatSpamTimer > 0.0f)
+            {
+                //player has already been spamming, stop again
+                ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                c.ChatSpamTimer = 10.0f;
+                GameMain.Server.SendChatMessage(denyMsg, c);
+                return;
+            }
+
+            float similarity = 0.0f;
+            for (int i = 0; i < c.lastSentChatMessages.Count; i++)
+            {
+                float closeFactor = 1.0f / (c.lastSentChatMessages.Count - i);
+                int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.lastSentChatMessages[i]);
+                similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
+            }
+
+            if (similarity + c.ChatSpamSpeed > 5.0f)
+            {
+                c.ChatSpamCount++;
+
+                if (c.ChatSpamCount > 3)
+                {
+                    //kick for spamming too much
+                    GameMain.Server.KickClient(c);
+                }
+                else
+                {
+                    ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                    c.ChatSpamTimer = 10.0f;
+                    GameMain.Server.SendChatMessage(denyMsg, c);
+                }
+                return;
+            }
+
+            c.ChatSpamSpeed += similarity;
+
+            GameMain.Server.SendChatMessage(txt, null, c);
         }
 
         public void ServerWrite(NetOutgoingMessage msg, Client c)
