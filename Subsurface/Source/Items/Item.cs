@@ -1212,7 +1212,7 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
-                ic.UpdateHUD(character);
+                if (ic.CanBeSelected) ic.UpdateHUD(character);
             }
         }
 
