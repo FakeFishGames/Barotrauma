@@ -33,6 +33,8 @@ namespace Barotrauma.Networking
         private DateTime sparseUpdateTimer;        
         private DateTime refreshMasterTimer;
 
+        private DateTime roundStartTime;
+
         private RestClient restClient;
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
@@ -534,6 +536,14 @@ namespace Barotrauma.Networking
                         }
                         else
                         {
+                            //if 30 seconds have passed since the round started and the client isn't ingame yet,
+                            //kill the clients character
+                            if (gameStarted && c.Character != null && (DateTime.Now - roundStartTime).Seconds > 30.0f)
+                            {
+                                c.Character.Kill(CauseOfDeath.Disconnected);
+                                c.Character = null;
+                            }
+
                             ClientWriteLobby(c);
                         }
                     }
@@ -1230,6 +1240,8 @@ namespace Barotrauma.Networking
 
             gameStarted = true;
             initiatedStartGame = false;
+
+            roundStartTime = DateTime.Now;
 
             yield return CoroutineStatus.Success;
         }
@@ -1944,6 +1956,9 @@ namespace Barotrauma.Networking
             unassigned = new List<Client>(unassigned);
             
             int[] assignedClientCount = new int[JobPrefab.List.Count];
+
+            int teamID = 0;
+            if (unassigned.Count > 0) teamID = unassigned[0].TeamID;
             
             if (assignHost)
             {
@@ -1956,7 +1971,7 @@ namespace Barotrauma.Networking
                     assignedClientCount[JobPrefab.List.IndexOf(myCharacter.Info.Job.Prefab)] = 1;  
                 }
             }
-            else if (myCharacter != null && !myCharacter.IsDead)
+            else if (myCharacter != null && !myCharacter.IsDead && myCharacter.TeamID == teamID)
             {
                 assignedClientCount[JobPrefab.List.IndexOf(myCharacter.Info.Job.Prefab)]++;
             }
@@ -1964,7 +1979,7 @@ namespace Barotrauma.Networking
             //count the clients who already have characters with an assigned job
             foreach (Client c in connectedClients)
             {
-                if (unassigned.Contains(c)) continue;
+                if (c.TeamID != teamID || unassigned.Contains(c)) continue;
                 if (c.Character != null && !c.Character.IsDead)
                 {
                     assignedClientCount[JobPrefab.List.IndexOf(c.Character.Info.Job.Prefab)]++;
