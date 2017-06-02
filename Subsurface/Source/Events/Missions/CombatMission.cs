@@ -166,7 +166,13 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
+            if (GameMain.Client == null)
+            {
+                //no characters in either team, i.e. the client hasn't received spawn messages yet
+                if (crews[0].Count == 0 && crews[1].Count == 0) return;
+            }
+
             bool[] teamDead = 
             { 
                 crews[0].All(c => c.IsDead || c.IsUnconscious),
