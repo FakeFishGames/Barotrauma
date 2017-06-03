@@ -933,8 +933,11 @@ namespace Barotrauma
         }
 
         public static void ThrowError(string error, Exception e = null)
-        {            
-            if (e != null) error += " {" + e.Message + "}";
+        {
+            if (e != null)
+            {
+                error += " {" + e.Message + "}\n" + e.StackTrace;
+            }
             System.Diagnostics.Debug.WriteLine(error);
             NewMessage(error, Color.Red);
             isOpen = true;
