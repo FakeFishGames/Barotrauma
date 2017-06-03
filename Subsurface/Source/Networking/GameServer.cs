@@ -256,7 +256,12 @@ namespace Barotrauma.Networking
             request.AddParameter("currplayers", connectedClients.Count);
             request.AddParameter("maxplayers", MaxPlayers);
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
-            
+            request.AddParameter("version", GameMain.Version.ToString());
+            if (GameMain.Config.SelectedContentPackage != null)
+            {
+                request.AddParameter("contentpackage", GameMain.Config.SelectedContentPackage.Name);
+            }
+
             masterServerResponded = false;
             masterServerResponse = null;
             var restRequestHandle = restClient.ExecuteAsync(request, response => MasterServerCallBack(response));
