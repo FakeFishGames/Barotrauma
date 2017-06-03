@@ -19,6 +19,8 @@ namespace Barotrauma
 
         private static string[] teamNames = { "Team A", "Team B" };
 
+        private bool initialized = false;
+
         public override bool AllowRespawn
         {
             get { return false; }
@@ -152,8 +154,10 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (crews[0].Count == 0 && crews[1].Count == 0)
+            if (!initialized)
             {
+                crews[0].Clear();
+                crews[1].Clear();
                 foreach (Character character in Character.CharacterList)
                 {
                     if (character.TeamID == 1)
@@ -165,14 +169,16 @@ namespace Barotrauma
                         crews[1].Add(character);
                     }
                 }
-            }
 
-            if (GameMain.Client == null)
-            {
-                //no characters in either team, i.e. the client hasn't received spawn messages yet
-                if (crews[0].Count == 0 && crews[1].Count == 0) return;
-            }
+                if (GameMain.Client != null)
+                {
+                    //no characters in one of the teams, the client may not have received all spawn messages yet
+                    if (crews[0].Count == 0 || crews[1].Count == 0) return;
+                }
 
+                initialized = true;
+            }
+            
             bool[] teamDead = 
             { 
                 crews[0].All(c => c.IsDead || c.IsUnconscious),
