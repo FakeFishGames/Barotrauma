@@ -1613,7 +1613,7 @@ namespace Barotrauma.Networking
                     if (senderCharacter == null) return;
 
                     //return if senderCharacter doesn't have a working radio
-                    var radio = senderCharacter.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+                    var radio = senderCharacter.Inventory.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
                     if (radio == null) return;
 
                     senderRadio = radio.GetComponent<WifiComponent>();
@@ -1699,11 +1699,11 @@ namespace Barotrauma.Networking
                 case ChatMessageType.Radio:
                     if (!receiver.IsDead)
                     {
-                        var receiverItem = receiver.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+                        var receiverItem = receiver.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
                         //client doesn't have a radio -> don't send
                         if (receiverItem == null) return "";
 
-                        var senderItem = sender.Inventory.Items.First(i => i != null && i.GetComponent<WifiComponent>() != null);
+                        var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
                         if (senderItem == null) return "";
 
                         var receiverRadio   = receiverItem.GetComponent<WifiComponent>();
