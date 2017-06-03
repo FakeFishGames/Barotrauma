@@ -914,7 +914,7 @@ namespace Barotrauma.Networking
 
             if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
             {
-                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit);
+                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit + ")");
             }
 
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
@@ -989,7 +989,7 @@ namespace Barotrauma.Networking
 
             if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
             {
-                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit);
+                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit + ")");
             }
 
             server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
@@ -1103,14 +1103,18 @@ namespace Barotrauma.Networking
             Rand.SetSyncedSeed(roundStartSeed);
             
             int teamCount = 1;
-            int hostTeam = 1;
+            byte hostTeam = 1;
         
             GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
 
-            if (GameMain.GameSession.gameMode.Mission != null && 
-                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients,out hostTeam))
+            if (GameMain.GameSession.gameMode.Mission != null &&
+                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients, out hostTeam))
             {
                 teamCount = 2;
+            }
+            else
+            {
+                connectedClients.ForEach(c => c.TeamID = hostTeam);
             }
 
             GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
