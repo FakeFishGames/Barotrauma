@@ -173,7 +173,7 @@ namespace Barotrauma.Networking
                 fileSender = new FileSender(this);
                 fileSender.OnEnded += FileTransferChanged;
                 fileSender.OnStarted += FileTransferChanged;
-
+                
                 server.Start();
             }
             catch (Exception e)
@@ -513,11 +513,10 @@ namespace Barotrauma.Networking
 
                 catch (Exception e)
                 {
-#if DEBUG
-                    DebugConsole.ThrowError("Failed to read incoming message", e);
-#endif
-
-                    continue;
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.ThrowError("Failed to read an incoming message. {" + e + "}\n" + e.StackTrace);
+                    }
                 }
             }
             
@@ -723,28 +722,24 @@ namespace Barotrauma.Networking
                         {
                             c.lastRecvChatMsgID = lastRecvChatMsgID;
                         }
-#if DEBUG
-                        else if (lastRecvChatMsgID != c.lastRecvChatMsgID)
+                        else if (lastRecvChatMsgID != c.lastRecvChatMsgID && GameSettings.VerboseLogging)
                         {
                             DebugConsole.ThrowError(
                                 "Invalid lastRecvChatMsgID  " + lastRecvChatMsgID + 
                                 " (previous: " + c.lastChatMsgQueueID + ", latest: "+c.lastChatMsgQueueID+")");
                         }
-#endif
 
                         if (NetIdUtils.IdMoreRecent(lastRecvEntityEventID, c.lastRecvEntityEventID) &&
                             !NetIdUtils.IdMoreRecent(lastRecvEntityEventID, lastEntityEventID))
                         {
                             c.lastRecvEntityEventID = lastRecvEntityEventID;
                         }
-#if DEBUG
-                        else if (lastRecvEntityEventID != c.lastRecvEntityEventID)
+                        else if (lastRecvEntityEventID != c.lastRecvEntityEventID && GameSettings.VerboseLogging)
                         {
                             DebugConsole.ThrowError(
                                 "Invalid lastRecvEntityEventID  " + lastRecvEntityEventID + 
                                 " (previous: " + c.lastRecvEntityEventID + ", latest: " + lastEntityEventID + ")");
                         }
-#endif
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);

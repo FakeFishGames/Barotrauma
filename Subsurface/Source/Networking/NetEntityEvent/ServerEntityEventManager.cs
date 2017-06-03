@@ -135,9 +135,10 @@ namespace Barotrauma.Networking
 
                 catch (Exception e)
                 {
-#if DEBUG
-                        DebugConsole.ThrowError("Failed to read event for entity \"" + bufferedEvent.TargetEntity.ToString() + "\"!", e);
-#endif
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.ThrowError("Failed to read event for entity \"" + bufferedEvent.TargetEntity.ToString() + "!", e);
+                    }
                 }
 
                 bufferedEvent.IsProcessed = true;
@@ -326,23 +327,27 @@ namespace Barotrauma.Networking
                 //skip the event if we've already received it or if the entity isn't found
                 if (thisEventID != (UInt16)(sender.lastSentEntityEventID + 1) || entity == null)
                 {
-#if DEBUG
-                    if (thisEventID != (UInt16)(sender.lastSentEntityEventID + 1))
+                    if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
+                        if (thisEventID != (UInt16) (sender.lastSentEntityEventID + 1))
+                        {
+                            DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
+                        }
+                        else if (entity == null)
+                        {
+                            DebugConsole.NewMessage(
+                                "received msg " + thisEventID + ", entity " + entityID + " not found",
+                                Microsoft.Xna.Framework.Color.Red);
+                        }
                     }
-                    else if (entity == null)
-                    {
-                        DebugConsole.NewMessage("received msg " + thisEventID + ", entity " + entityID + " not found", Microsoft.Xna.Framework.Color.Red);
-                    }
-#endif
                     msg.Position += msgLength * 8;
                 }
                 else
                 {
-#if DEBUG
-                    DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Green);
-#endif
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Green);
+                    }
 
                     UInt16 characterStateID = msg.ReadUInt16();
 

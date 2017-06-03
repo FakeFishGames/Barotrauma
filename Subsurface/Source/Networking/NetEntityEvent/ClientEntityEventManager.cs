@@ -112,15 +112,20 @@ namespace Barotrauma.Networking
                 unreceivedEntityEventCount = msg.ReadUInt16();
                 firstNewID = msg.ReadUInt16();
 
-#if DEBUG
-                DebugConsole.NewMessage("received midround syncing msg, unreceived: "+unreceivedEntityEventCount+", first new ID: "+firstNewID, Microsoft.Xna.Framework.Color.Yellow);
-#endif
+                if (GameSettings.VerboseLogging)
+                {
+                    DebugConsole.NewMessage(
+                        "received midround syncing msg, unreceived: " + unreceivedEntityEventCount +
+                        ", first new ID: " + firstNewID, Microsoft.Xna.Framework.Color.Yellow);
+                }
             }
             else if (firstNewID != null)
             {
-#if DEBUG
-                DebugConsole.NewMessage("midround syncing complete, switching to ID "+ (UInt16)(firstNewID - 1), Microsoft.Xna.Framework.Color.Yellow);
-#endif
+                if (GameSettings.VerboseLogging)
+                {
+                    DebugConsole.NewMessage("midround syncing complete, switching to ID " + (UInt16) (firstNewID - 1),
+                        Microsoft.Xna.Framework.Color.Yellow);
+                }
 
                 lastReceivedID = (UInt16)(firstNewID - 1);
                 firstNewID = null;
@@ -148,24 +153,33 @@ namespace Barotrauma.Networking
                 //skip the event if we've already received it or if the entity isn't found
                 if (thisEventID != (UInt16)(lastReceivedID + 1) || entity == null)
                 {
-#if DEBUG
-                    if (thisEventID != (UInt16)(lastReceivedID + 1))
+                    if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.NewMessage("received msg " + thisEventID + " (waiting for "+ (lastReceivedID+1) + ")", thisEventID<lastReceivedID+1 ? Microsoft.Xna.Framework.Color.Yellow : Microsoft.Xna.Framework.Color.Red);
+                        if (thisEventID != (UInt16) (lastReceivedID + 1))
+                        {
+                            DebugConsole.NewMessage(
+                                "received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
+                                thisEventID < lastReceivedID + 1
+                                    ? Microsoft.Xna.Framework.Color.Yellow
+                                    : Microsoft.Xna.Framework.Color.Red);
+                        }
+                        else if (entity == null)
+                        {
+                            DebugConsole.NewMessage(
+                                "received msg " + thisEventID + ", entity " + entityID + " not found",
+                                Microsoft.Xna.Framework.Color.Red);
+                        }
                     }
-                    else if (entity == null)
-                    {
-                        DebugConsole.NewMessage("received msg " + thisEventID + ", entity " + entityID + " not found", Microsoft.Xna.Framework.Color.Red);
-                    }
-#endif
                     msg.Position += msgLength * 8;
                 }
                 else
                 {
                     long msgPosition = msg.Position;
-#if DEBUG
-                    DebugConsole.NewMessage("received msg " + thisEventID + " (" + entity.ToString() + ")", Microsoft.Xna.Framework.Color.Green);
-#endif
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.NewMessage("received msg " + thisEventID + " (" + entity.ToString() + ")",
+                            Microsoft.Xna.Framework.Color.Green);
+                    }
                     lastReceivedID++;
                     try
                     {
@@ -174,9 +188,10 @@ namespace Barotrauma.Networking
 
                     catch (Exception e)
                     {
-#if DEBUG
-                        DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "\"!", e);
-#endif
+                        if (GameSettings.VerboseLogging)
+                        {
+                            DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "!", e);
+                        }
                         msg.Position = msgPosition + msgLength * 8;
                     }
                 }
