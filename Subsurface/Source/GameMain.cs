@@ -181,16 +181,16 @@ namespace Barotrauma
 
             ConvertUnits.SetDisplayUnitToSimUnitRatio(Physics.DisplayToSimRation);
 
-            spriteBatch = new SpriteBatch(base.GraphicsDevice);
-            TextureLoader.Init(base.GraphicsDevice);
+            spriteBatch = new SpriteBatch(GraphicsDevice);
+            TextureLoader.Init(GraphicsDevice);
 
             loadingScreenOpen = true;
-            TitleScreen = new LoadingScreen(base.GraphicsDevice);
+            TitleScreen = new LoadingScreen(GraphicsDevice);
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
         }
 
-        public IEnumerable<object> Load()
+        private IEnumerable<object> Load()
         {
             GUI.GraphicsDevice = base.GraphicsDevice;
             GUI.Init(Content);
@@ -320,10 +320,7 @@ namespace Barotrauma
 
                     if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
-                        DebugConsole.ThrowError("Loading was interrupted due to an error");
-                        loadingScreenOpen = false;
-                        loadingCoroutine = null;
-                        hasLoaded = true;
+                        throw new Exception("Loading was interrupted due to an error");
                     }
                 }
                 else if (hasLoaded)

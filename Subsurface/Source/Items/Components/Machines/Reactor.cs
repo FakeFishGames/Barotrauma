@@ -263,7 +263,7 @@ namespace Barotrauma.Items.Components
                             ", Cooling rate: " + (int)coolingRate +
                             ", Cooling rate: " + coolingRate +
                             ", Shutdown temp: " + shutDownTemp +
-                            (autoTemp ? "Autotemp ON" : "Autotemp OFF"),
+                            (autoTemp ? ", Autotemp ON" : ", Autotemp OFF"),
                             ServerLog.MessageType.ItemInteraction);
                     
                     nextServerLogWriteTime = null;
