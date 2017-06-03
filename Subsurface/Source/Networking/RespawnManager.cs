@@ -392,10 +392,14 @@ namespace Barotrauma.Networking
         {
             var server = networkMember as GameServer;
             if (server == null) return;
+
             
             var clients = GetClientsToRespawn();
             foreach (Client c in clients)
             {
+                //all characters are in Team 1 in game modes/missions with only one team.
+                //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
+                c.TeamID = 1;
                 if (c.characterInfo == null) c.characterInfo = new CharacterInfo(Character.HumanConfigFile, c.name);
             }
 
