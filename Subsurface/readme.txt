@@ -1,7 +1,7 @@
 ﻿BAROTRAUMA
 
-www.undertowgames.com/subsurface
-Copyright © Undertow Games 2016
+www.undertowgames.com/barotrauma
+Copyright © Undertow Games 2017
 
 Default controls:
 WASD			-	move
