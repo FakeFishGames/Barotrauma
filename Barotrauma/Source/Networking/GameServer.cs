@@ -922,6 +922,8 @@ namespace Barotrauma.Networking
 
         private void ClientWriteLobby(Client c)
         {
+            bool isInitialUpdate = false;
+
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
 
@@ -939,6 +941,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(c.lastRecvGeneralUpdate < 1);
                 if (c.lastRecvGeneralUpdate < 1)
                 {
+                    isInitialUpdate = true;
                     ClientWriteInitial(c, outmsg);
                 }
                 outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).Name);
@@ -987,12 +990,27 @@ namespace Barotrauma.Networking
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
-            if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
+            if (isInitialUpdate)
             {
-                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit + ")");
-            }
+                //the initial update may be very large if the host has a large number
+                //of submarine files, so the message may have to be fragmented
 
-            server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
+                //unreliable messages don't play nicely with fragmenting, so we'll send the message reliably
+                server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.ReliableUnordered);
+
+                //and assume the message was received, so we don't have to keep resending
+                //these large initial messages until the client acknowledges receiving them
+                c.lastRecvGeneralUpdate++;
+            }
+            else
+            {
+                if (outmsg.LengthBytes > config.MaximumTransmissionUnit)
+                {
+                    DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + config.MaximumTransmissionUnit + ")");
+                }
+
+                server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
+            }
         }
 
         public bool StartGameClicked(GUIButton button, object obj)
