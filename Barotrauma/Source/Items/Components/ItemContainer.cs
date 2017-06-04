@@ -269,10 +269,12 @@ namespace Barotrauma.Items.Components
             itemIds = null;
         }
 
+        protected override void ShallowRemoveComponentSpecific()
+        {
+        }
+
         protected override void RemoveComponentSpecific()
         {
-            base.RemoveComponentSpecific();
-
             foreach (Item item in Inventory.Items)
             {
                 if (item == null) continue;

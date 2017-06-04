@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Barotrauma", "Subsurface\Barotrauma.csproj", "{008C0F83-E914-4966-9135-EA885059EDD8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Barotrauma", "Barotrauma\Barotrauma.csproj", "{008C0F83-E914-4966-9135-EA885059EDD8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C293DB32-FA42-486D-B128-5A12522FAE4E} = {C293DB32-FA42-486D-B128-5A12522FAE4E}
 	EndProjectSection
