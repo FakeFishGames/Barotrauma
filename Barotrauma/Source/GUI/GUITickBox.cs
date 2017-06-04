@@ -1,13 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
     public class GUITickBox : GUIComponent
     {
-        GUIFrame box;
-        GUITextBlock text;
+        private GUIFrame box;
+        private GUITextBlock text;
 
         public delegate bool OnSelectedHandler(GUITickBox obj);
         public OnSelectedHandler OnSelected;
@@ -22,6 +21,8 @@ namespace Barotrauma
                 if (value == selected) return;
                 selected = value;
                 state = (selected) ? ComponentState.Selected : ComponentState.None;
+
+                box.State = state;
             }
         }
 
@@ -107,9 +108,9 @@ namespace Barotrauma
         
         public override void Update(float deltaTime)
         {
-            if (!Visible || !Enabled) return;
+            if (!Visible) return;
 
-            if (MouseOn == this)
+            if (MouseOn == this && Enabled)
             {
                 box.State = ComponentState.Hover;
 
