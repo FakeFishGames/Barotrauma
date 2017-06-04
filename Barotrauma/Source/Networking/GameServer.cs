@@ -402,9 +402,9 @@ namespace Barotrauma.Networking
 
                 entityEventManager.Update(connectedClients);
 
-                bool isCrewDead =  
-                    connectedClients.Find(c => c.Character != null && !c.Character.IsDead)==null &&
-                   (myCharacter == null || myCharacter.IsDead);
+                bool isCrewDead =
+                    connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsUnconscious) &&
+                    (myCharacter == null || myCharacter.IsDead || myCharacter.IsUnconscious);
 
                 //restart if all characters are dead or submarine is at the end of the level
                 if ((autoRestart && isCrewDead) 
