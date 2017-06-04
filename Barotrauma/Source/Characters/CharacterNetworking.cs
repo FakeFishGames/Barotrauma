@@ -741,6 +741,7 @@ namespace Barotrauma
                 msg.Write((byte)info.Job.Skills.Count);
                 foreach (Skill skill in info.Job.Skills)
                 {
+                    msg.Write(skill.Name);
                     msg.WriteRangedInteger(0, 100, MathHelper.Clamp(skill.Level, 0, 100));
                 }
             }
@@ -787,14 +788,17 @@ namespace Barotrauma
                 string jobName      = inc.ReadString();
 
                 JobPrefab jobPrefab = null;
-                List<int> skillLevels = new List<int>();
+                Dictionary<string, int> skillLevels = new Dictionary<string, int>();
                 if (!string.IsNullOrEmpty(jobName))
                 {
                     jobPrefab = JobPrefab.List.Find(jp => jp.Name == jobName);
                     int skillCount = inc.ReadByte();
                     for (int i = 0; i < skillCount; i++)
                     {
-                        skillLevels.Add(inc.ReadRangedInteger(0, 100));
+                        string skillName = inc.ReadString();
+                        int skillLevel   = inc.ReadRangedInteger(0, 100);
+
+                        skillLevels.Add(skillName, skillLevel);
                     }
                 }
 
@@ -807,9 +811,15 @@ namespace Barotrauma
                 System.Diagnostics.Debug.Assert(skillLevels.Count == ch.Job.Skills.Count);
                 if (ch.Job != null)
                 {
-                    for (int i = 0; i < skillLevels.Count && i < ch.Job.Skills.Count; i++)
+                    foreach (KeyValuePair<string, int> skill in skillLevels)
                     {
-                        ch.Job.Skills[i].Level = skillLevels[i];
+                        Skill matchingSkill = ch.Job.Skills.Find(s => s.Name == skill.Key);
+                        if (matchingSkill == null)
+                        {
+                            DebugConsole.ThrowError("Skill \""+skill.Key+"\" not found in character \""+newName+"\"");
+                            continue;
+                        }
+                        matchingSkill.Level = skill.Value;
                     }
                 }
 
