@@ -1,4 +1,21 @@
 ---------------------------------------------------------------------------------------------------------
+v0.6.0.1
+---------------------------------------------------------------------------------------------------------
+
+- Readded spam filter.
+- Servers log the automatic temperature control setting of nuclear reactors.
+- If a client fails to start a round (due to a missing sub file or an error, for example), their character 
+is automatically killed. This prevents situations where a team can't win a combat mission due to a 
+disabled, invisible character in the opposing team.
+- Fixed clients occasionally displaying the "crew has been defeated" message immediately after a combat
+mission starts.
+- Fixed a bunch of bugs in the job assignment logic.
+- Fixed errors if attempting to send radio messages without a radio in the inventory.
+- Fixed "component doesn't have a GUIFrame component" errors when selecting an artifact holder.
+- Disabled unnecessary server-side message ID logging.
+- Option to enable additional network debug logging by enabling verbose logging in config.xml.
+
+---------------------------------------------------------------------------------------------------------
 v0.6.0.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -51,7 +68,6 @@ Misc:
 	- AI controlled crew members are better at avoiding hazards such as water and fire
 	- swimming animation fix: characters don't swim with their legs extended up over their shoulders 
 	after a sharp turn
-
 
 ---------------------------------------------------------------------------------------------------------
 v0.5.4.5
