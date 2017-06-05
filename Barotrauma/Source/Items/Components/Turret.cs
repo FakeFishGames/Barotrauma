@@ -213,7 +213,11 @@ namespace Barotrauma.Items.Components
             projectile.FindHull();
             projectile.Submarine = projectile.body.Submarine;
 
-            projectile.Use((float)Timing.Step);
+            Projectile projectileComponent = projectile.GetComponent<Projectile>();
+            if (projectileComponent != null)
+            {
+                projectileComponent.Use((float)Timing.Step);
+            }
 
             if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
 
