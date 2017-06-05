@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------------
+v0.6.0.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "maximum packet size exceeded" errors when clients join servers.
+- Fixed a bug that caused non-interactable checkboxes to always appear unchecked.
+- Skill level syncing fix: the syncing isn't dependent on the order of the characters skills anymore.
+- IP addresses are included in all login error messages and the errors are also logged to the debug console.
+- Servers end rounds if all players are either dead or unconscious when autorestart is on (instead of 
+waiting for all players to die)
+- Fixed nuclear shells and depth charges exploding immediately when launched.
+- Fixed a bug that prevented any broken items from being repaired in the single player.
+- Fixed items disappearing from inside copypasted items (e.g. cabinets).
+- Added character teleporting console command.
+
+---------------------------------------------------------------------------------------------------------
 v0.6.0.1
 ---------------------------------------------------------------------------------------------------------
 
