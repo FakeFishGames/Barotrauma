@@ -243,7 +243,11 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.body == null || !item.body.Enabled) return;
-            if (!picker.HasSelectedItem(item)) IsActive = false;
+            if (picker == null || !picker.HasSelectedItem(item))
+            {
+                IsActive = false;
+                return;
+            }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 

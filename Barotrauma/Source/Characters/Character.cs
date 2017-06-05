@@ -52,7 +52,10 @@ namespace Barotrauma
 
                 foreach (Limb limb in AnimController.Limbs)
                 {
-                    limb.body.Enabled = enabled;
+                    if (limb.body != null)
+                    {
+                        limb.body.Enabled = enabled;
+                    }
                 }
                 AnimController.Collider.Enabled = value;
             }
