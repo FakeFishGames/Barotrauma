@@ -155,6 +155,10 @@ namespace Barotrauma
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
                 requirement.Fixed = true;
             }
+            else
+            {
+                requirement.Fixed = true;
+            }
             
             return true;
         }
