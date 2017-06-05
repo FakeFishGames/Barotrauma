@@ -474,7 +474,7 @@ namespace Barotrauma
                     break;
                 case "teleportcharacter":
                 case "teleport":
-                    var tpCharacter = FindMatchingCharacter(commands, true);
+                    var tpCharacter = FindMatchingCharacter(commands, false);
 
                     if (commands.Length < 2)
                     {
