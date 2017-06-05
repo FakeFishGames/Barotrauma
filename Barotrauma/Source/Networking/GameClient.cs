@@ -960,6 +960,11 @@ namespace Barotrauma.Networking
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
             for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
+                if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > client.Configuration.MaximumTransmissionUnit - 5)
+                {
+                    //not enough room in this packet
+                    return;
+                }
                 chatMsgQueue[i].ClientWrite(outmsg);
             }
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
@@ -982,15 +987,20 @@ namespace Barotrauma.Networking
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(entityEventManager.LastReceivedID);
 
-            chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
-            for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
-            {
-                chatMsgQueue[i].ClientWrite(outmsg);
-            }
-            
             Character.Controlled?.ClientWrite(outmsg);
 
             entityEventManager.Write(outmsg, client.ServerConnection);
+
+            chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
+            for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
+            {
+                if (outmsg.LengthBytes + chatMsgQueue[i].EstimateLengthBytesClient() > client.Configuration.MaximumTransmissionUnit - 5)
+                {
+                    //not enough room in this packet
+                    return;
+                }
+                chatMsgQueue[i].ClientWrite(outmsg);
+            }            
 
             outmsg.Write((byte)ClientNetObject.END_OF_MESSAGE);
 

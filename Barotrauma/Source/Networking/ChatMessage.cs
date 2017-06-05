@@ -196,6 +196,34 @@ namespace Barotrauma.Networking
             GameMain.Server.SendChatMessage(txt, null, c);
         }
 
+        public int EstimateLengthBytesClient()
+        {
+            int length =    1 + //(byte)ServerNetObject.CHAT_MESSAGE
+                            2 + //(UInt16)NetStateID
+                            Encoding.UTF8.GetBytes(Text).Length + 2;
+
+            return length;
+        }
+
+        public int EstimateLengthBytesServer(Client c)
+        {
+            int length =    1 + //(byte)ServerNetObject.CHAT_MESSAGE
+                            2 + //(UInt16)NetStateID
+                            1 + //(byte)Type
+                            Encoding.UTF8.GetBytes(Text).Length + 2;
+
+            if (Sender != null && c.inGame)
+            {
+                length += 2; //sender ID (UInt16)
+            }
+            else if (SenderName != null)
+            {
+                length += Encoding.UTF8.GetBytes(SenderName).Length + 2;
+            }
+
+            return length;
+        }
+
         public void ServerWrite(NetOutgoingMessage msg, Client c)
         {
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
