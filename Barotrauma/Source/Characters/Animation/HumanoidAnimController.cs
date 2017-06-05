@@ -1109,7 +1109,7 @@ namespace Barotrauma
 
             for (int i = 0; i < character.SelectedItems.Length; i++)
             {
-                if (character.SelectedItems[i] != null)
+                if (character.SelectedItems[i] != null && character.SelectedItems[i].body != null)
                 {
                     difference = character.SelectedItems[i].body.SimPosition - torso.SimPosition;
                     difference = Vector2.Transform(difference, torsoTransform);
