@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Input;
 using Barotrauma.Networking;
 using Barotrauma.Items.Components;
 using System.Text;
+using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -219,6 +220,8 @@ namespace Barotrauma
 
                     NewMessage(" ", Color.Cyan);
 
+                    NewMessage("teleport: teleport the controlled character to the position of the cursor", Color.Cyan);
+                    NewMessage("teleport [character name]: teleport the specified character to the position of the cursor", Color.Cyan);
                     NewMessage("heal: restore the controlled character to full health", Color.Cyan);
                     NewMessage("heal [character name]: restore the specified character to full health", Color.Cyan);
                     NewMessage("revive: bring the controlled character back from the dead", Color.Cyan);
@@ -468,6 +471,24 @@ namespace Barotrauma
                         Character.Controlled = character;
                     }
                     
+                    break;
+                case "teleportcharacter":
+                case "teleport":
+                    var tpCharacter = FindMatchingCharacter(commands, true);
+
+                    if (commands.Length < 2)
+                    {
+                        tpCharacter = Character.Controlled;
+                    }
+
+                    if (tpCharacter != null)
+                    {
+                        var cam = GameMain.GameScreen.Cam;
+                        tpCharacter.AnimController.CurrentHull = null;
+                        tpCharacter.Submarine = null;
+                        tpCharacter.AnimController.SetPosition(ConvertUnits.ToSimUnits(cam.ScreenToWorld(PlayerInput.MousePosition)));
+                        tpCharacter.AnimController.FindHull(cam.ScreenToWorld(PlayerInput.MousePosition), true);
+                    }
                     break;
                 case "godmode":
                     if (Submarine.MainSub == null) return;
