@@ -859,14 +859,7 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
             outmsg.Write(c.lastSentEntityEventID);
-
-            c.chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.lastRecvChatMsgID));
             
-            for (int i = 0; i < c.chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
-            {
-                c.chatMsgQueue[i].ServerWrite(outmsg, c);
-            }
-
             //don't send position updates to characters who are still midround syncing
             //characters or items spawned mid-round don't necessarily exist at the client's end yet
             if (!c.NeedsMidRoundSync)
@@ -909,6 +902,8 @@ namespace Barotrauma.Networking
             }
 
             entityEventManager.Write(c, outmsg);
+            
+            WriteChatMessages(outmsg, c);
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -978,15 +973,10 @@ namespace Barotrauma.Networking
                 outmsg.Write(false);
                 outmsg.WritePadBits();
             }
-
-            outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
-
-            c.chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.lastRecvChatMsgID));
             
-            for (int i = 0; i < c.chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
-            {
-                c.chatMsgQueue[i].ServerWrite(outmsg, c);
-            }
+            outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
+            
+            WriteChatMessages(outmsg, c);
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -1010,6 +1000,20 @@ namespace Barotrauma.Networking
                 }
 
                 server.SendMessage(outmsg, c.Connection, NetDeliveryMethod.Unreliable);
+            }
+        }
+
+        private void WriteChatMessages(NetOutgoingMessage outmsg, Client c)
+        {
+            c.chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.lastRecvChatMsgID));
+            for (int i = 0; i < c.chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
+            {
+                if (outmsg.LengthBytes + c.chatMsgQueue[i].EstimateLengthBytesServer(c) > config.MaximumTransmissionUnit - 5)
+                {
+                    //not enough room in this packet
+                    return;
+                }
+                c.chatMsgQueue[i].ServerWrite(outmsg, c);
             }
         }
 
