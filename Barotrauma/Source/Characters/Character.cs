@@ -277,6 +277,8 @@ namespace Barotrauma
             set { oxygenAvailable = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
+        public const float MaxStun = 60.0f;
+
         private float stunTimer;
         public float Stun
         {
@@ -1770,6 +1772,8 @@ namespace Barotrauma
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
             if (GameMain.Client != null && !isNetworkMessage) return;
+
+            newStun = MathHelper.Clamp(newStun, 0.0f, MaxStun);
 
             if ((newStun <= stunTimer && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
 
