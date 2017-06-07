@@ -620,8 +620,7 @@ namespace Barotrauma
                 msg.Write(Stun > 0.0f);
                 if (Stun > 0.0f)
                 {
-                    Stun = MathHelper.Clamp(Stun, 0.0f, 60.0f);
-                    msg.WriteRangedSingle(Stun, 0.0f, 60.0f, 8);
+                    msg.WriteRangedSingle(MathHelper.Clamp(Stun, 0.0f, MaxStun), 0.0f, MaxStun, 8);
                 }
 
                 msg.Write(HuskInfectionState > 0.0f);
