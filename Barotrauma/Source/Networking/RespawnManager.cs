@@ -469,7 +469,19 @@ namespace Barotrauma.Networking
                     scooter.Combine(battery);
                 }
                                 
+                //give the character the items they would've gotten if they had spawned in the main sub
                 character.GiveJobItems(mainSubSpawnPoints[i]);
+
+                //add the ID card tags they should've gotten when spawning in the shuttle
+                foreach (Item item in character.Inventory.Items)
+                {
+                    if (item == null || item.Prefab.Name != "ID Card") continue;                    
+                    foreach (string s in shuttleSpawnPoints[i].IdCardTags)
+                    {
+                        item.AddTag(s);
+                    }                    
+                }
+
                 GameMain.GameSession.CrewManager.characters.Add(character);
             }
             
