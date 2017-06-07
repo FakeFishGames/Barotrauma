@@ -2,7 +2,7 @@
   <Item
     name="Orange Jumpsuit"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem"
     fireproof="true"
     description="The fire-resistant fabric offers some protection against fires. Plenty of pockets for carrying any extra gear an engineer might need.">
@@ -30,7 +30,7 @@
   <Item
     name="Blue Jumpsuit"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem"
     fireproof="true"
     description="The fire-resistant fabric offers some protection against fires. Plenty of pockets for carrying any extra gear a mechanic might need.">

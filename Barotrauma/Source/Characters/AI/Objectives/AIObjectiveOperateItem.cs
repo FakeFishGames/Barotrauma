@@ -58,7 +58,7 @@ namespace Barotrauma
                 {
                     if (character.SelectedConstruction != target.Item && target.CanBeSelected)
                     {
-                        target.Item.Pick(character, false, true);
+                        target.Item.TryInteract(character, false, true);
                     }
 
                     if (component.AIOperate(deltaTime, character, this)) isCompleted = true;

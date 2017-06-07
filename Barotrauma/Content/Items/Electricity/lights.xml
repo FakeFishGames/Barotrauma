@@ -5,8 +5,7 @@
   <Item
     name="Lamp"
     category="Electrical"
-    Tags="smallitem"
-    pickdistance="150">
+    Tags="smallitem">
 
     <Sprite texture="lamp.png" sourcerect="0,0,16,32" depth="0.8"/>
 
@@ -25,8 +24,7 @@
   <Item
     name="Emergency Light"
     category="Electrical"
-    Tags="smallitem"
-    pickdistance="150">
+    Tags="smallitem">
 
     <Sprite texture="lamp.png" sourcerect="0,48,48,16" depth="0.8"/>
 

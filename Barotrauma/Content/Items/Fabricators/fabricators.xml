@@ -3,7 +3,7 @@
 	<Item
 		name="Fabricator"
 		linkable="true"
-		pickdistance="150"
+		
     category="Machine"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
     
@@ -84,7 +84,7 @@
   <Item
     name="Medical Fabricator"
     linkable="true"
-    pickdistance="150"
+    
     category="Machine"
     description="A machine that can be used to manufacture various medicines.">
 
@@ -157,7 +157,7 @@
   <Item
     name="Deconstructor"
     linkable="true"
-    pickdistance="150"
+    
     category="Machine"
     description="Disassembles and breaks down items to reusable components and material bars.">
 

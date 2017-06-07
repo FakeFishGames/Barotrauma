@@ -269,7 +269,7 @@ namespace Barotrauma
             Description = ToolBox.GetAttributeString(element, "description", "");
 
             pickThroughWalls    = ToolBox.GetAttributeBool(element, "pickthroughwalls", false);
-            pickDistance        = ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f);
+            pickDistance        = ToolBox.GetAttributeFloat(element, "pickdistance", 120.0f); // Default to 120 as the new item picking method is tuned to this number
             
             isLinkable          = ToolBox.GetAttributeBool(element, "linkable", false);
 
