@@ -110,6 +110,14 @@ namespace Barotrauma
             get { return Submarine == null ? rect : new Rectangle((int)(Submarine.Position.X + rect.X), (int)(Submarine.Position.Y + rect.Y), rect.Width, rect.Height); }
         }
 
+        public Rectangle InteractionRect
+        {
+            get
+            {
+                return WorldRect;
+            }
+        }
+
         public virtual Sprite Sprite 
         {
             get { return null; } 
@@ -231,7 +239,7 @@ namespace Barotrauma
 
         public virtual bool IsMouseOn(Vector2 position)
         {
-            return (Submarine.RectContains(WorldRect, position));
+            return (Submarine.RectContains(InteractionRect, position));
         }
 
         public virtual MapEntity Clone()

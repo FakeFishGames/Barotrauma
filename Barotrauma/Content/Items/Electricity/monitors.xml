@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Item
   name="Monitor"
-  linkable="true"
-  pickdistance="150">
+  linkable="true">
   
   <Sprite texture ="monitor.png" depth="0.85"/>
 

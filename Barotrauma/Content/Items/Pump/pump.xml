@@ -3,7 +3,7 @@
   name="Pump"
   linkable="true"
   category="Machine"
-  pickdistance="200">
+  >
 
     <Sprite texture ="pump.png" depth="0.8"/>
 
@@ -26,7 +26,7 @@
   name="Small Pump"
   linkable="true"
   category="Machine"
-  pickdistance="150">
+  >
 
     <Sprite texture ="smallpump.png" depth="0.8" sourcerect="0,0,64,48"/>
 

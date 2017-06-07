@@ -93,7 +93,7 @@ namespace Barotrauma
                     }
                 }
 
-                targetItem.Pick(character, false, true);
+                targetItem.TryInteract(character, false, true);
 
                 if (targetSlot > -1 && character.Inventory.IsInLimbSlot(targetItem, InvSlotType.Any))
                 {

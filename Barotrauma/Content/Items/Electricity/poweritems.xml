@@ -3,8 +3,7 @@
   <Item
     name="Junction Box"
     category="Electrical"
-    linkable="true"
-    pickdistance="150"
+    linkable="true"    
     description="Serves as a hub for power distribution and relaying signals between devices.">
     
     <Sprite texture="junctionbox.png" depth="0.8" canflipx="false"/>
@@ -39,8 +38,7 @@
   <Item
     name="Battery"
     category="Electrical"
-    linkable="true"
-    pickdistance="150"
+    linkable="true"    
     description="Generally used for storing backup power in case of a reactor failure.">
 
     <Sprite texture ="battery.png" depth="0.8"/>
@@ -67,8 +65,7 @@
   <Item
     name="Supercapacitor"
     category="Electrical"
-    linkable="true"
-    pickdistance="150"
+    linkable="true"    
     description="Can deliver charge much faster than batteries.">
 
     <Sprite texture ="supercapacitor.png" depth="0.8"/>

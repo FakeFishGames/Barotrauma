@@ -1,8 +1,7 @@
 ﻿<Items>
   <Item
     name="Steel Cabinet"
-    linkable="true"
-    pickdistance ="150">
+    linkable="true">
     
     <Sprite texture ="locker.png" depth="0.84"/>
 
@@ -13,8 +12,7 @@
 
   <Item
     name="Medicine Cabinet"
-    linkable="true"
-    pickdistance ="150">
+    linkable="true">
 
     <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,0,48,64" canflipx="false"/>
 
@@ -26,8 +24,7 @@
 
   <Item
    name="Toxic Cabinet"
-   linkable="true"
-   pickdistance ="150">
+   linkable="true">
 
     <Sprite texture ="cabinets.png" depth="0.84" sourcerect="0,64,48,64" canflipx="false"/>
 
@@ -39,8 +36,7 @@
 
   <Item
     name="Metal Crate"
-    linkable="true"
-    pickdistance ="150">
+    linkable="true">
 
     <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
 
@@ -55,8 +51,7 @@
 
   <Item
    name="Explosive Crate"
-   linkable="true"
-   pickdistance ="150">
+   linkable="true">
 
     <Sprite texture ="crates.png" depth="0.54" sourcerect="81,0,47,42"/>
 
@@ -71,8 +66,7 @@
 
   <Item
    name="Chemical Crate"
-   linkable="true"
-   pickdistance ="150">
+   linkable="true">
 
     <Sprite texture ="crates.png" depth="0.54" sourcerect="1,36,47,42"/>
 

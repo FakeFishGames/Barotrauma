@@ -141,7 +141,7 @@ namespace Barotrauma
             {
                 if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item && currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
                 {
-                    currentPath.CurrentNode.Ladders.Item.Pick(character, false, true);
+                    currentPath.CurrentNode.Ladders.Item.TryInteract(character, false, true);
                 }
             }
 
@@ -256,7 +256,7 @@ namespace Barotrauma
                             return;
                         }
 
-                        closestButton.Item.Pick(character, false, true);
+                        closestButton.Item.TryInteract(character, false, true);
                         break;
                     }
                 }

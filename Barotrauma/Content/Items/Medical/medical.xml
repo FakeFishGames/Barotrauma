@@ -4,7 +4,7 @@
     name="Medical Syringe"
     category="Equipment"
     Tags="smallitem,medical"
-    pickdistance="150"
+    
     price="50"
     canuseonself="true"
     description="Injection is often a much more effective method of administering drugs than taking them orally.">
@@ -31,7 +31,7 @@
     name="Bandage"
     category="Equipment"
     Tags="smallitem,medical"
-    pickdistance="150"
+    
     canuseonself="true"
     price="20"
     description="Treated with a hemostatic agent that quickly seals most minor wounds.">
@@ -51,7 +51,7 @@
     name="Iron Powder"
     category="Material"
     Tags="smallitem,chem"
-    pickdistance="150"
+    
     price="5">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
@@ -66,7 +66,7 @@
      category="Material"
      spritecolor="1.0,1.0,0.7,1.0"
      Tags="smallitem,chem,medical"
-     pickdistance="150"
+     
      description="A mild stimulant which is used as an incredient in the manufacture of various medicines."
      price="10">
 
@@ -91,7 +91,7 @@
      category="Material"
      spritecolor="0.5,0.5,1.0,1.0"
      Tags="smallitem,chem,medical"
-     pickdistance="150"
+     
      canuseonself="true"
      description="Most commonly used for treating oxygen deprivation."
      price="50">
@@ -112,7 +112,7 @@
     category="Material"
     spritecolor="0.6,0.4,0.2,1.0"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     canuseonself="true"
     description="A hemostatic agent that slows down bleeding."
     price="50">
@@ -138,7 +138,7 @@
     category="Material"
     spritecolor="0.8,0.0,0.0,1.0"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     canuseonself="true"
     description="Highly effective at treating various types of physical trauma."
     price="50">
@@ -164,7 +164,7 @@
     category="Material"
     spritecolor="1.0,1.0,0.0,1.0"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     description="A highly potent corrigodone-based stimulant."
     price="150">
 
@@ -184,7 +184,7 @@
     category="Material"
     spritecolor="1.0,1.0,1.0,0.6"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     price="20">
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
@@ -204,7 +204,7 @@
     spritecolor="0.0,0.9,0.1,1.0"
     Tags="smallitem,chem,medical"
     canuseonself="true"
-    pickdistance="150"
+    
     price="20">
 
     <ItemComponent>
@@ -228,7 +228,7 @@
     category="Material"
     spritecolor="0.7,0.7,0.7,1.0"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     price="20">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
@@ -247,7 +247,7 @@
     category="Material"
     spritecolor="0.8,0.8,0.8,1.0"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     price="20">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
@@ -266,7 +266,7 @@
     category="Material"
     spritecolor="0.1,0.1,0.1,1.0"
     Tags="smallitem,chem,explosive"
-    pickdistance="150"
+    
     price="50">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
@@ -287,7 +287,7 @@
     category="Material"
     spritecolor="1.0,1.0,1.0,0.8"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     price="20">
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
@@ -306,7 +306,7 @@
     category="Material"
     spritecolor="0.5,0.0,0.0,1.0"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     price="20">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
@@ -325,7 +325,7 @@
     category="Material"
     spritecolor="0.5,0.0,0.0,1.0"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     price="50">
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
@@ -344,7 +344,7 @@
     category="Material"
     spritecolor="0.2,0.35,0.06,1.0"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     price="50">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
@@ -363,7 +363,7 @@
    category="Material"
    spritecolor="0.8,0.3,0.8,1.0"
    Tags="smallitem,chem,medical"
-   pickdistance="150"
+   
    description="A potent muscle stimulant."
    price="50">
 
@@ -383,7 +383,7 @@
    category="Material"
    spritecolor="0.0,0.0,0.0,1.0"
    Tags="smallitem,chem,medical"
-   pickdistance="150"
+   
    description="A highly potent neurotoxin."
    price="200">
 
@@ -403,7 +403,7 @@
    category="Material"
    spritecolor="0.0,0.0,0.0,1.0"
    Tags="smallitem,chem,medical"
-   pickdistance="150"
+   
    description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'."
    price="200">
 
@@ -423,7 +423,7 @@
    category="Material"
    spritecolor="0.0,0.0,0.0,1.0"
    Tags="smallitem,chem,medical"
-   pickdistance="150"
+   
    description="An antiparasitic drug used in the treatment of husk parasite infections."
    price="300">
 
@@ -443,7 +443,7 @@
      category="Material"
      spritecolor="0.6,0.8,1.0,1.0"
      Tags="smallitem,chem,medical"
-     pickdistance="150"
+     
      canuseonself="true"
      description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected.">
 

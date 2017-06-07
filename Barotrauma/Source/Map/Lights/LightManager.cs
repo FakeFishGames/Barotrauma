@@ -164,15 +164,15 @@ namespace Barotrauma.Lights
 
             if (Character.Controlled != null)
             {
-                if (Character.Controlled.ClosestItem != null)
+                if (Character.Controlled.FocusedItem != null)
                 {
-                    Character.Controlled.ClosestItem.IsHighlighted = true;
-                    Character.Controlled.ClosestItem.Draw(spriteBatch, false, true);
-                    Character.Controlled.ClosestItem.IsHighlighted = true;
+                    Character.Controlled.FocusedItem.IsHighlighted = true;
+                    Character.Controlled.FocusedItem.Draw(spriteBatch, false, true);
+                    Character.Controlled.FocusedItem.IsHighlighted = true;
                 }
-                else if (Character.Controlled.ClosestCharacter != null)
+                else if (Character.Controlled.FocusedCharacter != null)
                 {
-                    Character.Controlled.ClosestCharacter.Draw(spriteBatch);
+                    Character.Controlled.FocusedCharacter.Draw(spriteBatch);
                 }
             }
 
