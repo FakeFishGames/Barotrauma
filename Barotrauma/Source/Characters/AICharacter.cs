@@ -27,7 +27,7 @@ namespace Barotrauma
         {
             base.Update(cam, deltaTime);
 
-            if (!Enabled) return;
+            if (!Enabled || IsRemotePlayer) return;
             
             float dist = Vector2.DistanceSquared(cam.WorldViewCenter, WorldPosition);
             if (dist > 8000.0f * 8000.0f)

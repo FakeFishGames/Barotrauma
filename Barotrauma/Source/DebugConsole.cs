@@ -404,17 +404,19 @@ namespace Barotrauma
                
                     break;
                 case "banip":
-                    if (GameMain.Server == null || commands.Length < 2) break;
+                    {
+                        if (GameMain.Server == null || commands.Length < 2) break;
 
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.Connection.RemoteEndPoint.Address.ToString() == commands[1]);
-                    if (client == null)
-                    {
-                        GameMain.Server.BanList.BanPlayer("Unnamed", commands[1]);
-                    }
-                    else
-                    {
-                        //GameMain.Server.KickClient(client, true);   
-                    }                    
+                        var client = GameMain.Server.ConnectedClients.Find(c => c.Connection.RemoteEndPoint.Address.ToString() == commands[1]);
+                        if (client == null)
+                        {
+                            GameMain.Server.BanList.BanPlayer("Unnamed", commands[1]);
+                        }
+                        else
+                        {
+                            GameMain.Server.KickClient(client, true);   
+                        }
+                    }               
                     break;
                 case "startclient":
                     if (commands.Length == 1) return;
@@ -462,15 +464,43 @@ namespace Barotrauma
                     break;
                 case "controlcharacter":
                 case "control":
-                    if (commands.Length < 2) break;
-
-                    var character = FindMatchingCharacter(commands, true);
-
-                    if (character != null)
                     {
-                        Character.Controlled = character;
+                        if (commands.Length < 2) break;
+
+                        var character = FindMatchingCharacter(commands, true);
+
+                        if (character != null)
+                        {
+                            Character.Controlled = character;
+                        }
                     }
-                    
+                    break;
+                case "setclientcharacter":
+                    {
+                        if (GameMain.Server == null) break;
+
+                        int separatorIndex = Array.IndexOf(commands, ";");
+
+                        if (separatorIndex == -1 || commands.Length < 4)
+                        {
+                            ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] ; [character]\"");
+                            break;
+                        }
+
+                        string[] commandsLeft = commands.Take(separatorIndex).ToArray();
+                        string[] commandsRight = commands.Skip(separatorIndex).ToArray();
+
+                        string clientName = String.Join(" ", commandsLeft.Skip(1));
+
+                        var client = GameMain.Server.ConnectedClients.Find(c => c.name == clientName);
+                        if (client == null)
+                        {
+                            ThrowError("Client \"" + clientName + "\" not found.");
+                        }
+
+                        var character = FindMatchingCharacter(commandsRight, false);                        
+                        GameMain.Server.SetClientCharacter(client, character);
+                    }
                     break;
                 case "teleportcharacter":
                 case "teleport":
@@ -533,19 +563,29 @@ namespace Barotrauma
 
                     break;
                 case "revive":
-                    Character reveivedCharacter = null;
+                    Character revivedCharacter = null;
                     if (commands.Length == 1)
                     {
-                        reveivedCharacter = Character.Controlled;
+                        revivedCharacter = Character.Controlled;
                     }
                     else
                     {
-                        reveivedCharacter = FindMatchingCharacter(commands);
+                        revivedCharacter = FindMatchingCharacter(commands);
                     }
 
-                    if (reveivedCharacter != null)
+                    if (revivedCharacter != null)
                     {
-                        reveivedCharacter.Revive(false);
+                        revivedCharacter.Revive(false);
+                        if (GameMain.Server != null)
+                        {
+                            foreach (Client c in GameMain.Server.ConnectedClients)
+                            {
+                                if (c.Character != revivedCharacter) continue;
+                                //clients stop controlling the character when it dies, force control back
+                                GameMain.Server.SetClientCharacter(c, revivedCharacter);
+                                break;
+                            }
+                        }
                     }
                     break;
                 case "freeze":
