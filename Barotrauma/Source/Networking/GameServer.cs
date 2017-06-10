@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -1943,6 +1942,37 @@ namespace Barotrauma.Networking
             }
 
             return true;
+        }
+
+        public void SetClientCharacter(Client client, Character newCharacter)
+        {
+            if (client == null) return;
+
+            //the client's previous character is no longer a remote player
+            if (client.Character != null)
+            {
+                client.Character.IsRemotePlayer = false;
+            }
+            
+            if (newCharacter == null)
+            {
+                if (client.Character != null) //removing control of the current character
+                {
+                    newCharacter.IsRemotePlayer = false;
+                    CreateEntityEvent(client.Character, new object[] { NetEntityEvent.Type.Control, null });
+                    client.Character = null;
+                }
+
+            }
+            else if (client.Character != newCharacter) //taking control of a new character
+            {
+                newCharacter.ResetNetState();
+                newCharacter.LastNetworkUpdateID = client.Character.LastNetworkUpdateID;
+
+                newCharacter.IsRemotePlayer = true;
+                client.Character = newCharacter;
+                CreateEntityEvent(newCharacter, new object[] { NetEntityEvent.Type.Control, client });
+            }
         }
 
         private void UpdateCharacterInfo(NetIncomingMessage message, Client sender)
