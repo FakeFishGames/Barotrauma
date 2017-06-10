@@ -82,7 +82,7 @@ namespace Barotrauma
         private bool networkUpdateSent;
 
         public bool isSynced = false;
-
+        
         public List<CharacterStateInfo> MemState
         {
             get { return memState; }
@@ -91,6 +91,16 @@ namespace Barotrauma
         public List<CharacterStateInfo> MemLocalState
         {
             get { return memLocalState; }
+        }
+
+        public void ResetNetState()
+        {
+            memInput.Clear();
+            memState.Clear();
+            memLocalState.Clear();
+
+            LastNetworkUpdateID = 0;
+            LastProcessedID = 0;
         }
 
         private void UpdateNetInput()
@@ -112,7 +122,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                else if (GameMain.Server != null && !(this is AICharacter))
+                else if (GameMain.Server != null && (!(this is AICharacter) || IsRemotePlayer))
                 {
                     if (!AllowInput)
                     {
@@ -387,17 +397,24 @@ namespace Barotrauma
 
             if (extraData != null)
             {
+                
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.Write(true);
+                        msg.WriteRangedInteger(0, 2, 0);
                         inventory.ClientWrite(msg, extraData);
                         break;
+                    case NetEntityEvent.Type.Control:
+                        msg.WriteRangedInteger(0, 2, 1);
+                        Client owner = ((Client)extraData[1]);
+                        msg.Write(owner == null ? (byte)0 : owner.ID);
+                        break;
                     case NetEntityEvent.Type.Status:
-                        msg.Write(false);
+                        msg.WriteRangedInteger(0, 2, 2);
                         WriteStatus(msg);
                         break;
                 }
+                msg.WritePadBits();
             }
             else
             {
@@ -573,15 +590,36 @@ namespace Barotrauma
 
                     break;
                 case ServerNetObject.ENTITY_EVENT:
-                    bool isInventoryUpdate = msg.ReadBoolean();
+                    
+                    int eventType = msg.ReadRangedInteger(0, 2);
+                    switch (eventType)
+                    {
+                        case 0:
+                            inventory.ClientRead(type, msg, sendingTime);
+                            break;
+                        case 1:
+                            byte ownerID = msg.ReadByte();
+                            ResetNetState();
+                            if (ownerID == GameMain.Client.ID)
+                            {
+                                if (controlled != null)
+                                {
+                                    LastNetworkUpdateID = controlled.LastNetworkUpdateID;
+                                }
 
-                    if (isInventoryUpdate)
-                    {
-                        inventory.ClientRead(type, msg, sendingTime);
-                    }
-                    else
-                    {
-                        ReadStatus(msg);
+                                controlled = this;
+                                IsRemotePlayer = false;
+                                GameMain.Client.Character = this;
+                            }
+                            else if (controlled == this)
+                            {
+                                controlled = null;
+                                IsRemotePlayer = ownerID > 0;
+                            }
+                            break;
+                        case 2:
+                            ReadStatus(msg);
+                            break;
                     }
 
                     break;

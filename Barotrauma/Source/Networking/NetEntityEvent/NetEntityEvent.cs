@@ -1,9 +1,5 @@
 ﻿using Lidgren.Network;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
@@ -16,7 +12,8 @@ namespace Barotrauma.Networking
             Status,
             Repair,
             ApplyStatusEffect,
-            ChangeProperty
+            ChangeProperty,
+            Control
         }
 
         public readonly Entity Entity;

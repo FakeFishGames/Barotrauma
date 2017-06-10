@@ -64,7 +64,7 @@ namespace Barotrauma
         public Hull PreviousHull = null;
         public Hull CurrentHull = null;
 
-        public readonly bool IsRemotePlayer;
+        public bool IsRemotePlayer;
 
         private CharacterInventory inventory;
 
@@ -810,7 +810,7 @@ namespace Barotrauma
             ViewTarget = null;
             if (!AllowInput) return;
 
-            if (!(this is AICharacter) || controlled == this)
+            if (!(this is AICharacter) || controlled == this || IsRemotePlayer)
             {
                 Vector2 targetMovement = GetTargetMovement();
 
@@ -1289,7 +1289,7 @@ namespace Barotrauma
             {
                 foreach (Character c in CharacterList)
                 {
-                    if (!(c is AICharacter)) continue;
+                    if (!(c is AICharacter) && !c.IsRemotePlayer) continue;
                     
                     if (GameMain.Server != null)
                     {
@@ -1432,7 +1432,7 @@ namespace Barotrauma
                 selectedConstruction = null;
             }
             
-            if (controlled != this && !(this is AICharacter))
+            if (controlled != this && (!(this is AICharacter) || IsRemotePlayer))
             {
                 if (!LockHands)
                 {
