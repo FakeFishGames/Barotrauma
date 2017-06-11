@@ -3,15 +3,16 @@ using System.Diagnostics;
 using System.Reflection;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
 using Barotrauma.Particles;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
+#if CLIENT
     class GameMain : Game
     {
         public static bool DebugDraw;
@@ -415,4 +416,5 @@ namespace Barotrauma
         }
 
     }
+#endif
 }

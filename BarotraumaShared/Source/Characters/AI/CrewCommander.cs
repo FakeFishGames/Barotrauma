@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿#if CLIENT
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
@@ -311,3 +312,4 @@ namespace Barotrauma
         }
     }
 }
+#endif
