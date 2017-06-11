@@ -2,9 +2,10 @@
 <Randomevents>
   <MonsterEvent name="Under attack" description=""  
     characterfile="Content/Characters/Crawler/crawler.xml" 
-    commonness="10" 
+    commonness="15" 
     difficulty="10"
     minamount="2" maxamount="3"
+    repeat="true"
     spawntype="mainpath,cave,ruin"
     musictype="monster"/>
 
@@ -20,13 +21,14 @@
     characterfile="Content/Characters/Moloch/moloch.xml"
     commonness="10"
     difficulty="30"
-                spawntype="mainpath"
+    spawntype="mainpath"
     musictype="monster"/>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Mantis/mantis.xml"
     commonness="10"
     difficulty="15"
+    repeat="true"
     minamount="1" maxamount="2"
     spawntype="mainpath,cave,ruin"
     musictype="monster"/>
@@ -70,7 +72,7 @@
     commonness="5"
     difficulty="10"
     minamount="2" maxamount="3"
-
+    repeat="true"
     spawntype="mainpath,cave,ruin"
     musictype="monster"/>
 
