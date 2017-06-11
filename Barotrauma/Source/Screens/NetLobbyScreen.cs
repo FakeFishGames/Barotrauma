@@ -546,7 +546,7 @@ namespace Barotrauma
                     if (job == null) { continue; }
 
                     GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20),  i + ". " + job.Name + "    ", 
-                        "",Alignment.Left, Alignment.Right, jobList, false,
+                        "", Alignment.Left, Alignment.Right, jobList, false,
                         GameMain.GraphicsWidth<1000 ? GUI.SmallFont : GUI.Font);
                     jobText.UserData = job;
 
