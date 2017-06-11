@@ -542,8 +542,11 @@ namespace Barotrauma
                 int i = 1;
                 foreach (string jobName in GameMain.Config.JobNamePreferences)
                 {
-                    JobPrefab job = JobPrefab.List.First(x => x.Name == jobName); 
-                    if (job == null) { continue; }
+                    JobPrefab job = JobPrefab.List.Find(x => x.Name == jobName);
+                    if (job == null)
+                    {
+                        continue;
+                    }
 
                     GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20),  i + ". " + job.Name + "    ", 
                         "", Alignment.Left, Alignment.Right, jobList, false,
