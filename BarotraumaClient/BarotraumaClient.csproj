@@ -35,7 +35,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Windows\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;WINDOWS;CLIENT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -45,7 +45,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Windows\Release\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS</DefineConstants>
+    <DefineConstants>TRACE;WINDOWS;CLIENT</DefineConstants>
     <AllowedReferenceRelatedFileExtensions>
       <!-- Prevent default XML and PDB files copied to output in RELEASE. 
            Only *.allowedextension files will be included, which doesn't exist in my case.
@@ -60,258 +60,49 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\Camera.cs" />
-    <Compile Include="Source\Characters\AICharacter.cs" />
-    <Compile Include="Source\Characters\AI\AIController.cs" />
-    <Compile Include="Source\Characters\AI\AITarget.cs" />
-    <Compile Include="Source\Characters\AI\IndoorsSteeringManager.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveCombat.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveContainItem.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFindDivingGear.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFixLeaks.cs" />
-    <Compile Include="Source\Characters\AI\Order.cs" />
-    <Compile Include="Source\Characters\AI\CrewCommander.cs" />
-    <Compile Include="Source\Characters\AI\HumanAIController.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFindSafety.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveFixLeak.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveGetItem.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveGoTo.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveIdle.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveManager.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
-    <Compile Include="Source\Characters\AI\Objectives\AIObjective.cs" />
-    <Compile Include="Source\Characters\AI\PathFinder.cs" />
-    <Compile Include="Source\Characters\Animation\AnimController.cs" />
-    <Compile Include="Source\Characters\Attack.cs" />
-    <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreature.cs" />
-    <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreatureManager.cs" />
-    <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreaturePrefab.cs" />
-    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpriteManager.cs" />
-    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpritePrefab.cs" />
-    <Compile Include="Source\Characters\Character.cs" />
-    <Compile Include="Source\Characters\CharacterHUD.cs" />
-    <Compile Include="Source\Characters\CharacterInfo.cs" />
-    <Compile Include="Source\Characters\AI\ISteerable.cs" />
-    <Compile Include="Source\Characters\CharacterNetworking.cs" />
-    <Compile Include="Source\Characters\CharacterSound.cs" />
-    <Compile Include="Source\Characters\DelayedEffect.cs" />
-    <Compile Include="Source\Characters\HUDProgressBar.cs" />
-    <Compile Include="Source\Characters\HuskInfection.cs" />
-    <Compile Include="Source\Characters\Jobs\Job.cs" />
-    <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />
-    <Compile Include="Source\Characters\AI\SteeringManager.cs" />
-    <Compile Include="Source\Characters\AI\SteeringPath.cs" />
-    <Compile Include="Source\Characters\Jobs\Skill.cs" />
-    <Compile Include="Source\Characters\Jobs\SkillPrefab.cs" />
-    <Compile Include="Source\ContentPackage.cs" />
-    <Compile Include="Source\CoroutineManager.cs" />
-    <Compile Include="Source\Events\Missions\CargoMission.cs" />
-    <Compile Include="Source\Events\Missions\CombatMission.cs" />
-    <Compile Include="Source\Events\Missions\Mission.cs" />
-    <Compile Include="Source\Events\Missions\MonsterMission.cs" />
-    <Compile Include="Source\Events\Missions\SalvageMission.cs" />
-    <Compile Include="Source\Events\ArtifactEvent.cs" />
-    <Compile Include="Source\Fonts\ScalableFont.cs" />
-    <Compile Include="Source\GameSession\CargoManager.cs" />
-    <Compile Include="Source\GameSession\GameModes\GameModePreset.cs" />
-    <Compile Include="Source\GameSession\GameModes\MissionMode.cs" />
-    <Compile Include="Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
-    <Compile Include="Source\GameSession\GameModes\Tutorials\EditorTutorial.cs" />
-    <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialType.cs" />
-    <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
-    <Compile Include="Source\GameSession\InfoTextManager.cs" />
-    <Compile Include="Source\GameSession\ShiftSummary.cs" />
-    <Compile Include="Source\GUI\GUIDropDown.cs" />
-    <Compile Include="Source\GUI\GUIMessage.cs" />
-    <Compile Include="Source\GUI\LoadingScreen.cs" />
-    <Compile Include="Source\Items\Components\DockingPort.cs" />
-    <Compile Include="Source\Items\Components\Holdable\MeleeWeapon.cs" />
-    <Compile Include="Source\Items\Components\Holdable\Propulsion.cs" />
-    <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
-    <Compile Include="Source\Items\Components\Signal\DelayComponent.cs" />
-    <Compile Include="Source\Items\Components\Signal\MotionSensor.cs" />
-    <Compile Include="Source\Items\Components\Signal\RelayComponent.cs" />
-    <Compile Include="Source\Items\Components\Signal\WaterDetector.cs" />
-    <Compile Include="Source\Items\Components\Signal\WifiComponent.cs" />
-    <Compile Include="Source\Items\Components\Signal\SignalCheckComponent.cs" />
-    <Compile Include="Source\Items\Components\ItemLabel.cs" />
-    <Compile Include="Source\Items\Components\StatusHUD.cs" />
-    <Compile Include="Source\Items\FixRequirement.cs" />
-    <Compile Include="Source\Networking\EntitySpawner.cs" />
-    <Compile Include="Source\Map\EntityGrid.cs" />
-    <Compile Include="Source\Map\FireSource.cs" />
-    <Compile Include="Source\Map\Levels\CaveGenerator.cs" />
-    <Compile Include="Source\Map\Levels\LevelGenerationParams.cs" />
-    <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
-    <Compile Include="Source\Map\Levels\Ruins\BTRoom.cs" />
-    <Compile Include="Source\Map\Levels\Ruins\Corridor.cs" />
-    <Compile Include="Source\Map\Levels\Ruins\RuinGenerator.cs" />
-    <Compile Include="Source\Map\Levels\Ruins\RuinStructure.cs" />
-    <Compile Include="Source\Map\Levels\WrappingWall.cs" />
-    <Compile Include="Source\Map\Lights\LightSource.cs" />
-    <Compile Include="Source\Map\Map\LocationType.cs" />
-    <Compile Include="Source\Map\SubmarineBody.cs" />
-    <Compile Include="Source\Map\LinkedSubmarine.cs" />
-    <Compile Include="Source\Map\TransitionCinematic.cs" />
-    <Compile Include="Source\Networking\BanList.cs" />
-    <Compile Include="Source\Networking\ChatMessage.cs" />
-    <Compile Include="Source\Networking\Client.cs" />
-    <Compile Include="Source\Networking\FileTransfer\FileReceiver.cs" />
-    <Compile Include="Source\Networking\FileTransfer\FileSender.cs" />
-    <Compile Include="Source\Networking\GameServerLogin.cs" />
-    <Compile Include="Source\Networking\INetSerializable.cs" />
-    <Compile Include="Source\Networking\NetBufferExtensions.cs" />
-    <Compile Include="Source\Networking\NetConfig.cs" />
-    <Compile Include="Source\Networking\NetEntityEvent\ClientEntityEventManager.cs" />
-    <Compile Include="Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
-    <Compile Include="Source\Networking\NetEntityEvent\NetEntityEventManager.cs" />
-    <Compile Include="Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />
-    <Compile Include="Source\Networking\NetStats.cs" />
-    <Compile Include="Source\Networking\NetIdUtils.cs" />
-    <Compile Include="Source\Networking\RespawnManager.cs" />
-    <Compile Include="Source\Networking\ServerLog.cs" />
-    <Compile Include="Source\Networking\WhiteList.cs" />
-    <Compile Include="Source\Particles\ParticleEmitter.cs" />
-    <Compile Include="Source\Networking\GameServerSettings.cs" />
-    <Compile Include="Source\Screens\BlurEffect.cs" />
-    <Compile Include="Source\Networking\Voting.cs" />
-    <Compile Include="Source\Screens\ServerListScreen.cs" />
-    <Compile Include="Source\SpriteSheet.cs" />
-    <Compile Include="Source\Timing.cs" />
-    <Compile Include="Source\Utils\Homoglyphs.cs" />
-    <Compile Include="Source\Utils\MTRandom.cs" />
-    <Compile Include="Source\Utils\Rand.cs" />
-    <Compile Include="Source\Events\PropertyTask.cs" />
-    <Compile Include="Source\Events\RepairTask.cs" />
-    <Compile Include="Source\GameSession\CrewManager.cs" />
-    <Compile Include="Source\Characters\AI\EnemyAIController.cs" />
-    <Compile Include="Source\Characters\Animation\FishAnimController.cs" />
-    <Compile Include="Source\GameSession\GameModes\GameMode.cs" />
-    <Compile Include="Source\GameSession\HireManager.cs" />
-    <Compile Include="Source\Characters\Animation\HumanoidAnimController.cs" />
-    <Compile Include="Source\GameSession\GameModes\SinglePlayerMode.cs" />
-    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
-    <Compile Include="Source\GUI\ComponentStyle.cs" />
-    <Compile Include="Source\GUI\GUIImage.cs" />
-    <Compile Include="Source\GUI\GUIMessageBox.cs" />
-    <Compile Include="Source\GUI\GUITickBox.cs" />
-    <Compile Include="Source\IPropertyObject.cs" />
-    <Compile Include="Source\Items\CharacterInventory.cs" />
-    <Compile Include="Source\Items\Components\Machines\Fabricator.cs" />
-    <Compile Include="Source\Items\Components\Machines\MiniMap.cs" />
-    <Compile Include="Source\Items\Components\Machines\Engine.cs" />
-    <Compile Include="Source\Items\Components\Machines\Pump.cs" />
-    <Compile Include="Source\Items\Components\Machines\Radar.cs" />
-    <Compile Include="Source\Items\Components\Signal\OxygenDetector.cs" />
-    <Compile Include="Source\Items\Components\Signal\LightComponent.cs" />
-    <Compile Include="Source\Items\Components\Signal\NotComponent.cs" />
-    <Compile Include="Source\Items\Components\Signal\OrComponent.cs" />
-    <Compile Include="Source\Items\Components\Signal\AndComponent.cs" />
-    <Compile Include="Source\Items\Components\Signal\ConnectionPanel.cs" />
-    <Compile Include="Source\Items\Components\Signal\RegExFindComponent.cs" />
-    <Compile Include="Source\Items\Components\Machines\Steering.cs" />
-    <Compile Include="Source\Items\Components\Holdable\Throwable.cs" />
-    <Compile Include="Source\Items\Components\Turret.cs" />
-    <Compile Include="Source\Items\Components\Signal\Wire.cs" />
-    <Compile Include="Source\Items\Components\Signal\Connection.cs" />
-    <Compile Include="Source\Items\Inventory.cs" />
-    <Compile Include="Source\Items\ItemInventory.cs" />
-    <Compile Include="Source\Characters\Limb.cs" />
-    <Compile Include="Source\GameSession\GameSession.cs" />
-    <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
-    <Compile Include="Source\Characters\StatusEffect.cs" />
-    <Compile Include="Source\DebugConsole.cs" />
-    <Compile Include="Source\Events\ScriptedTask.cs" />
-    <Compile Include="Source\Events\Task.cs" />
-    <Compile Include="Source\Events\TaskManager.cs" />
-    <Compile Include="Source\FrameCounter.cs" />
-    <Compile Include="Source\GUI\GUIStyle.cs" />
-    <Compile Include="Source\GUI\GUITextBox.cs" />
-    <Compile Include="Source\Items\Components\ItemContainer.cs" />
-    <Compile Include="Source\Items\Components\Machines\Controller.cs" />
-    <Compile Include="Source\Items\Components\Door.cs" />
-    <Compile Include="Source\Items\Components\Ladder.cs" />
-    <Compile Include="Source\Items\Components\Holdable\Pickable.cs" />
-    <Compile Include="Source\Items\Components\Power\PowerContainer.cs" />
-    <Compile Include="Source\Items\Components\Machines\OxygenGenerator.cs" />
-    <Compile Include="Source\Items\Components\Power\Powered.cs" />
-    <Compile Include="Source\Items\Components\Power\PowerTransfer.cs" />
-    <Compile Include="Source\Items\Components\Holdable\RangedWeapon.cs" />
-    <Compile Include="Source\Items\Components\Machines\Reactor.cs" />
-    <Compile Include="Source\Items\Components\Holdable\RepairTool.cs" />
-    <Compile Include="Source\Items\Components\Machines\Vent.cs" />
-    <Compile Include="Source\Items\RelatedItem.cs" />
-    <Compile Include="Source\Items\Components\Rope.cs" />
-    <Compile Include="Source\Items\Components\Wearable.cs" />
-    <Compile Include="Source\Map\Entity.cs" />
-    <Compile Include="Source\Map\Explosion.cs" />
-    <Compile Include="Source\Map\IDamageable.cs" />
-    <Compile Include="Source\Map\Levels\Level.cs" />
-    <Compile Include="Source\Map\Lights\ConvexHull.cs" />
-    <Compile Include="Source\Map\Lights\LightManager.cs" />
-    <Compile Include="Source\Map\Map\Location.cs" />
-    <Compile Include="Source\Map\Map\Map.cs" />
-    <Compile Include="Source\Map\Md5Hash.cs" />
-    <Compile Include="Source\Map\Levels\Voronoi.cs" />
-    <Compile Include="Source\Map\Levels\VoronoiElements.cs" />
-    <Compile Include="Source\Utils\MathUtils.cs" />
-    <Compile Include="Source\Physics\PhysicsBody.cs" />
-    <Compile Include="Source\Networking\NetworkMember.cs" />
-    <Compile Include="Source\Particles\Particle.cs" />
-    <Compile Include="Source\Particles\ParticleManager.cs" />
-    <Compile Include="Source\Particles\ParticlePrefab.cs" />
-    <Compile Include="Source\Physics\Physics.cs" />
-    <Compile Include="Source\Properties.cs" />
-    <Compile Include="Source\Utils\SaveUtil.cs" />
-    <Compile Include="Source\Screens\EditCharacterScreen.cs" />
     <Compile Include="Source\EventInput\EventInput.cs" />
     <Compile Include="Source\EventInput\KeyboardDispatcher.cs" />
-    <Compile Include="Source\Screens\EditMapScreen.cs" />
-    <Compile Include="Source\Events\ScriptedEvent.cs" />
-    <Compile Include="Source\Events\MonsterEvent.cs" />
-    <Compile Include="Source\Screens\GameScreen.cs" />
+    <Compile Include="Source\Fonts\ScalableFont.cs" />
+    <Compile Include="Source\GUI\ComponentStyle.cs" />
+    <Compile Include="Source\GUI\GUI.cs" />
     <Compile Include="Source\GUI\GUIButton.cs" />
     <Compile Include="Source\GUI\GUIComponent.cs" />
+    <Compile Include="Source\GUI\GUIDropDown.cs" />
     <Compile Include="Source\GUI\GUIFrame.cs" />
+    <Compile Include="Source\GUI\GUIImage.cs" />
     <Compile Include="Source\GUI\GUIListBox.cs" />
+    <Compile Include="Source\GUI\GUIMessage.cs" />
+    <Compile Include="Source\GUI\GUIMessageBox.cs" />
     <Compile Include="Source\GUI\GUIProgressBar.cs" />
     <Compile Include="Source\GUI\GUIScrollBar.cs" />
+    <Compile Include="Source\GUI\GUIStyle.cs" />
     <Compile Include="Source\GUI\GUITextBlock.cs" />
-    <Compile Include="Source\Items\Components\Holdable\Holdable.cs" />
-    <Compile Include="Source\Items\Components\ItemComponent.cs" />
-    <Compile Include="Source\Items\ItemPrefab.cs" />
-    <Compile Include="Source\Items\Item.cs" />
-    <Compile Include="Source\Items\Components\Projectile.cs" />
-    <Compile Include="Source\Map\MapEntity.cs" />
-    <Compile Include="Source\Map\MapEntityPrefab.cs" />
-    <Compile Include="Source\Map\Submarine.cs" />
-    <Compile Include="Source\Map\Structure.cs" />
-    <Compile Include="Source\Map\StructurePrefab.cs" />
-    <Compile Include="Source\Map\Levels\WaterRenderer.cs" />
-    <Compile Include="Source\Map\WayPoint.cs" />
-    <Compile Include="Source\Networking\GameClient.cs" />
-    <Compile Include="Source\Networking\GameServer.cs" />
-    <Compile Include="Source\PlayerInput.cs" />
-    <Compile Include="Source\Map\Gap.cs" />
-    <Compile Include="Source\GameMain.cs" />
-    <Compile Include="Source\GUI\GUI.cs" />
-    <Compile Include="Source\Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Source\GUI\GUITextBox.cs" />
+    <Compile Include="Source\GUI\GUITickBox.cs" />
+    <Compile Include="Source\GUI\LoadingScreen.cs" />
+    <Compile Include="Source\Particles\Particle.cs" />
+    <Compile Include="Source\Particles\ParticleEmitter.cs" />
+    <Compile Include="Source\Particles\ParticleManager.cs" />
+    <Compile Include="Source\Particles\ParticlePrefab.cs" />
+    <Compile Include="Source\Screens\BlurEffect.cs" />
+    <Compile Include="Source\Screens\EditCharacterScreen.cs" />
+    <Compile Include="Source\Screens\EditMapScreen.cs" />
+    <Compile Include="Source\Screens\GameScreen.cs" />
     <Compile Include="Source\Screens\LobbyScreen.cs" />
     <Compile Include="Source\Screens\MainMenuScreen.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\Screen.cs" />
-    <Compile Include="Source\GameSettings.cs" />
+    <Compile Include="Source\Screens\ServerListScreen.cs" />
     <Compile Include="Source\Sounds\OggSound.cs" />
-    <Compile Include="Source\Sounds\SoundManager.cs" />
     <Compile Include="Source\Sounds\OggStream.cs" />
     <Compile Include="Source\Sounds\Sound.cs" />
+    <Compile Include="Source\Sounds\SoundManager.cs" />
     <Compile Include="Source\Sounds\SoundPlayer.cs" />
-    <Compile Include="Source\Sprite.cs" />
     <Compile Include="Source\Utils\TextureLoader.cs" />
-    <Compile Include="Source\Utils\ToolBox.cs" />
-    <Compile Include="Source\Map\Hull.cs" />
-    <Compile Include="Source\Utils\UpdaterUtil.cs" />
+    <Compile Include="Source\Sprite.cs" />
+    <Compile Include="Source\SpriteSheet.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework, Version=3.5.1.1679, Culture=neutral, processorArchitecture=MSIL">
@@ -1097,9 +888,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
@@ -1706,6 +1494,7 @@
       <Name>SharpFont</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="..\BarotraumaShared\BarotraumaShared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
