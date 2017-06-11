@@ -61,7 +61,14 @@ namespace Barotrauma
         public List<string> JobNamePreferences
         {
             get { return jobNamePreferences; }
-            set { UnsavedSettings = true; jobNamePreferences = value; }
+            set
+            {
+                // Begin saving coroutine. Remove any existing save coroutines if one is running.
+                if (CoroutineManager.IsCoroutineRunning("saveCoroutine")) { CoroutineManager.StopCoroutines("saveCoroutine"); }
+                CoroutineManager.StartCoroutine(ApplyUnsavedChanges(), "saveCoroutine");
+
+                jobNamePreferences = value;
+            }
         }
 
         public string   MasterServerUrl { get; set; }
@@ -81,12 +88,6 @@ namespace Barotrauma
             private set
             {
                 unsavedSettings = value;
-                // Beging saving coroutine. Remove any existing save coroutines if one is running.
-                if (CoroutineManager.IsCoroutineRunning("saveCoroutine")) { CoroutineManager.StopCoroutines("saveCoroutine"); }
-                if (unsavedSettings == true)
-                {
-                    CoroutineManager.StartCoroutine(ApplyUnsavedChanges(), "saveCoroutine");
-                }
 
                 if (applyButton != null)
                 {
