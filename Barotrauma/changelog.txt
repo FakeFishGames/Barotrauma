@@ -1,0 +1,1349 @@
+---------------------------------------------------------------------------------------------------------
+v0.6.0.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "maximum packet size exceeded" errors when clients join servers.
+- Fixed a bug that caused non-interactable checkboxes to always appear unchecked.
+- Skill level syncing fix: the syncing isn't dependent on the order of the characters skills anymore.
+- IP addresses are included in all login error messages and the errors are also logged to the debug console.
+- Servers end rounds if all players are either dead or unconscious when autorestart is on (instead of 
+waiting for all players to die)
+- Fixed nuclear shells and depth charges exploding immediately when launched.
+- Fixed a bug that prevented any broken items from being repaired in the single player.
+- Fixed items disappearing from inside copypasted items (e.g. cabinets).
+- Added character teleporting console command.
+
+---------------------------------------------------------------------------------------------------------
+v0.6.0.1
+---------------------------------------------------------------------------------------------------------
+
+- Readded spam filter.
+- Servers log the automatic temperature control setting of nuclear reactors.
+- If a client fails to start a round (due to a missing sub file or an error, for example), their character 
+is automatically killed. This prevents situations where a team can't win a combat mission due to a 
+disabled, invisible character in the opposing team.
+- Fixed clients occasionally displaying the "crew has been defeated" message immediately after a combat
+mission starts.
+- Fixed a bunch of bugs in the job assignment logic.
+- Fixed errors if attempting to send radio messages without a radio in the inventory.
+- Fixed "component doesn't have a GUIFrame component" errors when selecting an artifact holder.
+- Disabled unnecessary server-side message ID logging.
+- Option to enable additional network debug logging by enabling verbose logging in config.xml.
+
+---------------------------------------------------------------------------------------------------------
+v0.6.0.0
+---------------------------------------------------------------------------------------------------------
+
+Rewritten networking code:
+	- much more robust syncing logic
+	- proper authoritative servers (i.e. much more more hack-proof)
+	- the server can transfer multiple files to a client simultaneously
+	- having multiple submarines with the same name (but different MD5 hash) in the submarine folder
+	doesn't prevent clients from loading the correct one
+	- server logs can be viewed in the server lobby, not just in-game
+	- logs can be filtered by message type
+	- door, docking port and railgun usage are logged
+	- the in-game log view isn't cleared when the log is written to a file
+	- character skill levels are synced
+	- clients can't vote multiple times by disconnecting and reconnecting
+
+UI:
+	- new UI graphics
+	- smoothly scrolling listboxes
+	- multi-line chat messages don't overlap
+
+Items:
+	- passive sonar: when not active, the sonar shows nearby sources of sound and a faint outline of the 
+	structures around them. Now it's much easier to monitor how much noise the submarine is making and to
+	hide from enemies.
+	- new sonar visuals
+	- texts in labels can be resized
+	- alien weapons can be used as railgun ammo
+	- nerfed oxygen and welding fuel tank explosions
+	- buttons created in fabricators work now
+
+Submarine editor:
+	- items/structures that have been copy-pasted from another submarine don't disappear when saving and 
+	loading the sub
+	- fixed crashes when attempting to load a submarine with no walls
+	- placing a resizable structure with a height/width of zero is not allowed
+	- "are you sure" prompt when trying to delete subs
+	- open menus are closed when opening another one (e.g. the save dialog box is automatically closed if
+	the item selection menu is opened)
+	- fixed crashes when switching to character or wiring mode after copypasting waypoints
+
+Misc:
+	- background ice formations with a parallax effect
+	- the level generation algorithm doesn't place walls behind alien ruins
+	- improved fire & smoke particles
+	- water puts out fires more slowly
+	- explosion damage is reduced if there are walls or other solid obstacles between and explosion and a character
+	- heal and revive commands can also be used on other characters than the controlled one
+	- fixed fires occasionally causing incorrect sound clips to loop continuously
+	- AI controlled crew members are better at avoiding hazards such as water and fire
+	- swimming animation fix: characters don't swim with their legs extended up over their shoulders 
+	after a sharp turn
+
+---------------------------------------------------------------------------------------------------------
+v0.5.4.5
+---------------------------------------------------------------------------------------------------------
+
+- optimized light rendering
+- switched fonts again, now to ones that support the cyrillic alphabet
+- special symbols are allowed in player names again (unless there's already a player on the server
+with a visually identical name)
+- fixed monsters not appearing in the position indicated by the sonar in monster missions (or being desynced
+whenever they did)
+- fixed the game process staying active in the background after a crash
+- players can't use headsets that are in the inventory
+- the warning message about unlinked vents is only shown once when saving a sub (not for each vent)
+- another attempt to fix AddToGUIUpdateList and SetTransformIgnoreContacts errors
+
+---------------------------------------------------------------------------------------------------------
+v0.5.4.4
+---------------------------------------------------------------------------------------------------------
+
+- new fonts
+- spectators see indicators for both subs during combat missions
+- fixed saves becoming corrupted if the player saves and quits in the "map view"
+- fixed "OpenAL not found" errors if trying to run the game with no enabled audio devices
+- fixed OpenAL errors when quitting a round
+- fixed unconscious/dead characters falling through floors
+- the server list accepts multiple servers from the same IP (assuming they're running on different ports)
+- fixed autorestart and the start button getting stuck if the server fails to load the respawn shuttle
+- fixed server failing to start a round if the cargo spawnpoint has been placed outside the submarine
+- fixed AddToGUIUpdateList errors
+- fixed SetTransformIgnoreContacts errors
+- tickboxes work again in the item UIs in wiring/character mode
+- fixed characters standing in an incorrect position when using railgun controllers in a mirrored sub
+- spawning a scorpion (an old placeholder enemy) doesn't crash the game anymore
+- submarine editor shows a warning if there are structures/items way outside the sub
+
+---------------------------------------------------------------------------------------------------------
+v0.5.4.3
+---------------------------------------------------------------------------------------------------------
+
+- a new enemy
+- some new sound effects by Omniary
+- some structure-specific damage sounds
+- the size of docked subs is taken into account when determining the spawn position of the sub (large 
+multi-part subs shouldn't spawn inside walls anymore)
+- explosion damage is calculated based on the distance to the closest surface of a limb instead of the
+center position of the limb (i.e. large monsters can be damaged by smaller explosions)
+- added an Undertow Games splash screen
+- updated to a newer version of the NVorbis sound library
+- fixed a null reference exception caused by wires
+- fixed an issue in the way items in alien ruins are initialized, which occasionally caused ID mismatches
+(and desync) in items and characters created after generating the ruins
+- fixed some item properties not being saved if changed in the editor (e.g. battery recharge speed)
+- fixed characters turning into husks when they die, even if the infection has been cured
+- fixed docking ports being disconnected in the mirrored subs in the combat missions
+- unconscious characters collide with stairs when they're being dragged up
+- fixed characters sinking/floating away when using railgun controllers underwater
+
+---------------------------------------------------------------------------------------------------------
+v0.5.4.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed crashes when removing nodes from a wire (i.e. right clicking with a wire equipped)
+- fixed inventory not being drawn in the correct position if switching to a character who's been 
+dragged/grabbed by some other character
+- fixed wires becoming disconnected when copypasting them
+- wire nodes can't be moved when connecting wires to a connection panel
+- fixed repeating crash messageboxes if the game fails to resolve a SharpDX exception on startup
+- fixed crashing when switching to wiring mode while editing some value of an item
+- fixed keyboard focus staying in textboxes after the textbox has been hidden (for example, 
+the input fields in the submarine saving prompt)
+- fixed error message spam if a docking port is linked to another port in the same sub
+- submarine lists in the editor, main menu and server menu are updated when new subs are saved/received
+- fixed item editing menu staying on the screen when loading another sub in the editor
+- ruins cant span above the top of the level anymore
+- the size of the docked subs is taken into account when generating the level
+- fixed autorestart timer not resetting at the clients' end if the server fails to start a shift and
+resets the timer
+- docked subs are forced to correct positions during loading (subs won't get stuck inside each other 
+even if the submarines are slightly overlapping in the editor)
+
+- all sounds are paused when switching to submarine editor
+- replaced the solid black color inside ice walls with a proper texture
+- the background ice texture loops better
+
+---------------------------------------------------------------------------------------------------------
+v0.5.4.1
+---------------------------------------------------------------------------------------------------------
+
+Bugfixes:
+	- copypasted items are now correctly aligned to the "grid"
+	- cabinets can be copypasted from a sub to another without the items inside disappearing
+	- placing explosives inside an item and that item inside another item doesn't prevent explosions
+	- fixed a bug that occasionally caused crashing when the game happens to generate a very small level
+
+Sub editor:
+	- structures/items that are behind something else can be selected using a listbox that appears 
+	when hovering the cursor over them	
+	- wires have to be selected by clicking before any of the points can be moved (makes it possible 
+	to move	the correct wire even if it's overlapping with other wires)
+	- the selected wire is renderer over all structures
+	- points can be added to wires by clicking while holding ctrl
+	- disabled music
+
+Misc:
+	- some rendering optimization	
+	- pathfinding and waypoint generation improvements
+	- made mantises more aggressive
+	- water flows more slowly through partially damaged walls	
+
+---------------------------------------------------------------------------------------------------------
+v0.5.4.0
+---------------------------------------------------------------------------------------------------------
+
+Submarine editor:
+	- copy, paste and cut functionality
+	- items/structures can be copied by holding ctrl while dragging
+	- it's possible to move a wire by moving both items it's connected to (without having to move each 
+	individual point of the wire separately)
+	- "hull volume helper" which makes it easier to select a suitable ballast tank size and 
+	NeutralBallastLevel setting in the navigation terminal
+	- equipped items are removed when switching from wiring mode to character mode or vice versa
+	- no need to wait when deattaching items from the walls with a wrench	
+
+
+Bugfixes:
+	- wires are now positioned correctly in mirrored subs
+	- UI elements (buttons, textboxes, etc) can't be clicked through each other anymore
+	- fixed a bug that caused crashes when deattaching items from walls
+	- fixed a game-crashing particle bug
+	- fixed respawned characters getting assigned to a different team than the rest of the characters 
+	(causing them to be displayed separately in the crew menu)
+	- pathfinding/autopilot fixes
+
+Misc:
+	- server hosts can give players special privileges (kick, ban, end round)	
+	- saving the contents of the server info box and the traitor setting
+	- changes to battery logic: they can now be used to cover the entire power consumption of the 
+	electrical grid	(assuming their maximum output is high enough)
+	- added "artifact holders" to alien ruins (which can also be used for turning artifacts into power 
+	sources if installed in a sub)
+	- changes to character collider behavior: crouching changes the size of the collider and it's 
+	easier to step over small obstacles
+
+
+---------------------------------------------------------------------------------------------------------
+v0.5.3.4
+---------------------------------------------------------------------------------------------------------
+
+- fixed screen turning black in the tutorial
+- the moloch attack in the tutorial is now much easier to survive
+- servers readd themselves to the master server if they have been removed from the server list
+- fixed a bug that caused lights to flicker even if there's enough power
+- fixed items disappearing when dropping them in the submarine editor
+
+---------------------------------------------------------------------------------------------------------
+v0.5.3.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed a bug that caused crashes after a husk-infected player died
+- disabled the "zoom effect" when under pressure as a huskified human
+- only a limited number of messages are kept in the debug console (prevents performance issues if large 
+amounts of messages are added)
+- some item and electricity logic optimization
+- fixed "sprite tigerthresher not found" errors in the Linux version
+
+---------------------------------------------------------------------------------------------------------
+v0.5.3.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed character colliders occasionally getting stuck inside walls when switching from swimming to
+walking or standing up after being unconscious
+- wires can be dragged outside the sub in the editor without disconnecting them
+- easier to climb over small obstacles
+- combat missions don't reset the "allow respawn" setting
+- submarines outside the camera view aren't rendered
+- coelanth collider fix
+
+---------------------------------------------------------------------------------------------------------
+v0.5.3.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed monster movement!
+
+---------------------------------------------------------------------------------------------------------
+v0.5.3.0
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- submarine vs submarine missions
+	- server hosts can disable spawning of certain characters
+	- server hosts can have subs spawn with additional items
+
+Changes to ragdoll movement/animation logic:
+	- movement is now controlled by a single invisible physics body which the rest of the ragdoll follows
+	- character position syncing is now more accurate and there's less "teleporting"
+	- characters are less likely to take impact damage by stumbling in stairs
+	- (+ makes working on the new improved netcode much easier)
+	- ladders can be slid down by holding the sprint key
+	
+Submarine Editor:
+	- zoom now works relative to the mouse's position rather than the center of the screen
+	- fixed selection rectangle not being visible when dragging from bottom right to top left
+	- rectangles now have line widths dependent on the camera zoom (lines are still visible after zooming out)
+
+Items:
+	- added a particle trail to railgun shells
+	- added dim emergency lights which require no power
+	- a "glow effect" when moving items between inventory slots
+	- option to select which location the autopilot should navigate to
+	- fabricator UI shows item descriptions and items that can't be fabricated are grayed out
+	
+Bugfixes:
+	- attempt to fix "DXGI_ERROR_NOT_CURRENTLY_AVAILABLE" errors on startup
+	- fixed water flow sounds taking up all the audio channels and preventing other sounds from playing
+	when the sub is heavily flooded
+	- the start button in the server lobby is re-enabled and autorestart countdown is reset if starting
+	a new round fails for whatever reason
+	- the colliders of the ice walls match the shape of the walls more accurately
+	- player-controlled monsters can damage the submarine from the outside
+	- waypoint generation and pathfinding bugfixes
+
+Misc:
+	- improved line of sight effect (instead of a solid black "fog of war", a faint image of the 
+	surrounding rooms can be seen through walls)
+	- less ambient light, and it gets darker when diving deeper
+	- a hull-specific ambient light system: light sources increase the amount of light inside rooms, 
+	preventing shadows from looking unnaturally dark in fully lit submarines
+	- option to disable vsync
+	- added a near-indestructible alien ruin wall variant - breaking through the walls with a railgun 
+	or a plasma cutter is not always an option anymore
+	- added a parallax effect to the particles floating in the ocean
+
+---------------------------------------------------------------------------------------------------------
+v0.5.2.0
+---------------------------------------------------------------------------------------------------------
+
+Level generation improvements:
+	- customizable level generation parameters (see Content/Map/LevelGenerationParameters.xml)
+	- different "level types" - each uses a different set of parameters, resulting in more varied levels
+	- more vegetation & other decorative background sprites
+	- the entrances and exits of the levels have more variety (not always straight vertical tunnels)
+
+Improved MiniMap (now called "Status Monitor"):
+	- shows hull integrity and oxygen levels
+	- can be configured to only show oxygen/water levels if the rooms have detectors installed
+
+- improved wall damage visuals
+- the single player map shows which locations have been visited and the passageways that have been used
+- minor visual improvements to the single player campaign menus
+- huskification bugfixes
+- oxygen isn't distributed through gaps or vents that are underwater (i.e. air pockets can form when the 
+sub is flooding)
+- molochs (or other large creatures) can't push the sub around as easily anymore
+
+---------------------------------------------------------------------------------------------------------
+v0.5.1.3
+---------------------------------------------------------------------------------------------------------
+
+- server whitelists
+- a new monster
+- improved autopilot
+- background sprites and creatures can be customized via Content Packages
+- Linux clients can connect to Windows servers again (and vice versa)
+- fixed the upper boundary of the level occasionally being possible to pass through
+- textboxes can't be selected through other UI elements anymore
+
+---------------------------------------------------------------------------------------------------------
+v0.5.1.2
+---------------------------------------------------------------------------------------------------------
+
+- hacked clients can't join a full server or change the name of their character anymore
+- option to choose which character to control using the "control" command when there are multiple 
+characters/creatures with the same name
+- a console command for spawning items
+- the server logs show who sent each chat message
+
+---------------------------------------------------------------------------------------------------------
+v0.5.1.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed non-password protected servers being impossible to join to
+- some more security checks
+
+---------------------------------------------------------------------------------------------------------
+v0.5.1.0
+---------------------------------------------------------------------------------------------------------
+
+- getting attacked by a husk will slowly turn the victim into a husk
+
+- spam filter
+- added server options to the ingame HUD
+- fixed tiger thresher spawning on Linux
+- a more secure password authentication method (again)
+- ingame players can't receive messages from lobby players anymore
+- more server-side security checks
+
+- medical doctors always have a high enough medical skill to fabricate any drug
+- ai-controlled crew can be spawned using the console in multiplayer
+- it's possible to manually attack when controlling a creature
+- randomly spawned artifacts are spread out better throughout the level
+- characters won't let go of a person they're dragging when entering/exiting the sub
+- respawned players get the same ID card tags they would've gotten if they had spawned inside the main sub
+- highlighted characters glow in the dark
+
+---------------------------------------------------------------------------------------------------------
+v0.5.0.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed "submarine not found" errors when starting a round after downloading a shuttle from the server
+- console command for banning
+- a more secure password authentication method
+- fixed players with a space in their name being impossible to kick/ban via the console
+- banlist is saved immediately after banning someone instead of when shutting down the server
+- IP addresses are visible in netstats
+- client names are sanitized
+- bunch of miscellaneous anti-cheat measures
+- fixed docking ports leaking if multiple vessels dock to the main sub
+- cargo is always spawned in the main sub even if there are cargo spawnpoints in the docked vessels
+
+---------------------------------------------------------------------------------------------------------
+v0.5.0.2
+---------------------------------------------------------------------------------------------------------
+
+- more server-side sanity checks to prevent (desynced or hacking) players from doing things their 
+characters shouldn't be able to do
+- fixed collision issues at docking ports (such as shooting up in the air when trying to drop down into
+a docked shuttle while shuttle hatch is closed)
+- fixed crashing when commanding a crew member to use a railgun in the single player mode
+- fixed chatbox staying disabled after being stunned (and reappearing when being stunned again)
+
+---------------------------------------------------------------------------------------------------------
+v0.5.0.1
+---------------------------------------------------------------------------------------------------------
+
+- selecting the same sub as the respawn shuttle and the main submarine works now
+- fixed the ''end round'' tickbox not appearing if joining and spawning mid-round
+- ruin walls/doors can be cut again
+
+---------------------------------------------------------------------------------------------------------
+v0.5.0.0
+---------------------------------------------------------------------------------------------------------
+
+Support for multiple submarines (no full-fledged submarine vs submarine battles yet, but they're coming
+in future updates!):
+	- Submarine files can be "merged", i.e. submarines can consist of multiple separate parts which can
+	be docked into each other
+	- the multiplayer mode has a "respawn shuttle" which transports respawned players from the entrance
+	to the main submarine
+	- parts of the submarine and characters inside them can be left behind in the single player mode
+	(and later salvaged if you wish to do so)
+
+Multiplayer:
+	- fixed a bunch of bugs that caused entity IDs not to match between the clients and the server (which
+	caused severe syncing issues)
+	- fixed monster inventory syncing (i.e. husk inventory syncing)
+	- fixed server description box not being synced with clients
+	- search bar for server logs
+	- more server options
+	- fixed the occasional "queue empty" error messages when attempting to send submarine files to players
+	- characters can't be freely named anymore - they'll have the same name as the client
+
+Items:
+	- items can be equipped/unequipped by double clicking
+	- longer railgun view distance
+	- changes to the logic that determines which item is being highlighted - now it's much easier to
+	select specific items in cramped subs
+	- highlighted items glow (so it's easier to see which item you're targeting in the dark)
+	- fixed an electricity bug that sometimes caused parts of the grid to not carry any power after 
+	a junction box has been broken and repaired
+	- option to choose the output of a signal check component when the signal doesn't match
+	- fixed fire extinquishers
+	- item search bar in the submarine editor
+	- fixed cargo items spawning in incorrect positions (which occasionally caused some serious problems 
+	if the item happened to be a crate full of nitroglycerin)
+	- flares burn longer
+	- fixed flashes from explosions/sparks/flares occasionally ''staying on''
+	- cameras: can be connected to a railgun controller (or any other selectable controller) to remotely
+	view rooms or areas around the sub
+
+Submarines:
+	- the mass of a submarine depends on its size - larger submarines require more force to move around
+	(custom subs may need some modifications to get the top speeds of the smaller/larger subs back to a
+	steerable level)
+	- changes to depth damage logic: structures with more health need more pressure before they start taking
+	damage (i.e. submarines with thicker walls and no windows can go deeper)
+
+Misc:
+	- stunned characters can't move items in their inventory
+	- characters can run while grabbing/dragging someone
+	- fixed a bug that made it impossible to spawn characters through the console in the Linux version
+	- NPCs won't close doors/hatches on themselves and are better at handling stairs/ladders
+	- pathfinding bugfixes
+
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.6
+---------------------------------------------------------------------------------------------------------
+
+- vote kicking
+- fixed reverting back to the first sub on the list after each round when using manual submarine selection
+- fixed lights "bleeding" through walls
+- fixed crashing if the submarine contains hulls far away from the rest of the submarine
+- corricodone is slightly more effective
+- battery charge can be set higher than the default capacity of 2000 (assuming the capacity is set higher)
+- job assignment bugfixes
+- head sprites can be given tags (e.g. customhead[tag].png) which will make the game select body sprites
+with a matching tag (e.g. customtorso[tag].png) for the character
+- some new head sprites
+- pathfinding errors (which may be caused by missing or incorrectly placed waypoints in custom subs)
+don't cause the debug console to pop up
+- added missing music clips to the Linux build
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.5
+---------------------------------------------------------------------------------------------------------
+
+- fixed oxygen distribution through vents not being calculated correctly
+- fixed another bug that caused ''object reference not set to an instance of object'' error messages
+when starting a new round
+- fulgurium batteries can be put in flashlights and sonars
+- more powerful oxygen generators in vanilla subs (small rooms aren't deathtraps anymore)
+
+Linux version:
+- fixed ''unable to load coelanth.png'' error messages
+- fixed non-matching content packages between the Linux and Windows versions
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.4
+---------------------------------------------------------------------------------------------------------
+
+- fixed clients failing to select submarines in their "Submarines/Downloaded" folder
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed errors when updating the submarine list if the host is has selected the "play yourself" option
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed the ''queue empty'' error messages when attempting to download a sub from the server
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.1
+---------------------------------------------------------------------------------------------------------
+
+- changes to connection panel layout: less wire overlap, making it easier to select individual wires
+
+- fixed missions not appearing in single player
+
+- clients see the submarines the host has instead of their own subs in the server lobby
+- clients can vote for subs they don't have
+- servers check whether all the clients have the selected submarine file before starting a round, and if not,
+give them some time to start downloading it
+
+- item sprites are visible in fabricator menus
+- some new wall sprites
+- fixed small walls being impossible to fix after they've broken
+- ruin walls look slightly different from normal walls on sonar
+- cargo is placed at the cargo spawnpoint instead of a random position within the hull it's inside
+- fixed light emitted by flares not disappearing after the flare burns out
+- flares won't stop burning if picked up and placed in the inventory
+- minor changes to the lighting - small lights aren't ''skewed''
+- fixed the ''CastShadows'' parameter of light components not being saved
+- fixed fires using up all the sound channels and preventing other sounds from playing
+
+- fixed the ''blood overlay'' still being visible when starting a new round or switching characters
+- fixed fractal guardians occasionally killing themselves by slamming against the walls
+- enemies use pathfinding inside the submarine
+
+---------------------------------------------------------------------------------------------------------
+v0.4.1.0
+---------------------------------------------------------------------------------------------------------
+
+- alien ruins and some special monsters/items that only spawn inside them
+- improved lighting
+- flashlights and flares
+- depth charges
+- items can be moved from the inventory to cabinets/containers by double clicking
+- option to choose mission type in multiplayer
+- fixed crashes when using medical syringes in multiplayer
+- fixed characters occasionally ''exploding'' or being launched to a random direction when
+entering/exiting the sub
+- fixed long map seeds always generating the same map
+- fixed item loading issues when playing the game on a PC using the Turkish locale (and most likely some
+other locales with special uppercase/lowercase rules)
+
+---------------------------------------------------------------------------------------------------------
+v0.4.0.3
+---------------------------------------------------------------------------------------------------------
+
+- stun syncing bugfix
+- fixed dead/unconscious characters being impossible to select in the info menu
+- fixed crashes when detonating nitroglyserine by injecting it
+- oxygen level deteriorates more slowly when unconscious
+- instructions for dealing with broken junction boxes in the tutorial
+
+---------------------------------------------------------------------------------------------------------
+v0.4.0.2
+---------------------------------------------------------------------------------------------------------
+
+- fire doesn't affect items in characters' inventories (e.g. holding a thermal artifact won't blow up
+oxygen tanks in your inventory)
+- handheld sonars only consume power when they're on
+- cargo missions are more common
+- fix for endworms (and possibly other large monsters) teleporting partially inside the sub
+- some more chemicals/drugs
+- doctor's clothes have some extra slots for chemicals
+
+---------------------------------------------------------------------------------------------------------
+v0.4.0.1
+---------------------------------------------------------------------------------------------------------
+
+- radio messages are visible to spectators
+- added a bunch of handheld sonars to the vanilla subs
+- junction boxes take more time to break in water
+- moved the junction boxes inside Nehalennia's ballast tanks to a drier location
+
+---------------------------------------------------------------------------------------------------------
+v0.4.0.0
+---------------------------------------------------------------------------------------------------------
+
+DOCTORS:
+	- medical doctors (can fabricate various drugs/chemicals and give CPR to unconscious characters)
+	- changes to the dying logic: characters will be unconscious when their health or oxygen goes below 0, 
+	and die when it drops to -100
+	- medical syringes can be used on other characters
+	- any chemicals can be inserted in medical syringes
+
+Items:
+	- handheld sonars
+	- crates, small medical/chemical cabinets
+	- junction boxes, sonar monitors, navigation terminals and engines break if they're underwater long enough
+	- reactor cools down if it's underwater (multiple fuel rods are required to bring the temperature back up)
+	- forces are applied to items (not just characters) when the submarine hits something
+	- changes to the logic for distributing oxygen through vents: the oxygen generator pushes more oxygen 
+	to larger rooms instead of dividing the oxygen output equally between vents
+
+	- autopilot bugfixes
+	- the amount of oxygen/battery left is visible in the inventory slot of the ''parent item''
+	- new inventory slot for masks, headsets, etc
+
+	- fixed ''signal loops'' crashing the game
+	- OR gates work properly now
+	- AND/OR gates can be set to send out a signal when the input conditions aren't met
+
+	- fabricating items may require some specific skill levels
+
+	- a bunch of new sprites
+
+Multiplayer:
+	- fixed a bug that caused the server to resend a ton of messages to a client who's been temporarily 
+	disconnected, causing syncing issues to every player
+	- fixed syncing issues related to items breaking (eg junction boxes being broken only for some players)
+	- fixed dead monsters occasionally ''teleporting'' inside the sub in multiplayer
+	- fixed missions not matching between Linux and Windows builds
+	- fixed traitor messages reappearing at the start of a new round after disabling traitors
+	- mid-round chat messages have a limited range
+	- players are equipped with a headset which can be used for remote communication (and making
+	voice-controlled devices/systems)
+	- speech bubble icon is displayed next to the character when speaking in multiplayer
+
+Misc:
+	- level generation improvements: small cave systems, more vegetation, more varied layouts
+	- option to spawn characters/monsters near, inside or outside the sub
+	- crouching
+	- cargo missions
+	- borderless windowed mode (aka fake fullscreen)
+	- option to enable some additional debug logging (by setting ''verboselogging'' to true in the config file)
+	- a menu that shows the mission description mid-round
+	- game settings can be changed mid-round
+	- submarine descriptions
+	- fixed characters getting stuck inside a wall when trying to get inside the sub through a hole
+
+---------------------------------------------------------------------------------------------------------
+v0.3.6.0
+---------------------------------------------------------------------------------------------------------
+
+- bunch of crew AI improvements and bugfixes: they are now much better at keeping themselves alive and
+fixing leaks
+- crew AI can be toggled on and off using "DisableCrewAi" and "EnableCrewAi" commands
+- fixed crashing when switching from wiring mode to character mode
+- inventory is visible in wiring mode
+- several wiring bugfixes
+- emergency sirens and alarm buzzers
+- fixed light components throwing errors when receiving an invalid color value to the "set_color" input
+- fixed bright lights making it impossible to see whether a light component is on or off
+- relay components break if too much power is directed through them
+- relay components are active by default and they can be toggled on/off in the editor
+- wires can be created in fabricators
+- label text color can be changed
+- boolean (true/false) properties are displayed as checkboxes in the editor
+
+---------------------------------------------------------------------------------------------------------
+v0.3.5.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed unclickable buttons/checkboxes in the launcher
+- fixed battery cells not reloading when placed inside a battery
+
+---------------------------------------------------------------------------------------------------------
+v0.3.5.0
+---------------------------------------------------------------------------------------------------------
+
+- items float and can be moved around by flowing water
+- wiring mode which makes wiring more convenient in the editor
+- networking bugfixes and improvements
+- changes to the logic that determines how far the monsters can see/hear the submarine from - now it's 
+possible to evade some monsters by turning off noisy devices and/or stopping the submarine
+- invisible entities (items inside cabinets, hulls/gaps when they've been hidden) can't be highlighted 
+or selected in the editor
+- fixed monster/item spawnpoints being placed in unreachable locations
+- relay and delay components
+- fixed lights not being positioned correctly on moving items
+- added a ''set_color'' connection to light components
+- ladders outside the sub can be climbed
+- changes to drowning/suffocation logic: amount of oxygen drops at a fixed rate instead of effects 
+"stacking" (e.g. when wearing a diving suit with no oxygen tank in a room with low oxygen)
+- fixed projectiles not colliding with the submarine when shot from the outside
+
+---------------------------------------------------------------------------------------------------------
+v0.3.4.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed characters passing through walls/windows that have already been repaired
+- fixed the spawn command in Linux version
+- fixed clients being able to join servers with the wrong password
+
+---------------------------------------------------------------------------------------------------------
+v0.3.4.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed a major bug in the networking code, which caused the server to incorrectly determine the order 
+of messages received from different clients and discard valid messages
+- fixed levels with the same seed appearing different between the Linux and Windows versions
+- creatures spawned using the console are synced with clients
+- password prompt for password-protected private servers
+- holes in the walls can be seen through
+- bleeding gradually slows down - making an enemy bleed isn't a guaranteed kill anymore
+- mantises don't bleed
+- fixed crashing when swapping some specific equipped items with another item in the inventory
+- fixed deconstructor, fabricator and railgun connection panels closing immediately after opening
+
+---------------------------------------------------------------------------------------------------------
+v0.3.4.0
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+- missing submarine files can be downloaded from the server host
+- player syncing bugfixes (aiming is visible to other players, smoother movement in water)
+- creature syncing bugfixes (less teleporting around)
+- fixed the server lobby displaying wrong numbers of votes at the client's side
+- fixed the server list displaying 16/16 players as 0/16
+- saving server settings
+
+Other:
+- skyholder artifacts consume oxygen
+- thermal artifacts catch fire even if they're not being held
+- placed items/structures can be resized in the editor
+- items in the inventory can be swapped between slots by dragging them on top of each other
+- cyrillic character support
+- slower underwater scooters
+- fixed pressure building up in enclosed rooms full of water, even if there were no hull breaches
+- an indicator which shows the direction of the sub when spectating
+- fixed crashing when loading a submarine with no hulls
+
+---------------------------------------------------------------------------------------------------------
+v0.3.3.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed the chatbox obstructing other player's inventory when grabbing/dragging a character
+- fixed characters randomly letting go of bodies they're dragging
+- the keybinds configured in the options menu are used when moving the camera as a spectator
+
+---------------------------------------------------------------------------------------------------------
+v0.3.3.0
+---------------------------------------------------------------------------------------------------------
+
+- more visible indicators when taking damage, running out of oxygen or being crushed by pressure
+- handcuffs
+- changes in the welding/cutting targeting logic: it's now possible to target "corners" of the hull
+even if the section of the wall is obstructed by adjacent walls
+- fixed submarines spawning in a wrong position (e.g. inside walls) if the submarine has been built
+far away from the coordinates (0,0)
+- fixed a memory leak caused by item sprites
+- character/inventory syncing bugfixes
+- fixed spectators not seeing their own chat messages
+- scrollable list of clients in the network statistics view
+- small changes to the vanilla subs
+- fixed the water brightness in Linux version
+
+---------------------------------------------------------------------------------------------------------
+v0.3.2.6
+---------------------------------------------------------------------------------------------------------
+
+- fixed the broken password box
+- maximum number of players per server increased to 16 (note that none of the vanilla subs have been
+designed for a crew that large)
+- junction boxes and power sources can be connected with multiple parallel wires without multiplying
+the power output
+- velocity and depth readings on navigation terminals
+- location types and missions are included in content packages
+
+---------------------------------------------------------------------------------------------------------
+v0.3.2.5
+---------------------------------------------------------------------------------------------------------
+
+- fixed null reference exception when starting a client
+
+---------------------------------------------------------------------------------------------------------
+v0.3.2.4
+---------------------------------------------------------------------------------------------------------
+
+- fixed crashing when highlighting a dead husk
+- fixed the unclickable checkboxes in server settings
+- sending messages to specific players using ''d; [message]'' and ''name; [message]'' (messages can be
+sent to players with spaces in their names now)
+- more descriptive log messages when taking items from cabinets or other players
+
+---------------------------------------------------------------------------------------------------------
+v0.3.2.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed characters dropping items when a spectator joins
+- fixed any selected textbox in the server lobby accepting keyboard input after a round starts
+- praise the honkmother
+
+---------------------------------------------------------------------------------------------------------
+v0.3.2.2
+---------------------------------------------------------------------------------------------------------
+
+- clearing the server log after saving!
+- saving the log after every round (even if it isn't full)
+
+---------------------------------------------------------------------------------------------------------
+v0.3.2.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed words missing from chat messages
+- the server log UI doesn't scroll to the bottom when new lines appear, making it easier to read it during
+a round
+
+---------------------------------------------------------------------------------------------------------
+v0.3.2.0
+---------------------------------------------------------------------------------------------------------
+
+- server logs 
+- server admins have the option to send messages only to dead players and spectators (/d [message]) or 
+to one specific player (/name [message])
+- more reliable door syncing
+- railgun syncing bugfixes
+- longer view distance when outside
+- deattaching items takes some time
+- welders and cutters do damage to players/enemies again
+- a new enemy
+- molochs can do damage to players
+
+---------------------------------------------------------------------------------------------------------
+v0.3.1.5
+---------------------------------------------------------------------------------------------------------
+
+- fixed projectiles/weapons not colliding with characters
+
+---------------------------------------------------------------------------------------------------------
+v0.3.1.4
+---------------------------------------------------------------------------------------------------------
+
+- fixed items ''floating'' in some of the custom subs
+- fuel rods can't be turned back to uranium/incendium bars if they've been used
+
+---------------------------------------------------------------------------------------------------------
+v0.3.1.3
+---------------------------------------------------------------------------------------------------------
+
+- round end votes can be toggled off
+- less confusing way of displaying the number of votes (yes/no instead of yes/number of voters)
+
+---------------------------------------------------------------------------------------------------------
+v0.3.1.2
+---------------------------------------------------------------------------------------------------------
+
+- players can vote to end a round in multiplayer
+- fixed fabricator syncing
+- fixed hulls being invisible in the editor
+- spectators can only speak to dead players
+- minor changes to the map generation algorithm: there's now more variety in the cavern shapes
+- added a new type of railgun shell
+- diving suits wont protect from the water pressure in the abyss anymore
+- added some spare buttons to Vellamo
+
+---------------------------------------------------------------------------------------------------------
+v0.3.1.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed a major bug that caused item/monster ID mismatches between the server and the clients, which 
+accounted for many of the monster/inventory/item syncing issues
+- improved player position syncing
+
+---------------------------------------------------------------------------------------------------------
+v0.3.1.0
+---------------------------------------------------------------------------------------------------------
+
+- batteries have separate power_in and power_out connections, which allows recharging and powering devices
+simultaneously and using separate recharge circuits
+- using supercapacitors as a substitute for batteries now longer works: they have a very low energy storage
+capacity and are only suitable for providing short high-energy power surges
+- improved connection panel graphics
+- fixed a bug that caused the submarine to swoop to a random direction when a character enters it
+- fixed crashed caused by EntityGrid.GetEntites()
+
+---------------------------------------------------------------------------------------------------------
+v0.3.0.5
+---------------------------------------------------------------------------------------------------------
+
+- fixed autopilot crashing the game
+- fixed reactor not catching fire when going above the configured ''fire temperature''
+- fixed a duplicate "Play yourself" checkbox appearing in the lobby screen after rounds
+
+---------------------------------------------------------------------------------------------------------
+v0.3.0.4
+---------------------------------------------------------------------------------------------------------
+
+- submarine editor can be used without the console now
+- autopilot can be set to maintain the current position of the sub
+- monster syncing bugfixes
+- ladder syncing bugfixes
+- fixed server randomly stunning the players
+- fixed "submarine not found" errors which occurred in multiplayer if the filename didn't match the
+name of the submarine
+- fixed new structures not lining up with existing ones if switching to editor while a round is running
+- fixed a bug in shadow rendering which caused memory leaks 
+- the autoupdater only checks the Content folder when deleting files that don't belong to the latest version
+(i.e. the autoupdater won't delete your mods as long as they aren't saved in the Content folder)
+- molochs and endworms are immune to bleeding!
+
+---------------------------------------------------------------------------------------------------------
+v0.3.0.3
+---------------------------------------------------------------------------------------------------------
+
+- fixed selecting stairs and items outside the sub in editor
+- fixed crashing when pressing the ''start'' button while no route is chosen in single player 
+- fixed fire syncing
+- fixed another bug that crashed the game if in the lobby when a round ends 
+- camera keeps moving with the sub when typing into chatbox in spectator mode
+
+---------------------------------------------------------------------------------------------------------
+v0.3.0.2
+---------------------------------------------------------------------------------------------------------
+
+- fixed crashing when picking up a thermal artifact outside the sub
+- fixed clients crashing if in the lobby when a round ends
+- fixed crashing when attempting to join a password-protected server
+- camera position is set at the position of the sub when entering spectator mode
+- AI crew equips a diving suit before going outside the sub
+
+
+---------------------------------------------------------------------------------------------------------
+v0.3.0.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed inventory not being visible when using character mode in the editor
+- adding hulls and gaps works properly when switching to editor after a round has been started
+- fixed item selecting when switching to character mode after a round has been started
+- fixed a bug that made it impossible to fix broken walls after saving and reloading
+- fixed crashing when trying to place ladders when no submarine has been loaded
+- trying to generate waypoints for an empty sub won't crash the game anymore
+- when opening the crew commander menu for the first time, there's a text notifying about the hotkey for 
+opening/closing the menu
+
+
+---------------------------------------------------------------------------------------------------------
+v0.3
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- a summary screen which shows some details about the previous round
+	- no separate traitor mode: they can be enabled for any game mode
+	- an option to randomize whether there is a traitor or not
+	- larger chatbox
+	- a ton of syncing bugfixes and optimization
+
+Items:
+	- fabricators, which can be used for crafting items out of raw materials or other items
+	- deconstructors, which break items down to their basic components/materials
+	- a bunch of new sprites
+	- there are some artifacts scattered around every level regardless of the quest, and they can be collected
+	and used as a source of useful raw materials for the fabricator
+	- added hatches (which are basically doors rotated by 90 degrees)
+	- characters can't get stuck inside doors anymore
+	- stairs are easier to climb (less tripping down!)
+	- navigation terminals have a ''default ballast level'' setting which determines how much water there
+	should be in the ballast tanks when not steering in any direction
+	- ladders can be climbed with a diving suit on, just very slowly
+	- ladder climbing animation now works properly even when holding an item
+	- items have a short description which can be read by hovering the mouse over the inventory slots
+	- if the reactor is connected to multiple junction boxes, automatic temperature control will adjust
+	the power output to the highest load instead of the sum of the loads
+	- reactor state is saved (it will stay running when between levels)
+	- using a stun baton while running won't make the character trip anymore
+
+Submarines:
+	- a new sub, Nehalennia
+	- the collider of the submarine now matches the shape of the hull
+	- the airlock pumps in each sub are set to pump water out instead of just turning the pump on when pressing 
+	the button outside the airlock
+
+Submarine editor:
+	- items/structures are sorted by category in alphabetical order
+	- tickboxes for hiding hulls, gaps, waypoints and links between items
+	- a list of the most recently used items/structures
+	- placed wires are much easier to move around
+	- more accurate staircase selecting (the ''bounding box'' of the staircase won't prevent selecting items that 
+	are behind it anymore)
+	- visible indicators for railgun rotation limits
+
+Crew:
+	- the crew members not controlled by the player now have an AI: they can take orders, do some basic tasks
+	and avoid various hazards
+	- fixed equipped items disappearing when loading the game
+	- bodies can be dragged up stairs
+
+Misc:
+	- two new monsters
+	- improved UI graphics
+	- better looking cavern walls
+	- major optimization to light/shadow rendering
+	- some new quests (which are now called ''missions'')
+
+---------------------------------------------------------------------------------------------------------
+v0.2.6.2
+---------------------------------------------------------------------------------------------------------
+
+- added missing stunbaton sound file
+
+---------------------------------------------------------------------------------------------------------
+v0.2.6.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed a bug that caused characters to take bleeding damage for no apparent reason
+- fixed autopilot not working when changing the map seed
+
+---------------------------------------------------------------------------------------------------------
+v0.2.6
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- major changes to the networking code: better lag compensation, more reliable item/character
+	syncing, lower bandwidth consumption
+	- spectator mode
+	
+Submarine:
+	- overloading the electrical grid or the reactor may cause fires
+
+Characters:
+	- blood texture drawn on damaged limbs
+	- fixed limbs clipping through walls
+	- some new head sprites
+
+Items:
+	- underwater scooters
+	- water detector
+	- jumpsuits for engineers and mechanics
+	- new artifact with an effect that makes retrieving it much harder
+	- less obtrusive ''fow effect'' when wearing a diving suit or a mask
+	- fire extinguishers
+	- some new sprites
+
+Misc:
+	- fixed placing ladders and labels in sub editor
+	- fixed a couple of game-crashing bugs in submarine saving
+	
+---------------------------------------------------------------------------------------------------------
+v0.2.5
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- option to randomly select level seed, submarine and/or game mode
+	- players can be allowed to vote for the next sub and game mode
+	- option to choose character's head
+	
+Submarine:
+	- pressure damage if the submarine dives too deep
+	- added the missing mechanic spawnpoint missing to Aegir
+
+Creatures:
+	- a new enemy that only spawns deep below the level
+
+Items:
+	- diving suits and mask now obstruct vision when worn
+	- nicer looking sonar monitor
+
+Misc:	
+	- the levels aren't just enclosed tunnels anymore and it's possible to dive much deeper
+	- settings menu
+	- better UI scaling on small resolutions
+	- fixed items occasionally disappearing from inventory after loading in single player
+
+---------------------------------------------------------------------------------------------------------
+v0.2.4.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed rewiring not working in the editor
+- fixed a game-crashing projectile bug
+
+---------------------------------------------------------------------------------------------------------
+v0.2.4
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- fixed invincible NPCs
+	- the target in traitor mode is properly randomized and the host can be selected as a traitor/target
+	- the "fix list" when repairing items is synced between clients, so the reactor can actually be fixed now
+	- more networking optimization
+	- bans can be removed by using a button under the player list, not just by editing the bannedplayers.xml file
+		
+Items:
+	- wires are removed from connection panels when they're deleted in the editor
+	- doors can be rewired from either side
+	- the rewire screen can be deselect by pressing E
+	- sonar won't work anymore if the power wire is removed
+	- stun batons can't be double wielded or used for fast underwater movement
+
+Misc:
+	- some particles floating in the water, which make it easier to see if the sub is moving just by
+	looking out of a window
+	- fixed a bug which may have crashed the game if a character spawned on a platform or stairs
+
+
+---------------------------------------------------------------------------------------------------------
+v0.2.3.2
+---------------------------------------------------------------------------------------------------------
+
+- more reliable NPC position syncing
+- more reliable method of handling players dying in multiplayer, there should now be less cases of
+the server killing players who have equipped a diving suit or switched an oxygen tank just in time for example
+- the "you have died" message in multiplayer now also tells your cause of death
+- fixed incorrectly placed waypoints in Aegir
+
+---------------------------------------------------------------------------------------------------------
+v0.2.3.1
+---------------------------------------------------------------------------------------------------------
+
+- fixed some broken items in Aegir Mark II which caused inventories to get messed up
+- fixed the gap at observation deck which vents water out from the lower level of the room
+
+---------------------------------------------------------------------------------------------------------
+v0.2.3
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- major changes to the way the game handles sending reliable messages through UDP, should get rid of
+	the occasional massive lag spikes
+	- fixed multiple issues in inventory syncing
+	- fixed attachable items occasionally crashing the game
+	- players can be banned from servers
+	- fixed not being able to kick players while a round is running
+	- misc optimization
+
+Items:
+	- screwdrivers and wrenches are used by left clicking now, so it's possible to start rewiring a
+	button without activating it for example
+	- the inventory slots are "combined" when equipping an item that takes up more than one slot
+	- door shadows aren't visible if the door is open when loading a map
+	- fixed projectiles crashing the game if they're stuck to a wall while a hole appears on it
+	- wrenches can be used as an ineffective melee weapon
+
+Submarine:
+	- another minimap and a sonar monitor at the "observation deck" on Aegir
+	- changed one of the cabins to a holding cell on Aegir
+
+Misc:
+	- fixed a bug in UI listboxes that may have caused crashes in the server list screen
+
+
+---------------------------------------------------------------------------------------------------------
+v0.2.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- network statistics view which can be enabled by opening the debug console (F3) and entering "netstats"
+	(only works if you're running a server)
+	- updated to latest version of Lidgren networking library, which may or may not have an effect 
+	on the chat lag issues
+
+Items:
+	- fixed some game-crashing bugs related to detaching and attaching items (such as buttons)
+	- railgun shells can be bought in single player
+
+Submarine:
+	- more tools, diving suits and misc supplies in both default subs
+
+Misc:
+	- fixed Moloch spawning inside the level in the tutorial
+	- the launcher shows an error message instead of crashing if it can't connect to the update server
+
+---------------------------------------------------------------------------------------------------------
+v0.2.1
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- fixed a bug that crashed the game after successfully retrieving an artifact in quest mode
+	- fixed client not disconnecting when going back to the main menu
+	- fixed a bug that caused some map seeds to throw an error
+	- players can be kicked out of the server by selecting them in the player list, not just through
+	the debug console
+
+Items:
+	- all wires can be used for electrical repairs, not just ones named ''Wire''
+	- broken doors can only be fixed by mechanics
+	- fixed a bug that sometimes made it impossible to pick/select items after reattaching them on a wall
+	- wires are disconnected and dropped if the item at either end is removed
+	
+---------------------------------------------------------------------------------------------------------
+v0.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- major optimization and much better lag compensation
+	- tons of bugfixes that should fix most of the syncing issues
+	- admins can play on their own server without launching another instance of the game
+	- setting the job preferences actually does something now
+	- reconnecting to a server if the connection is temporarily lost works much better now
+	- proper error messages if UPnP port forwarding fails
+
+Items:
+	- security guard gear: ballistic vest, helmet & stun baton
+	- wifi components that can be used for transmitting signals between devices
+	- wall labels with a configurable text
+	- a bunch of new sprites and sounds
+	- wearing a diving suit slows the characters down
+	- supercapacitors
+	- attempting to fire the railgun when there are no shells loaded doesn't consume power anymore
+
+Submarine:
+	- improved version of Aegir
+	- a new submarine, "Vellamo"
+	- nuclear reactors overheat much more slowly and there are warning signals for overheating and a remote
+	shutdown button in both of the default subs
+	- ambient sounds change according to the speed of the sub
+	- fixed parts of the submarine getting stuck in the level on collision
+	- the autopilot is a much better driver now (although it may still crash at very tight spots)
+
+Crew:
+	- aiming underwater is much easier
+	- improved humanoid animations
+	- stunned/dead characters can be dragged
+	- all characters can now use plasma cutters and welders regardless of their skills, but insufficient
+	skill level will make them flicker and work much less efficiently
+	- same for the harpoon gun, anyone can shoot but lower levels will make the gun less accurate
+	- rewiring devices may cause electric shocks if the electrical engineering level is too low
+
+Creatures:
+	- some random "prop fish" swimming in the background
+	- a new hostile creature
+
+Misc:
+	- a tutorial going through all the basic tasks and game mechanics (more in-depth tutorials will be
+	added in future versions, including one for making custom subs)
+	- an auto-updater in the launcher
+	- the game generates a detailed report if it crashes
+	- physics optimization (i.e. using simplified physics & animation for off-screen characters and 
+	disabling them entirely if they're far enough)
+	- lighting optimization (caching the lights/shadows if a light source hasn't moved instead of 
+	recalculating them every frame)
+	- two new background music tracks
+	- better looking explosions
+	- better looking water particle effects
+	- minor UI improvements
+	- better UI scaling on different resolutions
+	- health/oxygen bar improvements and status icons for bleeding and water pressure	
+	- gap-hull connections are visible in the sub editor
+	- pumps don't have to be manually connected to a hull in the editor anymore, they automatically
+	empty/fill the hull they're inside
+
+
+---------------------------------------------------------------------------------------------------------
+v0.1.3.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- some major opimization to networked messages (less lag)
+	- option to disable UPnP port forwarding (which may have prevented some from hosting a server)
+	- a new round can't be started if a submarine hasn't been selected (which used to crash the game)
+	- maximum number of players can be changed
+	- fixed a bug in the net lobby screen that disabled the start button when the chat box was scrolled
+	to a specific position
+	- a window that displays some network statistics when hosting a server (can be activated by entering
+	"debugview" to the debug console)
+	
+---------------------------------------------------------------------------------------------------------
+v0.1.3.1
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- chat messages are sent reliably
+
+---------------------------------------------------------------------------------------------------------
+v0.1.3
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- fixed master server connection errors in server list screen
+	- fixed a bug that caused other characters to get "stuck" to the railgun controller, causing them
+	to fly back to it as they try to move away
+
+Items:
+	- putting items inside other items works properly now (i.e. by pulling a spear to the same slot as 
+	a harpoon, not the other way around)
+	- C4 blocks loaded inside a railgun shell won't explode inside the submarine when firing the railgun
+	- fixed another game-crashing railgun bug
+	- fixed a bug that caused characters to spawn with an incorrect number of items
+	
+---------------------------------------------------------------------------------------------------------
+v0.1.2
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- a "lobby screen" showing a list of servers that are currently running
+	- password protected servers
+	- traitor rounds end when the traitor dies/disconnects or if the submarine reaches the end of the level
+
+Items:
+	- fixed the crashing when firing the railgun or activating a detonator
+
+Other:
+	- optimized lightning and "line of sight" rendering
+	- an unfinished tutorial which can currently only be accessed by entering "tutorial" into the 
+	debug console
+
+---------------------------------------------------------------------------------------------------------
+v0.1.1
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- player names are shown
+	- assigning jobs and selecting job preferences works now (jobs are assigned when the round starts)	
+	- a menu that shows the crew members and their jobs and skills
+	- reduced lag spikes
+	- fixed a bug that caused disconnected players to stay in the player list
+	- server admin can see which player is the traitor
+
+Items:
+	- plasma cutter / welding tool bugfixes and some light & sound effects
+	- stun grenades, detonators and c4 blocks work now
+	- captain's uniform
+	- items can be placed inside railgun shells (explosives for example)
+	- buttons can be attached and detached
+	- on-screen message when trying to use a button without the right ID card
+	- wire sprites don't overlap and "flicker" on top of each other anymore
+	- trying to set the color of a lightcomponent to an invalid value doesn't crash the game anymore
+
+Submarine:
+	- some signs on the walls of Aegir to make navigation a bit easier
+	- moved the railgun and changed the rotation limits to increase it's area of effect while preventing
+	shooting at the windows
+	- fixed waypoint selection bug in submarine editor
+	- the ".gz" extension is automatically added when saving a map
+
+Other:
+	- decreased fall/impact damage
+	- dead characters can be looted
