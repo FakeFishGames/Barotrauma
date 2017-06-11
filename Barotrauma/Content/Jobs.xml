@@ -32,7 +32,7 @@
       <Item name="Orange Jumpsuit" equip="true"/>
       <Item name="Headset" equip="true">
         <Item name="Battery Cell"/>
-      </Item>      
+      </Item>
     </Items>
   </Job>
 
@@ -50,11 +50,11 @@
       <Item name="Blue Jumpsuit" equip="true"/>
       <Item name="Headset" equip="true">
         <Item name="Battery Cell"/>
-      </Item>      
+      </Item>
     </Items>
   </Job>
 
-  <Job name="Security Officer" description="Security officers are are responsible for keeping the submarine safe from potential attackers. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." maxnumber="2">
+  <Job name="Security Officer" description="Security officers are responsible for keeping the submarine safe from potential attackers. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." maxnumber="2">
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Medical" level="30,40"/>
