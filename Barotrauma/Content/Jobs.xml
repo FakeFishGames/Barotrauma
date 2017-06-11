@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Jobs>
-  <Job name="Captain" description="The Commanding Officer with authority over the entire crew. The captain is responsible for commanding the rest of the crew and trying to keep everything running smoothly." minnumber="1" maxnumber="1">
+  <Job name="Captain" description="The Commanding Officer is responsible for commanding the entirety of the crew and ensuring that everything is running smoothly." minnumber="1" maxnumber="1">
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Construction" level="20,30"/>
@@ -18,7 +18,7 @@
     </Items>
   </Job>
   
-  <Job name="Engineer" description="Engineers have above-average construction and mechanic skills, but fixing complex mechanical devices is still usually out of their skill set. They are competent at fixing electrical devices however, and are the ones to turn to when the power grid starts failing." minnumber="1">
+  <Job name="Engineer" description="Engineers are the backbone of a submarine's crew, complementing a mechanic's construction skill with their knowledge of electrical engineering. They are capable of performing maintenance on the various electrical pieces of the submarine." minnumber="1">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="20,30"/>
@@ -36,7 +36,7 @@
     </Items>
   </Job>
 
-  <Job name="Mechanic" description="Mechanics have high construction and mechanic skills. They are skilled at using tools such as plasma cutters and welders, and are usually the only ones who can fix broken mechanical devices." minnumber="1">
+  <Job name="Mechanic" description="Mechanics are capable of fixing various mechanical devices with their high construction skill. Together with engineers they ensure a submarine is working to its fullest." minnumber="1">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="50,60"/>
@@ -54,7 +54,7 @@
     </Items>
   </Job>
 
-  <Job name="Security Officer" description="Security officers are responsible for keeping the submarine safe from potential attackers. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." maxnumber="2">
+  <Job name="Security Officer" description="Security Officers are responsible for keeping the submarine safe from threats, both external and internal. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." maxnumber="2">
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Medical" level="30,40"/>
@@ -74,7 +74,7 @@
     </Items>
   </Job>
 
-  <Job name="Medical Doctor" description="The primary duty of the doctors is too help injured crew members, but their knowledge of chemistry and pharmaceutics can also be useful for creating various non-medicinal chemicals." maxnumber="2">
+  <Job name="Medical Doctor" description="Although usually taken for granted, Doctors play an important role on the submarine, possessing the required skill to treat injured or unconscious crew members. Their skills can also be useful for creating various non-medicinal chemicals." maxnumber="2">
     <Skills>
       <Skill name="Weapons" level="10,20"/>
       <Skill name="Construction" level="10,20"/>
