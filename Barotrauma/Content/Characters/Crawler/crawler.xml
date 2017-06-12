@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="crawler" humanoid="false">
+<Character name ="crawler" humanoid="false" health="100">
   <sound file="Content/Characters/Crawler/attack1.ogg" state="Attack" range="500"/>
   <sound file="Content/Characters/Crawler/attack2.ogg" state="Attack" range="500"/>
 
@@ -78,6 +78,7 @@
 
   <ai attackhumans="500" attackrooms="50.0" attackweaker="50" attackstronger="-30" 
       sight="0.5" hearing="1.0"
+      fleehealththreshold="10"
       attackcooldown="3.0"/>
 </Character>
 

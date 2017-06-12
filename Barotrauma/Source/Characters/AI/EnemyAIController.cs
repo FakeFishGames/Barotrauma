@@ -48,6 +48,9 @@ namespace Barotrauma
 
         //the limb selected for the current attack
         private Limb attackingLimb;
+
+        //flee when the health is below this value
+        private float fleeHealthThreshold;
         
         private AITarget selectedAiTarget;
         private AITargetMemory selectedTargetMemory;
@@ -88,6 +91,8 @@ namespace Barotrauma
             hearing         = ToolBox.GetAttributeFloat(aiElement, "hearing", 0.0f);
 
             attackWhenProvoked = ToolBox.GetAttributeBool(aiElement, "attackwhenprovoked", false);
+
+            fleeHealthThreshold = ToolBox.GetAttributeFloat(aiElement, "fleehealththreshold", 0.0f);
 
             outsideSteering = new SteeringManager(this);
             insideSteering = new IndoorsSteeringManager(this, false);
@@ -146,7 +151,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    state = (targetValue > 0.0f) ? AiState.Attack : AiState.Escape;
+                    state = (targetValue < 0.0f || Character.Health < fleeHealthThreshold) ? AiState.Escape : AiState.Attack;
                 }
                 //if (coolDownTimer >= 0.0f) return;
             }
