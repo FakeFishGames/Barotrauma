@@ -785,16 +785,14 @@ namespace Barotrauma
             if (IsKeyDown(InputType.Run))
             {
                 //can't run if
-                //  - not a humanoid
                 //  - dragging someone
                 //  - crouching
                 //  - moving backwards
-                if (AnimController is HumanoidAnimController &&
-                    selectedCharacter == null &&
+                if (selectedCharacter == null &&
                     !((HumanoidAnimController)AnimController).Crouching &&
                     Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir))
                 {
-                    targetMovement *= 3.0f;
+                    targetMovement *= AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
                 }
             }
 

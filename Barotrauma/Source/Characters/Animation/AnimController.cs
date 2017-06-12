@@ -12,13 +12,25 @@ namespace Barotrauma
 
         protected Character character;
 
-        protected float walkSpeed, swimSpeed;  
-                
+        protected float walkSpeed, swimSpeed;
+        
         protected float walkPos;
 
         protected readonly Vector2 stepSize;
         protected readonly float legTorque;
-                
+
+        public float RunSpeedMultiplier
+        {
+            get;
+            private set;
+        }
+
+        public float SwimSpeedMultiplier
+        {
+            get;
+            private set;
+        }
+
         public AnimController(Character character, XElement element)
             : base(character, element)
         {
@@ -30,6 +42,9 @@ namespace Barotrauma
             walkSpeed = ToolBox.GetAttributeFloat(element, "walkspeed", 1.0f);
             swimSpeed = ToolBox.GetAttributeFloat(element, "swimspeed", 1.0f);
 
+            RunSpeedMultiplier = ToolBox.GetAttributeFloat(element, "runspeedmultiplier", 2f);
+            SwimSpeedMultiplier = ToolBox.GetAttributeFloat(element, "swimspeedmultiplier", 1.5f);
+            
             legTorque = ToolBox.GetAttributeFloat(element, "legtorque", 0.0f);
         }
 
