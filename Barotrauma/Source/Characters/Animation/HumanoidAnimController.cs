@@ -571,7 +571,6 @@ namespace Barotrauma
             }
 
             float targetSpeed = TargetMovement.Length();
-            if (targetSpeed > 0.0f) TargetMovement /= targetSpeed;
 
             if (targetSpeed > 0.1f)
             {
@@ -633,7 +632,7 @@ namespace Barotrauma
                 Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement * swimSpeed, movementLerp);
             }
                         
-            walkPos += movement.Length() * 0.15f;
+            walkPos += movement.Length() * 0.2f;
             footPos = Collider.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f;
             
             for (int i = -1; i<2; i+=2)
@@ -691,7 +690,7 @@ namespace Barotrauma
 
             handPos += head.LinearVelocity * 0.1f;
 
-            float handCyclePos = walkPos / 3.0f * -Dir;
+            float handCyclePos = walkPos / 2.0f * -Dir;
             float handPosX = (float)Math.Cos(handCyclePos) * 0.4f;
             float handPosY = (float)Math.Sin(handCyclePos) * 1.0f;
             handPosY = MathHelper.Clamp(handPosY, -0.8f, 0.8f);
