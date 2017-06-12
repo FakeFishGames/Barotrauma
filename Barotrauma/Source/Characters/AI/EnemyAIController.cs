@@ -360,13 +360,16 @@ namespace Barotrauma
             updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
             coolDownTimer *= 0.1f;
 
-            if (amount > 0.1f && attackWhenProvoked)
+            if (amount > 0.0f && attackWhenProvoked)
             {
-                attackHumans = 100.0f;
-                attackRooms = 100.0f;
+                if (!(attacker is AICharacter) || (((AICharacter)attacker).AIController is HumanAIController))
+                {
+                    attackHumans = 100.0f;
+                    attackRooms = 100.0f;
+                }
             }
 
-            if (attacker==null || attacker.AiTarget==null) return;
+            if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
             targetMemory.Priority += amount;
         }
