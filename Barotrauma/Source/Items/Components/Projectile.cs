@@ -60,6 +60,8 @@ namespace Barotrauma.Items.Components
         {
             if (character != null && !characterUsable) return false;
 
+            User = character;
+
             Launch(new Vector2(
                 (float)Math.Cos(item.body.Rotation),
                 (float)Math.Sin(item.body.Rotation)) * launchImpulse * item.body.Mass);

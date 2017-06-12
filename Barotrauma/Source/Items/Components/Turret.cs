@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
                 }
             }
          
-            Launch(projectiles[0].Item);
+            Launch(projectiles[0].Item, character);
 
             if (character != null)
             {
@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void Launch(Item projectile)
+        private void Launch(Item projectile, Character user = null)
         {
             reload = reloadTime;
 
@@ -217,6 +217,7 @@ namespace Barotrauma.Items.Components
             if (projectileComponent != null)
             {
                 projectileComponent.Use((float)Timing.Step);
+                projectileComponent.User = user;
             }
 
             if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
