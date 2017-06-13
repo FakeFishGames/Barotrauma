@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Xml.Linq;
 using FarseerPhysics;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework.Graphics;
@@ -158,22 +156,33 @@ namespace Barotrauma
 
             steeringManager = Character.Submarine == null ? outsideSteering : insideSteering;
 
+            bool run = false;
             switch (state)
             {
                 case AiState.None:
                     UpdateNone(deltaTime);
                     break;
                 case AiState.Attack:
+                    run = coolDownTimer <= 0.0f;
                     UpdateAttack(deltaTime);
                     break;
                 case AiState.Escape:
+                    run = true;
                     UpdateEscape(deltaTime);
                     break;
                 default:
                     throw new NotImplementedException();
             }
 
-            steeringManager.Update();
+            if (run)
+            {
+                steeringManager.Update(Character.AnimController.InWater ? 
+                    Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier);                
+            }
+            else
+            {
+                steeringManager.Update();
+            }
         }
 
         private void UpdateNone(float deltaTime)
@@ -259,7 +268,7 @@ namespace Barotrauma
             }
             if (attackLimb != null)
             {
-                steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition));
+                steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition), 3);
 
                 if (steeringManager is IndoorsSteeringManager)
                 {
@@ -276,7 +285,7 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
-            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition));
+            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
             SteeringManager.SteeringWander(1.0f);
             SteeringManager.SteeringAvoid(deltaTime, 2f);
         }
@@ -285,18 +294,16 @@ namespace Barotrauma
         {
             coolDownTimer -= deltaTime;
             attackingLimb = null;
-            
-            if (selectedAiTarget.Entity is Hull ||
-                Vector2.Distance(attackPosition, Character.AnimController.Limbs[0].SimPosition) < ConvertUnits.ToSimUnits(500.0f))
+
+            float dist = Vector2.Distance(attackPosition, Character.SimPosition);
+
+            if (dist < ConvertUnits.ToSimUnits(500.0f))
             {
                 steeringManager.SteeringSeek(attackPosition, -0.8f);
-                steeringManager.SteeringAvoid(deltaTime, 1.0f);
+                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(Character.SimPosition - attackPosition) * (1.0f - (dist / 500.0f)));
             }
-            else
-            {
-                steeringManager.SteeringSeek(attackPosition, -0.5f);
-                steeringManager.SteeringAvoid(deltaTime, 1.0f);
-            }
+
+            steeringManager.SteeringAvoid(deltaTime, 1.0f);            
         }
 
         private void GetTargetEntity()

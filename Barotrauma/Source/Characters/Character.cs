@@ -789,7 +789,7 @@ namespace Barotrauma
                 //  - crouching
                 //  - moving backwards
                 if (selectedCharacter == null &&
-                    !((HumanoidAnimController)AnimController).Crouching &&
+                    (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
                     Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir))
                 {
                     targetMovement *= AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
