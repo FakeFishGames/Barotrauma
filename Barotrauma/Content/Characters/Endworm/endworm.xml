@@ -1,10 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Character name ="endworm" humanoid="false" health="10000.0" doesbleed="false">
-  
+
   <sound file="Content/Characters/Endworm/endwormidle.ogg" state="None" range="8000" />
   <sound file="Content/Characters/Endworm/endwormattack1.ogg" state="Attack" range="8000" />
   <sound file="Content/Characters/Endworm/endwormattack2.ogg" state="Attack" range="8000" />
 
+  <ai 
+    combatstrength="10000" 
+    attackpriorityrooms="100.0"
+    attackpriorityweaker="0" 
+    attackstronger="-30" 
+    sight="0.1" 
+    hearing="2.0"/>
+  
   <ragdoll waveamplitude="100.0" wavelength="1000" speed="2.0" scale ="2.0" flip="false" canentersubmarine="false">
 
     <collider radius="300"/>
@@ -75,6 +83,5 @@
     <joint limb1="0" limb1anchor="160,50" limb2="9" limb2anchor="0,-200" lowerlimit="-50" upperlimit="20"/>
   </ragdoll>
 
-  <ai attackrooms="100.0" attackweaker="50" attackstronger="-30" combatstrength="10000" sight="0.1" hearing="2.0"/>
 </Character>
 

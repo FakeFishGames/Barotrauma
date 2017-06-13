@@ -5,7 +5,18 @@
   <sound file="Content/Characters/Scorpion/scorpionidle1.ogg" state="None" />
   <sound file="Content/Characters/Scorpion/scorpionidle2.ogg" state="None" />
 
-  <ragdoll waveamplitude="50.0" wavelength="2500" swimspeed="4.0" walkspeed="3.5" canentersubmarine="false">
+  <ai
+    combatstrength="400"
+    attackpriorityhumans="100.0"
+    attackpriorityrooms="50.0"
+    attackpriorityweaker="50"
+    attackprioritystronger="-30"
+    sight="0.5"
+    hearing="1.0"/>
+
+  <ragdoll waveamplitude="50.0" wavelength="2500" 
+           swimspeed="4.0" swimspeedmultiplier="1.5"
+           canentersubmarine="false">
 
     <collider radius="50" height="320"/>
     
@@ -19,7 +30,7 @@
     <limb id = "1" width="16" height="103">
       <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="391,169,28,110" depth="0.025" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="391,169,28,110" origin="0.5,0.5"/>
-      <attack range="300" duration="0.5" damage="150" bleedingdamage="10" structuredamage="200" damagetype="slash" force="10" torque="80" targetforce="-50"/>      
+      <attack range="300" duration="0.5" damage="150" bleedingdamage="10" structuredamage="200" damagetype="slash" force="80" torque="80" targetforce="-50"/>      
     </limb>
 
     <!-- body -->
@@ -67,17 +78,8 @@
     <joint limb1="2" limb1anchor="5,-30" limb2="5" limb2anchor="7,57" lowerlimit="-50" upperlimit="0"/>
 
     <!-- body to long -->
-    <joint limb1="2" limb1anchor="-5,-137" limb2="6" limb2anchor="-8,132" lowerlimit="-30" upperlimit="0"/>  
-    
+    <joint limb1="2" limb1anchor="-5,-137" limb2="6" limb2anchor="-8,132" lowerlimit="-30" upperlimit="0"/>      
     
   </ragdoll>
 
-  <ai
-    combatstrength="400"
-    attackpriorithumans="100.0" 
-    attackpriorityrooms="50.0" 
-    attackpriorityweaker="50" 
-    attackprioritystronger="-30" 
-    sight="0.5" 
-    hearing="1.0"/>
 </Character>

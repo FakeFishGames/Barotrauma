@@ -8,6 +8,16 @@
   <sound file="Content/Characters/Carrier/carrier3.ogg" state="None" range="4000"/>
 
   <sound file="Content/Characters/Carrier/ping.ogg" state="Die" range="3000"/>
+
+  <ai
+    combatstrength="1000"
+    attackpriorityhumans="100.0"
+    attackpriorityrooms="50.0"
+    attackpriorityweaker="0.0"
+    attackprioritystronger="-80.0"
+    attackcooldown="15.0"
+    sight="0.5" 
+    hearing="1.0"/>
     
   <ragdoll waveamplitude="0.0" swimspeed="4.0" mirror="true" rotatetowardsmovement="false" headangle="-90" canentersubmarine="false">
 
@@ -52,9 +62,4 @@
 
   </ragdoll>
 
-  <ai attackhumans="100.0" attackrooms="50.0" 
-      attackweaker="0.0" attackstronger="-50.0" 
-      attackcooldown="15.0"
-      combatstrength="1000"
-      sight="0.5" hearing="1.0"/>
 </Character>

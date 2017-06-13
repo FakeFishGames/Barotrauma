@@ -5,6 +5,14 @@
   <sound file="Content/Characters/Fractalguardian/guardian2.ogg" state="Attack" range="3000" />
   <sound file="Content/Characters/Fractalguardian/Die1.ogg" state="Die" range="3000" />
   <sound file="Content/Characters/Fractalguardian/Die2.ogg" state="Die" range="3000" />
+
+  <ai 
+    combatstrength="500"
+    attackpriorityrooms="0.0" 
+    attackpriorityhumans="100"
+    sight="1.0" 
+    hearing="2.0" 
+    attackcooldown="1"/>
   
   <ragdoll waveamplitude="50.0" wavelength="500" swimspeed="3.0" walkspeed="0.3" flip="false" canentersubmarine="false">
 
@@ -51,6 +59,5 @@
     <joint limb1="0" limb1anchor="-30,10" limb2="5" limb2anchor="0,-110" lowerlimit="90" upperlimit="180"/>
   </ragdoll>
 
-  <ai attackrooms="0.0" attackhumans="100" sight="1.0" hearing="2.0" attackcooldown="1"/>
 </Character>
 

@@ -5,6 +5,15 @@
   <sound file="Content/Characters/Coelanth/idle1.ogg" state="None" />
   <sound file="Content/Characters/Coelanth/idle2.ogg" state="None" />
 
+  <ai
+    combatstrength="300"
+    attackpriorityhumans="90.0"
+    attackpriorityrooms="50.0"
+    attackpriorityweaker="50"
+    attackprioritystronger="-100"
+    sight="0.1"
+    hearing="1.0"/>
+
   <ragdoll waveamplitude="50.0" wavelength="2500" swimspeed="5.0" walkspeed="3.5" canentersubmarine="false">
 
     <collider radius="50" height="250"/>
@@ -51,10 +60,7 @@
     <joint limb1="2" limb1anchor="65,100" limb2="4" limb2anchor="0,160" lowerlimit="-50" upperlimit="0"/>
 
     <!-- body to back fin -->
-    <joint limb1="2" limb1anchor="46,-48" limb2="5" limb2anchor="0,55" lowerlimit="-50" upperlimit="0"/>
-
-    
+    <joint limb1="2" limb1anchor="46,-48" limb2="5" limb2anchor="0,55" lowerlimit="-50" upperlimit="0"/>    
   </ragdoll>
-
-  <ai attackhumans="100.0" attackrooms="50.0" attackweaker="50" attackstronger="-30" sight="0.1" hearing="1.0"/>
+  
 </Character>

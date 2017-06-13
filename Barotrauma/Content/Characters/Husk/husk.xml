@@ -5,6 +5,16 @@
   <sound file="Content/Characters/Husk/Husk2.ogg" state="Attack" range="1000"/>
   <sound file="Content/Characters/Husk/Husk3.ogg" state="Attack" range="1000"/>
   
+  <ai 
+    combatstrength="100"
+    attackpriorityhumans="500"
+    attackpriorityrooms="5.0"
+    attackpriorityweaker="50"
+    attackprioritystronger="-30"
+    sight="0.5"
+    hearing="1.0"
+    attackcooldown="1.0"/>
+  
   <ragdoll headposition="134" torsoposition="108" 
            stepsize="42.0, 12.0"
            walkanimspeed="4.58"
@@ -15,7 +25,7 @@
            runspeedmultiplier="2.0" swimspeedmultiplier="1.5">
 
     <collider height="80" radius="15"/>
-	<collider height="40" radius="15"/>
+	  <collider height="40" radius="15"/>
 
     <!-- head -->
     <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2">
@@ -103,13 +113,8 @@
     <!-- body to right leg -->
     <joint limb1="12" limb1anchor="0,-1" limb2="9" limb2anchor="0,14" lowerlimit="-30" upperlimit="120"/>
     <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="-150" upperlimit="-10"/>
-    <joint limb1="10" limb1anchor="-3,-21" limb2="11" limb2anchor="5,7" lowerlimit="20" upperlimit="90"/>
-  
+    <joint limb1="10" limb1anchor="-3,-21" limb2="11" limb2anchor="5,7" lowerlimit="20" upperlimit="90"/>  
   </ragdoll>
 
-
-  <ai attackhumans="500" attackrooms="5.0" attackweaker="50" attackstronger="-30"
-      sight="0.5" hearing="1.0"
-      attackcooldown="1.0"/>
 </Character>
 

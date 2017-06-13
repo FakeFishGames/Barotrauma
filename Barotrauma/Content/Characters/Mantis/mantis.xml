@@ -7,10 +7,22 @@
   <sound file="Content/Characters/Mantis/idle1.ogg" state="None" range="500"/>
   <sound file="Content/Characters/Mantis/idle2.ogg" state="None" range="500"/>
   <sound file="Content/Characters/Mantis/idle3.ogg" state="None" range="500"/>
+
+  <ai
+    combatstrength="250"
+    attackpriorityhumans="500.0"
+    attackpriorityrooms="50.0"
+    attackpriorityweaker="60"
+    attackprioritystronger="-70"
+    attackcooldown="1.0"
+    sight="0.5"
+    hearing="1.0"
+    fleehealththreshold="20"/>
   
   <ragdoll headposition="120" headangle="-90" 
            waveamplitude="50.0" wavelength="2500" 
-           swimspeed="2.0" walkspeed="3.0"
+           swimspeed="2.0" walkspeed="2.0"
+           runspeedmultiplier="1.5" swimspeedmultiplier="1.5"
            stepsize ="20.0,20.0"
            legtorque="10"
            footrotation ="180.0"
@@ -87,15 +99,5 @@
     <joint limb1="9" limb1anchor="0,-28" limb2="10" limb2anchor="-11,-46" lowerlimit="-190" upperlimit="-50"/>  
   </ragdoll>
 
-  <ai
-    combatstrength="250"
-    attackpriorithumans="500.0"
-    attackpriorityrooms="50.0"
-    attackpriorityweaker="60"
-    attackprioritystronger="-30"
-    attackcooldown="1.0"
-    sight="0.5"
-    hearing="1.0"
-    fleehealththreshold="20"/>
 </Character>
 

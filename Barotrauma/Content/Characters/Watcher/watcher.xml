@@ -12,6 +12,14 @@
   <sound file="Content/Characters/Watcher/watch5.ogg" state="None" range="500"/>
   <sound file="Content/Characters/Watcher/watch6.ogg" state="None" range="500"/>
 
+  <ai
+    attackpriorityhumans="0.0"
+    attackpriorityrooms="0.0"
+    combatstrength="1000"
+    attackwhenprovoked="true"
+    sight="1.0"
+    hearing="0.0" />
+
   <ragdoll waveamplitude="0.0" swimspeed="0.5" walkspeed="0.3" mirror="true" rotatetowardsmovement="false" headangle="-90">
 
     <collider radius="100"/>
@@ -36,6 +44,4 @@
     <joint limb1="0" limb1anchor="60,130" limb2="1" limb2anchor="-30,100" lowerlimit="70" upperlimit="80"/>
     <joint limb1="0" limb1anchor="72,110" limb2="2" limb2anchor="120,-20" lowerlimit="90" upperlimit="180"/>
   </ragdoll>
-
-  <ai attackhumans="0.0" attackrooms="0.0" sight="1.0" hearing="0.0" attackwhenprovoked="true"/>
 </Character>
