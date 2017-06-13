@@ -54,10 +54,10 @@
     </limb>
 
 
-    <joint limb1="0" limb1anchor="92,-200" limb2="1" limb2anchor="0,-100" lowerlimit="180" upperlimit="210"/>
-    <joint limb1="0" limb1anchor="64,-264" limb2="2" limb2anchor="0,-100" lowerlimit="180" upperlimit="210"/>
+    <joint limb1="0" limb1anchor="92,-200" limb2="1" limb2anchor="0,-100" lowerlimit="180" upperlimit="210" canbesevered="true"/>
+    <joint limb1="0" limb1anchor="64,-264" limb2="2" limb2anchor="0,-100" lowerlimit="180" upperlimit="210" canbesevered="true"/>
 
-    <joint limb1="0" limb1anchor="-100,100" limb2="3" limb2anchor="38,0" lowerlimit="-50" upperlimit="5"/>
+    <joint limb1="0" limb1anchor="-100,100" limb2="3" limb2anchor="38,0" lowerlimit="-50" upperlimit="5" canbesevered="true"/>
     <joint limb1="0" limb1anchor="140,268" limb2="4" limb2anchor="0,0" lowerlimit="87" upperlimit="93"/>
 
   </ragdoll>

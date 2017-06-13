@@ -1012,7 +1012,7 @@ namespace Barotrauma
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
             }
 
-            Vector2 shoulderPos = limbJoints[2].WorldAnchorA;
+            Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
             Vector2 transformedHoldPos = shoulderPos;
 
             if (itemPos == Vector2.Zero || Anim == Animation.Climbing || usingController)
@@ -1071,7 +1071,7 @@ namespace Barotrauma
 
         private void HandIK(Limb hand, Vector2 pos, float force = 1.0f)
         {
-            Vector2 shoulderPos = limbJoints[2].WorldAnchorA;
+            Vector2 shoulderPos = LimbJoints[2].WorldAnchorA;
 
             Limb arm = (hand.type == LimbType.LeftHand) ? GetLimb(LimbType.LeftArm) : GetLimb(LimbType.RightArm);
 

@@ -81,22 +81,22 @@
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
     
-    <joint limb1="0" limb1anchor="-5,-53" limb2="1" limb2anchor="0,20" lowerlimit="-20" upperlimit="20"/>
+    <joint limb1="0" limb1anchor="-5,-53" limb2="1" limb2anchor="0,20" lowerlimit="-20" upperlimit="20" canbesevered="true"/>
 
-    <joint limb1="1" limb1anchor="6,-18" limb2="2" limb2anchor="-2,36" lowerlimit="-20" upperlimit="30"/>
+    <joint limb1="1" limb1anchor="6,-18" limb2="2" limb2anchor="-2,36" lowerlimit="-20" upperlimit="30" canbesevered="true"/>
 
-    <joint limb1="2" limb1anchor="1,7" limb2="3" limb2anchor="6,15" lowerlimit="-20" upperlimit="40"/>
+    <joint limb1="2" limb1anchor="1,7" limb2="3" limb2anchor="6,15" lowerlimit="-20" upperlimit="40" canbesevered="true"/>
 
 
-    <joint limb1="0" limb1anchor="16,2" limb2="4" limb2anchor="-5,-20" lowerlimit="-90" upperlimit="0"/>
-    <joint limb1="4" limb1anchor="-2,21" limb2="5" limb2anchor="-5,-20" lowerlimit="-290" upperlimit="-190"/>
-    <joint limb1="5" limb1anchor="-2,27" limb2="6" limb2anchor="0,-30" lowerlimit="-190" upperlimit="-30"/>
+    <joint limb1="0" limb1anchor="16,2" limb2="4" limb2anchor="-5,-20" lowerlimit="-90" upperlimit="0" canbesevered="true"/>
+    <joint limb1="4" limb1anchor="-2,21" limb2="5" limb2anchor="-5,-20" lowerlimit="-290" upperlimit="-190" canbesevered="true"/>
+    <joint limb1="5" limb1anchor="-2,27" limb2="6" limb2anchor="0,-30" lowerlimit="-190" upperlimit="-30" canbesevered="true"/>
 
-    <joint limb1="0" limb1anchor="52,-34" limb2="7" limb2anchor="-4,-19" lowerlimit="-90" upperlimit="0"/>
-    <joint limb1="7" limb1anchor="-2,28" limb2="8" limb2anchor="2,-32" lowerlimit="-190" upperlimit="-30"/>
+    <joint limb1="0" limb1anchor="52,-34" limb2="7" limb2anchor="-4,-19" lowerlimit="-90" upperlimit="0" canbesevered="true"/>
+    <joint limb1="7" limb1anchor="-2,28" limb2="8" limb2anchor="2,-32" lowerlimit="-190" upperlimit="-30" canbesevered="true"/>
 
-    <joint limb1="0" limb1anchor="43,-67" limb2="9" limb2anchor="0,21" lowerlimit="-180" upperlimit="-10"/>
-    <joint limb1="9" limb1anchor="0,-28" limb2="10" limb2anchor="-11,-46" lowerlimit="-190" upperlimit="-50"/>  
+    <joint limb1="0" limb1anchor="43,-67" limb2="9" limb2anchor="0,21" lowerlimit="-180" upperlimit="-10" canbesevered="true"/>
+    <joint limb1="9" limb1anchor="0,-28" limb2="10" limb2anchor="-11,-46" lowerlimit="-190" upperlimit="-50" canbesevered="true"/>  
   </ragdoll>
 
 </Character>

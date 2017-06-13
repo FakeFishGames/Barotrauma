@@ -19,6 +19,25 @@ namespace Barotrauma
         LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist
     };
 
+    class LimbJoint : RevoluteJoint
+    {
+        public bool IsSevered;
+        public bool CanBeSevered;
+
+        public readonly Limb LimbA, LimbB;
+
+        public LimbJoint(Limb limbA, Limb limbB, Vector2 anchor1, Vector2 anchor2)
+            : base(limbA.body.FarseerBody, limbB.body.FarseerBody, anchor1, anchor2)
+        {
+            CollideConnected = false;
+            MotorEnabled = true;
+            MaxMotorTorque = 0.25f;
+
+            LimbA = limbA;
+            LimbB = limbB;
+        }
+    }
+
     class Limb
     {
         private const float LimbDensity = 15;
@@ -66,7 +85,13 @@ namespace Barotrauma
         private List<WearableSprite> wearingItems;
 
         private Vector2 animTargetPos;
+
+        private float scale;
         
+        public float AttackTimer;
+
+        public bool IsSevered;
+
         public bool DoesFlip
         {
             get { return doesFlip; }
@@ -141,49 +166,17 @@ namespace Barotrauma
             get { return burnt; }
             set { burnt = MathHelper.Clamp(value,0.0f,100.0f); }
         }
-
-        private float scale;
-
-        public float AttackTimer;
-
-        //public float Damage
-        //{
-        //    get { return damage; }
-        //    set 
-        //    { 
-        //        damage = Math.Max(value, 0.0f);
-        //        if (damage >=maxHealth) Character.Kill();
-        //    }
-        //}
-
-        //public float MaxHealth
-        //{
-        //    get { return maxHealth; }
-        //}
-
-        //public float Bleeding
-        //{
-        //    get { return bleeding; }
-        //    set { bleeding = MathHelper.Clamp(value, 0.0f, 100.0f); }
-        //}
-
+        
         public List<WearableSprite> WearingItems
         {
             get { return wearingItems; }
-            set { wearingItems = value; }
         }
-
-        //public WearableSprite WearingItemSprite
-        //{
-        //    get { return wearingItemSprite; }
-        //    set { wearingItemSprite = value; }
-        //}
-
+  
         public Limb (Character character, XElement element, float scale = 1.0f)
         {
             this.character = character;
 
-            WearingItems = new List<WearableSprite>();
+            wearingItems = new List<WearableSprite>();
             
             dir = Direction.Right;
 

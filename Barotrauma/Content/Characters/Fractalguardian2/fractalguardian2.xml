@@ -43,11 +43,11 @@
     </limb>        
 
     <!-- head to body -->
-    <joint limb1="0" limb1anchor="-37,-40" limb2="1" limb2anchor="0,80" lowerlimit="-60" upperlimit="0"/>
-    <joint limb1="1" limb1anchor="0,-80" limb2="2" limb2anchor="0,80" lowerlimit="0" upperlimit="120"/>
+    <joint limb1="0" limb1anchor="-37,-40" limb2="1" limb2anchor="0,80" lowerlimit="-60" upperlimit="0" canbesevered="true"/>
+    <joint limb1="1" limb1anchor="0,-80" limb2="2" limb2anchor="0,80" lowerlimit="0" upperlimit="120" canbesevered="true"/>
     
-    <joint limb1="0" limb1anchor="37,-40" limb2="3" limb2anchor="0,80" lowerlimit="0" upperlimit="60"/>
-    <joint limb1="3" limb1anchor="0,-80" limb2="4" limb2anchor="0,80" lowerlimit="-120" upperlimit="0"/>    
+    <joint limb1="0" limb1anchor="37,-40" limb2="3" limb2anchor="0,80" lowerlimit="0" upperlimit="60" canbesevered="true"/>
+    <joint limb1="3" limb1anchor="0,-80" limb2="4" limb2anchor="0,80" lowerlimit="-120" upperlimit="0" canbesevered="true"/>    
     
   </ragdoll>
 

@@ -217,7 +217,7 @@ namespace Barotrauma
             }
 
             jointList.ClearChildren();
-            foreach (RevoluteJoint joint in character.AnimController.limbJoints)
+            foreach (RevoluteJoint joint in character.AnimController.LimbJoints)
             {
                 Limb limb1 = (Limb)(joint.BodyA.UserData);
                 Limb limb2 = (Limb)(joint.BodyB.UserData);
@@ -236,7 +236,7 @@ namespace Barotrauma
 
         private void DrawJoints(SpriteBatch spriteBatch, Limb limb, Vector2 limbBodyPos)
         {
-            foreach (var joint in editingCharacter.AnimController.limbJoints)
+            foreach (var joint in editingCharacter.AnimController.LimbJoints)
             {
                 Vector2 jointPos = Vector2.Zero;
 
