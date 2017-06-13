@@ -73,15 +73,17 @@
   </blood>
 
   <waterblood
-    startsize="0.05,0.05"
-    sizechangemin="0.1,0.1" sizechangemax="0.15,0.15"
+    startsizemin="0.1,0.1" startsizemax="0.3,0.3"
+    sizechangemin="0.1,0.1" sizechangemax="0.2,0.2"
     startrotationmin ="0.0" startrotationmax="360"
     startcolor="0.5, 0.0, 0.0" startalpha="1.0"
-    colorchange="0.0, 0.0, 0.0, -0.25"
+    animduration="5"
+    colorchange="0.0, 0.0, 0.0, -0.2"    
+    growtime ="0.1"
     lifetime="5.0"
     drawtarget="water"
     velocitychange="0.0, 0.0">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
+    <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
   </waterblood>
 
   <spark
