@@ -371,28 +371,24 @@ namespace Barotrauma
                 SoundPlayer.PlayDamageSound(damageSoundType, amount, position);
             }
 
-            //Bleeding += bleedingAmount;
-            //Damage += amount;
+            float bloodAmount = hitArmor || bleedingAmount <= 0.0f ? 0 : (int)Math.Min((int)(amount * 2.0f), 20);
 
-            float bloodAmount = hitArmor || bleedingAmount<=0.0f ? 0 : (int)Math.Min((int)(amount * 2.0f), 20);
-            
             for (int i = 0; i < bloodAmount; i++)
             {
-                Vector2 particleVel = SimPosition - position;
+                Vector2 particleVel = WorldPosition - position;
                 if (particleVel != Vector2.Zero) particleVel = Vector2.Normalize(particleVel);
 
                 GameMain.ParticleManager.CreateParticle("blood",
                     WorldPosition,
                     particleVel * Rand.Range(100.0f, 300.0f), 0.0f, character.AnimController.CurrentHull);
-            }
 
-            for (int i = 0; i < bloodAmount / 2; i++)
-            {
-                GameMain.ParticleManager.CreateParticle("waterblood", WorldPosition, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
+                if (i < bloodAmount / 5)
+                {
+                    GameMain.ParticleManager.CreateParticle("waterblood", WorldPosition, Rand.Vector(10), 0.0f, character.AnimController.CurrentHull);
+                }
             }
-
+            
             damage += Math.Max(amount,bleedingAmount) / character.MaxHealth * 100.0f;
-
 
             return new AttackResult(amount, bleedingAmount, hitArmor);
         }
