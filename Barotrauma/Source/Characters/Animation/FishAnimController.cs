@@ -260,7 +260,7 @@ namespace Barotrauma
 
                         if (limb.RefJointIndex>-1)
                         {
-                            RevoluteJoint refJoint = limbJoints[limb.RefJointIndex];
+                            RevoluteJoint refJoint = LimbJoints[limb.RefJointIndex];
                             footPos.X = refJoint.WorldAnchorA.X;
                         }
                         footPos.X += limb.StepOffset.X * Dir;

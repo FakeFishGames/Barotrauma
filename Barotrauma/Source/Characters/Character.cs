@@ -1755,10 +1755,31 @@ namespace Barotrauma
 
             AttackResult attackResult = closestLimb.AddDamage(worldPosition, damageType, amount, bleedingAmount, playSound);
 
+            //sever joints connected to the limb if the character was killed
+            //with an attack stronger than 50% of the characters max health
+            //TODO: maybe add a "CanSever" option to attacks
+            if (health - attackResult.Damage <= minHealth && attackResult.Damage >= MaxHealth * 0.5f)
+            {
+                foreach (LimbJoint joint in AnimController.LimbJoints)
+                {
+                    if (joint.CanBeSevered && (joint.LimbA == closestLimb || joint.LimbB == closestLimb))
+                    {
+                        AnimController.SeverLimbJoint(joint);
+
+                        if (joint.LimbA == closestLimb)
+                        {
+                            joint.LimbB.body.LinearVelocity = closestLimb.LinearVelocity*0.5f;
+                        }
+                        else
+                        {
+                            joint.LimbA.body.LinearVelocity = closestLimb.LinearVelocity * 0.5f;
+                        }
+                    }
+                }
+            }
+
             AddDamage(damageType == DamageType.Burn ? CauseOfDeath.Burn : causeOfDeath, attackResult.Damage, null);
-                        
-            //health -= attackResult.Damage;
-            //if (health <= 0.0f && damageType == DamageType.Burn) Kill(CauseOfDeath.Burn);
+
             if (DoesBleed)
             {
                 Bleeding += attackResult.Bleeding;
@@ -1832,7 +1853,7 @@ namespace Barotrauma
                     new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f, 50f)));
             }
 
-            foreach (var joint in AnimController.limbJoints)
+            foreach (var joint in AnimController.LimbJoints)
             {
                 joint.LimitEnabled = false;
             }
@@ -1895,7 +1916,7 @@ namespace Barotrauma
                 limb.pullJoint.Enabled = false;
             }
 
-            foreach (RevoluteJoint joint in AnimController.limbJoints)
+            foreach (RevoluteJoint joint in AnimController.LimbJoints)
             {
                 joint.MotorEnabled = false;
             }
@@ -1914,9 +1935,16 @@ namespace Barotrauma
 
             Health = Math.Max(maxHealth * 0.1f, health);
 
-            foreach (RevoluteJoint joint in AnimController.limbJoints)
+            foreach (LimbJoint joint in AnimController.LimbJoints)
             {
                 joint.MotorEnabled = true;
+                joint.Enabled = true;
+                joint.IsSevered = false;
+            }
+
+            foreach (Limb limb in AnimController.Limbs)
+            {
+                limb.IsSevered = false;
             }
 
             if (GameMain.GameSession != null)
