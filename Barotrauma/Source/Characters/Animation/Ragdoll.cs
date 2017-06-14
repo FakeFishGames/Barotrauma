@@ -162,15 +162,16 @@ namespace Barotrauma
                     limb.body.Enabled = !simplePhysicsEnabled;
                 }
 
-                foreach (RevoluteJoint joint in LimbJoints)
+                foreach (LimbJoint joint in LimbJoints)
                 {
-                    joint.Enabled = !simplePhysicsEnabled;
+                    joint.Enabled = !joint.IsSevered && !simplePhysicsEnabled;
                 }
 
                 if (!simplePhysicsEnabled)
                 {
                     foreach (Limb limb in Limbs)
                     {
+                        if (limb.IsSevered) continue;
                         limb.body.SetTransform(Collider.SimPosition, Collider.Rotation);
                     }
                 }
