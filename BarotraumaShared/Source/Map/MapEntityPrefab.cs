@@ -13,7 +13,7 @@ namespace Barotrauma
         Structure = 1, Machine = 2, Equipment = 4, Electrical = 8, Material = 16, Misc = 32, Alien = 64
     }
 
-    class MapEntityPrefab
+    partial class MapEntityPrefab
     {
         public static List<MapEntityPrefab> list = new List<MapEntityPrefab>();
 
@@ -172,39 +172,6 @@ namespace Barotrauma
             }
         }
 
-        public virtual void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
-        {
-            Vector2 placeSize = Submarine.GridSize;
-
-            if (placePosition == Vector2.Zero)
-            {
-                Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-
-                GUI.DrawLine(spriteBatch, new Vector2(position.X - GameMain.GraphicsWidth, -position.Y), new Vector2(position.X + GameMain.GraphicsWidth, -position.Y), Color.White,0,(int)(2.0f/cam.Zoom));
-
-                GUI.DrawLine(spriteBatch, new Vector2(position.X, -(position.Y - GameMain.GraphicsHeight)), new Vector2(position.X, -(position.Y + GameMain.GraphicsHeight)), Color.White, 0, (int)(2.0f / cam.Zoom));
-            }
-            else
-            {
-                Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-
-                if (resizeHorizontal) placeSize.X = position.X - placePosition.X;
-                if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
-
-                Rectangle newRect = Submarine.AbsRect(placePosition, placeSize);
-                newRect.Width = (int)Math.Max(newRect.Width, Submarine.GridSize.X);
-                newRect.Height = (int)Math.Max(newRect.Height, Submarine.GridSize.Y);
-
-                if (Submarine.MainSub != null)
-                {
-                    newRect.Location -= Submarine.MainSub.Position.ToPoint();
-                }
-                
-                newRect.Y = -newRect.Y;
-                GUI.DrawRectangle(spriteBatch, newRect, Color.DarkBlue);
-            }
-        }
-
         protected virtual void CreateInstance(Rectangle rect)
         {
             object[] lobject = new object[] { this, rect };
@@ -230,10 +197,5 @@ namespace Barotrauma
             return (object)selected;            
         }
         
-        public void DrawListLine(SpriteBatch spriteBatch, Vector2 pos, Color color)
-        {            
-            GUI.Font.DrawString(spriteBatch, name, pos, color);
-        }
-
     }
 }

@@ -35,6 +35,7 @@ Global
 		BarotraumaShared\BarotraumaShared.projitems*{008c0f83-e914-4966-9135-ea885059edd8}*SharedItemsImports = 4
 		SharpFont\Source\SharpFontShared\SharpFontShared.projitems*{2e4773b7-961a-4328-9d77-9749f9071ca2}*SharedItemsImports = 13
 		BarotraumaShared\BarotraumaShared.projitems*{561357c2-db28-4e01-b275-6bf545f70491}*SharedItemsImports = 13
+		BarotraumaShared\BarotraumaShared.projitems*{85232b20-074d-4723-b0c6-91495391e448}*SharedItemsImports = 4
 		SharpFont\Source\SharpFontShared\SharpFontShared.projitems*{c293db32-fa42-486d-b128-5a12522fae4e}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

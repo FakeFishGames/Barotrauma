@@ -7,128 +7,13 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public class Sprite
+    public partial class Sprite
     {
-        static List<Sprite> list = new List<Sprite>();
-        //the file from which the texture is loaded
-        //if two sprites use the same file, they share the same texture
-        string file;
-
         protected Texture2D texture;
-
-        //the area in the texture that is supposed to be drawn
-        Rectangle sourceRect;
-
-        //the offset used when drawing the sprite
-        protected Vector2 offset;
-
-        protected Vector2 origin;
-
-        //the size of the drawn sprite, if larger than the source,
-        //the sprite is tiled to fill the target size
-        public Vector2 size;
-
-        public float rotation;
-
-        public SpriteEffects effects;
-
-        protected float depth;
-
-        public Rectangle SourceRect
-        {
-            get { return sourceRect; }
-            set { sourceRect = value; }
-        }
-
-        public float Depth
-        {
-            get { return depth; }
-            set { depth = MathHelper.Clamp(value, 0.0f, 1.0f); }
-        }
-
-        public Vector2 Origin
-        {
-            get { return origin; }
-            set { origin = value; }
-        }
 
         public Texture2D Texture
         {
             get { return texture; }
-        }
-
-        public string FilePath
-        {
-            get { return file; }
-        }
-
-        public override string ToString()
-        {
-            return FilePath + ": " + sourceRect;
-        }
-
-        public Sprite(XElement element, string path = "", string file = "")
-        {
-            if (file == "")
-            {
-                file = ToolBox.GetAttributeString(element, "texture", "");
-            }
-            
-            if (file == "")
-            {
-                DebugConsole.ThrowError("Sprite " + element + " doesn't have a texture specified!");
-                return;
-            }
-
-            if (!string.IsNullOrEmpty(path))
-            {
-                if (!path.EndsWith("/")) path += "/";
-            }
-
-            this.file = path + file;
-            
-            texture = LoadTexture(this.file);
-
-            if (texture == null) return;
-            
-            Vector4 sourceVector = ToolBox.GetAttributeVector4(element, "sourcerect", Vector4.Zero);
-
-            if (sourceVector.Z == 0.0f) sourceVector.Z = texture.Width;
-            if (sourceVector.W == 0.0f) sourceVector.W = texture.Height;
-
-            sourceRect = new Rectangle(
-                (int)sourceVector.X, (int)sourceVector.Y,
-                (int)sourceVector.Z, (int)sourceVector.W);
-
-            origin = ToolBox.GetAttributeVector2(element, "origin", new Vector2(0.5f, 0.5f));
-            origin.X = origin.X * sourceRect.Width;
-            origin.Y = origin.Y * sourceRect.Height;
-
-            size = ToolBox.GetAttributeVector2(element, "size", Vector2.One);
-            size.X *= sourceRect.Width;
-            size.Y *= sourceRect.Height;
-
-            Depth = ToolBox.GetAttributeFloat(element, "depth", 0.0f);
-
-            list.Add(this);
-        }
-
-        public Sprite(string newFile, Vector2 newOrigin)
-        {
-            file = newFile;
-            texture = LoadTexture(file);
-
-            if (texture == null) return;
-            
-            sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
-
-            size = new Vector2(sourceRect.Width, sourceRect.Height);
-
-            origin = new Vector2((float)texture.Width * newOrigin.X, (float)texture.Height * newOrigin.Y);
-
-            effects = SpriteEffects.None;
-
-            list.Add(this);
         }
 
         public Sprite(Texture2D texture, Rectangle? sourceRectangle, Vector2? newOffset, float newRotation = 0.0f)
@@ -150,51 +35,53 @@ namespace Barotrauma
             list.Add(this);
         }
 
-        public Sprite(string newFile, Rectangle? sourceRectangle, Vector2? newOffset, float newRotation = 0.0f)
+        private void LoadTexture(ref Vector4 sourceVector,ref bool shouldReturn)
         {
-            file = newFile;
-            texture = LoadTexture(file);
+            texture = LoadTexture(this.file);
 
-            sourceRect = sourceRectangle ?? new Rectangle(0, 0, texture.Width, texture.Height);
-            
-            offset = newOffset ?? Vector2.Zero; 
-            
-            size = new Vector2(sourceRect.Width, sourceRect.Height);
+            if (texture == null)
+            {
+                shouldReturn = true;
+                return;
+            }
 
-            origin = Vector2.Zero;
-                        
-            rotation = newRotation;
-
-            list.Add(this);
+            if (sourceVector.Z == 0.0f) sourceVector.Z = texture.Width;
+            if (sourceVector.W == 0.0f) sourceVector.W = texture.Height;
         }
-        
+
+        private void CalculateSourceRect()
+        {
+            sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
+        }
+
+
         public static Texture2D LoadTexture(string file)
         {
             foreach (Sprite s in list)
             {
-                if (s.file == file) return s.texture;                
+                if (s.file == file) return s.texture;
             }
-            
+
             if (File.Exists(file))
             {
                 return TextureLoader.FromFile(file);
             }
             else
             {
-                DebugConsole.ThrowError("Sprite \""+file+"\" not found!");
+                DebugConsole.ThrowError("Sprite \"" + file + "\" not found!");
             }
 
             return null;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 pos, float rotate=0.0f, float scale=1.0f, SpriteEffects spriteEffect = SpriteEffects.None)
+        public void Draw(SpriteBatch spriteBatch, Vector2 pos, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None)
         {
             this.Draw(spriteBatch, pos, Color.White, rotate, scale, spriteEffect);
         }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
-            this.Draw(spriteBatch, pos, color, this.origin, rotate, new Vector2(scale,scale), spriteEffect, depth);
+            this.Draw(spriteBatch, pos, color, this.origin, rotate, new Vector2(scale, scale), spriteEffect, depth);
         }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
@@ -217,12 +104,12 @@ namespace Barotrauma
 
             spriteBatch.Draw(texture, pos + offset, sourceRect, color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
         }
-        
+
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Color color)
         {
             DrawTiled(spriteBatch, pos, targetSize, Vector2.Zero, color);
         }
-        
+
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Color color, Point offset, float? overrideDepth = null)
         {
             //how many times the texture needs to be drawn on the x-axis
@@ -242,12 +129,12 @@ namespace Barotrauma
 
             float top = pos.Y;
             texPerspective.Height = (int)Math.Min(targetSize.Y, sourceRect.Height);
-            
+
             for (int y = 0; y < yTiles; y++)
             {
                 var movementY = texPerspective.Height;
                 texPerspective.Height = Math.Min((int)(targetSize.Y - texPerspective.Height * y), texPerspective.Height);
-                
+
                 float left = pos.X;
                 texPerspective.Width = (int)Math.Min(targetSize.X, sourceRect.Width);
 
@@ -303,16 +190,16 @@ namespace Barotrauma
         {
             DrawTiled(spriteBatch, pos, targetSize, startOffset, sourceRect, color);
         }
-        
+
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Rectangle sourceRect, Color color)
         {
             //pos.X = (int)pos.X;
             //pos.Y = (int)pos.Y;
 
             //how many times the texture needs to be drawn on the x-axis
-            int xTiles = (int)Math.Ceiling((targetSize.X+startOffset.X) / sourceRect.Width);
+            int xTiles = (int)Math.Ceiling((targetSize.X + startOffset.X) / sourceRect.Width);
             //how many times the texture needs to be drawn on the y-axis
-            int yTiles = (int)Math.Ceiling((targetSize.Y+startOffset.Y) / sourceRect.Height);
+            int yTiles = (int)Math.Ceiling((targetSize.Y + startOffset.Y) / sourceRect.Height);
 
             Vector2 position = pos - startOffset;
             Rectangle drawRect = sourceRect;
@@ -372,13 +259,10 @@ namespace Barotrauma
 
                 position.X += sourceRect.Width;
             }
-
         }
 
-        public void Remove()
+        private void DisposeTexture()
         {
-            list.Remove(this);
-
             //check if another sprite is using the same texture
             foreach (Sprite s in list)
             {
@@ -392,7 +276,6 @@ namespace Barotrauma
                 texture = null;
             }
         }
-        
     }
 
 }

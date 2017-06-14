@@ -12,7 +12,6 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
-#if CLIENT
     class GameMain : Game
     {
         public static bool DebugDraw;
@@ -414,7 +413,5 @@ namespace Barotrauma
            
             base.OnExiting(sender, args);
         }
-
     }
-#endif
 }

@@ -10,7 +10,9 @@ namespace Barotrauma.Networking
     /// </summary>
     interface IClientSerializable : INetSerializable
     {
+#if CLIENT
         void ClientWrite(NetBuffer msg, object[] extraData = null);
+#endif
         void ServerRead(ClientNetObject type, NetBuffer msg, Client c);        
     }
 
@@ -20,6 +22,8 @@ namespace Barotrauma.Networking
     interface IServerSerializable : INetSerializable
     {
         void ServerWrite(NetBuffer msg, Client c, object[] extraData = null);
+#if CLIENT
         void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime);
+#endif
     }
 }

@@ -6,42 +6,33 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
-    class GameScreen : Screen
+    partial class GameScreen : Screen
     {
-        private Camera cam;
-
-        private Color waterColor = new Color(0.75f, 0.8f, 0.9f, 1.0f);
-
+        private BlurEffect lightBlur;
+        
         readonly RenderTarget2D renderTargetBackground;
         readonly RenderTarget2D renderTarget;
         readonly RenderTarget2D renderTargetWater;
         readonly RenderTarget2D renderTargetAir;
-
-        private BlurEffect lightBlur;
 
         private Effect damageEffect;
 
         private Texture2D damageStencil;
 
         public BackgroundCreatureManager BackgroundCreatureManager;
-
-        public override Camera Cam
-        {
-            get { return cam; }
-        }
-
+        
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
             cam = new Camera();
             cam.Translate(new Vector2(-10.0f, 50.0f));
 
-            renderTargetBackground  = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTarget            = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTargetWater       = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTargetAir         = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetBackground = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetAir = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
             var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundCreaturePrefabs);
-            if(files.Count > 0)
+            if (files.Count > 0)
                 BackgroundCreatureManager = new BackgroundCreatureManager(files);
             else
                 BackgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundSprites/BackgroundCreaturePrefabs.xml");
@@ -61,33 +52,7 @@ namespace Barotrauma
 
             lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
         }
-
-        public override void Select()
-        {
-            base.Select();
-
-            if (Character.Controlled!=null)
-            {
-                cam.Position = Character.Controlled.WorldPosition;
-                cam.UpdateTransform();
-            }
-            else if (Submarine.MainSub != null)
-            {
-                cam.Position = Submarine.MainSub.WorldPosition;
-                cam.UpdateTransform();
-            }
-
-            foreach (MapEntity entity in MapEntity.mapEntityList)
-                entity.IsHighlighted = false;
-        }
-
-        public override void Deselect()
-        {
-            base.Deselect();
-
-            Sounds.SoundManager.LowPassHFGain = 1.0f;
-        }
-
+        
         public override void AddToGUIUpdateList()
         {
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
@@ -103,92 +68,7 @@ namespace Barotrauma
             Character.AddAllToGUIUpdateList();
         }
 
-        /// <summary>
-        /// Allows the game to run logic such as updating the world,
-        /// checking for collisions, gathering input, and playing audio.
-        /// </summary>
-        public override void Update(double deltaTime)
-        {
 
-#if DEBUG
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
-                !DebugConsole.IsOpen)
-            {
-                var closestSub = Submarine.FindClosest(cam.WorldViewCenter);
-                if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
-
-                Vector2 targetMovement = Vector2.Zero;
-                if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
-                if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
-
-                if (targetMovement != Vector2.Zero)
-                    closestSub.ApplyForce(targetMovement * closestSub.SubBody.Body.Mass * 100.0f);
-            }
-#endif
-
-            foreach (MapEntity e in MapEntity.mapEntityList)
-            {
-                e.IsHighlighted = false;
-            }
-
-            if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
-
-            if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
-
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
-            {
-                if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
-                {
-                    Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);
-                }
-            }
-            Character.UpdateAll(cam, (float)deltaTime);
-
-            BackgroundCreatureManager.Update(cam, (float)deltaTime);
-
-            GameMain.ParticleManager.Update((float)deltaTime);
-
-            StatusEffect.UpdateAll((float)deltaTime);
-
-            if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
-            {
-                cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
-            }
-
-            GameMain.LightManager.Update((float)deltaTime);
-            cam.MoveCamera((float)deltaTime);
-                
-            foreach (Submarine sub in Submarine.Loaded)
-            {
-                sub.SetPrevTransform(sub.Position);
-            }
-
-            foreach (PhysicsBody pb in PhysicsBody.list)
-            {
-                pb.SetPrevTransform(pb.SimPosition, pb.Rotation);
-            }
-
-            MapEntity.UpdateAll(cam, (float)deltaTime);
-
-            Character.UpdateAnimAll((float)deltaTime);
-
-            Ragdoll.UpdateAll(cam, (float)deltaTime);
-
-            foreach (Submarine sub in Submarine.Loaded)
-            {
-                sub.Update((float)deltaTime);
-            }
-                
-            GameMain.World.Step((float)deltaTime);
-
-            if (!PlayerInput.LeftButtonHeld())
-            {
-                Inventory.draggingSlot = null;
-                Inventory.draggingItem = null;
-            }
-        }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
@@ -222,9 +102,9 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
             GUI.Draw((float)deltaTime, spriteBatch, cam);
-                        
+
             spriteBatch.End();
         }
 
@@ -251,7 +131,7 @@ namespace Barotrauma
             //----------------------------------------------------------------------------------------
 
             graphics.SetRenderTarget(renderTargetBackground);
-            
+
             if (Level.Loaded == null)
             {
                 graphics.Clear(new Color(11, 18, 26, 255));
@@ -367,7 +247,7 @@ namespace Barotrauma
                 Submarine.DrawFront(spriteBatch, false, s => s is Structure);
 
                 spriteBatch.End();
-                
+
                 GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect, true);
             }
 
@@ -387,7 +267,7 @@ namespace Barotrauma
             }
 
             Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
-            
+
             //----------------------------------------------------------------------------------------
             //3. draw the sections of the map that are on top of the water
             //----------------------------------------------------------------------------------------
@@ -398,17 +278,17 @@ namespace Barotrauma
                 cam.Transform);
 
             Submarine.DrawFront(spriteBatch, false, null);
-                        
+
             spriteBatch.End();
-            
+
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.NonPremultiplied, SamplerState.LinearWrap,
-                null, null, 
+                null, null,
                 damageEffect,
                 cam.Transform);
 
             Submarine.DrawDamageable(spriteBatch, damageEffect, false);
-                        
+
             spriteBatch.End();
 
             GameMain.LightManager.DrawLightMap(spriteBatch, lightBlur.Effect);
@@ -418,22 +298,22 @@ namespace Barotrauma
                 null, null, null,
                 cam.Transform);
 
-            if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch);            
+            if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch);
 
-            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch,cam);
+            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch, cam);
 
             spriteBatch.End();
 
             if (Character.Controlled != null && GameMain.LightManager.LosEnabled)
             {
-                GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect,false);
+                GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect, false);
 
                 spriteBatch.Begin(SpriteSortMode.Immediate,
                     BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, RasterizerState.CullNone, null);
 
                 float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
                 spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                    Color.Lerp(GameMain.LightManager.AmbientLight*0.5f, Color.Red, r));
+                    Color.Lerp(GameMain.LightManager.AmbientLight * 0.5f, Color.Red, r));
 
                 spriteBatch.End();
             }
