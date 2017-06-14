@@ -23,6 +23,8 @@ namespace Barotrauma
 
         private float? footRotation;
 
+        private float deathAnimTimer, deathAnimDuration = 5.0f;
+
         public FishAnimController(Character character, XElement element)
             : base(character, element)
         {
@@ -62,6 +64,12 @@ namespace Barotrauma
                 {
                     Collider.LinearVelocity = (MainLimb.SimPosition - Collider.SimPosition) * 60.0f;
                     Collider.SmoothRotate(MainLimb.Rotation);
+                }
+
+                if (character.IsDead && deathAnimTimer < deathAnimDuration)
+                {
+                    deathAnimTimer += deltaTime;
+                    UpdateDying(deltaTime);
                 }
                 
                 return;
@@ -297,8 +305,8 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             Limb tail = GetLimb(LimbType.Tail);
 
-            if (head != null) head.body.ApplyTorque(head.Mass * Dir * (float)Math.Sin(walkPos) * 5.0f);
-            if (tail != null) tail.body.ApplyTorque(tail.Mass * -Dir * (float)Math.Sin(walkPos) * 5.0f);
+            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * Math.Sin(walkPos)) * 10.0f);
+            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * (float)Math.Sin(walkPos)) * 10.0f);
 
             walkPos += deltaTime * 5.0f;
 
@@ -306,9 +314,9 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.type == LimbType.Head || limb.type == LimbType.Tail) continue;
+                if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered) continue;
 
-                limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)Math.Sin(walkPos) * limb.Mass * 10.0f);
+                limb.body.ApplyForce((centerOfMass - limb.SimPosition) * (float)(Math.Sin(walkPos) * Math.Sqrt(limb.Mass)) * 10.0f);
             }
         }
 

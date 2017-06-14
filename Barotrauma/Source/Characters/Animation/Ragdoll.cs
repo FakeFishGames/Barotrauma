@@ -702,13 +702,15 @@ namespace Barotrauma
         public Vector2 GetCenterOfMass()
         {
             Vector2 centerOfMass = Vector2.Zero;
+            float totalMass = 0.0f;
             foreach (Limb limb in Limbs)
             {
                 if (limb.IsSevered) continue;
                 centerOfMass += limb.Mass * limb.SimPosition;
+                totalMass += limb.Mass;
             }
 
-            centerOfMass /= Mass;
+            centerOfMass /= totalMass;
 
             return centerOfMass;
         }
