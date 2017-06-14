@@ -1719,12 +1719,35 @@ namespace Barotrauma
 
         public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            var attackResult = AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce);
+            Limb limbHit = null;
+            var attackResult = AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit);
+            if (limbHit == null) return new AttackResult();
 
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
                 GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
+            }
+            
+            if (GameMain.Client == null && 
+                health - attackResult.Damage <= minHealth && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
+            {
+                foreach (LimbJoint joint in AnimController.LimbJoints)
+                {
+                    if (joint.CanBeSevered && (joint.LimbA == limbHit || joint.LimbB == limbHit))
+                    {
+                        AnimController.SeverLimbJoint(joint);
+
+                        if (joint.LimbA == limbHit)
+                        {
+                            joint.LimbB.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                        }
+                        else
+                        {
+                            joint.LimbA.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                        }
+                    }
+                }
             }
 
             return attackResult;
@@ -1732,51 +1755,37 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce = 0.0f)
         {
+            Limb temp = null;
+            return AddDamage(worldPosition, damageType, amount, bleedingAmount, stun, playSound, attackForce, out temp);
+        }
+
+        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, out Limb hitLimb)
+        {
+            hitLimb = null;
+
             if (Removed) return new AttackResult();
 
             SetStun(stun);
-
-            Limb closestLimb = null;
+            
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
             {
                 float distance = Vector2.Distance(worldPosition, limb.WorldPosition);
-                if (closestLimb == null || distance < closestDistance)
+                if (hitLimb == null || distance < closestDistance)
                 {
-                    closestLimb = limb;
+                    hitLimb = limb;
                     closestDistance = distance;
                 }
             }
             
             if (Math.Abs(attackForce) > 0.0f)
             {
-                closestLimb.body.ApplyForce((closestLimb.WorldPosition - worldPosition) * attackForce);
+                Vector2 diff = hitLimb.WorldPosition - worldPosition;
+                if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
+                hitLimb.body.ApplyForce(Vector2.Normalize(diff) * attackForce, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
             }
 
-            AttackResult attackResult = closestLimb.AddDamage(worldPosition, damageType, amount, bleedingAmount, playSound);
-
-            //sever joints connected to the limb if the character was killed
-            //with an attack stronger than 50% of the characters max health
-            //TODO: maybe add a "CanSever" option to attacks
-            if (health - attackResult.Damage <= minHealth && attackResult.Damage >= MaxHealth * 0.5f)
-            {
-                foreach (LimbJoint joint in AnimController.LimbJoints)
-                {
-                    if (joint.CanBeSevered && (joint.LimbA == closestLimb || joint.LimbB == closestLimb))
-                    {
-                        AnimController.SeverLimbJoint(joint);
-
-                        if (joint.LimbA == closestLimb)
-                        {
-                            joint.LimbB.body.LinearVelocity = closestLimb.LinearVelocity*0.5f;
-                        }
-                        else
-                        {
-                            joint.LimbA.body.LinearVelocity = closestLimb.LinearVelocity * 0.5f;
-                        }
-                    }
-                }
-            }
+            AttackResult attackResult = hitLimb.AddDamage(worldPosition, damageType, amount, bleedingAmount, playSound);
 
             AddDamage(damageType == DamageType.Burn ? CauseOfDeath.Burn : causeOfDeath, attackResult.Damage, null);
 

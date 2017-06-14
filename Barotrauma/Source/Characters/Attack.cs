@@ -18,7 +18,7 @@ namespace Barotrauma
     {
         public readonly float Damage;
         public readonly float Bleeding;
-
+        
         public readonly bool HitArmor;
 
         public AttackResult(float damage, float bleeding, bool hitArmor=false)
@@ -48,6 +48,8 @@ namespace Barotrauma
         public readonly float Torque;
 
         public readonly float TargetForce;
+
+        public readonly float SeverLimbsProbability;
 
         private Sound sound;
 
@@ -83,32 +85,29 @@ namespace Barotrauma
                 DamageType = DamageType.None;
             }
 
-
-            damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
+            damage          = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
             structureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
-            bleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
+            bleedingDamage  = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
+            Stun            = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
 
-            Force = ToolBox.GetAttributeFloat(element,"force", 0.0f);
-            TargetForce = ToolBox.GetAttributeFloat(element, "targetforce", 0.0f);
+            SeverLimbsProbability = ToolBox.GetAttributeFloat(element, "severlimbsprobability", 0.0f);
 
-            Torque = ToolBox.GetAttributeFloat(element, "torque", 0.0f);
-
-            Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
-
+            Force           = ToolBox.GetAttributeFloat(element,"force", 0.0f);
+            TargetForce     = ToolBox.GetAttributeFloat(element, "targetforce", 0.0f);
+            Torque          = ToolBox.GetAttributeFloat(element, "torque", 0.0f);
+            
             string soundPath = ToolBox.GetAttributeString(element, "sound", "");
             if (!string.IsNullOrWhiteSpace(soundPath))
             {
                 sound = Sound.Load(soundPath);
             }
                       
-            Range = ToolBox.GetAttributeFloat(element, "range", 0.0f);
+            Range       = ToolBox.GetAttributeFloat(element, "range", 0.0f);
+            Duration    = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
 
-            Duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
-
-            priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
+            priority    = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
 
             statusEffects = new List<StatusEffect>();
-
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
