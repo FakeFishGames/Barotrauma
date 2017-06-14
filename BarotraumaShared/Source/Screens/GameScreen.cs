@@ -7,8 +7,6 @@ namespace Barotrauma
     {
         private Camera cam;
 
-        private Color waterColor = new Color(0.75f, 0.8f, 0.9f, 1.0f);
-
         public override Camera Cam
         {
             get { return cam; }

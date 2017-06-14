@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     partial class GameScreen : Screen
     {
+        private Color waterColor = new Color(0.75f, 0.8f, 0.9f, 1.0f);
+
         private BlurEffect lightBlur;
         
         readonly RenderTarget2D renderTargetBackground;

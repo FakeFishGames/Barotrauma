@@ -1,11 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    class SpriteSheet : Sprite
+    partial class SpriteSheet : Sprite
     {
         private Rectangle[] sourceRects;
 
@@ -36,20 +35,6 @@ namespace Barotrauma
             origin = ToolBox.GetAttributeVector2(element, "origin", new Vector2(0.5f, 0.5f));
             origin.X = origin.X * cellWidth;
             origin.Y = origin.Y * cellHeight;
-        }
-        
-        public override void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = default(float?))
-        {
-            if (texture == null) return;
-
-            spriteBatch.Draw(texture, pos + offset, sourceRects[0], color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
-        }
-
-        public void Draw(SpriteBatch spriteBatch, int spriteIndex, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = default(float?))
-        {
-            if (texture == null) return;
-
-            spriteBatch.Draw(texture, pos + offset, sourceRects[spriteIndex], color, rotation + rotate, origin, scale, spriteEffect, depth == null ? this.depth : (float)depth);
         }
     }
 }
