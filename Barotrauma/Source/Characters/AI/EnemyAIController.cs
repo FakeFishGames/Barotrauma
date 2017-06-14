@@ -221,6 +221,21 @@ namespace Barotrauma
 
                 if (selectedAiTarget.Entity != null && Character.Submarine == null && selectedAiTarget.Entity.Submarine != null) attackSimPosition += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
             }
+            else if (selectedAiTarget.Entity is Character)
+            {
+                //target the closest limb if the target is a character
+                float closestDist = Vector2.DistanceSquared(selectedAiTarget.SimPosition, SimPosition);
+                foreach (Limb limb in ((Character)selectedAiTarget.Entity).AnimController.Limbs)
+                {
+                    if (limb == null) continue;
+                    float dist = Vector2.DistanceSquared(limb.SimPosition, SimPosition);
+                    if (dist < closestDist)
+                    {
+                        closestDist = dist;
+                        attackSimPosition = limb.SimPosition;
+                    }
+                }
+            }
             
             if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater)
             {

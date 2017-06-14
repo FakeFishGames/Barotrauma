@@ -51,6 +51,10 @@ namespace Barotrauma
 
         public readonly float SeverLimbsProbability;
 
+        //the indices of the limbs Force is applied on 
+        //(if none, force is applied only to the limb the attack is attached to)
+        public readonly List<int> ApplyForceOnLimbs;
+
         private Sound sound;
 
         private ParticleEmitterPrefab particleEmitterPrefab;
@@ -92,7 +96,7 @@ namespace Barotrauma
 
             SeverLimbsProbability = ToolBox.GetAttributeFloat(element, "severlimbsprobability", 0.0f);
 
-            Force           = ToolBox.GetAttributeFloat(element,"force", 0.0f);
+            Force           = ToolBox.GetAttributeFloat(element, "force", 0.0f);
             TargetForce     = ToolBox.GetAttributeFloat(element, "targetforce", 0.0f);
             Torque          = ToolBox.GetAttributeFloat(element, "torque", 0.0f);
             
@@ -106,6 +110,20 @@ namespace Barotrauma
             Duration    = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
 
             priority    = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
+
+            string limbIndicesStr = ToolBox.GetAttributeString(element, "applyforceonlimbs", "");
+            if (!string.IsNullOrWhiteSpace(limbIndicesStr))
+            {
+                ApplyForceOnLimbs = new List<int>();
+                foreach (string limbIndexStr in limbIndicesStr.Split(','))
+                {
+                    int limbIndex;
+                    if (int.TryParse(limbIndexStr, out limbIndex))
+                    {
+                        ApplyForceOnLimbs.Add(limbIndex);
+                    }   
+                }
+            }
 
             statusEffects = new List<StatusEffect>();
             foreach (XElement subElement in element.Elements())
