@@ -44,7 +44,7 @@
       
     <limb id = "3" width="13" height="45" ignorecollisions="true" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="65,131,36,50" depth="0.15" origin="0.4,0.5"/>
-      <attack range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="3" structuredamage="50" damagetype="slash" force="20" torque="-20" targetforce="-30"/>
+      <attack range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="3" structuredamage="50" damagetype="slash" force="20" torque="-20" targetforce="-30" severlimbsprobability="0.5"/>
     </limb>
 
     <limb id = "4" width="11" height="34" type="RightLeg" flip="true">

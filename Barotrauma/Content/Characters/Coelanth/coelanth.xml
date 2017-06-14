@@ -26,7 +26,7 @@
     <!-- lower yaw -->
     <limb id = "1" radius="20" height="240">
       <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="425,1,101,309" depth="0.025" origin="0.5,0.5"/>
-      <attack range="300" duration="0.5" damage="200" bleedingdamage="50" structuredamage="150" damagetype="slash" torque="100" targetforce="-50"/>
+      <attack range="300" duration="0.5" damage="200" bleedingdamage="50" structuredamage="150" damagetype="slash" torque="100" targetforce="-50" severlimbsprobability="0.8"/>
     </limb>
 
     <!-- body -->

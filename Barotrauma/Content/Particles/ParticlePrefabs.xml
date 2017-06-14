@@ -57,26 +57,22 @@
   </bubbles>
 
   <blood
-    startsizemin="0.05,0.05" startsizemax="0.6,0.6"
-    sizechangemin="0.3,0.2" sizechangemax="0.4,0.2"
+    startsizemin="0.5,0.5" startsizemax="1.0,1.0"
     startrotationmin ="0.0" startrotationmax="360"
     startcolor="0.5, 0.0, 0.0" startalpha="1.0"
-    colorchange="0.0, 0.0, 0.0, -1.0"
-    lifetime="2"
+    lifetime="1"
     growtime ="0.1"
-    deleteoncollision="true"
-    rotatetodirection="true"
-    velocitychange="0.0, -9.8">
-    <sprite texture="Content/Particles/spatter.png" sourcerect="0,0,128,128"/>
-    <sprite texture="Content/Particles/spatter.png" sourcerect="128,0,128,128"/>
-    <sprite texture="Content/Particles/spatter.png" sourcerect="0,128,128,128"/>
+    velocitychange="0.0, -0.1">
+    <animatedsprite texture="Content/Particles/Spatter1.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.2,0.5"/>
+    <animatedsprite texture="Content/Particles/Spatter2.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.5,0.5"/>
+    <animatedsprite texture="Content/Particles/Spatter3.png" sourcerect="0,0,1024,1024" columns="4" rows="8" origin="0.3,0.5"/>
   </blood>
 
   <waterblood
     startsizemin="0.1,0.1" startsizemax="0.3,0.3"
     sizechangemin="0.1,0.1" sizechangemax="0.2,0.2"
     startrotationmin ="0.0" startrotationmax="360"
-    startcolor="0.5, 0.0, 0.0" startalpha="1.0"
+    startcolor="0.3, 0.0, 0.0" startalpha="1.0"
     animduration="5"
     colorchange="0.0, 0.0, 0.0, -0.2"    
     growtime ="0.1"

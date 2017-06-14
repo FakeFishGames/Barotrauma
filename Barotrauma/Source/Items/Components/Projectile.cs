@@ -149,7 +149,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            AttackResult attackResult = new AttackResult(0.0f, 0.0f);
+            AttackResult attackResult = new AttackResult();
             if (attack != null)
             {
                 var submarine = f2.Body.UserData as Submarine;
