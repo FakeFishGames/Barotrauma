@@ -45,10 +45,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GameMain.cs" />
-    <Compile Include="PlayerInput.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Source\Camera.cs" />
+    <Compile Include="Source\GameMain.cs" />
+    <Compile Include="Source\Networking\GameClient.cs" />
+    <Compile Include="Source\PlayerInput.cs" />
+    <Compile Include="Source\Program.cs" />
+    <Compile Include="Source\Sprite\Sprite.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -67,9 +70,7 @@
       <Name>Lidgren.Network</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="NewFolder1\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="..\BarotraumaShared\BarotraumaShared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
