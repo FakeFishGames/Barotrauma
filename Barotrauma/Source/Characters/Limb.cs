@@ -449,17 +449,32 @@ namespace Barotrauma
                 {
                     attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, (soundTimer <= 0.0f));
 
-                    soundTimer = Limb.SoundInterval;
+                    soundTimer = SoundInterval;
                 }
             }
 
             Vector2 diff = attackPosition - SimPosition;
-            if (diff.LengthSquared() > 0.00001f)
+            if (diff.LengthSquared() < 0.00001f) return;
+            
+            if (attack.ApplyForceOnLimbs != null)
             {
-                Vector2 pos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
-                body.ApplyLinearImpulse(Mass * attack.Force *
-                    Vector2.Normalize(attackPosition - SimPosition), pos);
+                foreach (int limbIndex in attack.ApplyForceOnLimbs)
+                {
+                    if (limbIndex < 0 || limbIndex >= character.AnimController.Limbs.Length) continue;
+
+                    Limb limb = character.AnimController.Limbs[limbIndex];
+                    Vector2 forcePos = limb.pullJoint == null ? limb.body.SimPosition : limb.pullJoint.WorldAnchorA;
+                    limb.body.ApplyLinearImpulse(
+                        limb.Mass * attack.Force * Vector2.Normalize(attackPosition - SimPosition), forcePos);
+                }
             }
+            else
+            {
+                Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
+                body.ApplyLinearImpulse(Mass * attack.Force *
+                    Vector2.Normalize(attackPosition - SimPosition), forcePos);
+            }
+
         }
 
         public void Draw(SpriteBatch spriteBatch)
