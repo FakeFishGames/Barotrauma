@@ -5,39 +5,9 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class Screen
+    partial class Screen
     {
-        private static Screen selected;
-        
-        public static Screen Selected
-        {
-            get { return selected; }
-        }
-
-        public virtual void Deselect()
-        {
-        }
-
-        public virtual void Select()
-        {
-            if (selected != null && selected != this)
-            {
-                selected.Deselect();
-                GUIComponent.KeyboardDispatcher.Subscriber = null;
-            }
-            selected = this;
-        }
-
-        public virtual Camera Cam
-        {
-            get { return null; }
-        }
-
         public virtual void AddToGUIUpdateList()
-        {
-        }
-
-        public virtual void Update(double deltaTime)
         {
         }
 
@@ -94,6 +64,5 @@ namespace Barotrauma
                 GUI.Arrow.Draw(spriteBatch, iconPos + arrowOffset, color, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
             }
         }
-
     }
 }
