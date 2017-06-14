@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     public partial class Sprite
     {
-        private void LoadTexture(ref Vector4 sourceVector,ref bool shouldReturn)
+        private void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn)
         {
             //do nothing
         }
@@ -23,3 +23,5 @@ namespace Barotrauma
         {
             //do nothing
         }
+    }
+}

@@ -181,7 +181,7 @@ namespace Barotrauma
             return priority;
         }
 
-        private static float GetHullSafety(Hull hull, Character character)
+        public static float GetHullSafety(Hull hull, Character character)
         {
             if (hull == null) return 0.0f;
 

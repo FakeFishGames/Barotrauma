@@ -1298,7 +1298,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRescue.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRescureAll.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRescueAll.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Order.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\PathFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\SteeringManager.cs" />
