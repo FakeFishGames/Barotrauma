@@ -43,7 +43,7 @@ namespace Barotrauma
         }
     }
 
-    class Structure : MapEntity, IDamageable, IServerSerializable
+    partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
         public static int wallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
@@ -517,91 +517,6 @@ namespace Barotrauma
             return true;
         }
 
-        public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
-        {
-            if (prefab.sprite == null) return;
-
-            Draw(spriteBatch, editing, back, null);
-        }
-
-        public override void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect)
-        {
-            Draw(spriteBatch, false, false, damageEffect);
-        }
-
-
-        private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
-        {
-            if (prefab.sprite == null) return;
-
-            Color color = (isHighlighted) ? Color.Orange : Color.White;
-            if (IsSelected && editing)
-            {
-                color = Color.Red;
-
-                GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, -rect.Y, rect.Width, rect.Height), color);
-            }
-
-            Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
-
-            float depth = prefab.sprite.Depth;
-            depth -= (ID % 255) * 0.000001f;
-
-            if (back && damageEffect == null)
-            {
-                if (prefab.BackgroundSprite != null)
-                {
-                    prefab.BackgroundSprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
-                        new Vector2(rect.Width, rect.Height),
-                        color, Point.Zero);
-                }
-            }
-
-            SpriteEffects oldEffects = prefab.sprite.effects;
-            prefab.sprite.effects ^= SpriteEffects;
-
-            if (back == prefab.sprite.Depth > 0.5f || editing)
-            {
-                for (int i = 0; i < sections.Length; i++)
-                {
-                    if (damageEffect != null)
-                    {
-                        float newCutoff = Math.Min((sections[i].damage / prefab.MaxHealth), 0.65f);
-
-                        if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f)
-                        {
-                            damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
-                            damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
-
-                            damageEffect.CurrentTechnique.Passes[0].Apply();
-
-                            Submarine.DamageEffectCutoff = newCutoff;
-                        }
-                    }
-
-                    Point textureOffset = new Point(
-                        Math.Abs(rect.Location.X - sections[i].rect.Location.X),
-                        Math.Abs(rect.Location.Y - sections[i].rect.Location.Y));
-
-                    if (flippedX && isHorizontal)
-                    {
-                        textureOffset.X = rect.Width - textureOffset.X - sections[i].rect.Width;
-                    }
-
-                    prefab.sprite.DrawTiled(
-                        spriteBatch,
-                        new Vector2(sections[i].rect.X + drawOffset.X, -(sections[i].rect.Y + drawOffset.Y)),
-                        new Vector2(sections[i].rect.Width, sections[i].rect.Height),
-                        color,
-                        textureOffset, depth);
-                }
-            }
-
-            prefab.sprite.effects = oldEffects;
-        }
-
         private bool OnWallCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (prefab.IsPlatform)
@@ -632,10 +547,12 @@ namespace Barotrauma
 
                     if (impact < 10.0f) return true;
 
+#if CLIENT
                     SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact,
                         new Vector2(
                             sections[section].rect.X + sections[section].rect.Width / 2, 
                             sections[section].rect.Y - sections[section].rect.Height / 2));
+#endif
 
                     AddDamage(section, impact);                 
                 }
@@ -685,6 +602,7 @@ namespace Barotrauma
 
             var section = sections[sectionIndex];
 
+#if CLIENT
             float particleAmount = Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f);
 
             particleAmount = Math.Min(particleAmount + Rand.Range(-5,1), 100);
@@ -695,10 +613,11 @@ namespace Barotrauma
                     Rand.Range(section.rect.Y - section.rect.Height, section.rect.Y));
 
                 if (Submarine != null) particlePos += Submarine.DrawPosition;
-
+                
                 var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)));
                 if (particle == null) break;
             }
+#endif
 
             if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage);
         }
@@ -753,18 +672,20 @@ namespace Barotrauma
             int i = FindSectionIndex(transformedPos);
             if (i == -1) return new AttackResult(0.0f, 0.0f);
             
-            GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
-
             float damageAmount = attack.GetStructureDamage(deltaTime);
+
+            AddDamage(i, damageAmount);
+
+#if CLIENT
+            GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
 
             if (playSound && !SectionBodyDisabled(i))
             {
                 DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
                 SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition);
             }
-
-            AddDamage(i, damageAmount);
-
+#endif
+            
             return new AttackResult(damageAmount, 0.0f);
         }
 
@@ -928,39 +849,6 @@ namespace Barotrauma
             CreateSections();
         }
         
-        public override XElement Save(XElement parentElement)
-        {
-            XElement element = new XElement("Structure");
-            
-            element.Add(new XAttribute("name", prefab.Name),
-                new XAttribute("ID", ID),
-                new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
-            
-            for (int i = 0; i < sections.Length; i++)
-            {
-                if (sections[i].damage == 0.0f) continue;
-
-                var sectionElement = 
-                    new XElement("section",
-                        new XAttribute("i", i),
-                        new XAttribute("damage", sections[i].damage));
-
-                if (sections[i].gap!=null)
-                {
-                    sectionElement.Add(new XAttribute("gap", sections[i].gap.ID));
-                }
-
-                element.Add(sectionElement);
-            }
-            
-            parentElement.Add(element);
-
-            return element;
-        }
-
         public static void Load(XElement element, Submarine submarine)
         {
             string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");

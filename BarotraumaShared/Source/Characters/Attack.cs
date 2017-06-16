@@ -1,9 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
-using Barotrauma.Particles;
 using System;
 using System.Xml.Linq;
 using System.Collections.Generic;
-
+#if CLIENT
+using Barotrauma.Particles;
+#endif
 
 namespace Barotrauma
 {
@@ -49,9 +50,11 @@ namespace Barotrauma
 
         public readonly float TargetForce;
 
+#if CLIENT
         private Sound sound;
 
         private ParticleEmitterPrefab particleEmitterPrefab;
+#endif
 
         public readonly float Stun;
 
@@ -95,11 +98,13 @@ namespace Barotrauma
 
             Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
 
+#if CLIENT
             string soundPath = ToolBox.GetAttributeString(element, "sound", "");
             if (!string.IsNullOrWhiteSpace(soundPath))
             {
                 sound = Sound.Load(soundPath);
             }
+#endif
                       
             Range = ToolBox.GetAttributeFloat(element, "range", 0.0f);
 
@@ -113,9 +118,11 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+#if CLIENT
                     case "particleemitter":
                         particleEmitterPrefab = new ParticleEmitterPrefab(subElement);
                         break;
+#endif
                     case "statuseffect":
                         statusEffects.Add(StatusEffect.Load(subElement));
                         break;

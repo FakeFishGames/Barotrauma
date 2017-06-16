@@ -1271,7 +1271,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)packages.config" />
-    <None Include="$(MSBuildThisFileDirectory)Source\Screens\sygwkgy0.iv5" />
     <None Include="$(MSBuildThisFileDirectory)Submarines\Nehalennia.sub" />
     <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialSub.sub" />
     <None Include="$(MSBuildThisFileDirectory)Submarines\Vellamo.sub" />
@@ -1309,12 +1308,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Attack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterHUD.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterSound.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DelayedEffect.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HUDProgressBar.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HuskInfection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\JobPrefab.cs" />
@@ -1340,20 +1336,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\TaskManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\FrameCounter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CargoManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MissionMode.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\SinglePlayerMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\TraitorManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\EditorTutorial.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\Tutorials\TutorialType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameSession.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\HireManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\InfoTextManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\ShiftSummary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\IPropertyObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\CharacterInventory.cs" />

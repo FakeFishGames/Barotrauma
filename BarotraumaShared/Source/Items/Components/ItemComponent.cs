@@ -13,7 +13,9 @@ namespace Barotrauma.Items.Components
 {
     interface IDrawableComponent
     {
+#if CLIENT
         void Draw(SpriteBatch spriteBatch, bool editing);
+#endif
     }
 
     class ItemSound

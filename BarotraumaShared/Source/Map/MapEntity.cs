@@ -34,6 +34,15 @@ namespace Barotrauma
         
         //the position and dimensions of the entity
         protected Rectangle rect;
+        
+        //is the mouse inside the rect
+        protected bool isHighlighted;
+
+        public bool IsHighlighted
+        {
+            get { return isHighlighted; }
+            set { isHighlighted = value; }
+        }
 
         private static bool resizing;
         private int resizeDirX, resizeDirY;

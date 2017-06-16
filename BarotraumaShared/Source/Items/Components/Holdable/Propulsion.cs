@@ -1,19 +1,26 @@
 ﻿using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+#if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Particles;
+#endif
 
 namespace Barotrauma.Items.Components
 {
     class Propulsion : ItemComponent
     {
+        enum UsableIn
+        {
+            Air,Water,Both
+        };
+
         private float force;
 
         private string particles;
 
         private float useState;
-
-        private ParticlePrefab.DrawTargetType usableIn;
+        
+        private UsableIn usableIn;
                 
         [HasDefaultValue(0.0f, false)]
         public float Force
@@ -21,13 +28,15 @@ namespace Barotrauma.Items.Components
             get { return force; }
             set { force = value; }
         }
-        
+
+#if CLIENT
         [HasDefaultValue("", false)]
         public string Particles
         {
             get { return particles; }
             set { particles = value; }
         }
+#endif
 
         public Propulsion(Item item, XElement element)
             : base(item,element)
@@ -35,14 +44,14 @@ namespace Barotrauma.Items.Components
             switch (ToolBox.GetAttributeString(element, "usablein", "both").ToLowerInvariant())
             {
                 case "air":
-                    usableIn = ParticlePrefab.DrawTargetType.Air;
+                    usableIn = UsableIn.Air;
                     break;
                 case "water":
-                    usableIn = ParticlePrefab.DrawTargetType.Water;
+                    usableIn = UsableIn.Water;
                     break;
                 case "both":
                 default:
-                    usableIn = ParticlePrefab.DrawTargetType.Both;
+                    usableIn = UsableIn.Both;
                     break;
             }
         }
@@ -58,11 +67,11 @@ namespace Barotrauma.Items.Components
 
             if (character.AnimController.InWater)
             {
-                if (usableIn == ParticlePrefab.DrawTargetType.Air) return true;
+                if (usableIn == UsableIn.Air) return true;
             }
             else
             {
-                if (usableIn == ParticlePrefab.DrawTargetType.Water) return true;
+                if (usableIn == UsableIn.Water) return true;
             }
 
             Vector2 dir = Vector2.Normalize(character.CursorPosition - character.Position);
@@ -82,13 +91,14 @@ namespace Barotrauma.Items.Components
 
             if (character.SelectedItems[0] == item) character.AnimController.GetLimb(LimbType.RightHand).body.ApplyForce(propulsion);
             if (character.SelectedItems[1] == item) character.AnimController.GetLimb(LimbType.LeftHand).body.ApplyForce(propulsion);
-            
 
+#if CLIENT
             if (!string.IsNullOrWhiteSpace(particles))
             {
                 GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition,
                     item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi), 0.0f, item.CurrentHull);
             }
+#endif
 
             return true;
         }

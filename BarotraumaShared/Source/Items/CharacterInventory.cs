@@ -16,7 +16,7 @@ namespace Barotrauma
         None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, Torso = 16, Legs = 32, Face=64
     };
 
-    class CharacterInventory : Inventory
+    partial class CharacterInventory : Inventory
     {
         private static Texture2D icons;
 
@@ -26,81 +26,26 @@ namespace Barotrauma
             InvSlotType.Head, InvSlotType.Torso, InvSlotType.Legs, InvSlotType.LeftHand, InvSlotType.RightHand, InvSlotType.Face,
             InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any,
             InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any, InvSlotType.Any};
-
-        public Vector2[] SlotPositions;
-
-        private GUIButton[] useOnSelfButton;
-
+        
         public CharacterInventory(int capacity, Character character)
             : base(character, capacity)
         {
             this.character = character;
 
-            useOnSelfButton = new GUIButton[2];
-
-            if (icons == null) icons = TextureLoader.FromFile("Content/UI/inventoryIcons.png");
-
-            SlotPositions = new Vector2[limbSlots.Length];
-            
-            int rectWidth = 40, rectHeight = 40;
-            int spacing = 10;
-            for (int i = 0; i < SlotPositions.Length; i++)
-            {
-                switch (i)
-                {
-                    //head, torso, legs
-                    case 0:
-                    case 1:
-                    case 2:
-                        SlotPositions[i] = new Vector2(
-                            spacing, 
-                            GameMain.GraphicsHeight - (spacing + rectHeight) * (3 - i));
-                        break;
-                    //lefthand, righthand
-                    case 3:
-                    case 4:
-                        SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 2),
-                            GameMain.GraphicsHeight - (spacing + rectHeight)*3);
-
-                        useOnSelfButton[i - 3] = new GUIButton(
-                            new Rectangle((int) SlotPositions[i].X, (int) (SlotPositions[i].Y - spacing - rectHeight),
-                                rectWidth, rectHeight), "Use", "")
-                        {
-                            UserData = i,
-                            OnClicked = UseItemOnSelf
-                        };
-
-
-                        break;
-                    case 5:
-                        SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 5),
-                            GameMain.GraphicsHeight - (spacing + rectHeight) * 3);
-
-                        break;
-                    default:
-                        SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 6)%5),
-                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i>10) ? 2 : 1));
-                        break;
-                }
-            }
+            InitProjSpecific();
         }
 
-        private bool UseItemOnSelf(GUIButton button, object obj)
+        private bool UseItemOnSelf(int slotIndex)
         {
-            if (!(obj is int)) return false;
-
-            int slotIndex = (int)obj;
-
             if (Items[slotIndex] == null) return false;
-                        
+
+#if CLIENT
             if (GameMain.Client != null)
             {
                 GameMain.Client.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect });
                 return true;
             }
+#endif
 
             if (GameMain.Server != null)
             {

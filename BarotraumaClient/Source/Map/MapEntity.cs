@@ -50,9 +50,6 @@ namespace Barotrauma
             }
         }
 
-        //is the mouse inside the rect
-        protected bool isHighlighted;
-
         //protected bool isSelected;
 
         private static bool disableSelect;
@@ -74,13 +71,6 @@ namespace Barotrauma
         public static bool SelectedAny
         {
             get { return selectedList.Count > 0; }
-        }
-
-
-        public bool IsHighlighted
-        {
-            get { return isHighlighted; }
-            set { isHighlighted = value; }
         }
 
         public bool IsSelected

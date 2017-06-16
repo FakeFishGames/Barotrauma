@@ -1,13 +1,15 @@
-﻿using Barotrauma.Particles;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+#if CLIENT
+using Barotrauma.Particles;
+#endif
 
 namespace Barotrauma
 {
-    class StatusEffect
+    partial class StatusEffect
     {
         [Flags]
         public enum TargetType
@@ -19,6 +21,12 @@ namespace Barotrauma
         private HashSet<string> targetNames;
 
         private List<RelatedItem> requiredItems;
+
+#if CLIENT
+        private List<ParticleEmitterPrefab> particleEmitters;
+
+        private Sound sound;
+#endif
 
         public string[] propertyNames;
         private object[] propertyEffects;
@@ -37,12 +45,8 @@ namespace Barotrauma
 
         private Explosion explosion;
 
-        private List<ParticleEmitterPrefab> particleEmitters;
-
         public readonly float FireSize;
 
-        private Sound sound;
-        
         public TargetType Targets
         {
             get { return targetTypes; }
@@ -71,7 +75,10 @@ namespace Barotrauma
         protected StatusEffect(XElement element)
         {
             requiredItems = new List<RelatedItem>();
+
+#if CLIENT
             particleEmitters = new List<ParticleEmitterPrefab>();
+#endif
 
             IEnumerable<XAttribute> attributes = element.Attributes();            
             List<XAttribute> propertyAttributes = new List<XAttribute>();
@@ -122,12 +129,14 @@ namespace Barotrauma
                             targetNames.Add(names[i].Trim());
                         }
                         break;
-                    case "sound":
-                        sound = Sound.Load(attribute.Value.ToString());
-                        break;
                     case "duration":
                         duration = ToolBox.GetAttributeFloat(attribute, 0.0f);
                         break;
+#if CLIENT
+                    case "sound":
+                        sound = Sound.Load(attribute.Value.ToString());
+                        break;
+#endif
                     default:
                         propertyAttributes.Add(attribute);
                         break;
@@ -160,9 +169,6 @@ namespace Barotrauma
                     case "useitem":
                         useItem = true;
                         break;
-                    case "particleemitter":
-                        particleEmitters.Add(new ParticleEmitterPrefab(subElement));
-                        break;
                     case "requireditem":
                     case "requireditems":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
@@ -171,6 +177,11 @@ namespace Barotrauma
                         
                         requiredItems.Add(newRequiredItem);
                         break;
+#if CLIENT
+                    case "particleemitter":
+                        particleEmitters.Add(new ParticleEmitterPrefab(subElement));
+                        break;
+#endif
                 }
             }
         }
@@ -214,8 +225,10 @@ namespace Barotrauma
         }
 
         protected void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)
-        {      
+        {
+#if CLIENT
             if (sound != null) sound.Play(1.0f, 1000.0f, entity.WorldPosition);
+#endif
 
             if (useItem)
             {
@@ -264,12 +277,14 @@ namespace Barotrauma
                 var fire = new FireSource(entity.WorldPosition, hull);
 
                 fire.Size = new Vector2(FireSize, fire.Size.Y);
-            }   
+            }
 
+#if CLIENT
             foreach (ParticleEmitterPrefab emitter in particleEmitters)
             {
                 emitter.Emit(entity.WorldPosition, hull);
             }
+#endif
         }
 
         private IEnumerable<object> ApplyToPropertyOverDuration(float duration, ObjectProperty property, object value)
