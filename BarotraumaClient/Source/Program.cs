@@ -125,7 +125,7 @@ namespace Barotrauma
             StreamWriter sw = new StreamWriter(filePath);
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Barotrauma crash report (generated on " + DateTime.Now + ")");
+            sb.AppendLine("Barotrauma Client crash report (generated on " + DateTime.Now + ")");
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");

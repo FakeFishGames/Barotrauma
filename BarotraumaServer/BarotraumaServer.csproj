@@ -35,6 +35,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework, Version=3.5.1.1679, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="RestSharp">
+      <HintPath>..\packages\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -47,10 +50,19 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\Camera.cs" />
+    <Compile Include="Source\Characters\Character.cs" />
+    <Compile Include="Source\DebugConsole.cs" />
     <Compile Include="Source\GameMain.cs" />
+    <Compile Include="Source\GameSession\GameSession.cs" />
+    <Compile Include="Source\GameSettings.cs" />
+    <Compile Include="Source\Items\CharacterInventory.cs" />
+    <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Networking\GameClient.cs" />
+    <Compile Include="Source\Networking\GameServer.cs" />
+    <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
+    <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Sprite\Sprite.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -4,8 +4,8 @@ using System.Linq;
 using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+//using Microsoft.Xna.Framework.Graphics;
+//using Microsoft.Xna.Framework.Input;
 using System.Collections.ObjectModel;
 using Barotrauma.Items.Components;
 using FarseerPhysics.Dynamics;
@@ -13,15 +13,11 @@ using FarseerPhysics.Dynamics;
 namespace Barotrauma
 {
     public enum SpawnType { Path, Human, Enemy, Cargo };
-    class WayPoint : MapEntity
+    partial class WayPoint : MapEntity
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
 
         public static bool ShowWayPoints = true, ShowSpawnPoints = true;
-
-        private static Texture2D iconTexture;
-        private const int IconSize = 32;
-        private static int[] iconIndices = { 3, 0, 1, 2 };
 
         protected SpawnType spawnType;
 
@@ -102,10 +98,12 @@ namespace Barotrauma
             linkedTo = new ObservableCollection<MapEntity>();
             idCardTags = new string[0];
 
+#if CLIENT
             if (iconTexture==null)
             {
                 iconTexture = Sprite.LoadTexture("Content/Map/waypointIcons.png");
             }
+#endif
 
             InsertToList();
             WayPointList.Add(this);
@@ -125,201 +123,11 @@ namespace Barotrauma
 
         public override bool IsMouseOn(Vector2 position)
         {
+#if CLIENT
             if (IsHidden()) return false;
+#endif
 
             return base.IsMouseOn(position);
-        }
-
-        public override void Draw(SpriteBatch spriteBatch, bool editing, bool back=true)
-        {
-            if (!editing && !GameMain.DebugDraw) return;
-
-            if (IsHidden()) return;
-
-            //Rectangle drawRect =
-            //    Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
-
-            Vector2 drawPos = Position;
-            if (Submarine!=null) drawPos += Submarine.DrawPosition;
-            drawPos.Y = -drawPos.Y;
-
-            Color clr = currentHull == null ? Color.Blue : Color.White;
-            if (IsSelected) clr = Color.Red;
-            if (isHighlighted) clr = Color.DarkRed;
-                        
-            int iconX = iconIndices[(int)spawnType]*IconSize % iconTexture.Width;
-            int iconY = (int)(Math.Floor(iconIndices[(int)spawnType]*IconSize / (float)iconTexture.Width))*IconSize;
-
-            int iconSize = ConnectedGap == null && Ladders == null ? IconSize : (int)(IconSize * 1.5f);
-            
-            spriteBatch.Draw(iconTexture, 
-                new Rectangle((int)(drawPos.X - iconSize/2), (int)(drawPos.Y - iconSize/2), iconSize, iconSize),
-                new Rectangle(iconX, iconY, IconSize,IconSize), clr);
-
-            //GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height), clr, true);
-            
-            //GUI.SmallFont.DrawString(spriteBatch, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
-
-            foreach (MapEntity e in linkedTo)
-            {
-                GUI.DrawLine(spriteBatch,
-                    drawPos,
-                    new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                    Color.Green);
-            }
-        }
-
-        private bool IsHidden()
-        {
-            if (spawnType == SpawnType.Path)
-            {
-                return (!GameMain.DebugDraw && !ShowWayPoints);
-            }
-            else
-            {
-                 return (!GameMain.DebugDraw && !ShowSpawnPoints);
-            }
-        }
-
-        public override void UpdateEditing(Camera cam)
-        {
-            if (editingHUD == null || editingHUD.UserData != this)
-            {
-                editingHUD = CreateEditingHUD();
-            }
-
-            editingHUD.Update((float)Timing.Step);
-
-            if (PlayerInput.LeftButtonClicked())
-            {
-                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-
-                foreach (MapEntity e in mapEntityList)
-                {
-                    if (e.GetType() != typeof(WayPoint)) continue;
-                    if (e == this) continue;
-
-                    if (!Submarine.RectContains(e.Rect, position)) continue;
-
-                    linkedTo.Add(e);
-                    e.linkedTo.Add(this);
-                }
-            }
-        }
-
-        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
-        {
-            if (editingHUD != null) editingHUD.Draw(spriteBatch);
-        }
-
-        private bool ChangeSpawnType(GUIButton button, object obj)
-        {
-            GUITextBlock spawnTypeText = button.Parent as GUITextBlock;
-
-            spawnType += (int)button.UserData;
-
-            if (spawnType > SpawnType.Cargo) spawnType = SpawnType.Human;
-            if (spawnType < SpawnType.Human) spawnType = SpawnType.Cargo;
-
-            spawnTypeText.Text = spawnType.ToString();
-
-            return true;
-        }
-
-        private bool EnterIDCardTags(GUITextBox textBox, string text)
-        {
-            IdCardTags = text.Split(',');
-            textBox.Text = text;
-            textBox.Color = Color.Green;
-
-            textBox.Deselect();
-
-            return true;
-        }
-
-        private bool EnterAssignedJob(GUITextBox textBox, string text)
-        {
-            string trimmedName = text.ToLowerInvariant().Trim();
-            assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == trimmedName);
-
-            if (assignedJob !=null && trimmedName!="none")
-            {
-                textBox.Color = Color.Green;
-                textBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
-            }
-
-            textBox.Deselect();
-
-            return true;
-        }
-
-        private bool TextBoxChanged(GUITextBox textBox, string text)
-        {
-            textBox.Color = Color.Red;
-
-            return true;
-        }
-
-        private GUIComponent CreateEditingHUD(bool inGame = false)
-        {
-            int width = 500;
-            int height = spawnType == SpawnType.Path ? 100 : 140;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
-
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, height), Color.Black * 0.5f);
-            editingHUD.Padding = new Vector4(10, 10, 0, 0);
-            editingHUD.UserData = this;
-
-            if (spawnType == SpawnType.Path)
-            {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing waypoint", "", editingHUD);
-                new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another waypoint", "", editingHUD);
-            }
-            else
-            {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing spawnpoint", "", editingHUD);
-                new GUITextBlock(new Rectangle(0, 25, 100, 20), "Spawn type: ", "", editingHUD);
-
-                var spawnTypeText = new GUITextBlock(new Rectangle(0, 25, 200, 20), spawnType.ToString(), "", Alignment.Right, Alignment.TopLeft, editingHUD);
-
-                var button = new GUIButton(new Rectangle(-30,0,20,20), "-", Alignment.Right, "", spawnTypeText);
-                button.UserData = -1;
-                button.OnClicked = ChangeSpawnType;
-
-                button = new GUIButton(new Rectangle(0, 0, 20, 20), "+", Alignment.Right, "", spawnTypeText);
-                button.UserData = 1;
-                button.OnClicked = ChangeSpawnType;
-
-                y = 40 + 20;
-
-                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), "", editingHUD);
-                propertyBox.Text = string.Join(", ", idCardTags);
-                propertyBox.OnEnterPressed = EnterIDCardTags;
-                propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = "Characters spawning at this spawnpoint will have the specified tags added to their ID card. You can, for example, use these tags to limit access to some parts of the sub.";
-
-                y = y + 30;
-
-                new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-                propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), "", editingHUD);
-                propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
-                propertyBox.OnEnterPressed = EnterAssignedJob;
-                propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = "Only characters with the specified job will spawn at this spawnpoint.";
-
-            }
-
-
-
-
-
-            //GUI.Font.DrawString(spriteBatch, "Spawnpoint: " + spawnType.ToString() + " +/-", new Vector2(x, y + 40), Color.Black);
-
-
-            y = y + 30;
-            
-            return editingHUD;
         }
 
         public static void GenerateSubWaypoints(Submarine submarine)
@@ -745,42 +553,6 @@ namespace Barotrauma
 
                 if (ladderItem != null) Ladders = ladderItem.GetComponent<Ladder>();
             }
-        }
-
-        public override XElement Save(XElement parentElement)
-        {
-            if (MoveWithLevel) return null;
-            XElement element = new XElement("WayPoint");
-
-            element.Add(new XAttribute("ID", ID),
-                new XAttribute("x", (int)(rect.X - Submarine.HiddenSubPosition.X)),
-                new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
-                new XAttribute("spawn", spawnType));
-
-            if (idCardTags.Length > 0)
-            {
-                element.Add(new XAttribute("idcardtags", string.Join(",", idCardTags)));
-            }
-
-            if (assignedJob != null) element.Add(new XAttribute("job", assignedJob.Name));
-            
-
-            if (ConnectedGap != null) element.Add(new XAttribute("gap", ConnectedGap.ID));
-            if (Ladders != null) element.Add(new XAttribute("ladders", Ladders.Item.ID));
-
-            parentElement.Add(element);
-
-            if (linkedTo != null)
-            {
-                int i = 0;
-                foreach (MapEntity e in linkedTo)
-                {
-                    element.Add(new XAttribute("linkedto" + i, e.ID));
-                    i += 1;
-                }
-            }
-
-            return element;
         }
 
         public static void Load(XElement element, Submarine submarine)

@@ -54,6 +54,12 @@ namespace Barotrauma
             get { return serverMessage; }
         }
 
+        public string ServerMessageText
+        {
+            get { return serverMessage.Text; }
+            set { serverMessage.Text = value; }
+        }
+
         public GUIListBox SubList
         {
             get { return subList; }
@@ -68,6 +74,11 @@ namespace Barotrauma
         {
             get { return modeList; }
         }
+        public int SelectedModeIndex
+        {
+            get { return modeList.SelectedIndex; }
+            set { modeList.Select(value); }
+        }
 
         public GUIListBox PlayerList
         {
@@ -78,6 +89,12 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        public bool StartButtonEnabled
+        {
+            get { return StartButton.Enabled; }
+            set { StartButton.Enabled = value; }
         }
 
         public GUIFrame InfoFrame
@@ -454,7 +471,7 @@ namespace Barotrauma
 
             base.Select();
         }
-
+        
         public void ShowSpectateButton()
         {
             if (GameMain.Client == null) return;

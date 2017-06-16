@@ -39,12 +39,9 @@ namespace Barotrauma.Networking
         private IRestResponse masterServerResponse;
 
         private ServerLog log;
-        private GUIButton showLogButton;
 
         private bool initiatedStartGame;
         private CoroutineHandle startGameCoroutine;
-
-        private GUIScrollBar clientListScrollBar;
 
         public TraitorManager TraitorManager;
 
@@ -122,40 +119,7 @@ namespace Barotrauma.Networking
                                     
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
-            //----------------------------------------
-
-            var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
-            endRoundButton.OnClicked = (btn, userdata) => { EndGame(); return true; };
-
-            log = new ServerLog(name);
-            showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, "", inGameHUD);
-            showLogButton.OnClicked = (GUIButton button, object userData) =>
-            {
-                if (log.LogFrame == null)
-                {
-                    log.CreateLogFrame();
-                }
-                else
-                {
-                    log.LogFrame = null;
-                    GUIComponent.KeyboardDispatcher.Subscriber = null;
-                }
-                return true;
-            };
-
-            GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Settings", Alignment.TopLeft, "", inGameHUD);
-            settingsButton.OnClicked = ToggleSettingsFrame;
-            settingsButton.UserData = "settingsButton";
-
-            entityEventManager = new ServerEntityEventManager(this);
-
-            whitelist = new WhiteList();
-            banList = new BanList();
-
-            LoadSettings();
-            LoadClientPermissions();
-            
-            //----------------------------------------
+            InitProjSpecific();
             
             CoroutineManager.StartCoroutine(StartServer(isPublic));
         }
@@ -181,6 +145,7 @@ namespace Barotrauma.Networking
 
                 System.Net.Sockets.SocketException socketException = e as System.Net.Sockets.SocketException;
 
+#if CLIENT
                 if (socketException != null && socketException.SocketErrorCode == System.Net.Sockets.SocketError.AddressAlreadyInUse)
                 {
                     new GUIMessageBox("Starting the server failed", e.Message + ". Are you trying to run multiple servers on the same port?");
@@ -189,6 +154,7 @@ namespace Barotrauma.Networking
                 {
                     new GUIMessageBox("Starting the server failed", e.Message);
                 }
+#endif
 
                 error = true;
             }                  
@@ -197,26 +163,27 @@ namespace Barotrauma.Networking
             {
                 if (server != null) server.Shutdown("Error while starting the server");
 
+#if CLIENT
                 GameMain.NetworkMember = null;
+#elif SERVER
+                Environment.Exit(-1);
+#endif
                 yield return CoroutineStatus.Success;
             }
             
             if (config.EnableUPnP)
             {
-                server.UPnP.ForwardPort(config.Port, "barotrauma");
-
-                GUIMessageBox upnpBox = new GUIMessageBox("Please wait...", "Attempting UPnP port forwarding", new string[] {"Cancel"} );
-                upnpBox.Buttons[0].OnClicked = upnpBox.Close;
+                InitUPnP();
 
                 //DateTime upnpTimeout = DateTime.Now + new TimeSpan(0,0,5);
-                while (server.UPnP.Status == UPnPStatus.Discovering 
-                    && GUIMessageBox.VisibleBox == upnpBox)// && upnpTimeout>DateTime.Now)
+                while (DiscoveringUPnP())// && upnpTimeout>DateTime.Now)
                 {
                     yield return null;
                 }
 
-                upnpBox.Close(null,null);
-                
+                FinishUPnP();
+
+#if CLIENT
                 if (server.UPnP.Status == UPnPStatus.NotAvailable)
                 {
                     new GUIMessageBox("Error", "UPnP not available");
@@ -225,6 +192,7 @@ namespace Barotrauma.Networking
                 {
                     new GUIMessageBox("Error", "UPnP discovery timed out");
                 }
+#endif
             }
 
             if (isPublic)
@@ -430,7 +398,7 @@ namespace Barotrauma.Networking
                 if (startGameCoroutine != null && !CoroutineManager.IsCoroutineRunning(startGameCoroutine))
                 {
                     if (autoRestart) AutoRestartTimer = Math.Max(AutoRestartInterval, 5.0f);
-                    GameMain.NetLobbyScreen.StartButton.Enabled = true;
+                    GameMain.NetLobbyScreen.StartButtonEnabled = true;
 
                     GameMain.NetLobbyScreen.LastUpdateID++;
 
@@ -441,9 +409,9 @@ namespace Barotrauma.Networking
             else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count>0)
             {
                 AutoRestartTimer -= deltaTime;
-                if (AutoRestartTimer < 0.0f && GameMain.NetLobbyScreen.StartButton.Enabled)
+                if (AutoRestartTimer < 0.0f && GameMain.NetLobbyScreen.StartButtonEnabled)
                 {
-                    StartGameClicked(null,null);
+                    StartGame();
                 }
             }
 
@@ -930,7 +898,7 @@ namespace Barotrauma.Networking
 
                 outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
                 outmsg.Write(GameMain.NetLobbyScreen.GetServerName());
-                outmsg.Write(GameMain.NetLobbyScreen.ServerMessage.Text);
+                outmsg.Write(GameMain.NetLobbyScreen.ServerMessageText);
                 
                 outmsg.Write(c.lastRecvGeneralUpdate < 1);
                 if (c.lastRecvGeneralUpdate < 1)
@@ -938,10 +906,10 @@ namespace Barotrauma.Networking
                     isInitialUpdate = true;
                     ClientWriteInitial(c, outmsg);
                 }
-                outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).Name);
-                outmsg.Write((GameMain.NetLobbyScreen.SubList.SelectedData as Submarine).MD5Hash.ToString());
-                outmsg.Write((GameMain.NetLobbyScreen.ShuttleList.SelectedData as Submarine).Name);
-                outmsg.Write((GameMain.NetLobbyScreen.ShuttleList.SelectedData as Submarine).MD5Hash.ToString());
+                outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.Name);
+                outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
+                outmsg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
+                outmsg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.ToString());
 
                 outmsg.Write(Voting.AllowSubVoting);
                 outmsg.Write(Voting.AllowModeVoting);
@@ -950,7 +918,7 @@ namespace Barotrauma.Networking
 
                 outmsg.WriteRangedInteger(0, Mission.MissionTypes.Count - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
 
-                outmsg.Write((byte)GameMain.NetLobbyScreen.ModeList.SelectedIndex);
+                outmsg.Write((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
                 outmsg.Write(GameMain.NetLobbyScreen.LevelSeed);
 
                 outmsg.Write(AutoRestart);
@@ -1015,8 +983,8 @@ namespace Barotrauma.Networking
                 c.chatMsgQueue[i].ServerWrite(outmsg, c);
             }
         }
-
-        public bool StartGameClicked(GUIButton button, object obj)
+        
+        public bool StartGame()
         {
             Submarine selectedSub = null;
             Submarine selectedShuttle = GameMain.NetLobbyScreen.SelectedShuttle;
@@ -1033,13 +1001,17 @@ namespace Barotrauma.Networking
 
             if (selectedSub == null)
             {
+#if CLIENT
                 GameMain.NetLobbyScreen.SubList.Flash();
+#endif
                 return false;
             }
 
             if (selectedShuttle == null)
             {
+#if CLIENT
                 GameMain.NetLobbyScreen.ShuttleList.Flash();
+#endif
                 return false;
             }
 
@@ -1048,7 +1020,9 @@ namespace Barotrauma.Networking
 
             if (selectedMode == null)
             {
+#if CLIENT
                 GameMain.NetLobbyScreen.ModeList.Flash();
+#endif
                 return false;
             }
 
@@ -1059,7 +1033,7 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> InitiateStartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
         {
-            GameMain.NetLobbyScreen.StartButton.Enabled = false;
+            GameMain.NetLobbyScreen.StartButtonEnabled = false;
 
             if (connectedClients.Any())
             {
@@ -1086,19 +1060,23 @@ namespace Barotrauma.Networking
 
                 if (fileSender.ActiveTransfers.Count > 0)
                 {
+#if CLIENT
                     var msgBox = new GUIMessageBox("", "Waiting for file transfers to finish before starting the round...", new string[] { "Start now" });
                     msgBox.Buttons[0].OnClicked += msgBox.Close;
+#endif
 
                     float waitForTransfersTimer = 20.0f;
                     while (fileSender.ActiveTransfers.Count > 0 && waitForTransfersTimer > 0.0f)
                     {
                         waitForTransfersTimer -= CoroutineManager.UnscaledDeltaTime;
 
+#if CLIENT
                         //message box close, break and start the round immediately
                         if (!GUIMessageBox.MessageBoxes.Contains(msgBox))
                         {
                             break;
                         }
+#endif
 
                         yield return CoroutineStatus.Running;
                     }
@@ -1116,9 +1094,11 @@ namespace Barotrauma.Networking
             
             entityEventManager.Clear();
 
-            GameMain.NetLobbyScreen.StartButton.Enabled = false;
+            GameMain.NetLobbyScreen.StartButtonEnabled = false;
 
+#if CLIENT
             GUIMessageBox.CloseAll();
+#endif
             
             roundStartSeed = DateTime.Now.Millisecond;
             Rand.SetSyncedSeed(roundStartSeed);
@@ -1261,7 +1241,7 @@ namespace Barotrauma.Networking
 
             AddChatMessage("Press TAB to chat. Use ''r;'' to talk through the radio.", ChatMessageType.Server);
             
-            GameMain.NetLobbyScreen.StartButton.Enabled = true;
+            GameMain.NetLobbyScreen.StartButtonEnabled = true;
 
             gameStarted = true;
             initiatedStartGame = false;
@@ -1350,7 +1330,9 @@ namespace Barotrauma.Networking
             Character.Controlled = null;
             myCharacter = null;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+#if CLIENT
             GameMain.LightManager.LosEnabled = false;
+#endif
             
             entityEventManager.Clear();
             foreach (Client c in connectedClients)
@@ -1486,7 +1468,9 @@ namespace Barotrauma.Networking
 
             client.Connection.Disconnect(targetmsg);
 
-            GameMain.NetLobbyScreen.RemovePlayer(client.name);            
+#if CLIENT
+            GameMain.NetLobbyScreen.RemovePlayer(client.name);        
+#endif    
             connectedClients.Remove(client);
 
             UpdateVoteStatus();
@@ -1744,85 +1728,12 @@ namespace Barotrauma.Networking
             return message;
         }
 
-        public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
-        {
-            base.Draw(spriteBatch);
-
-            if (settingsFrame != null)
-            {
-                settingsFrame.Draw(spriteBatch);
-            }
-            else if (log.LogFrame!=null)
-            {
-                log.LogFrame.Draw(spriteBatch);
-            }
-            
-            if (!ShowNetStats) return;
-
-            GUI.Font.DrawString(spriteBatch, "Unique Events: " + entityEventManager.UniqueEvents.Count, new Vector2(10, 50), Color.White);
-
-            int width = 200, height = 300;
-            int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
-
-
-            if (clientListScrollBar == null)
-            {
-                clientListScrollBar = new GUIScrollBar(new Rectangle(x + width - 10, y, 10, height), "", 1.0f);
-            }
-
-
-            GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
-            GUI.Font.DrawString(spriteBatch, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
-
-            GUI.SmallFont.DrawString(spriteBatch, "Connections: "+server.ConnectionsCount, new Vector2(x + 10, y + 30), Color.White);
-            GUI.SmallFont.DrawString(spriteBatch, "Received bytes: " + MathUtils.GetBytesReadable(server.Statistics.ReceivedBytes), new Vector2(x + 10, y + 45), Color.White);
-            GUI.SmallFont.DrawString(spriteBatch, "Received packets: " + server.Statistics.ReceivedPackets, new Vector2(x + 10, y + 60), Color.White);
-
-            GUI.SmallFont.DrawString(spriteBatch, "Sent bytes: " + MathUtils.GetBytesReadable(server.Statistics.SentBytes), new Vector2(x + 10, y + 75), Color.White);
-            GUI.SmallFont.DrawString(spriteBatch, "Sent packets: " + server.Statistics.SentPackets, new Vector2(x + 10, y + 90), Color.White);
-
-            int resentMessages = 0;
-
-            int clientListHeight = connectedClients.Count * 40;
-            float scrollBarHeight = (height - 110) / (float)Math.Max(clientListHeight, 110);
-
-            if (clientListScrollBar.BarSize != scrollBarHeight)
-            {
-                clientListScrollBar.BarSize = scrollBarHeight;
-            }
-
-            int startY = y + 110;
-            y = (startY - (int)(clientListScrollBar.BarScroll * (clientListHeight-(height - 110))));
-            foreach (Client c in connectedClients)
-            {
-                Color clientColor = c.Connection.AverageRoundtripTime > 0.3f ? Color.Red : Color.White;
-
-                if (y >= startY && y < startY + height - 120)
-                {
-                    GUI.SmallFont.DrawString(spriteBatch, c.name + " ("+c.Connection.RemoteEndPoint.Address.ToString()+")", new Vector2(x + 10, y), clientColor);
-                    GUI.SmallFont.DrawString(spriteBatch, "Ping: " + (int)(c.Connection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x+20, y+10), clientColor);
-                }
-                if (y + 25 >= startY && y < startY + height - 130) GUI.SmallFont.DrawString(spriteBatch, "Resent messages: " + c.Connection.Statistics.ResentMessages, new Vector2(x + 20, y + 20), clientColor);
-
-                resentMessages += (int)c.Connection.Statistics.ResentMessages;
-
-                y += 40;
-            }
-
-            clientListScrollBar.Update(1.0f / 60.0f);
-            clientListScrollBar.Draw(spriteBatch);
-
-            netStats.AddValue(NetStats.NetStatType.ResentMessages, Math.Max(resentMessages, 0));
-            netStats.AddValue(NetStats.NetStatType.SentBytes, server.Statistics.SentBytes);
-            netStats.AddValue(NetStats.NetStatType.ReceivedBytes, server.Statistics.ReceivedBytes);
-
-            netStats.Draw(spriteBatch, new Rectangle(200,0,800,200), this);
-        }
-
         private void FileTransferChanged(FileSender.FileTransferOut transfer)
         {
             Client recipient = connectedClients.Find(c => c.Connection == transfer.Connection);
+#if CLIENT
             UpdateFileTransferIndicator(recipient);
+#endif
         }
 
         public void SendCancelTransferMsg(FileSender.FileTransferOut transfer)
@@ -1832,42 +1743,6 @@ namespace Barotrauma.Networking
             msg.Write((byte)FileTransferMessageType.Cancel);
             msg.Write((byte)transfer.SequenceChannel);
             server.SendMessage(msg, transfer.Connection, NetDeliveryMethod.ReliableOrdered, transfer.SequenceChannel);
-        }
-
-        private void UpdateFileTransferIndicator(Client client)
-        {
-            var transfers = fileSender.ActiveTransfers.FindAll(t => t.Connection == client.Connection);
-
-            var clientNameBox = GameMain.NetLobbyScreen.PlayerList.FindChild(client.name);
-
-            var clientInfo = clientNameBox.FindChild("filetransfer");
-            if (clientInfo == null)
-            {
-                clientNameBox.ClearChildren();
-                clientInfo = new GUIFrame(new Rectangle(0, 0, 180, 0), Color.Transparent, Alignment.TopRight, null, clientNameBox);
-                clientInfo.UserData = "filetransfer";
-            }
-            else if (transfers.Count == 0)
-            {
-                clientInfo.Parent.RemoveChild(clientInfo);
-            }
-
-            clientInfo.ClearChildren();
-
-            var progressBar = new GUIProgressBar(new Rectangle(0, 4, 160, clientInfo.Rect.Height - 8), Color.Green, "", 0.0f, Alignment.Left, clientInfo);
-            progressBar.IsHorizontal = true;            
-            progressBar.ProgressGetter = () => { return transfers.Sum(t => t.Progress) / transfers.Count; };
-
-            var textBlock = new GUITextBlock(new Rectangle(0, 2, 160, 0), "", "", Alignment.TopLeft, Alignment.Left | Alignment.CenterY, clientInfo, true, GUI.SmallFont);
-            textBlock.TextGetter = () =>
-            { return MathUtils.GetBytesReadable(transfers.Sum(t => t.SentOffset)) + " / " + MathUtils.GetBytesReadable(transfers.Sum(t => t.Data.Length)); };
-
-            var cancelButton = new GUIButton(new Rectangle(-5, 0, 14, 0), "X", Alignment.Right, "", clientInfo);
-            cancelButton.OnClicked = (GUIButton button, object userdata) =>
-            {
-                transfers.ForEach(t => fileSender.CancelTransfer(t));
-                return true;
-            };
         }
 
         public void UpdateVoteStatus()
@@ -1920,30 +1795,7 @@ namespace Barotrauma.Networking
 
             SaveClientPermissions();
         }
-
-        public override bool SelectCrewCharacter(Character character, GUIComponent crewFrame)
-        {
-            if (character == null) return false;
-
-            var characterFrame = crewFrame.FindChild("selectedcharacter");
-            if (character != myCharacter)
-            {
-                var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, "", characterFrame);
-                banButton.UserData = character.Name;
-                banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
-
-                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomRight, "", characterFrame);
-                rangebanButton.UserData = character.Name;
-                rangebanButton.OnClicked += GameMain.NetLobbyScreen.BanPlayerRange;
-
-                var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, "", characterFrame);
-                kickButton.UserData = character.Name;
-                kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
-            }
-
-            return true;
-        }
-
+        
         public void SetClientCharacter(Client client, Character newCharacter)
         {
             if (client == null) return;
