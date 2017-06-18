@@ -239,7 +239,7 @@ namespace Barotrauma
                     foreach (Controller controller in buttons)
                     {
                         float dist = Vector2.Distance(controller.Item.WorldPosition, character.WorldPosition);
-                        if (dist > controller.Item.PickDistance * 2.0f) continue;
+                        if (dist > controller.Item.InteractDistance * 2.0f) continue;
 
                         if (dist < closestDist || closestButton == null)
                         {

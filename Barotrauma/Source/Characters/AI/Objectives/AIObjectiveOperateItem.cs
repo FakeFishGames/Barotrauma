@@ -53,7 +53,7 @@ namespace Barotrauma
 
             if (target.CanBeSelected)
             { 
-                if (Vector2.Distance(character.Position, target.Item.Position) < target.Item.PickDistance
+                if (Vector2.Distance(character.Position, target.Item.Position) < target.Item.InteractDistance
                     || target.Item.IsInsideTrigger(character.WorldPosition))
                 {
                     if (character.SelectedConstruction != target.Item && target.CanBeSelected)

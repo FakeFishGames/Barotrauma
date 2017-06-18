@@ -136,9 +136,14 @@ namespace Barotrauma
             get { return prefab.sprite; }
         }
 
-        public float PickDistance
+        public float InteractDistance
         {
-            get { return prefab.PickDistance; }
+            get { return prefab.InteractDistance; }
+        }
+
+        public float InteractPriority
+        {
+            get { return prefab.InteractPriority; }
         }
 
         public override Vector2 SimPosition

@@ -1048,7 +1048,7 @@ namespace Barotrauma
                 return CanAccessInventory(item.ParentInventory);
             }
 
-            if (item.PickDistance == 0.0f && !item.Prefab.Triggers.Any()) return false;
+            if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) return false;
 
             Pickable pickableComponent = item.GetComponent<Pickable>();
             if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) return false;
@@ -1091,19 +1091,19 @@ namespace Barotrauma
 
             // Get the point along the line between lowerBodyPosition and upperBodyPosition which is closest to the center of itemDisplayRect
             playerDistanceCheckPosition = Vector2.Clamp(itemDisplayRect.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
-            
+
+            // Here we get the point on the itemDisplayRect which is closest to playerDistanceCheckPosition
+            Vector2 rectIntersectionPoint = new Vector2(Math.Max(itemDisplayRect.X, Math.Min(itemDisplayRect.X + itemDisplayRect.Width, playerDistanceCheckPosition.X)), Math.Max(itemDisplayRect.Y, Math.Min(itemDisplayRect.Y + itemDisplayRect.Height, playerDistanceCheckPosition.Y)));
+
             // If playerDistanceCheckPosition is inside the itemDisplayRect then we consider the character to within 0 distance of the item
             if (!itemDisplayRect.Contains(playerDistanceCheckPosition))
             {
-                // Here we get the point on the itemDisplayRect which is closest to playerDistanceCheckPosition
-                Vector2 rectIntersectionPoint = new Vector2(Math.Max(itemDisplayRect.X, Math.Min(itemDisplayRect.X + itemDisplayRect.Width, playerDistanceCheckPosition.X)), Math.Max(itemDisplayRect.Y, Math.Min(itemDisplayRect.Y + itemDisplayRect.Height, playerDistanceCheckPosition.Y)));
-
                 distanceToItem = Vector2.Distance(rectIntersectionPoint, playerDistanceCheckPosition);
             }
 
-            if (distanceToItem > item.PickDistance && item.PickDistance > 0.0f) return false;
+            if (distanceToItem > item.InteractDistance && item.InteractDistance > 0.0f) return false;
 
-            if (!item.Prefab.PickThroughWalls && Screen.Selected != GameMain.EditMapScreen && !insideTrigger)
+            if (!item.Prefab.InteractThroughWalls && Screen.Selected != GameMain.EditMapScreen && !insideTrigger)
             {
                 Body body = Submarine.CheckVisibility(SimPosition, item.SimPosition, true);
                 if (body != null && body.UserData as Item != item) return false;
@@ -1128,7 +1128,7 @@ namespace Barotrauma
 
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
 
-            Item lowestDepthItemAtPosition = null;
+            Item highestPriorityItemAtPosition = null;
             Item closestItem = null;
             float closestItemDistance = 0.0f;
 
@@ -1139,9 +1139,15 @@ namespace Barotrauma
                 
                 if (CanInteractWith(item))
                 {
-                    if (item.IsMouseOn(displayPosition) && (lowestDepthItemAtPosition == null || lowestDepthItemAtPosition.GetDrawDepth() > item.GetDrawDepth()))
+                    if (item.IsMouseOn(displayPosition))
                     {
-                        lowestDepthItemAtPosition = item;
+                        Console.WriteLine("Name: " + item.Name + " Priority:" + item.InteractPriority);
+                    }
+                    if (item.IsMouseOn(displayPosition) && (highestPriorityItemAtPosition == null || 
+                        ((highestPriorityItemAtPosition.InteractPriority < item.InteractPriority) ||
+                        (highestPriorityItemAtPosition.InteractPriority == item.InteractPriority && highestPriorityItemAtPosition.GetDrawDepth() > item.GetDrawDepth()))))
+                    {
+                        highestPriorityItemAtPosition = item;
                     }
                     else if (aimAssistModifier > 0.0f)
                     {
@@ -1155,12 +1161,12 @@ namespace Barotrauma
                 }
             }
 
-            if (lowestDepthItemAtPosition == null)
+            if (highestPriorityItemAtPosition == null)
             {
                 return closestItem;
             }
 
-            return lowestDepthItemAtPosition;
+            return highestPriorityItemAtPosition;
         }
 
         private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = 150.0f)
