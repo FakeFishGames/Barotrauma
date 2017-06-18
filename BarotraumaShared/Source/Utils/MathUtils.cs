@@ -6,6 +6,16 @@ using System.Text;
 
 namespace Barotrauma
 {
+    //TODO: perhaps find a better place for this?
+    [Flags]
+    public enum Alignment
+    {
+        CenterX = 1, Left = 2, Right = 4, CenterY = 8, Top = 16, Bottom = 32,
+        TopLeft = (Top | Left), TopCenter = (CenterX | Top), TopRight = (Top | Right),
+        CenterLeft = (Left | CenterY), Center = (CenterX | CenterY), CenterRight = (Right | CenterY),
+        BottomLeft = (Bottom | Left), BottomCenter = (CenterX | Bottom), BottomRight = (Bottom | Right),
+    }
+
     static class MathUtils
     {
         public static Vector2 SmoothStep(Vector2 v1, Vector2 v2, float amount)
@@ -531,20 +541,6 @@ namespace Barotrauma
             float d1 = (a.X - center.X) * (a.X - center.X) + (a.Y - center.Y) * (a.Y - center.Y);
             float d2 = (b.X - center.X) * (b.X - center.X) + (b.Y - center.Y) * (b.Y - center.Y);
             return Math.Sign(d2 - d1);
-        }
-    }
-
-    class CompareSegmentPointCW : IComparer<Lights.SegmentPoint>
-    {
-        private Vector2 center;
-
-        public CompareSegmentPointCW(Vector2 center)
-        {
-            this.center = center;
-        }
-        public int Compare(Lights.SegmentPoint a, Lights.SegmentPoint b)
-        {
-            return -CompareCCW.Compare(a.WorldPos, b.WorldPos, center);
         }
     }
 }

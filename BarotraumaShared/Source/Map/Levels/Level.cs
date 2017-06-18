@@ -14,8 +14,7 @@ using Barotrauma.RuinGeneration;
 
 namespace Barotrauma
 {
-
-    class Level
+    partial class Level
     {
         public const float ShaftHeight = 1000.0f;
 
@@ -43,8 +42,6 @@ namespace Barotrauma
         }
 
         static Level loaded;
-
-        private LevelRenderer renderer;
 
         //how close the sub has to be to start/endposition to exit
         public const float ExitDistance = 6000.0f;
@@ -168,9 +165,7 @@ namespace Barotrauma
             loaded = this;
 
             positionsOfInterest = new List<InterestingPosition>();
-
-            renderer = new LevelRenderer(this);
-
+            
             Voronoi voronoi = new Voronoi(1.0);
 
             List<Vector2> sites = new List<Vector2>();
@@ -178,10 +173,14 @@ namespace Barotrauma
             bodies = new List<Body>();
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
-            
+
+#if CLIENT
+            renderer = new LevelRenderer(this);
+
             backgroundColor = generationParams.BackgroundColor;
             float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
             GameMain.LightManager.AmbientLight = new Color(backgroundColor * (10.0f / avgValue), 1.0f);
+#endif
 
             float minWidth = 6500.0f;
             if (Submarine.MainSub != null)
@@ -440,7 +439,8 @@ namespace Barotrauma
             endPosition.Y = borders.Height;
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
-            
+
+#if CLIENT
             List<VertexPositionTexture> bodyVertices;
             bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out bodyVertices);
 
@@ -448,6 +448,7 @@ namespace Barotrauma
             renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells));
 
             renderer.PlaceSprites(generationParams.BackgroundSpriteAmount);
+#endif
                         
             ShaftBody = BodyFactory.CreateEdge(GameMain.World, 
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
@@ -817,50 +818,14 @@ namespace Barotrauma
                 WrappingWall.UpdateWallShift(Submarine.MainSub.WorldPosition, wrappingWalls);
             }*/
 
+#if CLIENT
             if (Hull.renderer != null)
             {
                 Hull.renderer.ScrollWater((float)deltaTime);
             }
 
             renderer.Update(deltaTime);
-        }
-
-        public void DrawFront(SpriteBatch spriteBatch)
-        {
-            if (renderer == null) return;
-            renderer.Draw(spriteBatch);
-
-            if (GameMain.DebugDraw)
-            {
-                foreach (InterestingPosition pos in positionsOfInterest)
-                {
-                    Color color = Color.Yellow;
-                    if (pos.PositionType == PositionType.Cave)
-                    {
-                        color = Color.DarkOrange;
-                    }
-                    else if (pos.PositionType == PositionType.Ruin)
-                    {
-                        color = Color.LightGray;
-                    }
-                   
-
-                    GUI.DrawRectangle(spriteBatch, new Vector2(pos.Position.X-15.0f, -pos.Position.Y-15.0f), new Vector2(30.0f, 30.0f), color, true);
-                }
-            }
-        }
-
-        public void DrawBack(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundSpriteManager = null)
-        {
-            float brightness = MathHelper.Clamp(50.0f + (cam.Position.Y - Size.Y) / 2000.0f, 10.0f, 40.0f);
-
-            float avgValue = (backgroundColor.R + backgroundColor.G + backgroundColor.G) / 3;
-            GameMain.LightManager.AmbientLight = new Color(backgroundColor * (brightness / avgValue), 1.0f);
-
-            graphics.Clear(backgroundColor);
-
-            if (renderer == null) return;
-            renderer.DrawBackground(spriteBatch, cam, backgroundSpriteManager);
+#endif
         }
 
         public List<VoronoiCell> GetCells(Vector2 pos, int searchDepth = 2)
@@ -910,11 +875,13 @@ namespace Barotrauma
 
         private void Unload()
         {
+#if CLIENT
             if (renderer!=null) 
             {
                 renderer.Dispose();
                 renderer = null;
             }
+#endif
 
             if (ruins != null)
             {

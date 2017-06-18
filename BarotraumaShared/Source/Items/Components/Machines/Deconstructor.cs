@@ -10,11 +10,8 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Deconstructor : Powered, IServerSerializable, IClientSerializable
+    partial class Deconstructor : Powered, IServerSerializable, IClientSerializable
     {
-        GUIProgressBar progressBar;
-        GUIButton activateButton;
-
         float progressTimer;
 
         ItemContainer container;
@@ -22,10 +19,12 @@ namespace Barotrauma.Items.Components
         public Deconstructor(Item item, XElement element) 
             : base(item, element)
         {
+#if CLIENT
             progressBar = new GUIProgressBar(new Rectangle(0,0,200,20), Color.Green, "", 0.0f, Alignment.BottomCenter, GuiFrame);
 
             activateButton = new GUIButton(new Rectangle(0, 0, 200, 20), "Deconstruct", Alignment.TopCenter, "", GuiFrame);
             activateButton.OnClicked = ToggleActive;
+#endif
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -44,7 +43,9 @@ namespace Barotrauma.Items.Components
             Voltage -= deltaTime * 10.0f;
 
             var targetItem = container.Inventory.Items.FirstOrDefault(i => i != null);
+#if CLIENT
             progressBar.BarSize = Math.Min(progressTimer / targetItem.Prefab.DeconstructTime, 1.0f);
+#endif
             if (progressTimer>targetItem.Prefab.DeconstructTime)
             {
                 var containers = item.GetComponents<ItemContainer>();
@@ -83,42 +84,11 @@ namespace Barotrauma.Items.Components
                 if (container.Inventory.Items.Any(i => i != null))
                 {
                     progressTimer = 0.0f;
+#if CLIENT
                     progressBar.BarSize = 0.0f;
+#endif
                 }
             }
-        }
-
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            GuiFrame.Draw(spriteBatch);
-        }
-
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
-
-        public override void UpdateHUD(Character character)
-        {
-            GuiFrame.Update((float)Timing.Step);
-        }
-
-        private bool ToggleActive(GUIButton button, object obj)
-        {
-            SetActive(!IsActive, Character.Controlled);
-
-            currPowerConsumption = IsActive ? powerConsumption : 0.0f;
-
-            if (GameMain.Server != null)
-            {
-                item.CreateServerEvent(this);
-            }
-            else if (GameMain.Client != null)
-            {
-                item.CreateClientEvent(this);
-            }
-            
-            return true;
         }
 
         private void SetActive(bool active, Character user = null)
@@ -139,6 +109,7 @@ namespace Barotrauma.Items.Components
                 GameServer.Log(user.Name + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
+#if CLIENT
             if (!IsActive)
             {
                 progressBar.BarSize = 0.0f;
@@ -151,16 +122,11 @@ namespace Barotrauma.Items.Components
 
                 activateButton.Text = "Cancel";
             }
+#endif
 
             container.Inventory.Locked = IsActive;            
         }
-
-
-        public void ClientWrite(NetBuffer msg, object[] extraData = null)
-        {
-            msg.Write(IsActive);
-        }
-
+        
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             bool active = msg.ReadBoolean();
@@ -177,11 +143,5 @@ namespace Barotrauma.Items.Components
         {
             msg.Write(IsActive);
         }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            SetActive(msg.ReadBoolean());
-        }
-        
     }
 }

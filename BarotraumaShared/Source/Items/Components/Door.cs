@@ -1,5 +1,4 @@
-﻿using Barotrauma.Lights;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -9,18 +8,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-
+#if CLIENT
+using Barotrauma.Lights;
+#endif
 
 namespace Barotrauma.Items.Components
 {
-    class Door : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class Door : ItemComponent, IDrawableComponent, IServerSerializable
     {
         private Gap linkedGap;
 
         private Rectangle window;
-
-        private ConvexHull convexHull;
-        private ConvexHull convexHull2;
 
         private bool isOpen;
 
@@ -133,7 +131,9 @@ namespace Barotrauma.Items.Components
                 openState = MathHelper.Clamp(value, 0.0f, 1.0f);
                 if (openState == prevValue) return;
 
+#if CLIENT
                 UpdateConvexHulls();
+#endif
             }
         }
         
@@ -185,78 +185,6 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        private void UpdateConvexHulls()
-        {
-            doorRect = new Rectangle(
-                item.Rect.Center.X - (int)(doorSprite.size.X / 2),
-                item.Rect.Y - item.Rect.Height / 2 + (int)(doorSprite.size.Y / 2.0f),
-                (int)doorSprite.size.X,
-                (int)doorSprite.size.Y);
-
-            Rectangle rect = doorRect;
-            if (isHorizontal)
-            {
-                rect.Width = (int)(rect.Width * (1.0f - openState));
-            }
-            else
-            {
-                rect.Height = (int)(rect.Height * (1.0f - openState));
-            }
-
-            if (window.Height > 0 && window.Width > 0)
-            {
-                rect.Height = -window.Y;
-
-                rect.Y += (int)(doorRect.Height * openState);
-                rect.Height = Math.Max(rect.Height - (rect.Y - doorRect.Y), 0);
-                rect.Y = Math.Min(doorRect.Y, rect.Y);
-
-                if (convexHull2 != null)
-                {
-                    Rectangle rect2 = doorRect;
-                    rect2.Y = rect2.Y + window.Y - window.Height;
-
-                    rect2.Y += (int)(doorRect.Height * openState);
-                    rect2.Y = Math.Min(doorRect.Y, rect2.Y);
-                    rect2.Height = rect2.Y - (doorRect.Y - (int)(doorRect.Height * (1.0f - openState)));
-                    //convexHull2.SetVertices(GetConvexHullCorners(rect2));
-
-                    if (rect2.Height == 0)
-                    {
-                        convexHull2.Enabled = false;
-                    }
-                    else
-                    {
-                        convexHull2.Enabled = true;
-                        convexHull2.SetVertices(GetConvexHullCorners(rect2));
-                    }
-                }
-            }
-
-            if (convexHull == null) return;
-
-            if (rect.Height == 0 || rect.Width == 0)
-            {
-                convexHull.Enabled = false;
-            }
-            else
-            {
-                convexHull.Enabled = true;
-                convexHull.SetVertices(GetConvexHullCorners(rect));
-            }
-        }
-
-        private Vector2[] GetConvexHullCorners(Rectangle rect)
-        {
-            Vector2[] corners = new Vector2[4];
-            corners[0] = new Vector2(rect.X, rect.Y - rect.Height);
-            corners[1] = new Vector2(rect.X, rect.Y);
-            corners[2] = new Vector2(rect.Right, rect.Y);
-            corners[3] = new Vector2(rect.Right, rect.Y - rect.Height);
-
-            return corners;
-        }
-
         public override void Move(Vector2 amount)
         {
             base.Move(amount);
@@ -265,7 +193,9 @@ namespace Barotrauma.Items.Components
 
             body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
 
+#if CLIENT
             UpdateConvexHulls();
+#endif
 
             //convexHull.Move(amount);
             //if (convexHull2 != null) convexHull2.Move(amount);
@@ -331,66 +261,19 @@ namespace Barotrauma.Items.Components
             linkedGap.Open = 1.0f;
         }
         
-        public void Draw(SpriteBatch spriteBatch, bool editing)
-        {           
-            Color color = (item.IsSelected) ? Color.Green : Color.White;
-            color = color * (item.Condition / 100.0f);
-            color.A = 255;
-
-            //prefab.sprite.Draw(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);
-
-            if (stuck>0.0f && weldedSprite!=null)
-            {
-                Vector2 weldSpritePos = new Vector2(item.Rect.Center.X, item.Rect.Y-item.Rect.Height/2.0f);
-                if (item.Submarine != null) weldSpritePos += item.Submarine.Position;
-                weldSpritePos.Y = -weldSpritePos.Y;
-
-                weldedSprite.Draw(spriteBatch,
-                    weldSpritePos, Color.White*(stuck/100.0f), 0.0f, 1.0f);
-            }
-
-            if (openState == 1.0f)
-            {
-                body.Enabled = false;
-                return;
-            }
-
-            if (isHorizontal)
-            {
-                Vector2 pos = new Vector2(item.Rect.X, item.Rect.Y - item.Rect.Height/2);
-                if (item.Submarine != null) pos += item.Submarine.DrawPosition;
-                pos.Y = -pos.Y;
-
-                spriteBatch.Draw(doorSprite.Texture, pos,
-                    new Rectangle((int)(doorSprite.SourceRect.X + doorSprite.size.X * openState), (int)doorSprite.SourceRect.Y, 
-                     (int)(doorSprite.size.X * (1.0f - openState)),(int)doorSprite.size.Y),
-                    color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);  
-            }
-            else
-            {
-                Vector2 pos = new Vector2(item.Rect.Center.X, item.Rect.Y);
-                if (item.Submarine != null) pos += item.Submarine.DrawPosition;
-                pos.Y = -pos.Y;
-
-                spriteBatch.Draw(doorSprite.Texture, pos,
-                    new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.SourceRect.Y + doorSprite.size.Y * openState),
-                    (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
-                    color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);  
-            }
-          
-        }
-
         public override void OnMapLoaded()
         {
             LinkedGap.ConnectedDoor = this;
             LinkedGap.Open = openState;
 
+#if CLIENT
             Vector2[] corners = GetConvexHullCorners(Rectangle.Empty);
 
             convexHull = new ConvexHull(corners, Color.Black, item);
             if (window != Rectangle.Empty) convexHull2 = new ConvexHull(corners, Color.Black, item);
 
             UpdateConvexHulls();
+#endif
         }
 
         protected override void RemoveComponentSpecific()
@@ -409,8 +292,10 @@ namespace Barotrauma.Items.Components
             doorSprite.Remove();
             if (weldedSprite != null) weldedSprite.Remove();
 
+#if CLIENT
             if (convexHull!=null) convexHull.Remove();
             if (convexHull2 != null) convexHull2.Remove();
+#endif
         }
 
         private void PushCharactersAway()
@@ -450,7 +335,9 @@ namespace Barotrauma.Items.Components
                    
                     if (Math.Sign(diff) != dir)
                     {
+#if CLIENT
                         SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, body);
+#endif
 
                         if (isHorizontal)
                         {
@@ -512,10 +399,12 @@ namespace Barotrauma.Items.Components
             {
                 //clients can "predict" that the door opens/closes when a signal is received
 
-                //the prediction will be reset after 1 second, setting the door to a state
-                //sent by the server, or reverting it back to its old state if no msg from server was received
+//the prediction will be reset after 1 second, setting the door to a state
+//sent by the server, or reverting it back to its old state if no msg from server was received
 
+#if CLIENT
                 if (open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
+#endif
 
                 predictedState = open;
                 resetPredictionTimer = CorrectionDelay;
@@ -523,7 +412,9 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+#if CLIENT
                 if (!isNetworkMessage || open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
+#endif
 
                 isOpen = open;
             }

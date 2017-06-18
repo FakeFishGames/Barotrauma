@@ -1,18 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
-using Barotrauma.Lights;
 using System;
 using System.Xml.Linq;
 using Barotrauma.Networking;
 using Lidgren.Network;
+#if CLIENT
+using Barotrauma.Lights;
+#endif
 
 namespace Barotrauma.Items.Components
 {
-    class LightComponent : Powered, IServerSerializable, IDrawableComponent
+    partial class LightComponent : Powered, IServerSerializable, IDrawableComponent
     {
-
         private Color lightColor;
-
-        private LightSource light;
 
         private float range;
 
@@ -39,7 +38,9 @@ namespace Barotrauma.Items.Components
             set
             {
                 castShadows = value;
+#if CLIENT
                 if (light != null) light.CastShadows = value;
+#endif
             }
         }
 
@@ -83,7 +84,9 @@ namespace Barotrauma.Items.Components
 
         public override void Move(Vector2 amount)
         {
+#if CLIENT
             light.Position += amount;
+#endif
         }
 
         public override bool IsActive
@@ -96,20 +99,23 @@ namespace Barotrauma.Items.Components
             set
             {
                 base.IsActive = value;
-
+#if CLIENT
                 if (light == null) return;
                 light.Color = value ? lightColor : Color.Transparent;
                 if (!value) lightBrightness = 0.0f;
+#endif
             }
         }
 
         public LightComponent(Item item, XElement element)
             : base (item, element)
         {
+#if CLIENT
             light = new LightSource(element);
             light.ParentSub = item.CurrentHull == null ? null : item.CurrentHull.Submarine;
             light.Position = item.Position;
             light.CastShadows = castShadows;
+#endif
 
             IsActive = IsOn;
 
@@ -125,25 +131,32 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
-           
+
+#if CLIENT
             light.ParentSub = item.Submarine;
+#endif
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
+#if CLIENT
             if (item.Container != null)
             {
                 light.Color = Color.Transparent;
                 return;
             }
+#endif
 
             if (item.body != null)
             {
+#if CLIENT
                 light.Position = item.Position;
                 light.Rotation = item.body.Dir > 0.0f ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
-
+#endif
                 if (!item.body.Enabled)
                 {
+#if CLIENT
                     light.Color = Color.Transparent;
+#endif
                     return;
                 }
             }
@@ -159,7 +172,9 @@ namespace Barotrauma.Items.Components
 
             if (Rand.Range(0.0f, 1.0f) < 0.05f && voltage < Rand.Range(0.0f, minVoltage))
             {
+#if CLIENT
                 if (voltage > 0.1f) sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 400.0f, item.WorldPosition);
+#endif
                 lightBrightness = 0.0f;
             }
             else
@@ -167,8 +182,10 @@ namespace Barotrauma.Items.Components
                 lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(voltage, 1.0f), 0.1f);
             }
 
+#if CLIENT
             light.Color = lightColor * lightBrightness * (1.0f-Rand.Range(0.0f,Flicker));
             light.Range = range * (float)Math.Sqrt(lightBrightness);
+#endif
 
             voltage = 0.0f;
         }
@@ -178,19 +195,13 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch, bool editing = false)
-        {
-            if (light.LightSprite != null && (item.body == null || item.body.Enabled))
-            {
-                light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, 0.0f, 1.0f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, item.Sprite.Depth - 0.0001f);
-            } 
-        }
-        
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
 
+#if CLIENT
             light.Remove();
+#endif
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
@@ -214,11 +225,6 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
             msg.Write(IsOn);
-        }
-
-        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
-        {
-            IsOn = msg.ReadBoolean();
         }
     }
 }

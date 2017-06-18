@@ -12,7 +12,7 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    abstract partial class MapEntity
+    abstract partial class MapEntity : Entity
     {
         protected static Vector2 selectionPos = Vector2.Zero;
         protected static Vector2 selectionSize = Vector2.Zero;

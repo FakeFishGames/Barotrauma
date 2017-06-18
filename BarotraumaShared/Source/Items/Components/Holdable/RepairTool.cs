@@ -165,10 +165,10 @@ namespace Barotrauma.Items.Components
                 Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
                 if (hull != null)
                 {
-                    hull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
+                    hull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
                     if (hull != item.CurrentHull)
                     {
-                        item.CurrentHull.Extinquish(deltaTime, ExtinquishAmount, displayPos);
+                        item.CurrentHull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
                     }
                 }
 

@@ -14,6 +14,9 @@ namespace Barotrauma
 {
     partial class Character : Entity, IDamageable, IPropertyObject, IClientSerializable, IServerSerializable
     {
+        protected float soundTimer;
+        protected float soundInterval;
+
         private List<CharacterSound> sounds;
 
         //the Character that the player is currently controlling

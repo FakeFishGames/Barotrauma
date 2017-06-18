@@ -17,8 +17,6 @@ namespace Barotrauma.Networking
         //for keeping track of disconnected clients in case the reconnect shortly after
         private List<Client> disconnectedClients = new List<Client>();
 
-        private NetStats netStats;
-
         private int roundStartSeed;
         
         //is the server running
@@ -89,7 +87,9 @@ namespace Barotrauma.Networking
 
             config = new NetPeerConfiguration("barotrauma");
 
+#if CLIENT
             netStats = new NetStats();
+#endif
 
 #if DEBUG
             config.SimulatedLoss = 0.05f;
@@ -100,7 +100,7 @@ namespace Barotrauma.Networking
             config.ConnectionTimeout = 60.0f;
 
             NetIdUtils.Test();
-#endif 
+#endif
             config.Port = port;
             Port = port;
 
@@ -332,19 +332,13 @@ namespace Barotrauma.Networking
             masterServerResponded = true;
         }
         
-        public override void AddToGUIUpdateList()
-        {
-            if (started) base.AddToGUIUpdateList();
-
-            if (settingsFrame != null) settingsFrame.AddToGUIUpdateList();
-            if (log.LogFrame != null) log.LogFrame.AddToGUIUpdateList();
-        }
-
         public override void Update(float deltaTime)
         {
+#if CLIENT
             if (ShowNetStats) netStats.Update(deltaTime);
             if (settingsFrame != null) settingsFrame.Update(deltaTime);
             if (log.LogFrame != null) log.LogFrame.Update(deltaTime);
+#endif
             
             if (!started) return;
 
@@ -1176,7 +1170,9 @@ namespace Barotrauma.Networking
 
                     teamClients[i].Character = spawnedCharacter;
 
+#if CLIENT
                     GameMain.GameSession.CrewManager.characters.Add(spawnedCharacter);
+#endif
                 }
 
                 if (characterInfo != null && hostTeam == teamID)
@@ -1186,7 +1182,9 @@ namespace Barotrauma.Networking
                     myCharacter.TeamID = (byte)teamID;
 
                     Character.Controlled = myCharacter;
+#if CLIENT
                     GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+#endif
                 }
             }
 
@@ -1470,7 +1468,7 @@ namespace Barotrauma.Networking
 
 #if CLIENT
             GameMain.NetLobbyScreen.RemovePlayer(client.name);        
-#endif    
+#endif
             connectedClients.Remove(client);
 
             UpdateVoteStatus();

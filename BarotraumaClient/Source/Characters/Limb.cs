@@ -15,6 +15,8 @@ namespace Barotrauma
 {
     partial class Limb
     {
+        public readonly LightSource LightSource;
+
         Sound hitSound;
 
         public Sound HitSound

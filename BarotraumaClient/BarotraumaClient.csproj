@@ -63,6 +63,8 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\Camera.cs" />
+    <Compile Include="Source\Characters\AICharacter.cs" />
+    <Compile Include="Source\Characters\AI\CrewCommander.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreature.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreatureManager.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreaturePrefab.cs" />
@@ -107,18 +109,54 @@
     <Compile Include="Source\GUI\GUITickBox.cs" />
     <Compile Include="Source\GUI\LoadingScreen.cs" />
     <Compile Include="Source\Items\CharacterInventory.cs" />
+    <Compile Include="Source\Items\Components\Door.cs" />
+    <Compile Include="Source\Items\Components\ItemComponent.cs" />
+    <Compile Include="Source\Items\Components\ItemContainer.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
+    <Compile Include="Source\Items\Components\LightComponent.cs" />
+    <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
+    <Compile Include="Source\Items\Components\Machines\Engine.cs" />
+    <Compile Include="Source\Items\Components\Machines\Fabricator.cs" />
+    <Compile Include="Source\Items\Components\Machines\MiniMap.cs" />
+    <Compile Include="Source\Items\Components\Machines\Pump.cs" />
+    <Compile Include="Source\Items\Components\Machines\Radar.cs" />
+    <Compile Include="Source\Items\Components\Machines\Reactor.cs" />
+    <Compile Include="Source\Items\Components\Machines\Steering.cs" />
+    <Compile Include="Source\Items\Components\Power\PowerContainer.cs" />
+    <Compile Include="Source\Items\Components\Power\Powered.cs" />
+    <Compile Include="Source\Items\Components\Power\PowerTransfer.cs" />
+    <Compile Include="Source\Items\Components\Signal\ConnectionPanel.cs" />
+    <Compile Include="Source\Items\Components\Signal\Wire.cs" />
+    <Compile Include="Source\Items\Components\StatusHUD.cs" />
     <Compile Include="Source\Items\FixRequirement.cs" />
     <Compile Include="Source\Items\Inventory.cs" />
     <Compile Include="Source\Items\Item.cs" />
+    <Compile Include="Source\Items\ItemPrefab.cs" />
+    <Compile Include="Source\Map\Explosion.cs" />
+    <Compile Include="Source\Map\FireSource.cs" />
+    <Compile Include="Source\Map\Gap.cs" />
+    <Compile Include="Source\Map\Hull.cs" />
+    <Compile Include="Source\Map\Levels\Level.cs" />
+    <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
+    <Compile Include="Source\Map\Levels\WaterRenderer.cs" />
+    <Compile Include="Source\Map\Lights\ConvexHull.cs" />
+    <Compile Include="Source\Map\Lights\LightManager.cs" />
+    <Compile Include="Source\Map\Lights\LightSource.cs" />
+    <Compile Include="Source\Map\LinkedSubmarine.cs" />
     <Compile Include="Source\Map\MapEntity.cs" />
     <Compile Include="Source\Map\MapEntityPrefab.cs" />
     <Compile Include="Source\Map\Structure.cs" />
     <Compile Include="Source\Map\StructurePrefab.cs" />
     <Compile Include="Source\Map\WayPoint.cs" />
+    <Compile Include="Source\Networking\BanList.cs" />
     <Compile Include="Source\Networking\GameClient.cs" />
     <Compile Include="Source\Networking\GameServer.cs" />
+    <Compile Include="Source\Networking\GameServerSettings.cs" />
+    <Compile Include="Source\Networking\NetStats.cs" />
+    <Compile Include="Source\Networking\NetworkMember.cs" />
+    <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
+    <Compile Include="Source\Networking\WhiteList.cs" />
     <Compile Include="Source\Particles\Particle.cs" />
     <Compile Include="Source\Particles\ParticleEmitter.cs" />
     <Compile Include="Source\Particles\ParticleManager.cs" />
@@ -141,7 +179,9 @@
     <Compile Include="Source\Sounds\SoundPlayer.cs" />
     <Compile Include="Source\Sprite\Sprite.cs" />
     <Compile Include="Source\Sprite\SpriteSheet.cs" />
+    <Compile Include="Source\Utils\MathUtils.cs" />
     <Compile Include="Source\Utils\TextureLoader.cs" />
+    <Compile Include="Source\Utils\ToolBox.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework, Version=3.5.1.1679, Culture=neutral, processorArchitecture=MSIL">

@@ -3,11 +3,8 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Powered : ItemComponent
+    partial class Powered : ItemComponent
     {
-
-        protected static Sound[] sparkSounds;
-
         //the amount of power CURRENTLY consumed by the item
         //negative values mean that the item is providing power to connected items
         protected float currPowerConsumption;
@@ -20,10 +17,6 @@ namespace Barotrauma.Items.Components
 
         //the maximum amount of power the item can draw from connected items
         protected float powerConsumption;
-
-        private bool powerOnSoundPlayed;
-
-        private static Sound powerOnSound;
 
         [Editable, HasDefaultValue(0.5f, true)]
         public float MinVoltage
@@ -68,6 +61,7 @@ namespace Barotrauma.Items.Components
         public Powered(Item item, XElement element)
             : base(item, element)
         {
+#if CLIENT
             if (powerOnSound == null)
             {
                 powerOnSound = Sound.Load("Content/Items/Electricity/powerOn.ogg", false);
@@ -81,6 +75,7 @@ namespace Barotrauma.Items.Components
                     sparkSounds[i] = Sound.Load("Content/Items/Electricity/zap" + (i + 1) + ".ogg", false);
                 }
             }
+#endif
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0)
@@ -92,6 +87,8 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (currPowerConsumption == 0.0f) return;
+
+#if CLIENT
             if (voltage > minVoltage)
             {
                 if (!powerOnSoundPlayed)
@@ -104,6 +101,7 @@ namespace Barotrauma.Items.Components
             {
                 powerOnSoundPlayed = false;
             }
+#endif
         }
 
 

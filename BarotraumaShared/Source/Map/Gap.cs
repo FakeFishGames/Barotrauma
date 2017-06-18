@@ -9,7 +9,7 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    class Gap : MapEntity
+    partial class Gap : MapEntity
     {
         public static List<Gap> GapList = new List<Gap>();
 
@@ -189,58 +189,6 @@ namespace Barotrauma
             }
         }
 
-        public override void Draw(SpriteBatch sb, bool editing, bool back = true)
-        {
-            if (GameMain.DebugDraw)
-            {
-                Vector2 center = new Vector2(WorldRect.X + rect.Width / 2.0f, -(WorldRect.Y - rect.Height/ 2.0f));
-
-                GUI.DrawLine(sb, center, center + new Vector2(flowForce.X, -flowForce.Y)/10.0f, Color.Red);
-
-                GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + new Vector2(lerpedFlowForce.X, -lerpedFlowForce.Y) / 10.0f + Vector2.One * 5.0f, Color.Orange);
-            }
-            
-            if (!editing || !ShowGaps) return;
-
-            Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
-            if (isHighlighted) clr = Color.Gold;
-
-            float depth = (ID % 255) * 0.000001f;
-
-            GUI.DrawRectangle(
-                sb, new Rectangle(WorldRect.X, -WorldRect.Y, rect.Width, rect.Height), 
-                clr * 0.5f, true,
-                depth, 
-                (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
-
-            for (int i = 0; i < linkedTo.Count; i++)
-            {
-                Vector2 dir = isHorizontal ?
-                    new Vector2(Math.Sign(linkedTo[i].Rect.Center.X - rect.Center.X), 0.0f)
-                    : new Vector2(0.0f, Math.Sign((linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f) - (rect.Y - rect.Height / 2.0f)));
-
-                Vector2 arrowPos = new Vector2(WorldRect.Center.X, -(WorldRect.Y - WorldRect.Height / 2));
-                arrowPos += new Vector2(dir.X * (WorldRect.Width / 2 + 10), dir.Y * (WorldRect.Height / 2 + 10));
-
-                GUI.Arrow.Draw(sb,
-                    arrowPos, clr * 0.8f,
-                    GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
-                    isHorizontal ? new Vector2(rect.Height / 16.0f, 1.0f) : new Vector2(rect.Width / 16.0f, 1.0f),
-                    SpriteEffects.None, depth);
-            }        
-
-            if (IsSelected)
-            {
-                GUI.DrawRectangle(sb,
-                    new Vector2(WorldRect.X - 5, -WorldRect.Y - 5),
-                    new Vector2(rect.Width + 10, rect.Height + 10),
-                    Color.Red,
-                    false,
-                    depth,
-                    (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
-            }
-        }
-        
         public override void Update(Camera cam, float deltaTime)
         {
             flowForce = Vector2.Zero;
@@ -275,11 +223,12 @@ namespace Barotrauma
                 {
                     pos.X += Math.Sign(flowForce.X);
                     pos.Y = MathHelper.Clamp((higherSurface + lowerSurface) / 2.0f, rect.Y - rect.Height, rect.Y) + 10;
-
+                    
                     Vector2 velocity = new Vector2(
                         MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
                         flowForce.Y * Rand.Range(0.5f, 0.7f));
 
+#if CLIENT
                     var particle = GameMain.ParticleManager.CreateParticle(
                         "watersplash",
                         (Submarine == null ? pos : pos + Submarine.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
@@ -289,16 +238,19 @@ namespace Barotrauma
                     {
                         particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f), 5.0f);
                     }
+#endif
 
                     if (Math.Abs(flowForce.X) > 300.0f)
                     {
                         pos.X += Math.Sign(flowForce.X) * 10.0f;
                         pos.Y = Rand.Range(lowerSurface, rect.Y - rect.Height);
 
+#if CLIENT
                         GameMain.ParticleManager.CreateParticle(
                           "bubbles",
                           Submarine == null ? pos : pos + Submarine.Position,
                           flowForce / 10.0f, 0, flowTargetHull);  
+#endif
                     }
                 }
                 else
@@ -314,6 +266,7 @@ namespace Barotrauma
                             lerpedFlowForce.X * Rand.Range(0.5f, 0.7f),
                             Math.Max(lerpedFlowForce.Y, -100.0f) * Rand.Range(0.5f, 0.7f));
 
+#if CLIENT
                         var splash = GameMain.ParticleManager.CreateParticle(
                             "watersplash", 
                             Submarine == null ? pos : pos + Submarine.Position,
@@ -325,6 +278,7 @@ namespace Barotrauma
                             "bubbles", 
                             Submarine == null ? pos : pos + Submarine.Position,
                             flowForce / 2.0f, 0, FlowTargetHull);
+#endif
                     }
                 }
 
@@ -696,37 +650,7 @@ namespace Barotrauma
         {
             FindHulls();
         }
-
-        public override XElement Save(XElement parentElement)
-        {
-            XElement element = new XElement("Gap");
-
-            element.Add(
-                new XAttribute("ID", ID), 
-                new XAttribute("horizontal", isHorizontal ? "true" : "false"));
-
-            element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
-
-            //if (linkedTo != null)
-            //{
-            //    int i = 0;
-            //    foreach (Entity e in linkedTo)
-            //    {
-            //        if (e == null) continue;
-            //        element.Add(new XAttribute("linkedto" + i, e.ID));
-            //        i += 1;
-            //    }
-            //}
-
-            parentElement.Add(element);
-
-            return element;
-        }
-
-
+        
         public static void Load(XElement element, Submarine submarine)
         {
             Rectangle rect = Rectangle.Empty;
