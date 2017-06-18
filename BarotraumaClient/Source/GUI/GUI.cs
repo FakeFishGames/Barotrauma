@@ -6,15 +6,6 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    [Flags]
-    public enum Alignment 
-    { 
-        CenterX = 1, Left = 2, Right = 4, CenterY = 8, Top = 16, Bottom = 32,
-        TopLeft = (Top | Left),         TopCenter = (CenterX | Top),        TopRight = (Top | Right),       
-        CenterLeft = (Left | CenterY),  Center = (CenterX | CenterY),       CenterRight = (Right | CenterY),
-        BottomLeft = (Bottom | Left),   BottomCenter = (CenterX | Bottom),  BottomRight = (Bottom | Right), 
-    }
-
     public enum GUISoundType
     {
         Message,

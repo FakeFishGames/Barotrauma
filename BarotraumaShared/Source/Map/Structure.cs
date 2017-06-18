@@ -10,11 +10,10 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Networking;
-using Barotrauma.Lights;
 
 namespace Barotrauma
 {
-    class WallSection
+    partial class WallSection
     {
         public Rectangle rect;
         public float damage;
@@ -23,8 +22,6 @@ namespace Barotrauma
         public int GapID;
 
         //public float lastSentDamage;
-
-        public ConvexHull hull;
 
         public WallSection(Rectangle rect)
         {
@@ -47,8 +44,6 @@ namespace Barotrauma
     {
         public static int wallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
-
-        List<ConvexHull> convexHulls;
 
         StructurePrefab prefab;
 
@@ -202,10 +197,12 @@ namespace Barotrauma
                 }
             }
 
+#if CLIENT
             if (convexHulls!=null)
             {
                 convexHulls.ForEach(x => x.Move(amount));
             }
+#endif
         }
 
         public Structure(Rectangle rectangle, StructurePrefab sp, Submarine submarine)
@@ -257,10 +254,12 @@ namespace Barotrauma
                 }
             }
 
+#if CLIENT
             if (prefab.CastShadow)
             {
                 GenerateConvexHull();
             }
+#endif
 
             InsertToList();
         }
@@ -361,43 +360,6 @@ namespace Barotrauma
             }
         }
 
-        private void GenerateConvexHull()
-        {
-            // If not null and not empty , remove the hulls from the system
-            if(convexHulls != null && convexHulls.Any())
-                convexHulls.ForEach(x => x.Remove());
-
-            // list all of hulls for this structure
-            convexHulls = new List<ConvexHull>();
-
-            var mergedSections = new List<WallSection>();
-            foreach (var section in sections)
-            {
-                if (mergedSections.Count > 5)
-                {
-                    mergedSections.Add(section);
-                    GenerateMergedHull(mergedSections);
-                    continue;
-                }
-
-                // if there is a gap and we have sections to merge, do it.
-                if (section.gap != null)
-                {
-                    GenerateMergedHull(mergedSections);
-                }
-                else
-                {
-                    mergedSections.Add(section);
-                }
-            }
-
-            // take care of any leftover pieces
-            if (mergedSections.Count > 0)
-            {
-                GenerateMergedHull(mergedSections);
-            }
-        }
-
         private Rectangle GenerateMergedRect(List<WallSection> mergedSections)
         {
             if (isHorizontal)
@@ -408,17 +370,6 @@ namespace Barotrauma
                 return new Rectangle(mergedSections.Min(x => x.rect.Left), mergedSections.Max(x => x.rect.Top),
                     mergedSections.First().rect.Width, mergedSections.Sum(x => x.rect.Height));
             }
-        }
-
-        private void GenerateMergedHull(List<WallSection> mergedSections)
-        {
-            if (!mergedSections.Any()) return;
-            Rectangle mergedRect = GenerateMergedRect(mergedSections);
-            
-            var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
-            mergedSections.ForEach(x => x.hull = h);
-            convexHulls.Add(h);
-            mergedSections.Clear();
         }
 
         private static Vector2[] CalculateExtremes(Rectangle sectionRect)
@@ -477,7 +428,9 @@ namespace Barotrauma
                 }
             }
 
+#if CLIENT
             if (convexHulls != null) convexHulls.ForEach(x => x.Remove());
+#endif
         }
 
         public override void Remove()
@@ -504,7 +457,9 @@ namespace Barotrauma
                 }
             }
 
+#if CLIENT
             if (convexHulls != null) convexHulls.ForEach(x => x.Remove());
+#endif
         }
 
         public override bool IsVisible(Rectangle WorldView)
@@ -708,8 +663,9 @@ namespace Barotrauma
                     //remove existing gap if damage is below 50%
                     sections[sectionIndex].gap.Remove();
                     sections[sectionIndex].gap = null;
-                    if(CastShadow)
-                        GenerateConvexHull();
+#if CLIENT
+                    if(CastShadow) GenerateConvexHull();
+#endif
                 }
             }
             else
@@ -723,8 +679,9 @@ namespace Barotrauma
                     gapRect.Height += 20;
                     sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
                     sections[sectionIndex].gap.ConnectedWall = this;
-
+#if CLIENT
                     if(CastShadow) GenerateConvexHull();
+#endif
                 }
 
                 sections[sectionIndex].gap.Open = (damage / prefab.MaxHealth - 0.5f) * 2.0f;

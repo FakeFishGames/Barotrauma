@@ -9,9 +9,8 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Engine : Powered
+    partial class Engine : Powered
     {
-
         private float force;
 
         private float targetForce;
@@ -49,6 +48,7 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
+#if CLIENT
             var button = new GUIButton(new Rectangle(160, 50, 30, 30), "-", "", GuiFrame);
             button.OnClicked = (GUIButton btn, object obj) =>
             {
@@ -63,7 +63,8 @@ namespace Barotrauma.Items.Components
                 targetForce += 1.0f;
                 
                 return true;
-            };   
+            };
+#endif
         }
 
         public float CurrentVolume
@@ -91,41 +92,19 @@ namespace Barotrauma.Items.Components
                     item.CurrentHull.AiTarget.SoundRange = Math.Max(currForce.Length(), item.CurrentHull.AiTarget.SoundRange);
                 }
 
+#if CLIENT
                 for (int i = 0; i < 5; i++)
                 {
                     GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition - (Vector2.UnitX * item.Rect.Width/2),
                         -currForce / 5.0f + new Vector2(Rand.Range(-100.0f, 100.0f), Rand.Range(-50f, 50f)),
                         0.0f, item.CurrentHull);
                 }
+#endif
             }
 
             voltage = 0.0f;
         }
         
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            //isActive = true;
-            GuiFrame.Draw(spriteBatch);
-            
-            //int width = 300, height = 300;
-            //int x = Game1.GraphicsWidth / 2 - width / 2;
-            //int y = Game1.GraphicsHeight / 2 - height / 2 - 50;
-
-            //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
-
-            GUI.Font.DrawString(spriteBatch, "Force: " + (int)(targetForce) + " %", new Vector2(GuiFrame.Rect.X + 30, GuiFrame.Rect.Y + 30), Color.White);
-        }
-
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
-
-        public override void UpdateHUD(Character character)
-        {
-            GuiFrame.Update(1.0f / 60.0f);
-        }
-
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             force = MathHelper.Lerp(force, 0.0f, 0.1f);

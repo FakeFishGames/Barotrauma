@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma
 {
-    class AICharacter : Character
+    partial class AICharacter : Character
     {
         private AIController aiController;
         
@@ -15,7 +15,9 @@ namespace Barotrauma
         public AICharacter(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
             : base(file, position, characterInfo, isNetworkPlayer)
         {
+#if CLIENT
             soundTimer = Rand.Range(0.0f, soundInterval);
+#endif
         }
 
         public void SetAI(AIController aiController)
@@ -43,6 +45,7 @@ namespace Barotrauma
 
             if (Controlled == this || !aiController.Enabled) return;
 
+#if CLIENT
             if (soundTimer > 0)
             {
                 soundTimer -= deltaTime;
@@ -60,15 +63,9 @@ namespace Barotrauma
                 }
                 soundTimer = soundInterval;
             }
+#endif
 
             aiController.Update(deltaTime);
-        }
-
-        public override void DrawFront(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch,Camera cam)
-        {
-            base.DrawFront(spriteBatch,cam);
-
-            if (GameMain.DebugDraw && !IsDead) aiController.DebugDraw(spriteBatch);
         }
 
         public override void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)

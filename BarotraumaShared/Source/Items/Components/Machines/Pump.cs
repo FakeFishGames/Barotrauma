@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Pump : Powered, IServerSerializable, IClientSerializable
+    partial class Pump : Powered, IServerSerializable, IClientSerializable
     {
         private float flowPercentage;
         private float maxFlow;
@@ -16,8 +16,6 @@ namespace Barotrauma.Items.Components
         private float? targetLevel;
         
         public Hull hull1;
-
-        private GUITickBox isActiveTickBox;
 
         [HasDefaultValue(0.0f, true)]
         public float FlowPercentage
@@ -58,7 +56,9 @@ namespace Barotrauma.Items.Components
             {
                 base.IsActive = value;
 
+#if CLIENT
                 if (isActiveTickBox != null) isActiveTickBox.Selected = value;
+#endif
             }
         }
 
@@ -67,64 +67,7 @@ namespace Barotrauma.Items.Components
         {
             GetHull();
 
-            isActiveTickBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Running", Alignment.TopLeft, GuiFrame);
-            isActiveTickBox.OnSelected = (GUITickBox box) =>
-            {
-                targetLevel = null;
-                IsActive = !IsActive;
-                if (!IsActive) currPowerConsumption = 0.0f;
-
-                if (GameMain.Server != null)
-                {
-                    item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled + (IsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
-                }
-                else if (GameMain.Client != null)
-                {
-                    correctionTimer = CorrectionDelay;
-                    item.CreateClientEvent(this);
-                }
-
-                return true;
-            };
-
-            var button = new GUIButton(new Rectangle(160, 40, 35, 30), "OUT", "", GuiFrame);
-            button.OnClicked = (GUIButton btn, object obj) =>
-            {
-                FlowPercentage -= 10.0f;
-
-                if (GameMain.Server != null)
-                {
-                    item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
-                }
-                else if (GameMain.Client != null)
-                {
-                    correctionTimer = CorrectionDelay;
-                    item.CreateClientEvent(this);
-                }
-
-                return true;
-            };
-
-            button = new GUIButton(new Rectangle(210, 40, 35, 30), "IN", "", GuiFrame);
-            button.OnClicked = (GUIButton btn, object obj) =>
-            {
-                FlowPercentage += 10.0f;
-
-                if (GameMain.Server != null)
-                {
-                    item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
-                }
-                else if (GameMain.Client != null)
-                {
-                    correctionTimer = CorrectionDelay;
-                    item.CreateClientEvent(this);
-                }
-
-                return true;
-            };     
+            InitProjSpecific();
         }
 
         public override void Move(Vector2 amount)
@@ -180,27 +123,6 @@ namespace Barotrauma.Items.Components
             hull1 = Hull.FindHull(item.WorldPosition, item.CurrentHull);
         }
         
-        public override void DrawHUD(SpriteBatch spriteBatch, Character character)
-        {
-            int x = GuiFrame.Rect.X;
-            int y = GuiFrame.Rect.Y;
-
-            GuiFrame.Draw(spriteBatch);
-            
-            GUI.Font.DrawString(spriteBatch, "Pumping speed: " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
-     
-        }
-
-        public override void AddToGUIUpdateList()
-        {
-            GuiFrame.AddToGUIUpdateList();
-        }
-
-        public override void UpdateHUD(Character character)
-        {
-            GuiFrame.Update(1.0f / 60.0f);
-        }
-
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
         {
             base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
@@ -231,13 +153,6 @@ namespace Barotrauma.Items.Components
             }
 
             if (!IsActive) currPowerConsumption = 0.0f;
-        }
-
-        public void ClientWrite(Lidgren.Network.NetBuffer msg, object[] extraData = null)
-        {
-            //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedInteger(-10, 10, (int)(flowPercentage / 10.0f));
-            msg.Write(IsActive);
         }
 
         public void ServerRead(ClientNetObject type, Lidgren.Network.NetBuffer msg, Client c)
@@ -271,17 +186,5 @@ namespace Barotrauma.Items.Components
             msg.Write(IsActive);
         }
 
-        public void ClientRead(ServerNetObject type, Lidgren.Network.NetBuffer msg, float sendingTime)
-        {
-            if (correctionTimer > 0.0f)
-            {
-                StartDelayedCorrection(type, msg.ExtractBits(5 + 1), sendingTime);
-                return;
-            }
-
-            FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
-            IsActive = msg.ReadBoolean();
-        }
-        
     }
 }

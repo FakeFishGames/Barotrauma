@@ -14,8 +14,62 @@ using Barotrauma.Lights;
 
 namespace Barotrauma
 {
+    partial class WallSection
+    {
+        public ConvexHull hull;
+    }
+
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
+        List<ConvexHull> convexHulls;
+
+        private void GenerateConvexHull()
+        {
+            // If not null and not empty , remove the hulls from the system
+            if (convexHulls != null && convexHulls.Any())
+                convexHulls.ForEach(x => x.Remove());
+
+            // list all of hulls for this structure
+            convexHulls = new List<ConvexHull>();
+
+            var mergedSections = new List<WallSection>();
+            foreach (var section in sections)
+            {
+                if (mergedSections.Count > 5)
+                {
+                    mergedSections.Add(section);
+                    GenerateMergedHull(mergedSections);
+                    continue;
+                }
+
+                // if there is a gap and we have sections to merge, do it.
+                if (section.gap != null)
+                {
+                    GenerateMergedHull(mergedSections);
+                }
+                else
+                {
+                    mergedSections.Add(section);
+                }
+            }
+
+            // take care of any leftover pieces
+            if (mergedSections.Count > 0)
+            {
+                GenerateMergedHull(mergedSections);
+            }
+        }
+
+        private void GenerateMergedHull(List<WallSection> mergedSections)
+        {
+            if (!mergedSections.Any()) return;
+            Rectangle mergedRect = GenerateMergedRect(mergedSections);
+
+            var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
+            mergedSections.ForEach(x => x.hull = h);
+            convexHulls.Add(h);
+            mergedSections.Clear();
+        }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {

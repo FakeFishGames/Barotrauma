@@ -84,9 +84,6 @@ namespace Barotrauma
         //the name of the species (e.q. human)
         public readonly string SpeciesName;
 
-        protected float soundTimer;
-        protected float soundInterval;
-
         private float bleeding;
 
         private float attackCoolDown;
@@ -562,7 +559,9 @@ namespace Barotrauma
             needsAir = ToolBox.GetAttributeBool(doc.Root, "needsair", false);
             drowningTime = ToolBox.GetAttributeFloat(doc.Root, "drowningtime", 10.0f);
 
+#if CLIENT
             soundInterval = ToolBox.GetAttributeFloat(doc.Root, "soundinterval", 10.0f);
+#endif
             
             if (file == humanConfigFile)
             {
@@ -1138,6 +1137,7 @@ namespace Barotrauma
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
 
+#if CLIENT
             if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
             {
                 Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
@@ -1151,6 +1151,7 @@ namespace Barotrauma
                     }
                 }
             }
+#endif
 
             if (!LockHands)
             {
@@ -1733,7 +1734,9 @@ namespace Barotrauma
 
             if (AnimController != null) AnimController.Remove();
 
+#if CLIENT
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
+#endif
 
             if (selectedItems[0] != null) selectedItems[0].Drop(this);
             if (selectedItems[1] != null) selectedItems[1].Drop(this);

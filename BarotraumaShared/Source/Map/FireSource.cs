@@ -1,25 +1,23 @@
-﻿using Barotrauma.Lights;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Barotrauma.Networking;
+#if CLIENT
+using Barotrauma.Lights;
+#endif
 
 namespace Barotrauma
 {
-    class FireSource
+    partial class FireSource
     {
-        static Sound fireSoundBasic, fireSoundLarge;
-
         const float OxygenConsumption = 50.0f;
         const float GrowSpeed = 5.0f;
 
         private int basicSoundIndex, largeSoundIndex;
 
         private Hull hull;
-
-        private LightSource lightSource;
 
         private Vector2 position;
         private Vector2 size;
@@ -73,21 +71,23 @@ namespace Barotrauma
             if (hull == null) return;
 
             if (!isNetworkMessage && GameMain.Client != null) return;
-
-            if (fireSoundBasic == null)
-            {
-                fireSoundBasic = Sound.Load("Content/Sounds/fire.ogg", false);
-                fireSoundLarge = Sound.Load("Content/Sounds/firelarge.ogg", false);
-            }
-
+            
             hull.AddFireSource(this);
 
             Submarine = hull.Submarine;
 
             this.position = worldPosition - new Vector2(-5.0f, 5.0f) - Submarine.Position;
 
+#if CLIENT
+            if (fireSoundBasic == null)
+            {
+                fireSoundBasic = Sound.Load("Content/Sounds/fire.ogg", false);
+                fireSoundLarge = Sound.Load("Content/Sounds/firelarge.ogg", false);
+            }
+
             lightSource = new LightSource(this.position, 50.0f, new Color(1.0f, 0.9f, 0.7f), hull == null ? null : hull.Submarine);
-            
+#endif
+
             size = new Vector2(10.0f, 10.0f);
         }
 
@@ -140,70 +140,8 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            float count = Rand.Range(0.0f, size.X/50.0f);
-            
-            if (hull.FireSources.Any(fs => fs != this && fs.size.X > size.X))
-            {
-                if (basicSoundIndex > 0)
-                {                    
-                    Sounds.SoundManager.Stop(basicSoundIndex);
-                    basicSoundIndex = -1;
-                }
-                if (largeSoundIndex > 0)
-                {
-                    Sounds.SoundManager.Stop(largeSoundIndex);
-                    largeSoundIndex = -1;
-                }
-            }
-            else
-            {
-                if (fireSoundBasic != null)
-                {
-                    basicSoundIndex = fireSoundBasic.Loop(basicSoundIndex, 
-                        Math.Min(size.X / 100.0f, 1.0f), WorldPosition + size / 2.0f, 1000.0f);
-
-                }
-                if (fireSoundLarge != null)
-                {
-                    largeSoundIndex = fireSoundLarge.Loop(largeSoundIndex, 
-                        MathHelper.Clamp((size.X - 200.0f) / 100.0f, 0.0f, 1.0f), WorldPosition + size / 2.0f, 1000.0f);
-                }
-            }
-
             //the firesource will start to shrink if oxygen percentage is below 10
             float growModifier = Math.Min((hull.OxygenPercentage / 10.0f) - 1.0f, 1.0f);
-
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 particlePos = new Vector2(
-                    WorldPosition.X + Rand.Range(0.0f, size.X), 
-                    Rand.Range(WorldPosition.Y - size.Y, WorldPosition.Y + 20.0f));
-
-                Vector2 particleVel = new Vector2(
-                    (particlePos.X - (WorldPosition.X + size.X / 2.0f)),
-                    (float)Math.Sqrt(size.X) * Rand.Range(0.0f, 15.0f) * growModifier);
-
-                var particle = GameMain.ParticleManager.CreateParticle("flame",
-                    particlePos, particleVel, 0.0f, hull);
-
-                if (particle == null) continue;
-
-                //make some of the particles create another firesource when they enter another hull
-                if (Rand.Int(20) == 1) particle.OnChangeHull = OnChangeHull;
-
-                particle.Size *= MathHelper.Clamp(size.X / 60.0f * Math.Max(hull.Oxygen / hull.FullVolume, 0.4f), 0.5f, 1.0f);
-
-                if (Rand.Int(5) == 1)
-                {
-                    var smokeParticle = GameMain.ParticleManager.CreateParticle("smoke",
-                    particlePos, new Vector2(particleVel.X, particleVel.Y * 0.1f), 0.0f, hull);
-
-                    if (smokeParticle != null)
-                    {
-                        smokeParticle.Size *= MathHelper.Clamp(size.X / 100.0f * Math.Max(hull.Oxygen / hull.FullVolume, 0.4f), 0.5f, 1.0f);
-                    }
-                }
-            }
 
             DamageCharacters(deltaTime);
             DamageItems(deltaTime);
@@ -224,9 +162,7 @@ namespace Barotrauma
 
             LimitSize();
 
-            lightSource.Range = Math.Max(size.X, size.Y) * 10.0f / 2.0f;
-            lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f);
-            lightSource.Position = position + Vector2.UnitY * 30.0f;
+            UpdateProjSpecific(growModifier);
 
             if (GameMain.Client != null) return;
 
@@ -294,6 +230,7 @@ namespace Barotrauma
 
             if (extinquishAmount < 0.0f) return;
 
+#if CLIENT
             float steamCount = Rand.Range(-5.0f, Math.Min(extinquishAmount * 100.0f, 10));
             for (int i = 0; i < steamCount; i++)
             {
@@ -310,6 +247,7 @@ namespace Barotrauma
 
                 particle.Size *= MathHelper.Clamp(size.X / 10.0f, 0.5f, 3.0f);
             }
+#endif
 
             position.X += extinquishAmount / 2.0f;
             size.X -= extinquishAmount;
@@ -322,7 +260,7 @@ namespace Barotrauma
             if (size.X < 1.0f) Remove();
         }
 
-        public void Extinquish(float deltaTime, float amount, Vector2 pos)
+        public void Extinguish(float deltaTime, float amount, Vector2 pos)
         {
             float range = 100.0f;
 
@@ -331,6 +269,7 @@ namespace Barotrauma
 
             float extinquishAmount = amount * deltaTime;
 
+#if CLIENT
             float steamCount = Rand.Range(-5.0f, (float)Math.Sqrt(amount));
             for (int i = 0; i < steamCount; i++)
             {
@@ -345,6 +284,7 @@ namespace Barotrauma
 
                 particle.Size *= MathHelper.Clamp(size.X / 10.0f, 0.5f, 3.0f);
             }
+#endif
 
             position.X += extinquishAmount / 2.0f;
             size.X -= extinquishAmount;
@@ -358,6 +298,7 @@ namespace Barotrauma
 
         public void Remove()
         {
+#if CLIENT
             lightSource.Remove();
 
             if (basicSoundIndex > 0)
@@ -370,6 +311,7 @@ namespace Barotrauma
                 Sounds.SoundManager.Stop(largeSoundIndex);
                 largeSoundIndex = -1;
             }
+#endif
 
             hull.RemoveFire(this);
         }

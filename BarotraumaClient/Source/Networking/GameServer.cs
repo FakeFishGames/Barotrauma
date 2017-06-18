@@ -12,6 +12,8 @@ namespace Barotrauma.Networking
 {
     partial class GameServer : NetworkMember
     {
+        private NetStats netStats;
+
         private GUIButton showLogButton;
 
         private GUIScrollBar clientListScrollBar;
@@ -54,6 +56,13 @@ namespace Barotrauma.Networking
             //----------------------------------------
         }
 
+        public override void AddToGUIUpdateList()
+        {
+            if (started) base.AddToGUIUpdateList();
+
+            if (settingsFrame != null) settingsFrame.AddToGUIUpdateList();
+            if (log.LogFrame != null) log.LogFrame.AddToGUIUpdateList();
+        }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {

@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
         Kick
     }
 
-    abstract class NetworkMember
+    abstract partial class NetworkMember
     {
 #if DEBUG
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
@@ -82,10 +82,6 @@ namespace Barotrauma.Networking
 
         protected TimeSpan updateInterval;
         protected DateTime updateTimer;
-
-        protected GUIFrame inGameHUD;
-        protected GUIListBox chatBox;
-        protected GUITextBox chatMsgBox;        
 
         public int EndVoteCount, EndVoteMax;
         //private GUITextBlock endVoteText;
@@ -130,11 +126,6 @@ namespace Barotrauma.Networking
             get { return gameStarted; }
         }
 
-        public GUIFrame InGameHUD
-        {
-            get { return inGameHUD; }
-        }
-
         public virtual List<Client> ConnectedClients
         {
             get { return null; }
@@ -142,50 +133,9 @@ namespace Barotrauma.Networking
 
         public NetworkMember()
         {
-            inGameHUD = new GUIFrame(new Rectangle(0,0,0,0), null, null);
-            inGameHUD.CanBeFocused = false;
-
-            int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
-            int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.15f, 100, 200);
-            chatBox = new GUIListBox(new Rectangle(
-                GameMain.GraphicsWidth - 20 - width,
-                GameMain.GraphicsHeight - 40 - 25 - height,
-                width, height),
-                Color.White * 0.5f, "", inGameHUD);
-            chatBox.Padding = Vector4.Zero;
-
-            chatMsgBox = new GUITextBox(
-                new Rectangle(chatBox.Rect.X, chatBox.Rect.Y + chatBox.Rect.Height + 20, chatBox.Rect.Width, 25),
-                Color.White * 0.5f, Color.Black, Alignment.TopLeft, Alignment.Left, "", inGameHUD);
-            chatMsgBox.Font = GUI.SmallFont;
-            chatMsgBox.MaxTextLength = ChatMessage.MaxLength;
-            chatMsgBox.Padding = Vector4.Zero;
-            chatMsgBox.OnEnterPressed = EnterChatMessage;
-            chatMsgBox.OnTextChanged = TypingChatMessage;
-
+            InitProjSpecific();
+            
             Voting = new Voting();
-        }
-
-        public bool TypingChatMessage(GUITextBox textBox, string text)
-        {
-            string tempStr;
-            string command = ChatMessage.GetChatMessageCommand(text, out tempStr);
-            switch (command)
-            {
-                case "r":
-                case "radio":
-                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Radio];
-                    break;
-                case "d":
-                case "dead":
-                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
-                    break;
-                default:
-                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
-                    break;
-            }
-
-            return true;
         }
 
         public bool CanUseRadio(Character sender)
@@ -198,26 +148,6 @@ namespace Barotrauma.Networking
             var radioComponent = radio.GetComponent<WifiComponent>();
             if (radioComponent == null) return false;
             return radioComponent.HasRequiredContainedItems(false);
-        }
-
-        public bool EnterChatMessage(GUITextBox textBox, string message)
-        {
-            textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
-
-            if (string.IsNullOrWhiteSpace(message)) return false;
-
-            if (this == GameMain.Server)
-            {
-                GameMain.Server.SendChatMessage(message, null, null);
-            }
-            else if (this == GameMain.Client)
-            {
-                GameMain.Client.SendChatMessage(message);
-            }
-                        
-            if (textBox == chatMsgBox) textBox.Deselect();
-
-            return true;
         }
 
         public void AddChatMessage(string message, ChatMessageType type, string senderName="", Character senderCharacter = null)
@@ -236,6 +166,7 @@ namespace Barotrauma.Networking
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
             }
 
+#if CLIENT
             GameMain.NetLobbyScreen.NewChatMessage(message);
 
             while (chatBox.CountChildren > 20)
@@ -273,20 +204,14 @@ namespace Barotrauma.Networking
             }
 
             GUI.PlayUISound(soundType);
+#endif
         }
 
         public virtual void KickPlayer(string kickedName, bool ban, bool range = false) { }
 
-        public virtual void AddToGUIUpdateList()
-        {
-            if (gameStarted && Screen.Selected == GameMain.GameScreen)
-            {
-                inGameHUD.AddToGUIUpdateList();
-            }
-        }
-
         public virtual void Update(float deltaTime) 
         {
+#if CLIENT
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
                 chatMsgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
@@ -314,58 +239,7 @@ namespace Barotrauma.Networking
                     chatMsgBox.Select();
                 }
             }
-        }
-
-        public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
-        {
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen) return;
-
-            GameMain.GameSession.CrewManager.Draw(spriteBatch);
-
-            inGameHUD.Draw(spriteBatch);
-
-            if (EndVoteCount > 0)
-            {
-                if (GameMain.NetworkMember.myCharacter == null)
-                {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
-                        "Votes to end the round (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
-                }
-                else
-                {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 140.0f, 40),
-                        "Votes (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
-                }
-            }
-
-            if (respawnManager != null)
-            {
-                string respawnInfo = "";
-
-                if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
-                    respawnManager.CountdownStarted)
-                {
-                    respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : "Respawn Shuttle dispatching in " + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
-
-                }
-                else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
-                {
-                    respawnInfo = respawnManager.TransportTimer <= 0.0f ? "" : "Shuttle leaving in " + ToolBox.SecondsToReadableTime(respawnManager.TransportTimer);
-                }
-
-                if (!string.IsNullOrEmpty(respawnInfo))
-                {                
-                    GUI.DrawString(spriteBatch,
-                        new Vector2(120.0f, 10),
-                        respawnInfo, Color.White, null, 0, GUI.SmallFont);
-                }
-
-            }
-        }
-
-        public virtual bool SelectCrewCharacter(Character character, GUIComponent crewFrame)
-        {
-            return false;
+#endif
         }
 
         public virtual void Disconnect() { }

@@ -7,9 +7,11 @@ using Microsoft.Xna.Framework;
 //using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Items.Components;
 using System.Collections.Generic;
-using Barotrauma.Lights;
 using System.Linq;
 using System.IO;
+#if CLIENT
+using Barotrauma.Lights;
+#endif
 
 namespace Barotrauma
 {
@@ -42,8 +44,6 @@ namespace Barotrauma
         public bool inWater;
 
         public FixedMouseJoint pullJoint;
-
-        public readonly Lights.LightSource LightSource;
 
         public readonly LimbType type;
 
@@ -300,14 +300,14 @@ namespace Barotrauma
 
                         damagedSprite = new Sprite(subElement, "", damagedSpritePath);
                         break;
-                    case "lightsource":
-                        LightSource = new LightSource(subElement);
-
-                        break;
                     case "attack":
                         attack = new Attack(subElement);
                         break;
 #if CLIENT
+                    case "lightsource":
+                        LightSource = new LightSource(subElement);
+
+                        break;
                     case "sound":
                         hitSound = Sound.Load(ToolBox.GetAttributeString(subElement, "file", ""));
                         break;
@@ -411,10 +411,12 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+#if CLIENT
             if (LightSource != null)
             {
                 LightSource.ParentSub = body.Submarine;
             }
+#endif
 
             if (!character.IsDead) damage = Math.Max(0.0f, damage-deltaTime*0.1f);
 
@@ -483,11 +485,7 @@ namespace Barotrauma
                 sprite.Remove();
                 sprite = null;
             }
-
-            if (LightSource != null)
-            {
-                LightSource.Remove();
-            }
+            
             if (damagedSprite != null)
             {
                 damagedSprite.Remove();
@@ -505,6 +503,11 @@ namespace Barotrauma
             {                                
                 hitSound.Remove();
                 hitSound = null;
+            }
+
+            if (LightSource != null)
+            {
+                LightSource.Remove();
             }
 #endif
         }
