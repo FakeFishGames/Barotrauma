@@ -4,7 +4,7 @@
     name="Steel Bar"
     category="Material"
     Tags="smallitem"
-    pickdistance="150"
+    
     canbepicked="true"
     price="50">
 
@@ -24,7 +24,7 @@
      name="Uranium Bar"
      category="Material"
      Tags="smallitem"
-     pickdistance="150"
+     
      spritecolor="0.2,0.35,0.06,1.0"
      canbepicked="true"
      price="100">
@@ -45,7 +45,7 @@
    name="Copper Bar"
    category="Material"
    Tags="smallitem"
-   pickdistance="150"
+   
    spritecolor="0.78,0.55,0.2,1.0"
    canbepicked="true"
    price="50">
@@ -61,7 +61,7 @@
    name="Polycarbonate Bar"
    category="Material"
    Tags="smallitem"
-   pickdistance="150"
+   
    spritecolor="0.9,0.9,1.0,0.9"
    canbepicked="true"
    price="50">
@@ -77,7 +77,7 @@
    name="Incendium Bar"
    category="Material"
    Tags="smallitem"
-   pickdistance="150"
+   
    spritecolor="0.5,0.0,0.0,1.0"
    canbepicked="true">
 
@@ -97,7 +97,7 @@
    name="Fulgurium Bar"
    category="Material"
    Tags="smallitem"
-   pickdistance="150"
+   
    spritecolor="1.0,0.7,0.05,1.0"
    canbepicked="true">
 

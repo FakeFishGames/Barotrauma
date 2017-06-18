@@ -141,7 +141,7 @@ namespace Barotrauma
             {
                 if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item && currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
                 {
-                    currentPath.CurrentNode.Ladders.Item.Pick(character, false, true);
+                    currentPath.CurrentNode.Ladders.Item.TryInteract(character, false, true);
                 }
             }
 
@@ -239,7 +239,7 @@ namespace Barotrauma
                     foreach (Controller controller in buttons)
                     {
                         float dist = Vector2.Distance(controller.Item.WorldPosition, character.WorldPosition);
-                        if (dist > controller.Item.PickDistance * 2.0f) continue;
+                        if (dist > controller.Item.InteractDistance * 2.0f) continue;
 
                         if (dist < closestDist || closestButton == null)
                         {
@@ -256,7 +256,7 @@ namespace Barotrauma
                             return;
                         }
 
-                        closestButton.Item.Pick(character, false, true);
+                        closestButton.Item.TryInteract(character, false, true);
                         break;
                     }
                 }

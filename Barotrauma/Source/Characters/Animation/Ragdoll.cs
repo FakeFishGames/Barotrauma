@@ -1270,7 +1270,7 @@ namespace Barotrauma
                         var newSelectedConstruction = (Item)character.MemState[0].Interact;
                         if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                         {
-                            newSelectedConstruction.Pick(character, true, true);
+                            newSelectedConstruction.TryInteract(character, true, true);
                         }
                         character.SelectedConstruction = newSelectedConstruction;
                     }
@@ -1362,7 +1362,7 @@ namespace Barotrauma
                             var newSelectedConstruction = (Item)serverPos.Interact;
                             if (newSelectedConstruction != null && character.SelectedConstruction != newSelectedConstruction)
                             {
-                                newSelectedConstruction.Pick(character, true, true);
+                                newSelectedConstruction.TryInteract(character, true, true);
                             }
                             character.SelectedConstruction = newSelectedConstruction;
                         }

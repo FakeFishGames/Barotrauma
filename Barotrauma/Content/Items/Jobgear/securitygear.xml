@@ -2,7 +2,7 @@
   <Item
     name="Body Armor"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem"
     description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
 
@@ -20,7 +20,7 @@
   <Item
     name="Ballistic Helmet"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem"
     description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
 
@@ -41,7 +41,7 @@
   <Item
     name="Handcuffs"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem" >
 
     <Sprite texture = "securitygear.png" sourcerect="0,63,32,14" depth="0.6"/>

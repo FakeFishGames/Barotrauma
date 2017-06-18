@@ -105,9 +105,7 @@ namespace Barotrauma.Items.Components
             pickTimer = 0.0f;
             while (pickTimer < requiredTime && Screen.Selected != GameMain.EditMapScreen)
             {
-                if (picker.IsKeyDown(InputType.Aim) || 
-                    !item.IsInPickRange(picker.WorldPosition) ||
-                    picker.Stun > 0.0f || picker.IsDead)
+                if (picker.IsKeyDown(InputType.Aim) || !picker.CanInteractWith(item))
                 {
                     StopPicking(picker);
                     yield return CoroutineStatus.Success;

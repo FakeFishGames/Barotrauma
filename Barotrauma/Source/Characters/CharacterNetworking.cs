@@ -147,13 +147,13 @@ namespace Barotrauma
                         var closestEntity = Entity.FindEntityByID(memInput[memInput.Count - 1].interact);
                         if (closestEntity is Item)
                         {
-                            closestItem = (Item)closestEntity;
-                            closestCharacter = null;
+                            focusedItem = (Item)closestEntity;
+                            focusedCharacter = null;
                         }
                         else if (closestEntity is Character)
                         {
-                            closestCharacter = (Character)closestEntity;
-                            closestItem = null;
+                            focusedCharacter = (Character)closestEntity;
+                            focusedItem = null;
                         }
                         
                         memInput.RemoveAt(memInput.Count - 1);
@@ -205,13 +205,13 @@ namespace Barotrauma
                 NetInputMem newMem = new NetInputMem();
                 newMem.states = newInput;
                 newMem.intAim = intAngle;
-                if (closestItem != null)
+                if (focusedItem != null)
                 {
-                    newMem.interact = closestItem.ID;
+                    newMem.interact = focusedItem.ID;
                 }
-                else if (closestCharacter != null)
+                else if (focusedCharacter != null)
                 {
-                    newMem.interact = closestCharacter.ID;
+                    newMem.interact = focusedCharacter.ID;
                 }
 
                 memInput.Insert(0, newMem);

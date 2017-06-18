@@ -53,12 +53,12 @@ namespace Barotrauma
 
             if (target.CanBeSelected)
             { 
-                if (Vector2.Distance(character.Position, target.Item.Position) < target.Item.PickDistance
+                if (Vector2.Distance(character.Position, target.Item.Position) < target.Item.InteractDistance
                     || target.Item.IsInsideTrigger(character.WorldPosition))
                 {
                     if (character.SelectedConstruction != target.Item && target.CanBeSelected)
                     {
-                        target.Item.Pick(character, false, true);
+                        target.Item.TryInteract(character, false, true);
                     }
 
                     if (component.AIOperate(deltaTime, character, this)) isCompleted = true;

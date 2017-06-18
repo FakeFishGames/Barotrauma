@@ -6,7 +6,7 @@
     focusonselected="true"
     offsetonselected="700"
     linkable="true"
-    pickdistance="150">
+    >
 
     <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
@@ -24,7 +24,7 @@
     name="Depth Charge Loader"
     category="Machine"
     linkable="true"
-    pickdistance="150">
+    >
 
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
@@ -37,7 +37,7 @@
   <Item
     name="Depth Charge Shell"
     category="Misc"
-    pickdistance="150"
+    
     price="200">
 
     <Deconstruct time="10">
@@ -65,7 +65,7 @@
   <Item
     name="Nuclear Depth Charge"
     category="Misc"
-    pickdistance="150"
+    
     price="500">
 
     <Deconstruct time="20">

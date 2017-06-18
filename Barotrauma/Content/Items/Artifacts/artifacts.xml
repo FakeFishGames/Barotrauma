@@ -4,7 +4,7 @@
     name="Skyholder Artifact"
     category="Alien"
     Tags="alien"
-    pickdistance="150">
+    >
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="59,0,60,61"/>
 
@@ -26,7 +26,7 @@
     name="Thermal Artifact"
     category="Alien"
     Tags="alien"
-    pickdistance="150">
+    >
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,0,58,56"/>
 
@@ -49,7 +49,7 @@
   <Item
     name="Faraday Artifact"
     Tags="alien"
-    pickdistance="150">
+    >
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49"/>
 
@@ -68,7 +68,7 @@
   <Item
     name="Oxygenite Shard"
     category="Alien"
-    pickdistance="150"
+    
     tags="alien,smallitem"
     impacttolerance="8">
 
@@ -88,7 +88,7 @@
   <Item
    name="Sulphurite Shard"
    category="Alien"
-   pickdistance="150"
+   
    tags="alien,smallitem"
    impacttolerance="8"
    spritecolor="1.0,0.0,0.0,1.0">
@@ -113,7 +113,7 @@
    name="Ancient Weapon"
    category="Alien"
    Tags="alien,smallitem"
-   pickdistance="200">
+   >
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
@@ -164,7 +164,7 @@
     category="Alien"
     Tags="alien"
     linkable="true"
-    pickdistance="150.0">
+    >
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="747,0,260,95" depth="0.8" origin="0.5,0.5"/>
 
@@ -186,7 +186,7 @@
    category="Alien"
    linkable="true"
    Tags="alien"
-   pickdistance="150.0">
+   >
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="746,101,93,259" depth="0.8" origin="0.5,0.5"/>
 
@@ -208,7 +208,7 @@
    linkable="true"
    category="Alien"
    Tags="alien"
-   pickdistance="150.0">
+   >
 
     <Sprite texture="Content/Map/ruins.png" sourcerect="55,608,81,103" depth="0.8" origin="0.5,0.5"/>
 
@@ -225,7 +225,7 @@
    linkable="true"
    category="Alien"
    Tags="alien"
-   pickdistance="150.0">
+   >
 
     <Sprite texture="artifactholder.png" depth="0.8"/>
 

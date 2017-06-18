@@ -55,7 +55,7 @@
   <Item
     name="Fuel Rod"
     Tags="smallitem"
-    pickdistance="150"
+    
     price="200">
 
     <Deconstruct time="10">
@@ -73,7 +73,7 @@
   <Item
     name="Incendium Fuel Rod"
     Tags="smallitem"
-    pickdistance="150"
+    
     spritecolor="0.5,0.0,0.0,1.0">
 
     <Deconstruct time="10">
@@ -92,7 +92,7 @@
   <Item
     name="Heat Absorber"
     Tags="smallitem"
-    pickdistance="150">
+    >
 
     <Sprite texture ="heatabsorber.png"/>
 
