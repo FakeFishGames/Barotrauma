@@ -57,7 +57,7 @@ namespace Barotrauma
             FindTargetItem();
             if (targetItem == null || moveToTarget == null) return;
 
-            if (Vector2.Distance(character.Position, moveToTarget.Position) < targetItem.PickDistance*2.0f)
+            if (Vector2.Distance(character.Position, moveToTarget.Position) < targetItem.InteractDistance*2.0f)
             {
                 int targetSlot = -1;
                 if (equip)
@@ -93,7 +93,7 @@ namespace Barotrauma
                     }
                 }
 
-                targetItem.Pick(character, false, true);
+                targetItem.TryInteract(character, false, true);
 
                 if (targetSlot > -1 && character.Inventory.IsInLimbSlot(targetItem, InvSlotType.Any))
                 {

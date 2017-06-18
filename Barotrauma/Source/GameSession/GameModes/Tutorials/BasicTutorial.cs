@@ -388,7 +388,7 @@ namespace Barotrauma.Tutorials
             while (!HasItem("Diving Mask") && !HasItem("Diving Suit"))
             {
                 if (!divingMaskSelected &&
-                    Character.Controlled.ClosestItem != null && Character.Controlled.ClosestItem.Name == "Diving Suit")
+                    Character.Controlled.FocusedItem != null && Character.Controlled.FocusedItem.Name == "Diving Suit")
                 {
                     infoBox = CreateInfoFrame("There can only be one item in each inventory slot, so you need to take off "
                         + "the jumpsuit if you wish to wear a diving suit.");
