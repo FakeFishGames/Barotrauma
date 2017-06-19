@@ -18,6 +18,15 @@ namespace Barotrauma
 
         private bool sparks, shockwave, flames, smoke;
 
+        public Explosion(float range, float force, float damage, float structureDamage)
+        {
+            attack = new Attack(damage, structureDamage, 0.0f, range);
+            this.force = force;
+            sparks = true;
+            shockwave = true;
+            flames = true;
+        }
+
         public Explosion(XElement element)
         {
             attack = new Attack(element);

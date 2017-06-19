@@ -558,7 +558,7 @@ namespace Barotrauma
                         healedCharacter.AddDamage(CauseOfDeath.Damage, -healedCharacter.MaxHealth, null);
                         healedCharacter.Oxygen = 100.0f;
                         healedCharacter.Bleeding = 0.0f;
-                        healedCharacter.Stun = 0.0f;
+                        healedCharacter.SetStun(0.0f, true);
                     }
 
                     break;
@@ -600,6 +600,14 @@ namespace Barotrauma
                 case "water":
                     if (GameMain.Client == null) Hull.EditWater = !Hull.EditWater;
                     
+                    break;
+                case "explosion":
+                    Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                    float range = 500, force = 10, damage=50;
+                    if (commands.Length > 1) float.TryParse(commands[1], out range);
+                    if (commands.Length > 2) float.TryParse(commands[2], out force);
+                    if (commands.Length > 3) float.TryParse(commands[3], out damage);
+                    new Explosion(range, force, damage, damage).Explode(explosionPos);
                     break;
                 case "fire":
                     if (GameMain.Client == null) Hull.EditFire = !Hull.EditFire;
