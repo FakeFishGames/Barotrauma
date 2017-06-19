@@ -1,5 +1,7 @@
-﻿using System;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
+#if CLIENT
+using Microsoft.Xna.Framework.Input;
+#endif
 
 namespace Barotrauma
 {
@@ -47,7 +49,7 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
 
-#if DEBUG
+#if DEBUG && CLIENT
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
                 !DebugConsole.IsOpen)
             {
