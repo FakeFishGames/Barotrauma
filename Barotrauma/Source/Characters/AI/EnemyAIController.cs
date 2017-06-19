@@ -21,7 +21,7 @@ namespace Barotrauma
         //0.0 = doesn't attack targets of the type
         //positive values = attacks targets of this type
         //negative values = escapes targets of this type        
-        private float attackRooms, attackHumans, attackWeaker, attackStronger;
+        private float attackRooms, attackHumans, attackWeaker, attackStronger, eatDeadPriority;
 
         private float combatStrength;
 
@@ -97,7 +97,7 @@ namespace Barotrauma
 
             steeringManager = outsideSteering;
 
-            state = AiState.None;
+            state = AIState.None;
         }
 
         public override void SelectTarget(AITarget target)
@@ -145,11 +145,15 @@ namespace Barotrauma
 
                 if (selectedAiTarget == null)
                 {
-                    state = AiState.None;
+                    state = AIState.None;
+                }
+                else if ((selectedAiTarget.Entity is Character) && ((Character)selectedAiTarget.Entity).IsDead)
+                {
+                    state = AIState.Eat;
                 }
                 else
                 {
-                    state = (targetValue < 0.0f || Character.Health < fleeHealthThreshold) ? AiState.Escape : AiState.Attack;
+                    state = (targetValue < 0.0f || Character.Health < fleeHealthThreshold) ? AIState.Escape : AIState.Attack;
                 }
                 //if (coolDownTimer >= 0.0f) return;
             }
@@ -159,14 +163,17 @@ namespace Barotrauma
             bool run = false;
             switch (state)
             {
-                case AiState.None:
+                case AIState.None:
                     UpdateNone(deltaTime);
                     break;
-                case AiState.Attack:
+                case AIState.Attack:
                     run = coolDownTimer <= 0.0f;
                     UpdateAttack(deltaTime);
                     break;
-                case AiState.Escape:
+                case AIState.Eat:
+
+                    break;
+                case AIState.Escape:
                     run = true;
                     UpdateEscape(deltaTime);
                     break;
@@ -208,7 +215,7 @@ namespace Barotrauma
         {
             if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
             {
-                state = AiState.None;
+                state = AIState.None;
                 return;
             }
 
@@ -409,6 +416,21 @@ namespace Barotrauma
                 coolDownTimer = attackCoolDown;                
             }
         }
+
+        private void UpdateEat(float deltaTime)
+        {
+            if (selectedAiTarget == null)
+            {
+                state = AIState.None;
+                return;
+            }
+
+            var head = Character.AnimController.GetLimb(LimbType.Head);
+            if (head == null) head = Character.AnimController.MainLimb;
+
+            Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
+            steeringManager.SteeringSeek(attackSimPosition - (head.SimPosition - SimPosition), 3);
+        }
         
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
@@ -433,17 +455,20 @@ namespace Barotrauma
                 float valueModifier = 0.0f;
                 float dist = 0.0f;
                 
-                IDamageable targetDamageable = target.Entity as IDamageable;
-                if (targetDamageable!=null && targetDamageable.Health <= 0.0f) continue;
 
                 Character targetCharacter = target.Entity as Character;
 
                 //ignore the aitarget if it is the Character itself
                 if (targetCharacter == character) continue;
-                                
-                if (targetCharacter!=null)
+
+                if (targetCharacter != null)
                 {
-                    if (targetCharacter.SpeciesName == "human")
+                    if (targetCharacter.IsDead)
+                    {
+                        if (eatDeadPriority == 0.0f) continue;
+                        valueModifier = eatDeadPriority;
+                    }
+                    else if (targetCharacter.SpeciesName == "human")
                     {
                         if (attackHumans == 0.0f) continue;
                         valueModifier = attackHumans;
@@ -470,6 +495,9 @@ namespace Barotrauma
                 }
                 else if (target.Entity!=null && attackRooms != 0.0f)
                 {
+                    IDamageable targetDamageable = target.Entity as IDamageable;
+                    if (targetDamageable != null && targetDamageable.Health <= 0.0f) continue;
+
                     //skip the target if it's the room the Character is inside of
                     if (character.AnimController.CurrentHull != null && character.AnimController.CurrentHull == target.Entity as Hull) continue;
 

@@ -1912,13 +1912,7 @@ namespace Barotrauma
             {
                 if (selectedItems[i] != null) selectedItems[i].Drop(this);            
             }
-
-            if (aiTarget != null)
-            {
-                aiTarget.Remove();
-                aiTarget = null;
-            }
-
+            
             foreach (Limb limb in AnimController.Limbs)
             {
                 if (limb.pullJoint == null) continue;
