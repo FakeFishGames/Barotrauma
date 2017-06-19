@@ -195,8 +195,9 @@ namespace Barotrauma.Items.Components
                 item.SendSignal(0, ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out", character);
                 return;
             }
-
+            
             character.ViewTarget = focusTarget;
+#if CLIENT
             if (character == Character.Controlled && cam != null)
             {
                 Lights.LightManager.ViewTarget = focusTarget;
@@ -204,6 +205,7 @@ namespace Barotrauma.Items.Components
 
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected, deltaTime*10.0f);
             }
+#endif
             
             if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)
             {
@@ -215,7 +217,9 @@ namespace Barotrauma.Items.Components
         {
             item.SendSignal(0, "1", "signal_out", picker);
 
+#if CLIENT
             PlaySound(ActionType.OnUse, item.WorldPosition);
+#endif
 
             return true;
         }

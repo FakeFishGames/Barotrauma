@@ -53,7 +53,9 @@ namespace Barotrauma
 
             Character.Controlled = null;
             cam.TargetPos = Vector2.Zero;
+#if CLIENT
             GameMain.LightManager.LosEnabled = false;
+#endif
 
             //Vector2 diff = targetPos - sub.Position;
             float targetSpeed = 10.0f;
@@ -69,7 +71,9 @@ namespace Barotrauma
                 {
                     yield return new WaitForSeconds(0.1f);
 
+#if CLIENT
                     GUI.ScreenOverlayColor = Color.TransparentBlack;
+#endif
 
                     Running = false;
                     yield return CoroutineStatus.Success;
@@ -80,7 +84,9 @@ namespace Barotrauma
                 Vector2 cameraPos = subs.First().Position + Submarine.MainSub.HiddenSubPosition;
                 cameraPos.Y = Math.Min(cameraPos.Y, ConvertUnits.ToDisplayUnits(Level.Loaded.ShaftBody.Position.Y) - cam.WorldView.Height/2.0f);
 
+#if CLIENT
                 GUI.ScreenOverlayColor = Color.Lerp(Color.TransparentBlack, Color.Black, timer/duration);
+#endif
 
                 cam.Translate((cameraPos - cam.Position) * CoroutineManager.UnscaledDeltaTime*10.0f);
 
@@ -99,7 +105,9 @@ namespace Barotrauma
 
             yield return new WaitForSeconds(0.1f);
 
+#if CLIENT
             GUI.ScreenOverlayColor = Color.TransparentBlack;
+#endif
 
             yield return CoroutineStatus.Success;
         }

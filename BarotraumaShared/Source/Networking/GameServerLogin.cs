@@ -212,7 +212,9 @@ namespace Barotrauma.Networking
             unauthClient = null;
             ConnectedClients.Add(newClient);
 
+#if CLIENT
             GameMain.NetLobbyScreen.AddPlayer(newClient.name);
+#endif
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
 
             var savedPermissions = clientPermissions.Find(cp => cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());

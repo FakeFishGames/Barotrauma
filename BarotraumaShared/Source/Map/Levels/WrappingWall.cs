@@ -10,11 +10,9 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    class WrappingWall : IDisposable
+    partial class WrappingWall : IDisposable
     {
         public const float WallWidth = 20000.0f;
-
-        private VertexBuffer wallVertices, bodyVertices;
 
         private Vector2 midPos;
         private int slot;
@@ -22,16 +20,6 @@ namespace Barotrauma
         private Vector2 offset;
 
         private List<VoronoiCell> cells;
-
-        public VertexBuffer WallVertices
-        {
-            get { return wallVertices; }
-        }
-
-        public VertexBuffer BodyVertices
-        {
-            get { return bodyVertices; }
-        }
 
         public Vector2 Offset
         {
@@ -110,20 +98,7 @@ namespace Barotrauma
                 cells.Add(wallCell);
             }
         }
-
-        public void SetWallVertices(VertexPositionTexture[] vertices)
-        {
-            wallVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-            wallVertices.SetData(vertices);
-        }
-
-        public void SetBodyVertices(VertexPositionColor[] vertices)
-        {
-            bodyVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-            bodyVertices.SetData(vertices);
-        }
-
-
+        
         public static void UpdateWallShift(Vector2 pos, WrappingWall[,] walls)
         {
             if (pos.X < walls[0, 1].midPos.X && walls[0,0].midPos.X > pos.X)
@@ -186,6 +161,7 @@ namespace Barotrauma
 
         protected virtual void Dispose(bool disposing)
         {
+#if CLIENT
             if (wallVertices != null)
             {
                 wallVertices.Dispose();
@@ -196,6 +172,7 @@ namespace Barotrauma
                 bodyVertices.Dispose();
                 bodyVertices = null;
             }
+#endif
         }
     }
 }

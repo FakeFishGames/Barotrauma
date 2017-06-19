@@ -155,39 +155,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void SetDestinationLevelStart()
-        {
-            AutoPilot = true;
-
-            MaintainPos = false;
-            posToMaintain = null;
-
-            levelEndTickBox.Selected = false;
-
-            if (!levelStartTickBox.Selected)
-            {
-                levelStartTickBox.Selected = true;
-                UpdatePath();
-            }
-        }
-
-        public void SetDestinationLevelEnd()
-        {
-            AutoPilot = false;
-
-            MaintainPos = false;
-            posToMaintain = null;
-
-            levelStartTickBox.Selected = false;
-
-            if (!levelEndTickBox.Selected)
-            {
-                levelEndTickBox.Selected = true;
-                UpdatePath();
-            }
-        }
-
-
         private bool SelectDestination(GUITickBox tickBox)
         {
             unsentChanges = true;

@@ -148,8 +148,10 @@ namespace Barotrauma.Items.Components
                 Repair(rayStart - character.Submarine.SimPosition, rayEnd - character.Submarine.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
 
+#if CLIENT
             GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition + TransformedBarrelPos,
                 -item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi), ParticleSpeed);
+#endif
           
             return true;
         }
@@ -191,6 +193,7 @@ namespace Barotrauma.Items.Components
                 int sectionIndex = targetStructure.FindSectionIndex(ConvertUnits.ToDisplayUnits(pickedPosition));
                 if (sectionIndex < 0) return;
 
+#if CLIENT
                 Vector2 progressBarPos = targetStructure.SectionPosition(sectionIndex);
                 if (targetStructure.Submarine != null)
                 {
@@ -204,6 +207,7 @@ namespace Barotrauma.Items.Components
                     Color.Red, Color.Green);
 
                 if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
+#endif
 
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess);
 

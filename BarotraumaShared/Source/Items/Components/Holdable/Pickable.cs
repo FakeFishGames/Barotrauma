@@ -113,11 +113,13 @@ namespace Barotrauma.Items.Components
                     yield return CoroutineStatus.Success;
                 }
 
+#if CLIENT
                 picker.UpdateHUDProgressBar(
                     this,
                     item.WorldPosition,
                     pickTimer / requiredTime,
                     Color.Red, Color.Green);
+#endif
 
                 picker.AnimController.Anim = AnimController.Animation.UsingConstruction;
 

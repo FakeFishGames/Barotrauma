@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    class Ragdoll
+    partial class Ragdoll
     {
         public static List<Ragdoll> list = new List<Ragdoll>();
 
@@ -508,12 +508,14 @@ namespace Barotrauma
             if (f1.Body.UserData is Limb)
             {
                 Limb limb = (Limb)f1.Body.UserData;
-                
+
+#if CLIENT
                 if (impact > 3.0f && limb.HitSound != null && limb.soundTimer <= 0.0f)
                 {
                     limb.soundTimer = Limb.SoundInterval;
                     limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
                 }
+#endif
             }
             else if (f1.Body == Collider.FarseerBody)
             {
@@ -522,96 +524,14 @@ namespace Barotrauma
                     if (impact > ImpactTolerance)
                     {
                         character.AddDamage(CauseOfDeath.Damage, impact - ImpactTolerance, null);
+#if CLIENT
                         SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, Collider);
+#endif
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                     }
                 }                              
 
                 if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
-            }
-        }
-
-        public virtual void Draw(SpriteBatch spriteBatch)
-        {
-            if (simplePhysicsEnabled) return;
-            
-            Collider.UpdateDrawPosition();
-
-            foreach (Limb limb in Limbs)
-            {
-                limb.Draw(spriteBatch);
-            }  
-        }
-
-        public void DebugDraw(SpriteBatch spriteBatch)
-        {
-            if (!GameMain.DebugDraw || !character.Enabled) return;
-            if (simplePhysicsEnabled) return;
-
-            foreach (Limb limb in Limbs)
-            {
-
-                if (limb.pullJoint != null)
-                {
-                    Vector2 pos = ConvertUnits.ToDisplayUnits(limb.pullJoint.WorldAnchorA);
-                    if (currentHull != null) pos += currentHull.Submarine.DrawPosition;
-                    pos.Y = -pos.Y;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
-                }
-
-                limb.body.DebugDraw(spriteBatch, inWater ? Color.Cyan : Color.White);
-            }
-
-            Collider.DebugDraw(spriteBatch, frozen ? Color.Red : (inWater ? Color.SkyBlue : Color.Gray));
-            GUI.Font.DrawString(spriteBatch, Collider.LinearVelocity.X.ToString(), new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y), Color.Orange);
-
-            foreach (RevoluteJoint joint in limbJoints)
-            {
-                Vector2 pos = ConvertUnits.ToDisplayUnits(joint.WorldAnchorA);
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.White, true);
-
-                pos = ConvertUnits.ToDisplayUnits(joint.WorldAnchorB);
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.White, true);
-            }
-
-            foreach (Limb limb in Limbs)
-            {
-                if (limb.body.TargetPosition != null)
-                {
-                    Vector2 pos = ConvertUnits.ToDisplayUnits((Vector2)limb.body.TargetPosition);
-                    if (currentHull != null) pos += currentHull.Submarine.DrawPosition;
-                    pos.Y = -pos.Y;
-
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
-                    GUI.DrawLine(spriteBatch, pos, new Vector2(limb.WorldPosition.X, -limb.WorldPosition.Y), Color.Cyan);
-                }
-            }
-
-            if (character.MemState.Count > 1)
-            {
-                Vector2 prevPos = ConvertUnits.ToDisplayUnits(character.MemState[0].Position);
-                if (currentHull != null) prevPos += currentHull.Submarine.DrawPosition;
-                prevPos.Y = -prevPos.Y;
-
-                for (int i = 1; i < character.MemState.Count; i++ )
-                {
-                    Vector2 currPos = ConvertUnits.ToDisplayUnits(character.MemState[i].Position);
-                    if (currentHull != null) currPos += currentHull.Submarine.DrawPosition;
-                    currPos.Y = -currPos.Y;
-
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)currPos.X - 3, (int)currPos.Y - 3, 6, 6), Color.Cyan*0.6f, true, 0.01f);
-                    GUI.DrawLine(spriteBatch, prevPos, currPos, Color.Cyan*0.6f, 0, 3);
-
-                    prevPos = currPos;
-                }
-            }
-
-            if (ignorePlatforms)
-            {
-                GUI.DrawLine(spriteBatch, 
-                    new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y),
-                    new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y + 50), 
-                    Color.Orange, 0, 5);
             }
         }
 
@@ -909,7 +829,7 @@ namespace Barotrauma
                     //the limb has gone through the surface of the water
                     if (Math.Abs(limb.LinearVelocity.Y) > 5.0f && limb.inWater != prevInWater)
                     {
-
+#if CLIENT
                         //create a splash particle
                         GameMain.ParticleManager.CreateParticle("watersplash",
                             new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
@@ -920,13 +840,16 @@ namespace Barotrauma
                             new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
                             limb.LinearVelocity * 0.001f,
                             0.0f, limbHull);
+#endif
 
                         //if the Character dropped into water, create a wave
                         if (limb.LinearVelocity.Y < 0.0f)
                         {
                             if (splashSoundTimer <= 0.0f)
                             {
+#if CLIENT
                                 SoundPlayer.PlaySplashSound(limb.WorldPosition, Math.Abs(limb.LinearVelocity.Y) + Rand.Range(-5.0f, 0.0f));
+#endif
                                 splashSoundTimer = 0.5f;
                             }
 
@@ -941,10 +864,12 @@ namespace Barotrauma
                     }
                 }
 
+#if CLIENT
                 if (limb.LightSource != null)
                 {
                     limb.LightSource.Rotation = dir == Direction.Right ? limb.body.DrawRotation : limb.body.DrawRotation - MathHelper.Pi;
                 }
+#endif
                 limb.Update(deltaTime);
             }
             

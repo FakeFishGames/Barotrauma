@@ -15,8 +15,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-
-    class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
     {
         public static List<DockingPort> list = new List<DockingPort>();
         
@@ -185,7 +184,9 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+#if CLIENT
             PlaySound(ActionType.OnUse, item.WorldPosition);
+#endif
 
             if (!item.linkedTo.Contains(target.item)) item.linkedTo.Add(target.item);
             if (!target.item.linkedTo.Contains(item)) target.item.linkedTo.Add(item);
@@ -254,9 +255,11 @@ namespace Barotrauma.Items.Components
             dockingDir = IsHorizontal ?
                 Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
                 Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
-            dockingTarget.dockingDir = -dockingDir;            
-            
+            dockingTarget.dockingDir = -dockingDir;
+
+#if CLIENT
             PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
+#endif
 
             ConnectWireBetweenPorts();
 
@@ -496,8 +499,10 @@ namespace Barotrauma.Items.Components
         public void Undock()
         {
             if (dockingTarget == null || !docked) return;
-            
+
+#if CLIENT
             PlaySound(ActionType.OnUse, item.WorldPosition);
+#endif
 
             dockingTarget.item.Submarine.DockedTo.Remove(item.Submarine);
             item.Submarine.DockedTo.Remove(dockingTarget.item.Submarine);
@@ -618,60 +623,6 @@ namespace Barotrauma.Items.Components
                     item.SendSignal(0, "1", "state_out", null);
 
                     dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
-                }
-            }
-        }
-
-        public void Draw(SpriteBatch spriteBatch, bool editing)
-        {
-            if (dockingState == 0.0f) return;
-
-            Vector2 drawPos = item.DrawPosition;
-            drawPos.Y = -drawPos.Y;
-
-            var rect = overlaySprite.SourceRect;
-
-            if (IsHorizontal)
-            {
-                drawPos.Y -= rect.Height / 2;
-
-                if (dockingDir == 1)
-                {
-                    spriteBatch.Draw(overlaySprite.Texture,
-                        drawPos,
-                        new Rectangle(
-                            rect.Center.X + (int)(rect.Width / 2 * (1.0f - dockingState)), rect.Y,
-                            (int)(rect.Width / 2 * dockingState), rect.Height), Color.White);
-
-                }
-                else
-                {
-                    spriteBatch.Draw(overlaySprite.Texture,
-                        drawPos - Vector2.UnitX * (rect.Width / 2 * dockingState),
-                        new Rectangle(
-                            rect.X, rect.Y,
-                            (int)(rect.Width / 2 * dockingState), rect.Height), Color.White);
-                }
-            }
-            else
-            {
-                drawPos.X -= rect.Width / 2;
-
-                if (dockingDir == 1)
-                {
-                    spriteBatch.Draw(overlaySprite.Texture,
-                        drawPos - Vector2.UnitY * (rect.Height / 2 * dockingState),
-                        new Rectangle(
-                            rect.X, rect.Y,
-                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
-                }
-                else
-                {
-                    spriteBatch.Draw(overlaySprite.Texture,
-                        drawPos,
-                        new Rectangle(
-                            rect.X, rect.Y + rect.Height / 2 + (int)(rect.Height / 2 * (1.0f - dockingState)),
-                            rect.Width, (int)(rect.Height / 2 * dockingState)), Color.White);
                 }
             }
         }

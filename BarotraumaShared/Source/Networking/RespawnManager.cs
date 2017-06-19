@@ -429,17 +429,22 @@ namespace Barotrauma.Networking
 
             for (int i = 0; i < characterInfos.Count; i++)
             {
-                bool myCharacter = i >= clients.Count;
+                bool myCharacter = false;
+#if CLIENT
+                myCharacter = i >= clients.Count;
+#endif
 
                 var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, !myCharacter, false);
                 
                 character.TeamID = 1;
-
+                
                 if (myCharacter)
                 {
                     server.Character = character;
                     Character.Controlled = character;
+#if CLIENT
                     GameMain.LightManager.LosEnabled = true;
+#endif
                 }
                 else
                 {
@@ -481,8 +486,9 @@ namespace Barotrauma.Networking
                         item.AddTag(s);
                     }                    
                 }
-
+#if CLIENT
                 GameMain.GameSession.CrewManager.characters.Add(character);
+#endif
             }
             
         }

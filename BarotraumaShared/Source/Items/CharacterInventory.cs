@@ -119,7 +119,9 @@ namespace Barotrauma
                     if (allowedSlot.HasFlag(limbSlots[i]) && Items[i]!=null && Items[i]!=item)
                     {
                         free = false;
+#if CLIENT
                         if (slots != null) slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+#endif
                     }
                 }
 
@@ -240,30 +242,6 @@ namespace Barotrauma
             CreateSlots();
         }
 
-        protected override void CreateSlots()
-        {
-            if (slots == null) slots = new InventorySlot[capacity];
-
-            int rectWidth = 40, rectHeight = 40;
-            
-            Rectangle slotRect = new Rectangle(0, 0, rectWidth, rectHeight);
-            for (int i = 0; i < capacity; i++)
-            {
-                if (slots[i] == null) slots[i] = new InventorySlot(slotRect);
-
-                slots[i].Disabled = false;
-
-                slotRect.X = (int)(SlotPositions[i].X + DrawOffset.X);
-                slotRect.Y = (int)(SlotPositions[i].Y + DrawOffset.Y);
-
-                slots[i].Rect = slotRect;
-
-                slots[i].Color = limbSlots[i] == InvSlotType.Any ? Color.White * 0.2f : Color.White * 0.4f;
-            }
-
-            MergeSlots();
-        }
-
         public override void Update(float deltaTime, bool subInventory = false)
         {
             base.Update(deltaTime);
@@ -309,6 +287,7 @@ namespace Barotrauma
                 UpdateSubInventory(deltaTime, selectedSlot);
             }
 
+#if CLIENT
             if (character == Character.Controlled)
             {
                 for (int i = 0; i < capacity; i++)
@@ -321,6 +300,7 @@ namespace Barotrauma
                     }
                 }
             }
+#endif
 
             //cancel dragging if too far away from the container of the dragged item
             if (draggingItem != null)
@@ -365,67 +345,5 @@ namespace Barotrauma
 
             selectedSlot = -1;
         }
-                 
-        public void DrawOwn(SpriteBatch spriteBatch)
-        {
-            if (slots == null) CreateSlots();
-
-            Rectangle slotRect = new Rectangle(0, 0, 40, 40);
-
-            for (int i = 0; i < capacity; i++)
-            {
-                slotRect.X = (int)(SlotPositions[i].X + DrawOffset.X);
-                slotRect.Y = (int)(SlotPositions[i].Y + DrawOffset.Y);
-
-                if (i==1) //head
-                {
-                    spriteBatch.Draw(icons, new Vector2(slotRect.Center.X, slotRect.Center.Y), 
-                        new Rectangle(0,0,56,128), Color.White*0.7f, 0.0f, 
-                        new Vector2(28.0f, 64.0f), Vector2.One, 
-                        SpriteEffects.None, 0.1f);
-                } 
-                else if (i==3 || i==4)
-                {
-                    spriteBatch.Draw(icons, new Vector2(slotRect.Center.X, slotRect.Center.Y),
-                        new Rectangle(92, 41*(4-i), 36, 40), Color.White * 0.7f, 0.0f,
-                        new Vector2(18.0f, 20.0f), Vector2.One,
-                        SpriteEffects.None, 0.1f);
-                }
-                else if (i==5)
-                {
-                    spriteBatch.Draw(icons, new Vector2(slotRect.Center.X, slotRect.Center.Y),
-                        new Rectangle(57,0,31,32), Color.White * 0.7f, 0.0f,
-                        new Vector2(15.0f, 16.0f), Vector2.One,
-                        SpriteEffects.None, 0.1f);
-                }
-            }
-
-            base.Draw(spriteBatch);
-            
-            if (character == Character.Controlled)
-            {
-                for (int i = 0; i < capacity; i++)
-                {
-                    if (selectedSlot != i &&
-                        Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
-                    {
-                        useOnSelfButton[i - 3].Draw(spriteBatch);
-                    }
-                }
-            }
-
-            if (selectedSlot > -1)
-            {
-                DrawSubInventory(spriteBatch, selectedSlot);
-
-                if (selectedSlot > -1 && 
-                    !slots[selectedSlot].IsHighlighted &&
-                    (draggingItem == null || draggingItem.Container != Items[selectedSlot]))
-                {
-                    selectedSlot = -1;
-                }
-            }
-        }
-        
     }
 }

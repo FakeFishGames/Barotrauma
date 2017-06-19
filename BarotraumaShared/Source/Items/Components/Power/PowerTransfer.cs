@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
 
                 if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
+#if CLIENT
                     sparkSounds[Rand.Int(sparkSounds.Length)].Play(1.0f, 600.0f, pt.item.WorldPosition);
 
                     Vector2 baseVel = Rand.Vector(300.0f);
@@ -90,6 +91,7 @@ namespace Barotrauma.Items.Components
 
                         if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                     }
+#endif
 
                     if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
                     {

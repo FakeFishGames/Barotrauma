@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    class MissionMode : GameMode
+    partial class MissionMode : GameMode
     {
         private Mission mission;
 
@@ -21,17 +21,6 @@ namespace Barotrauma
 
             MTRandom rand = new MTRandom(ToolBox.StringToInt(GameMain.NetLobbyScreen.LevelSeed));
             mission = Mission.LoadRandom(locations, rand, param as string);
-        }
-
-        public override void MsgBox()
-        {
-            if (mission == null) return;
-
-            var missionMsg = new GUIMessageBox(mission.Name, mission.Description, 400, 400);
-            missionMsg.UserData = "missionstartmessage";
-
-            Networking.GameServer.Log("Mission: " + mission.Name, Networking.ServerLog.MessageType.ServerMessage);
-            Networking.GameServer.Log(mission.Description, Networking.ServerLog.MessageType.ServerMessage);
         }
     }
 }

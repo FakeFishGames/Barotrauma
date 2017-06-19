@@ -264,6 +264,26 @@ namespace Barotrauma
             }
             return editingHUD;
         }
+
+        public virtual void UpdateHUD(Camera cam, Character character)
+        {
+            if (condition <= 0.0f)
+            {
+                FixRequirement.UpdateHud(this, character);
+                return;
+            }
+
+            if (HasInGameEditableProperties)
+            {
+                UpdateEditing(cam);
+            }
+
+            foreach (ItemComponent ic in components)
+            {
+                if (ic.CanBeSelected) ic.UpdateHUD(character);
+            }
+        }
+
         public virtual void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
             if (condition <= 0.0f)

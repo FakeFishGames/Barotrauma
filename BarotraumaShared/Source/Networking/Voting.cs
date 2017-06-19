@@ -97,14 +97,18 @@ namespace Barotrauma
                     string subName = inc.ReadString();
                     Submarine sub = Submarine.SavedSubmarines.Find(s => s.Name == subName);
                     sender.SetVote(voteType, sub);
+#if CLIENT
                     UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
+#endif
                     break;
 
                 case VoteType.Mode:
                     string modeName = inc.ReadString();
                     GameModePreset mode = GameModePreset.list.Find(gm => gm.Name == modeName);
                     sender.SetVote(voteType, mode);
+#if CLIENT
                     UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);
+#endif
                     break;
                 case VoteType.EndRound:
                     if (sender.Character == null) return;

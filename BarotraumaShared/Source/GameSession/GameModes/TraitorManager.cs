@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class TraitorManager
+    partial class TraitorManager
     {
         public Character TraitorCharacter
         {
@@ -53,8 +53,9 @@ namespace Barotrauma
             traitorCharacter = characters[traitorIndex];
             targetCharacter = characters[targetIndex];
 
+#if CLIENT
             if (server.Character == null)
-            {               
+            {
                 new GUIMessageBox("New traitor", traitorCharacter.Name + " is the traitor and the target is " + targetCharacter.Name+".");
             }
             else if (server.Character == traitorCharacter)
@@ -62,15 +63,9 @@ namespace Barotrauma
                 CreateStartPopUp(traitorCharacter.Name);
                 return;
             }
+#endif
         }
 
-        public static void CreateStartPopUp(string targetName)
-        {
-            new GUIMessageBox("You are the Traitor!",
-                "Your secret task is to assassinate " + targetName + "! Discretion is an utmost concern; sinking the submarine and killing the entire crew "
-                + "will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.", 400, 350);
-        }
-        
         public string GetEndMessage()
         {
             if (GameMain.Server == null || traitorCharacter == null || targetCharacter == null) return "";

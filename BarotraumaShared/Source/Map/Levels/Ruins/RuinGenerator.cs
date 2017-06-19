@@ -139,24 +139,24 @@ namespace Barotrauma.RuinGeneration
         }
     }
 
-        struct Line
+    struct Line
+    {
+        public readonly Vector2 A, B;
+
+        public readonly RuinStructureType Type;
+
+        public Line(Vector2 a, Vector2 b, RuinStructureType type)
         {
-            public readonly Vector2 A, B;
+            Debug.Assert(a.X <= b.X);
+            Debug.Assert(a.Y <= b.Y);
 
-            public readonly RuinStructureType Type;
+            A = a;
+            B = b;
+            Type = type;
+        }
+    }  
 
-            public Line(Vector2 a, Vector2 b, RuinStructureType type)
-            {
-                Debug.Assert(a.X <= b.X);
-                Debug.Assert(a.Y <= b.Y);
-
-                A = a;
-                B = b;
-                Type = type;
-            }
-        }  
-
-    class Ruin
+    partial class Ruin
     {
         private List<BTRoom> rooms;
         private List<Corridor> corridors;
@@ -449,24 +449,5 @@ namespace Barotrauma.RuinGeneration
 
             return shapes;
         }
-                
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            //foreach (BTRoom room in leaves)
-            //{
-            //    GUI.DrawRectangle(spriteBatch, room.Rect, Color.White);
-            //}
-
-            //foreach (Corridor corr in corridors)
-            //{
-            //    GUI.DrawRectangle(spriteBatch, corr.Rect, Color.Blue);
-            //}
-
-            foreach (Line line in walls)
-            {
-                GUI.DrawLine(spriteBatch, new Vector2(line.A.X, -line.A.Y), new Vector2(line.B.X, -line.B.Y), Color.Red, 0.0f, 10);
-            }
-        }
-
     }
 }

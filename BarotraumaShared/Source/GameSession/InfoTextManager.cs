@@ -52,10 +52,12 @@ namespace Barotrauma
 
             string text = infoList[Rand.Int(infoList.Count)];
 
+#if CLIENT
             foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
             {
                 text = text.Replace("[" + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
             }
+#endif
 
             if (Submarine.MainSub != null) text = text.Replace("[sub]", Submarine.MainSub.Name);
             if (GameMain.GameSession != null && GameMain.GameSession.StartLocation != null)

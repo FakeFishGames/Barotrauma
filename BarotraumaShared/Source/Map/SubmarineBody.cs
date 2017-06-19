@@ -399,7 +399,8 @@ namespace Barotrauma
                 Vector2 n;
                 FixedArray2<Vector2> particlePos;
                 contact.GetWorldManifold(out n, out particlePos);
-                
+
+#if CLIENT
                 int particleAmount = (int)(wallImpact*10.0f);
                 for (int i = 0; i < particleAmount; i++)
                 {
@@ -407,6 +408,7 @@ namespace Barotrauma
                         ConvertUnits.ToDisplayUnits(particlePos[0]) + Rand.Vector(Rand.Range(1.0f, 50.0f)), 
                         Rand.Vector(Rand.Range(50.0f,500.0f)) + Velocity);
                 }
+#endif
             
                 return true;
             }
@@ -529,6 +531,7 @@ namespace Barotrauma
                 }
             }
 
+#if CLIENT
             if (maxDamageStructure != null)
             {
                 SoundPlayer.PlayDamageSound(
@@ -538,6 +541,7 @@ namespace Barotrauma
                     MathHelper.Clamp(maxDamage * 4.0f, 1000.0f, 4000.0f),
                     maxDamageStructure.Tags);            
             }
+#endif
         }
 
     }
