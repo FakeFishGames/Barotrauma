@@ -33,6 +33,18 @@ namespace Barotrauma
             }
         }
 
+
+        public override void Select()
+        {
+            List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
+
+            SelectedSub = subsToShow[0];
+            SelectedShuttle = subsToShow[0]; //TODO: don't use the same sub as a shuttle by default
+
+            DebugConsole.NewMessage("Selected sub: " + SelectedSub.Name, Color.White);
+            DebugConsole.NewMessage("Selected shuttle: " + SelectedShuttle.Name, Color.White);
+        }
+
         private List<Submarine> subs = new List<Submarine>();
         public List<Submarine> GetSubList()
         {

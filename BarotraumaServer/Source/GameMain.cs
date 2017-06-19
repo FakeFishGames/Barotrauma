@@ -6,6 +6,7 @@ using FarseerPhysics.Dynamics;
 using Barotrauma.Networking;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using System.Threading;
 
 namespace Barotrauma
 {
@@ -68,7 +69,46 @@ namespace Barotrauma
 
         public void Run()
         {
-            //TODO: implement
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Item));
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
+            
+            Mission.Init();
+            MapEntityPrefab.Init();
+            LevelGenerationParams.LoadPresets();
+
+            JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
+            StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
+
+            ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
+
+            GameModePreset.Init();
+
+            LocationType.Init();
+
+            Submarine.RefreshSavedSubs();
+            
+            NetLobbyScreen = new NetLobbyScreen();
+
+            Server = new GameServer("Dedicated Server Test", 14242, true, "asd", false, 10);
+            while (true)
+            {
+                NetLobbyScreen.Update((float)Timing.Step);
+                Server.Update((float)Timing.Step);
+                CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
+
+                Thread.Sleep((int)(Timing.Step * 1000.0));
+            }
+        }
+        
+        public void ProcessInput()
+        {
+            while (true)
+            {
+                string input = Console.ReadLine();
+                DebugConsole.ExecuteCommand(input, this);
+            }
         }
 
         public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)

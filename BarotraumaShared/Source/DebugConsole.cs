@@ -497,6 +497,10 @@ namespace Barotrauma
             if (String.IsNullOrEmpty((msg))) return;
 
             Messages.Add(new ColoredText(msg, color));
+#if SERVER
+            //TODO: REMOVE
+            Console.WriteLine(msg);
+#endif
 
             if (Messages.Count > MaxMessages)
             {

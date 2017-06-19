@@ -360,7 +360,7 @@ namespace Barotrauma
                     }
 
                     GUI.Update((float)Timing.Step);
-                }               
+                }
 
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 

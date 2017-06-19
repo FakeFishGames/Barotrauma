@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 #if WINDOWS
 using System.Management;
@@ -31,6 +32,9 @@ namespace Barotrauma
             try
             {
                 game = new GameMain();
+
+                Thread inputThread = new Thread(new ThreadStart(game.ProcessInput));
+                inputThread.Start();
                 game.Run();
             }
             catch (Exception e)
