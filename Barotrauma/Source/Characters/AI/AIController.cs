@@ -6,15 +6,13 @@ namespace Barotrauma
 {
     class AIController : ISteerable
     {
-
-        public enum AiState { None, Attack, GoTo, Escape }
-        public enum SteeringState { Wander, Seek, Escape }
+        public enum AIState { None, Attack, GoTo, Escape, Eat }
 
         public bool Enabled;
 
         public readonly Character Character;
         
-        protected AiState state;
+        protected AIState state;
 
         protected SteeringManager steeringManager;
 
@@ -44,7 +42,7 @@ namespace Barotrauma
             get { return Character.AnimController.Collider.LinearVelocity; }
         }
 
-        public AiState State
+        public AIState State
         {
             get { return state; }
             set { state = value; }

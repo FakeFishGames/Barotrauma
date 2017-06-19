@@ -70,10 +70,12 @@ namespace Barotrauma
         
         private float damage, burnt;
 
+        private bool isSevered;
+
         private readonly Vector2 armorSector;
         private readonly float armorValue;
 
-        Sound hitSound;
+        private Sound hitSound;
         //a timer for delaying when a hitsound/attacksound can be played again
         public float soundTimer;
         public const float SoundInterval = 0.4f;
@@ -90,7 +92,18 @@ namespace Barotrauma
         
         public float AttackTimer;
 
-        public bool IsSevered;
+        public bool IsSevered
+        {
+            get { return isSevered; }
+            set
+            {
+                isSevered = value;
+                if (isSevered)
+                {
+                    damage = 100.0f;
+                }
+            }
+        }
 
         public bool DoesFlip
         {
@@ -429,12 +442,7 @@ namespace Barotrauma
             //        SimPosition, Vector2.Zero);
             //}
         }
-
-        public void ActivateDamagedSprite()
-        {
-            damage = 100.0f;
-        }
-
+        
         public void UpdateAttack(float deltaTime, Vector2 attackPosition, IDamageable damageTarget)
         {
             float dist = ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackPosition));
