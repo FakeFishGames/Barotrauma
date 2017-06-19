@@ -70,21 +70,25 @@ namespace Barotrauma
             IncubationTimer += deltaTime / IncubationDuration;
 
             if (Character.Controlled != character) return;
-            
+
+#if CLIENT
             if (prevTimer % 0.1f > 0.05f && IncubationTimer % 0.1f < 0.05f)
             {
                 GUI.AddMessage(InfoTextManager.GetInfoText("HuskDormant"), Color.Red, 4.0f);
             }
+#endif
         }
 
         private void UpdateTransitionState(float deltaTime, Character character)
         {
             IncubationTimer += deltaTime / IncubationDuration;
 
+#if CLIENT
             if (state == InfectionState.Dormant && Character.Controlled == character)
             {
                 new GUIMessageBox("", InfoTextManager.GetInfoText("HuskCantSpeak"));
             }
+#endif
 
             state = InfectionState.Transition;
         }
@@ -93,7 +97,9 @@ namespace Barotrauma
         {
             if (state != InfectionState.Active)
             {
+#if CLIENT
                 if (Character.Controlled==character) new GUIMessageBox("", InfoTextManager.GetInfoText("HuskActivate"));
+#endif
                 ActivateHusk(character);
                 state = InfectionState.Active;
             }

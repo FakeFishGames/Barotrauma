@@ -70,9 +70,9 @@ namespace Barotrauma
                 e.IsHighlighted = false;
             }
 
+#if CLIENT
             if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
 
-#if CLIENT
             BackgroundCreatureManager.Update(cam, (float)deltaTime);
 
             GameMain.ParticleManager.Update((float)deltaTime);
@@ -82,6 +82,7 @@ namespace Barotrauma
 
             if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
 
+#if CLIENT
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
             {
                 if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
@@ -89,14 +90,18 @@ namespace Barotrauma
                     Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);
                 }
             }
+#endif
+
             Character.UpdateAll(cam, (float)deltaTime);
 
             StatusEffect.UpdateAll((float)deltaTime);
 
+#if CLIENT
             if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
             {
                 cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
             }
+#endif
 
             cam.MoveCamera((float)deltaTime);
                 

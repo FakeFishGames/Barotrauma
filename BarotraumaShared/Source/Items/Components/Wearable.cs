@@ -173,7 +173,9 @@ namespace Barotrauma.Items.Components
             
             ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
+#if CLIENT
             PlaySound(ActionType.OnWearing, picker.WorldPosition);
+#endif
         }
 
         protected override void RemoveComponentSpecific()

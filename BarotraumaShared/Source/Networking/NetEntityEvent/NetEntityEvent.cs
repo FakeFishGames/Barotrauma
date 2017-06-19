@@ -83,24 +83,4 @@ namespace Barotrauma.Networking
             serializable.ServerWrite(msg, recipient, Data);
         } 
     }
-    
-    class ClientEntityEvent : NetEntityEvent
-    {
-        private IClientSerializable serializable;
-
-        public UInt16 CharacterStateID;
-
-        public ClientEntityEvent(IClientSerializable entity, UInt16 id)
-            : base(entity, id)
-        { 
-            serializable = entity;
-        }
-
-        public void Write(NetBuffer msg)
-        {
-            msg.Write(CharacterStateID);
-            serializable.ClientWrite(msg, Data);
-        } 
-    }
-
 }

@@ -35,8 +35,10 @@ namespace Barotrauma
 
         public static void Init()
         {
+#if CLIENT
             new GameModePreset("Single Player", typeof(SinglePlayerMode), true);
             new GameModePreset("Tutorial", typeof(TutorialMode), true);
+#endif
 
             var mode = new GameModePreset("SandBox", typeof(GameMode), false);
             mode.Description = "A game mode with no specific objectives.";

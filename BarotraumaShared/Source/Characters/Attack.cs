@@ -134,6 +134,7 @@ namespace Barotrauma
 
         public AttackResult DoDamage(IDamageable attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
+#if CLIENT
             if (particleEmitterPrefab != null)
             {
                 particleEmitterPrefab.Emit(worldPosition);
@@ -143,6 +144,7 @@ namespace Barotrauma
             {
                 sound.Play(1.0f, 500.0f, worldPosition);
             }
+#endif
             
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
 

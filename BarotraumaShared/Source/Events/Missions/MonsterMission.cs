@@ -46,7 +46,9 @@ namespace Barotrauma
                     }
 
                     if (!monster.IsDead) return;
+#if CLIENT
                     ShowMessage(state);
+#endif
                     state = 1;
                     break;
             }

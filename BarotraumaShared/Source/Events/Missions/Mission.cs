@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class Mission
+    partial class Mission
     {
         public static List<string> MissionTypes = new List<string>() { "Random" };
         
@@ -237,18 +237,6 @@ namespace Barotrauma
             return false; 
         }
 
-        public void ShowMessage(int index)
-        {
-            if (index >= headers.Count && index >= messages.Count) return;
-
-            string header = index < headers.Count ? headers[index] : "";
-            string message = index < messages.Count ? messages[index] : "";
-
-            GameServer.Log("Mission info: " + header + " - " + message, ServerLog.MessageType.ServerMessage);
-
-            new GUIMessageBox(header, message);
-        }
-
         /// <summary>
         /// End the mission and give a reward if it was completed successfully
         /// </summary>
@@ -261,10 +249,12 @@ namespace Barotrauma
 
         public void GiveReward()
         {
+#if CLIENT
             var mode = GameMain.GameSession.gameMode as SinglePlayerMode;
             if (mode == null) return;
 
             mode.Money += reward;
+#endif
         }
     }
 }

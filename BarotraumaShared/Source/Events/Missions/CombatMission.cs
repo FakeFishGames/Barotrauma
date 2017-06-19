@@ -196,7 +196,9 @@ namespace Barotrauma
 
                         winner = i;
 
+#if CLIENT
                         ShowMessage(i);
+#endif
                         state = 1;
                         break;
                     }
@@ -208,14 +210,18 @@ namespace Barotrauma
                     (winner == 0 && subs[winner].AtStartPosition) || (winner == 1 && subs[winner].AtEndPosition) &&
                     crews[winner].Any(c => !c.IsDead && c.Submarine == subs[winner]))
                 {
+#if CLIENT
                     GameMain.GameSession.CrewManager.WinningTeam = winner+1;
+#endif
                     if (GameMain.Server != null) GameMain.Server.EndGame();
                 }
             }
 
             if (teamDead[0] && teamDead[1])
             {
+#if CLIENT
                 GameMain.GameSession.CrewManager.WinningTeam = 0;
+#endif
                 winner = -1;
                 if (GameMain.Server != null) GameMain.Server.EndGame();
             }

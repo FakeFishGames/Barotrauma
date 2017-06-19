@@ -285,6 +285,37 @@ namespace Barotrauma.Items.Components
             steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(item.WorldPosition), target);
         }
 
+        public void SetDestinationLevelStart()
+        {
+            AutoPilot = true;
+
+            MaintainPos = false;
+            posToMaintain = null;
+
+            LevelEndSelected = false;
+
+            if (!LevelStartSelected)
+            {
+                LevelStartSelected = true;
+                UpdatePath();
+            }
+        }
+
+        public void SetDestinationLevelEnd()
+        {
+            AutoPilot = false;
+
+            MaintainPos = false;
+            posToMaintain = null;
+
+            LevelStartSelected = false;
+
+            if (!LevelEndSelected)
+            {
+                LevelEndSelected = true;
+                UpdatePath();
+            }
+        }
         private void SteerTowardsPosition(Vector2 worldPosition)
         {
             float prediction = 10.0f;

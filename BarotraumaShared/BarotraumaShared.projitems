@@ -1432,7 +1432,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Client.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileReceiver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileSender.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameServerLogin.cs" />
@@ -1440,7 +1439,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\INetSerializable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetBufferExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetConfig.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\ClientEntityEventManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\NetEntityEventManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\NetEntityEvent\ServerEntityEventManager.cs" />

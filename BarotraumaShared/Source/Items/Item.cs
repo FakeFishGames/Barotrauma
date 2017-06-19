@@ -766,10 +766,12 @@ namespace Barotrauma
             {
                 if (ic.Parent != null) ic.IsActive = ic.Parent.IsActive;
 
+#if CLIENT
                 if (!ic.WasUsed)
                 {
                     ic.StopSounds(ActionType.OnUse);
                 }
+#endif
                 ic.WasUsed = false;
 
                 if (parentInventory!=null) ic.ApplyStatusEffects(ActionType.OnContained, deltaTime);
@@ -779,8 +781,10 @@ namespace Barotrauma
                 if (condition > 0.0f)
                 {
                     ic.Update(deltaTime, cam);
-                    
-                    if (ic.IsActive) ic.PlaySound(ActionType.OnActive, WorldPosition);              
+
+#if CLIENT
+                    if (ic.IsActive) ic.PlaySound(ActionType.OnActive, WorldPosition);
+#endif
                 }
                 else
                 {
@@ -907,25 +911,6 @@ namespace Barotrauma
             return drawableComponents.Count > 0 || body == null || body.Enabled;
         }
         
-        public virtual void UpdateHUD(Camera cam, Character character)
-        {
-            if (condition <= 0.0f)
-            {
-                FixRequirement.UpdateHud(this, character);
-                return;
-            }
-
-            if (HasInGameEditableProperties)
-            {
-                UpdateEditing(cam);
-            }
-
-            foreach (ItemComponent ic in components)
-            {
-                if (ic.CanBeSelected) ic.UpdateHUD(character);
-            }
-        }
-
         public List<T> GetConnectedComponents<T>(bool recursive = false)
         {
             List<T> connectedComponents = new List<T>();
@@ -1159,9 +1144,10 @@ namespace Barotrauma
                 {
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
-                    ic.PlaySound(ActionType.OnPicked, picker.WorldPosition);
 
 #if CLIENT
+                    ic.PlaySound(ActionType.OnPicked, picker.WorldPosition);
+
                     if (picker == Character.Controlled) GUIComponent.ForceMouseOn(null);
 #endif
 
@@ -1212,7 +1198,9 @@ namespace Barotrauma
                 {
                     ic.WasUsed = true;
 
+#if CLIENT
                     ic.PlaySound(ActionType.OnUse, WorldPosition);
+#endif
     
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
 
