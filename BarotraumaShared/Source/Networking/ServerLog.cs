@@ -80,6 +80,10 @@ namespace Barotrauma.Networking
         {
             //string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
 
+#if SERVER
+            DebugConsole.NewMessage(line, Color.White); //TODO: REMOVE
+#endif
+
             var newText = new LogMessage(line, messageType);
             
             lines.Enqueue(newText);

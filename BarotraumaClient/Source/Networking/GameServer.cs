@@ -25,7 +25,6 @@ namespace Barotrauma.Networking
             var endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170, 20, 150, 20), "End round", Alignment.TopLeft, "", inGameHUD);
             endRoundButton.OnClicked = (btn, userdata) => { EndGame(); return true; };
 
-            log = new ServerLog(name);
             showLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170, 20, 150, 20), "Server Log", Alignment.TopLeft, "", inGameHUD);
             showLogButton.OnClicked = (GUIButton button, object userData) =>
             {
@@ -44,14 +43,6 @@ namespace Barotrauma.Networking
             GUIButton settingsButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Settings", Alignment.TopLeft, "", inGameHUD);
             settingsButton.OnClicked = ToggleSettingsFrame;
             settingsButton.UserData = "settingsButton";
-
-            entityEventManager = new ServerEntityEventManager(this);
-
-            whitelist = new WhiteList();
-            banList = new BanList();
-
-            LoadSettings();
-            LoadClientPermissions();
 
             //----------------------------------------
         }

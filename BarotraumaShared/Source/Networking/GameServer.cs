@@ -119,7 +119,17 @@ namespace Barotrauma.Networking
                                     
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
+            log = new ServerLog(name);
+
             InitProjSpecific();
+
+            entityEventManager = new ServerEntityEventManager(this);
+
+            whitelist = new WhiteList();
+            banList = new BanList();
+
+            LoadSettings();
+            LoadClientPermissions();
             
             CoroutineManager.StartCoroutine(StartServer(isPublic));
         }
@@ -341,7 +351,7 @@ namespace Barotrauma.Networking
 #endif
             
             if (!started) return;
-
+            
             base.Update(deltaTime);
 
             foreach (UnauthenticatedClient unauthClient in unauthenticatedClients)
