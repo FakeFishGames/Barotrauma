@@ -72,6 +72,14 @@ namespace Barotrauma
             return (Duration == 0.0f) ? structureDamage : structureDamage * deltaTime;
         }
 
+        public Attack(float damage, float structureDamage, float bleedingDamage, float range = 0.0f)
+        {
+            Range = range;
+            this.damage = damage;
+            this.structureDamage = structureDamage;
+            this.bleedingDamage = bleedingDamage;
+        }
+
         public Attack(XElement element)
         {
             try
@@ -106,9 +114,7 @@ namespace Barotrauma
             Duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
 
             priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
-
-            statusEffects = new List<StatusEffect>();
-
+            
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -117,6 +123,10 @@ namespace Barotrauma
                         particleEmitterPrefab = new ParticleEmitterPrefab(subElement);
                         break;
                     case "statuseffect":
+                        if (statusEffects == null)
+                        {
+                            statusEffects = new List<StatusEffect>();
+                        }
                         statusEffects.Add(StatusEffect.Load(subElement));
                         break;
                 }
@@ -140,6 +150,11 @@ namespace Barotrauma
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
 
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+
+            if (statusEffects == null)
+            {
+                return attackResult;
+            }
 
             foreach (StatusEffect effect in statusEffects)
             {
