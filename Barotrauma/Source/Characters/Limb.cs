@@ -43,6 +43,9 @@ namespace Barotrauma
         private const float LimbDensity = 15;
         private const float LimbAngularDamping = 7;
 
+        //how long it takes for severed limbs to fade out
+        private const float SeveredFadeOutTime = 10.0f;
+
         public readonly Character character;
         
         //the physics body of the limb
@@ -71,13 +74,16 @@ namespace Barotrauma
         private float damage, burnt;
 
         private bool isSevered;
+        private float severedFadeOutTimer;
 
         private readonly Vector2 armorSector;
         private readonly float armorValue;
 
+        public Vector2? MouthPos;
+
         private Sound hitSound;
         //a timer for delaying when a hitsound/attacksound can be played again
-        public float soundTimer;
+        public float SoundTimer;
         public const float SoundInterval = 0.4f;
 
         public readonly Attack attack;
@@ -173,7 +179,7 @@ namespace Barotrauma
         {
             get { return stepOffset; }
         }
-
+        
         public float Burnt
         {
             get { return burnt; }
@@ -261,7 +267,12 @@ namespace Barotrauma
             armorSector.Y = MathHelper.ToRadians(armorSector.Y);
 
             armorValue = Math.Max(ToolBox.GetAttributeFloat(element, "armor", 0.0f), 0.0f);
-            
+
+            if (element.Attribute("mouthpos") != null)
+            {
+                MouthPos = ConvertUnits.ToSimUnits(ToolBox.GetAttributeVector2(element, "mouthpos", Vector2.Zero));
+            }
+
             body.BodyType = BodyType.Dynamic;
             body.FarseerBody.AngularDamping = LimbAngularDamping;
 
@@ -414,9 +425,7 @@ namespace Barotrauma
             {
                 LightSource.ParentSub = body.Submarine;
             }
-
-            if (!character.IsDead) damage = Math.Max(0.0f, damage-deltaTime*0.1f);
-
+            
             if (burnt > 0.0f) Burnt -= deltaTime;
 
             if (LinearVelocity.X > 500.0f)
@@ -431,9 +440,19 @@ namespace Barotrauma
                 body.ApplyWaterForces();
             }
 
+            if (isSevered)
+            {
+                severedFadeOutTimer += deltaTime;
+                if (severedFadeOutTimer > SeveredFadeOutTime)
+                {
+                    body.Enabled = false;
+                }
+            }
+
             if (character.IsDead) return;
 
-            soundTimer -= deltaTime;
+            damage = Math.Max(0.0f, damage - deltaTime * 0.1f);
+            SoundTimer -= deltaTime;
 
             //if (MathUtils.RandomFloat(0.0f, 1000.0f) < Bleeding)
             //{
@@ -455,9 +474,9 @@ namespace Barotrauma
             {
                 if (AttackTimer >= attack.Duration && damageTarget != null)
                 {
-                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, (soundTimer <= 0.0f));
+                    attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, (SoundTimer <= 0.0f));
 
-                    soundTimer = SoundInterval;
+                    SoundTimer = SoundInterval;
                 }
             }
 
@@ -490,10 +509,21 @@ namespace Barotrauma
             float brightness = 1.0f - (burnt / 100.0f) * 0.5f;
             Color color = new Color(brightness, brightness, brightness);
 
+            if (isSevered)
+            {
+                if (severedFadeOutTimer > SeveredFadeOutTime)
+                {
+                    return;
+                }
+                else if (severedFadeOutTimer > SeveredFadeOutTime - 1.0f)
+                {
+                    color *= SeveredFadeOutTime - severedFadeOutTimer;
+                }
+            }
+
             body.Dir = Dir;
 
             bool hideLimb = wearingItems.Any(w => w != null && w.HideLimb);
-
             if (!hideLimb)
             {
                 body.Draw(spriteBatch, sprite, color, null, scale);

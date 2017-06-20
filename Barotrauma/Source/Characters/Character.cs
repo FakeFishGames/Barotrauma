@@ -1729,7 +1729,8 @@ namespace Barotrauma
                 GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
             }
             
-            if (GameMain.Client == null && 
+            if (GameMain.Client == null &&
+                isDead && 
                 health - attackResult.Damage <= minHealth && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
             {
                 foreach (LimbJoint joint in AnimController.LimbJoints)
