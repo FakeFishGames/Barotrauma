@@ -159,6 +159,7 @@ namespace Barotrauma
 
                 foreach (Limb limb in Limbs)
                 {
+                    if (limb.IsSevered) continue;
                     limb.body.Enabled = !simplePhysicsEnabled;
                 }
 
