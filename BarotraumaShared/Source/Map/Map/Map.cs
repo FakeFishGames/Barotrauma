@@ -122,7 +122,7 @@ namespace Barotrauma
             List<Vector2> sites = new List<Vector2>();
             for (int i = 0; i < 50; i++)
             {
-                sites.Add(new Vector2(Rand.Range(0.0f, size, false), Rand.Range(0.0f, size, false)));
+                sites.Add(new Vector2(Rand.Range(0.0f, size, Rand.RandSync.Server), Rand.Range(0.0f, size, Rand.RandSync.Server)));
             }
 
             List<GraphEdge> edges = voronoi.MakeVoronoiGraph(sites, size, size);
@@ -148,7 +148,7 @@ namespace Barotrauma
 
                     Vector2[] points = new Vector2[] { edge.point1, edge.point2 };
 
-                    int positionIndex = Rand.Int(1, false);
+                    int positionIndex = Rand.Int(1, Rand.RandSync.Server);
 
                     Vector2 position = points[positionIndex];
                     if (newLocations[1 - i] != null && newLocations[1 - i].MapPosition == position) position = points[1 - positionIndex];
@@ -215,8 +215,8 @@ namespace Barotrauma
         private void GenerateDifficulties(Location start, List<LocationConnection> locations, float currDifficulty)
         {
             //start.Difficulty = currDifficulty;
-            currDifficulty += Rand.Range(difficultyIncrease.X, difficultyIncrease.Y, false);
-            if (currDifficulty > Rand.Range(difficultyCutoff.X, difficultyCutoff.Y, false)) currDifficulty = 10.0f;
+            currDifficulty += Rand.Range(difficultyIncrease.X, difficultyIncrease.Y, Rand.RandSync.Server);
+            if (currDifficulty > Rand.Range(difficultyCutoff.X, difficultyCutoff.Y, Rand.RandSync.Server)) currDifficulty = 10.0f;
 
             foreach (LocationConnection connection in start.Connections)
             {

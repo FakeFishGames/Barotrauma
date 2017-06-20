@@ -69,7 +69,7 @@ namespace Barotrauma
             }
 
             Vector2 position = new Vector2(
-                cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, false),
+                cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, Rand.RandSync.Server),
                 cargoRoom.Rect.Y - cargoRoom.Rect.Height + itemPrefab.Size.Y / 2);
 
             var item = new Item(itemPrefab, position, cargoRoom.Submarine);

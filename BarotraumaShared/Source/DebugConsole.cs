@@ -40,7 +40,7 @@ namespace Barotrauma
             
             if (!commands[0].ToLowerInvariant().Equals("admin"))
             {
-                NewMessage(InputText, Color.White);
+                NewMessage(command, Color.White);
             }
 
 #if !DEBUG
@@ -499,6 +499,7 @@ namespace Barotrauma
             Messages.Add(new ColoredText(msg, color));
 #if SERVER
             //TODO: REMOVE
+            Console.ForegroundColor = XnaToConsoleColor.Convert(color);
             Console.WriteLine(msg);
 #endif
 

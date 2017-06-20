@@ -1343,7 +1343,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MissionMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameSession.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\HireManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\InfoTextManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\IPropertyObject.cs" />

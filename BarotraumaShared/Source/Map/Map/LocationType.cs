@@ -116,7 +116,7 @@ namespace Barotrauma
                 Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
             }
 
-            int randInt = Rand.Int(totalWeight, false);
+            int randInt = Rand.Int(totalWeight, Rand.RandSync.Server);
 
             foreach (LocationType type in list)
             {

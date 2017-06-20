@@ -101,10 +101,10 @@ namespace Barotrauma
                     rotation = MathUtils.VectorToAngle(new Vector2(edgeNormal.Y, edgeNormal.X));
                 }
 
-                rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, false);
+                rotation += Rand.Range(prefab.RandomRotation.X, prefab.RandomRotation.Y, Rand.RandSync.ClientOnly);
 
                 var newSprite = new BackgroundSprite(prefab,
-                    new Vector3((Vector2)pos, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, false)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, false), rotation);
+                    new Vector3((Vector2)pos, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.ClientOnly)), Rand.Range(prefab.Scale.X, prefab.Scale.Y, Rand.RandSync.ClientOnly), rotation);
                 
                 //calculate the positions of the corners of the rotated sprite
                 Vector2 halfSize = newSprite.Prefab.Sprite.size * newSprite.Scale / 2;
@@ -155,8 +155,8 @@ namespace Barotrauma
             edgeNormal = Vector2.One;
 
             Vector2 randomPos = new Vector2(
-                Rand.Range(0.0f, level.Size.X, false), 
-                Rand.Range(0.0f, level.Size.Y, false));
+                Rand.Range(0.0f, level.Size.X, Rand.RandSync.ClientOnly), 
+                Rand.Range(0.0f, level.Size.Y, Rand.RandSync.ClientOnly));
 
             if (!prefab.SpawnOnWalls) return randomPos;
 
@@ -167,7 +167,7 @@ namespace Barotrauma
 
             if (cells.Any())
             {
-                VoronoiCell cell = cells[Rand.Int(cells.Count, false)];
+                VoronoiCell cell = cells[Rand.Int(cells.Count, Rand.RandSync.ClientOnly)];
 
                 foreach (GraphEdge edge in cell.edges)
                 {
@@ -220,13 +220,13 @@ namespace Barotrauma
 
             if (!edges.Any()) return null;
 
-            int index = Rand.Int(edges.Count, false);
+            int index = Rand.Int(edges.Count, Rand.RandSync.ClientOnly);
             closestEdge = edges[index];
             edgeNormal = normals[index];
 
             float length = Vector2.Distance(closestEdge.point1, closestEdge.point2);
             Vector2 dir = (closestEdge.point1 - closestEdge.point2) / length;
-            Vector2 pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f, false);
+            Vector2 pos = closestEdge.point2 + dir * Rand.Range(prefab.Sprite.size.X / 2.0f, length - prefab.Sprite.size.X / 2.0f, Rand.RandSync.ClientOnly);
 
             return pos;
         }
@@ -331,7 +331,7 @@ namespace Barotrauma
                 totalCommonness += prefab.GetCommonness(levelType);
             }
 
-            float randomNumber = Rand.Int(totalCommonness+1, false);
+            float randomNumber = Rand.Int(totalCommonness+1, Rand.RandSync.ClientOnly);
 
             foreach (BackgroundSpritePrefab prefab in prefabs)
             {

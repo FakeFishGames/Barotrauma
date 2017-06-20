@@ -84,7 +84,7 @@ namespace Barotrauma.RuinGeneration
 
             int totalCommonness = matchingStructures.Sum(m => m.commonness);
 
-            int randomNumber = Rand.Int(totalCommonness + 1, false);
+            int randomNumber = Rand.Int(totalCommonness + 1, Rand.RandSync.Server);
 
             foreach (RuinStructure ruinStructure in matchingStructures)
             {

@@ -76,7 +76,7 @@ namespace Barotrauma
             
             Vector2 spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType, true);
             
-            int amount = Rand.Range(minAmount, maxAmount, false);
+            int amount = Rand.Range(minAmount, maxAmount, Rand.RandSync.Server);
 
             monsters = new Character[amount];
 
@@ -84,8 +84,8 @@ namespace Barotrauma
                 
             for (int i = 0; i < amount; i++)
             {
-                spawnPos.X += Rand.Range(-0.5f, 0.5f, false);
-                spawnPos.Y += Rand.Range(-0.5f, 0.5f, false);
+                spawnPos.X += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
+                spawnPos.Y += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
                 monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null);
             }
         }

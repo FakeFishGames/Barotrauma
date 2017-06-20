@@ -475,10 +475,10 @@ namespace Barotrauma
 
             if (!wayPoints.Any()) return null;
 
-            return wayPoints[Rand.Int(wayPoints.Count, !useSyncedRand)];
+            return wayPoints[Rand.Int(wayPoints.Count, (useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced))];
         }
 
-        public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
+        public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine, bool tryAssignWayPoint = true)
         {
             List<WayPoint> subWayPoints = WayPointList.FindAll(wp => wp.Submarine == submarine);
 
@@ -515,12 +515,15 @@ namespace Barotrauma
 
                 if (assignedWayPoints[i] != null) continue;
 
-                //try to assign a spawnpoint that isn't meant for any specific job
-                var nonJobSpecificPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human && wp.assignedJob == null);
-
-                if (nonJobSpecificPoints.Any())
+                if (tryAssignWayPoint)
                 {
-                    assignedWayPoints[i] = nonJobSpecificPoints[Rand.Int(nonJobSpecificPoints.Count, false)];
+                    //try to assign a spawnpoint that isn't meant for any specific job
+                    var nonJobSpecificPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human && wp.assignedJob == null);
+
+                    if (nonJobSpecificPoints.Any())
+                    {
+                        assignedWayPoints[i] = nonJobSpecificPoints[Rand.Int(nonJobSpecificPoints.Count, Rand.RandSync.Server)];
+                    }
                 }
 
                 if (assignedWayPoints[i] != null) continue;

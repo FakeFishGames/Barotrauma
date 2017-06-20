@@ -482,7 +482,7 @@ namespace Barotrauma
                     return "";
                 }
 
-                int lineNumber = Rand.Int(lineCount, false);
+                int lineNumber = Rand.Int(lineCount, Rand.RandSync.Server);
 
                 int i = 0;
                     

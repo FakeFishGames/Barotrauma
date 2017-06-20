@@ -14,6 +14,12 @@ namespace Barotrauma
             get { return cam; }
         }
         
+        public GameScreen()
+        {
+            cam = new Camera();
+            cam.Translate(new Vector2(-10.0f, 50.0f));
+        }
+
         public override void Select()
         {
             base.Select();

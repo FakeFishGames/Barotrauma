@@ -68,7 +68,7 @@ namespace Barotrauma
                 float normalizedDist = distFromEdge / (WallWidth / 2);
 
                 float variance = 1000.0f * normalizedDist;
-                bottomVertices.Add(center + new Vector2(Rand.Range(-variance, variance, false), Rand.Range(-variance, variance, false)*2.0f));
+                bottomVertices.Add(center + new Vector2(Rand.Range(-variance, variance, Rand.RandSync.Server), Rand.Range(-variance, variance, Rand.RandSync.Server) *2.0f));
             }
 
             for (int i = 1; i < bottomVertices.Count; i++)

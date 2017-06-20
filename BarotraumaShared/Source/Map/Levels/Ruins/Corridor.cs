@@ -72,7 +72,7 @@ namespace Barotrauma.RuinGeneration
                 int top = Math.Max(room1.Y, room2.Y);
                 int bottom = Math.Min(room1.Bottom, room2.Bottom);
 
-                int yPos = Rand.Range(top, bottom - width, false);
+                int yPos = Rand.Range(top, bottom - width, Rand.RandSync.Server);
 
                 rect = new Rectangle(left, yPos, right - left, width);
             }
@@ -84,7 +84,7 @@ namespace Barotrauma.RuinGeneration
                 int top = Math.Min(room1.Bottom, room2.Bottom);
                 int bottom = Math.Max(room1.Y, room2.Y);
 
-                int xPos = Rand.Range(left, right - width, false);
+                int xPos = Rand.Range(left, right - width, Rand.RandSync.Server);
 
                 rect = new Rectangle(xPos, top, width, bottom - top);
             }
@@ -146,8 +146,8 @@ namespace Barotrauma.RuinGeneration
         /// <returns></returns>
         private BTRoom[] GetSuitableLeafRooms(List<BTRoom> leaves1, List<BTRoom> leaves2, int width, bool isHorizontal)
         {
-            int iOffset = Rand.Int(leaves1.Count, false);
-            int jOffset = Rand.Int(leaves2.Count, false);
+            int iOffset = Rand.Int(leaves1.Count, Rand.RandSync.Server);
+            int jOffset = Rand.Int(leaves2.Count, Rand.RandSync.Server);
 
 
             for (int iCount = 0; iCount < leaves1.Count; iCount++)
