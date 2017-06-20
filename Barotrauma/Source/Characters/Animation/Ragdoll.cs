@@ -502,9 +502,9 @@ namespace Barotrauma
             {
                 Limb limb = (Limb)f1.Body.UserData;
                 
-                if (impact > 3.0f && limb.HitSound != null && limb.soundTimer <= 0.0f)
+                if (impact > 3.0f && limb.HitSound != null && limb.SoundTimer <= 0.0f)
                 {
-                    limb.soundTimer = Limb.SoundInterval;
+                    limb.SoundTimer = Limb.SoundInterval;
                     limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
                 }
             }
@@ -675,6 +675,8 @@ namespace Barotrauma
             foreach (Limb limb in Limbs)
             {
                 if (limb == null || limb.IsSevered) continue;
+                
+                limb.Dir = Dir;
 
                 if (limb.sprite != null)
                 {
@@ -683,12 +685,13 @@ namespace Barotrauma
                     limb.sprite.Origin = spriteOrigin;
                 }
 
-                limb.Dir = Dir;
-
-                /*if (limb.LightSource != null)
+                
+                if (limb.MouthPos.HasValue)
                 {
-                    limb.LightSource.FlipX();
-                }*/
+                    limb.MouthPos = new Vector2(
+                        -limb.MouthPos.Value.X,
+                        limb.MouthPos.Value.Y);
+                }
 
                 if (limb.pullJoint != null)
                 {

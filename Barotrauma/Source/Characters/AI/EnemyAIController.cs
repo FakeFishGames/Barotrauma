@@ -80,6 +80,7 @@ namespace Barotrauma
             attackHumans    = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackhumans", "attackpriorityhumans") / 100.0f;
             attackWeaker    = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackweaker", "attackpriorityweaker") / 100.0f;
             attackStronger  = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackstronger", "attackprioritystronger") / 100.0f;
+            eatDeadPriority = ToolBox.GetAttributeFloat(aiElement, "eatpriority", 0.0f) / 100.0f;
 
             combatStrength = ToolBox.GetAttributeFloat(aiElement, "combatstrength", 1.0f);
 
@@ -171,7 +172,7 @@ namespace Barotrauma
                     UpdateAttack(deltaTime);
                     break;
                 case AIState.Eat:
-
+                    UpdateEating(deltaTime);
                     break;
                 case AIState.Escape:
                     run = true;
@@ -417,7 +418,7 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateEat(float deltaTime)
+        private void UpdateEating(float deltaTime)
         {
             if (selectedAiTarget == null)
             {
@@ -425,11 +426,59 @@ namespace Barotrauma
                 return;
             }
 
-            var head = Character.AnimController.GetLimb(LimbType.Head);
-            if (head == null) head = Character.AnimController.MainLimb;
+            Limb mouthLimb = Array.Find(Character.AnimController.Limbs, l => l != null && l.MouthPos.HasValue);
+            if (mouthLimb == null) mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
+            
+            if (mouthLimb == null)
+            {
+                DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (a head or a limb with a mouthpos required)");
+                state = AIState.None;
+                return;
+            }
+
+            Vector2 mouthPos = mouthLimb.SimPosition;
+            if (mouthLimb.MouthPos.HasValue)
+            {
+                float cos = (float)Math.Cos(mouthLimb.Rotation);
+                float sin = (float)Math.Sin(mouthLimb.Rotation);
+
+                mouthPos += new Vector2(
+                     mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
+                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos);
+            }
+
 
             Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
-            steeringManager.SteeringSeek(attackSimPosition - (head.SimPosition - SimPosition), 3);
+            steeringManager.SteeringSeek(attackSimPosition + (mouthPos - SimPosition), 3);
+
+            Vector2 limbDiff = attackSimPosition - mouthPos;
+            float limbDist = limbDiff.Length();
+            if (limbDist < 1.0f)
+            {
+                Character targetCharacter = selectedAiTarget.Entity as Character;
+                //targetCharacter.AnimController.MainLimb.body.ApplyForce(-limbDiff * targetCharacter.AnimController.Mass * (float)(Math.Sin(Timing.TotalTime)+1.0f));
+
+                targetCharacter.AnimController.MainLimb.MoveToPos(
+                    mouthPos,
+                    (float)(Math.Sin(Timing.TotalTime) + 10.0f));
+                steeringManager.SteeringManual(deltaTime, limbDiff);
+
+                Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
+                mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * (float)(Math.Sin(Timing.TotalTime) + 1.0f));
+                //eatingLimb.pullJoint.Enabled = true;
+                //eatingLimb.pullJoint.WorldAnchorB = attackSimPosition;
+
+                if (Rand.Range(0.0f, 60.0f) < 1.0f)
+                {
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), 10.0f, false);
+                }
+            }
+            else if (limbDist < 2.0f)
+            {
+                steeringManager.SteeringManual(deltaTime, limbDiff);
+                Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
+
+            }
         }
         
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
