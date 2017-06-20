@@ -14,6 +14,7 @@
     attackpriorityrooms="50.0"
     attackpriorityweaker="60"
     attackprioritystronger="-70"
+    eatpriority="65"
     attackcooldown="1.0"
     sight="0.5"
     hearing="1.0"
@@ -31,7 +32,7 @@
     <collider radius="60"/>
     
     <!-- head -->
-    <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armor="10.0">
+    <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armor="10.0" mouthpos="30,88">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53"/>
     </limb>
 
