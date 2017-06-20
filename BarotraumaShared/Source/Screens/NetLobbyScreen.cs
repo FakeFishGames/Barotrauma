@@ -27,7 +27,7 @@ namespace Barotrauma
             return ServerName;
         }
         
-        private string levelSeed;
+        private string levelSeed = "";
         
         private float autoRestartTimer;
 

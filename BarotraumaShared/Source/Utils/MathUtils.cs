@@ -445,7 +445,7 @@ namespace Barotrauma
 
                     Vector2 normal = Vector2.Normalize(endSegment - startSegment);
                     normal = new Vector2(-normal.Y, normal.X);
-                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, false);
+                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, Rand.RandSync.Server);
 
                     segments.Insert(i, new Vector2[] { startSegment, midPoint });
                     segments.Insert(i + 1, new Vector2[] { midPoint, endSegment });

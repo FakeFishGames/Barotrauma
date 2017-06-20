@@ -46,7 +46,7 @@ namespace Barotrauma.RuinGeneration
         {
             subRooms = new BTRoom[2];
 
-            if (Rand.Range(0.0f, 1.0f, false) < verticalProbability && 
+            if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < verticalProbability && 
                 rect.Width * minDivRatio >= minWidth)
             {
                 SplitVertical(minDivRatio);
@@ -65,7 +65,7 @@ namespace Barotrauma.RuinGeneration
 
         private void SplitHorizontal(float minDivRatio)
         {
-            float div = Rand.Range(minDivRatio, 1.0f - minDivRatio, false);
+            float div = Rand.Range(minDivRatio, 1.0f - minDivRatio, Rand.RandSync.Server);
             subRooms[0] = new BTRoom(new Rectangle(rect.X, rect.Y, rect.Width, (int)(rect.Height * div)));
             subRooms[1] = new BTRoom(new Rectangle(rect.X, rect.Y + subRooms[0].rect.Height, rect.Width, rect.Height - subRooms[0].rect.Height));
 
@@ -73,7 +73,7 @@ namespace Barotrauma.RuinGeneration
 
         private void SplitVertical(float minDivRatio)
         {
-            float div = Rand.Range(minDivRatio, 1.0f - minDivRatio, false);
+            float div = Rand.Range(minDivRatio, 1.0f - minDivRatio, Rand.RandSync.Server);
             subRooms[0] = new BTRoom(new Rectangle(rect.X, rect.Y, (int)(rect.Width * div), rect.Height));
             subRooms[1] = new BTRoom(new Rectangle(rect.X + subRooms[0].rect.Width, rect.Y, rect.Width - subRooms[0].rect.Width, rect.Height));
         }
@@ -118,7 +118,7 @@ namespace Barotrauma.RuinGeneration
         {
             if (Adjacent != null && Corridor == null)
             {
-                Corridor = new Corridor(this, Rand.Range(minWidth, maxWidth, false), corridors);
+                Corridor = new Corridor(this, Rand.Range(minWidth, maxWidth, Rand.RandSync.Server), corridors);
             }
 
             if (subRooms != null)

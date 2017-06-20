@@ -92,7 +92,7 @@ namespace Barotrauma.Networking
             fileReceiver = new FileReceiver("Submarines/Downloaded");
             fileReceiver.OnFinished += OnFileReceived;
             
-            characterInfo = new CharacterInfo(Character.HumanConfigFile, name);
+            characterInfo = new CharacterInfo(Character.HumanConfigFile, name,Gender.None,null);
             characterInfo.Job = null;
 
             otherClients = new List<Client>();

@@ -41,9 +41,9 @@ namespace Barotrauma
             {
                 for (float y = edges.Y + siteInterval; y < edges.W - siteInterval; y += siteInterval)
                 {
-                    if (Rand.Int(5, false) == 0) continue; //skip some positions to make the cells more irregular
+                    if (Rand.Int(5, Rand.RandSync.Server) == 0) continue; //skip some positions to make the cells more irregular
 
-                    sites.Add(new Vector2(x, y) + Rand.Vector(siteVariance, false));
+                    sites.Add(new Vector2(x, y) + Rand.Vector(siteVariance, Rand.RandSync.Server));
                 }
             }
 
@@ -126,10 +126,10 @@ namespace Barotrauma
                 }
                 
                 //randomly pick one of the adjacent cells as the next cell
-                pathCell = allowedNextCells[Rand.Int(allowedNextCells.Count, false)];
+                pathCell = allowedNextCells[Rand.Int(allowedNextCells.Count, Rand.RandSync.Server)];
 
                 //randomly take steps further away from the startpoint to make the cave expand further
-                if (Rand.Int(4, false) == 0)
+                if (Rand.Int(4, Rand.RandSync.Server) == 0)
                 {
                     float furthestDist = 0.0f;
                     foreach (VoronoiCell nextCell in allowedNextCells)
@@ -300,7 +300,7 @@ namespace Barotrauma
                 }
 
                 //steer towards target
-                if (Rand.Range(0.0f, 1.0f, false) > wanderAmount || allowedEdges.Count == 0)
+                if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) > wanderAmount || allowedEdges.Count == 0)
                 {
                     for (int i = 0; i < currentCell.edges.Count; i++)
                     {
@@ -321,7 +321,7 @@ namespace Barotrauma
                     //}
                     //else
                     //{
-                    edgeIndex = Rand.Int(allowedEdges.Count, false);
+                    edgeIndex = Rand.Int(allowedEdges.Count, Rand.RandSync.Server);
                     if (mirror && edgeIndex > 0) edgeIndex = allowedEdges.Count - edgeIndex;
                     edgeIndex = currentCell.edges.IndexOf(allowedEdges[edgeIndex]);
                     //}

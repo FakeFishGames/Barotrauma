@@ -144,7 +144,7 @@ namespace Barotrauma
                 return new LevelGenerationParams(null);
             }
 
-            return presets[Rand.Range(0, presets.Count, false)];
+            return presets[Rand.Range(0, presets.Count, Rand.RandSync.Server)];
         }
 
         private LevelGenerationParams(XElement element)

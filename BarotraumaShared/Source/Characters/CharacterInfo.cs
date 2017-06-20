@@ -113,7 +113,7 @@ namespace Barotrauma
                 if (gender == Gender.None)
                 {
                     float femaleRatio = ToolBox.GetAttributeFloat(doc.Root, "femaleratio", 0.5f);
-                    this.gender = (Rand.Range(0.0f, 1.0f, false) < femaleRatio) ? Gender.Female : Gender.Male;
+                    this.gender = (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < femaleRatio) ? Gender.Female : Gender.Male;
                 }
                 else
                 {

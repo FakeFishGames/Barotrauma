@@ -33,16 +33,24 @@ namespace Barotrauma
             }
         }
 
-
-        public override void Select()
+        public NetLobbyScreen()
         {
-            List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
+            LevelSeed = ToolBox.RandomSeed(8);
 
-            SelectedSub = subsToShow[0];
-            SelectedShuttle = subsToShow[0]; //TODO: don't use the same sub as a shuttle by default
+            subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
+
+            SelectedSub = subs[0];
+            SelectedShuttle = subs[0]; //TODO: don't use the same sub as a shuttle by default
 
             DebugConsole.NewMessage("Selected sub: " + SelectedSub.Name, Color.White);
             DebugConsole.NewMessage("Selected shuttle: " + SelectedShuttle.Name, Color.White);
+
+            GameModes = GameModePreset.list.ToArray();
+        }
+
+        public override void Select()
+        {
+            
         }
 
         private List<Submarine> subs = new List<Submarine>();
@@ -62,6 +70,7 @@ namespace Barotrauma
                 if (levelSeed == value) return;
 
                 levelSeed = value;
+                LocationType.Random(levelSeed); //call to sync up with clients
             }
         }
 

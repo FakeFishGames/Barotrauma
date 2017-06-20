@@ -565,7 +565,7 @@ namespace Barotrauma
         {
             if (tickBox.Selected)
             {
-                GameMain.Server.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.Server.Name);
+                GameMain.Server.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, GameMain.Server.Name,Gender.None,null);
                 UpdatePlayerFrame(GameMain.Server.CharacterInfo);
             }
             else

@@ -71,7 +71,7 @@ namespace Barotrauma
         
         public static Job Random()
         {
-            JobPrefab prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count - 1, false)];
+            JobPrefab prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count - 1, Rand.RandSync.Server)];
 
             return new Job(prefab);
         }

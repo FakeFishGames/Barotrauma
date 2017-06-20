@@ -29,13 +29,7 @@ namespace Barotrauma
         static GUIFrame frame;
         static GUIListBox listBox;
         static GUITextBox textBox;
-
-        private static string InputText
-        {
-            get { return textBox.Text; }
-            set { textBox.Text = value; }
-        }
-
+        
         public static void Init(GameWindow window)
         {
             int x = 20, y = 20;

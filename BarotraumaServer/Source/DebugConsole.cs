@@ -13,11 +13,41 @@ namespace Barotrauma
 {
     static partial class DebugConsole
     {
-        private static string InputText;
+        public static List<string> QueuedCommands = new List<string>();
+
+        public static void Update()
+        {
+            lock (QueuedCommands)
+            {
+                while (QueuedCommands.Count>0)
+                {
+                    ExecuteCommand(QueuedCommands[0], GameMain.Instance);
+                    QueuedCommands.RemoveAt(0);
+                }
+            }
+        }
 
         private static bool ExecProjSpecific(string[] commands)
         {
-            return false; //command not found
+            switch (commands[0].ToLower())
+            {
+                case "startgame":
+                case "startround":
+                case "start":
+                    if (Screen.Selected == GameMain.GameScreen) break;
+                    if (!GameMain.Server.StartGame()) NewMessage("Failed to start server",Color.Yellow);
+                    break;
+                case "endgame":
+                case "endround":
+                case "end":
+                    if (Screen.Selected == GameMain.NetLobbyScreen) break;
+                    GameMain.Server.EndGame();
+                    break;
+                default:
+                    return false;
+                    break;
+            }
+            return true; //command found
         }
     }
 }

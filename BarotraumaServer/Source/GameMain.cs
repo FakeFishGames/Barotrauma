@@ -58,6 +58,12 @@ namespace Barotrauma
         {
             Instance = this;
 
+            World = new World(new Vector2(0, -9.82f));
+            FarseerPhysics.Settings.AllowSleep = true;
+            FarseerPhysics.Settings.ContinuousPhysics = false;
+            FarseerPhysics.Settings.VelocityIterations = 1;
+            FarseerPhysics.Settings.PositionIterations = 1;
+
             Config = new GameSettings("serverconfig.xml");
             if (Config.WasGameUpdated)
             {
@@ -65,6 +71,8 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save("serverconfig.xml");
             }
+
+            GameScreen = new GameScreen();
         }
 
         public void Run()
@@ -91,9 +99,10 @@ namespace Barotrauma
             
             NetLobbyScreen = new NetLobbyScreen();
 
-            Server = new GameServer("Dedicated Server Test", 14242, true, "asd", false, 10);
+            Server = new GameServer("Dedicated Server Test", 14242, false, "asd", false, 10);
             while (true)
             {
+                DebugConsole.Update();
                 NetLobbyScreen.Update((float)Timing.Step);
                 Server.Update((float)Timing.Step);
                 CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
@@ -107,7 +116,10 @@ namespace Barotrauma
             while (true)
             {
                 string input = Console.ReadLine();
-                DebugConsole.ExecuteCommand(input, this);
+                lock (DebugConsole.QueuedCommands)
+                {
+                    DebugConsole.QueuedCommands.Add(input);
+                }
             }
         }
 

@@ -202,9 +202,9 @@ namespace Barotrauma.RuinGeneration
 
             //area = new Rectangle(area.X, area.Y - area.Height, area.Width, area.Height);
 
-            int iterations = Rand.Range(3, 4, false);
+            int iterations = Rand.Range(3, 4, Rand.RandSync.Server);
 
-            float verticalProbability = Rand.Range(0.4f, 0.6f, false);
+            float verticalProbability = Rand.Range(0.4f, 0.6f, Rand.RandSync.Server);
             
             BTRoom baseRoom = new BTRoom(area);
 
@@ -221,7 +221,7 @@ namespace Barotrauma.RuinGeneration
             {
                 leaf.Scale
                     (
-                        new Vector2(Rand.Range(0.5f, 0.9f, false), Rand.Range(0.5f, 0.9f, false))
+                        new Vector2(Rand.Range(0.5f, 0.9f, Rand.RandSync.Server), Rand.Range(0.5f, 0.9f, Rand.RandSync.Server))
                     );
             }
             
@@ -304,7 +304,7 @@ namespace Barotrauma.RuinGeneration
                     wallType = RuinStructureType.CorridorWall;
                 }
                 //rooms further from the entrance are more likely to have hard-to-break walls
-                else if (Rand.Range(0.0f, leaf.DistanceFromEntrance, false) > 1.5f)
+                else if (Rand.Range(0.0f, leaf.DistanceFromEntrance, Rand.RandSync.Server) > 1.5f)
                 {
                     wallType = RuinStructureType.HeavyWall;
                 }
@@ -352,28 +352,28 @@ namespace Barotrauma.RuinGeneration
             {
                 Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
 
-                var prop = RuinStructure.GetRandom(RuinStructureType.Prop, alignments[Rand.Int(alignments.Length, false)]);
+                var prop = RuinStructure.GetRandom(RuinStructureType.Prop, alignments[Rand.Int(alignments.Length, Rand.RandSync.Server)]);
 
                 Vector2 size = (prop.Prefab is StructurePrefab) ? ((StructurePrefab)prop.Prefab).Size : Vector2.Zero;
 
-                var shape = shapes[Rand.Int(shapes.Count, false)];
+                var shape = shapes[Rand.Int(shapes.Count, Rand.RandSync.Server)];
 
                 Vector2 position = shape.Rect.Center.ToVector2();
                 if (prop.Alignment.HasFlag(Alignment.Top))
                 {
-                    position = new Vector2(Rand.Range(shape.Rect.X+size.X, shape.Rect.Right - size.X, false), shape.Rect.Bottom - 64);
+                    position = new Vector2(Rand.Range(shape.Rect.X+size.X, shape.Rect.Right - size.X, Rand.RandSync.Server), shape.Rect.Bottom - 64);
                 }
                 else if (prop.Alignment.HasFlag(Alignment.Bottom))
                 {
-                    position = new Vector2(Rand.Range(shape.Rect.X + size.X, shape.Rect.Right - size.X, false), shape.Rect.Top + 64);
+                    position = new Vector2(Rand.Range(shape.Rect.X + size.X, shape.Rect.Right - size.X, Rand.RandSync.Server), shape.Rect.Top + 64);
                 }
                 else if (prop.Alignment.HasFlag(Alignment.Right))
                 {
-                    position = new Vector2(shape.Rect.Right - 64, Rand.Range(shape.Rect.Y + size.X, shape.Rect.Bottom - size.Y, false));
+                    position = new Vector2(shape.Rect.Right - 64, Rand.Range(shape.Rect.Y + size.X, shape.Rect.Bottom - size.Y, Rand.RandSync.Server));
                 }
                 else if (prop.Alignment.HasFlag(Alignment.Left))
                 {
-                    position = new Vector2(shape.Rect.X + 64, Rand.Range(shape.Rect.Y + size.X, shape.Rect.Bottom - size.Y, false));
+                    position = new Vector2(shape.Rect.X + 64, Rand.Range(shape.Rect.Y + size.X, shape.Rect.Bottom - size.Y, Rand.RandSync.Server));
                 }
 
                 if (prop.Prefab is ItemPrefab)
@@ -410,7 +410,7 @@ namespace Barotrauma.RuinGeneration
                 Vector2 doorPos = corridor.Center;
 
                 //choose a random wall to place the door next to
-                var wall = suitableWalls[Rand.Int(suitableWalls.Count, false)];
+                var wall = suitableWalls[Rand.Int(suitableWalls.Count, Rand.RandSync.Server)];
                 if (corridor.IsHorizontal)
                 {
                     doorPos.X = (wall.A.X + wall.B.X) / 2.0f;
@@ -423,7 +423,7 @@ namespace Barotrauma.RuinGeneration
                 var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos, null);
                 door.MoveWithLevel = true;
 
-                door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, false) < 0.8f;
+                door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
 
                 if (sensorPrefab == null || wirePrefab == null) continue;
 
@@ -431,8 +431,8 @@ namespace Barotrauma.RuinGeneration
                 if (sensorRoom == null) continue;
 
                 var sensor = new Item(sensorPrefab, new Vector2(
-                    Rand.Range(sensorRoom.Rect.X, sensorRoom.Rect.Right, false), 
-                    Rand.Range(sensorRoom.Rect.Y, sensorRoom.Rect.Bottom,false)), null);
+                    Rand.Range(sensorRoom.Rect.X, sensorRoom.Rect.Right, Rand.RandSync.Server), 
+                    Rand.Range(sensorRoom.Rect.Y, sensorRoom.Rect.Bottom, Rand.RandSync.Server)), null);
                 sensor.MoveWithLevel = true;
 
                 var wire = new Item(wirePrefab, sensorRoom.Center, null).GetComponent<Items.Components.Wire>();
