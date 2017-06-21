@@ -153,13 +153,13 @@ namespace Barotrauma.Items.Components
         public InputType PickKey
         {
             get;
-            private set;
+            protected set;
         }
 
         public InputType SelectKey
         {
             get;
-            private set;
+            protected set;
         }
 
         [HasDefaultValue(false, false)]

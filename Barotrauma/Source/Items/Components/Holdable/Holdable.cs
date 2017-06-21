@@ -2,17 +2,18 @@
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using Barotrauma.Networking;
+using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {
-    class Holdable : Pickable
+    class Holdable : Pickable, IServerSerializable
     {
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
-
-        private List<RelatedItem> prevRequiredItems;
-
-        string prevMsg;
+        
+        private InputType prevPickKey;
+        private string prevMsg;
 
         //the distance from the holding characters elbow to center of the physics body of the item
         protected Vector2 holdPos;
@@ -94,25 +95,28 @@ namespace Barotrauma.Items.Components
 
             if (attachable)
             {
-                prevRequiredItems = new List<RelatedItem>(requiredItems);
                 prevMsg = Msg;
+                prevPickKey = PickKey;
 
-                requiredItems.Clear();
-                Msg = "";
+                DeattachFromWall();
             }
-
-            if (attachedByDefault || (Screen.Selected == GameMain.EditMapScreen)) Use(1.0f);
-
-
-            //holdAngle = ToolBox.GetAttributeFloat(element, "holdangle", 0.0f);
-            //holdAngle = MathHelper.ToRadians(holdAngle);
+                        
+            if ((Screen.Selected == GameMain.EditMapScreen)) Use(1.0f);
         }
 
         public override void Drop(Character dropper)
         {
             DropConnectedWires(dropper);
 
-            if (body != null) item.body = body;
+            if (attachable)
+            {
+                DeattachFromWall();
+
+                if (body != null)
+                {
+                    item.body = body;
+                }
+            }
 
             if (item.body != null) item.body.Enabled = true;
             IsActive = false;
@@ -121,7 +125,6 @@ namespace Barotrauma.Items.Components
             {
                 if (dropper == null) return;
                 picker = dropper;
-
             }
             if (picker.Inventory == null) return;
             
@@ -190,29 +193,36 @@ namespace Barotrauma.Items.Components
                 return base.Pick(picker);
             }
 
-            if (!base.Pick(picker))
+            if (Attached)
             {
-                return false;
+                return base.Pick(picker);
             }
             else
             {
-                requiredItems.Clear();
-                Msg = "";
+                //not attached -> pick the item instantly, ignoring picking time
+                return OnPicked(picker);
             }
-
-            attached = false;
-            if (body != null) item.body = body;
-            //item.body.Enabled = true;
-
-            return true;
         }
 
-        public override bool Use(float deltaTime, Character character = null)
+        protected override bool OnPicked(Character picker)
         {
-            if (!attachable || item.body == null) return true;
-            if (character != null && !character.IsKeyDown(InputType.Aim)) return false;
+            if (base.OnPicked(picker))
+            {
+                DeattachFromWall();
 
-            item.Drop();
+                if (GameMain.Server != null && attachable)
+                {
+                    item.CreateServerEvent(this);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        private void AttachToWall()
+        {
+            if (!attachable) return;
 
             var containedItems = item.ContainedItems;
             if (containedItems != null)
@@ -226,12 +236,40 @@ namespace Barotrauma.Items.Components
 
             item.body.Enabled = false;
             item.body = null;
-
-            requiredItems = new List<RelatedItem>(prevRequiredItems);
+            
             Msg = prevMsg;
+            PickKey = prevPickKey;
 
             attached = true;
+        }
+
+        private void DeattachFromWall()
+        {
+            if (!attachable) return;
+
+            attached = false;
+
+            //make the item pickable with the default pick key and with no specific tools/items when it's deattached
+            requiredItems.Clear();
+            Msg = "";
+            PickKey = InputType.Select;
+        }
+
+        public override bool Use(float deltaTime, Character character = null)
+        {
+            if (!attachable || item.body == null) return true;
+            if (character != null)
+            {
+                if (!character.IsKeyDown(InputType.Aim)) return false;
+                if (character != null && GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
+                item.Drop();
+            }
             
+            AttachToWall();
+
             return true;
         }
 
@@ -284,13 +322,39 @@ namespace Barotrauma.Items.Components
                         item.body = body;
                         body.Enabled = false;
                     }
-                    attached = false;
                 }
+                attached = false;                
 
-                requiredItems.Clear();
-                Msg = "";
+                DeattachFromWall();
             }
         }
-        
+
+        public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
+        {
+            msg.Write(Attached);
+        }
+
+        public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
+        {
+            bool isAttached = msg.ReadBoolean();
+            if (isAttached)
+            {
+                item.Drop();
+                AttachToWall();
+            }
+            else
+            {
+                DropConnectedWires(null);
+
+                if (body != null)
+                {
+                    item.body = body;
+                    item.body.Enabled = true;
+                }
+                IsActive = false;
+
+                DeattachFromWall();
+            }
+        }
     }
 }
