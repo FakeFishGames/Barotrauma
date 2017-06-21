@@ -39,13 +39,13 @@ namespace Barotrauma
         //null screens because they are not implemented by the server,
         //but they're checked for all over the place
         //TODO: maybe clean up instead of having these constants
-        public const Screen MainMenuScreen = null;
-        public const Screen LobbyScreen = null;
+        public static readonly Screen MainMenuScreen = UnimplementedScreen.Instance;
+        public static readonly Screen LobbyScreen = UnimplementedScreen.Instance;
 
-        public const Screen ServerListScreen = null;
+        public static readonly Screen ServerListScreen = UnimplementedScreen.Instance;
 
-        public const Screen EditMapScreen = null;
-        public const Screen EditCharacterScreen = null;
+        public static readonly Screen EditMapScreen = UnimplementedScreen.Instance;
+        public static readonly Screen EditCharacterScreen = UnimplementedScreen.Instance;
 
         //
 

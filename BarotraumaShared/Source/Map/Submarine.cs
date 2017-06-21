@@ -175,7 +175,7 @@ namespace Barotrauma
         public bool AtEndPosition
         {
             get 
-            { 
+            {
                 if (Level.Loaded == null) return false;
                 return (Vector2.Distance(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance);
             }
