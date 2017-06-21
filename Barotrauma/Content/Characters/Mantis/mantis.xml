@@ -32,7 +32,7 @@
     <collider radius="60"/>
     
     <!-- head -->
-    <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armor="10.0" mouthpos="30,88">
+    <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armor="10.0" mouthpos="30,65">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53"/>
     </limb>
 
@@ -48,7 +48,7 @@
 
     <!-- tail -->
     <limb id = "3" radius="20"  mass = "6" type="Tail" flip="true" armorsector="0.0,180.0" armor="10.0">
-      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="130,158,46,93" depth="0.023" origin="0.37,0.3"/>
+      <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3"/>
     </limb>
       
 
@@ -87,7 +87,7 @@
 
     <joint limb1="1" limb1anchor="6,-18" limb2="2" limb2anchor="-2,36" lowerlimit="-20" upperlimit="30" canbesevered="true"/>
 
-    <joint limb1="2" limb1anchor="1,7" limb2="3" limb2anchor="6,15" lowerlimit="-20" upperlimit="40" canbesevered="true"/>
+    <joint limb1="2" limb1anchor="1,7" limb2="3" limb2anchor="0,20" lowerlimit="-20" upperlimit="40" canbesevered="true"/>
 
 
     <joint limb1="0" limb1anchor="16,2" limb2="4" limb2anchor="-5,-20" lowerlimit="-90" upperlimit="0" canbesevered="true"/>

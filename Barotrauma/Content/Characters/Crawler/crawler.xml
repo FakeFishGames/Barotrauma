@@ -12,6 +12,7 @@
     attackpriorityrooms="50.0"
     attackpriorityweaker="50"
     attackprioritystronger="-60"
+    eatpriority="55"
     sight="0.5" 
     hearing="1.0"
     fleehealththreshold="10"
@@ -28,7 +29,7 @@
     <collider width="45" radius="22"/>
 
     <!-- head -->
-    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="30.0">
+    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="30.0" mouthpos="17,35">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63"/>
     </limb>
 
