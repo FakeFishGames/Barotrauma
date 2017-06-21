@@ -53,6 +53,8 @@ namespace Barotrauma
         private AITarget selectedAiTarget;
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
+
+        private float eatTimer;
         
         private Dictionary<AITarget, AITargetMemory> targetMemories;
 
@@ -150,7 +152,11 @@ namespace Barotrauma
                 }
                 else if ((selectedAiTarget.Entity is Character) && ((Character)selectedAiTarget.Entity).IsDead)
                 {
-                    state = AIState.Eat;
+                    if (state != AIState.Eat)
+                    {
+                        eatTimer = 0.0f;
+                        state = AIState.Eat;
+                    }
                 }
                 else
                 {
@@ -420,7 +426,7 @@ namespace Barotrauma
 
         private void UpdateEating(float deltaTime)
         {
-            if (selectedAiTarget == null)
+            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
             {
                 state = AIState.None;
                 return;
@@ -428,13 +434,18 @@ namespace Barotrauma
 
             Limb mouthLimb = Array.Find(Character.AnimController.Limbs, l => l != null && l.MouthPos.HasValue);
             if (mouthLimb == null) mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
-            
+
             if (mouthLimb == null)
             {
                 DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (a head or a limb with a mouthpos required)");
                 state = AIState.None;
                 return;
             }
+
+            Character targetCharacter = selectedAiTarget.Entity as Character;
+            float eatSpeed = Character.Mass / targetCharacter.Mass * 0.1f;
+
+            eatTimer += deltaTime * eatSpeed;
 
             Vector2 mouthPos = mouthLimb.SimPosition;
             if (mouthLimb.MouthPos.HasValue)
@@ -447,37 +458,49 @@ namespace Barotrauma
                      mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos);
             }
 
-
             Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
-            steeringManager.SteeringSeek(attackSimPosition + (mouthPos - SimPosition), 3);
+
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
             float limbDist = limbDiff.Length();
             if (limbDist < 1.0f)
             {
-                Character targetCharacter = selectedAiTarget.Entity as Character;
-                //targetCharacter.AnimController.MainLimb.body.ApplyForce(-limbDiff * targetCharacter.AnimController.Mass * (float)(Math.Sin(Timing.TotalTime)+1.0f));
+                //pull the target character to the position of the mouth
+                //(+ make the force fluctuate to waggle the character a bit)
+                targetCharacter.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
 
-                targetCharacter.AnimController.MainLimb.MoveToPos(
-                    mouthPos,
-                    (float)(Math.Sin(Timing.TotalTime) + 10.0f));
-                steeringManager.SteeringManual(deltaTime, limbDiff);
+                //pull the character's mouth to the target character (again with a fluctuating force)
+                float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
+                steeringManager.SteeringManual(deltaTime, limbDiff * pullStrength);
+                mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength);
 
-                Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
-                mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * (float)(Math.Sin(Timing.TotalTime) + 1.0f));
-                //eatingLimb.pullJoint.Enabled = true;
-                //eatingLimb.pullJoint.WorldAnchorB = attackSimPosition;
-
-                if (Rand.Range(0.0f, 60.0f) < 1.0f)
+                if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
                 {
+                    //apply damage to the target character to get some blood particles flying 
                     targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), 10.0f, false);
+
+                    //keep severing joints until there is only one limb left
+                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered);
+                    if (nonSeveredJoints.Length == 0)
+                    {
+                        //only one limb left, the character is now full eaten
+                        Entity.Spawner.AddToRemoveQueue(targetCharacter);
+                        state = AIState.None;
+                    }
+                    else //sever a random joint
+                    {
+                        targetCharacter.AnimController.SeverLimbJoint(nonSeveredJoints[Rand.Int(nonSeveredJoints.Length)]);
+                    }
                 }
             }
             else if (limbDist < 2.0f)
             {
                 steeringManager.SteeringManual(deltaTime, limbDiff);
                 Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
-
+            }
+            else
+            {
+                steeringManager.SteeringSeek(attackSimPosition + (mouthPos - SimPosition), 3);
             }
         }
         
