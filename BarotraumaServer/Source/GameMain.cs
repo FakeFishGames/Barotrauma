@@ -103,7 +103,7 @@ namespace Barotrauma
             while (true)
             {
                 DebugConsole.Update();
-                NetLobbyScreen.Update((float)Timing.Step);
+                if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
                 Server.Update((float)Timing.Step);
                 CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
 

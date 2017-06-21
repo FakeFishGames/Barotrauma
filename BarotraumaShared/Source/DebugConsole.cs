@@ -29,7 +29,7 @@ namespace Barotrauma
 
     static partial class DebugConsole
     {
-        const int MaxMessages = 200;
+        const int MaxMessages = 20000;
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
@@ -55,6 +55,17 @@ namespace Barotrauma
 
             switch (commands[0].ToLowerInvariant())
             {
+                case "entitylist":
+                    System.IO.StreamWriter sw = new System.IO.StreamWriter("ENTLIST "+Rand.Int(20000).ToString()+".TXT");
+
+                    List<Entity> entList = Entity.GetEntityList();
+                    foreach (Entity ent in entList)
+                    {
+                        sw.WriteLine(ent.ID.ToString()+" "+ent.ToString());
+                    }
+
+                    sw.Close();
+                    break;
                 case "help":
                     NewMessage("menu: go to main menu", Color.Cyan);
                     NewMessage("game: enter the \"game screen\"", Color.Cyan);
@@ -501,6 +512,7 @@ namespace Barotrauma
             //TODO: REMOVE
             Console.ForegroundColor = XnaToConsoleColor.Convert(color);
             Console.WriteLine(msg);
+            Console.ForegroundColor = ConsoleColor.White;
 #endif
 
             if (Messages.Count > MaxMessages)

@@ -437,20 +437,24 @@ namespace Barotrauma.Networking
                 var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, !myCharacter, false);
                 
                 character.TeamID = 1;
-                
+
+#if CLIENT
                 if (myCharacter)
                 {
                     server.Character = character;
                     Character.Controlled = character;
-#if CLIENT
+
                     GameMain.LightManager.LosEnabled = true;
-#endif
+
                 }
                 else
                 {
+#endif
                     clients[i].Character = character;
+#if CLIENT
                 }
-                
+#endif
+
                 Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
 
                 if (divingSuitPrefab != null && oxyPrefab != null)

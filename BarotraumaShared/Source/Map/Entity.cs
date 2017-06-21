@@ -10,6 +10,10 @@ namespace Barotrauma
     class Entity
     {
         private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
+        public static List<Entity> GetEntityList()
+        {
+            return dictionary.Values.ToList();
+        }
 
         public static EntitySpawner Spawner;
 

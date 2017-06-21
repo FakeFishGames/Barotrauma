@@ -137,7 +137,7 @@ namespace Barotrauma.Networking
                 {
                     if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.ThrowError("Failed to read event for entity \"" + bufferedEvent.TargetEntity.ToString() + "!", e);
+                        DebugConsole.ThrowError("Failed to read event for entity \"" + bufferedEvent.TargetEntity.ToString() + "\"!", e);
                     }
                 }
 
@@ -232,6 +232,7 @@ namespace Barotrauma.Networking
 
                 msg.Write(client.UnreceivedEntityEventCount);                
                 msg.Write(client.FirstNewEventID);
+                //DebugConsole.NewMessage(eventsToSync[0].ID.ToString(), Microsoft.Xna.Framework.Color.Yellow);
                 Write(msg, eventsToSync, client);
             }
             else

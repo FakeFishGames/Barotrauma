@@ -146,6 +146,7 @@ namespace Barotrauma
                 case "help":
                 case "dumpids":
                 case "admin":
+                case "entitylist":
                     return true;
                 default:
                     return false;

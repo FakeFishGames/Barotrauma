@@ -11,6 +11,22 @@ namespace Barotrauma.Networking
 {
     abstract partial class NetworkMember
     {
+        protected CharacterInfo characterInfo;
+
+        protected Character myCharacter;
+
+        public CharacterInfo CharacterInfo
+        {
+            get { return characterInfo; }
+            set { characterInfo = value; }
+        }
+
+        public Character Character
+        {
+            get { return myCharacter; }
+            set { myCharacter = value; }
+        }
+
         protected GUIFrame inGameHUD;
         protected GUIListBox chatBox;
         protected GUITextBox chatMsgBox;

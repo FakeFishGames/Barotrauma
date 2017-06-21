@@ -401,7 +401,7 @@ namespace Barotrauma
 
                         attack = dequeuedInput.HasFlag(InputNetFlags.Attack);
                     }
-                    else
+                    else if (keys != null)
                     {
                         aiming = keys[(int)InputType.Aim].GetHeldQueue;
                         use = keys[(int)InputType.Use].GetHeldQueue;

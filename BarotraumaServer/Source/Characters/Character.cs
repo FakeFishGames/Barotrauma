@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private void InitProjSpecific(XDocument doc)
         {
-            //do nothing
+            keys = null;
         }
 
         private void UpdateControlled(float deltaTime)
