@@ -1959,6 +1959,13 @@ namespace Barotrauma
         
         public override void Remove()
         {
+#if DEBUG
+            if (Removed)
+            {
+                DebugConsole.ThrowError("Attempting to remove an already removed character\n" + Environment.StackTrace);
+            }
+#endif
+
             base.Remove();
 
             if (info != null) info.Remove();
@@ -1969,7 +1976,7 @@ namespace Barotrauma
 
             if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
 
-            if (aiTarget != null) aiTarget.Remove();
+            if (aiTarget != null) aiTarget.Remove();            
 
             if (AnimController != null) AnimController.Remove();
 

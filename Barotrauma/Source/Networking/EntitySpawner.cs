@@ -109,6 +109,7 @@ namespace Barotrauma
         public void AddToRemoveQueue(Entity entity)
         {
             if (GameMain.Client != null) return;
+            if (removeQueue.Contains(entity) || entity.Removed) return;
 
             removeQueue.Enqueue(entity);
         }
@@ -116,6 +117,7 @@ namespace Barotrauma
         public void AddToRemoveQueue(Item item)
         {
             if (GameMain.Client != null) return;
+            if (removeQueue.Contains(item) || item.Removed) return;
 
             removeQueue.Enqueue(item);
             if (item.ContainedItems == null) return;
