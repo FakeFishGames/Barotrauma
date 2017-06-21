@@ -89,6 +89,7 @@
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
+    <Compile Include="Source\Screens\UnimplementedScreen.cs" />
     <Compile Include="Source\Sprite\Sprite.cs" />
     <Compile Include="Source\Utils\XnaToConsoleColor.cs" />
   </ItemGroup>
