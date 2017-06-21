@@ -440,16 +440,17 @@ namespace Barotrauma
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
 
-#if CLIENT
             List<VertexPositionTexture> bodyVertices;
             bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out bodyVertices);
 
+#if CLIENT
+            
             renderer.SetBodyVertices(bodyVertices.ToArray());
             renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells));
 
             renderer.PlaceSprites(generationParams.BackgroundSpriteAmount);
 #endif
-                        
+
             ShaftBody = BodyFactory.CreateEdge(GameMain.World, 
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
                 ConvertUnits.ToSimUnits(new Vector2(borders.Right, 0)));

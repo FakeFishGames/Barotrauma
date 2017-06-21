@@ -347,9 +347,10 @@ namespace Barotrauma
 
             return pathCells;
         }
-
+        
         public static List<Body> GeneratePolygons(List<VoronoiCell> cells, out List<VertexPositionTexture> verticeList, bool setSolid=true)
         {
+            //TODO: consider separating body generation from render triangle generation
             verticeList = new List<VertexPositionTexture>();
             var bodies = new List<Body>();
 
