@@ -1513,22 +1513,28 @@ namespace Barotrauma
 
         public void Remove()
         {
-            foreach (Limb l in Limbs)
+            if (Limbs != null)
             {
-                l.Remove();
+                foreach (Limb l in Limbs)
+                {
+                    l.Remove();
+                }
+                Limbs = null;
             }
-            Limbs = null;
 
             foreach (PhysicsBody b in collider)
             {
                 b.Remove();
             }
 
-            foreach (RevoluteJoint joint in LimbJoints)
+            if (LimbJoints != null)
             {
-                GameMain.World.RemoveJoint(joint);
+                foreach (RevoluteJoint joint in LimbJoints)
+                {
+                    GameMain.World.RemoveJoint(joint);
+                }
+                LimbJoints = null;
             }
-            LimbJoints = null;
 
             list.Remove(this);
         }
