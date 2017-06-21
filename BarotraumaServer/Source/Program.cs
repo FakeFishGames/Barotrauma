@@ -29,17 +29,19 @@ namespace Barotrauma
         static void Main()
         {
             GameMain game = null;
+            Thread inputThread = null;
             try
             {
                 game = new GameMain();
 
-                Thread inputThread = new Thread(new ThreadStart(game.ProcessInput));
+                inputThread = new Thread(new ThreadStart(game.ProcessInput));
                 inputThread.Start();
                 game.Run();
             }
             catch (Exception e)
             {
                 CrashDump(game, "servercrashreport.txt", e);
+                //inputThread.Abort(); inputThread.Join();
             }
         }
         
@@ -84,6 +86,8 @@ namespace Barotrauma
                 sb.AppendLine("   "+DebugConsole.Messages[i].Time+" - "+DebugConsole.Messages[i].Text);
             }
 
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(sb.ToString());
 
             sw.WriteLine(sb.ToString());
             sw.Close();    

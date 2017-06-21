@@ -47,6 +47,8 @@ namespace Barotrauma
 
         private void InitProjSpecific(XDocument doc)
         {
+            keys = new Key[Enum.GetNames(typeof(InputType)).Length];
+
             for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
             {
                 keys[i] = new Key(GameMain.Config.KeyBind((InputType)i));

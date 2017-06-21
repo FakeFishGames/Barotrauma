@@ -53,7 +53,7 @@ namespace Barotrauma
             
         }
 
-        private List<Submarine> subs = new List<Submarine>();
+        private List<Submarine> subs;
         public List<Submarine> GetSubList()
         {
             return subs;

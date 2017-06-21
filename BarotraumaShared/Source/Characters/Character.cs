@@ -505,8 +505,6 @@ namespace Barotrauma
         protected Character(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false)
             : base(null)
         {
-            keys = new Key[Enum.GetNames(typeof(InputType)).Length];
-            
             ConfigPath = file;
             
             selectedItems = new Item[2];
@@ -899,8 +897,8 @@ namespace Barotrauma
                 }
             }
 
-                  
-            if (IsRemotePlayer)
+            
+            if (IsRemotePlayer && keys!=null)
             {
                 foreach (Key key in keys)
                 {
@@ -1726,9 +1724,9 @@ namespace Barotrauma
             {
                 GameMain.GameSession.CrewManager.characters.Remove(this);
             }
-#endif
 
             if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
+#endif
 
             if (aiTarget != null) aiTarget.Remove();
 

@@ -27,6 +27,7 @@ namespace Barotrauma
                 dictionary.Add(Color.Cyan, ConsoleColor.Cyan);
                 dictionary.Add(Color.DarkBlue, ConsoleColor.DarkBlue);
                 dictionary.Add(Color.Pink, ConsoleColor.Magenta);
+                dictionary.Add(Color.Magenta, ConsoleColor.Magenta);
             }
 
             ConsoleColor val = ConsoleColor.White;

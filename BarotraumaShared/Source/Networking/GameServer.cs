@@ -1185,6 +1185,7 @@ namespace Barotrauma.Networking
 #endif
                 }
 
+#if CLIENT
                 if (characterInfo != null && hostTeam == teamID)
                 {
                     myCharacter = Character.Create(characterInfo, assignedWayPoints[assignedWayPoints.Length - 1].WorldPosition, false, false);
@@ -1192,10 +1193,10 @@ namespace Barotrauma.Networking
                     myCharacter.TeamID = (byte)teamID;
 
                     Character.Controlled = myCharacter;
-#if CLIENT
+
                     GameMain.GameSession.CrewManager.characters.Add(myCharacter);
-#endif
                 }
+#endif
             }
 
 
@@ -1247,7 +1248,7 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.GameScreen.Select();
 
-            AddChatMessage("Press TAB to chat. Use ''r;'' to talk through the radio.", ChatMessageType.Server);
+            AddChatMessage("Press TAB to chat. Use \"r;\" to talk through the radio.", ChatMessageType.Server);
             
             GameMain.NetLobbyScreen.StartButtonEnabled = true;
 
@@ -1336,12 +1337,13 @@ namespace Barotrauma.Networking
             if (SaveServerLogs) log.Save();
             
             Character.Controlled = null;
-            myCharacter = null;
+            
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 #if CLIENT
+            myCharacter = null;
             GameMain.LightManager.LosEnabled = false;
 #endif
-            
+
             entityEventManager.Clear();
             foreach (Client c in connectedClients)
             {

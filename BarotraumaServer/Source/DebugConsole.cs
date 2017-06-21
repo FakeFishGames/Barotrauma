@@ -43,6 +43,20 @@ namespace Barotrauma
                     if (Screen.Selected == GameMain.NetLobbyScreen) break;
                     GameMain.Server.EndGame();
                     break;
+                case "entitydata":
+                    Entity ent = Entity.FindEntityByID(Convert.ToUInt16(commands[1]));
+                    if (ent != null)
+                    {
+                        NewMessage(ent.ToString(), Color.Lime);
+                    }
+                    break;
+                case "eventdata":
+                    ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events[Convert.ToUInt16(commands[1])];
+                    if (ev != null)
+                    {
+                        NewMessage(ev.StackTrace, Color.Lime);
+                    }
+                    break;
                 default:
                     return false;
                     break;

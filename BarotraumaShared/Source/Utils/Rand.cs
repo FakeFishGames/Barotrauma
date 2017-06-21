@@ -26,7 +26,7 @@ namespace Barotrauma
         private static void Assert(RandSync sync)
         {
             //TODO: REMOVE AFTER FINDING ALL WRONG RNG USAGE
-#if CLIENT
+#if false
             string trace = Environment.StackTrace.ToString();
             if (sync != RandSync.Server) return;
             if (trace.ToLower().Contains("barotraumaclient\\source")) DebugConsole.NewMessage("WARNING: Client code using RandSync.Server\n"+trace,Color.Yellow);

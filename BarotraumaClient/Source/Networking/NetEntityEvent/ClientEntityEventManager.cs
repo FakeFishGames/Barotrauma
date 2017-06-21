@@ -190,7 +190,7 @@ namespace Barotrauma.Networking
                     {
                         if (GameSettings.VerboseLogging)
                         {
-                            DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "!", e);
+                            DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "\"!", e);
                         }
                         msg.Position = msgPosition + msgLength * 8;
                     }

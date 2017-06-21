@@ -90,26 +90,11 @@ namespace Barotrauma.Networking
 
         protected bool gameStarted;
 
-        protected Character myCharacter;
-        protected CharacterInfo characterInfo;
-
         public Dictionary<string, bool> monsterEnabled;
 
         protected RespawnManager respawnManager;
 
         public Voting Voting;
-
-        public Character Character
-        {
-            get { return myCharacter; }
-            set { myCharacter = value; }
-        }
-
-        public CharacterInfo CharacterInfo
-        {
-            get { return characterInfo; }
-            set { characterInfo = value; }
-        }
 
         public string Name
         {
