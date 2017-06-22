@@ -692,6 +692,7 @@ namespace Barotrauma
 
         public void ClearInputs()
         {
+            if (keys == null) return;
             foreach (Key key in keys)
             {
                 key.Hit = false;

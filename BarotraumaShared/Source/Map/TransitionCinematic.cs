@@ -80,16 +80,14 @@ namespace Barotrauma
                 }
 
                 cam.Zoom = Math.Max(0.2f, cam.Zoom - CoroutineManager.UnscaledDeltaTime * 0.1f);
-
+                
                 Vector2 cameraPos = subs.First().Position + Submarine.MainSub.HiddenSubPosition;
-                cameraPos.Y = Math.Min(cameraPos.Y, ConvertUnits.ToDisplayUnits(Level.Loaded.ShaftBody.Position.Y) - cam.WorldView.Height/2.0f);
-
+                cameraPos.Y = Math.Min(cameraPos.Y, ConvertUnits.ToDisplayUnits(Level.Loaded.ShaftBody.Position.Y) - cam.WorldView.Height / 2.0f);
+                cam.Translate((cameraPos - cam.Position) * CoroutineManager.UnscaledDeltaTime * 10.0f);
 #if CLIENT
                 GUI.ScreenOverlayColor = Color.Lerp(Color.TransparentBlack, Color.Black, timer/duration);
 #endif
-
-                cam.Translate((cameraPos - cam.Position) * CoroutineManager.UnscaledDeltaTime*10.0f);
-
+                
                 foreach (Submarine sub in subs)
                 {
                     if (sub.Position == targetPos) continue;
