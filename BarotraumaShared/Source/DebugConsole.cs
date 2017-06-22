@@ -29,7 +29,7 @@ namespace Barotrauma
 
     static partial class DebugConsole
     {
-        const int MaxMessages = 20000;
+        const int MaxMessages = 200;
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
