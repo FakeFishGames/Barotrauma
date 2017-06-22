@@ -23,6 +23,7 @@ namespace Barotrauma
         //negative values = escapes targets of this type        
         private float attackRooms, attackHumans, attackWeaker, attackStronger, eatDeadPriority;
 
+        //determines which characters are considered weaker/stronger
         private float combatStrength;
 
         private SteeringManager outsideSteering, insideSteering;
@@ -30,14 +31,12 @@ namespace Barotrauma
         private float updateTargetsTimer;
 
         private float raycastTimer;
-        
-        //a timer for attacks such as biting that last for a specific amount of time
-        //the duration is determined by the attackDuration of the attacking limb
-        private float attackTimer;
-        
+                
         //a "cooldown time" after an attack during which the Character doesn't try to attack again
         private float attackCoolDown;
         private float coolDownTimer;
+
+        private bool attachToWalls;
         
         //a point in a wall which the Character is currently targeting
         private Vector2 wallAttackPos;
@@ -94,6 +93,8 @@ namespace Barotrauma
             attackWhenProvoked = ToolBox.GetAttributeBool(aiElement, "attackwhenprovoked", false);
 
             fleeHealthThreshold = ToolBox.GetAttributeFloat(aiElement, "fleehealththreshold", 0.0f);
+
+            attachToWalls = ToolBox.GetAttributeBool(aiElement, "attachtowalls", false);
 
             outsideSteering = new SteeringManager(this);
             insideSteering = new IndoorsSteeringManager(this, false);
@@ -199,25 +200,84 @@ namespace Barotrauma
             }
         }
 
+        #region Idle
+
         private void UpdateNone(float deltaTime)
         {
-            //wander around randomly
-            if (Character.Submarine==null && SimPosition.Y < ConvertUnits.ToSimUnits(SubmarineBody.DamageDepth*0.5f))
+            attackingLimb = null;
+            coolDownTimer -= deltaTime;
+
+            if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(SubmarineBody.DamageDepth * 0.5f))
             {
+                //steer straight up if very deep
                 steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
+                return;
+            }
+
+            if (attachToWalls && Character.Submarine == null)
+            {
+                raycastTimer -= deltaTime;
+                //check if there are any walls nearby the character could attach to
+                if (raycastTimer < 1.0f)
+                {
+                    wallAttackPos = Vector2.Zero;
+
+                    var cells = Level.Loaded.GetCells(WorldPosition, 1);
+                    if (cells.Count > 0)
+                    {
+                        Body closestBody = Submarine.CheckVisibility(Character.SimPosition, ConvertUnits.ToSimUnits(cells[0].Center));
+                        if (closestBody != null && closestBody.UserData is Voronoi2.VoronoiCell)
+                        {
+                            wallAttackPos = Submarine.LastPickedPosition;
+                        }
+                    }
+                    raycastTimer = RaycastInterval;
+                }                
             }
             else
             {
-                steeringManager.SteeringAvoid(deltaTime, 0.1f);
-                steeringManager.SteeringWander(0.5f);
+                wallAttackPos = Vector2.Zero;
             }
 
-            attackingLimb = null;
-            attackTimer = 0.0f;
+            if (wallAttackPos == Vector2.Zero)
+            {
+                //wander around randomly
+                steeringManager.SteeringAvoid(deltaTime, 0.1f);
+                steeringManager.SteeringWander(0.5f);
+                return;
+            }
 
-            coolDownTimer -= deltaTime;  
+            float dist = Vector2.Distance(SimPosition, wallAttackPos);
+            if (dist < Math.Max(Math.Max(Character.AnimController.Collider.radius, Character.AnimController.Collider.width), Character.AnimController.Collider.height) * 1.2f)
+            {
+                //close enough to a wall -> attach
+                Character.AnimController.Collider.MoveToPos(wallAttackPos, 1.0f);
+                steeringManager.Reset();                    
+
+            }
+            else
+            {
+                //move closer to the wall
+                steeringManager.SteeringAvoid(deltaTime, 0.1f);
+                steeringManager.SteeringSeek(wallAttackPos);
+            }
         }
-        
+
+        #endregion
+
+        #region Escape
+
+        private void UpdateEscape(float deltaTime)
+        {
+            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
+            SteeringManager.SteeringWander(1.0f);
+            SteeringManager.SteeringAvoid(deltaTime, 2f);
+        }
+
+        #endregion
+
+        #region Attack
+
         private void UpdateAttack(float deltaTime)
         {
             if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
@@ -250,7 +310,7 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
             if (Math.Abs(Character.AnimController.movement.X) > 0.1f && !Character.AnimController.InWater)
             {
                 Character.AnimController.TargetDir = Character.SimPosition.X < attackSimPosition.X ? Direction.Right : Direction.Left;
@@ -281,13 +341,13 @@ namespace Barotrauma
             {
                 foreach (Limb limb in Character.AnimController.Limbs)
                 {
-                    if (limb.attack==null) continue;
+                    if (limb.attack == null) continue;
                     attackLimb = limb;
 
                     if (ConvertUnits.ToDisplayUnits(Vector2.Distance(limb.SimPosition, attackSimPosition)) > limb.attack.Range) continue;
-                                        
+
                     attackingLimb = limb;
-                    break;   
+                    break;
                 }
 
                 if (Character.IsRemotePlayer)
@@ -302,37 +362,14 @@ namespace Barotrauma
                 if (steeringManager is IndoorsSteeringManager)
                 {
                     var indoorsSteering = (IndoorsSteeringManager)steeringManager;
-                    if (indoorsSteering.CurrentPath!=null && (indoorsSteering.CurrentPath.Finished || indoorsSteering.CurrentPath.Unreachable))
+                    if (indoorsSteering.CurrentPath != null && (indoorsSteering.CurrentPath.Finished || indoorsSteering.CurrentPath.Unreachable))
                     {
                         steeringManager.SteeringManual(deltaTime, attackSimPosition - attackLimb.SimPosition);
                     }
                 }
 
                 if (attackingLimb != null) UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
-            }   
-        }
-
-        private void UpdateEscape(float deltaTime)
-        {
-            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
-            SteeringManager.SteeringWander(1.0f);
-            SteeringManager.SteeringAvoid(deltaTime, 2f);
-        }
-
-        private void UpdateCoolDown(Vector2 attackPosition, float deltaTime)
-        {
-            coolDownTimer -= deltaTime;
-            attackingLimb = null;
-
-            float dist = Vector2.Distance(attackPosition, Character.SimPosition);
-
-            if (dist < ConvertUnits.ToSimUnits(500.0f))
-            {
-                steeringManager.SteeringSeek(attackPosition, -0.8f);
-                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(Character.SimPosition - attackPosition) * (1.0f - (dist / 500.0f)));
             }
-
-            steeringManager.SteeringAvoid(deltaTime, 1.0f);            
         }
 
         private void GetTargetEntity()
@@ -424,6 +461,26 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateCoolDown(Vector2 attackPosition, float deltaTime)
+        {
+            coolDownTimer -= deltaTime;
+            attackingLimb = null;
+
+            float dist = Vector2.Distance(attackPosition, Character.SimPosition);
+
+            if (dist < ConvertUnits.ToSimUnits(500.0f))
+            {
+                steeringManager.SteeringSeek(attackPosition, -0.8f);
+                steeringManager.SteeringManual(deltaTime, Vector2.Normalize(Character.SimPosition - attackPosition) * (1.0f - (dist / 500.0f)));
+            }
+
+            steeringManager.SteeringAvoid(deltaTime, 1.0f);
+        }
+
+        #endregion
+
+        #region Eat
+
         private void UpdateEating(float deltaTime)
         {
             if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
@@ -505,6 +562,10 @@ namespace Barotrauma
             }
         }
         
+        #endregion
+
+        #region Targeting
+
         //goes through all the AItargets, evaluates how preferable it is to attack the target,
         //whether the Character can see/hear the target and chooses the most preferable target within
         //sight/hearing range
@@ -603,21 +664,6 @@ namespace Barotrauma
 
                     Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd);
                     Structure closestStructure = (closestBody == null) ? null : closestBody.UserData as Structure;
-
-                   /* float targetStrength = 0.0f;
-                    if (targetDamageable != null)
-                    {
-                        targetStrength = targetDamageable.Health;                            
-                    }
-                    else if (closestStructure!=null)
-                    {
-                        targetStrength = ((IDamageable)closestStructure).Health;
-                    }
-                    else
-                    {
-                        targetStrength = 1000.0f;
-                    }*/
-;
                     
                     if (selectedAiTarget == null || Math.Abs(valueModifier) > Math.Abs(targetValue))
                     {
@@ -668,6 +714,8 @@ namespace Barotrauma
                 targetMemories.Remove(target);
             }
         }
+
+        #endregion
 
         public override void DebugDraw(SpriteBatch spriteBatch)
         {

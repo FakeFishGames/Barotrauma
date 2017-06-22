@@ -18,6 +18,7 @@
     attackcooldown="1.0"
     sight="0.5"
     hearing="1.0"
+    attachtowalls="true"
     fleehealththreshold="20"/>
   
   <ragdoll headposition="120" headangle="-90" 
