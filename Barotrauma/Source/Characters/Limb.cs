@@ -136,6 +136,11 @@ namespace Barotrauma
             get { return body.Rotation; }
         }
 
+        public float Scale
+        {
+            get { return scale; }
+        }
+
         //where an animcontroller is trying to pull the limb, only used for debug visualization
         public Vector2 AnimTargetPos
         {
