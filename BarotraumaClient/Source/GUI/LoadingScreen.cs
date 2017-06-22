@@ -44,6 +44,7 @@ namespace Barotrauma
             set 
             {
                 loadState = value;
+                DebugConsole.NewMessage("Loading: " + value.ToString() + "%",Color.Yellow);
                 DrawLoadingText = true;
             }
         }

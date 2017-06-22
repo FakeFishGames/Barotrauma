@@ -192,6 +192,7 @@ namespace Barotrauma
 
         private IEnumerable<object> Load()
         {
+            DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
             GUI.GraphicsDevice = base.GraphicsDevice;
             GUI.Init(Content);
 
@@ -269,6 +270,7 @@ namespace Barotrauma
 
             TitleScreen.LoadState = 100.0f;
             hasLoaded = true;
+            DebugConsole.NewMessage("LOADING COROUTINE FINISHED", Color.Lime);
         yield return CoroutineStatus.Success;
 
         }

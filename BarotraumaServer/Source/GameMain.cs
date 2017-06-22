@@ -100,14 +100,20 @@ namespace Barotrauma
             NetLobbyScreen = new NetLobbyScreen();
 
             Server = new GameServer("Dedicated Server Test", 14242, false, "asd", false, 10);
+
+            DateTime prevTime = DateTime.Now;
+
             while (true)
             {
+                prevTime = DateTime.Now;
+
                 DebugConsole.Update();
                 if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
                 Server.Update((float)Timing.Step);
                 CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
-
-                Thread.Sleep((int)(Timing.Step * 1000.0));
+                
+                int frameTime = DateTime.Now.Subtract(prevTime).Milliseconds;
+                Thread.Sleep(Math.Max((int)(Timing.Step * 1000.0) - frameTime,0));
             }
         }
         
