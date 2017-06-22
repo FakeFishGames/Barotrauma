@@ -33,10 +33,46 @@ namespace Barotrauma
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
+        private static string[] SplitCommand(string command)
+        {
+            command = command.Trim();
+
+            List<string> commands = new List<string>();
+            int escape = 0;
+            bool inQuotes = false;
+            string piece = "";
+            
+            for (int i=0;i<command.Length;i++)
+            {
+                if (command[i] == '\\')
+                {
+                    if (escape == 0) escape = 2;
+                    else piece += '\\';
+                }
+                else if (command[i] == '"')
+                {
+                    if (escape == 0) inQuotes = !inQuotes;
+                    else piece += '"';
+                }
+                else if (command[i] == ' ' && !inQuotes)
+                {
+                    if (!string.IsNullOrWhiteSpace(piece)) commands.Add(piece);
+                    piece = "";
+                }
+                else if (escape == 0) piece += command[i];
+
+                if (escape > 0) escape--;
+            }
+
+            if (!string.IsNullOrWhiteSpace(piece)) commands.Add(piece); //add final piece
+
+            return commands.ToArray();
+        }
+
         public static void ExecuteCommand(string command, GameMain game)
         {
             if (string.IsNullOrWhiteSpace(command)) return;
-            string[] commands = command.Split(' ');
+            string[] commands = SplitCommand(command);
             
             if (!commands[0].ToLowerInvariant().Equals("admin"))
             {

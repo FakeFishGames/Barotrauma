@@ -50,7 +50,7 @@ namespace Barotrauma
 
         public override void Select()
         {
-
+            base.Select();
         }
 
         private List<Submarine> subs;

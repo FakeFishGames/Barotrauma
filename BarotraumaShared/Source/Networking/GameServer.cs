@@ -1381,18 +1381,16 @@ namespace Barotrauma.Networking
         public IEnumerable<object> EndCinematic()
         {
             float endPreviewLength = 10.0f;
-
+            
             var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-
-            new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-            float secondsLeft = endPreviewLength;
+            //float secondsLeft = endPreviewLength;
 
             do
             {
-                secondsLeft -= CoroutineManager.UnscaledDeltaTime;
+                //secondsLeft -= CoroutineManager.UnscaledDeltaTime;
 
                 yield return CoroutineStatus.Running;
-            } while (secondsLeft > 0.0f);
+            } while (cinematic.Running);//(secondsLeft > 0.0f);
 
             Submarine.Unload();
             entityEventManager.Clear();
