@@ -15,6 +15,8 @@ namespace Barotrauma
         private float waveAmplitude;
         private float waveLength;
 
+        private float steerTorque;
+
         private bool rotateTowardsMovement;
 
         private bool mirror, flip;
@@ -28,13 +30,15 @@ namespace Barotrauma
         public FishAnimController(Character character, XElement element)
             : base(character, element)
         {
-            waveAmplitude = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "waveamplitude", 0.0f));
-            waveLength = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "wavelength", 0.0f));
+            waveAmplitude   = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "waveamplitude", 0.0f));
+            waveLength      = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "wavelength", 0.0f));
+
+            steerTorque     = ToolBox.GetAttributeFloat(element, "steertorque", 25.0f);
             
-            flip = ToolBox.GetAttributeBool(element, "flip", true);
-            mirror = ToolBox.GetAttributeBool(element, "mirror", false);
+            flip            = ToolBox.GetAttributeBool(element, "flip", true);
+            mirror          = ToolBox.GetAttributeBool(element, "mirror", false);
             
-            float footRot = ToolBox.GetAttributeFloat(element,"footrotation", float.NaN);
+            float footRot = ToolBox.GetAttributeFloat(element, "footrotation", float.NaN);
             if (float.IsNaN(footRot))
             {
                 footRotation = null;
@@ -184,12 +188,12 @@ namespace Barotrauma
             if (rotateTowardsMovement)
             {
                 Collider.SmoothRotate(movementAngle, 25.0f);
-                MainLimb.body.SmoothRotate(movementAngle, 25.0f);
+                MainLimb.body.SmoothRotate(movementAngle, steerTorque);
             }
             else
             {
                 Collider.SmoothRotate(HeadAngle * Dir, 25.0f);
-                MainLimb.body.SmoothRotate(HeadAngle * Dir, 25.0f);
+                MainLimb.body.SmoothRotate(HeadAngle * Dir, steerTorque);
             }
 
             Limb tail = GetLimb(LimbType.Tail);

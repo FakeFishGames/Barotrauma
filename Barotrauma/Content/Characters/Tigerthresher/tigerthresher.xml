@@ -15,8 +15,11 @@
     sight="0.5"
     hearing="1.0"/>
 
-  <ragdoll waveamplitude="50.0" wavelength="2500" 
-           swimspeed="4.0" swimspeedmultiplier="1.5"
+  <ragdoll waveamplitude="50.0" 
+           wavelength="2500" 
+           steertorque="100"
+           swimspeed="4.0" 
+           swimspeedmultiplier="1.5"
            canentersubmarine="false">
 
     <collider radius="50" height="320"/>

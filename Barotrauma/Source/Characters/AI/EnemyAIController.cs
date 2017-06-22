@@ -485,6 +485,7 @@ namespace Barotrauma
                     {
                         //only one limb left, the character is now full eaten
                         Entity.Spawner.AddToRemoveQueue(targetCharacter);
+                        selectedAiTarget = null;
                         state = AIState.None;
                     }
                     else //sever a random joint
