@@ -31,6 +31,30 @@ namespace Barotrauma
         {
             switch (commands[0].ToLower())
             {
+                case "restart":
+                case "reset":
+                    DebugConsole.NewMessage("*****************", Color.Lime);
+                    DebugConsole.NewMessage("RESTARTING SERVER", Color.Lime);
+                    DebugConsole.NewMessage("*****************", Color.Lime);
+                    GameMain.Instance.CloseServer();
+                    GameMain.Instance.StartServer();
+                    break;
+                case "exit":
+                case "close":
+                case "quit":
+                    GameMain.ShouldRun = false;
+                    break;
+                case "say":
+                case "msg":
+                    string text = "";
+                    for (int i=1;i<commands.Count();i++)
+                    {
+                        if (!string.IsNullOrEmpty(text)) text += " ";
+                        text += commands[i];
+                    }
+                    if (commands[0].ToLower() == "say") text = "HOST: " + text;
+                    GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
+                    break;
                 case "startgame":
                 case "startround":
                 case "start":

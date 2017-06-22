@@ -14,6 +14,11 @@ namespace Barotrauma
             get { return selected; }
         }
 
+        public static void SelectNull()
+        {
+            selected = null;
+        }
+
         public virtual void Deselect()
         {
         }

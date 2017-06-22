@@ -48,6 +48,7 @@ namespace Barotrauma
         public static readonly Screen EditCharacterScreen = UnimplementedScreen.Instance;
 
         //
+        public static bool ShouldRun = true;
 
         public static ContentPackage SelectedPackage
         {
@@ -75,13 +76,8 @@ namespace Barotrauma
             GameScreen = new GameScreen();
         }
 
-        public void Run()
+        public void Init()
         {
-            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
-            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Item));
-            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
-            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
-            
             Mission.Init();
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
@@ -96,14 +92,36 @@ namespace Barotrauma
             LocationType.Init();
 
             Submarine.RefreshSavedSubs();
-            
-            NetLobbyScreen = new NetLobbyScreen();
 
+            Screen.SelectNull();
+
+            NetLobbyScreen = new NetLobbyScreen();
+        }
+
+        public void StartServer()
+        {
             Server = new GameServer("Dedicated Server Test", 14242, false, "asd", false, 10);
+        }
+
+        public void CloseServer()
+        {
+            Server.Disconnect();
+            Server = null;
+        }
+
+        public void Run()
+        {
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Character));
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Item));
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
+            Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
+
+            Init();
+            StartServer();
 
             DateTime prevTime = DateTime.Now;
 
-            while (true)
+            while (ShouldRun)
             {
                 prevTime = DateTime.Now;
 
@@ -115,6 +133,9 @@ namespace Barotrauma
                 int frameTime = DateTime.Now.Subtract(prevTime).Milliseconds;
                 Thread.Sleep(Math.Max((int)(Timing.Step * 1000.0) - frameTime,0));
             }
+
+            CloseServer();
+
         }
         
         public void ProcessInput()

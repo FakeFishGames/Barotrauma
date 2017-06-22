@@ -30,18 +30,19 @@ namespace Barotrauma
         {
             GameMain game = null;
             Thread inputThread = null;
+            
             try
             {
                 game = new GameMain();
-
                 inputThread = new Thread(new ThreadStart(game.ProcessInput));
                 inputThread.Start();
                 game.Run();
+                inputThread.Abort(); inputThread.Join();
             }
             catch (Exception e)
             {
                 CrashDump(game, "servercrashreport.txt", e);
-                //inputThread.Abort(); inputThread.Join();
+                inputThread.Abort(); inputThread.Join();
             }
         }
         

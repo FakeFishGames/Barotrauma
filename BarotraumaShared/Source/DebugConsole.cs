@@ -91,16 +91,14 @@ namespace Barotrauma
 
             switch (commands[0].ToLowerInvariant())
             {
-                case "entitylist":
-                    System.IO.StreamWriter sw = new System.IO.StreamWriter("ENTLIST "+Rand.Int(20000).ToString()+".TXT");
-
-                    List<Entity> entList = Entity.GetEntityList();
-                    foreach (Entity ent in entList)
+                case "clientlist":
+                    if (GameMain.Server == null) break;
+                    DebugConsole.NewMessage("***************", Color.Cyan);
+                    foreach (Client c in GameMain.Server.ConnectedClients)
                     {
-                        sw.WriteLine(ent.ID.ToString()+" "+ent.ToString());
+                        DebugConsole.NewMessage("- " + c.ID.ToString() + ": " + c.name + ", " + c.Connection.RemoteEndPoint.Address.ToString(),Color.Cyan);
                     }
-
-                    sw.Close();
+                    DebugConsole.NewMessage("***************", Color.Cyan);
                     break;
                 case "help":
                     NewMessage("menu: go to main menu", Color.Cyan);
@@ -307,6 +305,23 @@ namespace Barotrauma
                 case "kick":
                     if (GameMain.NetworkMember == null || commands.Length < 2) break;
                     GameMain.NetworkMember.KickPlayer(string.Join(" ", commands.Skip(1)), false);
+
+                    break;
+                case "kickid":
+                    if (GameMain.Server == null || commands.Length < 2) break;
+                    {
+                        int id = 0;
+                        int.TryParse(commands[1], out id);
+                        GameMain.Server.KickPlayer(id, false);
+                    }
+                    break;
+                case "banid":
+                    if (GameMain.Server == null || commands.Length < 2) break;
+                    {
+                        int id = 0;
+                        int.TryParse(commands[1], out id);
+                        GameMain.Server.KickPlayer(id, true);
+                    }
 
                     break;
                 case "ban":

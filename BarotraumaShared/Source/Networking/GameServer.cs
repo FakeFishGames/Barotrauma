@@ -1249,7 +1249,7 @@ namespace Barotrauma.Networking
             GameMain.GameScreen.Select();
 
             AddChatMessage("Press TAB to chat. Use \"r;\" to talk through the radio.", ChatMessageType.Server);
-            
+
             GameMain.NetLobbyScreen.StartButtonEnabled = true;
 
             gameStarted = true;
@@ -1407,6 +1407,13 @@ namespace Barotrauma.Networking
             Client client = connectedClients.Find(c =>
                 c.name.ToLowerInvariant() == playerName ||
                 (c.Character != null && c.Character.Name.ToLowerInvariant() == playerName));
+
+            KickClient(client, ban, range);
+        }
+
+        public void KickPlayer(int id,bool ban,bool range=false)
+        {
+            Client client = connectedClients.Find(c => c.ID == id);
 
             KickClient(client, ban, range);
         }
