@@ -1159,9 +1159,10 @@ namespace Barotrauma
                 }
             }
 
-            if (moveCam && needsAir)
+            if (moveCam)
             {
-                if (pressureProtection < 80.0f && 
+                if (needsAir &&
+                    pressureProtection < 80.0f && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 50.0f))
                 {
                     float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
@@ -1170,7 +1171,16 @@ namespace Barotrauma
                         (pressure / 50.0f) * Rand.Range(1.0f, 1.05f),
                         (pressure - 50.0f) / 50.0f);
                 }
-                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
+
+                if (IsHumanoid)
+                {
+                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
+                }
+                else
+                {
+                    //increased visibility range when controlling large a non-humanoid
+                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp(Mass, 250.0f, 800.0f), deltaTime);
+                }
             }
 
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
