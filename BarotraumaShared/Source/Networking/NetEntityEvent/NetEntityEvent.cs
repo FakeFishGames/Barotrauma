@@ -64,7 +64,9 @@ namespace Barotrauma.Networking
 
         public bool Sent;
 
+#if DEBUG
         public string StackTrace;
+#endif
 
         private double createTime;
         public double CreateTime
@@ -78,8 +80,10 @@ namespace Barotrauma.Networking
             serializable = entity;
 
             createTime = Timing.TotalTime;
-            
+
+#if DEBUG
             StackTrace = Environment.StackTrace.ToString();
+#endif
         }
 
         public void Write(NetBuffer msg, Client recipient)

@@ -309,6 +309,7 @@ namespace Barotrauma
                     break;
                 case "kickid":
                     if (GameMain.Server == null || commands.Length < 2) break;
+
                     {
                         int id = 0;
                         int.TryParse(commands[1], out id);
@@ -317,6 +318,7 @@ namespace Barotrauma
                     break;
                 case "banid":
                     if (GameMain.Server == null || commands.Length < 2) break;
+
                     {
                         int id = 0;
                         int.TryParse(commands[1], out id);

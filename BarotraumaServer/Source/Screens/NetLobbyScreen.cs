@@ -95,7 +95,7 @@ namespace Barotrauma
         {
             ServerMessageText = m; lastUpdateID++;
         }
-
+        
         public List<JobPrefab> JobPreferences
         {
             get
@@ -145,6 +145,7 @@ namespace Barotrauma
             {
                 if (levelSeed == value) return;
 
+                lastUpdateID++;
                 levelSeed = value;
                 LocationType.Random(levelSeed); //call to sync up with clients
             }

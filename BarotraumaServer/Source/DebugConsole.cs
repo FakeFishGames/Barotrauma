@@ -57,6 +57,9 @@ namespace Barotrauma
                 case "servermsg":
                     GameMain.NetLobbyScreen.ChangeServerMessage(string.Join(" ", commands.Skip(1)));
                     break;
+                case "seed":
+                    GameMain.NetLobbyScreen.LevelSeed = string.Join(" ", commands.Skip(1));
+                    break;
                 case "gamemode":
                     {
                         int index = -1;
@@ -129,6 +132,7 @@ namespace Barotrauma
                         NewMessage(ent.ToString(), Color.Lime);
                     }
                     break;
+#if DEBUG
                 case "eventdata":
                     ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events[Convert.ToUInt16(commands[1])];
                     if (ev != null)
@@ -136,6 +140,7 @@ namespace Barotrauma
                         NewMessage(ev.StackTrace, Color.Lime);
                     }
                     break;
+#endif
                 default:
                     return false;
                     break;
