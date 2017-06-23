@@ -18,7 +18,17 @@ namespace Barotrauma
     {
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
+        
+        private float soundVolume, musicVolume;
 
+        private WindowMode windowMode;
+
+        public List<string> jobNamePreferences;
+
+        private KeyOrMouse[] keyMapping;
+
+        private bool unsavedSettings;
+        
         public GUIFrame SettingsFrame
         {
             get
@@ -27,12 +37,6 @@ namespace Barotrauma
                 return settingsFrame;
             }
         }
-
-        private float soundVolume, musicVolume;
-
-        private WindowMode windowMode;
-
-        private KeyOrMouse[] keyMapping;
 
         public KeyOrMouse KeyBind(InputType inputType)
         {
@@ -53,9 +57,20 @@ namespace Barotrauma
             get { return windowMode; }
             set { windowMode = value; }
         }
+        
+        public List<string> JobNamePreferences
+        {
+            get { return jobNamePreferences; }
+            set
+            {
+                // Begin saving coroutine. Remove any existing save coroutines if one is running.
+                if (CoroutineManager.IsCoroutineRunning("saveCoroutine")) { CoroutineManager.StopCoroutines("saveCoroutine"); }
+                CoroutineManager.StartCoroutine(ApplyUnsavedChanges(), "saveCoroutine");
 
-        private bool unsavedSettings;
-
+                jobNamePreferences = value;
+            }
+        }
+        
         public bool UnsavedSettings
         {
             get
@@ -65,6 +80,7 @@ namespace Barotrauma
             private set
             {
                 unsavedSettings = value;
+
                 if (applyButton != null)
                 {
                     //applyButton.Selected = unsavedSettings;
@@ -100,7 +116,16 @@ namespace Barotrauma
             {
                 GraphicsWidth = 1024;
                 GraphicsHeight = 678;
+                
+                MasterServerUrl = "";
+                
+                SelectedContentPackage = ContentPackage.list.Any() ? ContentPackage.list[0] : new ContentPackage("");
 
+                JobNamePreferences = new List<string>();
+                foreach (JobPrefab job in JobPrefab.List)
+                {
+                    JobNamePreferences.Add(job.Name);
+                }
                 return;
             }
 
@@ -168,6 +193,13 @@ namespace Barotrauma
                                     }
                                 }
                             }
+                        }
+                        break;
+                    case "gameplay":
+                        JobNamePreferences = new List<string>();
+                        foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
+                        {
+                            JobNamePreferences.Add(ToolBox.GetAttributeString(ele, "name", ""));
                         }
                         break;
                 }
@@ -252,6 +284,17 @@ namespace Barotrauma
 
 
             }
+
+            var gameplay = new XElement("gameplay");
+
+            var jobPreferences = new XElement("jobpreferences");
+            foreach (string jobName in JobNamePreferences)
+            {
+                jobPreferences.Add(new XElement("job", new XAttribute("name", jobName)));
+            }
+
+            gameplay.Add(jobPreferences);
+            doc.Root.Add(gameplay);
 
             doc.Save(filePath);
         }
@@ -460,6 +503,13 @@ namespace Barotrauma
             keyBox.Deselect();
 
             yield return CoroutineStatus.Success;
+        }
+
+        private IEnumerable<object> ApplyUnsavedChanges()
+        {
+            yield return new WaitForSeconds(10.0f);
+
+            Save("config.xml");
         }
 
         private bool ApplyClicked(GUIButton button, object userData)

@@ -257,8 +257,20 @@ namespace Barotrauma
             var targetCells = new List<VoronoiCell>();
             for (int i = 0; i < pathNodes.Count; i++)
             {
-                int cellIndex = FindCellIndex(pathNodes[i], cells, cellGrid, gridCellSize, 2, gridOffset);
-                targetCells.Add(cells[cellIndex]);
+                //a search depth of 2 is large enough to find a cell in almost all maps, but in case it fails, we increase the depth
+                int searchDepth = 2;
+                while (searchDepth < 5)
+                {
+                    int cellIndex = FindCellIndex(pathNodes[i], cells, cellGrid, gridCellSize, searchDepth, gridOffset);
+                    if (cellIndex > -1)
+                    {
+                        targetCells.Add(cells[cellIndex]);
+                        break;
+                    }
+
+                    searchDepth++;
+                }
+
             }
 
             return GeneratePath(targetCells, cells, cellGrid, gridCellSize, limits, wanderAmount, mirror);

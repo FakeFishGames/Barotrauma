@@ -527,11 +527,17 @@ namespace Barotrauma
 
 
                 int i = 1;
-                foreach (JobPrefab job in JobPrefab.List)
+                foreach (string jobName in GameMain.Config.JobNamePreferences)
                 {
-                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20), i + ". " + job.Name + "    ",
+                    JobPrefab job = JobPrefab.List.Find(x => x.Name == jobName);
+                    if (job == null)
+                    {
+                        continue;
+                    }
+
+                    GUITextBlock jobText = new GUITextBlock(new Rectangle(0, 0, 0, 20),  i + ". " + job.Name + "    ", 
                         "", Alignment.Left, Alignment.Right, jobList, false,
-                        GameMain.GraphicsWidth < 1000 ? GUI.SmallFont : GUI.Font);
+                        GameMain.GraphicsWidth<1000 ? GUI.SmallFont : GUI.Font);
                     jobText.UserData = job;
 
                     GUIButton infoButton = new GUIButton(new Rectangle(0, 2, 15, 15), "?", "", jobText);
@@ -1165,6 +1171,8 @@ namespace Barotrauma
         private void UpdateJobPreferences(GUIListBox listBox)
         {
             listBox.Deselect();
+            List<string> jobNamePreferences = new List<string>();
+
             for (int i = 0; i < listBox.children.Count; i++)
             {
                 float a = (float)(i - 1) / 3.0f;
@@ -1174,10 +1182,13 @@ namespace Barotrauma
                 listBox.children[i].Color = color;
                 listBox.children[i].HoverColor = color;
                 listBox.children[i].SelectedColor = color;
+                
+                (listBox.children[i] as GUITextBlock).Text = (i+1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
 
-                (listBox.children[i] as GUITextBlock).Text = (i + 1) + ". " + (listBox.children[i].UserData as JobPrefab).Name;
+                jobNamePreferences.Add((listBox.children[i].UserData as JobPrefab).Name);
             }
 
+            GameMain.Config.JobNamePreferences = jobNamePreferences;
         }
 
         public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
