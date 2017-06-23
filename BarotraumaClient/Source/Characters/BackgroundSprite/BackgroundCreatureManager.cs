@@ -103,7 +103,7 @@ namespace Barotrauma
             activeSprites.Clear();
         }
 
-        public void Update(Camera cam, float deltaTime)
+        public void Update(float deltaTime, Camera cam)
         {
             if (checkActiveTimer<0.0f)
             {

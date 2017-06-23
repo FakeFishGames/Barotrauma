@@ -294,27 +294,27 @@ namespace Barotrauma
         /// <summary>
         /// Call Update() on every object in Entity.list
         /// </summary>
-        public static void UpdateAll(Camera cam, float deltaTime)
+        public static void UpdateAll(float deltaTime, Camera cam)
         {
             foreach (Hull hull in Hull.hullList)
             {
-                hull.Update(cam, deltaTime);
+                hull.Update(deltaTime, cam);
             }
 
             foreach (Gap gap in Gap.GapList)
             {
-                gap.Update(cam, deltaTime);
+                gap.Update(deltaTime, cam);
             }
 
             foreach (Item item in Item.ItemList)
             {
-                item.Update(cam, deltaTime);
+                item.Update(deltaTime, cam);
             }
             
             Spawner?.Update();
         }
 
-        public virtual void Update(Camera cam, float deltaTime) { }
+        public virtual void Update(float deltaTime, Camera cam) { }
 
         public virtual void FlipX()
         {

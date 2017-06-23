@@ -25,9 +25,9 @@ namespace Barotrauma
             this.aiController = aiController;
         }
 
-        public override void Update(Camera cam, float deltaTime)
+        public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(cam, deltaTime);
+            base.Update(deltaTime, cam);
 
             if (!Enabled || IsRemotePlayer) return;
             

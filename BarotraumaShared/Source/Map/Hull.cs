@@ -394,7 +394,7 @@ namespace Barotrauma
             if (GameMain.Server != null) GameMain.Server.CreateEntityEvent(this);
         }
 
-        public override void Update(Camera cam, float deltaTime)
+        public override void Update(float deltaTime, Camera cam)
         {
             Oxygen -= OxygenDetoriationSpeed * deltaTime;
 
