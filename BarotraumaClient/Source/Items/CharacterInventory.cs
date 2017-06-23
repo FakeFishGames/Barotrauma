@@ -12,6 +12,8 @@ namespace Barotrauma
 {
     partial class CharacterInventory : Inventory
     {
+        private static Texture2D icons;
+
         public Vector2[] SlotPositions;
 
         private GUIButton[] useOnSelfButton;

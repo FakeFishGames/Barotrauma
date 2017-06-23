@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class GameMode
+    partial class GameMode
     {
         public static List<GameModePreset> PresetList = new List<GameModePreset>();
 
@@ -53,10 +53,6 @@ namespace Barotrauma
         public GameMode(GameModePreset preset, object param)
         {
             this.preset = preset;
-        }
-
-        public virtual void Draw(SpriteBatch spriteBatch)
-        {
         }
 
         public virtual void Start()

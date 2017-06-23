@@ -238,7 +238,7 @@ namespace Barotrauma
             if (Position.X < 0 || Position.X > Level.Loaded.Size.X)
             {
                 Rectangle worldBorders = Borders;
-                worldBorders.Location += Position.ToPoint();
+                worldBorders.Location += MathUtils.ToPoint(Position);
 
                 //push the sub back below the upper "barrier" of the level
                 if (worldBorders.Y > Level.Loaded.Size.Y)
@@ -276,7 +276,7 @@ namespace Barotrauma
         private void DisplaceCharacters(Vector2 subTranslation)
         {
             Rectangle worldBorders = Borders;
-            worldBorders.Location += ConvertUnits.ToDisplayUnits(Body.SimPosition).ToPoint();
+            worldBorders.Location += MathUtils.ToPoint(ConvertUnits.ToDisplayUnits(Body.SimPosition));
 
             Vector2 translateDir = Vector2.Normalize(subTranslation);
 

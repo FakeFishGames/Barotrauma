@@ -52,15 +52,8 @@
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MonoGame.Framework, Version=3.5.1.1679, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\MonoGame\v3.0\Assemblies\Windows\MonoGame.Framework.dll</HintPath>
-    </Reference>
     <Reference Include="RestSharp">
       <HintPath>..\packages\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.XML" />
@@ -89,20 +82,30 @@
     <Compile Include="Source\Networking\GameServer.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
+    <Compile Include="Source\Physics\PhysicsBody.cs" />
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\UnimplementedScreen.cs" />
     <Compile Include="Source\Sprite\Sprite.cs" />
+    <Compile Include="Source\Utils\MonogameTypes\Color.cs" />
+    <Compile Include="Source\Utils\MonogameTypes\Graphics\SpriteEffects.cs" />
+    <Compile Include="Source\Utils\MonogameTypes\Input\KeyboardState.cs" />
+    <Compile Include="Source\Utils\MonogameTypes\Input\Keys.cs" />
+    <Compile Include="Source\Utils\MonogameTypes\Input\KeyState.cs" />
+    <Compile Include="Source\Utils\MonogameTypes\Point.cs" />
+    <Compile Include="Source\Utils\MonogameTypes\Quaternion.cs" />
+    <Compile Include="Source\Utils\MonogameTypes\Rectangle.cs" />
+    <Compile Include="Source\Utils\MonogameTypes\Vector4.cs" />
     <Compile Include="Source\Utils\XnaToConsoleColor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj">
-      <Project>{0aad36e3-51a5-4a07-ab60-5c8a66bd38b7}</Project>
-      <Name>Farseer Physics MonoGame</Name>
+    <ProjectReference Include="..\Farseer Physics Engine 3.5\Farseer Physics.csproj">
+      <Project>{a4610e4c-dd34-428b-babb-779ca0b5993a}</Project>
+      <Name>Farseer Physics</Name>
     </ProjectReference>
     <ProjectReference Include="..\Hyper.ComponentModel\Hyper.ComponentModel.csproj">
       <Project>{3b8f9edb-6e5e-450c-abc2-ec49075d0b50}</Project>

@@ -2,7 +2,6 @@
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Barotrauma.Networking;
 using Lidgren.Network;
 using System.Collections.Generic;
@@ -18,8 +17,6 @@ namespace Barotrauma
 
     partial class CharacterInventory : Inventory
     {
-        private static Texture2D icons;
-
         private Character character;
 
         public static InvSlotType[] limbSlots = new InvSlotType[] { 

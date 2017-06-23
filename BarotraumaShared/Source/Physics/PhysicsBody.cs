@@ -248,12 +248,6 @@ namespace Barotrauma
             set { body.CollidesWith = value; }
         }
 
-        private Texture2D bodyShapeTexture;
-        public Texture2D BodyShapeTexture
-        {
-            get { return bodyShapeTexture; }
-        }
-
         public PhysicsBody(XElement element, float scale = 1.0f)
             : this(element, Vector2.Zero, scale)
         {
@@ -538,11 +532,7 @@ namespace Barotrauma
             list.Remove(this);
             GameMain.World.RemoveBody(body);
 
-            if (bodyShapeTexture != null)
-            {
-                bodyShapeTexture.Dispose();
-                bodyShapeTexture = null;
-            }
+            DisposeProjSpecific();
         }
 
     }

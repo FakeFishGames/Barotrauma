@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -157,7 +156,7 @@ namespace Barotrauma
 
                 linkedSub.loadSub = true;
 
-                linkedSub.rect.Location = pos.ToPoint();
+                linkedSub.rect.Location = MathUtils.ToPoint(pos);
             }
 
             linkedSub.filePath = ToolBox.GetAttributeString(element, "filepath", "");

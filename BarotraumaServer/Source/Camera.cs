@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using System.Linq;
 //TODO: this class still does things that the server doesn't need, cleanup
 

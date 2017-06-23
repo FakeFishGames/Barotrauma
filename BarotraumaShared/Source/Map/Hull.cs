@@ -281,11 +281,11 @@ namespace Barotrauma
             {
                 if (grid.Submarine != submarine) continue;
 
-                rect.Location -= submarine.HiddenSubPosition.ToPoint();
+                rect.Location -= MathUtils.ToPoint(submarine.HiddenSubPosition);
                 
                 grid.InsertEntity(this);
 
-                rect.Location += submarine.HiddenSubPosition.ToPoint();
+                rect.Location += MathUtils.ToPoint(submarine.HiddenSubPosition);
                 return;
             }
         }

@@ -11,6 +11,12 @@ namespace Barotrauma
 {
     partial class PhysicsBody
     {
+        private Texture2D bodyShapeTexture;
+        public Texture2D BodyShapeTexture
+        {
+            get { return bodyShapeTexture; }
+        }
+
         public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f)
         {
             if (!Enabled) return;
@@ -87,6 +93,15 @@ namespace Barotrauma
                 rot,
                 new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2),
                 1.0f, SpriteEffects.None, 0.0f);
+        }
+
+        private void DisposeProjSpecific()
+        {
+            if (bodyShapeTexture != null)
+            {
+                bodyShapeTexture.Dispose();
+                bodyShapeTexture = null;
+            }
         }
     }
 }

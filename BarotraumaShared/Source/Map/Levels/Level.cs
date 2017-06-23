@@ -440,11 +440,12 @@ namespace Barotrauma
 
             List<VoronoiCell> cellsWithBody = new List<VoronoiCell>(cells);
 
-            List<VertexPositionTexture> bodyVertices;
-            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out bodyVertices);
+            List<Vector2[]> triangles;
+            bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out triangles);
 
 #if CLIENT
-            
+            List<VertexPositionTexture> bodyVertices = CaveGenerator.GenerateRenderVerticeList(triangles);
+
             renderer.SetBodyVertices(bodyVertices.ToArray());
             renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells));
 
@@ -714,7 +715,7 @@ namespace Barotrauma
                 }
             }
 
-            var ruin = new Ruin(closestPathCell, cells, new Rectangle((ruinPos - ruinSize * 0.5f).ToPoint(), ruinSize.ToPoint()));
+            var ruin = new Ruin(closestPathCell, cells, new Rectangle(MathUtils.ToPoint(ruinPos - ruinSize * 0.5f), MathUtils.ToPoint(ruinSize)));
             ruins.Add(ruin);
 
             ruin.RuinShapes.Sort((shape1, shape2) => shape2.DistanceFromEntrance.CompareTo(shape1.DistanceFromEntrance));

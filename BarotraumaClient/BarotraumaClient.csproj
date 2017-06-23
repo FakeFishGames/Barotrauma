@@ -63,6 +63,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\Camera.cs" />
     <Compile Include="Source\Characters\AICharacter.cs" />
+    <Compile Include="Source\Characters\AI\AIController.cs" />
     <Compile Include="Source\Characters\AI\AITarget.cs" />
     <Compile Include="Source\Characters\AI\CrewCommander.cs" />
     <Compile Include="Source\Characters\AI\EnemyAIController.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="Source\Fonts\ScalableFont.cs" />
     <Compile Include="Source\GameMain.cs" />
     <Compile Include="Source\GameSession\CrewManager.cs" />
+    <Compile Include="Source\GameSession\GameMode.cs" />
     <Compile Include="Source\GameSession\GameModes\SinglePlayerMode.cs" />
     <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
@@ -148,6 +150,7 @@
     <Compile Include="Source\Map\FireSource.cs" />
     <Compile Include="Source\Map\Gap.cs" />
     <Compile Include="Source\Map\Hull.cs" />
+    <Compile Include="Source\Map\Levels\CaveGenerator.cs" />
     <Compile Include="Source\Map\Levels\Level.cs" />
     <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
     <Compile Include="Source\Map\Levels\Ruins\RuinGenerator.cs" />

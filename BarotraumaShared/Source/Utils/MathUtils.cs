@@ -42,6 +42,11 @@ namespace Barotrauma
             return (float)Math.Atan2(vector.Y, vector.X);
         }
 
+        public static Point ToPoint(Vector2 vector)
+        {
+            return new Point((int)vector.X,(int)vector.Y);
+        }
+
         public static bool IsValid(float value)
         {
             return (!float.IsInfinity(value) && !float.IsNaN(value));

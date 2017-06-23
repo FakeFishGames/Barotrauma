@@ -392,7 +392,7 @@ namespace Barotrauma.Items.Components
 
                 for (int i = 0; i < 2; i++)
                 {
-                    hullRects[i].Location -= (subs[i].WorldPosition - subs[i].HiddenSubPosition).ToPoint();
+                    hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
 
@@ -422,7 +422,7 @@ namespace Barotrauma.Items.Components
 
                 for (int i = 0; i < 2; i++)
                 {
-                    hullRects[i].Location -= (subs[i].WorldPosition - subs[i].HiddenSubPosition).ToPoint();
+                    hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
 

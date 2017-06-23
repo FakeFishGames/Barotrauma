@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -152,7 +151,7 @@ namespace Barotrauma
 
                 if (Submarine.MainSub != null)
                 {
-                    newRect.Location -= Submarine.MainSub.Position.ToPoint();
+                    newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
                 }
 
                 if (PlayerInput.LeftButtonReleased())
