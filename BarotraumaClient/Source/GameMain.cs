@@ -218,6 +218,11 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
+            // Add any missing jobs from the prefab into Config.JobNamePreferences.
+            foreach (JobPrefab job in JobPrefab.List)
+            {
+                if (!Config.JobNamePreferences.Contains(job.Name)) { Config.JobNamePreferences.Add(job.Name); }
+            }
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
             TitleScreen.LoadState = 20.0f;
         yield return CoroutineStatus.Running;

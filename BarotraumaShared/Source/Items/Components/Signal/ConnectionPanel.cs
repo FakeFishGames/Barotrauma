@@ -53,6 +53,13 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character picker)
         {
+            //attaching wires to items with a body is not allowed
+            //(signal items remove their bodies when attached to a wall)
+            if (item.body != null)
+            {
+                return false;
+            }
+
             user = picker;
             IsActive = true;
             return true;

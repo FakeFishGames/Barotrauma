@@ -70,11 +70,9 @@ namespace Barotrauma.Items.Components
             {
                 return OnPicked(picker);
             }
-
-
         }
 
-        private bool OnPicked(Character picker)
+        protected virtual bool OnPicked(Character picker)
         {
             if (picker.Inventory.TryPutItem(item, allowedSlots))
             {
