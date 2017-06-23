@@ -95,6 +95,8 @@ namespace Barotrauma.Items.Components
             InitProjSpecific();
         }
 
+        partial void InitProjSpecific();
+
         public override bool Pick(Character picker)
         {
             if (picker == null) return false;

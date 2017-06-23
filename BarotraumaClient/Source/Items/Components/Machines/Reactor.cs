@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
     {
         private GUITickBox autoTempTickBox;
         
-        private void InitProjSpecific()
+        partial void InitProjSpecific()
         {
             var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", "", GuiFrame);
             button.OnPressed = () =>

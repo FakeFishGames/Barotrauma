@@ -70,6 +70,8 @@ namespace Barotrauma.Items.Components
             InitProjSpecific();
         }
 
+        partial void InitProjSpecific();
+
         public override void Move(Vector2 amount)
         {
             base.Move(amount);

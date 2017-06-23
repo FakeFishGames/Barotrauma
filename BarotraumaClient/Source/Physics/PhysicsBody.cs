@@ -95,7 +95,7 @@ namespace Barotrauma
                 1.0f, SpriteEffects.None, 0.0f);
         }
 
-        private void DisposeProjSpecific()
+        partial void DisposeProjSpecific()
         {
             if (bodyShapeTexture != null)
             {

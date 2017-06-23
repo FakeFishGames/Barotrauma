@@ -9,7 +9,7 @@ namespace Barotrauma.Items.Components
 {
     partial class PowerContainer : Powered, IDrawableComponent, IServerSerializable, IClientSerializable
     {
-        private void InitProjSpecific()
+        partial void InitProjSpecific()
         {
             if (canBeSelected)
             {

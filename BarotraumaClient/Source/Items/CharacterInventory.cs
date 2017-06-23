@@ -18,7 +18,7 @@ namespace Barotrauma
 
         private GUIButton[] useOnSelfButton;
 
-        void InitProjSpecific()
+        partial void InitProjSpecific()
         {
             useOnSelfButton = new GUIButton[2];
 

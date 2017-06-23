@@ -32,6 +32,8 @@ namespace Barotrauma
             InitProjSpecific();
         }
 
+        partial void InitProjSpecific();
+
         private bool UseItemOnSelf(int slotIndex)
         {
             if (Items[slotIndex] == null) return false;

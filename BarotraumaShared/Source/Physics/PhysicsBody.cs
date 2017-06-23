@@ -535,5 +535,6 @@ namespace Barotrauma
             DisposeProjSpecific();
         }
 
+        partial void DisposeProjSpecific();
     }
 }
