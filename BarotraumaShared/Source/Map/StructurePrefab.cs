@@ -175,7 +175,7 @@ namespace Barotrauma
                     //don't allow resizing width/height to zero
                    if ((!resizeHorizontal || placeSize.X != 0.0f) && (!resizeVertical || placeSize.Y != 0.0f))
                     {
-                        newRect.Location -= Submarine.MainSub.Position.ToPoint();
+                        newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
 
                         var structure = new Structure(newRect, this, Submarine.MainSub);
                         structure.Submarine = Submarine.MainSub;

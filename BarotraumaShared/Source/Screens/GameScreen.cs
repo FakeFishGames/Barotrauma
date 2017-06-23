@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 #if CLIENT
-using Microsoft.Xna.Framework.Input;
 #endif
 
 namespace Barotrauma

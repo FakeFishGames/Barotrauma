@@ -307,7 +307,7 @@ namespace Barotrauma
 
                 Rectangle dockedSubBorders = dockedSub.Borders;
                 dockedSubBorders.Y -= dockedSubBorders.Height;
-                dockedSubBorders.Location += diff.ToPoint();
+                dockedSubBorders.Location += MathUtils.ToPoint(diff);
 
                 dockedBorders = Rectangle.Union(dockedBorders, dockedSubBorders);
             }
@@ -740,7 +740,7 @@ namespace Barotrauma
             foreach (Submarine sub in Submarine.Loaded)
             {
                 Rectangle subBorders = sub.Borders;
-                subBorders.Location += sub.HiddenSubPosition.ToPoint() - new Microsoft.Xna.Framework.Point(0, sub.Borders.Height);
+                subBorders.Location += MathUtils.ToPoint(sub.HiddenSubPosition) - new Microsoft.Xna.Framework.Point(0, sub.Borders.Height);
 
                 subBorders.Inflate(500.0f, 500.0f);
 

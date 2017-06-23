@@ -5,7 +5,6 @@ using System.Xml.Linq;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 //using Microsoft.Xna.Framework.Graphics;
-//using Microsoft.Xna.Framework.Input;
 using System.Collections.ObjectModel;
 using Barotrauma.Items.Components;
 using FarseerPhysics.Dynamics;
@@ -181,7 +180,7 @@ namespace Barotrauma
             borders.Width += outsideWaypointDist * 2;
             borders.Height += outsideWaypointDist * 2;
 
-            borders.Location -= submarine.HiddenSubPosition.ToPoint();
+            borders.Location -= MathUtils.ToPoint(submarine.HiddenSubPosition);
                 
             if (borders.Width <= outSideWaypointInterval*2)
             {

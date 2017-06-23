@@ -72,6 +72,18 @@ namespace Microsoft.Xna.Framework
             return value;
         }
 
+        public static int Clamp(int value, int min, int max)
+        {
+            // First we check to see if we're greater than the max
+            value = (value > max) ? max : value;
+
+            // Then we check to see if we're less than the min.
+            value = (value < min) ? min : value;
+
+            // There's no check to see if min > max.
+            return value;
+        }
+
         public static float Distance(float value1, float value2)
         {
             return Math.Abs(value1 - value2);

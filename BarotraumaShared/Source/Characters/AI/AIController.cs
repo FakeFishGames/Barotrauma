@@ -4,9 +4,8 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    class AIController : ISteerable
+    partial class AIController : ISteerable
     {
-
         public enum AiState { None, Attack, GoTo, Escape }
         public enum SteeringState { Wander, Seek, Escape }
 
@@ -56,8 +55,6 @@ namespace Barotrauma
 
             Enabled = true;
         }
-
-        public virtual void DebugDraw(SpriteBatch spriteBatch) { }
 
         public virtual void OnAttacked(IDamageable attacker, float amount) { }
 
