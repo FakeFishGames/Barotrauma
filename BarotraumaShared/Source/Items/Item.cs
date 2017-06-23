@@ -293,11 +293,11 @@ namespace Barotrauma
 
         public override string ToString()
         {
-/*#if CLIENT
+#if CLIENT
             return (GameMain.DebugDraw) ? Name + "(ID: " + ID + ")" : Name;
-#elif SERVER*/
+#elif SERVER
             return Name + "(ID: " + ID + ")";
-//#endif
+#endif
         }
 
         public List<IPropertyObject> AllPropertyObjects
@@ -1304,7 +1304,6 @@ namespace Barotrauma
         
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null) 
         {
-            DebugConsole.NewMessage(ToString(), Color.Magenta);
             if (extraData == null || extraData.Length == 0 || !(extraData[0] is NetEntityEvent.Type))
             {
                 return;
