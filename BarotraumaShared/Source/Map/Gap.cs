@@ -189,7 +189,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(Camera cam, float deltaTime)
+        public override void Update(float deltaTime, Camera cam)
         {
             flowForce = Vector2.Zero;
 

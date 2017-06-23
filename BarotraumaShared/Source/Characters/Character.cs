@@ -1230,7 +1230,7 @@ namespace Barotrauma
             }
         }
 
-        public static void UpdateAll(Camera cam, float deltaTime)
+        public static void UpdateAll(float deltaTime, Camera cam)
         {
             if (GameMain.Client == null)
             {
@@ -1258,11 +1258,11 @@ namespace Barotrauma
 
             for (int i = 0; i < CharacterList.Count; i++)
             {
-                CharacterList[i].Update(cam, deltaTime);
+                CharacterList[i].Update(deltaTime, cam);
             }
         }
 
-        public virtual void Update(Camera cam, float deltaTime)
+        public virtual void Update(float deltaTime, Camera cam)
         {
             if (GameMain.Client != null && this == Controlled && !isSynced) return;
 

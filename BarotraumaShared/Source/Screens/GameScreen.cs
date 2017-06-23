@@ -81,7 +81,7 @@ namespace Barotrauma
 #if CLIENT
             if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
 
-            BackgroundCreatureManager.Update(cam, (float)deltaTime);
+            BackgroundCreatureManager.Update((float)deltaTime, cam);
 
             GameMain.ParticleManager.Update((float)deltaTime);
             
@@ -100,7 +100,7 @@ namespace Barotrauma
             }
 #endif
 
-            Character.UpdateAll(cam, (float)deltaTime);
+            Character.UpdateAll((float)deltaTime, cam);
 
             StatusEffect.UpdateAll((float)deltaTime);
 
@@ -123,11 +123,11 @@ namespace Barotrauma
                 pb.SetPrevTransform(pb.SimPosition, pb.Rotation);
             }
 
-            MapEntity.UpdateAll(cam, (float)deltaTime);
+            MapEntity.UpdateAll((float)deltaTime, cam);
 
             Character.UpdateAnimAll((float)deltaTime);
 
-            Ragdoll.UpdateAll(cam, (float)deltaTime);
+            Ragdoll.UpdateAll((float)deltaTime, cam);
 
             foreach (Submarine sub in Submarine.Loaded)
             {

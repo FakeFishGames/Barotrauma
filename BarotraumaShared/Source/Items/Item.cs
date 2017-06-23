@@ -757,9 +757,8 @@ namespace Barotrauma
         }
 
 
-        public override void Update(Camera cam, float deltaTime)
+        public override void Update(float deltaTime, Camera cam)
         {
-
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
             foreach (ItemComponent ic in components)

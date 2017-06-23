@@ -609,11 +609,11 @@ namespace Barotrauma
             }
         }
 
-        public static void UpdateAll(Camera cam, float deltaTime)
+        public static void UpdateAll(float deltaTime, Camera cam)
         {
             foreach (Ragdoll r in list)
             {
-                r.Update(cam, deltaTime);
+                r.Update(deltaTime, cam);
             }
         }
 
@@ -740,7 +740,7 @@ namespace Barotrauma
 
         protected bool levitatingCollider = true;
 
-        public void Update(Camera cam, float deltaTime)
+        public void Update(float deltaTime, Camera cam)
         {
             if (!character.Enabled || Frozen) return;
 

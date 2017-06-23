@@ -103,7 +103,7 @@ namespace Barotrauma
             {
                 Character.UpdateAnimAll((float)deltaTime);
 
-                Ragdoll.UpdateAll(cam, (float)deltaTime);
+                Ragdoll.UpdateAll((float)deltaTime, cam);
 
                 GameMain.World.Step((float)deltaTime);
             }                                                
