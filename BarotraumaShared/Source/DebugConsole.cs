@@ -68,7 +68,7 @@ namespace Barotrauma
 
             return commands.ToArray();
         }
-
+        
         public static void ExecuteCommand(string command, GameMain game)
         {
             if (string.IsNullOrWhiteSpace(command)) return;

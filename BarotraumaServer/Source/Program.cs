@@ -20,8 +20,6 @@ namespace Barotrauma
     /// </summary>
     public static class Program
     {
-        private static int restartAttempts;
-
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -65,10 +63,6 @@ namespace Barotrauma
             if (GameMain.Server != null)
             {
                 sb.AppendLine("Server (" + (GameMain.Server.GameStarted ? "Round had started)" : "Round hadn't been started)"));
-            }
-            else if (GameMain.Client != null)
-            {
-                sb.AppendLine("Client (" + (GameMain.Client.GameStarted ? "Round had started)" : "Round hadn't been started)"));
             }
 
             sb.AppendLine("\n");

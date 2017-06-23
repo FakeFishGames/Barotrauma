@@ -122,8 +122,7 @@ namespace Barotrauma
             get { return (int)missionTypeBlock.UserData; }
             set { missionTypeBlock.UserData = value; }
         }
-
-
+        
         public List<JobPrefab> JobPreferences
         {
             get

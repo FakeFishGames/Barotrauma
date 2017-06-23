@@ -46,14 +46,69 @@ namespace Barotrauma
                     break;
                 case "say":
                 case "msg":
-                    string text = "";
-                    for (int i=1;i<commands.Count();i++)
-                    {
-                        if (!string.IsNullOrEmpty(text)) text += " ";
-                        text += commands[i];
-                    }
+                    string text = string.Join(" ", commands.Skip(1));
                     if (commands[0].ToLower() == "say") text = "HOST: " + text;
                     GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
+                    break;
+                case "servername":
+                    GameMain.Server.Name = string.Join(" ", commands.Skip(1));
+                    GameMain.NetLobbyScreen.ChangeServerName(string.Join(" ", commands.Skip(1)));
+                    break;
+                case "servermsg":
+                    GameMain.NetLobbyScreen.ChangeServerMessage(string.Join(" ", commands.Skip(1)));
+                    break;
+                case "gamemode":
+                    {
+                        int index = -1;
+                        if (int.TryParse(string.Join(" ", commands.Skip(1)), out index))
+                        {
+                            GameMain.NetLobbyScreen.SelectedModeIndex = index;
+                        }
+                        else
+                        {
+                            GameMain.NetLobbyScreen.SelectedModeName = string.Join(" ", commands.Skip(1));
+                        }
+                        DebugConsole.NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
+                    }
+                    break;
+                case "mission":
+                    {
+                        int index = -1;
+                        if (int.TryParse(string.Join(" ", commands.Skip(1)), out index))
+                        {
+                            GameMain.NetLobbyScreen.MissionTypeIndex = index;
+                        }
+                        else
+                        {
+                            GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", commands.Skip(1));
+                        }
+                        DebugConsole.NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
+                    }
+                    break;
+                case "sub":
+                case "submarine":
+                    {
+                        Submarine sub = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", commands.Skip(1)).ToLower());
+
+                        if (sub != null)
+                        {
+                            GameMain.NetLobbyScreen.SelectedSub = sub;
+                        }
+                        sub = GameMain.NetLobbyScreen.SelectedSub;
+                        DebugConsole.NewMessage("Selected sub: " + sub.Name + (sub.HasTag(SubmarineTag.Shuttle) ? " (shuttle)" : ""), Color.Cyan);
+                    }
+                    break;
+                case "shuttle":
+                    {
+                        Submarine shuttle = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", commands.Skip(1)).ToLower());
+
+                        if (shuttle != null)
+                        {
+                            GameMain.NetLobbyScreen.SelectedShuttle = shuttle;
+                        }
+                        shuttle = GameMain.NetLobbyScreen.SelectedShuttle;
+                        DebugConsole.NewMessage("Selected shuttle: " + shuttle.Name + (shuttle.HasTag(SubmarineTag.Shuttle) ? "" : " (not shuttle)"), Color.Cyan);
+                    }
                     break;
                 case "startgame":
                 case "startround":
