@@ -35,7 +35,7 @@ namespace Barotrauma
             list.Add(this);
         }
 
-        private void LoadTexture(ref Vector4 sourceVector,ref bool shouldReturn)
+        partial void LoadTexture(ref Vector4 sourceVector,ref bool shouldReturn)
         {
             texture = LoadTexture(this.file);
 
@@ -49,7 +49,7 @@ namespace Barotrauma
             if (sourceVector.W == 0.0f) sourceVector.W = texture.Height;
         }
 
-        private void CalculateSourceRect()
+        partial void CalculateSourceRect()
         {
             sourceRect = new Rectangle(0, 0, texture.Width, texture.Height);
         }
@@ -261,7 +261,7 @@ namespace Barotrauma
             }
         }
 
-        private void DisposeTexture()
+        partial void DisposeTexture()
         {
             //check if another sprite is using the same texture
             foreach (Sprite s in list)

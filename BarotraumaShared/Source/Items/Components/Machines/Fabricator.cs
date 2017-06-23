@@ -106,6 +106,8 @@ namespace Barotrauma.Items.Components
             InitProjSpecific();
         }
 
+        partial void InitProjSpecific();
+
         public override bool Select(Character character)
         {
             CheckFabricableItems(character);

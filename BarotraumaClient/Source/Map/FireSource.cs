@@ -14,7 +14,7 @@ namespace Barotrauma
 
         private LightSource lightSource;
 
-        private void UpdateProjSpecific(float growModifier)
+        partial void UpdateProjSpecific(float growModifier)
         {
             if (hull.FireSources.Any(fs => fs != this && fs.size.X > size.X))
             {

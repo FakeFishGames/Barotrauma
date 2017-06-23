@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
     {
         private GUITickBox isActiveTickBox;
 
-        private void InitProjSpecific()
+        partial void InitProjSpecific()
         {
             isActiveTickBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Running", Alignment.TopLeft, GuiFrame);
             isActiveTickBox.OnSelected = (GUITickBox box) =>

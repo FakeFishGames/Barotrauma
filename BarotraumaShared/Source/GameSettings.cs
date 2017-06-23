@@ -66,5 +66,6 @@ namespace Barotrauma
             }
         }
 
+        partial void InitProjSpecific(XDocument doc);
     }
 }

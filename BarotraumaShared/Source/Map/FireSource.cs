@@ -169,6 +169,8 @@ namespace Barotrauma
             if (size.X < 1.0f) Remove();
         }
 
+        partial void UpdateProjSpecific(float growModifier);
+
         private void OnChangeHull(Vector2 pos, Hull particleHull)
         {
             if (particleHull == hull || particleHull==null) return;

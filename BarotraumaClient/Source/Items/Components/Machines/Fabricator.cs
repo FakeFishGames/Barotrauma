@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
         private GUIProgressBar progressBar;
         private GUIButton activateButton;
 
-        private void InitProjSpecific()
+        partial void InitProjSpecific()
         {
             GuiFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 

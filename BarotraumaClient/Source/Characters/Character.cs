@@ -81,7 +81,7 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateControlled(float deltaTime)
+        partial void UpdateControlled(float deltaTime)
         {
             if (controlled == this)
             {
@@ -239,7 +239,7 @@ namespace Barotrauma
             selectedSound.Sound.Play(1.0f, selectedSound.Range, AnimController.WorldPosition);
         }
 
-        private void ImplodeFX()
+        partial void ImplodeFX()
         {
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
 

@@ -104,7 +104,9 @@ namespace Barotrauma.Items.Components
 
             InitProjSpecific();
         }
-        
+
+        partial void InitProjSpecific();
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (unsentChanges)

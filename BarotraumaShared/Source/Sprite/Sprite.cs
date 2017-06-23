@@ -60,6 +60,9 @@ namespace Barotrauma
             return FilePath + ": " + sourceRect;
         }
 
+        partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn);
+        partial void CalculateSourceRect();
+
         public Sprite(XElement element, string path = "", string file = "")
         {
             if (file == "")
@@ -157,6 +160,8 @@ namespace Barotrauma
 
             DisposeTexture();
         }
+
+        partial void DisposeTexture();
     }
 }
 

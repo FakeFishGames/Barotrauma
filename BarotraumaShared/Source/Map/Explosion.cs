@@ -80,6 +80,8 @@ namespace Barotrauma
 
         }
 
+        partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);
+
         private Vector2 ClampParticlePos(Vector2 particlePos, Hull hull)
         {
             if (hull == null) return particlePos;

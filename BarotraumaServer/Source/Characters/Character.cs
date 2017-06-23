@@ -28,15 +28,5 @@ namespace Barotrauma
         {
             keys = null;
         }
-
-        private void UpdateControlled(float deltaTime)
-        {
-            //do nothing
-        }
-
-        private void ImplodeFX()
-        {
-            //do nothing
-        }
     }
 }

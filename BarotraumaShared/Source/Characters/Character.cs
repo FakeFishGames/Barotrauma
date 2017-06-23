@@ -1442,6 +1442,8 @@ namespace Barotrauma
             if (!IsDead) LockHands = false;
         }
 
+        partial void UpdateControlled(float deltaTime);
+
         private void UpdateOxygen(float deltaTime)
         {
             float prevOxygen = oxygen;
@@ -1617,6 +1619,8 @@ namespace Barotrauma
                 joint.LimitEnabled = false;
             }
         }
+
+        partial void ImplodeFX();
         
         public void Kill(CauseOfDeath causeOfDeath, bool isNetworkMessage = false)
         {

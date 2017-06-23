@@ -35,7 +35,7 @@ namespace Barotrauma.Items.Components
             set { maintainPosTickBox.Selected = value; }
         }
 
-        private void InitProjSpecific()
+        partial void InitProjSpecific()
         {
             autopilotTickBox = new GUITickBox(new Rectangle(0, 25, 20, 20), "Autopilot", Alignment.TopLeft, GuiFrame);
             autopilotTickBox.OnSelected = (GUITickBox box) =>

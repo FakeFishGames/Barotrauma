@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     partial class Explosion
     {
-        private void ExplodeProjSpecific(Vector2 worldPosition,Hull hull)
+        partial void ExplodeProjSpecific(Vector2 worldPosition,Hull hull)
         {
 
             if (shockwave)

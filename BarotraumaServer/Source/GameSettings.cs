@@ -14,10 +14,6 @@ namespace Barotrauma
 
     public partial class GameSettings
     {
-        private void InitProjSpecific(XDocument doc)
-        {
-            //do nothing
-        }
         public void Save(string filePath)
         {
             XDocument doc = new XDocument();

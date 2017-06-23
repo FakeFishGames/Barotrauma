@@ -17,10 +17,5 @@ namespace Barotrauma.Items.Components
         public bool MaintainPos;
         public bool LevelStartSelected;
         public bool LevelEndSelected;
-        
-        private void InitProjSpecific()
-        {
-            //do nothing
-        }
     }
 }
