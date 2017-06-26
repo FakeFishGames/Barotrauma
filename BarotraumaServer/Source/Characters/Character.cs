@@ -24,7 +24,7 @@ namespace Barotrauma
             }
         }
 
-        private void InitProjSpecific(XDocument doc)
+        partial void InitProjSpecific(XDocument doc)
         {
             keys = null;
         }

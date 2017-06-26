@@ -2,9 +2,7 @@
 using System;
 using System.Xml.Linq;
 using System.Collections.Generic;
-#if CLIENT
-using Barotrauma.Particles;
-#endif
+
 
 namespace Barotrauma
 {
@@ -31,7 +29,7 @@ namespace Barotrauma
         }
     }
 
-    class Attack
+    partial class Attack
     {
         public readonly float Range;
         public readonly float Duration;
@@ -49,13 +47,7 @@ namespace Barotrauma
         public readonly float Torque;
 
         public readonly float TargetForce;
-
-#if CLIENT
-        private Sound sound;
-
-        private ParticleEmitterPrefab particleEmitterPrefab;
-#endif
-
+        
         public readonly float Stun;
 
         private float priority;
@@ -105,30 +97,19 @@ namespace Barotrauma
             Torque = ToolBox.GetAttributeFloat(element, "torque", 0.0f);
 
             Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
-
-#if CLIENT
-            string soundPath = ToolBox.GetAttributeString(element, "sound", "");
-            if (!string.IsNullOrWhiteSpace(soundPath))
-            {
-                sound = Sound.Load(soundPath);
-            }
-#endif
-                      
+ 
             Range = ToolBox.GetAttributeFloat(element, "range", 0.0f);
 
             Duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
 
             priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
-            
+
+            InitProjSpecific(element);
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-#if CLIENT
-                    case "particleemitter":
-                        particleEmitterPrefab = new ParticleEmitterPrefab(subElement);
-                        break;
-#endif
                     case "statuseffect":
                         if (statusEffects == null)
                         {
@@ -140,22 +121,12 @@ namespace Barotrauma
 
             }
         }
-
-
+        partial void InitProjSpecific(XElement element);
+        
         public AttackResult DoDamage(IDamageable attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
-#if CLIENT
-            if (particleEmitterPrefab != null)
-            {
-                particleEmitterPrefab.Emit(worldPosition);
-            }
+            DamageParticles(worldPosition);
 
-            if (sound != null)
-            {
-                sound.Play(1.0f, 500.0f, worldPosition);
-            }
-#endif
-            
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
 
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
@@ -179,5 +150,6 @@ namespace Barotrauma
 
             return attackResult;
         }
+        partial void DamageParticles(Vector2 worldPosition);
     }
 }

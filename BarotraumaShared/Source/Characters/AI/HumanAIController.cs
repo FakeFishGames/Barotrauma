@@ -37,15 +37,9 @@ namespace Barotrauma
 
             updateObjectiveTimer = Rand.Range(0.0f, UpdateObjectiveInterval);
 
-#if CLIENT
-            if (GameMain.GameSession!=null && GameMain.GameSession.CrewManager!=null)
-            {
-                CurrentOrder = Order.PrefabList.Find(o => o.Name.ToLowerInvariant() == "dismissed");
-                objectiveManager.SetOrder(CurrentOrder, "");
-                GameMain.GameSession.CrewManager.SetCharacterOrder(Character, CurrentOrder);
-            }
-#endif
+            InitProjSpecific();
         }
+        partial void InitProjSpecific();
 
         public override void Update(float deltaTime)
         {
@@ -154,10 +148,9 @@ namespace Barotrauma
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option);
 
-#if CLIENT
-            GameMain.GameSession.CrewManager.SetCharacterOrder(Character, order);
-#endif
+            SetOrderProjSpecific(order);
         }
+        partial void SetOrderProjSpecific(Order order);
 
         public override void SelectTarget(AITarget target)
         {

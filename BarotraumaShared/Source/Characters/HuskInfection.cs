@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class HuskInfection
+    partial class HuskInfection
     {
         public enum InfectionState
         {
@@ -47,9 +47,11 @@ namespace Barotrauma
 
         public void Update(float deltaTime, Character character)
         {
+            float prevTimer = IncubationTimer;
+
             if (IncubationTimer < 0.5f)
             {
-                UpdateDormantState(deltaTime, character);   
+                UpdateDormantState(deltaTime, character);
             }
             else if (IncubationTimer < 1.0f)
             {
@@ -59,7 +61,9 @@ namespace Barotrauma
             {
                 UpdateActiveState(deltaTime, character);
             }
+            UpdateProjSpecific(prevTimer,character);
         }
+        partial void UpdateProjSpecific(float prevTimer, Character character);
 
         private void UpdateDormantState(float deltaTime, Character character)
         {
@@ -70,26 +74,12 @@ namespace Barotrauma
             IncubationTimer += deltaTime / IncubationDuration;
 
             if (Character.Controlled != character) return;
-
-#if CLIENT
-            if (prevTimer % 0.1f > 0.05f && IncubationTimer % 0.1f < 0.05f)
-            {
-                GUI.AddMessage(InfoTextManager.GetInfoText("HuskDormant"), Color.Red, 4.0f);
-            }
-#endif
         }
 
         private void UpdateTransitionState(float deltaTime, Character character)
         {
             IncubationTimer += deltaTime / IncubationDuration;
-
-#if CLIENT
-            if (state == InfectionState.Dormant && Character.Controlled == character)
-            {
-                new GUIMessageBox("", InfoTextManager.GetInfoText("HuskCantSpeak"));
-            }
-#endif
-
+            
             state = InfectionState.Transition;
         }
 
@@ -97,9 +87,6 @@ namespace Barotrauma
         {
             if (state != InfectionState.Active)
             {
-#if CLIENT
-                if (Character.Controlled==character) new GUIMessageBox("", InfoTextManager.GetInfoText("HuskActivate"));
-#endif
                 ActivateHusk(character);
                 state = InfectionState.Active;
             }

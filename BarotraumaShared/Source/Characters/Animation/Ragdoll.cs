@@ -163,6 +163,11 @@ namespace Barotrauma
 
                 foreach (Limb limb in Limbs)
                 {
+                    if (limb.body == null)
+                    {
+                        DebugConsole.ThrowError("Limb has no body! (" + (character != null ? character.Name : "Unknown character") + ", " + limb.type.ToString());
+                        continue;
+                    }
                     limb.body.Enabled = !simplePhysicsEnabled;
                 }
 
@@ -503,19 +508,12 @@ namespace Barotrauma
             if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
                                     
             float impact = Vector2.Dot(velocity, -normal);
-
-            float volume = Math.Min(impact-3.0f, 1.0f);
+            
+            ImpactProjSpecific(impact,f1.Body);
+            
             if (f1.Body.UserData is Limb)
             {
-                Limb limb = (Limb)f1.Body.UserData;
 
-#if CLIENT
-                if (impact > 3.0f && limb.HitSound != null && limb.soundTimer <= 0.0f)
-                {
-                    limb.soundTimer = Limb.SoundInterval;
-                    limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
-                }
-#endif
             }
             else if (f1.Body == Collider.FarseerBody)
             {
@@ -524,16 +522,13 @@ namespace Barotrauma
                     if (impact > ImpactTolerance)
                     {
                         character.AddDamage(CauseOfDeath.Damage, impact - ImpactTolerance, null);
-#if CLIENT
-                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, Collider);
-#endif
+
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                     }
-                }                              
-
-                if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
+                }
             }
         }
+        partial void ImpactProjSpecific(float impact, Body body);
 
         public virtual void Flip()
         {
@@ -829,30 +824,11 @@ namespace Barotrauma
                     //the limb has gone through the surface of the water
                     if (Math.Abs(limb.LinearVelocity.Y) > 5.0f && limb.inWater != prevInWater)
                     {
-#if CLIENT
-                        //create a splash particle
-                        GameMain.ParticleManager.CreateParticle("watersplash",
-                            new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
-                            new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 20.0f)),
-                            0.0f, limbHull);
-
-                        GameMain.ParticleManager.CreateParticle("bubbles",
-                            new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
-                            limb.LinearVelocity * 0.001f,
-                            0.0f, limbHull);
-#endif
+                        Splash(limb, limbHull);
 
                         //if the Character dropped into water, create a wave
                         if (limb.LinearVelocity.Y < 0.0f)
                         {
-                            if (splashSoundTimer <= 0.0f)
-                            {
-#if CLIENT
-                                SoundPlayer.PlaySplashSound(limb.WorldPosition, Math.Abs(limb.LinearVelocity.Y) + Rand.Range(-5.0f, 0.0f));
-#endif
-                                splashSoundTimer = 0.5f;
-                            }
-
                             //1.0 when the limb is parallel to the surface of the water
                             // = big splash and a large impact
                             float parallel = (float)Math.Abs(Math.Sin(limb.Rotation));
@@ -864,12 +840,6 @@ namespace Barotrauma
                     }
                 }
 
-#if CLIENT
-                if (limb.LightSource != null)
-                {
-                    limb.LightSource.Rotation = dir == Direction.Right ? limb.body.DrawRotation : limb.body.DrawRotation - MathHelper.Pi;
-                }
-#endif
                 limb.Update(deltaTime);
             }
             
@@ -1009,6 +979,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        partial void Splash(Limb limb, Hull limbHull);
 
         protected float GetFloorY(Limb refLimb = null)
         {

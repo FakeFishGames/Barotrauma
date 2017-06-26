@@ -45,8 +45,10 @@ namespace Barotrauma
             get { return hudProgressBars; }
         }
 
-        private void InitProjSpecific(XDocument doc)
+        partial void InitProjSpecific(XDocument doc)
         {
+            soundInterval = ToolBox.GetAttributeFloat(doc.Root, "soundinterval", 10.0f);
+
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
 
             for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
@@ -65,6 +67,195 @@ namespace Barotrauma
             hudProgressBars = new Dictionary<object, HUDProgressBar>();
         }
 
+
+        /// <summary>
+        /// Control the Character according to player input
+        /// </summary>
+        public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
+        {
+            if (!DisableControls)
+            {
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    keys[i].SetState();
+                }
+            }
+            else
+            {
+                foreach (Key key in keys)
+                {
+                    if (key == null) continue;
+                    key.Reset();
+                }
+            }
+
+            if (moveCam && needsAir)
+            {
+                if (pressureProtection < 80.0f &&
+                    (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 50.0f))
+                {
+                    float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
+
+                    cam.Zoom = MathHelper.Lerp(cam.Zoom,
+                        (pressure / 50.0f) * Rand.Range(1.0f, 1.05f),
+                        (pressure - 50.0f) / 50.0f);
+                }
+                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
+            }
+
+            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
+            if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
+            {
+                cursorPosition -= AnimController.CurrentHull.Submarine.Position;
+            }
+
+            Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
+            
+            if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+            {
+                Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
+                Structure structure = null;
+                if (body != null) structure = body.UserData as Structure;
+                if (structure != null)
+                {
+                    if (!structure.CastShadow && moveCam)
+                    {
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 500.0f, 0.05f);
+                    }
+                }
+            }
+
+            if (!LockHands)
+            {
+                //find the closest item if selectkey has been hit, or if the Character is being
+                //controlled by the player (in order to highlight it)
+
+                if (findClosestTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)
+                {
+                    closestCharacter = FindClosestCharacter(mouseSimPos);
+                    if (closestCharacter != null && closestCharacter.info == null)
+                    {
+                        closestCharacter = null;
+                    }
+
+                    float closestItemDist = 0.0f;
+                    closestItem = FindClosestItem(mouseSimPos, out closestItemDist);
+
+                    if (closestCharacter != null && closestItem != null)
+                    {
+                        if (Vector2.DistanceSquared(closestCharacter.SimPosition, mouseSimPos) < ConvertUnits.ToSimUnits(closestItemDist) * ConvertUnits.ToSimUnits(closestItemDist))
+                        {
+                            if (selectedConstruction != closestItem) closestItem = null;
+                        }
+                        else
+                        {
+                            closestCharacter = null;
+                        }
+                    }
+
+                    findClosestTimer = 0.1f;
+                }
+                else
+                {
+                    findClosestTimer -= deltaTime;
+                }
+
+                if (selectedCharacter == null && closestItem != null)
+                {
+                    closestItem.IsHighlighted = true;
+                    if (!LockHands && closestItem.Pick(this))
+                    {
+
+                    }
+                }
+
+                if (IsKeyHit(InputType.Select))
+                {
+                    if (selectedCharacter != null)
+                    {
+                        DeselectCharacter();
+                    }
+                    else if (closestCharacter != null && closestCharacter.IsHumanoid && closestCharacter.CanBeSelected)
+                    {
+                        SelectCharacter(closestCharacter);
+                    }
+                }
+            }
+            else
+            {
+                if (selectedCharacter != null) DeselectCharacter();
+                selectedConstruction = null;
+                closestItem = null;
+                closestCharacter = null;
+            }
+
+            DisableControls = false;
+        }
+        
+        partial void UpdateControlled(float deltaTime,Camera cam)
+        {
+            if (controlled == this)
+            {
+                ControlLocalPlayer(deltaTime, cam);
+            }
+
+            Lights.LightManager.ViewTarget = this;
+            CharacterHUD.Update(deltaTime, this);
+
+            foreach (HUDProgressBar progressBar in hudProgressBars.Values)
+            {
+                progressBar.Update(deltaTime);
+            }
+
+            foreach (var pb in hudProgressBars.Where(pb => pb.Value.FadeTimer <= 0.0f).ToList())
+            {
+                hudProgressBars.Remove(pb.Key);
+            }
+        }
+
+        partial void DamageHUD(float amount)
+        {
+            if (controlled == this) CharacterHUD.TakeDamage(amount);
+        }
+
+        partial void UpdateOxygenProjSpecific(float prevOxygen)
+        {
+            if (prevOxygen > 0.0f && Oxygen <= 0.0f && controlled == this)
+            {
+                SoundPlayer.PlaySound("drown");
+            }
+        }
+
+        partial void KillProjSpecific()
+        {
+            if (GameMain.NetworkMember != null && Character.controlled == this)
+            {
+                string chatMessage = InfoTextManager.GetInfoText("Self_CauseOfDeath." + causeOfDeath.ToString());
+                if (GameMain.Client != null) chatMessage += " Your chat messages will only be visible to other dead players.";
+
+                GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
+                GameMain.LightManager.LosEnabled = false;
+                controlled = null;
+            }
+
+            PlaySound(CharacterSound.SoundType.Die);
+        }
+
+        partial void DisposeProjSpecific()
+        {
+            if (controlled == this) controlled = null;
+
+            if (GameMain.GameSession?.CrewManager != null &&
+                GameMain.GameSession.CrewManager.characters.Contains(this))
+            {
+                GameMain.GameSession.CrewManager.characters.Remove(this);
+            }
+
+            if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
+
+            if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
+        }
+
         public static void AddAllToGUIUpdateList()
         {
             for (int i = 0; i < CharacterList.Count; i++)
@@ -80,26 +271,7 @@ namespace Barotrauma
                 CharacterHUD.AddToGUIUpdateList(this);
             }
         }
-
-        partial void UpdateControlled(float deltaTime)
-        {
-            if (controlled == this)
-            {
-                Lights.LightManager.ViewTarget = this;
-                CharacterHUD.Update(deltaTime, this);
-
-                foreach (HUDProgressBar progressBar in hudProgressBars.Values)
-                {
-                    progressBar.Update(deltaTime);
-                }
-
-                foreach (var pb in hudProgressBars.Where(pb => pb.Value.FadeTimer <= 0.0f).ToList())
-                {
-                    hudProgressBars.Remove(pb.Key);
-                }
-            }
-        }
-
+        
         public void Draw(SpriteBatch spriteBatch)
         {
             if (!Enabled) return;

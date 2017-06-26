@@ -5,6 +5,21 @@ namespace Barotrauma
 {
     partial class HumanAIController : AIController
     {
+        partial void InitProjSpecific()
+        {
+            if (GameMain.GameSession != null && GameMain.GameSession.CrewManager != null)
+            {
+                CurrentOrder = Order.PrefabList.Find(o => o.Name.ToLowerInvariant() == "dismissed");
+                objectiveManager.SetOrder(CurrentOrder, "");
+                GameMain.GameSession.CrewManager.SetCharacterOrder(Character, CurrentOrder);
+            }
+        }
+
+        partial void SetOrderProjSpecific(Order order)
+        {
+            GameMain.GameSession.CrewManager.SetCharacterOrder(Character, order);
+        }
+
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (selectedAiTarget != null)
