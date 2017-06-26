@@ -13,6 +13,58 @@ namespace Barotrauma
 {
     partial class Ragdoll
     {
+        partial void ImpactProjSpecific(float impact, Body body)
+        {
+            float volume = Math.Min(impact - 3.0f, 1.0f);
+
+            if (body.UserData is Limb)
+            {
+                Limb limb = (Limb)body.UserData;
+
+                if (impact > 3.0f && limb.HitSound != null && limb.soundTimer <= 0.0f)
+                {
+                    limb.soundTimer = Limb.SoundInterval;
+                    limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
+                }
+            }
+            else if (body == Collider.FarseerBody)
+            {
+                if (!character.IsRemotePlayer || GameMain.Server != null)
+                {
+                    if (impact > ImpactTolerance)
+                    {
+                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, Collider);
+                    }
+                }
+
+                if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
+            }
+        }
+
+        partial void Splash(Limb limb, Hull limbHull)
+        {
+            //create a splash particle
+            GameMain.ParticleManager.CreateParticle("watersplash",
+                new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
+                new Vector2(0.0f, Math.Abs(-limb.LinearVelocity.Y * 20.0f)),
+                0.0f, limbHull);
+
+            GameMain.ParticleManager.CreateParticle("bubbles",
+                new Vector2(limb.Position.X, limbHull.Surface) + limbHull.Submarine.Position,
+                limb.LinearVelocity * 0.001f,
+                0.0f, limbHull);
+
+            //if the Character dropped into water, create a wave
+            if (limb.LinearVelocity.Y < 0.0f)
+            {
+                if (splashSoundTimer <= 0.0f)
+                {
+                    SoundPlayer.PlaySplashSound(limb.WorldPosition, Math.Abs(limb.LinearVelocity.Y) + Rand.Range(-5.0f, 0.0f));
+                    splashSoundTimer = 0.5f;
+                }
+            }
+        }
+
         public virtual void Draw(SpriteBatch spriteBatch)
         {
             if (simplePhysicsEnabled) return;

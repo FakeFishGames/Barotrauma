@@ -156,16 +156,25 @@ namespace Barotrauma.Networking
                     //it's been 10 seconds since this event was created
                     //kick everyone that hasn't received it yet, this is way too old
                     List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.lastRecvEntityEventID));
-
-                    toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
+                    toKick.ForEach(c =>
+                    {
+                        DebugConsole.NewMessage(c.name + " was kicked due to excessive desync (expected old event " + c.lastRecvEntityEventID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
+                        server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
+                    }
+                    );
                 }
 
                 if (events.Count > 0)
                 {
                     //the client is waiting for an event that we don't have anymore
                     //(the ID they're expecting is smaller than the ID of the first event in our list)
-                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent(events[0].ID, (UInt16)(c.lastRecvEntityEventID+1)));
-                    toKick.ForEach(c => server.DisconnectClient(c, "", "You have been disconnected because of excessive desync"));
+                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent(events[0].ID, (UInt16)(c.lastRecvEntityEventID + 1)));
+                    toKick.ForEach(c =>
+                    {
+                        DebugConsole.NewMessage(c.name + " was kicked due to excessive desync (expected " + c.lastRecvEntityEventID.ToString() + ", last available is " + events[0].ID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
+                        server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
+                    }
+                    );
                 }
             }
             

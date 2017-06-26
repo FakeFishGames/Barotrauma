@@ -69,6 +69,7 @@
     <Compile Include="Source\Characters\AI\EnemyAIController.cs" />
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
+    <Compile Include="Source\Characters\Attack.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreature.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreatureManager.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreaturePrefab.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Source\Characters\CharacterNetworking.cs" />
     <Compile Include="Source\Characters\CharacterSound.cs" />
     <Compile Include="Source\Characters\HUDProgressBar.cs" />
+    <Compile Include="Source\Characters\HuskInfection.cs" />
     <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />
     <Compile Include="Source\Characters\Limb.cs" />
     <Compile Include="Source\DebugConsole.cs" />

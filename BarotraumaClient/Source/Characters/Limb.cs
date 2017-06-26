@@ -15,13 +15,42 @@ namespace Barotrauma
 {
     partial class Limb
     {
-        public readonly LightSource LightSource;
+        public LightSource LightSource
+        {
+            get;
+            private set;
+        }
 
         Sound hitSound;
 
         public Sound HitSound
         {
             get { return hitSound; }
+        }
+
+        partial void InitProjSpecific(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "lightsource":
+                        LightSource = new LightSource(subElement);
+                        break;
+                    case "sound":
+                        hitSound = Sound.Load(ToolBox.GetAttributeString(subElement, "file", ""));
+                        break;
+                }
+            }
+        }
+
+        partial void UpdateProjSpecific()
+        {
+            if (LightSource != null)
+            {
+                LightSource.Rotation = dir == Direction.Right ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
+                LightSource.ParentSub = body.Submarine;
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch)

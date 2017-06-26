@@ -440,7 +440,7 @@ namespace Barotrauma
 
         public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi=true)
         {
-#if LINUX            
+#if LINUX
             if (!System.IO.File.Exists(file)) 
             {
 
@@ -556,10 +556,6 @@ namespace Barotrauma
 
             needsAir = ToolBox.GetAttributeBool(doc.Root, "needsair", false);
             drowningTime = ToolBox.GetAttributeFloat(doc.Root, "drowningtime", 10.0f);
-
-#if CLIENT
-            soundInterval = ToolBox.GetAttributeFloat(doc.Root, "soundinterval", 10.0f);
-#endif
             
             if (file == humanConfigFile)
             {
@@ -593,6 +589,7 @@ namespace Barotrauma
             //  - if an AICharacter, the server enables it when close enough to any of the players
             Enabled = GameMain.NetworkMember == null;
         }
+        partial void InitProjSpecific(XDocument doc);
 
         private static string humanConfigFile;
         public static string HumanConfigFile
@@ -1092,134 +1089,7 @@ namespace Barotrauma
 
             selectedCharacter = null;
         }
-
-        /// <summary>
-        /// Control the Character according to player input
-        /// </summary>
-        public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
-        {
-            if (!DisableControls)
-            {
-                for (int i = 0; i < keys.Length; i++ )
-                {
-                    keys[i].SetState();
-                }
-            }
-            else
-            {
-                foreach (Key key in keys)
-                {
-                    if (key == null) continue;
-                    key.Reset();
-                }
-            }
-
-            if (moveCam && needsAir)
-            {
-                if (pressureProtection < 80.0f && 
-                    (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 50.0f))
-                {
-                    float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
-
-                    cam.Zoom = MathHelper.Lerp(cam.Zoom,
-                        (pressure / 50.0f) * Rand.Range(1.0f, 1.05f),
-                        (pressure - 50.0f) / 50.0f);
-                }
-                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
-            }
-
-            cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
-            if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
-            {
-                cursorPosition -= AnimController.CurrentHull.Submarine.Position;
-            }
-
-            Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-
-#if CLIENT
-            if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
-            {
-                Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
-                Structure structure = null;
-                if (body != null) structure = body.UserData as Structure;
-                if (structure != null)
-                {
-                    if (!structure.CastShadow && moveCam)
-                    {
-                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 500.0f, 0.05f);
-                    }
-                }
-            }
-#endif
-
-            if (!LockHands)
-            {
-                //find the closest item if selectkey has been hit, or if the Character is being
-                //controlled by the player (in order to highlight it)
-
-                if (findClosestTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)
-                {
-                    closestCharacter = FindClosestCharacter(mouseSimPos);
-                    if (closestCharacter != null && closestCharacter.info==null)
-                    {
-                        closestCharacter = null;
-                    }
-
-                    float closestItemDist = 0.0f;
-                    closestItem = FindClosestItem(mouseSimPos, out closestItemDist);
-
-                    if (closestCharacter != null && closestItem != null)
-                    {
-                        if (Vector2.DistanceSquared(closestCharacter.SimPosition, mouseSimPos) < ConvertUnits.ToSimUnits(closestItemDist)*ConvertUnits.ToSimUnits(closestItemDist))
-                        {
-                            if (selectedConstruction != closestItem) closestItem = null;
-                        }
-                        else
-                        {
-                            closestCharacter = null;
-                        }
-                    }
-
-                    findClosestTimer = 0.1f;
-                }
-                else
-                {
-                    findClosestTimer -= deltaTime;
-                }
-
-                if (selectedCharacter == null && closestItem != null)
-                {
-                    closestItem.IsHighlighted = true;
-                    if (!LockHands && closestItem.Pick(this))
-                    {
-                        
-                    }
-                }
-
-                if (IsKeyHit(InputType.Select))
-                {
-                    if (selectedCharacter != null)
-                    {
-                        DeselectCharacter();
-                    }
-                    else if (closestCharacter != null && closestCharacter.IsHumanoid && closestCharacter.CanBeSelected)
-                    {
-                        SelectCharacter(closestCharacter);
-                    }
-                }
-            }
-            else
-            {
-                if (selectedCharacter != null) DeselectCharacter();
-                selectedConstruction = null;
-                closestItem = null;
-                closestCharacter = null;
-            }
-
-            DisableControls = false;
-        }
         
-
         public static void UpdateAnimAll(float deltaTime)
         {
             foreach (Character c in CharacterList)
@@ -1327,7 +1197,7 @@ namespace Barotrauma
                 }
             }
 
-            UpdateControlled(deltaTime);
+            UpdateControlled(deltaTime,cam);
 
             if (Stun > 0.0f)
             {
@@ -1343,11 +1213,6 @@ namespace Barotrauma
             {
                 UpdateUnconscious(deltaTime);
                 return;
-            }
-
-            if (controlled == this)
-            {
-                ControlLocalPlayer(deltaTime, cam);
             }
 
             Control(deltaTime, cam);
@@ -1442,19 +1307,14 @@ namespace Barotrauma
             if (!IsDead) LockHands = false;
         }
 
-        partial void UpdateControlled(float deltaTime);
+        partial void UpdateControlled(float deltaTime,Camera cam);
 
         private void UpdateOxygen(float deltaTime)
         {
             float prevOxygen = oxygen;
             Oxygen += deltaTime * (oxygenAvailable < 30.0f ? -5.0f : 10.0f);
 
-#if CLIENT
-            if (prevOxygen > 0.0f && Oxygen <= 0.0f && controlled == this)
-            {
-                SoundPlayer.PlaySound("drown");                
-            }
-#endif
+            UpdateOxygenProjSpecific(prevOxygen);
 
             PressureProtection -= deltaTime * 100.0f;
 
@@ -1469,6 +1329,7 @@ namespace Barotrauma
 
             OxygenAvailable += Math.Sign(hullAvailableOxygen - oxygenAvailable) * deltaTime * 50.0f;
         }
+        partial void UpdateOxygenProjSpecific(float prevOxygen);
 
         private void UpdateUnconscious(float deltaTime)
         {
@@ -1504,12 +1365,12 @@ namespace Barotrauma
             if (amount > 0.0f)
             {
                 lastAttackCauseOfDeath = causeOfDeath;
-#if CLIENT
-                if (controlled == this) CharacterHUD.TakeDamage(amount);
-#endif
+
+                DamageHUD(amount);
             }
             if (health <= minHealth) Kill(causeOfDeath);
         }
+        partial void DamageHUD(float amount);
 
         public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
@@ -1634,18 +1495,6 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember != null)
             {
-#if CLIENT
-                if (Character.controlled == this)
-                {
-                    string chatMessage = InfoTextManager.GetInfoText("Self_CauseOfDeath." + causeOfDeath.ToString());
-                    if (GameMain.Client!=null) chatMessage += " Your chat messages will only be visible to other dead players.";
-
-                    GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
-                    GameMain.LightManager.LosEnabled = false;
-                    controlled = null;
-                }
-#endif
-
                 if (GameMain.Server != null)
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
             }
@@ -1656,10 +1505,8 @@ namespace Barotrauma
 
             if (OnDeath != null) OnDeath(this, causeOfDeath);
 
-#if CLIENT
-            PlaySound(CharacterSound.SoundType.Die);
-#endif
-            
+            KillProjSpecific();
+
             isDead = true;
             
             this.causeOfDeath = causeOfDeath;
@@ -1693,6 +1540,7 @@ namespace Barotrauma
                 GameMain.GameSession.KillCharacter(this);
             }
         }
+        partial void KillProjSpecific();
 
         public void Revive(bool isNetworkMessage)
         {
@@ -1721,25 +1569,11 @@ namespace Barotrauma
 
             CharacterList.Remove(this);
 
-#if CLIENT
-            if (controlled == this) controlled = null;
-            
-            if (GameMain.GameSession?.CrewManager != null &&
-                GameMain.GameSession.CrewManager.characters.Contains(this))
-            {
-                GameMain.GameSession.CrewManager.characters.Remove(this);
-            }
-
-            if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
-#endif
+            DisposeProjSpecific();
 
             if (aiTarget != null) aiTarget.Remove();
 
             if (AnimController != null) AnimController.Remove();
-
-#if CLIENT
-            if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
-#endif
 
             if (selectedItems[0] != null) selectedItems[0].Drop(this);
             if (selectedItems[1] != null) selectedItems[1].Drop(this);
@@ -1750,5 +1584,6 @@ namespace Barotrauma
                 if (c.selectedCharacter == this) c.selectedCharacter = null;
             }
         }
+        partial void DisposeProjSpecific();
     }
 }

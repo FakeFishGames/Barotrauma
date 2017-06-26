@@ -9,9 +9,6 @@ using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-#if CLIENT
-using Barotrauma.Lights;
-#endif
 
 namespace Barotrauma
 {
@@ -303,18 +300,12 @@ namespace Barotrauma
                     case "attack":
                         attack = new Attack(subElement);
                         break;
-#if CLIENT
-                    case "lightsource":
-                        LightSource = new LightSource(subElement);
-
-                        break;
-                    case "sound":
-                        hitSound = Sound.Load(ToolBox.GetAttributeString(subElement, "file", ""));
-                        break;
-#endif
                 }
             }
+
+            InitProjSpecific(element);
         }
+        partial void InitProjSpecific(XElement element);
 
         public void MoveToPos(Vector2 pos, float force, bool pullFromCenter=false)
         {
@@ -411,12 +402,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-#if CLIENT
-            if (LightSource != null)
-            {
-                LightSource.ParentSub = body.Submarine;
-            }
-#endif
+            UpdateProjSpecific();
 
             if (!character.IsDead) damage = Math.Max(0.0f, damage-deltaTime*0.1f);
 
@@ -445,6 +431,7 @@ namespace Barotrauma
             //        SimPosition, Vector2.Zero);
             //}
         }
+        partial void UpdateProjSpecific();
 
         public void ActivateDamagedSprite()
         {

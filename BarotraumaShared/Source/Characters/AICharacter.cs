@@ -15,10 +15,9 @@ namespace Barotrauma
         public AICharacter(string file, Vector2 position, CharacterInfo characterInfo = null, bool isNetworkPlayer = false)
             : base(file, position, characterInfo, isNetworkPlayer)
         {
-#if CLIENT
-            soundTimer = Rand.Range(0.0f, soundInterval);
-#endif
+
         }
+        partial void InitProjSpecific();
 
         public void SetAI(AIController aiController)
         {
@@ -45,28 +44,11 @@ namespace Barotrauma
 
             if (Controlled == this || !aiController.Enabled) return;
 
-#if CLIENT
-            if (soundTimer > 0)
-            {
-                soundTimer -= deltaTime;
-            }
-            else
-            {
-                switch (aiController.State)
-                {
-                    case AIController.AiState.Attack:
-                        PlaySound(CharacterSound.SoundType.Attack);
-                        break;
-                    default:
-                        PlaySound(CharacterSound.SoundType.Idle);
-                        break;
-                }
-                soundTimer = soundInterval;
-            }
-#endif
+            SoundUpdate(deltaTime);
 
             aiController.Update(deltaTime);
         }
+        partial void SoundUpdate(float deltaTime);
 
         public override void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
         {
