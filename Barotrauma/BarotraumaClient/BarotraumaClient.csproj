@@ -1,0 +1,305 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{008C0F83-E914-4966-9135-EA885059EDD8}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Barotrauma</RootNamespace>
+    <AssemblyName>Barotrauma</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>0.1.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\Windows\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WINDOWS;CLIENT</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\Windows\Release\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS;CLIENT</DefineConstants>
+    <AllowedReferenceRelatedFileExtensions>
+      <!-- Prevent default XML and PDB files copied to output in RELEASE. 
+           Only *.allowedextension files will be included, which doesn't exist in my case.
+       -->
+      .allowedextension
+    </AllowedReferenceRelatedFileExtensions>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Source\Camera.cs" />
+    <Compile Include="Source\Characters\AICharacter.cs" />
+    <Compile Include="Source\Characters\AI\AIController.cs" />
+    <Compile Include="Source\Characters\AI\AITarget.cs" />
+    <Compile Include="Source\Characters\AI\CrewCommander.cs" />
+    <Compile Include="Source\Characters\AI\EnemyAIController.cs" />
+    <Compile Include="Source\Characters\AI\HumanAIController.cs" />
+    <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
+    <Compile Include="Source\Characters\Attack.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreature.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreatureManager.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreaturePrefab.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpriteManager.cs" />
+    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpritePrefab.cs" />
+    <Compile Include="Source\Characters\Character.cs" />
+    <Compile Include="Source\Characters\CharacterHUD.cs" />
+    <Compile Include="Source\Characters\CharacterInfo.cs" />
+    <Compile Include="Source\Characters\CharacterNetworking.cs" />
+    <Compile Include="Source\Characters\CharacterSound.cs" />
+    <Compile Include="Source\Characters\HUDProgressBar.cs" />
+    <Compile Include="Source\Characters\HuskInfection.cs" />
+    <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />
+    <Compile Include="Source\Characters\Limb.cs" />
+    <Compile Include="Source\DebugConsole.cs" />
+    <Compile Include="Source\EventInput\EventInput.cs" />
+    <Compile Include="Source\EventInput\KeyboardDispatcher.cs" />
+    <Compile Include="Source\Events\Missions\Mission.cs" />
+    <Compile Include="Source\Events\Missions\MissionMode.cs" />
+    <Compile Include="Source\Fonts\ScalableFont.cs" />
+    <Compile Include="Source\GameMain.cs" />
+    <Compile Include="Source\GameSession\CrewManager.cs" />
+    <Compile Include="Source\GameSession\GameMode.cs" />
+    <Compile Include="Source\GameSession\GameModes\SinglePlayerMode.cs" />
+    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\EditorTutorial.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
+    <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialType.cs" />
+    <Compile Include="Source\GameSession\GameSession.cs" />
+    <Compile Include="Source\GameSession\HireManager.cs" />
+    <Compile Include="Source\GameSession\ShiftSummary.cs" />
+    <Compile Include="Source\GameSettings.cs" />
+    <Compile Include="Source\GUI\ComponentStyle.cs" />
+    <Compile Include="Source\GUI\GUI.cs" />
+    <Compile Include="Source\GUI\GUIButton.cs" />
+    <Compile Include="Source\GUI\GUIComponent.cs" />
+    <Compile Include="Source\GUI\GUIDropDown.cs" />
+    <Compile Include="Source\GUI\GUIFrame.cs" />
+    <Compile Include="Source\GUI\GUIImage.cs" />
+    <Compile Include="Source\GUI\GUIListBox.cs" />
+    <Compile Include="Source\GUI\GUIMessage.cs" />
+    <Compile Include="Source\GUI\GUIMessageBox.cs" />
+    <Compile Include="Source\GUI\GUIProgressBar.cs" />
+    <Compile Include="Source\GUI\GUIScrollBar.cs" />
+    <Compile Include="Source\GUI\GUIStyle.cs" />
+    <Compile Include="Source\GUI\GUITextBlock.cs" />
+    <Compile Include="Source\GUI\GUITextBox.cs" />
+    <Compile Include="Source\GUI\GUITickBox.cs" />
+    <Compile Include="Source\GUI\LoadingScreen.cs" />
+    <Compile Include="Source\Items\CharacterInventory.cs" />
+    <Compile Include="Source\Items\Components\Door.cs" />
+    <Compile Include="Source\Items\Components\ItemComponent.cs" />
+    <Compile Include="Source\Items\Components\ItemContainer.cs" />
+    <Compile Include="Source\Items\Components\ItemLabel.cs" />
+    <Compile Include="Source\Items\Components\LightComponent.cs" />
+    <Compile Include="Source\Items\Components\Machines\Deconstructor.cs" />
+    <Compile Include="Source\Items\Components\Machines\Engine.cs" />
+    <Compile Include="Source\Items\Components\Machines\Fabricator.cs" />
+    <Compile Include="Source\Items\Components\Machines\MiniMap.cs" />
+    <Compile Include="Source\Items\Components\Machines\Pump.cs" />
+    <Compile Include="Source\Items\Components\Machines\Radar.cs" />
+    <Compile Include="Source\Items\Components\Machines\Reactor.cs" />
+    <Compile Include="Source\Items\Components\Machines\Steering.cs" />
+    <Compile Include="Source\Items\Components\Power\PowerContainer.cs" />
+    <Compile Include="Source\Items\Components\Power\Powered.cs" />
+    <Compile Include="Source\Items\Components\Power\PowerTransfer.cs" />
+    <Compile Include="Source\Items\Components\Signal\Connection.cs" />
+    <Compile Include="Source\Items\Components\Signal\ConnectionPanel.cs" />
+    <Compile Include="Source\Items\Components\Signal\Wire.cs" />
+    <Compile Include="Source\Items\Components\StatusHUD.cs" />
+    <Compile Include="Source\Items\Components\Turret.cs" />
+    <Compile Include="Source\Items\DockingPort.cs" />
+    <Compile Include="Source\Items\FixRequirement.cs" />
+    <Compile Include="Source\Items\Inventory.cs" />
+    <Compile Include="Source\Items\Item.cs" />
+    <Compile Include="Source\Items\ItemPrefab.cs" />
+    <Compile Include="Source\Items\Rope.cs" />
+    <Compile Include="Source\Map\Explosion.cs" />
+    <Compile Include="Source\Map\FireSource.cs" />
+    <Compile Include="Source\Map\Gap.cs" />
+    <Compile Include="Source\Map\Hull.cs" />
+    <Compile Include="Source\Map\Levels\CaveGenerator.cs" />
+    <Compile Include="Source\Map\Levels\Level.cs" />
+    <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
+    <Compile Include="Source\Map\Levels\Ruins\RuinGenerator.cs" />
+    <Compile Include="Source\Map\Levels\WaterRenderer.cs" />
+    <Compile Include="Source\Map\Levels\WrappingWall.cs" />
+    <Compile Include="Source\Map\Lights\ConvexHull.cs" />
+    <Compile Include="Source\Map\Lights\LightManager.cs" />
+    <Compile Include="Source\Map\Lights\LightSource.cs" />
+    <Compile Include="Source\Map\LinkedSubmarine.cs" />
+    <Compile Include="Source\Map\Map\Location.cs" />
+    <Compile Include="Source\Map\Map.cs" />
+    <Compile Include="Source\Map\MapEntity.cs" />
+    <Compile Include="Source\Map\MapEntityPrefab.cs" />
+    <Compile Include="Source\Map\Structure.cs" />
+    <Compile Include="Source\Map\StructurePrefab.cs" />
+    <Compile Include="Source\Map\Submarine.cs" />
+    <Compile Include="Source\Map\WayPoint.cs" />
+    <Compile Include="Source\Networking\BanList.cs" />
+    <Compile Include="Source\Networking\EntitySpawner.cs" />
+    <Compile Include="Source\Networking\FileTransfer\FileReceiver.cs" />
+    <Compile Include="Source\Networking\GameClient.cs" />
+    <Compile Include="Source\Networking\GameServer.cs" />
+    <Compile Include="Source\Networking\GameServerSettings.cs" />
+    <Compile Include="Source\Networking\NetEntityEvent\ClientEntityEventManager.cs" />
+    <Compile Include="Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
+    <Compile Include="Source\Networking\NetStats.cs" />
+    <Compile Include="Source\Networking\NetworkMember.cs" />
+    <Compile Include="Source\Networking\ServerLog.cs" />
+    <Compile Include="Source\Networking\Voting.cs" />
+    <Compile Include="Source\Networking\WhiteList.cs" />
+    <Compile Include="Source\Particles\Particle.cs" />
+    <Compile Include="Source\Particles\ParticleEmitter.cs" />
+    <Compile Include="Source\Particles\ParticleManager.cs" />
+    <Compile Include="Source\Particles\ParticlePrefab.cs" />
+    <Compile Include="Source\Physics\PhysicsBody.cs" />
+    <Compile Include="Source\PlayerInput.cs" />
+    <Compile Include="Source\Program.cs" />
+    <Compile Include="Source\Screens\BlurEffect.cs" />
+    <Compile Include="Source\Screens\EditCharacterScreen.cs" />
+    <Compile Include="Source\Screens\EditMapScreen.cs" />
+    <Compile Include="Source\Screens\GameScreen.cs" />
+    <Compile Include="Source\Screens\LobbyScreen.cs" />
+    <Compile Include="Source\Screens\MainMenuScreen.cs" />
+    <Compile Include="Source\Screens\NetLobbyScreen.cs" />
+    <Compile Include="Source\Screens\Screen.cs" />
+    <Compile Include="Source\Screens\ServerListScreen.cs" />
+    <Compile Include="Source\Sounds\OggSound.cs" />
+    <Compile Include="Source\Sounds\OggStream.cs" />
+    <Compile Include="Source\Sounds\Sound.cs" />
+    <Compile Include="Source\Sounds\SoundManager.cs" />
+    <Compile Include="Source\Sounds\SoundPlayer.cs" />
+    <Compile Include="Source\Sprite\Sprite.cs" />
+    <Compile Include="Source\Sprite\SpriteSheet.cs" />
+    <Compile Include="Source\Utils\MathUtils.cs" />
+    <Compile Include="Source\Utils\SaveUtil.cs" />
+    <Compile Include="Source\Utils\TextureLoader.cs" />
+    <Compile Include="Source\Utils\ToolBox.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NVorbis, Version=0.8.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Libraries\NuGet\NVorbis.0.8.5.0\lib\NVorbis.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Libraries\NuGet\OpenTK.2.0.0\lib\net20\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="RestSharp">
+      <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="freetype6.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="OpenAL32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wrap_oal.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 4.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj">
+      <Project>{0aad36e3-51a5-4a07-ab60-5c8a66bd38b7}</Project>
+      <Name>Farseer Physics MonoGame</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.csproj">
+      <Project>{3b8f9edb-6e5e-450c-abc2-ec49075d0b50}</Project>
+      <Name>Hyper.ComponentModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.Network.csproj">
+      <Project>{49ba1c69-6104-41ac-a5d8-b54fa9f696e8}</Project>
+      <Name>Lidgren.Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\SharpFont\Source\SharpFont\SharpFont.csproj">
+      <Project>{c293db32-fa42-486d-b128-5a12522fae4e}</Project>
+      <Name>SharpFont</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="OpenTK.dll.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="..\BarotraumaShared\BarotraumaShared.projitems" Label="Shared" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
