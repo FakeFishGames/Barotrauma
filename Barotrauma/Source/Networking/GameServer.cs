@@ -28,8 +28,7 @@ namespace Barotrauma.Networking
         private NetPeerConfiguration config;
 
         private int MaxPlayers;
-
-        private DateTime sparseUpdateTimer;        
+       
         private DateTime refreshMasterTimer;
 
         private DateTime roundStartTime;
@@ -529,25 +528,15 @@ namespace Barotrauma.Networking
             {
                 if (server.ConnectionsCount > 0)
                 {
-                    if (sparseUpdateTimer < DateTime.Now) SparseUpdate();
-
                     foreach (Client c in ConnectedClients)
                     {
-                        if (gameStarted && c.inGame)
+                        try
                         {
-                            ClientWriteIngame(c);                         
+                            ClientWrite(c);
                         }
-                        else
+                        catch (Exception e)
                         {
-                            //if 30 seconds have passed since the round started and the client isn't ingame yet,
-                            //kill the clients character
-                            if (gameStarted && c.Character != null && (DateTime.Now - roundStartTime).Seconds > 30.0f)
-                            {
-                                c.Character.Kill(CauseOfDeath.Disconnected);
-                                c.Character = null;
-                            }
-
-                            ClientWriteLobby(c);
+                            DebugConsole.ThrowError("Failed to write a network message for the client \""+c.name+"\"!", e);
                         }
                     }
 
@@ -617,12 +606,7 @@ namespace Barotrauma.Networking
                     break;
             }            
         }
-
-        private void SparseUpdate()
-        {
-            sparseUpdateTimer = DateTime.Now + sparseUpdateInterval;
-        }
-
+        
         public void CreateEntityEvent(IServerSerializable entity, object[] extraData = null)
         {
             entityEventManager.CreateEvent(entity, extraData);
@@ -827,6 +811,27 @@ namespace Barotrauma.Networking
             inc.ReadPadBits();
         }
 
+
+        private void ClientWrite(Client c)
+        {
+            if (gameStarted && c.inGame)
+            {
+                ClientWriteIngame(c);
+            }
+            else
+            {                
+                //if 30 seconds have passed since the round started and the client isn't ingame yet,
+                //kill the client's character
+                if (gameStarted && c.Character != null && (DateTime.Now - roundStartTime).Seconds > 30.0f)
+                {
+                    c.Character.Kill(CauseOfDeath.Disconnected);
+                    c.Character = null;
+                }
+
+                ClientWriteLobby(c);
+            }
+        }
+
         /// <summary>
         /// Write info that the client needs when joining the server
         /// </summary>
@@ -850,6 +855,37 @@ namespace Barotrauma.Networking
 
         private void ClientWriteIngame(Client c)
         {
+            //don't send position updates to characters who are still midround syncing
+            //characters or items spawned mid-round don't necessarily exist at the client's end yet
+            if (!c.NeedsMidRoundSync)
+            {
+                foreach (Character character in Character.CharacterList)
+                {
+                    if (!character.Enabled) continue;
+                    if (c.Character != null &&
+                        Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
+                        NetConfig.CharacterIgnoreDistance * NetConfig.CharacterIgnoreDistance)
+                    {
+                        continue;
+                    }
+                    if (!c.PendingPositionUpdates.Contains(character)) c.PendingPositionUpdates.Enqueue(character);
+                }
+
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    //if docked to a sub with a smaller ID, don't send an update
+                    //  (= update is only sent for the docked sub that has the smallest ID, doesn't matter if it's the main sub or a shuttle)
+                    if (sub.DockedTo.Any(s => s.ID < sub.ID)) continue;
+                    if (!c.PendingPositionUpdates.Contains(sub)) c.PendingPositionUpdates.Enqueue(sub);
+                }
+
+                foreach (Item item in Item.ItemList)
+                {
+                    if (!item.NeedsPositionUpdate) continue;
+                    if (!c.PendingPositionUpdates.Contains(item)) c.PendingPositionUpdates.Enqueue(item);
+                }
+            }
+
             NetOutgoingMessage outmsg = server.CreateMessage();
             outmsg.Write((byte)ServerPacketHeader.UPDATE_INGAME);
             
@@ -858,51 +894,29 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ServerNetObject.SYNC_IDS);
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
             outmsg.Write(c.lastSentEntityEventID);
-            
-            //don't send position updates to characters who are still midround syncing
-            //characters or items spawned mid-round don't necessarily exist at the client's end yet
-            if (!c.NeedsMidRoundSync)
-            {
-                foreach (Character character in Character.CharacterList)
-                {
-                    if (!character.Enabled) continue;
-
-                    if (c.Character != null &&
-                        Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                        NetConfig.CharacterIgnoreDistance * NetConfig.CharacterIgnoreDistance)
-                    {
-                        continue;
-                    }
-
-                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
-                    character.ServerWrite(outmsg, c);
-                    outmsg.WritePadBits();
-                }
-
-                foreach (Submarine sub in Submarine.Loaded)
-                {
-                    //if docked to a sub with a smaller ID, don't send an update
-                    //  (= update is only sent for the docked sub that has the smallest ID, doesn't matter if it's the main sub or a shuttle)
-                    if (sub.DockedTo.Any(s => s.ID < sub.ID)) continue;
-
-                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
-                    sub.ServerWrite(outmsg, c);
-                    outmsg.WritePadBits();
-                }
-
-                foreach (Item item in Item.ItemList)
-                {
-                    if (!item.NeedsPositionUpdate) continue;
-
-                    outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
-                    item.ServerWritePosition(outmsg, c);
-                    outmsg.WritePadBits();
-                }
-            }
 
             entityEventManager.Write(c, outmsg);
-            
+
             WriteChatMessages(outmsg, c);
+
+            //write as many position updates as the message can fit
+            while (outmsg.LengthBytes < config.MaximumTransmissionUnit - 20 && 
+                c.PendingPositionUpdates.Count > 0)
+            {
+                var entity = c.PendingPositionUpdates.Dequeue();
+                if (entity == null || entity.Removed) continue;
+
+                outmsg.Write((byte)ServerNetObject.ENTITY_POSITION);
+                if (entity is Item)
+                {
+                    ((Item)entity).ServerWritePosition(outmsg, c);
+                }
+                else
+                {
+                    ((IServerSerializable)entity).ServerWrite(outmsg, c);
+                }
+                outmsg.WritePadBits();
+            }
 
             outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
 
@@ -1165,7 +1179,8 @@ namespace Barotrauma.Networking
                 foreach (Client client in teamClients)
                 {
                     client.NeedsMidRoundSync = false;
-                    
+
+                    client.PendingPositionUpdates.Clear();
                     client.entityEventLastSent.Clear();
                     client.lastSentEntityEventID = 0;
                     client.lastRecvEntityEventID = 0;
@@ -1356,6 +1371,7 @@ namespace Barotrauma.Networking
             foreach (Client c in connectedClients)
             {
                 c.entityEventLastSent.Clear();
+                c.PendingPositionUpdates.Clear();
             }
 
 #if DEBUG

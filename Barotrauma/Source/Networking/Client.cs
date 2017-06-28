@@ -59,6 +59,8 @@ namespace Barotrauma.Networking
         //when was a specific entity event last sent to the client
         //  key = event id, value = NetTime.Now when sending
         public Dictionary<UInt16, float> entityEventLastSent;
+        
+        private Queue<Entity> pendingPositionUpdates = new Queue<Entity>();
 
         public bool ReadyToStart;
 
@@ -70,6 +72,11 @@ namespace Barotrauma.Networking
         public float deleteDisconnectedTimer;
 
         public ClientPermissions Permissions = ClientPermissions.None;
+
+        public Queue<Entity> PendingPositionUpdates
+        {
+            get { return pendingPositionUpdates; }
+        }
         
         public void InitClientSync()
         {
