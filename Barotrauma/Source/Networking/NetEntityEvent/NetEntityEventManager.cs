@@ -65,9 +65,12 @@ namespace Barotrauma.Networking
                 eventCount++;
             }
             
-            msg.Write(eventsToSync[0].ID);
-            msg.Write((byte)eventCount);
-            msg.Write(tempBuffer);
+            if (eventCount > 0)
+            {
+                msg.Write(eventsToSync[0].ID);
+                msg.Write((byte)eventCount);
+                msg.Write(tempBuffer);
+            }
         }
        
         protected virtual void WriteEvent(NetBuffer buffer, NetEntityEvent entityEvent, Client recipient = null)
