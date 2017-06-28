@@ -17,7 +17,7 @@ namespace Barotrauma
 
         protected AITarget aiTarget;
 
-        public bool Removed
+        public virtual bool Removed
         {
             get;
             private set;
