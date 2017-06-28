@@ -236,6 +236,14 @@ namespace Barotrauma
             return "Barotrauma.Submarine ("+name+")";
         }
 
+        public override bool Removed
+        {
+            get
+            {
+                return !loaded.Contains(this);
+            }
+        }
+
         //constructors & generation ----------------------------------------------------
 
         public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
