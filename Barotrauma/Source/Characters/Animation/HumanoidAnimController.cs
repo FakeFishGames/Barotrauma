@@ -882,12 +882,15 @@ namespace Barotrauma
             head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.6f + yPos);
             head.pullJoint.Enabled = true;
         }
-        public override void DragCharacter(Character target, LimbType rightHandTarget = LimbType.RightHand, LimbType leftHandTarget = LimbType.LeftHand)
+        public override void DragCharacter(Character target)
         {
             if (target == null) return;
 
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
+
+            Limb targetLeftHand = target.AnimController.GetLimb(LimbType.LeftHand);
+            Limb targetRightHand = target.AnimController.GetLimb(LimbType.RightHand);
 
             //only grab with one hand when swimming
             leftHand.Disabled = true;
@@ -895,10 +898,32 @@ namespace Barotrauma
 
             for (int i = 0; i < 2; i++)
             {
-                LimbType type = i == 0 ? leftHandTarget : rightHandTarget;
-                Limb targetLimb = target.AnimController.GetLimb(type);
+                Limb targetLimb = target.AnimController.GetLimb(LimbType.Torso);
 
-                Limb pullLimb = GetLimb(i == 0 ? LimbType.LeftHand : LimbType.RightHand);
+                if (i == 0)
+                {
+                    if (!targetLeftHand.IsSevered)
+                    {
+                        targetLimb = targetLeftHand;
+                    }
+                    else if (!targetRightHand.IsSevered)
+                    {
+                        targetLimb = targetRightHand;
+                    }
+                }
+                else
+                {
+                    if (!targetRightHand.IsSevered)
+                    {
+                        targetLimb = targetRightHand;
+                    }
+                    else if (!targetLeftHand.IsSevered)
+                    {
+                        targetLimb = targetLeftHand;
+                    }
+                }
+
+                Limb pullLimb = i == 0 ? leftHand : rightHand;
 
                 if (i == 1 && inWater)
                 {
