@@ -258,7 +258,6 @@ namespace Barotrauma
                         msg.WriteRangedInteger(0, 2, 2);
                         break;
                 }
-                msg.WritePadBits();
             }
             else
             {
@@ -285,6 +284,7 @@ namespace Barotrauma
                     }
                 }
             }
+            msg.WritePadBits();
         }
         public virtual void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
@@ -383,12 +383,10 @@ namespace Barotrauma
                                 Kill(lastAttackCauseOfDeath);
                             }
                             break;
-
                     }
-
-                    msg.ReadPadBits();
                     break;
             }
+            msg.ReadPadBits();
         }
 
         public virtual void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
