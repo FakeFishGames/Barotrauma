@@ -90,7 +90,7 @@ namespace Barotrauma
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
 
-            ApplyExplosionForces(worldPosition, attack.Range, force, attack.GetDamage(1.0f), attack.Stun);
+            ApplyExplosionForces(worldPosition, attack, force);
 
             if (flames && GameMain.Client == null)
             {
@@ -141,9 +141,9 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public static void ApplyExplosionForces(Vector2 worldPosition, float range, float force, float damage = 0.0f, float stun = 0.0f)
+        public static void ApplyExplosionForces(Vector2 worldPosition, Attack attack, float force)
         {
-            if (range <= 0.0f) return;
+            if (attack.Range <= 0.0f) return;
 
             foreach (Character c in Character.CharacterList)
             {
@@ -152,6 +152,7 @@ namespace Barotrauma
 
                 explosionPos = ConvertUnits.ToSimUnits(explosionPos);
 
+                bool wasDead = c.IsDead;
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
@@ -160,24 +161,36 @@ namespace Barotrauma
                     //doesn't take the rotation of the limb into account, but should be accurate enough for this purpose
                     float limbRadius = Math.Max(Math.Max(limb.body.width * 0.5f, limb.body.height * 0.5f), limb.body.radius);
                     dist = Math.Max(0.0f, dist - FarseerPhysics.ConvertUnits.ToDisplayUnits(limbRadius));
+                    
+                    if (dist > attack.Range) continue;
 
-                    if (dist > range) continue;
-
-                    float distFactor = 1.0f - dist / range;
+                    float distFactor = 1.0f - dist / attack.Range;
 
                     //solid obstacles between the explosion and the limb reduce the effect of the explosion by 90%
                     if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null) distFactor *= 0.1f;
 
                     c.AddDamage(limb.WorldPosition, DamageType.None,
-                        damage / c.AnimController.Limbs.Length * distFactor, 0.0f, stun * distFactor, false);
+                        attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 
+                        attack.GetBleedingDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 
+                        attack.Stun * distFactor, 
+                        false);
 
-                    if (limb.WorldPosition == worldPosition) continue;
-
-                    if (force > 0.0f)
+                    if (limb.WorldPosition != worldPosition && force > 0.0f)
                     {
                         limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.WorldPosition - worldPosition) * distFactor * force);
                     }
-                }
+                }     
+                
+                if (!wasDead && c.IsDead)
+                {
+                    foreach (LimbJoint joint in c.AnimController.LimbJoints)
+                    {
+                        if (Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
+                        {
+                            c.AnimController.SeverLimbJoint(joint);
+                        }
+                    }
+                }          
             }
         }
 

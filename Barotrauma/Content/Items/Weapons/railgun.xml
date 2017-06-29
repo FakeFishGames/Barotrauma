@@ -83,7 +83,7 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
     
     <Projectile launchimpulse="80.0">
-      <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
+      <Attack damage="100" bleedingdamage="10" structuredamage="200" damagetype="Blunt" severlimbsprobability="1.0"/>
 
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
@@ -115,10 +115,10 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,0" handle2="10,0" aimable="false"/>
 
     <Projectile launchimpulse="80.0">
-      <Attack damage="1000" bleedingdamage="10" structuredamage="200" damagetype="Blunt"/>
+      <Attack damage="1000" bleedingdamage="10" structuredamage="200" damagetype="Blunt" severlimbsprobability="1.0"/>
       
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Weapons/bigexplosion.ogg">
-        <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
+        <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0" severlimbsprobability="0.8"/>
       </StatusEffect>
 
       <StatusEffect type="OnActive" target="This">

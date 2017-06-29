@@ -5,28 +5,38 @@
   <sound file="Content/Characters/Husk/Husk2.ogg" state="Attack" range="1000"/>
   <sound file="Content/Characters/Husk/Husk3.ogg" state="Attack" range="1000"/>
   
+  <ai 
+    combatstrength="100"
+    attackpriorityhumans="500"
+    attackpriorityrooms="5.0"
+    attackpriorityweaker="50"
+    attackprioritystronger="-30"
+    sight="0.5"
+    hearing="1.0"
+    attackcooldown="1.0"/>
+  
   <ragdoll headposition="134" torsoposition="108" 
            stepsize="42.0, 12.0"
            walkanimspeed="4.58"
            movementlerp="0.4"
            legtorque="15.0"
            thightorque="-5.0"
-           walkspeed="1.2"
-           swimspeed="2.5">
+           walkspeed="1.2" swimspeed="2.5"
+           runspeedmultiplier="2.0" swimspeedmultiplier="1.5">
 
     <collider height="80" radius="15"/>
-	<collider height="40" radius="15"/>
+	  <collider height="40" radius="15"/>
 
     <!-- head -->
     <limb id = "0" radius="13" mass = "6" type="Head" attackpriority="2">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="95,0,33,25" depth="0.04" origin="0.5,0.5"/>
     </limb>
 
-
     <!-- spike/tentacle thingy -->
     <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" flip="true" pullpos="0.0,25.0">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.05" origin="0.5,0.5"/>
-      <attack range="70" duration="0.2" bleedingdamage="0.5" damage="10" stun="0.5" force="1" torque="-50" damagetype="slash" targetforce="10">
+      <attack range="70" duration="0.2" bleedingdamage="0.5" damage="10" stun="0.5" damagetype="slash" targetforce="10"
+              force="5" applyforceonlimbs="1" torque="-10">
         <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01" disabledeltatime="true"/>
         <StatusEffect type="OnUse" target="This" Health="1.0" disabledeltatime="true"/>
       </attack>
@@ -82,7 +92,7 @@
     </limb> 
 
     <!-- head to body -->
-    <joint limb1="0" limb1anchor="-10,-10" limb2="1" limb2anchor="-3,28" lowerlimit="0" upperlimit="10"/>
+    <joint limb1="0" limb1anchor="-10,-10" limb2="1" limb2anchor="-3,28" lowerlimit="0" upperlimit="10" canbesevered="true"/>
     <!-- spike to head -->
     <joint limb1="0" limb1anchor="35,-8" limb2="13" limb2anchor="30,0" lowerlimit="-40" upperlimit="0"/>
     
@@ -90,26 +100,21 @@
     
     <!-- body to left arm -->
     <joint limb1="1" limb1anchor="-3,14" limb2="2" limb2anchor="0,12"/>
-    <joint limb1="2" limb1anchor="0,-16" limb2="3" limb2anchor="-2,19" lowerlimit="0" upperlimit="170"/>
+    <joint limb1="2" limb1anchor="0,-16" limb2="3" limb2anchor="-2,19" lowerlimit="0" upperlimit="170" canbesevered="true"/>
     <!-- body to right arm -->
     <joint limb1="1" limb1anchor="-3,14" limb2="4" limb2anchor="0,12"/>
-    <joint limb1="4" limb1anchor="0,-16" limb2="5" limb2anchor="-2,19" lowerlimit="0" upperlimit="170"/>
+    <joint limb1="4" limb1anchor="0,-16" limb2="5" limb2anchor="-2,19" lowerlimit="0" upperlimit="170" canbesevered="true"/>
 
     <!-- body to left leg -->
-    <joint limb1="12" limb1anchor="0,-1" limb2="6" limb2anchor="0,14" lowerlimit="-30" upperlimit="120"/>
-    <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,20" lowerlimit="-150" upperlimit="-10"/>
-    <joint limb1="7" limb1anchor="-3,-21" limb2="8" limb2anchor="5,7" lowerlimit="20" upperlimit="90"/>
+    <joint limb1="12" limb1anchor="0,-1" limb2="6" limb2anchor="0,14" lowerlimit="-30" upperlimit="120" canbesevered="true"/>
+    <joint limb1="6" limb1anchor="0,-15" limb2="7" limb2anchor="0,20" lowerlimit="-150" upperlimit="-10" canbesevered="true"/>
+    <joint limb1="7" limb1anchor="-3,-21" limb2="8" limb2anchor="5,7" lowerlimit="20" upperlimit="90" canbesevered="true"/>
   
     <!-- body to right leg -->
-    <joint limb1="12" limb1anchor="0,-1" limb2="9" limb2anchor="0,14" lowerlimit="-30" upperlimit="120"/>
-    <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="-150" upperlimit="-10"/>
-    <joint limb1="10" limb1anchor="-3,-21" limb2="11" limb2anchor="5,7" lowerlimit="20" upperlimit="90"/>
-  
+    <joint limb1="12" limb1anchor="0,-1" limb2="9" limb2anchor="0,14" lowerlimit="-30" upperlimit="120" canbesevered="true"/>
+    <joint limb1="9" limb1anchor="0,-15" limb2="10" limb2anchor="0,20" lowerlimit="-150" upperlimit="-10" canbesevered="true"/>
+    <joint limb1="10" limb1anchor="-3,-21" limb2="11" limb2anchor="5,7" lowerlimit="20" upperlimit="90" canbesevered="true"/>  
   </ragdoll>
 
-
-  <ai attackhumans="500" attackrooms="5.0" attackweaker="50" attackstronger="-30"
-      sight="0.5" hearing="1.0"
-      attackcooldown="1.0"/>
 </Character>
 

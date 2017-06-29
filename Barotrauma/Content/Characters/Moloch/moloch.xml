@@ -6,6 +6,14 @@
   <sound file="Content/Characters/Moloch/idle1.ogg" state="None" range="3000"/>
   <sound file="Content/Characters/Moloch/idle2.ogg" state="None" range="3000"/>
 
+  <ai
+    combatstrength="1200"
+    attackpriorityhumans="40.0"
+    attackpriorityrooms="50.0"
+    attackprioritystronger="-100.0"
+    attackcooldown="15.0"
+    sight="0.5" hearing="1.0"/>
+
   <ragdoll waveamplitude="0.0" swimspeed="2.0" mirror="true" rotatetowardsmovement="false" headangle="-90" canentersubmarine="false">
 
     <collider radius ="230"/>
@@ -46,22 +54,18 @@
       <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="867,474,101,550" depth="0.025" origin="0.5,0.5"/>
     </limb>
 
-    <joint limb1="0" limb1anchor="112,77" limb2="1" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90"/>
-    <joint limb1="1" limb1anchor="0,190" limb2="2" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
-    <joint limb1="2" limb1anchor="0,120" limb2="3" limb2anchor="15,-250" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="0" limb1anchor="112,77" limb2="1" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90" canbesevered="true"/>
+    <joint limb1="1" limb1anchor="0,190" limb2="2" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0" canbesevered="true"/>
+    <joint limb1="2" limb1anchor="0,120" limb2="3" limb2anchor="15,-250" lowerlimit="-50" upperlimit="0" canbesevered="true"/>
 
-    <joint limb1="0" limb1anchor="0,0" limb2="4" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90"/>
-    <joint limb1="4" limb1anchor="0,190" limb2="5" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
-    <joint limb1="5" limb1anchor="0,120" limb2="6" limb2anchor="15,-250" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="0" limb1anchor="0,0" limb2="4" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90" canbesevered="true"/>
+    <joint limb1="4" limb1anchor="0,190" limb2="5" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0" canbesevered="true"/>
+    <joint limb1="5" limb1anchor="0,120" limb2="6" limb2anchor="15,-250" lowerlimit="-50" upperlimit="0" canbesevered="true"/>
 
-    <joint limb1="0" limb1anchor="-53,-164" limb2="7" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90"/>
-    <joint limb1="7" limb1anchor="0,190" limb2="8" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0"/>
-    <joint limb1="8" limb1anchor="0,120" limb2="9" limb2anchor="15,-250" lowerlimit="-50" upperlimit="0"/>
+    <joint limb1="0" limb1anchor="-53,-164" limb2="7" limb2anchor="0,-190" lowerlimit="-180" upperlimit="-90" canbesevered="true"/>
+    <joint limb1="7" limb1anchor="0,190" limb2="8" limb2anchor="0,-100" lowerlimit="-50" upperlimit="0" canbesevered="true"/>
+    <joint limb1="8" limb1anchor="0,120" limb2="9" limb2anchor="15,-250" lowerlimit="-50" upperlimit="0" canbesevered="true"/>
 
   </ragdoll>
 
-  <ai attackhumans="100.0" attackrooms="50.0" 
-      attackweaker="50.0" attackstronger="-30.0" 
-      attackcooldown="15.0"
-      sight="0.5" hearing="1.0"/>
 </Character>

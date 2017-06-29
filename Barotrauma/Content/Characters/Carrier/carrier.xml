@@ -8,6 +8,16 @@
   <sound file="Content/Characters/Carrier/carrier3.ogg" state="None" range="4000"/>
 
   <sound file="Content/Characters/Carrier/ping.ogg" state="Die" range="3000"/>
+
+  <ai
+    combatstrength="1000"
+    attackpriorityhumans="100.0"
+    attackpriorityrooms="50.0"
+    attackpriorityweaker="0.0"
+    attackprioritystronger="-80.0"
+    attackcooldown="15.0"
+    sight="0.5" 
+    hearing="1.0"/>
     
   <ragdoll waveamplitude="0.0" swimspeed="4.0" mirror="true" rotatetowardsmovement="false" headangle="-90" canentersubmarine="false">
 
@@ -44,16 +54,12 @@
     </limb>
 
 
-    <joint limb1="0" limb1anchor="92,-200" limb2="1" limb2anchor="0,-100" lowerlimit="180" upperlimit="210"/>
-    <joint limb1="0" limb1anchor="64,-264" limb2="2" limb2anchor="0,-100" lowerlimit="180" upperlimit="210"/>
+    <joint limb1="0" limb1anchor="92,-200" limb2="1" limb2anchor="0,-100" lowerlimit="180" upperlimit="210" canbesevered="true"/>
+    <joint limb1="0" limb1anchor="64,-264" limb2="2" limb2anchor="0,-100" lowerlimit="180" upperlimit="210" canbesevered="true"/>
 
-    <joint limb1="0" limb1anchor="-100,100" limb2="3" limb2anchor="38,0" lowerlimit="-50" upperlimit="5"/>
+    <joint limb1="0" limb1anchor="-100,100" limb2="3" limb2anchor="38,0" lowerlimit="-50" upperlimit="5" canbesevered="true"/>
     <joint limb1="0" limb1anchor="140,268" limb2="4" limb2anchor="0,0" lowerlimit="87" upperlimit="93"/>
 
   </ragdoll>
 
-  <ai attackhumans="100.0" attackrooms="50.0" 
-      attackweaker="50.0" attackstronger="-30.0" 
-      attackcooldown="15.0"
-      sight="0.5" hearing="1.0"/>
 </Character>

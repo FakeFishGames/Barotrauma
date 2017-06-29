@@ -785,16 +785,14 @@ namespace Barotrauma
             if (IsKeyDown(InputType.Run))
             {
                 //can't run if
-                //  - not a humanoid
                 //  - dragging someone
                 //  - crouching
                 //  - moving backwards
-                if (AnimController is HumanoidAnimController &&
-                    selectedCharacter == null &&
-                    !((HumanoidAnimController)AnimController).Crouching &&
+                if (selectedCharacter == null &&
+                    (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
                     Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir))
                 {
-                    targetMovement *= 3.0f;
+                    targetMovement *= AnimController.InWater ? AnimController.SwimSpeedMultiplier : AnimController.RunSpeedMultiplier;
                 }
             }
 
@@ -1161,9 +1159,10 @@ namespace Barotrauma
                 }
             }
 
-            if (moveCam && needsAir)
+            if (moveCam)
             {
-                if (pressureProtection < 80.0f && 
+                if (needsAir &&
+                    pressureProtection < 80.0f && 
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 50.0f))
                 {
                     float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
@@ -1172,7 +1171,16 @@ namespace Barotrauma
                         (pressure / 50.0f) * Rand.Range(1.0f, 1.05f),
                         (pressure - 50.0f) / 50.0f);
                 }
-                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, 0.05f);
+
+                if (IsHumanoid)
+                {
+                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
+                }
+                else
+                {
+                    //increased visibility range when controlling large a non-humanoid
+                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp(Mass, 250.0f, 800.0f), deltaTime);
+                }
             }
 
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -1721,12 +1729,36 @@ namespace Barotrauma
 
         public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            var attackResult = AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce);
+            Limb limbHit = null;
+            var attackResult = AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit);
+            if (limbHit == null) return new AttackResult();
 
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
                 GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
+            }
+            
+            if (GameMain.Client == null &&
+                isDead && 
+                health - attackResult.Damage <= minHealth && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
+            {
+                foreach (LimbJoint joint in AnimController.LimbJoints)
+                {
+                    if (joint.CanBeSevered && (joint.LimbA == limbHit || joint.LimbB == limbHit))
+                    {
+                        AnimController.SeverLimbJoint(joint);
+
+                        if (joint.LimbA == limbHit)
+                        {
+                            joint.LimbB.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                        }
+                        else
+                        {
+                            joint.LimbA.body.LinearVelocity += limbHit.LinearVelocity * 0.5f;
+                        }
+                    }
+                }
             }
 
             return attackResult;
@@ -1734,33 +1766,40 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce = 0.0f)
         {
+            Limb temp = null;
+            return AddDamage(worldPosition, damageType, amount, bleedingAmount, stun, playSound, attackForce, out temp);
+        }
+
+        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, out Limb hitLimb)
+        {
+            hitLimb = null;
+
             if (Removed) return new AttackResult();
 
             SetStun(stun);
-
-            Limb closestLimb = null;
+            
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
             {
                 float distance = Vector2.Distance(worldPosition, limb.WorldPosition);
-                if (closestLimb == null || distance < closestDistance)
+                if (hitLimb == null || distance < closestDistance)
                 {
-                    closestLimb = limb;
+                    hitLimb = limb;
                     closestDistance = distance;
                 }
             }
             
             if (Math.Abs(attackForce) > 0.0f)
             {
-                closestLimb.body.ApplyForce((closestLimb.WorldPosition - worldPosition) * attackForce);
+                Vector2 diff = hitLimb.WorldPosition - worldPosition;
+                if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
+                hitLimb.body.ApplyForce(Vector2.Normalize(diff) * attackForce, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
             }
 
-            AttackResult attackResult = closestLimb.AddDamage(worldPosition, damageType, amount, bleedingAmount, playSound);
+            AttackResult attackResult = hitLimb.AddDamage(worldPosition, damageType, amount, bleedingAmount, playSound);
 
             AddDamage(damageType == DamageType.Burn ? CauseOfDeath.Burn : causeOfDeath, attackResult.Damage, null);
-                        
-            //health -= attackResult.Damage;
-            //if (health <= 0.0f && damageType == DamageType.Burn) Kill(CauseOfDeath.Burn);
+
             if (DoesBleed)
             {
                 Bleeding += attackResult.Bleeding;
@@ -1834,7 +1873,7 @@ namespace Barotrauma
                     new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f, 50f)));
             }
 
-            foreach (var joint in AnimController.limbJoints)
+            foreach (var joint in AnimController.LimbJoints)
             {
                 joint.LimitEnabled = false;
             }
@@ -1884,20 +1923,14 @@ namespace Barotrauma
             {
                 if (selectedItems[i] != null) selectedItems[i].Drop(this);            
             }
-
-            if (aiTarget != null)
-            {
-                aiTarget.Remove();
-                aiTarget = null;
-            }
-
+            
             foreach (Limb limb in AnimController.Limbs)
             {
                 if (limb.pullJoint == null) continue;
                 limb.pullJoint.Enabled = false;
             }
 
-            foreach (RevoluteJoint joint in AnimController.limbJoints)
+            foreach (RevoluteJoint joint in AnimController.LimbJoints)
             {
                 joint.MotorEnabled = false;
             }
@@ -1916,9 +1949,16 @@ namespace Barotrauma
 
             Health = Math.Max(maxHealth * 0.1f, health);
 
-            foreach (RevoluteJoint joint in AnimController.limbJoints)
+            foreach (LimbJoint joint in AnimController.LimbJoints)
             {
                 joint.MotorEnabled = true;
+                joint.Enabled = true;
+                joint.IsSevered = false;
+            }
+
+            foreach (Limb limb in AnimController.Limbs)
+            {
+                limb.IsSevered = false;
             }
 
             if (GameMain.GameSession != null)
@@ -1929,6 +1969,13 @@ namespace Barotrauma
         
         public override void Remove()
         {
+#if DEBUG
+            if (Removed)
+            {
+                DebugConsole.ThrowError("Attempting to remove an already removed character\n" + Environment.StackTrace);
+            }
+#endif
+
             base.Remove();
 
             if (info != null) info.Remove();
@@ -1939,7 +1986,7 @@ namespace Barotrauma
 
             if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
 
-            if (aiTarget != null) aiTarget.Remove();
+            if (aiTarget != null) aiTarget.Remove();            
 
             if (AnimController != null) AnimController.Remove();
 

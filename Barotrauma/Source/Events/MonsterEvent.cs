@@ -17,6 +17,8 @@ namespace Barotrauma
         private bool spawnDeep;
 
         private bool disallowed;
+
+        private bool repeat;
         
         private Level.PositionType spawnPosType;
 
@@ -39,7 +41,9 @@ namespace Barotrauma
         {
             characterFile = ToolBox.GetAttributeString(element, "characterfile", "");
 
-            minAmount = ToolBox.GetAttributeInt(element, "minamount", 1);
+            int defaultAmount = ToolBox.GetAttributeInt(element, "amount", 1);
+
+            minAmount = ToolBox.GetAttributeInt(element, "minamount", defaultAmount);
             maxAmount = Math.Max(ToolBox.GetAttributeInt(element, "maxamount", 1), minAmount);
 
             var spawnPosTypeStr = ToolBox.GetAttributeString(element, "spawntype", "");
@@ -51,6 +55,8 @@ namespace Barotrauma
             }
 
             spawnDeep = ToolBox.GetAttributeBool(element, "spawndeep", false);
+
+            repeat = ToolBox.GetAttributeBool(element, "repeat", repeat);
 
             if (GameMain.NetworkMember != null)
             {
@@ -67,18 +73,17 @@ namespace Barotrauma
         {
             base.Init();
 
-            SpawnMonsters();
+            SpawnMonsters(Rand.Range(minAmount, maxAmount, false));
         }
 
-        private void SpawnMonsters()
+        private Character[] SpawnMonsters(int amount)
         {
-            if (disallowed) return;
+            if (disallowed) return null;
             
             Vector2 spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType, true);
             
-            int amount = Rand.Range(minAmount, maxAmount, false);
 
-            monsters = new Character[amount];
+            var monsters = new Character[amount];
 
             if (spawnDeep) spawnPos.Y -= Level.Loaded.Size.Y;
                 
@@ -88,6 +93,8 @@ namespace Barotrauma
                 spawnPos.Y += Rand.Range(-0.5f, 0.5f, false);
                 monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null);
             }
+
+            return monsters;
         }
 
         public override void Update(float deltaTime)
@@ -97,7 +104,29 @@ namespace Barotrauma
                 Finished();
                 return;
             }
-            if (monsters == null) SpawnMonsters();
+
+            if (monsters == null)
+            {
+                monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, false));
+                return;
+            }
+
+            if (repeat)
+            {
+                //clients aren't allowed to spawn more monsters mid-round
+                if (GameMain.Client != null)
+                {
+                    return;
+                }
+
+                for (int i = 0; i < monsters.Length; i++)
+                {
+                    if (monsters[i] == null || monsters[i].Removed || monsters[i].IsDead)
+                    {
+                        monsters[i] = SpawnMonsters(1)[0];
+                    }
+                }
+            }
 
             if (isFinished) return;
 
@@ -128,7 +157,7 @@ namespace Barotrauma
                 }
             }
 
-            if (monstersDead) Finished();
+            if (monstersDead && !repeat) Finished();
         }
     }
 }

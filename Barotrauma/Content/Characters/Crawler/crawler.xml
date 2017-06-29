@@ -1,14 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name ="crawler" humanoid="false">
+<Character name ="crawler" humanoid="false" health="100">
   <sound file="Content/Characters/Crawler/attack1.ogg" state="Attack" range="500"/>
   <sound file="Content/Characters/Crawler/attack2.ogg" state="Attack" range="500"/>
 
   <sound file="Content/Characters/Crawler/idle1.ogg" state="None" range="500"/>
   <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
 
+  <ai 
+    combatstrength="100"
+    attackpriorityhumans="500"
+    attackpriorityrooms="50.0"
+    attackpriorityweaker="50"
+    attackprioritystronger="-60"
+    eatpriority="55"
+    sight="0.5" 
+    hearing="1.0"
+    fleehealththreshold="10"
+    attachtowalls="true"
+    attackcooldown="3.0"/>
+
   <ragdoll headposition="50" headangle="-70" 
-           waveamplitude="2.0" wavelength="5000" 
-           swimspeed="3.0" walkspeed="2.0"
+           waveamplitude="2.0" wavelength="3000" 
+           swimspeed="2.0" walkspeed="2.0"
+           runspeedmultiplier="2" swimspeedmultiplier="2.0"
            stepsize ="15.0,20.0"           
            legtorque="10"
            flip="true">
@@ -16,7 +30,7 @@
     <collider width="45" radius="22"/>
 
     <!-- head -->
-    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="30.0">
+    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="30.0" mouthpos="17,35">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63"/>
     </limb>
 
@@ -32,7 +46,9 @@
       
     <limb id = "3" width="13" height="45" ignorecollisions="true" flip="true">
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="65,131,36,50" depth="0.15" origin="0.4,0.5"/>
-      <attack range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="3" structuredamage="50" damagetype="slash" force="20" torque="-20" targetforce="-30"/>
+      <attack range="120" duration="0.5" damage="30" stun="0.1" bleedingdamage="3" structuredamage="50" 
+              damagetype="slash" targetforce="-30" severlimbsprobability="0.5"
+              force="5" applyforceonlimbs="0" torque="-20" />
     </limb>
 
     <limb id = "4" width="11" height="34" type="RightLeg" flip="true">
@@ -59,25 +75,21 @@
       <sound file ="Content/Sounds/stepMetal.ogg"/>
     </limb>
 
-    <joint limb1="0" limb1anchor="-5,-38" limb2="1" limb2anchor="-2,25" lowerlimit="-20" upperlimit="40"/>
+    <joint limb1="0" limb1anchor="-5,-38" limb2="1" limb2anchor="-2,25" lowerlimit="-20" upperlimit="40" canbesevered="true"/>
 
-    <joint limb1="1" limb1anchor="0,-15" limb2="2" limb2anchor="-10,31" lowerlimit="-20" upperlimit="40"/>
+    <joint limb1="1" limb1anchor="0,-15" limb2="2" limb2anchor="-10,31" lowerlimit="-20" upperlimit="40" canbesevered="true"/>
 
-    <joint limb1="0" limb1anchor="7,30" limb2="3" limb2anchor="-2,-17" lowerlimit="-180" upperlimit="-90"/>
+    <joint limb1="0" limb1anchor="7,30" limb2="3" limb2anchor="-2,-17" lowerlimit="-180" upperlimit="-90" canbesevered="true"/>
 
 
-    <joint limb1="0" limb1anchor="13,6" limb2="4" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180"/>
-    <joint limb1="4" limb1anchor="0,-17" limb2="5" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190"/>
+    <joint limb1="0" limb1anchor="13,6" limb2="4" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180" canbesevered="true"/>
+    <joint limb1="4" limb1anchor="0,-17" limb2="5" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190" canbesevered="true"/>
 
-    <joint limb1="0" limb1anchor="13,-15" limb2="6" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180"/>
-    <joint limb1="6" limb1anchor="0,-17" limb2="7" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190"/>
+    <joint limb1="0" limb1anchor="13,-15" limb2="6" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180" canbesevered="true"/>
+    <joint limb1="6" limb1anchor="0,-17" limb2="7" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190" canbesevered="true"/>
 
-    <joint limb1="0" limb1anchor="13,-35" limb2="8" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180"/>
-    <joint limb1="8" limb1anchor="0,-17" limb2="9" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190"/>
+    <joint limb1="0" limb1anchor="13,-35" limb2="8" limb2anchor="0,14" lowerlimit="-270" upperlimit="-180" canbesevered="true"/>
+    <joint limb1="8" limb1anchor="0,-17" limb2="9" limb2anchor="0,-17" lowerlimit="-350" upperlimit="-190" canbesevered="true"/>
   </ragdoll>
-
-  <ai attackhumans="500" attackrooms="50.0" attackweaker="50" attackstronger="-30" 
-      sight="0.5" hearing="1.0"
-      attackcooldown="3.0"/>
 </Character>
 
