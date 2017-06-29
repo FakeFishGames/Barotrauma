@@ -28,17 +28,13 @@ namespace Barotrauma
                 if (frozen == value) return;
 
                 frozen = value;
-
-                /*foreach (Limb l in Limbs)
-                {
-                    l.body.PhysEnabled = !frozen;
-                }*/
+                
                 Collider.PhysEnabled = !frozen;
             }
         }
 
         private Dictionary<LimbType, Limb> limbDictionary;
-        public RevoluteJoint[] limbJoints;
+        public LimbJoint[] LimbJoints;
 
         private bool simplePhysicsEnabled;
 
@@ -163,18 +159,20 @@ namespace Barotrauma
 
                 foreach (Limb limb in Limbs)
                 {
+                    if (limb.IsSevered) continue;
                     limb.body.Enabled = !simplePhysicsEnabled;
                 }
 
-                foreach (RevoluteJoint joint in limbJoints)
+                foreach (LimbJoint joint in LimbJoints)
                 {
-                    joint.Enabled = !simplePhysicsEnabled;
+                    joint.Enabled = !joint.IsSevered && !simplePhysicsEnabled;
                 }
 
                 if (!simplePhysicsEnabled)
                 {
                     foreach (Limb limb in Limbs)
                     {
+                        if (limb.IsSevered) continue;
                         limb.body.SetTransform(Collider.SimPosition, Collider.Rotation);
                     }
                 }
@@ -278,9 +276,9 @@ namespace Barotrauma
 
             float scale = ToolBox.GetAttributeFloat(element, "scale", 1.0f);
             
-            Limbs = new Limb[element.Elements("limb").Count()];
-            limbJoints = new RevoluteJoint[element.Elements("joint").Count()];
-            limbDictionary = new Dictionary<LimbType, Limb>();
+            Limbs           = new Limb[element.Elements("limb").Count()];
+            LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
+            limbDictionary  = new Dictionary<LimbType, Limb>();
 
             headPosition    = ToolBox.GetAttributeFloat(element, "headposition", 50.0f);
             headPosition    = ConvertUnits.ToSimUnits(headPosition);
@@ -346,7 +344,7 @@ namespace Barotrauma
 
             UpdateCollisionCategories();
 
-            foreach (var joint in limbJoints)
+            foreach (var joint in LimbJoints)
             {
                 joint.BodyB.SetTransform(
                     joint.BodyA.Position + (joint.LocalAnchorA - joint.LocalAnchorB)*0.1f,
@@ -385,9 +383,8 @@ namespace Barotrauma
             Vector2 limb2Pos = ToolBox.GetAttributeVector2(subElement, "limb2anchor", Vector2.Zero) * scale;
             limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
 
-            RevoluteJoint joint = new RevoluteJoint(Limbs[limb1ID].body.FarseerBody, Limbs[limb2ID].body.FarseerBody, limb1Pos, limb2Pos);
-
-            joint.CollideConnected = false;
+            LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos);
+            joint.CanBeSevered = ToolBox.GetAttributeBool(subElement, "canbesevered", false);
 
             if (subElement.Attribute("lowerlimit") != null)
             {
@@ -396,22 +393,18 @@ namespace Barotrauma
                 joint.UpperLimit = float.Parse(subElement.Attribute("upperlimit").Value) * ((float)Math.PI / 180.0f);
             }
 
-            joint.MotorEnabled = true;
-            joint.MaxMotorTorque = 0.25f;
-
             GameMain.World.AddJoint(joint);
 
-            for (int i = 0; i < limbJoints.Length; i++)
+            for (int i = 0; i < LimbJoints.Length; i++)
             {
-                if (limbJoints[i] != null) continue;
+                if (LimbJoints[i] != null) continue;
 
-                limbJoints[i] = joint;
+                LimbJoints[i] = joint;
                 return;
             }
 
-            Array.Resize(ref limbJoints, limbJoints.Length + 1);
-            limbJoints[limbJoints.Length - 1] = joint;
-
+            Array.Resize(ref LimbJoints, LimbJoints.Length + 1);
+            LimbJoints[LimbJoints.Length - 1] = joint;
         }
 
         public void AddLimb(Limb limb)
@@ -509,9 +502,9 @@ namespace Barotrauma
             {
                 Limb limb = (Limb)f1.Body.UserData;
                 
-                if (impact > 3.0f && limb.HitSound != null && limb.soundTimer <= 0.0f)
+                if (impact > 3.0f && limb.HitSound != null && limb.SoundTimer <= 0.0f)
                 {
-                    limb.soundTimer = Limb.SoundInterval;
+                    limb.SoundTimer = Limb.SoundInterval;
                     limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
                 }
             }
@@ -528,6 +521,51 @@ namespace Barotrauma
                 }                              
 
                 if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
+            }
+        }
+
+        public void SeverLimbJoint(LimbJoint limbJoint)
+        {
+            limbJoint.IsSevered = true;
+            limbJoint.Enabled = false;
+
+            List<Limb> connectedLimbs = new List<Limb>();
+            List<LimbJoint> checkedJoints = new List<LimbJoint>();
+
+            GetConnectedLimbs(connectedLimbs, checkedJoints, MainLimb);
+            foreach (Limb limb in Limbs)
+            {
+                if (!connectedLimbs.Contains(limb))
+                {
+                    limb.IsSevered = true;
+                }
+            }
+
+        }
+
+        private void GetConnectedLimbs(List<Limb> connectedLimbs, List<LimbJoint> checkedJoints, Limb limb)
+        {
+            connectedLimbs.Add(limb);
+
+            foreach (LimbJoint joint in LimbJoints)
+            {
+                if (joint.IsSevered || checkedJoints.Contains(joint)) continue;
+                if (joint.LimbA == limb)
+                {
+                    if (!connectedLimbs.Contains(joint.LimbB))
+                    {
+                        checkedJoints.Add(joint);
+                        GetConnectedLimbs(connectedLimbs, checkedJoints, joint.LimbB);
+                    }
+                }
+                else if (joint.LimbB == limb)
+                {
+                    if (!connectedLimbs.Contains(joint.LimbA))
+                    {
+                        checkedJoints.Add(joint);
+                        GetConnectedLimbs(connectedLimbs, checkedJoints, joint.LimbA);
+                    }
+                }
             }
         }
 
@@ -559,13 +597,15 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
                 }
 
-                limb.body.DebugDraw(spriteBatch, inWater ? Color.Cyan : Color.White);
+                Color limbColor = inWater ? Color.Cyan : Color.White;
+                if (limb.IsSevered) limbColor = Color.Red;
+                limb.body.DebugDraw(spriteBatch, limbColor);
             }
 
             Collider.DebugDraw(spriteBatch, frozen ? Color.Red : (inWater ? Color.SkyBlue : Color.Gray));
             GUI.Font.DrawString(spriteBatch, Collider.LinearVelocity.X.ToString(), new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y), Color.Orange);
 
-            foreach (RevoluteJoint joint in limbJoints)
+            foreach (RevoluteJoint joint in LimbJoints)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(joint.WorldAnchorA);
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.White, true);
@@ -619,22 +659,24 @@ namespace Barotrauma
         {
             dir = (dir == Direction.Left) ? Direction.Right : Direction.Left;
             
-            for (int i = 0; i < limbJoints.Length; i++)
+            for (int i = 0; i < LimbJoints.Length; i++)
             {
-                float lowerLimit = -limbJoints[i].UpperLimit;
-                float upperLimit = -limbJoints[i].LowerLimit;
+                float lowerLimit = -LimbJoints[i].UpperLimit;
+                float upperLimit = -LimbJoints[i].LowerLimit;
 
-                limbJoints[i].LowerLimit = lowerLimit;
-                limbJoints[i].UpperLimit = upperLimit;
+                LimbJoints[i].LowerLimit = lowerLimit;
+                LimbJoints[i].UpperLimit = upperLimit;
 
-                limbJoints[i].LocalAnchorA = new Vector2(-limbJoints[i].LocalAnchorA.X, limbJoints[i].LocalAnchorA.Y);
-                limbJoints[i].LocalAnchorB = new Vector2(-limbJoints[i].LocalAnchorB.X, limbJoints[i].LocalAnchorB.Y);
+                LimbJoints[i].LocalAnchorA = new Vector2(-LimbJoints[i].LocalAnchorA.X, LimbJoints[i].LocalAnchorA.Y);
+                LimbJoints[i].LocalAnchorB = new Vector2(-LimbJoints[i].LocalAnchorB.X, LimbJoints[i].LocalAnchorB.Y);
             }
 
 
             foreach (Limb limb in Limbs)
             {
-                if (limb == null) continue;
+                if (limb == null || limb.IsSevered) continue;
+                
+                limb.Dir = Dir;
 
                 if (limb.sprite != null)
                 {
@@ -643,12 +685,13 @@ namespace Barotrauma
                     limb.sprite.Origin = spriteOrigin;
                 }
 
-                limb.Dir = Dir;
-
-                /*if (limb.LightSource != null)
+                
+                if (limb.MouthPos.HasValue)
                 {
-                    limb.LightSource.FlipX();
-                }*/
+                    limb.MouthPos = new Vector2(
+                        -limb.MouthPos.Value.X,
+                        limb.MouthPos.Value.Y);
+                }
 
                 if (limb.pullJoint != null)
                 {
@@ -663,12 +706,15 @@ namespace Barotrauma
         public Vector2 GetCenterOfMass()
         {
             Vector2 centerOfMass = Vector2.Zero;
+            float totalMass = 0.0f;
             foreach (Limb limb in Limbs)
             {
+                if (limb.IsSevered) continue;
                 centerOfMass += limb.Mass * limb.SimPosition;
+                totalMass += limb.Mass;
             }
 
-            centerOfMass /= Mass;
+            centerOfMass /= totalMass;
 
             return centerOfMass;
         }
@@ -769,6 +815,7 @@ namespace Barotrauma
         {
             foreach (Limb limb in Limbs)
             {
+                if (limb.IsSevered) continue;
                 if (limb.body.FarseerBody.ContactList == null) continue;
                 
                 ContactEdge ce = limb.body.FarseerBody.ContactList;
@@ -781,6 +828,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
+                if (limb.IsSevered) continue;
                 limb.body.LinearVelocity += velocityChange;
             }
 
@@ -805,7 +853,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.ignoreCollisions) continue;
+                if (limb.ignoreCollisions || limb.IsSevered) continue;
 
                 try
                 {
@@ -1145,6 +1193,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
+                if (limb.IsSevered) continue;
                 //check visibility from the new position of the collider to the new position of this limb
                 Vector2 movePos = limb.SimPosition + limbMoveAmount;
 
@@ -1208,6 +1257,7 @@ namespace Barotrauma
                 //(in case the ragdoll has gotten stuck somewhere)
                 foreach (Limb limb in Limbs)
                 {
+                    if (limb.IsSevered) continue;
                     limb.body.CollidesWith = Physics.CollisionNone;
                 }
 
@@ -1463,22 +1513,28 @@ namespace Barotrauma
 
         public void Remove()
         {
-            foreach (Limb l in Limbs)
+            if (Limbs != null)
             {
-                l.Remove();
+                foreach (Limb l in Limbs)
+                {
+                    l.Remove();
+                }
+                Limbs = null;
             }
-            Limbs = null;
 
             foreach (PhysicsBody b in collider)
             {
                 b.Remove();
             }
 
-            foreach (RevoluteJoint joint in limbJoints)
+            if (LimbJoints != null)
             {
-                GameMain.World.RemoveJoint(joint);
+                foreach (RevoluteJoint joint in LimbJoints)
+                {
+                    GameMain.World.RemoveJoint(joint);
+                }
+                LimbJoints = null;
             }
-            limbJoints = null;
 
             list.Remove(this);
         }

@@ -11,7 +11,11 @@ namespace Barotrauma
 
         public static List<AITarget> List = new List<AITarget>();
 
-        public readonly Entity Entity;
+        public Entity Entity
+        {
+            get;
+            private set;
+        }
 
         private float soundRange;
         private float sightRange;
@@ -47,6 +51,7 @@ namespace Barotrauma
         public void Remove()
         {
             List.Remove(this);
+            Entity = null;
         }
 
         public void Draw(SpriteBatch spriteBatch)

@@ -18,7 +18,7 @@ namespace Barotrauma
     {
         public readonly float Damage;
         public readonly float Bleeding;
-
+        
         public readonly bool HitArmor;
 
         public AttackResult(float damage, float bleeding, bool hitArmor=false)
@@ -48,6 +48,12 @@ namespace Barotrauma
         public readonly float Torque;
 
         public readonly float TargetForce;
+
+        public readonly float SeverLimbsProbability;
+
+        //the indices of the limbs Force is applied on 
+        //(if none, force is applied only to the limb the attack is attached to)
+        public readonly List<int> ApplyForceOnLimbs;
 
         private Sound sound;
 
@@ -91,29 +97,41 @@ namespace Barotrauma
                 DamageType = DamageType.None;
             }
 
-
-            damage = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
+            damage          = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
             structureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
-            bleedingDamage = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
+            bleedingDamage  = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
+            Stun            = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
 
-            Force = ToolBox.GetAttributeFloat(element,"force", 0.0f);
-            TargetForce = ToolBox.GetAttributeFloat(element, "targetforce", 0.0f);
+            SeverLimbsProbability = ToolBox.GetAttributeFloat(element, "severlimbsprobability", 0.0f);
 
-            Torque = ToolBox.GetAttributeFloat(element, "torque", 0.0f);
-
-            Stun = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
-
+            Force           = ToolBox.GetAttributeFloat(element, "force", 0.0f);
+            TargetForce     = ToolBox.GetAttributeFloat(element, "targetforce", 0.0f);
+            Torque          = ToolBox.GetAttributeFloat(element, "torque", 0.0f);
+            
             string soundPath = ToolBox.GetAttributeString(element, "sound", "");
             if (!string.IsNullOrWhiteSpace(soundPath))
             {
                 sound = Sound.Load(soundPath);
             }
                       
-            Range = ToolBox.GetAttributeFloat(element, "range", 0.0f);
+            Range       = ToolBox.GetAttributeFloat(element, "range", 0.0f);
+            Duration    = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
 
-            Duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
-
-            priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
+            priority    = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
+            
+            string limbIndicesStr = ToolBox.GetAttributeString(element, "applyforceonlimbs", "");
+            if (!string.IsNullOrWhiteSpace(limbIndicesStr))
+            {
+                ApplyForceOnLimbs = new List<int>();
+                foreach (string limbIndexStr in limbIndicesStr.Split(','))
+                {
+                    int limbIndex;
+                    if (int.TryParse(limbIndexStr, out limbIndex))
+                    {
+                        ApplyForceOnLimbs.Add(limbIndex);
+                    }   
+                }
+            }
             
             foreach (XElement subElement in element.Elements())
             {

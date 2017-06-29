@@ -217,7 +217,7 @@ namespace Barotrauma
             }
 
             jointList.ClearChildren();
-            foreach (RevoluteJoint joint in character.AnimController.limbJoints)
+            foreach (RevoluteJoint joint in character.AnimController.LimbJoints)
             {
                 Limb limb1 = (Limb)(joint.BodyA.UserData);
                 Limb limb2 = (Limb)(joint.BodyB.UserData);
@@ -236,7 +236,7 @@ namespace Barotrauma
 
         private void DrawJoints(SpriteBatch spriteBatch, Limb limb, Vector2 limbBodyPos)
         {
-            foreach (var joint in editingCharacter.AnimController.limbJoints)
+            foreach (var joint in editingCharacter.AnimController.LimbJoints)
             {
                 Vector2 jointPos = Vector2.Zero;
 
@@ -253,24 +253,27 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                
-                jointPos.Y = -jointPos.Y;
-                jointPos += limbBodyPos;
+
+                Vector2 tformedJointPos = jointPos /= limb.Scale;                
+                tformedJointPos.Y = -tformedJointPos.Y;
+                tformedJointPos += limbBodyPos;
+
                 if (joint.BodyA == limb.body.FarseerBody)
                 {
                     float a1 = joint.UpperLimit - MathHelper.PiOver2;
                     float a2 = joint.LowerLimit - MathHelper.PiOver2;
-                    float a3 =( a1+a2)/2.0f;
-                GUI.DrawLine(spriteBatch, jointPos, jointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Green);
-                GUI.DrawLine(spriteBatch, jointPos, jointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.DarkGreen);
+                    float a3 = (a1 + a2) / 2.0f;
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a1), -(float)Math.Sin(a1)) * 30.0f, Color.Green);
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a2), -(float)Math.Sin(a2)) * 30.0f, Color.DarkGreen);
 
-                GUI.DrawLine(spriteBatch, jointPos, jointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
+                    GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + new Vector2((float)Math.Cos(a3), -(float)Math.Sin(a3)) * 30.0f, Color.LightGray);
                 }
 
-                GUI.DrawRectangle(spriteBatch, jointPos, new Vector2(5.0f, 5.0f), Color.Red, true);
-                if (Vector2.Distance(PlayerInput.MousePosition, jointPos) < 6.0f)
+                GUI.DrawRectangle(spriteBatch, tformedJointPos, new Vector2(5.0f, 5.0f), Color.Red, true);
+                if (Vector2.Distance(PlayerInput.MousePosition, tformedJointPos) < 10.0f)
                 {
-                    GUI.DrawRectangle(spriteBatch, jointPos - new Vector2(3.0f, 3.0f), new Vector2(11.0f, 11.0f), Color.Red, false);
+                    GUI.DrawString(spriteBatch, tformedJointPos + Vector2.One*10.0f, jointPos.ToString(), Color.White, Color.Black * 0.5f);
+                    GUI.DrawRectangle(spriteBatch, tformedJointPos - new Vector2(3.0f, 3.0f), new Vector2(11.0f, 11.0f), Color.Red, false);
                     if (PlayerInput.LeftButtonHeld())
                     {
                         Vector2 speed = ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed);
