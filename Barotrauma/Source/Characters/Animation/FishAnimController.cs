@@ -213,14 +213,6 @@ namespace Barotrauma
 
                 Vector2 pullPos = Limbs[i].pullJoint == null ? Limbs[i].SimPosition : Limbs[i].pullJoint.WorldAnchorA;
                 Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
-
-                /*if (Limbs[i] == MainLimb) continue;
-
-                float dist = (MainLimb.SimPosition - Limbs[i].SimPosition).Length();
-
-                Vector2 limbPos = MainLimb.SimPosition - Vector2.Normalize(movement) * dist;
-
-                Limbs[i].body.ApplyForce(((limbPos - Limbs[i].SimPosition) * 3.0f - Limbs[i].LinearVelocity * 3.0f) * Limbs[i].Mass);*/
             }
             
             Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, 0.5f);
@@ -231,7 +223,6 @@ namespace Barotrauma
         void UpdateWalkAnim(float deltaTime)
         {
             movement = MathUtils.SmoothStep(movement, TargetMovement * walkSpeed, 0.2f);
-            if (movement == Vector2.Zero) return;
             
             float mainLimbHeight, mainLimbAngle;
             if (MainLimb.type == LimbType.Torso)

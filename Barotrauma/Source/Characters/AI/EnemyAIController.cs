@@ -362,9 +362,18 @@ namespace Barotrauma
                 if (steeringManager is IndoorsSteeringManager)
                 {
                     var indoorsSteering = (IndoorsSteeringManager)steeringManager;
-                    if (indoorsSteering.CurrentPath != null && (indoorsSteering.CurrentPath.Finished || indoorsSteering.CurrentPath.Unreachable))
+                    if (indoorsSteering.CurrentPath != null)
                     {
-                        steeringManager.SteeringManual(deltaTime, attackSimPosition - attackLimb.SimPosition);
+                        if (indoorsSteering.CurrentPath.Unreachable)
+                        {
+                            //wander around randomly and decrease the priority faster if no path is found
+                            if (selectedTargetMemory != null) selectedTargetMemory.Priority -= deltaTime * 10.0f;
+                            steeringManager.SteeringWander();
+                        }
+                        else if (indoorsSteering.CurrentPath.Finished)
+                        {                            
+                            steeringManager.SteeringManual(deltaTime, attackSimPosition - attackLimb.SimPosition);
+                        }
                     }
                 }
 
@@ -525,6 +534,8 @@ namespace Barotrauma
                 //pull the target character to the position of the mouth
                 //(+ make the force fluctuate to waggle the character a bit)
                 targetCharacter.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                targetCharacter.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation);
+                targetCharacter.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
 
                 //pull the character's mouth to the target character (again with a fluctuating force)
                 float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
@@ -632,8 +643,8 @@ namespace Barotrauma
                     IDamageable targetDamageable = target.Entity as IDamageable;
                     if (targetDamageable != null && targetDamageable.Health <= 0.0f) continue;
 
-                    //skip the target if it's the room the Character is inside of
-                    if (character.AnimController.CurrentHull != null && character.AnimController.CurrentHull == target.Entity as Hull) continue;
+                    //skip the target if it's a room and the character is already inside a sub
+                    if (character.AnimController.CurrentHull != null && target.Entity is Hull) continue;
 
                     valueModifier = attackRooms;
                 }
@@ -701,7 +712,6 @@ namespace Barotrauma
         //have a corresponding AItarget or whose priority is 0.0f
         private void UpdateTargetMemories()
         {
-
             List<AITarget> toBeRemoved = new List<AITarget>();
             foreach(KeyValuePair<AITarget, AITargetMemory> memory in targetMemories)
             {
@@ -724,7 +734,7 @@ namespace Barotrauma
             Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
 
-            if (selectedAiTarget!=null)
+            if (selectedAiTarget!=null && selectedAiTarget.Entity != null)
             {
                 GUI.DrawLine(spriteBatch, pos, new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);
 
@@ -734,10 +744,7 @@ namespace Barotrauma
                 }
 
                 GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY*20.0f, Color.Red);
-            }
 
-            if (selectedAiTarget != null)
-            {
                 GUI.DrawLine(spriteBatch,
                     new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
                     new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);

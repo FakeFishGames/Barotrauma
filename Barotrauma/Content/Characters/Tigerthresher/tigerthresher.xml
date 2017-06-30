@@ -25,7 +25,7 @@
     <collider radius="50" height="320"/>
     
     <!-- head -->
-    <limb id = "0" radius="12" height="100" type="Head" steerforce="1.0" mouthpos="20,0">
+    <limb id = "0" radius="12" height="100" type="Head" steerforce="1.0" mouthpos="20,50">
       <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="371,15,66,136" depth="0.02" origin ="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="371,15,66,136" origin ="0.5,0.5"/>
     </limb>
