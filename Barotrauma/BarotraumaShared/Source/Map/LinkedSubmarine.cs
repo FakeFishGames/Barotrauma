@@ -1,0 +1,245 @@
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+
+namespace Barotrauma
+{
+    partial class LinkedSubmarinePrefab : MapEntityPrefab
+    {
+        public readonly Submarine mainSub;
+        
+        public LinkedSubmarinePrefab(Submarine submarine)
+        {
+            this.mainSub = submarine;
+        }
+
+        protected override void CreateInstance(Rectangle rect)
+        {
+            System.Diagnostics.Debug.Assert(Submarine.MainSub != null);
+
+            LinkedSubmarine.CreateDummy(Submarine.MainSub, mainSub.FilePath, rect.Location.ToVector2());
+        }
+    }
+
+    partial class LinkedSubmarine : MapEntity
+    {
+        private List<Vector2> wallVertices;
+
+        private string filePath;
+
+        private bool loadSub;
+        private Submarine sub;
+
+        public Submarine Sub
+        {
+            get
+            {
+                return sub;
+            }
+        }
+
+        private XElement saveElement;
+
+        public override bool IsLinkable
+        {
+            get
+            {
+                return true;
+            }
+        }
+        
+        public LinkedSubmarine(Submarine submarine)
+            : base(null, submarine) 
+        {
+            linkedTo = new System.Collections.ObjectModel.ObservableCollection<MapEntity>();
+            linkedToID = new List<ushort>();
+
+            InsertToList();
+        }
+
+        public static LinkedSubmarine CreateDummy(Submarine mainSub, Submarine linkedSub)
+        {
+            LinkedSubmarine sl = new LinkedSubmarine(mainSub);
+            sl.sub = linkedSub;
+
+            return sl;
+        }
+        
+        public static LinkedSubmarine CreateDummy(Submarine mainSub, string filePath, Vector2 position)
+        {
+            XDocument doc = Submarine.OpenFile(filePath);
+            if (doc == null || doc.Root == null) return null;
+
+            LinkedSubmarine sl = CreateDummy(mainSub, doc.Root, position);
+            sl.filePath = filePath;
+
+            return sl;
+        }
+
+        public static LinkedSubmarine CreateDummy(Submarine mainSub, XElement element, Vector2 position)
+        {
+            LinkedSubmarine sl = new LinkedSubmarine(mainSub);
+            sl.GenerateWallVertices(element);
+
+            sl.Rect = new Rectangle(
+                (int)sl.wallVertices.Min(v => v.X + position.X),
+                (int)sl.wallVertices.Max(v => v.Y + position.Y),
+                (int)sl.wallVertices.Max(v => v.X + position.X),
+                (int)sl.wallVertices.Min(v => v.Y + position.Y));
+            
+            sl.rect = new Rectangle((int)position.X, (int)position.Y, 1, 1);
+
+            return sl;
+        }
+
+        public override bool IsMouseOn(Vector2 position)
+        {
+            return Vector2.Distance(position, WorldPosition) < 50.0f;
+        }
+        
+        private void GenerateWallVertices(XElement rootElement)
+        {
+            List<Vector2> points = new List<Vector2>();
+
+            var wallPrefabs =
+                MapEntityPrefab.list.FindAll(mp => (mp is StructurePrefab) && ((StructurePrefab)mp).HasBody);
+
+            foreach (XElement element in rootElement.Elements())
+            {
+                if (element.Name != "Structure") continue;
+
+                string name = ToolBox.GetAttributeString(element, "name", "");
+                if (!wallPrefabs.Any(wp => wp.Name == name)) continue;
+
+                var rect = ToolBox.GetAttributeVector4(element, "rect", Vector4.Zero);
+                
+                points.Add(new Vector2(rect.X, rect.Y));
+                points.Add(new Vector2(rect.X + rect.Z, rect.Y));
+                points.Add(new Vector2(rect.X, rect.Y - rect.W));
+                points.Add(new Vector2(rect.X + rect.Z, rect.Y - rect.W));
+            }
+
+            wallVertices = MathUtils.GiftWrap(points);
+        }
+
+        public static void Load(XElement element, Submarine submarine)
+        {
+            Vector2 pos = ToolBox.GetAttributeVector2(element, "pos", Vector2.Zero);
+
+            LinkedSubmarine linkedSub = null;
+
+            if (Screen.Selected == GameMain.EditMapScreen)
+            {
+                //string filePath = ToolBox.GetAttributeString(element, "filepath", "");
+                
+                linkedSub = CreateDummy(submarine, element, pos);
+                linkedSub.saveElement = element;
+            }
+            else
+            {
+                linkedSub = new LinkedSubmarine(submarine);
+                linkedSub.saveElement = element;
+
+                string levelSeed = ToolBox.GetAttributeString(element, "location", "");
+                if (!string.IsNullOrWhiteSpace(levelSeed) && GameMain.GameSession.Level != null && GameMain.GameSession.Level.Seed != levelSeed)
+                {
+                    linkedSub.loadSub = false;
+                    return;
+                }
+
+                linkedSub.loadSub = true;
+
+                linkedSub.rect.Location = MathUtils.ToPoint(pos);
+            }
+
+            linkedSub.filePath = ToolBox.GetAttributeString(element, "filepath", "");
+
+            string linkedToString = ToolBox.GetAttributeString(element, "linkedto", "");
+            if (linkedToString != "")
+            {
+                string[] linkedToIds = linkedToString.Split(',');
+                for (int i = 0; i < linkedToIds.Length; i++)
+                {
+                    linkedSub.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
+                }
+            }
+
+        }
+
+        public override void OnMapLoaded()
+        {
+            if (!loadSub) return;
+
+            sub = Submarine.Load(saveElement, false);
+            
+            Vector2 worldPos = ToolBox.GetAttributeVector2(saveElement, "worldpos", Vector2.Zero);
+            if (worldPos != Vector2.Zero)
+            {
+                sub.SetPosition(worldPos);
+            }
+            else
+            {
+                sub.SetPosition(WorldPosition);                
+            }
+
+
+            DockingPort linkedPort = null;
+            DockingPort myPort = null;
+            
+            MapEntity linkedItem = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
+            if (linkedItem == null)
+            {
+                linkedPort = DockingPort.list.Find(dp => dp.DockingTarget != null && dp.DockingTarget.Item.Submarine == sub);
+            }
+            else
+            {
+                linkedPort = ((Item)linkedItem).GetComponent<DockingPort>();
+            }
+
+            if (linkedPort == null)
+            {
+                return;
+            }
+
+            float closestDistance = 0.0f;
+            foreach (DockingPort port in DockingPort.list)
+            {
+                if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) continue;
+
+                float dist = Vector2.Distance(port.Item.WorldPosition, linkedPort.Item.WorldPosition);
+                if (myPort == null || dist < closestDistance)
+                {
+                    myPort = port;
+                    closestDistance = dist;
+                }
+            }
+
+            if (myPort != null)
+            {
+                Vector2 portDiff = myPort.Item.WorldPosition - sub.WorldPosition;
+                Vector2 offset = (myPort.IsHorizontal ?
+                    Vector2.UnitX * Math.Sign(linkedPort.Item.WorldPosition.X - myPort.Item.WorldPosition.X) :
+                    Vector2.UnitY * Math.Sign(linkedPort.Item.WorldPosition.Y - myPort.Item.WorldPosition.Y));
+                offset *= myPort.DockedDistance;
+
+                sub.SetPosition(
+                    (linkedPort.Item.WorldPosition - portDiff)
+                    - offset);
+
+
+                myPort.Dock(linkedPort);   
+                myPort.Lock(true);
+            }
+
+            sub.SetPosition(sub.WorldPosition - Submarine.WorldPosition);
+            sub.Submarine = Submarine;
+        }
+    }
+}
