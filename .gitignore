@@ -16,4 +16,3 @@ bld/
 #performance reports & sessions
 *.vsp
 *.psess
-/packages/MonoGame.Framework.WindowsDX.3.4.0.459/lib/net40
