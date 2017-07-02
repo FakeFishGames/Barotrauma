@@ -141,7 +141,6 @@ namespace Barotrauma
 #endif
                 default:
                     return false;
-                    break;
             }
             return true; //command found
         }

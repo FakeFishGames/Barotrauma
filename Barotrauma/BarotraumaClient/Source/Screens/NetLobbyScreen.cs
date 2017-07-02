@@ -893,49 +893,22 @@ namespace Barotrauma
 
         public bool KickPlayer(GUIButton button, object userData)
         {
-            if (userData == null) return false;
-
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.KickPlayer(userData.ToString(), false);
-            }
-            else if (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.Kick))
-            {
-                GameMain.Client.KickPlayer(userData.ToString(), false);
-            }
-
+            if (userData == null || GameMain.NetworkMember == null) return false;
+            GameMain.NetworkMember.CreateKickReasonPrompt(userData.ToString(), false);            
             return false;
         }
 
         public bool BanPlayer(GUIButton button, object userData)
         {
-            if (userData == null) return false;
-
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.KickPlayer(userData.ToString(), true);
-            }
-            else if (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.Ban))
-            {
-                GameMain.Client.KickPlayer(userData.ToString(), true);
-            }
-
+            if (userData == null || GameMain.NetworkMember == null) return false;
+            GameMain.NetworkMember.CreateKickReasonPrompt(userData.ToString(), true);
             return false;
         }
 
         public bool BanPlayerRange(GUIButton button, object userData)
         {
-            if (userData == null) return false;
-
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.KickPlayer(userData.ToString(), true, true);
-            }
-            else if (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.Ban))
-            {
-                GameMain.Client.KickPlayer(userData.ToString(), true, true);
-            }
-
+            if (userData == null || GameMain.NetworkMember == null) return false;
+            GameMain.NetworkMember.CreateKickReasonPrompt(userData.ToString(), true, true);
             return false;
         }
 

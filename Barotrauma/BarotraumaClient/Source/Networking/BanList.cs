@@ -29,6 +29,7 @@ namespace Barotrauma.Networking
                     Alignment.Left, Alignment.Left, banFrame);
                 textBlock.Padding = new Vector4(10.0f, 10.0f, 0.0f, 0.0f);
                 textBlock.UserData = banFrame;
+                textBlock.ToolTip = bannedPlayer.Reason;
 
                 var removeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Remove", Alignment.Right | Alignment.CenterY, "", textBlock);
                 removeButton.UserData = bannedPlayer;

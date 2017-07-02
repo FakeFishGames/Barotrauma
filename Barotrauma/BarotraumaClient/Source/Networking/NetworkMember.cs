@@ -161,5 +161,20 @@ namespace Barotrauma.Networking
         {
             return false;
         }
+        
+        public void CreateKickReasonPrompt(string clientName, bool ban, bool rangeBan = false)
+        {
+            var banReasonPrompt = new GUIMessageBox(ban ? "Reason for the ban?" : "Reason for kicking?", "", new string[] { "OK" }, 400, 250);
+            var textBox = new GUITextBox(new Rectangle(0, 0, 0, 50), Alignment.Center, "", banReasonPrompt.children[0]);
+            textBox.Wrap = true;
+            textBox.MaxTextLength = 100;
+
+            banReasonPrompt.Buttons[0].OnClicked += (btn, userData) =>
+            {
+                KickPlayer(clientName, textBox.Text, ban, rangeBan);
+                return true;
+            };
+            banReasonPrompt.Buttons[0].OnClicked += banReasonPrompt.Close;
+        }
     }
 }
