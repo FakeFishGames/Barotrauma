@@ -6,6 +6,9 @@ namespace Barotrauma
 {
     class GUINumberInput : GUIComponent
     {
+        public delegate void OnValueChangedHandler(GUINumberInput numberInput, int number);
+        public OnValueChangedHandler OnValueChanged;
+        
         private GUITextBox textBox;
         private GUIButton plusButton, minusButton;
 
@@ -17,16 +20,22 @@ namespace Barotrauma
             get { return value; }
             set
             {
+                if (value == this.value) return;
+
                 this.value = value;
                 if (MinValue != null)
                 {
                     this.value = Math.Max(this.value, (int)MinValue);
+                    minusButton.Enabled = this.value > MinValue;
                 }
                 if (MaxValue != null)
                 {
                     this.value = Math.Min(this.value, (int)MaxValue);
+                    plusButton.Enabled = this.value < MaxValue;
                 }
                 textBox.Text = this.value.ToString();
+
+                if (OnValueChanged != null) OnValueChanged(this, this.value);
             }
         }
 
@@ -49,14 +58,15 @@ namespace Barotrauma
 
             textBox.OnTextChanged += TextChanged;
 
-            plusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "+", Alignment.TopRight, style, this);
+            plusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "+", null, Alignment.TopRight, Alignment.Center, style, this);
             plusButton.OnClicked += ChangeValue;
-            minusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "-", Alignment.BottomRight, style, this);
+            minusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "-", null, Alignment.BottomRight, Alignment.Center, style, this);
             minusButton.OnClicked += ChangeValue;
 
             MinValue = minValue;
             MaxValue = maxValue;
 
+            value = int.MaxValue;
             Value = minValue != null ? (int)minValue : 0;
         }
 

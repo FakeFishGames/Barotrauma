@@ -271,50 +271,20 @@ namespace Barotrauma.Networking
 
                 int cargoVal = 0;
                 extraCargo.TryGetValue(pf.Name, out cargoVal);
-                var countText = new GUITextBlock(
-                    new Rectangle(160, 0, 55, 25),
-                    cargoVal.ToString(),
-                    "",
-                    Alignment.Left, Alignment.Center, textBlock);
+                var amountInput = new GUINumberInput(new Rectangle(160, 0, 50, 20), "", 0, 100, textBlock);
+                amountInput.Value = cargoVal;
 
-                var incButton = new GUIButton(new Rectangle(200, 5, 15, 15), ">", "", textBlock);
-                incButton.UserData = countText;
-                incButton.OnClicked = (button, obj) =>
+                amountInput.OnValueChanged += (numberInput, value) =>
                 {
-                    int val;
-                    if (extraCargo.TryGetValue(pf.Name, out val))
+                    if (extraCargo.ContainsKey(pf.Name))
                     {
-                        extraCargo[pf.Name]++; val = extraCargo[pf.Name];
+                        extraCargo[pf.Name] = value;
                     }
                     else
                     {
-                        extraCargo.Add(pf.Name, 1); val = 1;
+                        extraCargo.Add(pf.Name, value);
                     }
-                    ((GUITextBlock)obj).Text = val.ToString();
-                    ((GUITextBlock)obj).SetTextPos();
-                    return true;
-                };
-
-                var decButton = new GUIButton(new Rectangle(160, 5, 15, 15), "<", "", textBlock);
-                decButton.UserData = countText;
-                decButton.OnClicked = (button, obj) =>
-                {
-                    int val;
-                    if (extraCargo.TryGetValue(pf.Name, out val))
-                    {
-                        extraCargo[pf.Name]--;
-                        val = extraCargo[pf.Name];
-                        if (val <= 0)
-                        {
-                            extraCargo.Remove(pf.Name);
-                            val = 0;
-                        }
-                        ((GUITextBlock)obj).Text = val.ToString();
-                        ((GUITextBlock)obj).SetTextPos();
-                    }
-
-                    return true;
-                };
+                };                
             }
 
 
