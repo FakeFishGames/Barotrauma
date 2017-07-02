@@ -67,8 +67,8 @@ namespace Barotrauma.Networking
                     string name     = separatedLine[0];
                     string ip       = separatedLine[1];
 
-                    DateTime? expirationTime = DateTime.Now;
-                    if (separatedLine.Length > 2)
+                    DateTime? expirationTime = null;
+                    if (separatedLine.Length > 2 && !string.IsNullOrEmpty(separatedLine[2]))
                     {
                         DateTime parsedTime;
                         if (DateTime.TryParse(separatedLine[2], out parsedTime))
@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
                     }
                     string reason = separatedLine.Length > 3 ? string.Join(",", separatedLine.Skip(3)) : "";
 
-                    if (expirationTime.HasValue && expirationTime.Value > DateTime.Now) continue;
+                    if (expirationTime.HasValue && DateTime.Now > expirationTime.Value) continue;
 
                     bannedPlayers.Add(new BannedPlayer(name, ip, reason, expirationTime));
                 }
@@ -91,7 +91,11 @@ namespace Barotrauma.Networking
 
             System.Diagnostics.Debug.Assert(!name.Contains(','));
 
-            DebugConsole.Log("Banned " + name);
+            string logMsg = "Banned " + name;
+            if (!string.IsNullOrEmpty(reason)) logMsg += ", reason: " + reason;
+            if (duration.HasValue) logMsg += ", duration: " + duration.Value.ToString();
+
+            DebugConsole.Log(logMsg);
 
             DateTime? expirationTime = null;
             if (duration.HasValue)
@@ -158,7 +162,7 @@ namespace Barotrauma.Networking
             foreach (BannedPlayer banned in bannedPlayers)
             {
                 string line = banned.Name + "," + banned.IP;
-                if (banned.ExpirationTime.HasValue) line += "," + banned.ExpirationTime.Value.ToString();
+                line += "," + (banned.ExpirationTime.HasValue ? banned.ExpirationTime.Value.ToString() : "");
                 if (!string.IsNullOrWhiteSpace(banned.Reason)) line += "," + banned.Reason;
                 
                 lines.Add(line);
