@@ -11,6 +11,7 @@ namespace Barotrauma.Networking
         public string Name;
         public string IP;
         public string Reason;
+        public DateTime? ExpirationTime;
 
         public bool CompareTo(string ipCompare)
         {
@@ -26,11 +27,12 @@ namespace Barotrauma.Networking
             }
         }
 
-        public BannedPlayer(string name, string ip, string reason)
+        public BannedPlayer(string name, string ip, string reason, DateTime? expirationTime)
         {
             this.Name = name;
             this.IP = ip;
             this.Reason = reason;
+            this.ExpirationTime = expirationTime;
         }
     }
 
@@ -64,14 +66,26 @@ namespace Barotrauma.Networking
 
                     string name     = separatedLine[0];
                     string ip       = separatedLine[1];
-                    string reason   = separatedLine.Length > 2 ? string.Join(",", separatedLine.Skip(2)) : "";
 
-                    bannedPlayers.Add(new BannedPlayer(name, ip,reason));
+                    DateTime? expirationTime = DateTime.Now;
+                    if (separatedLine.Length > 2)
+                    {
+                        DateTime parsedTime;
+                        if (DateTime.TryParse(separatedLine[2], out parsedTime))
+                        {
+                            expirationTime = parsedTime;
+                        }
+                    }
+                    string reason = separatedLine.Length > 3 ? string.Join(",", separatedLine.Skip(3)) : "";
+
+                    if (expirationTime.HasValue && expirationTime.Value > DateTime.Now) continue;
+
+                    bannedPlayers.Add(new BannedPlayer(name, ip, reason, expirationTime));
                 }
             }
         }
 
-        public void BanPlayer(string name, string ip, string reason)
+        public void BanPlayer(string name, string ip, string reason, TimeSpan? duration)
         {
             if (bannedPlayers.Any(bp => bp.IP == ip)) return;
 
@@ -79,12 +93,19 @@ namespace Barotrauma.Networking
 
             DebugConsole.Log("Banned " + name);
 
-            bannedPlayers.Add(new BannedPlayer(name, ip, reason));
+            DateTime? expirationTime = null;
+            if (duration.HasValue)
+            {
+                expirationTime = DateTime.Now + duration.Value;
+            }
+
+            bannedPlayers.Add(new BannedPlayer(name, ip, reason, expirationTime));
             Save();
         }
 
         public bool IsBanned(string IP)
         {
+            bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
             return bannedPlayers.Any(bp => bp.CompareTo(IP));
         }
 
@@ -131,12 +152,15 @@ namespace Barotrauma.Networking
         {
             GameServer.Log("Saving banlist", ServerLog.MessageType.ServerMessage);
 
-            List<string> lines = new List<string>();
+            bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
 
+            List<string> lines = new List<string>();
             foreach (BannedPlayer banned in bannedPlayers)
             {
                 string line = banned.Name + "," + banned.IP;
+                if (banned.ExpirationTime.HasValue) line += "," + banned.ExpirationTime.Value.ToString();
                 if (!string.IsNullOrWhiteSpace(banned.Reason)) line += "," + banned.Reason;
+                
                 lines.Add(line);
             }
 
