@@ -194,6 +194,19 @@
     <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="470, 490, 274, 52" slice="480, 497, 731, 529"/>
   </GUITextBox>
 
+  <GUINumberInput>
+    <GUITextBox
+      color="1.0,1.0,1.0,1.0"
+      hovercolor="1.0,1.0,1.0,1.0"
+      selectedcolor="1.0,1.0,1.0,1.0"
+    
+      textcolor="0.5, 0.55, 0.6, 1.0">
+      <Sprite texture="Content/UI/UI_Atlas.png" state="None" sourcerect ="470, 599, 274, 52" slice="480, 610, 731, 640"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" sourcerect ="470, 544, 274, 52" slice="480, 552, 731, 584"/>
+      <Sprite texture="Content/UI/UI_Atlas.png" state="Selected"  sourcerect ="470, 490, 274, 52" slice="480, 497, 731, 529"/>
+    </GUITextBox>
+  </GUINumberInput>
+
   <GUITickBox
     color="1.0,1.0,1.0,1.0"
     hovercolor="1.0,1.0,1.0,1.0"

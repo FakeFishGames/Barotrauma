@@ -113,6 +113,7 @@
     <Compile Include="Source\GUI\GUIListBox.cs" />
     <Compile Include="Source\GUI\GUIMessage.cs" />
     <Compile Include="Source\GUI\GUIMessageBox.cs" />
+    <Compile Include="Source\GUI\GUINumberInput.cs" />
     <Compile Include="Source\GUI\GUIProgressBar.cs" />
     <Compile Include="Source\GUI\GUIScrollBar.cs" />
     <Compile Include="Source\GUI\GUIStyle.cs" />

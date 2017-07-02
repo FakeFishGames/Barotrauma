@@ -23,23 +23,32 @@ namespace Barotrauma.Networking
             foreach (BannedPlayer bannedPlayer in bannedPlayers)
             {
                 GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
+                    new Rectangle(0, 0, 0, 55),
                     bannedPlayer.IP + " (" + bannedPlayer.Name + ")",
                     "",
-                    Alignment.Left, Alignment.Left, banFrame);
-                textBlock.Padding = new Vector4(10.0f, 10.0f, 0.0f, 0.0f);
+                    Alignment.Left, Alignment.TopLeft, banFrame);
+                textBlock.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
                 textBlock.UserData = banFrame;
-                textBlock.ToolTip = bannedPlayer.Reason;
 
-                var removeButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Remove", Alignment.Right | Alignment.CenterY, "", textBlock);
+                var removeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Remove", Alignment.TopRight, "", textBlock);
                 removeButton.UserData = bannedPlayer;
                 removeButton.OnClicked = RemoveBan;
                 if (bannedPlayer.IP.IndexOf(".x") <= -1)
                 {
-                    var rangeBanButton = new GUIButton(new Rectangle(-100, 0, 100, 20), "Ban range", Alignment.Right | Alignment.CenterY, "", textBlock);
+                    var rangeBanButton = new GUIButton(new Rectangle(-85, 0, 90, 20), "Ban range", Alignment.TopRight, "", textBlock);
                     rangeBanButton.UserData = bannedPlayer;
                     rangeBanButton.OnClicked = RangeBan;
                 }
+
+                var reasonText = new GUITextBlock(new Rectangle(0, 0, 170, 20), 
+                    string.IsNullOrEmpty(bannedPlayer.Reason) ? "Reason: none" : ToolBox.LimitString("Reason: " + bannedPlayer.Reason, GUI.SmallFont, 170),
+                    "", Alignment.BottomLeft, Alignment.TopLeft, textBlock, false, GUI.SmallFont);
+                reasonText.ToolTip = bannedPlayer.Reason;
+
+                new GUITextBlock(new Rectangle(0, 0, 100, 20),
+                    bannedPlayer.ExpirationTime == null ? "Permanent" : "Expires " + bannedPlayer.ExpirationTime.Value.ToString(),
+                    "", Alignment.BottomRight, Alignment.TopRight, textBlock, false, GUI.SmallFont);
+
             }
 
             return banFrame;

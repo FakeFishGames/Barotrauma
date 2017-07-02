@@ -164,25 +164,58 @@ namespace Barotrauma.Networking
         
         public void CreateKickReasonPrompt(string clientName, bool ban, bool rangeBan = false)
         {
-            var banReasonPrompt = new GUIMessageBox(ban ? "Reason for the ban?" : "Reason for kicking?", "", new string[] { "OK" }, 400, 250);
-            var textBox = new GUITextBox(new Rectangle(0, 0, 0, 50), Alignment.Center, "", banReasonPrompt.children[0]);
-            textBox.Wrap = true;
-            textBox.MaxTextLength = 100;
+            var banReasonPrompt = new GUIMessageBox(ban ? "Reason for the ban?" : "Reason for kicking?", "", new string[] { "OK", "Cancel" }, 400, 300);
+            var banReasonBox = new GUITextBox(new Rectangle(0, 30, 0, 50), Alignment.TopCenter, "", banReasonPrompt.children[0]);
+            banReasonBox.Wrap = true;
+            banReasonBox.MaxTextLength = 100;
+
+            GUINumberInput durationInputDays = null, durationInputHours = null;
+            GUITickBox permaBanTickBox = null;
+
+            if (ban)
+            {
+                new GUITextBlock(new Rectangle(0, 80, 0, 0), "Duration:", "", banReasonPrompt.children[0]);
+                permaBanTickBox = new GUITickBox(new Rectangle(0, 110, 15, 15), "Permanent", Alignment.TopLeft, banReasonPrompt.children[0]);
+                permaBanTickBox.Selected = true;
+
+                var durationContainer = new GUIFrame(new Rectangle(0, 130, 0, 40), null, banReasonPrompt.children[0]);
+                durationContainer.Visible = false;
+
+                permaBanTickBox.OnSelected += (tickBox) =>
+                {
+                    durationContainer.Visible = !tickBox.Selected;
+                    return true;
+                };
+                
+                new GUITextBlock(new Rectangle(0, 0, 30, 20), "Days:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
+                durationInputDays = new GUINumberInput(new Rectangle(40, 0, 50, 20), "", 0, 1000, durationContainer);
+
+                new GUITextBlock(new Rectangle(100, 0, 30, 20), "Hours:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
+                durationInputHours = new GUINumberInput(new Rectangle(150, 0, 50, 20), "", 0, 24, durationContainer);
+            }
 
             banReasonPrompt.Buttons[0].OnClicked += (btn, userData) =>
             {
                 if (ban)
                 {
-                    //TODO: a way to set ban duration in the prompt
-                    BanPlayer(clientName, textBox.Text, ban, null);
+                    if (!permaBanTickBox.Selected)
+                    {
+                        TimeSpan banDuration = new TimeSpan(durationInputDays.Value, durationInputHours.Value, 0, 0);
+                        BanPlayer(clientName, banReasonBox.Text, ban, banDuration);
+                    }
+                    else
+                    {
+                        BanPlayer(clientName, banReasonBox.Text, ban);
+                    }
                 }
                 else
                 {
-                    KickPlayer(clientName, textBox.Text);
+                    KickPlayer(clientName, banReasonBox.Text);
                 }
                 return true;
             };
             banReasonPrompt.Buttons[0].OnClicked += banReasonPrompt.Close;
+            banReasonPrompt.Buttons[1].OnClicked += banReasonPrompt.Close;
         }
     }
 }

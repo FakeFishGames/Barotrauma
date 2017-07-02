@@ -754,21 +754,23 @@ namespace Barotrauma.Networking
             switch (command)
             {
                 case ClientPermissions.Kick:
-                    string kickedName = inc.ReadString();
-                    var kickedClient = connectedClients.Find(cl => cl != sender && cl.name == kickedName);
+                    string kickedName = inc.ReadString().ToLowerInvariant();
+                    string kickReason = inc.ReadString();
+                    var kickedClient = connectedClients.Find(cl => cl != sender && cl.name.ToLowerInvariant() == kickedName);
                     if (kickedClient != null)
                     {
                         Log("Client \"" + sender.name + "\" kicked \"" + kickedClient.name + "\".", ServerLog.MessageType.ServerMessage);
-                        KickClient(kickedClient, "Kicked by " + sender.name);
+                        KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? "Kicked by " + sender.name : kickReason);
                     }
                     break;
                 case ClientPermissions.Ban:
-                    string bannedName = inc.ReadString();
-                    var bannedClient = connectedClients.Find(cl => cl != sender && cl.name == bannedName);
+                    string bannedName = inc.ReadString().ToLowerInvariant();
+                    string banReason = inc.ReadString();
+                    var bannedClient = connectedClients.Find(cl => cl != sender && cl.name.ToLowerInvariant() == bannedName);
                     if (bannedClient != null)
                     {
                         Log("Client \"" + sender.name + "\" banned \"" + bannedClient.name + "\".", ServerLog.MessageType.ServerMessage);
-                        BanClient(bannedClient, "Banned by " + sender.name, false);
+                        BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? "Banned by " + sender.name : banReason, false);
                     }
                     break;
                 case ClientPermissions.EndRound:

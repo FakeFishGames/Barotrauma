@@ -1245,9 +1245,9 @@ namespace Barotrauma.Networking
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)ClientPermissions.Kick);
-            //TODO: write the reason
+            msg.Write((byte)ClientPermissions.Kick);            
             msg.Write(kickedName);
+            msg.Write(reason);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
@@ -1257,8 +1257,8 @@ namespace Barotrauma.Networking
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
             msg.Write((byte)ClientPermissions.Ban);
-            //TODO: write the reason
             msg.Write(kickedName);
+            msg.Write(reason);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }

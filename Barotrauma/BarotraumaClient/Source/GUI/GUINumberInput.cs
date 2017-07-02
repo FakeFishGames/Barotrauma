@@ -1,0 +1,104 @@
+﻿using Microsoft.Xna.Framework;
+using System;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace Barotrauma
+{
+    class GUINumberInput : GUIComponent
+    {
+        private GUITextBox textBox;
+        private GUIButton plusButton, minusButton;
+
+        public int? MinValue, MaxValue;
+
+        private int value;
+        public int Value
+        {
+            get { return value; }
+            set
+            {
+                this.value = value;
+                if (MinValue != null)
+                {
+                    this.value = Math.Max(this.value, (int)MinValue);
+                }
+                if (MaxValue != null)
+                {
+                    this.value = Math.Min(this.value, (int)MaxValue);
+                }
+                textBox.Text = this.value.ToString();
+            }
+        }
+
+        public GUINumberInput(Rectangle rect, string style, int? minValue = null, int? maxValue = null, GUIComponent parent = null)
+            : this(rect, style, Alignment.TopLeft, minValue, maxValue, parent)
+        {
+        }
+
+        public GUINumberInput(Rectangle rect, string style, Alignment alignment, int? minValue = null, int? maxValue = null, GUIComponent parent = null)
+            : base(style)
+        {
+            this.rect = rect;
+
+            this.alignment = alignment;
+
+            if (parent != null)
+                parent.AddChild(this);
+
+            textBox = new GUITextBox(Rectangle.Empty, style, this);
+
+            textBox.OnTextChanged += TextChanged;
+
+            plusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "+", Alignment.TopRight, style, this);
+            plusButton.OnClicked += ChangeValue;
+            minusButton = new GUIButton(new Rectangle(0, 0, 15, rect.Height / 2), "-", Alignment.BottomRight, style, this);
+            minusButton.OnClicked += ChangeValue;
+
+            MinValue = minValue;
+            MaxValue = maxValue;
+
+            Value = minValue != null ? (int)minValue : 0;
+        }
+
+        private bool ChangeValue(GUIButton button, object userData)
+        {
+            if (button == plusButton)
+            {
+                Value++;
+            }
+            else
+            {
+                Value--;
+            }
+
+            return false;
+        }
+
+        private bool TextChanged(GUITextBox textBox, string text)
+        {
+            int newValue = Value;
+            if (text == "" || text == "-")
+            {
+                Value = 0;
+                textBox.Text = text;
+            }
+            else if (int.TryParse(text, out newValue))
+            {
+                Value = newValue;
+            }
+            else
+            {
+                textBox.Text = Value.ToString();
+            }
+
+            return true;
+        }
+
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            if (!Visible) return;
+
+            DrawChildren(spriteBatch);
+        }
+    }
+}
