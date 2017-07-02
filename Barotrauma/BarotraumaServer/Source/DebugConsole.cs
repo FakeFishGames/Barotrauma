@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Barotrauma.Networking;
-using Barotrauma.Items.Components;
-using System.Text;
-using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -31,9 +28,9 @@ namespace Barotrauma
             {
                 case "restart":
                 case "reset":
-                    DebugConsole.NewMessage("*****************", Color.Lime);
-                    DebugConsole.NewMessage("RESTARTING SERVER", Color.Lime);
-                    DebugConsole.NewMessage("*****************", Color.Lime);
+                    NewMessage("*****************", Color.Lime);
+                    NewMessage("RESTARTING SERVER", Color.Lime);
+                    NewMessage("*****************", Color.Lime);
                     GameMain.Instance.CloseServer();
                     GameMain.Instance.StartServer();
                     break;
@@ -69,7 +66,7 @@ namespace Barotrauma
                         {
                             GameMain.NetLobbyScreen.SelectedModeName = string.Join(" ", commands.Skip(1));
                         }
-                        DebugConsole.NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
+                        NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
                     }
                     break;
                 case "mission":
@@ -83,7 +80,7 @@ namespace Barotrauma
                         {
                             GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", commands.Skip(1));
                         }
-                        DebugConsole.NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
+                        NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
                     }
                     break;
                 case "sub":
@@ -96,7 +93,7 @@ namespace Barotrauma
                             GameMain.NetLobbyScreen.SelectedSub = sub;
                         }
                         sub = GameMain.NetLobbyScreen.SelectedSub;
-                        DebugConsole.NewMessage("Selected sub: " + sub.Name + (sub.HasTag(SubmarineTag.Shuttle) ? " (shuttle)" : ""), Color.Cyan);
+                        NewMessage("Selected sub: " + sub.Name + (sub.HasTag(SubmarineTag.Shuttle) ? " (shuttle)" : ""), Color.Cyan);
                     }
                     break;
                 case "shuttle":
@@ -108,7 +105,7 @@ namespace Barotrauma
                             GameMain.NetLobbyScreen.SelectedShuttle = shuttle;
                         }
                         shuttle = GameMain.NetLobbyScreen.SelectedShuttle;
-                        DebugConsole.NewMessage("Selected shuttle: " + shuttle.Name + (shuttle.HasTag(SubmarineTag.Shuttle) ? "" : " (not shuttle)"), Color.Cyan);
+                        NewMessage("Selected shuttle: " + shuttle.Name + (shuttle.HasTag(SubmarineTag.Shuttle) ? "" : " (not shuttle)"), Color.Cyan);
                     }
                     break;
                 case "startgame":

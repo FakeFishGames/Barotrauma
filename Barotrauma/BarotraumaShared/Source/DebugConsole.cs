@@ -34,7 +34,9 @@ namespace Barotrauma
 
         private delegate void QuestionCallback(string answer);
         private static QuestionCallback activeQuestionCallback;
+#if CLIENT
         private static GUIComponent activeQuestionText;
+#endif
 
         private static string[] SplitCommand(string command)
         {
@@ -74,15 +76,20 @@ namespace Barotrauma
         
         public static void ExecuteCommand(string command, GameMain game)
         {
-            if (string.IsNullOrWhiteSpace(command)) return;
-
             if (activeQuestionCallback != null)
             {
+#if CLIENT
                 activeQuestionText = null;
-                activeQuestionCallback(command);
-                activeQuestionCallback = null;                
+#endif
+                NewMessage(command, Color.White);
+                //reset the variable before invoking the delegate because the method may need to activate another question
+                var temp = activeQuestionCallback;
+                activeQuestionCallback = null;
+                temp(command);
                 return;
             }
+
+            if (string.IsNullOrWhiteSpace(command)) return;
 
             string[] commands = SplitCommand(command);
             
@@ -91,26 +98,24 @@ namespace Barotrauma
                 NewMessage(command, Color.White);
             }
 
-#if !DEBUG
-#if CLIENT
+#if !DEBUG && CLIENT
             if (GameMain.Client != null && !IsCommandPermitted(commands[0].ToLowerInvariant(), GameMain.Client))
             {
                 ThrowError("You're not permitted to use the command \"" + commands[0].ToLowerInvariant()+"\"!");
                 return;
             }
 #endif
-#endif
 
             switch (commands[0].ToLowerInvariant())
             {
                 case "clientlist":
                     if (GameMain.Server == null) break;
-                    DebugConsole.NewMessage("***************", Color.Cyan);
+                    NewMessage("***************", Color.Cyan);
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
-                        DebugConsole.NewMessage("- " + c.ID.ToString() + ": " + c.name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
+                        NewMessage("- " + c.ID.ToString() + ": " + c.name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
                     }
-                    DebugConsole.NewMessage("***************", Color.Cyan);
+                    NewMessage("***************", Color.Cyan);
                     break;
                 case "help":
                     NewMessage("menu: go to main menu", Color.Cyan);
@@ -319,9 +324,9 @@ namespace Barotrauma
                     {
                         string playerName = string.Join(" ", commands.Skip(1));
 
-                        ShowQuestionPrompt("Reason for kicking \"" + playerName + "\"?", (answer) =>
+                        ShowQuestionPrompt("Reason for kicking \"" + playerName + "\"?", (reason) =>
                         {
-                            GameMain.NetworkMember.KickPlayer(playerName, answer, false);
+                            GameMain.NetworkMember.KickPlayer(playerName, reason);
                         });
                     }
                     break;
@@ -340,9 +345,31 @@ namespace Barotrauma
                             return;
                         }
 
-                        ShowQuestionPrompt(ban ? "Reason for banning \"" + client.name + "\"?" : "Reason for kicking \"" + client.name + "\"?", (answer) =>
+                        ShowQuestionPrompt(ban ? "Reason for banning \"" + client.name + "\"?" : "Reason for kicking \"" + client.name + "\"?", (reason) =>
                         {
-                            GameMain.Server.KickPlayer(client.name, answer, ban);
+                            if (ban)
+                            {
+                                ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                                {
+                                    TimeSpan? banDuration = null;
+                                    if (!string.IsNullOrWhiteSpace(duration))
+                                    {
+                                        TimeSpan parsedBanDuration;
+                                        if (!TryParseTimeSpan(duration, out parsedBanDuration))
+                                        {
+                                            ThrowError("\"" + duration + "\" is not a valid ban duration. Use the format \"[days] d [hours] h\", \"[days] d\" or \"[hours] h\".");
+                                            return;
+                                        }
+                                        banDuration = parsedBanDuration;
+                                    }
+
+                                    GameMain.Server.BanPlayer(client.name, reason, false, banDuration);
+                                });
+                            }
+                            else
+                            {
+                                GameMain.Server.KickPlayer(client.name, reason);
+                            }
                         });
                     }
                     break;
@@ -350,26 +377,56 @@ namespace Barotrauma
                     if (GameMain.NetworkMember != null || commands.Length >= 2)
                     {
                         string clientName = string.Join(" ", commands.Skip(1));
-                        ShowQuestionPrompt("Reason for banning \"" + clientName + "\"?", (answer) =>
+                        ShowQuestionPrompt("Reason for banning \"" + clientName + "\"?", (reason) =>
                         {
-                            GameMain.NetworkMember.KickPlayer(clientName, answer, true);
+                            ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                            {
+                                TimeSpan? banDuration = null;
+                                if (!string.IsNullOrWhiteSpace(duration))
+                                {
+                                    TimeSpan parsedBanDuration;
+                                    if (!TryParseTimeSpan(duration, out parsedBanDuration))
+                                    {
+                                        ThrowError("\"" + duration + "\" is not a valid ban duration. Use the format \"[days] d [hours] h\", \"[days] d\" or \"[hours] h\".");
+                                        return;
+                                    }
+                                    banDuration = parsedBanDuration;
+                                }
+
+                                GameMain.NetworkMember.BanPlayer(clientName, reason, false, banDuration);
+                            });
                         });
                     }            
                     break;
                 case "banip":                    
                     if (GameMain.Server != null || commands.Length >= 2)
                     {
-                        ShowQuestionPrompt("Reason for banning the ip \"" + commands[1] + "\"?", (answer) =>
+                        ShowQuestionPrompt("Reason for banning the ip \"" + commands[1] + "\"?", (reason) =>
                         {
-                            var client = GameMain.Server.ConnectedClients.Find(c => c.Connection.RemoteEndPoint.Address.ToString() == commands[1]);
-                            if (client == null)
+                            ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
                             {
-                                GameMain.Server.BanList.BanPlayer("Unnamed", commands[1], answer);
-                            }
-                            else
-                            {
-                                GameMain.Server.KickClient(client, answer, true);
-                            }
+                                TimeSpan? banDuration = null;
+                                if (!string.IsNullOrWhiteSpace(duration))
+                                {
+                                    TimeSpan parsedBanDuration;
+                                    if (!TryParseTimeSpan(duration, out parsedBanDuration))
+                                    {
+                                        ThrowError("\""+duration+ "\" is not a valid ban duration. Use the format \"[days] d [hours] h\", \"[days] d\" or \"[hours] h\".");
+                                        return;
+                                    }
+                                    banDuration = parsedBanDuration;
+                                }
+
+                                var client = GameMain.Server.ConnectedClients.Find(c => c.Connection.RemoteEndPoint.Address.ToString() == commands[1]);
+                                if (client == null)
+                                {
+                                    GameMain.Server.BanList.BanPlayer("Unnamed", commands[1], reason, banDuration);
+                                }
+                                else
+                                {
+                                    GameMain.Server.KickClient(client, reason);
+                                }
+                            });
                         });
                     }                              
                     break;
@@ -655,10 +712,61 @@ namespace Barotrauma
         {
             NewMessage("   >>" + question, Color.Cyan);
             activeQuestionCallback += onAnswered;
+#if CLIENT
             if (listBox != null && listBox.children.Count > 0)
             {
                 activeQuestionText = listBox.children[listBox.children.Count - 1];
             }
+#endif
+        }
+
+        private static bool TryParseTimeSpan(string s, out TimeSpan timeSpan)
+        {
+            timeSpan = new TimeSpan();
+            if (string.IsNullOrWhiteSpace(s)) return false;
+
+            string currNum = "";
+            foreach (char c in s)
+            {
+                if (char.IsDigit(c))
+                {
+                    currNum += c;
+                }
+                else if (char.IsWhiteSpace(c))
+                {
+                    continue;
+                }
+                else
+                {
+                    int parsedNum = 0;
+                    if (!int.TryParse(currNum, out parsedNum))
+                    {
+                        return false;
+                    }
+
+                    switch (c)
+                    {
+                        case 'd':
+                            timeSpan += new TimeSpan(parsedNum, 0, 0, 0, 0);
+                            break;
+                        case 'h':
+                            timeSpan += new TimeSpan(0, parsedNum, 0, 0, 0);
+                            break;
+                        case 'm':
+                            timeSpan += new TimeSpan(0, 0, parsedNum, 0, 0);
+                            break;
+                        case 's':
+                            timeSpan += new TimeSpan(0, 0, 0, parsedNum, 0);
+                            break;
+                        default:
+                            return false;
+                    }
+
+                    currNum = "";
+                }
+            }
+
+            return true;
         }
 
 

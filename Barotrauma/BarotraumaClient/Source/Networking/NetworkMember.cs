@@ -171,7 +171,15 @@ namespace Barotrauma.Networking
 
             banReasonPrompt.Buttons[0].OnClicked += (btn, userData) =>
             {
-                KickPlayer(clientName, textBox.Text, ban, rangeBan);
+                if (ban)
+                {
+                    //TODO: a way to set ban duration in the prompt
+                    BanPlayer(clientName, textBox.Text, ban, null);
+                }
+                else
+                {
+                    KickPlayer(clientName, textBox.Text);
+                }
                 return true;
             };
             banReasonPrompt.Buttons[0].OnClicked += banReasonPrompt.Close;

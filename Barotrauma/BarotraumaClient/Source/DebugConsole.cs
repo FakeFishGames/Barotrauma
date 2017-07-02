@@ -99,15 +99,11 @@ namespace Barotrauma
                 {
                     SelectMessage(1);
                 }
-
-                //textBox.Update(deltaTime);
-
-                if (PlayerInput.KeyDown(Keys.Enter) && textBox.Text != "")
+                
+                if (PlayerInput.KeyHit(Keys.Enter))
                 {
                     ExecuteCommand(textBox.Text, game);
                     textBox.Text = "";
-
-                    //selectedIndex = messages.Count;
                 }
             }
         }

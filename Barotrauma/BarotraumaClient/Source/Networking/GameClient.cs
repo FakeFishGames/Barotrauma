@@ -1241,11 +1241,23 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public override void KickPlayer(string kickedName, string reason, bool ban, bool range = false)
+        public override void KickPlayer(string kickedName, string reason)
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
-            msg.Write((byte)(ban ? ClientPermissions.Ban : ClientPermissions.Kick));
+            msg.Write((byte)ClientPermissions.Kick);
+            //TODO: write the reason
+            msg.Write(kickedName);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public override void BanPlayer(string kickedName, string reason, bool range = false, TimeSpan? duration = null)
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
+            msg.Write((byte)ClientPermissions.Ban);
+            //TODO: write the reason
             msg.Write(kickedName);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
