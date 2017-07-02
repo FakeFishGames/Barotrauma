@@ -32,6 +32,10 @@ namespace Barotrauma
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
+        private delegate void QuestionCallback(string answer);
+        private static QuestionCallback activeQuestionCallback;
+        private static GUIComponent activeQuestionText;
+
         private static string[] SplitCommand(string command)
         {
             command = command.Trim();
@@ -41,7 +45,7 @@ namespace Barotrauma
             bool inQuotes = false;
             string piece = "";
             
-            for (int i=0;i<command.Length;i++)
+            for (int i = 0; i < command.Length; i++)
             {
                 if (command[i] == '\\')
                 {
@@ -71,6 +75,15 @@ namespace Barotrauma
         public static void ExecuteCommand(string command, GameMain game)
         {
             if (string.IsNullOrWhiteSpace(command)) return;
+
+            if (activeQuestionCallback != null)
+            {
+                activeQuestionText = null;
+                activeQuestionCallback(command);
+                activeQuestionCallback = null;                
+                return;
+            }
+
             string[] commands = SplitCommand(command);
             
             if (!commands[0].ToLowerInvariant().Equals("admin"))
@@ -95,7 +108,7 @@ namespace Barotrauma
                     DebugConsole.NewMessage("***************", Color.Cyan);
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
-                        DebugConsole.NewMessage("- " + c.ID.ToString() + ": " + c.name + ", " + c.Connection.RemoteEndPoint.Address.ToString(),Color.Cyan);
+                        DebugConsole.NewMessage("- " + c.ID.ToString() + ": " + c.name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
                     }
                     DebugConsole.NewMessage("***************", Color.Cyan);
                     break;
@@ -107,7 +120,7 @@ namespace Barotrauma
                     NewMessage("load [submarine name]: load a submarine", Color.Cyan);
                     NewMessage("save [submarine name]: save the current submarine using the specified name", Color.Cyan);
 
-                    NewMessage(" ", Color.Cyan);                    
+                    NewMessage(" ", Color.Cyan);
 
                     NewMessage("spawn [creaturename] [near/inside/outside]: spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine)", Color.Cyan);
                     NewMessage("spawnitem [itemname] [cursor/inventory]: spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted", Color.Cyan);
@@ -135,7 +148,7 @@ namespace Barotrauma
                     NewMessage("killmonsters: immediately kills all AI-controlled enemies in the level", Color.Cyan);
 
                     NewMessage(" ", Color.Cyan);
-                    
+
                     NewMessage("fixwalls: fixes all the walls", Color.Cyan);
                     NewMessage("fixitems: fixes every item/device in the sub", Color.Cyan);
                     NewMessage("oxygen: replenishes the oxygen in every room to 100%", Color.Cyan);
@@ -148,7 +161,7 @@ namespace Barotrauma
                     NewMessage("banip [IP address]: ban the IP address from the server", Color.Cyan);
                     NewMessage("debugdraw: toggles the \"debug draw mode\"", Color.Cyan);
                     NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
-                    
+
                     break;
                 case "createfilelist":
                     UpdaterUtil.SaveFileList("filelist.xml");
@@ -208,7 +221,7 @@ namespace Barotrauma
 
                     if (spawnPoint != null) spawnPosition = spawnPoint.WorldPosition;
 
-                    if (commands[1].ToLowerInvariant()=="human")
+                    if (commands[1].ToLowerInvariant() == "human")
                     {
                         spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
 
@@ -228,15 +241,15 @@ namespace Barotrauma
                     else
                     {
                         spawnedCharacter = Character.Create(
-                            "Content/Characters/" 
-                            + commands[1].First().ToString().ToUpper() + commands[1].Substring(1) 
+                            "Content/Characters/"
+                            + commands[1].First().ToString().ToUpper() + commands[1].Substring(1)
                             + "/" + commands[1].ToLower() + ".xml", spawnPosition);
                     }
 
                     break;
                 case "spawnitem":
                     if (commands.Length < 2) return;
-                    
+
                     Vector2? spawnPos = null;
                     Inventory spawnInventory = null;
 
@@ -261,7 +274,7 @@ namespace Barotrauma
                     var itemPrefab = MapEntityPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == itemName) as ItemPrefab;
                     if (itemPrefab == null)
                     {
-                        ThrowError("Item \""+itemName+"\" not found!");
+                        ThrowError("Item \"" + itemName + "\" not found!");
                         return;
                     }
 
@@ -302,48 +315,63 @@ namespace Barotrauma
                     }
                     break;*/
                 case "kick":
-                    if (GameMain.NetworkMember == null || commands.Length < 2) break;
-                    GameMain.NetworkMember.KickPlayer(string.Join(" ", commands.Skip(1)), false);
+                    if (GameMain.NetworkMember != null && commands.Length >= 2)
+                    {
+                        string playerName = string.Join(" ", commands.Skip(1));
 
+                        ShowQuestionPrompt("Reason for kicking \"" + playerName + "\"?", (answer) =>
+                        {
+                            GameMain.NetworkMember.KickPlayer(playerName, answer, false);
+                        });
+                    }
                     break;
                 case "kickid":
-                    if (GameMain.Server == null || commands.Length < 2) break;
-
-                    {
-                        int id = 0;
-                        int.TryParse(commands[1], out id);
-                        GameMain.Server.KickPlayer(id, false);
-                    }
-                    break;
                 case "banid":
-                    if (GameMain.Server == null || commands.Length < 2) break;
-
+                    if (GameMain.Server != null && commands.Length >= 2)
                     {
+                        bool ban = commands[0].ToLowerInvariant() == "banid";
+
                         int id = 0;
                         int.TryParse(commands[1], out id);
-                        GameMain.Server.KickPlayer(id, true);
-                    }
-
-                    break;
-                case "ban":
-                    if (GameMain.NetworkMember == null || commands.Length < 2) break;
-                    GameMain.NetworkMember.KickPlayer(string.Join(" ", commands.Skip(1)), true);
-               
-                    break;
-                case "banip":
-                    {
-                        if (GameMain.Server == null || commands.Length < 2) break;
-
-                        var client = GameMain.Server.ConnectedClients.Find(c => c.Connection.RemoteEndPoint.Address.ToString() == commands[1]);
+                        var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
                         if (client == null)
                         {
-                            GameMain.Server.BanList.BanPlayer("Unnamed", commands[1]);
+                            ThrowError("Client id \"" + id + "\" not found.");
+                            return;
                         }
-                        else
+
+                        ShowQuestionPrompt(ban ? "Reason for banning \"" + client.name + "\"?" : "Reason for kicking \"" + client.name + "\"?", (answer) =>
                         {
-                            GameMain.Server.KickClient(client, true);   
-                        }
-                    }               
+                            GameMain.Server.KickPlayer(client.name, answer, ban);
+                        });
+                    }
+                    break;
+                case "ban":
+                    if (GameMain.NetworkMember != null || commands.Length >= 2)
+                    {
+                        string clientName = string.Join(" ", commands.Skip(1));
+                        ShowQuestionPrompt("Reason for banning \"" + clientName + "\"?", (answer) =>
+                        {
+                            GameMain.NetworkMember.KickPlayer(clientName, answer, true);
+                        });
+                    }            
+                    break;
+                case "banip":                    
+                    if (GameMain.Server != null || commands.Length >= 2)
+                    {
+                        ShowQuestionPrompt("Reason for banning the ip \"" + commands[1] + "\"?", (answer) =>
+                        {
+                            var client = GameMain.Server.ConnectedClients.Find(c => c.Connection.RemoteEndPoint.Address.ToString() == commands[1]);
+                            if (client == null)
+                            {
+                                GameMain.Server.BanList.BanPlayer("Unnamed", commands[1], answer);
+                            }
+                            else
+                            {
+                                GameMain.Server.KickClient(client, answer, true);
+                            }
+                        });
+                    }                              
                     break;
                 case "teleportcharacter":
                 case "teleport":
@@ -367,6 +395,7 @@ namespace Barotrauma
                     if (Submarine.MainSub == null) return;
 
                     Submarine.MainSub.GodMode = !Submarine.MainSub.GodMode;
+                    NewMessage(Submarine.MainSub.GodMode ? "Godmode on" : "Godmode off", Color.White);
                     break;
                 case "lockx":
                     Submarine.LockX = !Submarine.LockX;
@@ -441,8 +470,12 @@ namespace Barotrauma
                     break;
                 case "editwater":
                 case "water":
-                    if (GameMain.Client == null) Hull.EditWater = !Hull.EditWater;
-                    
+                    if (GameMain.Client == null)
+                    {
+                        Hull.EditWater = !Hull.EditWater;
+                        NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);
+                    }                   
+
                     break;
                 case "explosion":
                     Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -453,7 +486,11 @@ namespace Barotrauma
                     new Explosion(range, force, damage, damage).Explode(explosionPos);
                     break;
                 case "fire":
-                    if (GameMain.Client == null) Hull.EditFire = !Hull.EditFire;
+                    if (GameMain.Client == null)
+                    {
+                        Hull.EditFire = !Hull.EditFire;
+                        NewMessage(Hull.EditWater ? "Fire spawning on" : "Fire spawning off", Color.White);
+                    }
                     
                     break;
                 case "fixitems":
@@ -604,8 +641,26 @@ namespace Barotrauma
             }
             
             selectedIndex = listBox.children.Count;
+
+            if (activeQuestionText != null)
+            {
+                //make sure the active question stays at the bottom of the list
+                listBox.children.Remove(activeQuestionText);
+                listBox.children.Add(activeQuestionText);
+            }
 #endif
         }
+
+        private static void ShowQuestionPrompt(string question, QuestionCallback onAnswered)
+        {
+            NewMessage("   >>" + question, Color.Cyan);
+            activeQuestionCallback += onAnswered;
+            if (listBox != null && listBox.children.Count > 0)
+            {
+                activeQuestionText = listBox.children[listBox.children.Count - 1];
+            }
+        }
+
 
         public static void Log(string message)
         {

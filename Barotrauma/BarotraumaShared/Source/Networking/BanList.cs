@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma.Networking
 {
@@ -11,11 +10,12 @@ namespace Barotrauma.Networking
     {
         public string Name;
         public string IP;
+        public string Reason;
 
         public bool CompareTo(string ipCompare)
         {
             int rangeBanIndex = IP.IndexOf(".x");
-            if (rangeBanIndex<=-1)
+            if (rangeBanIndex <= -1)
             {
                 return ipCompare == IP;
             }
@@ -26,10 +26,11 @@ namespace Barotrauma.Networking
             }
         }
 
-        public BannedPlayer(string name, string ip)
+        public BannedPlayer(string name, string ip, string reason)
         {
             this.Name = name;
             this.IP = ip;
+            this.Reason = reason;
         }
     }
 
@@ -61,21 +62,24 @@ namespace Barotrauma.Networking
                     string[] separatedLine = line.Split(',');
                     if (separatedLine.Length < 2) continue;
 
-                    string name = String.Join(",", separatedLine.Take(separatedLine.Length - 1));
-                    string ip = separatedLine.Last();
+                    string name     = separatedLine[0];
+                    string ip       = separatedLine[1];
+                    string reason   = separatedLine.Length > 2 ? string.Join(",", separatedLine.Skip(2)) : "";
 
-                    bannedPlayers.Add(new BannedPlayer(name, ip));
+                    bannedPlayers.Add(new BannedPlayer(name, ip,reason));
                 }
             }
         }
 
-        public void BanPlayer(string name, string ip)
+        public void BanPlayer(string name, string ip, string reason)
         {
             if (bannedPlayers.Any(bp => bp.IP == ip)) return;
 
+            System.Diagnostics.Debug.Assert(!name.Contains(','));
+
             DebugConsole.Log("Banned " + name);
 
-            bannedPlayers.Add(new BannedPlayer(name, ip));
+            bannedPlayers.Add(new BannedPlayer(name, ip, reason));
             Save();
         }
 
@@ -131,7 +135,9 @@ namespace Barotrauma.Networking
 
             foreach (BannedPlayer banned in bannedPlayers)
             {
-                lines.Add(banned.Name + "," + banned.IP);
+                string line = banned.Name + "," + banned.IP;
+                if (!string.IsNullOrWhiteSpace(banned.Reason)) line += "," + banned.Reason;
+                lines.Add(line);
             }
 
             try

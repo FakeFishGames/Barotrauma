@@ -565,26 +565,23 @@ namespace Barotrauma.Networking
                         {
                             string disconnectMsg = inc.ReadString();
 
-                            switch (disconnectMsg)
+                            if (disconnectMsg.Contains("You have been disconnected") ||
+                                disconnectMsg.Contains("You have been banned") ||
+                                disconnectMsg.Contains("You have been kicked") ||
+                                disconnectMsg == "The server has been shut down")
                             {
-                                case "The server has been shut down":
-                                case "You have been banned from the server":
-                                case "You have been kicked from the server":
-                                case "You have been disconnected because of excessive desync":
-                                case "You have been disconnected because syncing your client with the server took too long.":
-                                    var msgBox = new GUIMessageBox("CONNECTION LOST", disconnectMsg);
-                                    msgBox.Buttons[0].OnClicked += ReturnToServerList;
-                                    break;
-                                default:
-                                    reconnectBox = new GUIMessageBox(
-                                        "CONNECTION LOST", 
-                                        "You have been disconnected from the server. Reconnecting...", new string[0]);
-                                    
-                                    connected = false;
-                                    ConnectToServer(serverIP);
-                                    break;
+                                var msgBox = new GUIMessageBox("CONNECTION LOST", disconnectMsg);
+                                msgBox.Buttons[0].OnClicked += ReturnToServerList;
                             }
-
+                            else
+                            {
+                                reconnectBox = new GUIMessageBox(
+                                    "CONNECTION LOST", 
+                                    "You have been disconnected from the server. Reconnecting...", new string[0]);
+                                    
+                                connected = false;
+                                ConnectToServer(serverIP);
+                            }
                         }
                         break;
                 }
@@ -1244,7 +1241,7 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public override void KickPlayer(string kickedName, bool ban, bool range = false)
+        public override void KickPlayer(string kickedName, string reason, bool ban, bool range = false)
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
