@@ -73,12 +73,11 @@ namespace Barotrauma
                     child.Rect = new Rectangle(child.Rect.X + value.X - rect.X, child.Rect.Y + value.Y - rect.Y, child.Rect.Width, child.Rect.Height);
                 }
 
+                rect = value;
                 if (value.Width != rect.Width || value.Height != rect.Height)
                 {
                     SetTextPos();
                 }
-
-                rect = value;
             }
         }
 
