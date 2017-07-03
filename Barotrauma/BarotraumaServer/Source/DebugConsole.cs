@@ -26,6 +26,51 @@ namespace Barotrauma
         {
             switch (commands[0].ToLower())
             {
+                case "help":
+
+                    NewMessage("start: start a new round", Color.Cyan);
+                    NewMessage("end: end the current round", Color.Cyan);
+                    NewMessage("restart: restart the server", Color.Cyan);
+                    NewMessage("quit: exit the game", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+
+                    NewMessage("say [chat message]: send a chat message", Color.Cyan);
+                    NewMessage("clientlist: list the names and IPs of the connected clients", Color.Cyan);
+                    NewMessage("kick [name]: kick a player out from the server", Color.Cyan);
+                    NewMessage("ban [name]: kick and ban the player from the server", Color.Cyan);
+                    NewMessage("banip [IP address]: ban the IP address from the server", Color.Cyan);
+                    NewMessage("debugdraw: toggles the \"debug draw mode\"", Color.Cyan);
+                    NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+
+                    NewMessage("servername [name]: change the name of the server", Color.Cyan);
+                    NewMessage("servermsg [message]: change the message in the server lobby", Color.Cyan);
+                    NewMessage("seed [seed]: changes the level seed for the next round", Color.Cyan);
+                    NewMessage("gamemode [name]: select the specified game mode for the next round", Color.Cyan);
+                    NewMessage("gamemode [index]: select the specified game mode (0 = sandbox, 1 = mission, etc)", Color.Cyan);
+                    NewMessage("submarine [name]: select the specified game mode for the next round", Color.Cyan);
+                    NewMessage("shuttle [name]: select the specified submarine as the respawn shuttle for the next round", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+
+                    NewMessage("spawn [creaturename] [near/inside/outside]: spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine)", Color.Cyan);
+                    
+                    NewMessage(" ", Color.Cyan);
+                    
+                    NewMessage("heal [character name]: restore the specified character to full health", Color.Cyan);
+                    NewMessage("revive [character name]: bring the specified character back from the dead", Color.Cyan);
+                    NewMessage("killmonsters: immediately kills all AI-controlled enemies in the level", Color.Cyan);
+
+                    NewMessage(" ", Color.Cyan);
+
+                    NewMessage("fixwalls: fixes all the walls", Color.Cyan);
+                    NewMessage("fixitems: fixes every item/device in the sub", Color.Cyan);
+                    NewMessage("oxygen: replenishes the oxygen in every room to 100%", Color.Cyan);
+                    NewMessage("power [amount]: immediately sets the temperature of the reactor to the specified value", Color.Cyan);
+                    
+                    break;
                 case "restart":
                 case "reset":
                     NewMessage("*****************", Color.Lime);
@@ -112,7 +157,7 @@ namespace Barotrauma
                 case "startround":
                 case "start":
                     if (Screen.Selected == GameMain.GameScreen) break;
-                    if (!GameMain.Server.StartGame()) NewMessage("Failed to start server",Color.Yellow);
+                    if (!GameMain.Server.StartGame()) NewMessage("Failed to start a new round", Color.Yellow);
                     break;
                 case "endgame":
                 case "endround":
