@@ -362,7 +362,7 @@ namespace Barotrauma
         
         public static List<Body> GeneratePolygons(List<VoronoiCell> cells, out List<Vector2[]> renderTriangles, bool setSolid=true)
         {
-            renderTriangles = null;
+            renderTriangles = new List<Vector2[]>();
             var bodies = new List<Body>();
 
             List<Vector2> tempVertices = new List<Vector2>();
@@ -395,7 +395,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                renderTriangles = MathUtils.TriangulateConvexHull(tempVertices, cell.Center);
+                renderTriangles.AddRange(MathUtils.TriangulateConvexHull(tempVertices, cell.Center));
                 
                 if (bodyPoints.Count < 2) continue;
 
