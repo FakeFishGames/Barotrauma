@@ -83,9 +83,6 @@ namespace Barotrauma.Networking
         protected DateTime updateTimer;
 
         public int EndVoteCount, EndVoteMax;
-        //private GUITextBlock endVoteText;
-
-        public int Port;
 
         protected bool gameStarted;
 
@@ -94,13 +91,21 @@ namespace Barotrauma.Networking
         protected RespawnManager respawnManager;
 
         public Voting Voting;
+        
+        [HasDefaultValue(14242, true)]
+        public int Port
+        {
+            get;
+            set;
+        }
 
+        [HasDefaultValue("", true)]
         public string Name
         {
             get { return name; }
             set
             {
-                if (string.IsNullOrEmpty(name)) return;
+                if (string.IsNullOrEmpty(value)) return;
                 name = value;
             }
         }
