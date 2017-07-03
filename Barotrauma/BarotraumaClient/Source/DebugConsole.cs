@@ -15,6 +15,8 @@ namespace Barotrauma
     {
         static bool isOpen;
 
+        private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
+
         //used for keeping track of the message entered when pressing up/down
         static int selectedIndex;
 
@@ -68,6 +70,11 @@ namespace Barotrauma
 
         public static void Update(GameMain game, float deltaTime)
         {
+            while (queuedMessages.Count > 0)
+            {
+                AddMessage(queuedMessages.Dequeue());
+            }
+
             if (PlayerInput.KeyHit(Keys.F3))
             {
                 isOpen = !isOpen;
@@ -81,8 +88,6 @@ namespace Barotrauma
                     GUIComponent.ForceMouseOn(null);
                     textBox.Deselect();
                 }
-
-                //keyboardDispatcher.Subscriber = (isOpen) ? textBox : null;
             }
 
             if (isOpen)
@@ -146,6 +151,46 @@ namespace Barotrauma
                     return true;
                 default:
                     return false;
+            }
+        }
+
+        private static void AddMessage(ColoredText msg)
+        {
+            //listbox not created yet, don't attempt to add
+            if (listBox == null) return;
+
+            if (listBox.children.Count > MaxMessages)
+            {
+                listBox.children.RemoveRange(0, listBox.children.Count - MaxMessages);
+            }
+            
+            Messages.Add(msg);
+            if (Messages.Count > MaxMessages)
+            {
+                Messages.RemoveRange(0, Messages.Count - MaxMessages);
+            }
+
+            try
+            {
+                var textBlock = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 0), msg.Text, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
+                textBlock.CanBeFocused = false;
+                textBlock.TextColor = msg.Color;
+
+                listBox.AddChild(textBlock);
+                listBox.BarScroll = 1.0f;
+            }
+            catch (Exception e)
+            {
+                ThrowError("Failed to add a message to the debug console.", e);
+            }
+
+            selectedIndex = listBox.children.Count;
+
+            if (activeQuestionText != null)
+            {
+                //make sure the active question stays at the bottom of the list
+                listBox.children.Remove(activeQuestionText);
+                listBox.children.Add(activeQuestionText);
             }
         }
 

@@ -659,51 +659,24 @@ namespace Barotrauma
 
         public static void NewMessage(string msg, Color color)
         {
-            if (String.IsNullOrEmpty((msg))) return;
+            if (string.IsNullOrEmpty((msg))) return;
 
-            Messages.Add(new ColoredText(msg, color));
 #if SERVER
+            Messages.Add(new ColoredText(msg, color));
+
             //TODO: REMOVE
             Console.ForegroundColor = XnaToConsoleColor.Convert(color);
             Console.WriteLine(msg);
             Console.ForegroundColor = ConsoleColor.White;
-#endif
 
             if (Messages.Count > MaxMessages)
             {
                 Messages.RemoveRange(0, Messages.Count - MaxMessages);
             }
-
-#if CLIENT
-            //listbox not created yet, don't attempt to add
-            if (listBox == null) return;
-
-            if (listBox.children.Count > MaxMessages)
+#elif CLIENT
+            lock (queuedMessages)
             {
-                listBox.children.RemoveRange(0, listBox.children.Count - MaxMessages);
-            }
-
-            try
-            {
-                var textBlock = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 0), msg, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
-                textBlock.CanBeFocused = false;
-                textBlock.TextColor = color;
-
-                listBox.AddChild(textBlock);
-                listBox.BarScroll = 1.0f;
-            }
-            catch
-            {
-                return;
-            }
-            
-            selectedIndex = listBox.children.Count;
-
-            if (activeQuestionText != null)
-            {
-                //make sure the active question stays at the bottom of the list
-                listBox.children.Remove(activeQuestionText);
-                listBox.children.Add(activeQuestionText);
+                queuedMessages.Enqueue(new ColoredText(msg, color));
             }
 #endif
         }
