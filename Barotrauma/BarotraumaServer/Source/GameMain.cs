@@ -7,6 +7,7 @@ using Barotrauma.Networking;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -100,7 +101,21 @@ namespace Barotrauma
 
         public void StartServer()
         {
-            Server = new GameServer("Dedicated Server Test", 14242, false, "asd", false, 10);
+            XDocument doc = ToolBox.TryLoadXml(GameServer.SettingsFile);
+            if (doc == null)
+            {
+                DebugConsole.ThrowError("File \""+GameServer.SettingsFile+"\" not found. Starting the server with default settings.");
+                Server = new GameServer("Server", 14242, false, "", false, 10);
+                return;
+            }
+
+            Server = new GameServer(
+                ToolBox.GetAttributeString(doc.Root, "name", "Server"),
+                ToolBox.GetAttributeInt(doc.Root, "port", 14242),
+                ToolBox.GetAttributeBool(doc.Root, "public", false),
+                ToolBox.GetAttributeString(doc.Root, "password", ""),
+                ToolBox.GetAttributeBool(doc.Root, "attemptupnp", false),
+                ToolBox.GetAttributeInt(doc.Root, "maxplayers", 10));
         }
 
         public void CloseServer()

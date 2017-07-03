@@ -113,11 +113,16 @@ namespace Barotrauma.Networking
             {
                 serverIP = address[0];
 
-                if (!int.TryParse(address[1], out Port))
+                int port = 0;
+                if (!int.TryParse(address[1], out port))
                 {
                     DebugConsole.ThrowError("Invalid port: "+address[1]+"!");
                     Port = NetConfig.DefaultPort;
-                }                
+                }
+                else
+                {
+                    Port = port;
+                }     
             }
 
             myCharacter = Character.Controlled;

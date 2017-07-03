@@ -171,6 +171,27 @@ namespace Barotrauma.Networking
             }
         }
 
+        [HasDefaultValue(8, true)]
+        private int MaxPlayers
+        {
+            get;
+            set;
+        }
+
+        [HasDefaultValue(false, true)]
+        private bool Public
+        {
+            get;
+            set;
+        }
+
+        [HasDefaultValue(false, true)]
+        private bool AttemptUPNP
+        {
+            get { return config.EnableUPnP; }
+            set { config.EnableUPnP = value; }
+        }
+
         public YesNoMaybe TraitorsEnabled
         {
             get;
@@ -230,6 +251,10 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
             
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
+
+#if SERVER
+            doc.Root.SetAttributeValue("password", password);
+#endif
 
             if (GameMain.NetLobbyScreen != null
 #if CLIENT

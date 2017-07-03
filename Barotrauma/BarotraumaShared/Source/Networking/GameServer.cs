@@ -24,8 +24,6 @@ namespace Barotrauma.Networking
 
         private NetServer server;
         private NetPeerConfiguration config;
-
-        private int MaxPlayers;
        
         private DateTime refreshMasterTimer;
 
@@ -69,7 +67,7 @@ namespace Barotrauma.Networking
         {
             get { return updateInterval; }
         }
-
+        
         public GameServer(string name, int port, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10)
         {
             name = name.Replace(":", "");
@@ -78,6 +76,7 @@ namespace Barotrauma.Networking
             AdminAuthPass = "";
 
             this.name = name;
+            this.Public = isPublic;
             this.password = "";
             if (password.Length>0)
             {
