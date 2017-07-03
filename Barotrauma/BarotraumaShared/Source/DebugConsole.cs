@@ -117,57 +117,6 @@ namespace Barotrauma
                     }
                     NewMessage("***************", Color.Cyan);
                     break;
-                case "help":
-                    NewMessage("menu: go to main menu", Color.Cyan);
-                    NewMessage("game: enter the \"game screen\"", Color.Cyan);
-                    NewMessage("edit: switch to submarine editor", Color.Cyan);
-                    NewMessage("edit [submarine name]: load a submarine and switch to submarine editor", Color.Cyan);
-                    NewMessage("load [submarine name]: load a submarine", Color.Cyan);
-                    NewMessage("save [submarine name]: save the current submarine using the specified name", Color.Cyan);
-
-                    NewMessage(" ", Color.Cyan);
-
-                    NewMessage("spawn [creaturename] [near/inside/outside]: spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine)", Color.Cyan);
-                    NewMessage("spawnitem [itemname] [cursor/inventory]: spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted", Color.Cyan);
-
-                    NewMessage(" ", Color.Cyan);
-
-                    NewMessage("lights: disable lighting", Color.Cyan);
-                    NewMessage("los: disable the line of sight effect", Color.Cyan);
-                    NewMessage("freecam: detach the camera from the controlled character", Color.Cyan);
-                    NewMessage("control [character name]: start controlling the specified character", Color.Cyan);
-
-                    NewMessage(" ", Color.Cyan);
-
-                    NewMessage("water: allows adding water into rooms or removing it by holding the left/right mouse buttons", Color.Cyan);
-                    NewMessage("fire: allows putting up fires by left clicking", Color.Cyan);
-
-                    NewMessage(" ", Color.Cyan);
-
-                    NewMessage("teleport: teleport the controlled character to the position of the cursor", Color.Cyan);
-                    NewMessage("teleport [character name]: teleport the specified character to the position of the cursor", Color.Cyan);
-                    NewMessage("heal: restore the controlled character to full health", Color.Cyan);
-                    NewMessage("heal [character name]: restore the specified character to full health", Color.Cyan);
-                    NewMessage("revive: bring the controlled character back from the dead", Color.Cyan);
-                    NewMessage("revive [character name]: bring the specified character back from the dead", Color.Cyan);
-                    NewMessage("killmonsters: immediately kills all AI-controlled enemies in the level", Color.Cyan);
-
-                    NewMessage(" ", Color.Cyan);
-
-                    NewMessage("fixwalls: fixes all the walls", Color.Cyan);
-                    NewMessage("fixitems: fixes every item/device in the sub", Color.Cyan);
-                    NewMessage("oxygen: replenishes the oxygen in every room to 100%", Color.Cyan);
-                    NewMessage("power [amount]: immediately sets the temperature of the reactor to the specified value", Color.Cyan);
-
-                    NewMessage(" ", Color.Cyan);
-
-                    NewMessage("kick [name]: kick a player out from the server", Color.Cyan);
-                    NewMessage("ban [name]: kick and ban the player from the server", Color.Cyan);
-                    NewMessage("banip [IP address]: ban the IP address from the server", Color.Cyan);
-                    NewMessage("debugdraw: toggles the \"debug draw mode\"", Color.Cyan);
-                    NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
-
-                    break;
                 case "createfilelist":
                     UpdaterUtil.SaveFileList("filelist.xml");
                     break;
