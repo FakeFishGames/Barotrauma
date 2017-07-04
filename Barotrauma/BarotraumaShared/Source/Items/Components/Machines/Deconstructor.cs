@@ -58,7 +58,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (DeconstructItem deconstructProduct in targetItem.Prefab.DeconstructItems)
                 {
-                    if (deconstructProduct.RequireFullCondition && targetItem.Condition < 100.0f) continue;
+                    if (deconstructProduct.RequireFullCondition && targetItem.Condition < targetItem.Prefab.Health) continue;
 
                     var itemPrefab = MapEntityPrefab.list.FirstOrDefault(ip => ip.Name.ToLowerInvariant() == deconstructProduct.ItemPrefabName.ToLowerInvariant()) as ItemPrefab;
                     if (itemPrefab == null)

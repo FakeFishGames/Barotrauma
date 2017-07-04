@@ -178,10 +178,11 @@ namespace Barotrauma
             {
                 if (GameMain.Client != null) return;
                 if (!MathUtils.IsValid(value)) return;
+                if (prefab.Indestructible) return;
 
                 float prev = condition;
-                condition = MathHelper.Clamp(value, 0.0f, 100.0f); 
-                if (condition == 0.0f && prev>0.0f)
+                condition = MathHelper.Clamp(value, 0.0f, prefab.Health);
+                if (condition == 0.0f && prev > 0.0f)
                 {
                     ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
                     foreach (FixRequirement req in FixRequirements)
@@ -192,7 +193,7 @@ namespace Barotrauma
 
                 if (GameMain.Server != null && lastSentCondition != condition)
                 {
-                    if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == 100.0f)
+                    if (Math.Abs(lastSentCondition - condition) > 1.0f || condition == 0.0f || condition == prefab.Health)
                     {
                         GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                         lastSentCondition = condition;
@@ -205,7 +206,7 @@ namespace Barotrauma
         {
             get { return condition; }
         }
-
+        
         [Editable, HasDefaultValue("", true)]
         public string Tags
         {
@@ -340,9 +341,9 @@ namespace Barotrauma
             rect = newRect;
             
             if (submarine==null || !submarine.Loading) FindHull();
-
-            condition = 100.0f;
-            lastSentCondition = 100.0f;
+            
+            condition = prefab.Health;
+            lastSentCondition = prefab.Health;
 
             XElement element = prefab.ConfigElement;
             if (element == null) return;
@@ -740,6 +741,8 @@ namespace Barotrauma
 
         public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
+            if (prefab.Indestructible) return new AttackResult();
+
             float damageAmount = attack.GetStructureDamage(deltaTime);
             Condition -= damageAmount;
 
@@ -1321,9 +1324,9 @@ namespace Barotrauma
                     ownInventory.ServerWrite(msg, c, extraData);
                     break;
                 case NetEntityEvent.Type.Status:
-                    //clamp above 0.5f if condition > 0.0f
+                    //clamp to (MaxHealth / 255.0f) if condition > 0.0f
                     //to prevent condition from being rounded down to 0.0 even if the item is not broken
-                    msg.WriteRangedSingle(condition > 0.0f ? Math.Max(condition, 0.5f) : 0.0f, 0.0f, 100.0f, 8);
+                    msg.WriteRangedSingle(condition > 0.0f ? Math.Max(condition, prefab.Health / 255.0f) : 0.0f, 0.0f, prefab.Health, 8);
 
                     if (condition <= 0.0f && FixRequirements.Count > 0)
                     {
@@ -1370,7 +1373,7 @@ namespace Barotrauma
                     FixRequirements[requirementIndex].Fixed = true;
                     if (condition <= 0.0f && FixRequirements.All(f => f.Fixed))
                     {
-                        Condition = 100.0f;
+                        Condition = prefab.Health;
                     }
 
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });

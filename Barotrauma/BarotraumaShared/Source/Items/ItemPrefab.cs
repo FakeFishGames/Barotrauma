@@ -104,6 +104,17 @@ namespace Barotrauma
             get { return offsetOnSelected; }
         }
 
+        public float Health
+        {
+            get;
+            private set;
+        }
+
+        public bool Indestructible
+        {
+            get;
+            private set;
+        }
 
         public float ImpactTolerance
         {
@@ -242,8 +253,10 @@ namespace Barotrauma
 
             CanUseOnSelf        = ToolBox.GetAttributeBool(element, "canuseonself", false);
             
-            FireProof           = ToolBox.GetAttributeBool(element, "fireproof", false);
 
+            Health              = ToolBox.GetAttributeFloat(element, "health", 100.0f);
+            Indestructible      = ToolBox.GetAttributeBool(element, "indestructible", false);
+            FireProof           = ToolBox.GetAttributeBool(element, "fireproof", false);
             ImpactTolerance     = ToolBox.GetAttributeFloat(element, "impacttolerance", 0.0f);
 
             string aliases = ToolBox.GetAttributeString(element, "aliases", "");
