@@ -1,15 +1,12 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Contacts;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Xml.Linq;
@@ -455,7 +452,7 @@ namespace Barotrauma
                     ownInventory.ClientRead(type, msg, sendingTime);
                     break;
                 case NetEntityEvent.Type.Status:
-                    condition = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+                    condition = msg.ReadRangedSingle(0.0f, prefab.Health, 8);
 
                     if (FixRequirements.Count > 0)
                     {

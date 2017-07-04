@@ -167,21 +167,21 @@ namespace Barotrauma
 
             if (item != null && drawItem)
             {
-                if (item.Condition < 100.0f)
+                if (item.Condition < item.Prefab.Health)
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                     GUI.DrawRectangle(spriteBatch,
-                        new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * item.Condition / 100.0f), 8),
+                        new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * item.Condition / item.Prefab.Health), 8),
                         Color.Lerp(Color.Red, Color.Green, item.Condition / 100.0f) * 0.8f, true);
                 }
 
                 var containedItems = item.ContainedItems;
-                if (containedItems != null && containedItems.Length == 1 && containedItems[0].Condition < 100.0f)
+                if (containedItems != null && containedItems.Length == 1 && containedItems[0].Condition < item.Prefab.Health)
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Y, rect.Width, 8), Color.Black * 0.8f, true);
                     GUI.DrawRectangle(spriteBatch,
                         new Rectangle(rect.X, rect.Y, (int)(rect.Width * containedItems[0].Condition / 100.0f), 8),
-                        Color.Lerp(Color.Red, Color.Green, containedItems[0].Condition / 100.0f) * 0.8f, true);
+                        Color.Lerp(Color.Red, Color.Green, containedItems[0].Condition / item.Prefab.Health) * 0.8f, true);
                 }
             }
 

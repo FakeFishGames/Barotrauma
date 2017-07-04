@@ -156,7 +156,7 @@ namespace Barotrauma
             }
             if (!unfixedFound)
             {
-                item.Condition = 100.0f;
+                item.Condition = item.Prefab.Health;
                 frame = null;
             }
         }

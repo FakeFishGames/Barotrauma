@@ -290,7 +290,7 @@ namespace Barotrauma
             body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
 
             body.Friction = ToolBox.GetAttributeFloat(element, "friction", 0.3f);
-            body.Restitution = 0.05f;
+            body.Restitution = ToolBox.GetAttributeFloat(element, "restitution", 0.05f);
             
             body.BodyType = BodyType.Dynamic;
 

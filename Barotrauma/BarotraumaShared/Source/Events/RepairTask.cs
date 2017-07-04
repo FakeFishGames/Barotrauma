@@ -14,7 +14,7 @@
 
         public override void Update(float deltaTime)
         {
-            if (item.Condition > 50.0f) Finished();
+            if (item.Condition > item.Prefab.Health * 0.5f) Finished();
         }
     }
 }

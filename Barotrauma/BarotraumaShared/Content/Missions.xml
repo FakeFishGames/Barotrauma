@@ -26,6 +26,19 @@
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
 
+  <SalvageMission
+    name="Salvaging an artifact"
+    description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
+    commonness="10"
+    reward="2000"
+    radarlabel="Infrasonic signal"
+    failuremessage="Retrieving the artifact failed"
+    successmessage="The artifact has been succesfully retrieved"
+    spawntype="ruin"
+    itemname="Nasonov Artifact">
+    <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
+  </SalvageMission>
+
   <MonsterMission
     name="Killing a Moloch"
     description="A particularly aggressive Moloch has been terrorizing vessels traveling between [location1] and [location2]. A reward of 1000 credits has been promised to those who kill the creature."

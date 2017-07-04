@@ -6,7 +6,7 @@
     Tags="alien"
     pickdistance="150">
 
-    <Sprite texture="artifact.png" depth="0.7" sourcerect="59,0,60,61"/>
+    <Sprite texture="artifact.png" depth="0.7" sourcerect="58,0,60,60"/>
 
     <Deconstruct time="30">
       <Item name="Steel Bar"/>
@@ -15,7 +15,7 @@
       <Item name="Uranium Bar"/>
     </Deconstruct>
         
-    <Body width="60" height="61" density="50"/>
+    <Body width="60" height="61" density="50" friction="0.95"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
       <StatusEffect type="Always" target="Hull" oxygen="-50000.0"/>
@@ -28,7 +28,7 @@
     Tags="alien"
     pickdistance="150">
 
-    <Sprite texture="artifact.png" depth="0.7" sourcerect="0,0,58,56"/>
+    <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56"/>
 
     <Deconstruct time="30">
       <Item name="Steel Bar"/>
@@ -37,7 +37,7 @@
       <Item name="Incendium Bar"/>
     </Deconstruct>
     
-    <Body radius="28" density="50"/>
+    <Body radius="28" density="50" friction="0.95"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10">
       <StatusEffect type="Always">
@@ -48,6 +48,7 @@
 
   <Item
     name="Faraday Artifact"
+    category="Alien"
     Tags="alien"
     pickdistance="150">
 
@@ -60,7 +61,30 @@
       <Item name="Fulgurium Bar"/>
     </Deconstruct>
 
-    <Body radius="25" density="50"/>
+    <Body radius="25" density="50" friction="0.95"/>
+
+    <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10"/>
+  </Item>
+
+  <Item
+    name="Nasonov Artifact"
+    category="Alien"
+    Tags="alien"
+    pickdistance="150"
+    indestructible="true">
+
+    <Sprite texture="artifact.png" depth="0.7" sourcerect="60,61,63,67"/>
+
+    <Deconstruct time="30">
+      <Item name="Steel Bar"/>
+      <Item name="Fulgurium Bar"/>
+      <Item name="Fulgurium Bar"/>
+      <Item name="Fulgurium Bar"/>
+    </Deconstruct>
+
+    <AiTarget sightrange="10000.0" soundrange="10000"/>
+    
+    <Body width="55" height="55" density="50" friction="0.95"/>
 
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10"/>
   </Item>
@@ -72,7 +96,7 @@
     tags="alien,smallitem"
     impacttolerance="8">
 
-    <Sprite texture="artifact.png" depth="0.7" sourcerect="119,96,9,32"/>
+    <Sprite texture="artifact.png" depth="0.7" sourcerect="119,0,9,32"/>
 
     <Body width="9" height="32" density="15"/>
 
@@ -100,7 +124,7 @@
       <Item name="Sulphuric Acid"/>
     </Deconstruct>
 
-    <Sprite texture="artifact.png" depth="0.7" sourcerect="119,96,9,32"/>
+    <Sprite texture="artifact.png" depth="0.7" sourcerect="119,0,9,32"/>
 
     <Body width="9" height="32" density="15"/>
 

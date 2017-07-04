@@ -93,7 +93,7 @@ namespace Barotrauma.Items.Components
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
             Color color = (item.IsSelected) ? Color.Green : Color.White;
-            color = color * (item.Condition / 100.0f);
+            color = color * (item.Condition / item.Prefab.Health);
             color.A = 255;
 
             //prefab.sprite.Draw(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);

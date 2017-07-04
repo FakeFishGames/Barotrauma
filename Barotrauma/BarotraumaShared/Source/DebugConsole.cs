@@ -502,7 +502,7 @@ namespace Barotrauma
                 case "fixitems":
                     foreach (Item it in Item.ItemList)
                     {
-                        it.Condition = 100.0f;
+                        it.Condition = it.Prefab.Health;
                     }
                     break;
                 case "fixhull":

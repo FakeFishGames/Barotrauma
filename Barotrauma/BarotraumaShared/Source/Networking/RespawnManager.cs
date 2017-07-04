@@ -330,7 +330,7 @@ namespace Barotrauma.Networking
                     continue;
                 }
 
-                item.Condition = 100.0f;
+                item.Condition = item.Prefab.Health;
 
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
