@@ -70,9 +70,12 @@ namespace Barotrauma
 
         public static void Update(GameMain game, float deltaTime)
         {
-            while (queuedMessages.Count > 0)
+            lock (queuedMessages)
             {
-                AddMessage(queuedMessages.Dequeue());
+                while (queuedMessages.Count > 0)
+                {
+                    AddMessage(queuedMessages.Dequeue());
+                }
             }
 
             if (PlayerInput.KeyHit(Keys.F3))
