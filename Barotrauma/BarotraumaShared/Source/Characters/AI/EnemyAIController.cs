@@ -213,7 +213,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (attachToWalls && Character.Submarine == null)
+            if (attachToWalls && Character.Submarine == null && Level.Loaded != null)
             {
                 raycastTimer -= deltaTime;
                 //check if there are any walls nearby the character could attach to
