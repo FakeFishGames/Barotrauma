@@ -413,7 +413,7 @@ namespace Barotrauma.Lights
 
                 if (intersection != null)
                 {
-                    float dist = Vector2.Distance((Vector2)intersection, rayStart);
+                    float dist = Vector2.DistanceSquared((Vector2)intersection, rayStart);
                     if (closestIntersection == null || dist < closestDist)
                     {
                         closestDist = dist;

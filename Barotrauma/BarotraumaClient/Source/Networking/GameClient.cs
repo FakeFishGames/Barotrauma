@@ -818,7 +818,11 @@ namespace Barotrauma.Networking
  
                             if (inc.ReadBoolean())
                             {
-                                ReadInitialUpdate(inc, !NetIdUtils.IdMoreRecent(updateID,GameMain.NetLobbyScreen.LastUpdateID));
+                                if (GameSettings.VerboseLogging)
+                                {
+                                    DebugConsole.NewMessage("Received initial lobby update, ID: " + updateID + ", last ID: " + GameMain.NetLobbyScreen.LastUpdateID, Color.Gray);
+                                }
+                                ReadInitialUpdate(inc, !NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID));
                             }
 
                             string selectSubName        = inc.ReadString();

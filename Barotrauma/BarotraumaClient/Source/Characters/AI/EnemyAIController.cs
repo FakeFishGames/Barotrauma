@@ -19,7 +19,7 @@ namespace Barotrauma
             Vector2 pos = Character.WorldPosition;
             pos.Y = -pos.Y;
 
-            if (selectedAiTarget != null)
+            if (selectedAiTarget?.Entity != null)
             {
                 GUI.DrawLine(spriteBatch, pos, new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);
 
@@ -29,13 +29,6 @@ namespace Barotrauma
                 }
 
                 GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 20.0f, Color.Red);
-            }
-
-            if (selectedAiTarget != null)
-            {
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
-                    new Vector2(selectedAiTarget.WorldPosition.X, -selectedAiTarget.WorldPosition.Y), Color.Red);
             }
 
             GUI.Font.DrawString(spriteBatch, targetValue.ToString(), pos - Vector2.UnitY * 80.0f, Color.Red);
