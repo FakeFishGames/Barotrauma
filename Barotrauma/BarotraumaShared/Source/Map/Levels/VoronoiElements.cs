@@ -50,15 +50,14 @@
  */
 
 
+using Barotrauma;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
-using Barotrauma;
-using System;
 using System.Collections.Generic;
 
 namespace Voronoi2
 {
-	public class Point
+    public class Point
 	{
 		public double x, y;
 		

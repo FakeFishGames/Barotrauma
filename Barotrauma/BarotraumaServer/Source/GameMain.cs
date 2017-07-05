@@ -1,11 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using System.Reflection;
-using FarseerPhysics;
+﻿using Barotrauma.Networking;
 using FarseerPhysics.Dynamics;
-using Barotrauma.Networking;
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Xml.Linq;
-
-namespace Barotrauma.Items.Components
+﻿namespace Barotrauma.Items.Components
 {
     partial class Powered : ItemComponent
     {

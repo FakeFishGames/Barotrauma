@@ -1,5 +1,5 @@
-﻿using Microsoft.Xna.Framework;
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {

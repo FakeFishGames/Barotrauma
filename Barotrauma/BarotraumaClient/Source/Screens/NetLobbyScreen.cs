@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Networking;
-using System.Linq;
+using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
 
 namespace Barotrauma
 {

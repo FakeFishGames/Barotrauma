@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using OpenTK.Audio.OpenAL;
+﻿using Microsoft.Xna.Framework;
 using OpenTK.Audio;
-
+using OpenTK.Audio.OpenAL;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma.Sounds
 {

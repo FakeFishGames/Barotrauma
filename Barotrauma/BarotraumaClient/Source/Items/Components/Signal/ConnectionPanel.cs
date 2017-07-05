@@ -1,11 +1,6 @@
 ﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Linq;
-using System.Collections.Generic;
 using System.Xml.Linq;
-using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {

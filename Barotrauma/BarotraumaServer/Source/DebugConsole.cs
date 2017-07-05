@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {

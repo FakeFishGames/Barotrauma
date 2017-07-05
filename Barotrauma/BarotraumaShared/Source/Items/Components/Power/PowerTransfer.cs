@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Xml.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
 using System;
-using System.Globalization;
-using System.Linq;
+using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {

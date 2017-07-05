@@ -1,6 +1,6 @@
-﻿using System;
+﻿using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
-using FarseerPhysics.Dynamics;
+using System;
 
 namespace Barotrauma
 {

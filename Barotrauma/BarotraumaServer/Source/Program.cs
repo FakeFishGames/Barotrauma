@@ -2,12 +2,10 @@
 
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 
 #if WINDOWS
-using System.Management;
 #endif
 
 #endregion

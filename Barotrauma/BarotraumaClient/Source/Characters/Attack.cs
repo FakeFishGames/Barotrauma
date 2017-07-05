@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml.Linq;
+﻿using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
-using Barotrauma.Particles;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {

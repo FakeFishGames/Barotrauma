@@ -1,11 +1,11 @@
-﻿using System;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Barotrauma.Networking
 {

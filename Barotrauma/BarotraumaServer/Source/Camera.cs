@@ -1,6 +1,5 @@
-﻿using System;
-using Microsoft.Xna.Framework;
-using System.Linq;
+﻿using Microsoft.Xna.Framework;
+using System;
 //TODO: this class still does things that the server doesn't need, cleanup
 
 namespace Barotrauma

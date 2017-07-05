@@ -1,7 +1,6 @@
-﻿using System.Xml.Linq;
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {

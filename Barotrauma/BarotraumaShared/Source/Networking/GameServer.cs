@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Barotrauma.Items.Components;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
+using RestSharp;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using Lidgren.Network;
-using Microsoft.Xna.Framework;
-using RestSharp;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma.Networking
 {

@@ -1,14 +1,13 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using Barotrauma.Particles;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Joints;
-using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Particles;
 
 namespace Barotrauma
 {

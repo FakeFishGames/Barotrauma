@@ -1,9 +1,7 @@
-﻿using Microsoft.Xna.Framework;
-using Barotrauma.Lights;
-using System;
-using System.Xml.Linq;
+﻿using Barotrauma.Lights;
 using Barotrauma.Networking;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {

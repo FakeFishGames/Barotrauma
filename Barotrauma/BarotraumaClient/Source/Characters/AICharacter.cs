@@ -1,7 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class AICharacter : Character
     {

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {

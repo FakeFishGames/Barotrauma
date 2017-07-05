@@ -1,7 +1,7 @@
-﻿using System.Xml.Linq;
+﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using FarseerPhysics;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {

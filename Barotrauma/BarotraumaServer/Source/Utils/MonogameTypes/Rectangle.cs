@@ -3,7 +3,6 @@
 // file 'LICENSE.txt', which is part of this source code package.
 
 using System;
-using System.Runtime.Serialization;
 using System.Diagnostics;
 
 namespace Microsoft.Xna.Framework
@@ -11,7 +10,7 @@ namespace Microsoft.Xna.Framework
     /// <summary>
     /// Describes a 2D-rectangle. 
     /// </summary>
-    
+
     [DebuggerDisplay("{DebugDisplayString,nq}")]
     public struct Rectangle : IEquatable<Rectangle>
     {
