@@ -76,10 +76,8 @@ namespace Barotrauma.Items.Components
             this.cam = cam;
 
             if (character == null 
-                || character.IsDead
-                || character.Stun > 0.0f
                 || character.SelectedConstruction != item
-                || Vector2.Distance(character.Position, item.Position) > item.PickDistance * 2.0f)
+                || !character.CanInteractWith(item))
             {
                 if (character != null)
                 {
@@ -149,7 +147,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character activator = null)
         {
-            if (character == null || activator != character || character.SelectedConstruction != item)
+            if (character == null || activator != character || character.SelectedConstruction != item || !character.CanInteractWith(item))
             {
                 character = null;
                 return false;
@@ -164,7 +162,7 @@ namespace Barotrauma.Items.Components
 
         public override void SecondaryUse(float deltaTime, Character character = null)
         {
-            if (this.character == null || this.character != character || this.character.SelectedConstruction != item)
+            if (this.character == null || this.character != character || this.character.SelectedConstruction != item || !character.CanInteractWith(item))
             {
                 character = null;
                 return;

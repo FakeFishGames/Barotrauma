@@ -4,7 +4,7 @@
     name="C-4 Block"
     category="Equipment"
     Tags="smallitem,explosive"
-    pickdistance="150"
+    
     price="100">
 
     <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
@@ -22,7 +22,7 @@
     name="Compound N"
     category="Equipment"
     Tags="smallitem,explosive"
-    pickdistance="150">
+    >
 
     <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
 
@@ -40,7 +40,7 @@
     name="Volatile Compound N"
     category="Equipment"
     Tags="smallitem,explosive"
-    pickdistance="150">
+    >
 
     <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
 
@@ -60,7 +60,7 @@
     description="A compound made of C-4 and incendium."
     category="Equipment"
     Tags="smallitem,explosive"
-    pickdistance="150">
+    >
 
     <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
 
@@ -80,7 +80,7 @@
     description="A device that detonates any contained explosive when receiving a signal."
     category="Equipment"
     Tags="smallitem"
-    pickdistance="150"
+    
     price="50">
 
     <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,7,16,9"/>
@@ -109,7 +109,7 @@
     description="A highly unstable liquid that may explode when subjected to heat or physical shock."
     spritecolor="1.0,1.0,1.0,1.0"
     Tags="smallitem,chem,medical"
-    pickdistance="150"
+    
     impacttolerance="4">
 
     <Sprite texture ="Content/Items/Medical/med.png" sourcerect="24,16,8,16" depth="0.6"/>

@@ -33,9 +33,11 @@ namespace Barotrauma
         protected Vector2 size;
 
         //how close the Character has to be to the item to pick it up
-        private float pickDistance;
+        private float interactDistance;
+        // this can be used to allow items which are behind other items tp
+        private float interactPriority; 
 
-        private bool pickThroughWalls;
+        private bool interactThroughWalls;
 
         //an area next to the construction
         //the construction can be Activated() by a Character inside the area
@@ -78,14 +80,19 @@ namespace Barotrauma
             private set;
         }
 
-        public float PickDistance
+        public float InteractDistance
         {
-            get { return pickDistance; }
+            get { return interactDistance; }
         }
 
-        public bool PickThroughWalls
+        public float InteractPriority
         {
-            get { return pickThroughWalls; }
+            get { return interactPriority; }
+        }
+
+        public bool InteractThroughWalls
+        {
+            get { return interactThroughWalls; }
         }
 
         public override bool IsLinkable
@@ -238,9 +245,10 @@ namespace Barotrauma
 
             Description = ToolBox.GetAttributeString(element, "description", "");
 
-            pickThroughWalls    = ToolBox.GetAttributeBool(element, "pickthroughwalls", false);
-            pickDistance        = ToolBox.GetAttributeFloat(element, "pickdistance", 0.0f);
-            
+            interactThroughWalls    = ToolBox.GetAttributeBool(element, "interactthroughwalls", false);
+            interactDistance        = ToolBox.GetAttributeFloat(element, "interactdistance", 120.0f); // Default to 120 as the new item picking method is tuned to this number
+            interactPriority        = ToolBox.GetAttributeFloat(element, "interactpriority", 0.0f);
+
             isLinkable          = ToolBox.GetAttributeBool(element, "linkable", false);
 
             resizeHorizontal    = ToolBox.GetAttributeBool(element, "resizehorizontal", false);

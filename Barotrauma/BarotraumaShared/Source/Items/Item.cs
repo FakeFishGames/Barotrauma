@@ -128,19 +128,33 @@ namespace Barotrauma
         {
             get { return prefab.ImpactTolerance; }
         }
-
-        public float PickDistance
+        
+        public float InteractDistance
         {
-            get { return prefab.PickDistance; }
+            get { return prefab.InteractDistance; }
+        }
+
+        public float InteractPriority
+        {
+            get { return prefab.InteractPriority; }
         }
 
         public override Vector2 SimPosition
         {
             get
             {
-                return (body==null) ? base.SimPosition : body.SimPosition;
+                return (body == null) ? base.SimPosition : body.SimPosition;
             }
         }
+
+        public Rectangle InteractionRect
+        {
+            get
+            {
+                return WorldRect;
+            }
+        }
+
         public bool NeedsPositionUpdate
         {
             get
@@ -910,7 +924,7 @@ namespace Barotrauma
         {
             return drawableComponents.Count > 0 || body == null || body.Enabled;
         }
-        
+
         public List<T> GetConnectedComponents<T>(bool recursive = false)
         {
             List<T> connectedComponents = new List<T>();
@@ -999,77 +1013,11 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public static Item FindPickable(Vector2 position, Vector2 pickPosition, Hull hull = null, Item[] ignoredItems = null)
+        public float GetDrawDepth()
         {
-            float dist;
-            return FindPickable(position, pickPosition, hull, ignoredItems, out dist);
+            return Sprite.Depth + ((ID % 255) * 0.000001f);
         }
 
-        /// <param name="position">Position of the Character doing the pick, only items that are close enough to this are checked</param>
-        /// <param name="pickPosition">the item closest to pickPosition is returned</param>
-        /// <param name="hull">If a hull is specified, only items within that hull are checked</param>
-        public static Item FindPickable(Vector2 position, Vector2 pickPosition, Hull hull, Item[] ignoredItems, out float distance)
-        {
-            float closestDist = 0.0f, dist;
-            Item closest = null;
-
-            Vector2 displayPos = ConvertUnits.ToDisplayUnits(position);
-            Vector2 displayPickPos = ConvertUnits.ToDisplayUnits(pickPosition);
-
-            distance = 1000.0f;
-
-            foreach (Item item in ItemList)
-            {
-                if (ignoredItems != null && ignoredItems.Contains(item)) continue;
-                if (item.body != null && !item.body.Enabled) continue;
-
-                if (item.PickDistance == 0.0f && !item.prefab.Triggers.Any()) continue;
-
-                Pickable pickableComponent = item.GetComponent<Pickable>();
-                if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) continue;
-
-                float pickDist = Vector2.Distance(item.WorldPosition, displayPickPos);
-                
-                bool insideTrigger = false;
-                foreach (Rectangle trigger in item.prefab.Triggers)
-                {
-                    Rectangle transformedTrigger = item.TransformTrigger(trigger, true);
-
-                    if (!Submarine.RectContains(transformedTrigger, displayPos)) continue;                    
-                        
-                    insideTrigger = true;                    
-
-                    Vector2 triggerCenter = new Vector2(transformedTrigger.Center.X, transformedTrigger.Y - transformedTrigger.Height / 2);
-                    pickDist = Math.Min(Math.Abs(triggerCenter.X - displayPickPos.X), Math.Abs(triggerCenter.Y - displayPickPos.Y));
-                }
-
-                if (!insideTrigger && item.prefab.Triggers.Any()) continue;
-
-                if (pickDist > item.PickDistance && item.PickDistance > 0.0f) continue;
-
-                dist = item.Sprite.Depth * 10.0f + pickDist;
-                if (item.IsMouseOn(displayPickPos)) dist = dist * 0.1f;
-
-                if (closest == null || dist < closestDist)
-                {
-                    if (item.PickDistance > 0.0f && Vector2.Distance(displayPos, item.WorldPosition) > item.prefab.PickDistance) continue;
-                    
-                    if (!item.prefab.PickThroughWalls && Screen.Selected != GameMain.EditMapScreen && !insideTrigger)
-                    {
-                        Body body = Submarine.CheckVisibility(item.Submarine == null ? position : position - item.Submarine.SimPosition, item.SimPosition, true);
-                        if (body != null && body.UserData as Item != item) continue;
-                    }
-                    
-                    closestDist = dist;
-                    closest = item;
-
-                    distance = pickDist;
-                }
-            }
-                        
-            return closest;
-        }
-        
         public bool IsInsideTrigger(Vector2 worldPosition)
         {
             foreach (Rectangle trigger in prefab.Triggers)
@@ -1082,26 +1030,19 @@ namespace Barotrauma
             return false;
         }
 
-        public bool IsInPickRange(Vector2 worldPosition)
-        {
-            if (IsInsideTrigger(worldPosition)) return true;
-
-            return Vector2.Distance(WorldPosition, worldPosition) < PickDistance;
-        }
-
         public bool CanClientAccess(Client c)
         {
-            return c != null && c.Character != null && c.Character.CanAccessItem(this);
+            return c != null && c.Character != null && c.Character.CanInteractWith(this);
         }
 
-        public bool Pick(Character picker, bool ignoreRequiredItems=false, bool forceSelectKey=false, bool forceActionKey=false)
+        public bool TryInteract(Character picker, bool ignoreRequiredItems=false, bool forceSelectKey=false, bool forceActionKey=false)
         {
             bool hasRequiredSkills = true;
 
             bool picked = false, selected = false;
 
             Skill requiredSkill = null;
-
+            
             foreach (ItemComponent ic in components)
             {
                 bool pickHit = false, selectHit = false;
@@ -1129,7 +1070,6 @@ namespace Barotrauma
                     }
                 }
 
-                
                 if (!pickHit && !selectHit) continue;
 
                 Skill tempRequiredSkill;
@@ -1139,7 +1079,7 @@ namespace Barotrauma
 
                 bool showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.EditMapScreen;
                 if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, showUiMsg)) continue;
-                if ((ic.CanBePicked && pickHit && ic.Pick(picker)) || 
+                if ((ic.CanBePicked && pickHit && ic.Pick(picker)) ||
                     (ic.CanBeSelected && selectHit && ic.Select(picker)))
                 {
                     picked = true;
@@ -1164,24 +1104,24 @@ namespace Barotrauma
                 if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
             }
             else if (selected)
-            {        
+            {
                 picker.SelectedConstruction = this;
             }
 
 #if CLIENT
-            if (!hasRequiredSkills && Character.Controlled==picker && Screen.Selected != GameMain.EditMapScreen)
+            if (!hasRequiredSkills && Character.Controlled == picker && Screen.Selected != GameMain.EditMapScreen)
             {
                 GUI.AddMessage("Your skills may be insufficient to use the item!", Color.Red, 5.0f);
                 if (requiredSkill != null)
                 {
-                    GUI.AddMessage("("+requiredSkill.Name+" level "+requiredSkill.Level+" required)", Color.Red, 5.0f);
+                    GUI.AddMessage("(" + requiredSkill.Name + " level " + requiredSkill.Level + " required)", Color.Red, 5.0f);
                 }
             }
 #endif
 
-            if (Container!=null) Container.RemoveContained(this);
+            if (Container != null) Container.RemoveContained(this);
 
-            return true;
+            return true;         
         }
 
 
@@ -1366,7 +1306,7 @@ namespace Barotrauma
                     int requirementIndex = FixRequirements.Count == 1 ? 
                         0 : msg.ReadRangedInteger(0, FixRequirements.Count - 1);
                     
-                    if (c.Character == null || !c.Character.CanAccessItem(this)) return;
+                    if (c.Character == null || !c.Character.CanInteractWith(this)) return;
                     if (!FixRequirements[requirementIndex].CanBeFixed(c.Character)) return;
 
                     FixRequirements[requirementIndex].Fixed = true;
@@ -1379,7 +1319,7 @@ namespace Barotrauma
 
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
-                    if (c.Character == null || !c.Character.CanAccessItem(this)) return;
+                    if (c.Character == null || !c.Character.CanInteractWith(this)) return;
 
                     ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, c.Character);
 

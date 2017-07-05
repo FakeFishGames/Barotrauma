@@ -6,7 +6,7 @@
     name="Wire"
     category="Electrical"
     Tags="smallitem,wire"
-    pickdistance="150"
+    
     linkable="true"
     canbepicked="true"
     price="10">
@@ -29,7 +29,7 @@
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="1.0,0.0,0.0,1.0"
-    pickdistance="150"
+    
     linkable="true"
     canbepicked="true"
     price="10">
@@ -51,7 +51,7 @@
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="0.0,0.6,1.0,1.0"
-    pickdistance="150"
+    
     linkable="true"
     canbepicked="true"
     price="10">
@@ -73,7 +73,7 @@
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="1.0,0.5,0.0,1.0"
-    pickdistance="150"
+    
     linkable="true"
     canbepicked="true"
     price="10">
@@ -94,7 +94,7 @@
     name="FPGA Circuit"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="100"
     description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
@@ -110,7 +110,7 @@
     name="And Component"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10"
     description="Sends a signal when both inputs receive a signal within a set period of each other.">
@@ -145,7 +145,7 @@
     name="Or Component"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10"
     description="Sends a signal if either of the inputs receive a signal.">
@@ -179,7 +179,7 @@
     name="Not Component"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10"
     description="Sends a signal when the input is NOT receiving a signal.">
@@ -211,7 +211,7 @@
     name="Relay Component"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10"
     description="When switched on, forwards all received signals from the input connections to the outputs.">
@@ -257,7 +257,7 @@
     name="Delay Component"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10"
     description="Delays all received signals for a specific amount of time.">
@@ -289,7 +289,7 @@
     name="Light Component"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10">
 
@@ -324,7 +324,7 @@
     name="Oxygen Detector"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10"
     description="Sends out a value between 0-100 depending on the quality of the surrounding air.">
@@ -355,7 +355,7 @@
     name="Water Detector"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10"
     description="Sends out a signal when the detector is submerged.">
@@ -386,7 +386,7 @@
     name="Signal Check Component"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10"
     description="Sends a signal when a signal matching a specific value is received.">
@@ -420,7 +420,7 @@
     name="RegEx Find Component"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10"
     description="Sends a signal if the received signal matches a specific regular expression pattern.">
@@ -452,7 +452,7 @@
     name="Wifi Component"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="20"
     description="Allows remote communication between other Wifi Components that are using the same channel.">
@@ -484,7 +484,7 @@
     name="Emergency Siren"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10">
 
@@ -517,7 +517,7 @@
     name="Alarm Buzzer"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     linkable="true"
     price="10">
 
@@ -550,7 +550,7 @@
     name="Camera"
     category="Electrical"
     Tags="smallitem"
-    pickdistance="150"
+    
     focusonselected="true"
     offsetonselected="500"
     linkable="true"

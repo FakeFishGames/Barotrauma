@@ -3,7 +3,7 @@
   category="Electrical"
   linkable="true"
   tags="smallitem"
-  pickdistance="150.0"
+  
   price="10">
 
   <Sprite texture ="button.png" depth="0.8"/>

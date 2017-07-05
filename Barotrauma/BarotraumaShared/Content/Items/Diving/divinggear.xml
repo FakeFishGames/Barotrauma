@@ -4,7 +4,7 @@
     name="Oxygen Tank"
     category="Equipment,Misc"
     Tags="smallitem"
-    pickdistance="150"
+    
     price="50">
 
     <Deconstruct time="10">
@@ -26,7 +26,7 @@
     name="Diving Mask"
     category="Equipment"
     Tags="smallitem,diving"
-    pickdistance="200"
+    
     price="50"
     description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
 
@@ -63,7 +63,7 @@
     name="Diving Suit"
     category="Equipment"
     tags="diving"
-    pickdistance="200"
+    
     price="200"
     fireproof="true"
     description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
@@ -113,7 +113,7 @@
     name="Underwater Scooter"
     category="Equipment"
     Tags="smallitem"
-    pickdistance="200"
+    
     price="50"
     description="A battery-powered underwater propulsion device.">
 

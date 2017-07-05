@@ -2,7 +2,7 @@
   <Item
     name="Health Scanner HUD"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem"
     description="A heads-up display that displays information of the vital signs and status of nearby humans.">
 
@@ -20,7 +20,7 @@
   <Item
     name="Doctor's Coat"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem">
 
     <Sprite texture ="doctorgear.png" sourcerect="75,0,53,18" depth="0.6"/>
@@ -45,7 +45,7 @@
   <Item
     name="Doctor's Trousers"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem">
 
     <Sprite texture ="doctorgear.png" sourcerect="76,19,51,13" depth="0.6"/>
