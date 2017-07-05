@@ -1028,7 +1028,7 @@ namespace Barotrauma
                     // Get the point along the line between lowerBodyPosition and upperBodyPosition which is closest to the center of itemDisplayRect
                     playerDistanceCheckPosition = Vector2.Clamp(transformedTrigger.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
 
-                    if (!transformedTrigger.Contains(upperBodyPosition)) return false;
+                    if (!transformedTrigger.Contains(upperBodyPosition) && !transformedTrigger.Contains(lowerBodyPosition)) return false;
 
                     insideTrigger = true;
                 }
@@ -1099,9 +1099,11 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (ignoredItems != null && ignoredItems.Contains(item)) continue;
+                if (hull != null && item.CurrentHull != hull) continue;
                 if (item.body != null && !item.body.Enabled) continue;
-                
-                if (CanInteractWith(item))
+
+                float distanceToItem = float.PositiveInfinity;
+                if (CanInteractWith(item, out distanceToItem))
                 {
                     if (item.IsMouseOn(displayPosition))
                     {
@@ -1115,7 +1117,6 @@ namespace Barotrauma
                     }
                     else if (aimAssistModifier > 0.0f)
                     {
-                        float distanceToItem = Vector2.Distance(item.WorldPosition, displayPosition);
                         if (distanceToItem < (100.0f * aimAssistModifier) && (closestItem == null || distanceToItem < closestItemDistance))
                         {
                             closestItem = item;
