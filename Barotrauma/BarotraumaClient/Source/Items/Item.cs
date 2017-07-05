@@ -20,7 +20,6 @@ namespace Barotrauma
             get { return prefab.sprite; }
         }
 
-
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!Visible) return;
@@ -32,8 +31,7 @@ namespace Barotrauma
 
             if (prefab.sprite != null)
             {
-                float depth = Sprite.Depth;
-                depth += (ID % 255) * 0.000001f;
+                float depth = GetDrawDepth();
 
                 if (body == null)
                 {
