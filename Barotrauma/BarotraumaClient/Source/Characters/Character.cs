@@ -134,69 +134,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!LockHands)
-            {
-                //find the closest item if selectkey has been hit, or if the Character is being
-                //controlled by the player (in order to highlight it)
-
-                if (findClosestTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)
-                {
-                    closestCharacter = FindClosestCharacter(mouseSimPos);
-                    if (closestCharacter != null && closestCharacter.info == null)
-                    {
-                        closestCharacter = null;
-                    }
-
-                    float closestItemDist = 0.0f;
-                    closestItem = FindClosestItem(mouseSimPos, out closestItemDist);
-
-                    if (closestCharacter != null && closestItem != null)
-                    {
-                        if (Vector2.DistanceSquared(closestCharacter.SimPosition, mouseSimPos) < ConvertUnits.ToSimUnits(closestItemDist) * ConvertUnits.ToSimUnits(closestItemDist))
-                        {
-                            if (selectedConstruction != closestItem) closestItem = null;
-                        }
-                        else
-                        {
-                            closestCharacter = null;
-                        }
-                    }
-
-                    findClosestTimer = 0.1f;
-                }
-                else
-                {
-                    findClosestTimer -= deltaTime;
-                }
-
-                if (selectedCharacter == null && closestItem != null)
-                {
-                    closestItem.IsHighlighted = true;
-                    if (!LockHands && closestItem.Pick(this))
-                    {
-
-                    }
-                }
-
-                if (IsKeyHit(InputType.Select))
-                {
-                    if (selectedCharacter != null)
-                    {
-                        DeselectCharacter();
-                    }
-                    else if (closestCharacter != null && closestCharacter.IsHumanoid && closestCharacter.CanBeSelected)
-                    {
-                        SelectCharacter(closestCharacter);
-                    }
-                }
-            }
-            else
-            {
-                if (selectedCharacter != null) DeselectCharacter();
-                selectedConstruction = null;
-                closestItem = null;
-                closestCharacter = null;
-            }
+            DoInteractionUpdate(deltaTime, mouseSimPos);
 
             DisableControls = false;
         }

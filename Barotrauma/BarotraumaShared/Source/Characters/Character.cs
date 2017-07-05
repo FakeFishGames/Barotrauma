@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -71,8 +72,8 @@ namespace Barotrauma
         private float health, lastSentHealth;
         protected float minHealth, maxHealth;
 
-        protected Item closestItem;
-        private Character closestCharacter, selectedCharacter;
+        protected Item focusedItem;
+        private Character focusedCharacter, selectedCharacter;
 
         private bool isDead;
         private CauseOfDeath lastAttackCauseOfDeath;
@@ -154,6 +155,11 @@ namespace Barotrauma
             get { return !IsUnconscious && Stun <= 0.0f && !isDead; }
         }
 
+        public bool CanInteract
+        {
+            get { return AllowInput && !LockHands; }
+        }
+
         public Vector2 CursorPosition
         {
             get { return cursorPosition; }
@@ -169,9 +175,9 @@ namespace Barotrauma
             get { return Submarine == null ? cursorPosition : cursorPosition + Submarine.Position; }
         }
 
-        public Character ClosestCharacter
+        public Character FocusedCharacter
         {
-            get { return closestCharacter; }
+            get { return focusedCharacter; }
         }
 
         public Character SelectedCharacter
@@ -386,9 +392,9 @@ namespace Barotrauma
             set { selectedConstruction = value; }
         }
 
-        public Item ClosestItem
+        public Item FocusedItem
         {
-            get { return closestItem; }
+            get { return focusedItem; }
         }
 
         public virtual AIController AIController
@@ -569,7 +575,7 @@ namespace Barotrauma
                         System.Diagnostics.Debug.Assert(item != null);
                         if (item == null) continue;
 
-                        item.Pick(this, true, true, true);
+                        item.TryInteract(this, true, true, true);
                         inventory.TryPutItem(item, i, false, false);
                     }
                 }
@@ -713,7 +719,7 @@ namespace Barotrauma
             return (Info==null || Info.Job==null) ? 0 : Info.Job.GetSkillLevel(skillName);
         }
 
-        float findClosestTimer;
+        float findFocusedTimer;
 
         public Vector2 GetTargetMovement()
         {
@@ -950,7 +956,7 @@ namespace Barotrauma
 
         public bool CanAccessInventory(Inventory inventory)
         {
-            if (!AllowInput || LockHands) return false;
+            if (!CanInteract) return false;
 
             //the inventory belongs to some other character
             if (inventory.Owner is Character && inventory.Owner != this)
@@ -958,14 +964,13 @@ namespace Barotrauma
                 var owner = (Character)inventory.Owner;
 
                 //can only be accessed if the character is incapacitated and has been selected
-                return selectedCharacter == owner &&
-                    (owner.isDead || owner.IsUnconscious || owner.Stun > 0.0f || owner.LockHands);
+                return selectedCharacter == owner && (!owner.CanInteract);
             }
 
             if (inventory.Owner is Item)
             {
                 var owner = (Item)inventory.Owner;
-                if (!CanAccessItem(owner))
+                if (!CanInteractWith(owner))
                 {
                     return false;
                 }
@@ -973,53 +978,162 @@ namespace Barotrauma
             return true;
         }
 
-        public bool CanAccessItem(Item item)
+        public bool CanInteractWith(Item item)
         {
-            if (!AllowInput || LockHands) return false;
+            float distanceToItem;
+            return CanInteractWith(item, out distanceToItem);
+        }
+
+        public bool CanInteractWith(Item item, out float distanceToItem)
+        {
+            distanceToItem = -1.0f;
+
+            if (!CanInteract) return false;
 
             if (item.ParentInventory != null)
             {
                 return CanAccessInventory(item.ParentInventory);
             }
 
-            float maxDist = item.PickDistance * 1.2f;
-            if (maxDist <= 0.01f)
-            {
-                maxDist = 150.0f;
-            }
+            if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) return false;
 
-            if (Vector2.DistanceSquared(WorldPosition, item.WorldPosition) < maxDist*maxDist ||
-                item.IsInsideTrigger(WorldPosition))
-            {
-                return true;
-            }
+            Pickable pickableComponent = item.GetComponent<Pickable>();
+            if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) return false;
+                        
+            Vector2 characterDirection = Vector2.Transform(Vector2.UnitY, Matrix.CreateFromAxisAngle(Vector3.UnitZ, AnimController.Collider.Rotation));
 
-            return item.GetComponent<Items.Components.Ladder>() != null;
-        }
-
-        private Item FindClosestItem(Vector2 mouseSimPos, out float distance)
-        {
-            distance = 0.0f;
-
-            Limb torso = AnimController.GetLimb(LimbType.Torso);
-
-            if (torso == null) return null;
-
-            Vector2 pos = (torso.body.TargetPosition != null) ? (Vector2)torso.body.TargetPosition : torso.SimPosition;
-            Vector2 pickPos = mouseSimPos;
+            Vector2 upperBodyPosition = Position + (characterDirection * 20.0f);
+            Vector2 lowerBodyPosition = Position - (characterDirection * 60.0f);
 
             if (Submarine != null)
             {
-                pos += Submarine.SimPosition;
-                pickPos += Submarine.SimPosition;
+                upperBodyPosition += Submarine.Position;
+                lowerBodyPosition += Submarine.Position;
             }
 
-            if (selectedConstruction != null) pickPos = ConvertUnits.ToSimUnits(selectedConstruction.WorldPosition);
+            Vector2 playerDistanceCheckPosition;
+            Rectangle itemDisplayRect;
 
-            return Item.FindPickable(pos, pickPos, AnimController.CurrentHull, selectedItems, out distance);
+            bool insideTrigger = false;
+            if (item.Prefab.Triggers.Any())
+            {
+                foreach (Rectangle trigger in item.Prefab.Triggers)
+                {
+                    Rectangle transformedTrigger = new Rectangle(
+                        item.WorldRect.X + trigger.X,
+                        (item.WorldRect.Y + trigger.Y) - ((trigger.Height == 0) ? item.Rect.Height : trigger.Height),
+                        (trigger.Width == 0) ? item.Rect.Width : trigger.Width,
+                        (trigger.Height == 0) ? item.Rect.Height : trigger.Height);
+
+                    // Get the point along the line between lowerBodyPosition and upperBodyPosition which is closest to the center of itemDisplayRect
+                    playerDistanceCheckPosition = Vector2.Clamp(transformedTrigger.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
+
+                    if (!transformedTrigger.Contains(upperBodyPosition)) return false;
+
+                    insideTrigger = true;
+                }
+                if (!insideTrigger) return false;
+            }            
+            itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
+
+            // Get the point along the line between lowerBodyPosition and upperBodyPosition which is closest to the center of itemDisplayRect
+            playerDistanceCheckPosition = Vector2.Clamp(itemDisplayRect.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
+
+            // Here we get the point on the itemDisplayRect which is closest to playerDistanceCheckPosition
+            Vector2 rectIntersectionPoint = new Vector2(Math.Max(itemDisplayRect.X, Math.Min(itemDisplayRect.X + itemDisplayRect.Width, playerDistanceCheckPosition.X)), Math.Max(itemDisplayRect.Y, Math.Min(itemDisplayRect.Y + itemDisplayRect.Height, playerDistanceCheckPosition.Y)));
+
+            // If playerDistanceCheckPosition is inside the itemDisplayRect then we consider the character to within 0 distance of the item
+            if (!itemDisplayRect.Contains(playerDistanceCheckPosition))
+            {
+                distanceToItem = Vector2.Distance(rectIntersectionPoint, playerDistanceCheckPosition);
+            }
+
+            if (distanceToItem > item.InteractDistance && item.InteractDistance > 0.0f) return false;
+
+            if (!item.Prefab.InteractThroughWalls && Screen.Selected != GameMain.EditMapScreen && !insideTrigger)
+            {
+                Vector2 itemPosition = item.SimPosition;
+                if (Submarine == null && item.Submarine != null)
+                {
+                    //character is outside, item inside
+                    itemPosition += item.Submarine.SimPosition;
+                }
+                else if (Submarine != null && item.Submarine == null)
+                {
+                    //character is inside, item outside
+                    itemPosition -= Submarine.SimPosition;
+                }
+                else if (Submarine != item.Submarine)
+                {
+                    //character and the item are inside different subs
+                    itemPosition += item.Submarine.SimPosition;
+                    itemPosition -= Submarine.SimPosition;
+                }
+                var body = Submarine.CheckVisibility(SimPosition, itemPosition, true);
+                if (body != null && body.UserData as Item != item) return false;
+            }
+
+            return true;
         }
 
-        private Character FindClosestCharacter(Vector2 mouseSimPos, float maxDist = 150.0f)
+        /// <summary>
+        ///   Finds the front (lowest depth) interactable item at a position. "Interactable" in this case means that the character can "reach" the item.
+        /// </summary>
+        /// <param name="character">The Character who is looking for the interactable item, only items that are close enough to this character are returned</param>
+        /// <param name="simPosition">The item at the simPosition, with the lowest depth, is returned</param>
+        /// <param name="allowFindingNearestItem">If this is true and an item cannot be found at simPosition then a nearest item will be returned if possible</param>
+        /// <param name="hull">If a hull is specified, only items within that hull are returned</param>
+        public Item FindItemAtPosition(Vector2 simPosition, float aimAssistModifier = 0.0f, Hull hull = null, Item[] ignoredItems = null)
+        {
+            if (Submarine != null)
+            {
+                simPosition += Submarine.SimPosition;
+            }
+
+            Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
+
+            Item highestPriorityItemAtPosition = null;
+            Item closestItem = null;
+            float closestItemDistance = 0.0f;
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (ignoredItems != null && ignoredItems.Contains(item)) continue;
+                if (item.body != null && !item.body.Enabled) continue;
+                
+                if (CanInteractWith(item))
+                {
+                    if (item.IsMouseOn(displayPosition))
+                    {
+                        Console.WriteLine("Name: " + item.Name + " Priority:" + item.InteractPriority);
+                    }
+                    if (item.IsMouseOn(displayPosition) && (highestPriorityItemAtPosition == null || 
+                        ((highestPriorityItemAtPosition.InteractPriority < item.InteractPriority) ||
+                        (highestPriorityItemAtPosition.InteractPriority == item.InteractPriority && highestPriorityItemAtPosition.GetDrawDepth() > item.GetDrawDepth()))))
+                    {
+                        highestPriorityItemAtPosition = item;
+                    }
+                    else if (aimAssistModifier > 0.0f)
+                    {
+                        float distanceToItem = Vector2.Distance(item.WorldPosition, displayPosition);
+                        if (distanceToItem < (100.0f * aimAssistModifier) && (closestItem == null || distanceToItem < closestItemDistance))
+                        {
+                            closestItem = item;
+                            closestItemDistance = distanceToItem;
+                        }
+                    }
+                }
+            }
+
+            if (highestPriorityItemAtPosition == null)
+            {
+                return closestItem;
+            }
+
+            return highestPriorityItemAtPosition;
+        }
+
+        private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = 150.0f)
         {
             Character closestCharacter = null;
             float closestDist = 0.0f;
@@ -1028,17 +1142,25 @@ namespace Barotrauma
             
             foreach (Character c in CharacterList)
             {
-                if (c == this || !c.enabled) continue;
-
-                if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist*maxDist) continue;
+                if (c == this || !c.enabled || c.info == null || !c.IsHumanoid || !c.CanBeSelected) continue;
 
                 float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
-                if (dist < maxDist*maxDist && (closestCharacter==null || dist<closestDist))
+                if (dist < maxDist*maxDist && (closestCharacter == null || dist < closestDist))
                 {
                     closestCharacter = c;
                     closestDist = dist;
-                    continue;
                 }
+                
+                /*FarseerPhysics.Common.Transform transform;
+                c.AnimController.Collider.FarseerBody.GetTransform(out transform);
+                for (int i = 0; i < c.AnimController.Collider.FarseerBody.FixtureList.Count; i++)
+                {
+                    if (c.AnimController.Collider.FarseerBody.FixtureList[i].Shape.TestPoint(ref transform, ref mouseSimPos))
+                    {
+                        Console.WriteLine("Hit: " + i);
+                        closestCharacter = c;
+                    }
+                }*/
             }
 
             return closestCharacter;
@@ -1086,7 +1208,66 @@ namespace Barotrauma
 
             selectedCharacter = null;
         }
-         
+
+        public void DoInteractionUpdate(float deltaTime, Vector2 mouseSimPos)
+        {
+            bool isLocalPlayer = (controlled == this);
+            if (!isLocalPlayer && (this is AICharacter || !IsRemotePlayer))
+            {
+                return;
+            }
+
+            if (!AllowInput || LockHands)
+            {
+                if (selectedCharacter != null)
+                {
+                    DeselectCharacter();
+                }
+                selectedConstruction = null;
+                focusedItem = null;
+                focusedCharacter = null;
+                return;
+            }
+            if ((!isLocalPlayer && IsKeyHit(InputType.Select) && GameMain.Server == null) || (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)))
+            {
+                focusedCharacter = FindCharacterAtPosition(mouseSimPos);
+                if (focusedCharacter != null)
+                {
+                    focusedItem = null; // We can only focus one thing at a time
+                }
+                else
+                {
+                    focusedItem = FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.5f : 0.25f);
+                }
+                findFocusedTimer = 0.05f;
+            }
+            else
+            {
+                findFocusedTimer -= deltaTime;
+            }
+
+            if (focusedCharacter != null && IsKeyHit(InputType.Select))
+            {
+                if (selectedCharacter != null)
+                {
+                    DeselectCharacter();
+                }
+                else
+                {
+                    SelectCharacter(focusedCharacter);
+                }
+            }
+            else if (focusedItem != null)
+            {
+                focusedItem.IsHighlighted = true;
+                focusedItem.TryInteract(this);
+            }
+            else if (IsKeyHit(InputType.Select) && selectedConstruction != null)
+            {
+                selectedConstruction = null;
+            }
+        }
+        
         public static void UpdateAnimAll(float deltaTime)
         {
             foreach (Character c in CharacterList)
@@ -1194,7 +1375,7 @@ namespace Barotrauma
                 }
             }
 
-            UpdateControlled(deltaTime,cam);
+            UpdateControlled(deltaTime, cam);
 
             if (Stun > 0.0f)
             {
@@ -1211,77 +1392,17 @@ namespace Barotrauma
                 UpdateUnconscious(deltaTime);
                 return;
             }
-
-            Control(deltaTime, cam);
-                        
-            if (selectedConstruction != null && !selectedConstruction.IsInPickRange(WorldPosition))
-            {
-                selectedConstruction = null;
-            }
             
+            Control(deltaTime, cam);
             if (controlled != this && (!(this is AICharacter) || IsRemotePlayer))
             {
-                if (!LockHands)
-                {
-                    Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-
-                    if (IsKeyHit(InputType.Select) && GameMain.Server==null)
-                    {
-                        closestCharacter = FindClosestCharacter(mouseSimPos);
-                        if (closestCharacter != null && closestCharacter.info == null)
-                        {
-                            closestCharacter = null;
-                        }
-
-                        float closestItemDist = 0.0f;
-                        closestItem = FindClosestItem(mouseSimPos, out closestItemDist);
-
-                        if (closestCharacter != null && closestItem != null)
-                        {
-                            if (closestItem != null) closestItemDist = (closestItem.Position - AnimController.Collider.Position).Length();
-                            if (Vector2.Distance(closestCharacter.SimPosition, mouseSimPos) < ConvertUnits.ToSimUnits(closestItemDist))
-                            {
-                                if (selectedConstruction != closestItem) closestItem = null;
-                            }
-                            else
-                            {
-                                closestCharacter = null;
-                            }
-                        }
-                    }
-                    
-                    if (selectedCharacter == null && closestItem != null)
-                    {
-                        //DebugConsole.NewMessage(closestItem.ToString(), Color.Yellow);
-                        //closestItem.IsHighlighted = true;
-                        if (!LockHands && closestItem.Pick(this))
-                        {
-                            if (AnimController.Anim == AnimController.Animation.Climbing)
-                            {
-                                //DebugConsole.NewMessage("ladder woo",Color.Lime);
-                            }
-                        }
-                    }
-
-                    if (IsKeyHit(InputType.Select))
-                    {
-                        if (selectedCharacter != null)
-                        {
-                            DeselectCharacter();
-                        }
-                        else if (closestCharacter != null && closestCharacter.IsHumanoid && closestCharacter.CanBeSelected)
-                        {
-                            SelectCharacter(closestCharacter);
-                        }
-                    }
-                }
-                else
-                {
-                    if (selectedCharacter != null) DeselectCharacter();
-                    selectedConstruction = null;
-                    closestItem = null;
-                    closestCharacter = null;
-                }
+                Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
+                DoInteractionUpdate(deltaTime, mouseSimPos);
+            }
+                        
+            if (selectedConstruction != null && !CanInteractWith(selectedConstruction))
+            {
+                selectedConstruction = null;
             }
 
             if (selectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
@@ -1304,7 +1425,7 @@ namespace Barotrauma
             if (!IsDead) LockHands = false;
         }
 
-        partial void UpdateControlled(float deltaTime,Camera cam);
+        partial void UpdateControlled(float deltaTime, Camera cam);
 
         private void UpdateOxygen(float deltaTime)
         {
@@ -1355,7 +1476,7 @@ namespace Barotrauma
             speechBubbleTimer = Math.Max(speechBubbleTimer, duration);
             speechBubbleColor = color;
         }
-
+        
         public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
         {
             Health = health-amount;
@@ -1616,7 +1737,7 @@ namespace Barotrauma
 
             foreach (Character c in CharacterList)
             {
-                if (c.closestCharacter == this) c.closestCharacter = null;
+                if (c.focusedCharacter == this) c.focusedCharacter = null;
                 if (c.selectedCharacter == this) c.selectedCharacter = null;
             }
         }

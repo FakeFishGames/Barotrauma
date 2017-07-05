@@ -14,9 +14,9 @@ namespace Barotrauma.Items.Components
             GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 Color.Green * 0.1f, true);
 
-            if (character.ClosestCharacter == null) return;
+            if (character.FocusedCharacter == null) return;
 
-            var target = character.ClosestCharacter;
+            var target = character.FocusedCharacter;
 
             Vector2 hudPos = GameMain.GameScreen.Cam.WorldToScreen(target.WorldPosition);
             hudPos += Vector2.UnitX * 50.0f;

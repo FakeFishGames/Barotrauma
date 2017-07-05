@@ -56,21 +56,16 @@ namespace Barotrauma
         
         public override void AddToGUIUpdateList()
         {
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
             {
-                if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
-                {
-                    Character.Controlled.SelectedConstruction.AddToGUIUpdateList();
-                }
+                Character.Controlled.SelectedConstruction.AddToGUIUpdateList();
             }
 
             if (GameMain.GameSession != null) GameMain.GameSession.AddToGUIUpdateList();
 
             Character.AddAllToGUIUpdateList();
         }
-
-
-
+        
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             cam.UpdateTransform(true);
@@ -80,12 +75,9 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
             {
-                if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
-                {
-                    Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
-                }
+                Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
             }
 
             if (Character.Controlled != null && cam != null) Character.Controlled.DrawHUD(spriteBatch, cam);
