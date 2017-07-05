@@ -6,7 +6,7 @@
     linkable="true"
     category="Machine"
     pickthroughwalls="true"
-    pickdistance="150">
+    >
 
     <Sprite texture ="engine.png" depth="0.8" sourcerect="0,0,373,113" canflipx="true"/>
 
@@ -34,7 +34,7 @@
     linkable="true"
     category="Machine"
     pickthroughwalls="true"
-    pickdistance="150">
+    >
 
     <Sprite texture ="engine.png" depth="0.8" sourcerect="0,115,224,73" canflipx="true"/>
 
@@ -60,7 +60,7 @@
     name="Navigation Terminal"
     linkable="true"
     category="Machine"
-    pickdistance="150">
+    >
 
     <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="0,0,64,128"/>
 
@@ -96,7 +96,7 @@
     name="Sonar Monitor"
     linkable="true"
     category="Machine"
-    pickdistance="150">
+    >
     
     <Sprite texture="Content/Items/machines.png" depth="0.8" sourcerect="64,0,64,128"/>
 

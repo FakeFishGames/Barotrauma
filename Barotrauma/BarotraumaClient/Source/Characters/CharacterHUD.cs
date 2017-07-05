@@ -182,27 +182,27 @@ namespace Barotrauma
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
                 }
 
-                if (character.ClosestCharacter != null && character.ClosestCharacter.CanBeSelected)
+                if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {
-                    Vector2 startPos = character.DrawPosition + (character.ClosestCharacter.DrawPosition - character.DrawPosition) * 0.7f;
+                    Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
                     startPos = cam.WorldToScreen(startPos);
 
                     Vector2 textPos = startPos;
-                    textPos -= new Vector2(GUI.Font.MeasureString(character.ClosestCharacter.Info.Name).X / 2, 20);
+                    textPos -= new Vector2(GUI.Font.MeasureString(character.FocusedCharacter.Info.Name).X / 2, 20);
 
-                    GUI.DrawString(spriteBatch, textPos, character.ClosestCharacter.Info.Name, Color.White, Color.Black, 2);
+                    GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.Info.Name, Color.White, Color.Black, 2);
                 }
-                else if (character.SelectedCharacter == null && character.ClosestItem != null && character.SelectedConstruction == null)
+                else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
                 {
-                    var hudTexts = character.ClosestItem.GetHUDTexts(character);
+                    var hudTexts = character.FocusedItem.GetHUDTexts(character);
 
                     Vector2 startPos = new Vector2((int)(GameMain.GraphicsWidth / 2.0f), GameMain.GraphicsHeight);
                     startPos.Y -= 50 + hudTexts.Count * 25;
 
                     Vector2 textPos = startPos;
-                    textPos -= new Vector2((int)GUI.Font.MeasureString(character.ClosestItem.Name).X / 2, 20);
+                    textPos -= new Vector2((int)GUI.Font.MeasureString(character.FocusedItem.Name).X / 2, 20);
 
-                    GUI.DrawString(spriteBatch, textPos, character.ClosestItem.Name, Color.White, Color.Black * 0.7f, 2);
+                    GUI.DrawString(spriteBatch, textPos, character.FocusedItem.Name, Color.White, Color.Black * 0.7f, 2);
 
                     textPos.Y += 30.0f;
                     foreach (ColoredText coloredText in hudTexts)

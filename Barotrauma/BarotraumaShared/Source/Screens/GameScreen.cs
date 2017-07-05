@@ -91,12 +91,9 @@ namespace Barotrauma
             if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
 
 #if CLIENT
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null)
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
             {
-                if (Character.Controlled.SelectedConstruction == Character.Controlled.ClosestItem)
-                {
-                    Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);
-                }
+                Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);                
             }
 #endif
 

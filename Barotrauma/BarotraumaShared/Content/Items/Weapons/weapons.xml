@@ -4,7 +4,7 @@
   <Item
     name="Spear"
     category="Equipment"
-    pickdistance="200"
+    
     pickthroughwalls="true"
     price="50">
 
@@ -25,7 +25,7 @@
   <Item
     name="Harpoon Gun"
     category="Equipment"
-    pickdistance="200"
+    
     price="500"
     tags="weapon">
 
@@ -57,7 +57,7 @@
   <Item
     name="Stun Grenade"
     category="Equipment"
-    pickdistance="200"
+    
     price="200"
     tags="smallitem,weapon">
 
@@ -75,7 +75,7 @@
   <Item
     name="Incendium Grenade"
     category="Equipment"
-    pickdistance="200"
+    
     tags="smallitem,weapon">
 
     <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.55"/>
@@ -94,7 +94,7 @@
     name="Stun Baton"
     category="Equipment"
     Tags="smallitem,weapon"
-    pickdistance="150"
+    
     price="100"
     description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
 
@@ -129,7 +129,7 @@
   <Item
     name="Battery Cell"
     category="Equipment,Electrical"
-    pickdistance="150"
+    
     tags="smallitem,loadable"
     price="50"
     description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
@@ -150,7 +150,7 @@
   <Item
     name="Fulgurium Battery Cell"
     category="Equipment,Electrical"
-    pickdistance="150"
+    
     tags="smallitem,loadable"
     description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
 
@@ -170,7 +170,7 @@
   <Item
     name="Bike Horn"
     category="Equipment"
-    pickdistance="200"
+    
     tags="weapon,smallitem"
     description="HONK">
 

@@ -5,7 +5,7 @@
     focusonselected="true"
     offsetonselected="700"
     linkable="true"
-    pickdistance="150">
+    >
 
     <Sprite texture ="railgunbase.png" depth = "0.01"/>
 
@@ -30,7 +30,7 @@
     category="Machine"
     type="Controller"
     linkable="true"
-    pickdistance="150">
+    >
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
     
@@ -53,7 +53,7 @@
     name="Railgun Loader"
     category="Machine"
     linkable="true"
-    pickdistance="150">
+    >
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="0,0,177,128"/>
 
@@ -67,7 +67,7 @@
   <Item
     name="Railgun Shell"
     category="Misc"
-    pickdistance="200"
+    
     price="200">
 
     <Deconstruct time="10">
@@ -98,7 +98,7 @@
   <Item
     name="Nuclear Shell"
     category="Misc"
-    pickdistance="200"
+    
     price="500">
 
     <Deconstruct time="10">

@@ -2,7 +2,7 @@
   <Item
     name="Headset"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem"
     description="Allows remote communication between the crew.">
 
@@ -28,7 +28,7 @@
   <Item
     name="Clown Mask"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem"
     description="Praise the honkmother.">
 
@@ -44,7 +44,7 @@
   <Item
     name="Clown Costume"
     category="Equipment"
-    pickdistance="150"
+    
     tags="smallitem"
     description="Praise the honkmother.">
 
