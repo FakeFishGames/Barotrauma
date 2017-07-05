@@ -82,6 +82,7 @@ namespace Barotrauma.Items.Components
                 foreach (Submarine submarine in Submarine.Loaded)
                 {
                     if (submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
+                    if (submarine.HullVertices == null) continue;
 
                     Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - item.WorldPosition);
 
