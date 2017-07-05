@@ -1000,7 +1000,7 @@ namespace Barotrauma
             Pickable pickableComponent = item.GetComponent<Pickable>();
             if (pickableComponent != null && (pickableComponent.Picker != null && !pickableComponent.Picker.IsDead)) return false;
                         
-            Vector2 characterDirection = Vector2.Transform(Vector2.UnitY, Matrix.CreateFromAxisAngle(Vector3.UnitZ, AnimController.Collider.Rotation));
+            Vector2 characterDirection = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(AnimController.Collider.Rotation));
 
             Vector2 upperBodyPosition = Position + (characterDirection * 20.0f);
             Vector2 lowerBodyPosition = Position - (characterDirection * 60.0f);
