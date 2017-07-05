@@ -3,12 +3,6 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Xml.Linq;
-using Voronoi2;
 
 namespace Barotrauma.Items.Components
 {

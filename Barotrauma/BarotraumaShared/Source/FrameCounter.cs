@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-        public class FrameCounter
+    public class FrameCounter
         {
             public long TotalFrames { get; private set; }
             public double TotalSeconds { get; private set; }

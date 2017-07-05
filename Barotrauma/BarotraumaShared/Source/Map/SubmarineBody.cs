@@ -1,7 +1,6 @@
 ﻿using FarseerPhysics;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
-using FarseerPhysics.Common.Decomposition;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Factories;

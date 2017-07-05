@@ -1,8 +1,5 @@
-﻿using FarseerPhysics.Dynamics;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Lidgren.Network;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {

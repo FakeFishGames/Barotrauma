@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using Barotrauma.Networking;
-using FarseerPhysics;
 
 namespace Barotrauma
 {

@@ -1,9 +1,8 @@
-﻿using System.Xml.Linq;
+﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using Barotrauma.Networking;
 using Lidgren.Network;
+using Microsoft.Xna.Framework;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {

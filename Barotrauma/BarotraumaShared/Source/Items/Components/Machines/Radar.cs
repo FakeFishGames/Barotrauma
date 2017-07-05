@@ -1,11 +1,8 @@
 ﻿using Barotrauma.Networking;
-using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using Voronoi2;
 
 namespace Barotrauma.Items.Components
 {

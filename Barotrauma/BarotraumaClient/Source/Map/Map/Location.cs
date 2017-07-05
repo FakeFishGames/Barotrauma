@@ -1,7 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class Location
     {

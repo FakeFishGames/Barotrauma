@@ -1,14 +1,13 @@
-﻿using System.Xml.Linq;
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma
-{     
+{
     class PosInfo
     {
         public Vector2 Position

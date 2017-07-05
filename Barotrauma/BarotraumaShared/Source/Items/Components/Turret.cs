@@ -1,12 +1,11 @@
-﻿using System;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using FarseerPhysics;
-using Barotrauma.Networking;
-using Lidgren.Network;
 
 namespace Barotrauma.Items.Components
 {

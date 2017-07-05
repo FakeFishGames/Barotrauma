@@ -1,14 +1,10 @@
-﻿using System;
+﻿using Barotrauma.Networking;
+using Lidgren.Network;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Xml.Linq;
-using FarseerPhysics;
-using FarseerPhysics.Dynamics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Lidgren.Network;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {

@@ -1,12 +1,4 @@
-﻿using System;
-using System.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
-using Lidgren.Network;
-using Barotrauma.Items.Components;
-
-namespace Barotrauma.Networking
+﻿namespace Barotrauma.Networking
 {
     abstract partial class NetworkMember
     {

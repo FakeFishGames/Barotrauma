@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Networking;
-using System.Collections.Generic;
 using RestSharp;
+using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {

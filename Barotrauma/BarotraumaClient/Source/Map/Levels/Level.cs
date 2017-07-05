@@ -1,16 +1,5 @@
-﻿using FarseerPhysics;
-using FarseerPhysics.Common;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
-using Lidgren.Network;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Diagnostics;
-using Voronoi2;
-using Barotrauma.RuinGeneration;
 
 namespace Barotrauma
 {

@@ -1,6 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class MissionMode : GameMode
     {

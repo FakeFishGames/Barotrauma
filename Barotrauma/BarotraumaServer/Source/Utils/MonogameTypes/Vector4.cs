@@ -6,7 +6,6 @@
 // available in Farseer's implementation of MathHelper.
 
 using System;
-using System.Runtime.Serialization;
 using System.Diagnostics;
 
 namespace Microsoft.Xna.Framework
@@ -17,7 +16,7 @@ namespace Microsoft.Xna.Framework
 #if XNADESIGNPROVIDED
     [System.ComponentModel.TypeConverter(typeof(Microsoft.Xna.Framework.Design.Vector4TypeConverter))]
 #endif
-        [DebuggerDisplay("{DebugDisplayString,nq}")]
+    [DebuggerDisplay("{DebugDisplayString,nq}")]
     public struct Vector4 : IEquatable<Vector4>
     {
         #region Private Fields

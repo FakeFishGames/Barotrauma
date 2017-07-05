@@ -1,11 +1,9 @@
 ﻿
+using Barotrauma.Sounds;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using FarseerPhysics;
-using FarseerPhysics.Dynamics;
-using Microsoft.Xna.Framework;
-using Barotrauma.Sounds;
-using System;
 
 namespace Barotrauma
 {

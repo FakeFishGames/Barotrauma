@@ -1,6 +1,6 @@
-﻿using System;
-using NVorbis;
+﻿using NVorbis;
 using OpenTK.Audio.OpenAL;
+using System;
 
 namespace Barotrauma.Sounds
 {

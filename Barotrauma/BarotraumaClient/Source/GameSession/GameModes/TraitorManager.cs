@@ -1,7 +1,4 @@
-﻿using Barotrauma.Networking;
-using System.Collections.Generic;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class TraitorManager
     {

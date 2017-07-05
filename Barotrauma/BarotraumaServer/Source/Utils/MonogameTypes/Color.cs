@@ -6,16 +6,15 @@
 // available in Farseer's implementation of MathHelper.
 
 using System;
-using System.Text;
-using System.Runtime.Serialization;
 using System.Diagnostics;
+using System.Text;
 
 namespace Microsoft.Xna.Framework
 {
     /// <summary>
     /// Describes a 32-bit packed color.
     /// </summary>
-        [DebuggerDisplay("{DebugDisplayString,nq}")]
+    [DebuggerDisplay("{DebugDisplayString,nq}")]
     public struct Color : IEquatable<Color>
     {
         static Color()

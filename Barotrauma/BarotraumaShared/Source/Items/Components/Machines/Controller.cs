@@ -1,9 +1,8 @@
-﻿using System;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using FarseerPhysics;
-using FarseerPhysics.Dynamics.Joints;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {

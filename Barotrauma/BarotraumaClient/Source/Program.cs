@@ -2,11 +2,9 @@
 
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text;
 
 #if WINDOWS
-using System.Management;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework.Graphics;
 #endif

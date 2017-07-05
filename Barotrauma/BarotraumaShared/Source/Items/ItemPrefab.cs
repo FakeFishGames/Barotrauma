@@ -1,10 +1,9 @@
-﻿using System;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
-using FarseerPhysics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {

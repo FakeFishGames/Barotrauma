@@ -1,5 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using Barotrauma.Tutorials;
+﻿using Barotrauma.Tutorials;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
