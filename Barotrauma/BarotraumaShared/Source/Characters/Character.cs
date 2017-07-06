@@ -157,7 +157,7 @@ namespace Barotrauma
 
         public bool CanInteract
         {
-            get { return AllowInput && !LockHands; }
+            get { return AllowInput && IsHumanoid && !LockHands; }
         }
 
         public Vector2 CursorPosition
@@ -1218,7 +1218,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (!AllowInput || LockHands)
+            if (!CanInteract)
             {
                 if (selectedCharacter != null)
                 {
