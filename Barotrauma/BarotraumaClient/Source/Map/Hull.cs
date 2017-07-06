@@ -1,18 +1,40 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class Hull : MapEntity, IPropertyObject, IServerSerializable
     {
+        public const int MaxDecalsPerHull = 10;
+
         public static WaterRenderer renderer;
+
+        private List<Decal> decals = new List<Decal>();
 
         private Sound currentFlowSound;
         private int soundIndex;
         private float soundVolume;
+
+        public override bool DrawBelowWater
+        {
+            get
+            {
+                return decals.Count > 0;
+            }
+        }
+
+        public override bool DrawOverWater
+        {
+            get
+            {
+                return true;
+            }
+        }
 
         public override bool IsMouseOn(Vector2 position)
         {
@@ -22,9 +44,169 @@ namespace Barotrauma
                 !Submarine.RectContains(MathUtils.ExpandRect(WorldRect, -8), position));
         }
 
+        public void AddDecal(string decalName, Vector2 position, float scale)
+        {
+            if (decals.Count >= MaxDecalsPerHull) return;
+
+            var decal = GameMain.DecalManager.CreateDecal(decalName, scale, position, this);
+
+            if (decal != null)
+            {
+                decals.Add(decal);
+            }
+        }
+        
+        partial void UpdateProjSpecific(float deltaTime, Camera cam)
+        {
+            if (EditWater)
+            {
+                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+                if (Submarine.RectContains(WorldRect, position))
+                {
+                    if (PlayerInput.LeftButtonHeld())
+                    {
+                        //waveY[GetWaveIndex(position.X - rect.X - Submarine.Position.X) / WaveWidth] = 100.0f;
+                        Volume = Volume + 1500.0f;
+                    }
+                    else if (PlayerInput.RightButtonHeld())
+                    {
+                        Volume = Volume - 1500.0f;
+                    }
+                }
+            }
+            else if (EditFire)
+            {
+                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+                if (Submarine.RectContains(WorldRect, position))
+                {
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        new FireSource(position, this);
+                    }
+                }
+            }
+
+            foreach (Decal decal in decals)
+            {
+                decal.Update(deltaTime);
+            }
+
+            decals.RemoveAll(d => d.FadeTimer >= d.LifeTime);
+
+            float strongestFlow = 0.0f;
+            foreach (Gap gap in ConnectedGaps)
+            {
+                if (gap.IsRoomToRoom)
+                {
+                    //only the first linked hull plays the flow sound
+                    if (gap.linkedTo[1] == this) continue;
+                }
+
+                float gapFlow = gap.LerpedFlowForce.Length();
+
+                if (gapFlow > strongestFlow)
+                {
+                    strongestFlow = gapFlow;
+                }
+            }
+
+            if (strongestFlow > 1.0f)
+            {
+                soundVolume = soundVolume + ((strongestFlow < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
+                soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
+
+                int index = (int)Math.Floor(strongestFlow / 100.0f);
+                index = Math.Min(index, 2);
+
+                var flowSound = SoundPlayer.flowSounds[index];
+                if (flowSound != currentFlowSound && soundIndex > -1)
+                {
+                    Sounds.SoundManager.Stop(soundIndex);
+                    currentFlowSound = null;
+                    soundIndex = -1;
+                }
+
+                currentFlowSound = flowSound;
+                soundIndex = currentFlowSound.Loop(soundIndex, soundVolume, WorldPosition, Math.Min(strongestFlow * 5.0f, 2000.0f));
+            }
+            else
+            {
+                if (soundIndex > -1)
+                {
+                    Sounds.SoundManager.Stop(soundIndex);
+                    currentFlowSound = null;
+                    soundIndex = -1;
+                }
+            }
+
+            for (int i = 0; i < waveY.Length; i++)
+            {
+                float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
+                if (maxDelta > Rand.Range(1.0f, 10.0f))
+                {
+                    var particlePos = new Vector2(rect.X + WaveWidth * i, surface + waveY[i]);
+                    if (Submarine != null) particlePos += Submarine.Position;
+
+                    GameMain.ParticleManager.CreateParticle("mist",
+                        particlePos,
+                        new Vector2(0.0f, -50.0f), 0.0f, this);
+                }
+            }
+        }
+
+        private void DrawDecals(SpriteBatch spriteBatch)
+        {
+            Rectangle hullDrawRect = rect;
+            if (Submarine != null) hullDrawRect.Location += Submarine.DrawPosition.ToPoint();
+
+
+            
+            foreach (Decal d in decals)
+            {
+                d.Draw(spriteBatch, this);
+                continue;
+
+                Vector2 drawPos = d.Position + rect.Location.ToVector2();
+
+                Rectangle drawRect = new Rectangle(
+                    (int)(drawPos.X - d.Sprite.size.X / 2),
+                    (int)(drawPos.Y + d.Sprite.size.Y / 2), 
+                    (int)d.Sprite.size.X, 
+                    (int)d.Sprite.size.Y);
+
+                Rectangle overFlowAmount = new Rectangle(
+                    (int)Math.Max(hullDrawRect.X - drawRect.X, 0.0f),
+                    (int)Math.Max(drawRect.Y - hullDrawRect.Y, 0.0f),
+                    (int)Math.Max(drawRect.Right - hullDrawRect.Right, 0.0f),
+                    (int)Math.Max((hullDrawRect.Y - hullDrawRect.Height) - (drawRect.Y - drawRect.Height), 0.0f));
+
+                var clippedSourceRect = new Rectangle(d.Sprite.SourceRect.X + overFlowAmount.X,
+                                d.Sprite.SourceRect.Y + overFlowAmount.Y,
+                                d.Sprite.SourceRect.Width - overFlowAmount.X - overFlowAmount.Width,
+                                d.Sprite.SourceRect.Height - overFlowAmount.Y - overFlowAmount.Height);
+                
+                drawRect = new Rectangle(
+                    drawRect.X + overFlowAmount.X,
+                    drawRect.Y - overFlowAmount.Y,
+                    drawRect.Width - overFlowAmount.X - overFlowAmount.Width,
+                    drawRect.Height - overFlowAmount.Y - overFlowAmount.Height);
+
+                drawPos.Y = -drawPos.Y;
+                drawRect.Y = -drawRect.Y;
+                GUI.DrawRectangle(spriteBatch, drawRect, Color.Red);
+                GUI.DrawRectangle(spriteBatch, drawPos, Vector2.One * 3, Color.Red);
+                spriteBatch.Draw(d.Sprite.Texture, drawRect, clippedSourceRect, d.Color, 0, Vector2.Zero, SpriteEffects.None, 1.0f);
+            }
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            //if (back) return;
+            if (back)
+            {
+                DrawDecals(spriteBatch);
+                return;
+            }
+
             Rectangle drawRect;
             if (!Visible)
             {

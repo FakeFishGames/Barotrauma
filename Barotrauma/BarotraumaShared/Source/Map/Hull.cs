@@ -27,7 +27,7 @@ namespace Barotrauma
         public static bool EditWater, EditFire;
         
         private List<FireSource> fireSources;
-        
+                
         public const float OxygenDistributionSpeed = 500.0f;
         public const float OxygenDetoriationSpeed = 0.3f;
         public const float OxygenConsumptionSpeed = 1000.0f;
@@ -392,89 +392,15 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            Oxygen -= OxygenDetoriationSpeed * deltaTime;
+            UpdateProjSpecific(deltaTime, cam);
 
-            if (EditWater)
-            {
-                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(WorldRect, position))
-                {
-                    if (PlayerInput.LeftButtonHeld())
-                    {
-                        //waveY[GetWaveIndex(position.X - rect.X - Submarine.Position.X) / WaveWidth] = 100.0f;
-                        Volume = Volume + 1500.0f;
-                    }
-                    else if (PlayerInput.RightButtonHeld())
-                    {
-                        Volume = Volume - 1500.0f;
-                    }
-                }
-            }
-            else if (EditFire)
-            {
-                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(WorldRect, position))
-                {
-                    if (PlayerInput.LeftButtonClicked())
-                    {
-                        new FireSource(position, this);
-                    }
-                }
-            }
+            Oxygen -= OxygenDetoriationSpeed * deltaTime;
 
             FireSource.UpdateAll(fireSources, deltaTime);
 
             aiTarget.SightRange = Submarine == null ? 0.0f : Math.Max(Submarine.Velocity.Length() * 500.0f, 500.0f);
             aiTarget.SoundRange -= deltaTime * 1000.0f;
-
-            float strongestFlow = 0.0f;
-            foreach (Gap gap in ConnectedGaps)
-            {
-                if (gap.IsRoomToRoom)
-                {
-                    //only the first linked hull plays the flow sound
-                    if (gap.linkedTo[1] == this) continue;
-                }
-
-                float gapFlow = gap.LerpedFlowForce.Length();
-                
-                if (gapFlow > strongestFlow)
-                {
-                    strongestFlow = gapFlow;
-                }
-            }
-
-#if CLIENT
-            if (strongestFlow > 1.0f)
-            {
-                soundVolume = soundVolume + ((strongestFlow < 100.0f) ? -deltaTime * 0.5f : deltaTime * 0.5f);
-                soundVolume = MathHelper.Clamp(soundVolume, 0.0f, 1.0f);
-
-                int index = (int)Math.Floor(strongestFlow / 100.0f);
-                index = Math.Min(index, 2);
-
-                var flowSound = SoundPlayer.flowSounds[index];
-                if (flowSound != currentFlowSound && soundIndex > -1)
-                {
-                    Sounds.SoundManager.Stop(soundIndex);
-                    currentFlowSound = null;
-                    soundIndex = -1;
-                }
-
-                currentFlowSound = flowSound;
-                soundIndex = currentFlowSound.Loop(soundIndex, soundVolume, WorldPosition, Math.Min(strongestFlow*5.0f, 2000.0f));
-            }
-            else
-            {
-                if (soundIndex > -1)
-                {
-                    Sounds.SoundManager.Stop(soundIndex);
-                    currentFlowSound = null;
-                    soundIndex = -1;
-                }
-            }
-#endif
-                        
+         
             //update client hulls if the amount of water has changed by >10%
             //or if oxygen percentage has changed by 5%
             if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f ||
@@ -499,23 +425,9 @@ namespace Barotrauma
                 return;
             }
 
-
             float surfaceY = rect.Y - rect.Height + Volume / rect.Width;
             for (int i = 0; i < waveY.Length; i++)
             {
-                float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
-#if CLIENT
-                if (maxDelta > Rand.Range(1.0f,10.0f))
-                {
-                    var particlePos = new Vector2(rect.X + WaveWidth * i, surface + waveY[i]);
-                    if (Submarine != null) particlePos += Submarine.Position;
-
-                    GameMain.ParticleManager.CreateParticle("mist",
-                        particlePos,
-                        new Vector2(0.0f, -50.0f), 0.0f, this);
-                }
-#endif
-
                 waveY[i] = waveY[i] + waveVel[i];
 
                 if (surfaceY + waveY[i] > rect.Y)
@@ -571,6 +483,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
         public void ApplyFlowForces(float deltaTime, Item item)
         {

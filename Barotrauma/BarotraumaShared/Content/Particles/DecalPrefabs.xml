@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<prefabs>
+  <blood
+    color="0.4, 0.0, 0.0, 1.0"
+    lifetime="60"
+    fadetime="20">
+    <sprite texture="Content/Particles/spatter.png" sourcerect="0,0,128,128"/>
+    <sprite texture="Content/Particles/spatter.png" sourcerect="128,0,128,128"/>
+    <sprite texture="Content/Particles/spatter.png" sourcerect="0,128,128,128"/>    
+  </blood>
+</prefabs>
