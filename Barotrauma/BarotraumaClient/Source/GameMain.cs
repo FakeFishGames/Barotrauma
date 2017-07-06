@@ -42,6 +42,7 @@ namespace Barotrauma
         public static NetworkMember NetworkMember;
 
         public static ParticleManager ParticleManager;
+        public static DecalManager DecalManager;
         
         public static World World;
 
@@ -274,6 +275,7 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", GameScreen.Cam);
+            DecalManager = new DecalManager("Content/Particles/DecalPrefabs.xml");
         yield return CoroutineStatus.Running;
 
             LocationType.Init();

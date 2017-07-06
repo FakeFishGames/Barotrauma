@@ -1511,6 +1511,13 @@ namespace Barotrauma
                 {
                     if (joint.CanBeSevered && (joint.LimbA == limbHit || joint.LimbB == limbHit))
                     {
+#if CLIENT
+                        if (CurrentHull != null)
+                        {
+                            CurrentHull.AddDecal("blood", WorldPosition, Rand.Range(0.5f, 1.5f));                            
+                        }
+#endif
+
                         AnimController.SeverLimbJoint(joint);
 
                         if (joint.LimbA == limbHit)

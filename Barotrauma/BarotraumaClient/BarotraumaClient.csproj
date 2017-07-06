@@ -184,6 +184,9 @@
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
+    <Compile Include="Source\Particles\Decal.cs" />
+    <Compile Include="Source\Particles\DecalManager.cs" />
+    <Compile Include="Source\Particles\DecalPrefab.cs" />
     <Compile Include="Source\Particles\Particle.cs" />
     <Compile Include="Source\Particles\ParticleEmitter.cs" />
     <Compile Include="Source\Particles\ParticleManager.cs" />

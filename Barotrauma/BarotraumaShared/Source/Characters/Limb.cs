@@ -394,6 +394,11 @@ namespace Barotrauma
                 }
             }
 
+            if (bloodParticleAmount > 0 && character.CurrentHull != null)
+            {
+                character.CurrentHull.AddDecal("blood", WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
+            }
+
 #endif
 
             damage += Math.Max(amount,bleedingAmount) / character.MaxHealth * 100.0f;
