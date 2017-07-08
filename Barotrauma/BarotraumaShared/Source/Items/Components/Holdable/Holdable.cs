@@ -2,6 +2,7 @@
 using FarseerPhysics;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -13,6 +14,7 @@ namespace Barotrauma.Items.Components
         
         private InputType prevPickKey;
         private string prevMsg;
+        private List<RelatedItem> prevRequiredItems;
 
         //the distance from the holding characters elbow to center of the physics body of the item
         protected Vector2 holdPos;
@@ -92,6 +94,8 @@ namespace Barotrauma.Items.Components
 
             canBePicked = true;
 
+            prevRequiredItems = new List<RelatedItem>(requiredItems);
+
             if (attachable)
             {
                 prevMsg = Msg;
@@ -99,7 +103,7 @@ namespace Barotrauma.Items.Components
 
                 DeattachFromWall();
             }
-                        
+            
             if ((Screen.Selected == GameMain.EditMapScreen)) Use(1.0f);
         }
 
@@ -238,6 +242,7 @@ namespace Barotrauma.Items.Components
             
             Msg = prevMsg;
             PickKey = prevPickKey;
+            requiredItems = new List<RelatedItem>(prevRequiredItems);
 
             attached = true;
         }
@@ -304,7 +309,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
-            //prevRequiredItems = new List<RelatedItem>(requiredItems);
+            prevRequiredItems = new List<RelatedItem>(requiredItems);
 
             if (!attachable) return;
 
