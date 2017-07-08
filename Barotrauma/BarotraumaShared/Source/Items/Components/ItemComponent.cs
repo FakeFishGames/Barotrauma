@@ -437,6 +437,7 @@ namespace Barotrauma.Items.Components
         public bool HasRequiredItems(Character character, bool addMessage)
         {
             if (!requiredItems.Any()) return true;
+            if (character.Inventory == null) return false;
                        
             foreach (RelatedItem ri in requiredItems)
             {
@@ -449,7 +450,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (!hasItem && ri.Type.HasFlag(RelatedItem.RelationType.Picked))
                 {
-                    if (character.Inventory.Items.FirstOrDefault(x => x!=null && x.Condition>0.0f && ri.MatchesItem(x))!=null) hasItem = true;
+                    if (character.Inventory.Items.FirstOrDefault(x => x != null && x.Condition > 0.0f && ri.MatchesItem(x)) != null) hasItem = true;
                 }
                 if (!hasItem)
                 {
