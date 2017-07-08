@@ -14,7 +14,8 @@ namespace Barotrauma.Particles
         public readonly Color Color;
 
         public readonly float LifeTime;
-        public readonly float FadeTime;
+        public readonly float FadeOutTime;
+        public readonly float FadeInTime;
 
         public DecalPrefab(XElement element)
         {
@@ -33,7 +34,8 @@ namespace Barotrauma.Particles
             Color = new Color(ToolBox.GetAttributeVector4(element, "color", Vector4.One));
 
             LifeTime = ToolBox.GetAttributeFloat(element, "lifetime", 10.0f);
-            FadeTime = Math.Min(LifeTime, ToolBox.GetAttributeFloat(element, "fadetime", 1.0f));
+            FadeOutTime = Math.Min(LifeTime, ToolBox.GetAttributeFloat(element, "fadeouttime", 1.0f));
+            FadeInTime = Math.Min(LifeTime - FadeOutTime, ToolBox.GetAttributeFloat(element, "fadeintime", 0.0f));
         }
     }
 }

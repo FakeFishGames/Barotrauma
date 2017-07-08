@@ -6,9 +6,8 @@ namespace Barotrauma
 {
     partial class Explosion
     {
-        partial void ExplodeProjSpecific(Vector2 worldPosition,Hull hull)
+        partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull)
         {
-
             if (shockwave)
             {
                 GameMain.ParticleManager.CreateParticle("shockwave", worldPosition,
@@ -36,6 +35,11 @@ namespace Barotrauma
                     GameMain.ParticleManager.CreateParticle("smoke", ClampParticlePos(worldPosition + Rand.Vector(50f), hull),
                         Rand.Vector(Rand.Range(1.0f, 10.0f)), 0.0f, hull);
                 }
+            }
+
+            if (hull != null && !string.IsNullOrWhiteSpace(decal) && decalSize > 0.0f)
+            {
+                hull.AddDecal(decal, worldPosition, decalSize);
             }
 
             float displayRange = attack.Range;

@@ -3,9 +3,22 @@
   <blood
     color="0.4, 0.0, 0.0, 1.0"
     lifetime="60"
-    fadetime="20">
+    fadeouttime="20">
     <sprite texture="Content/Particles/spatter.png" sourcerect="0,0,128,128"/>
     <sprite texture="Content/Particles/spatter.png" sourcerect="128,0,128,128"/>
     <sprite texture="Content/Particles/spatter.png" sourcerect="0,128,128,128"/>    
   </blood>
+  <explosion
+    color="1.0, 1.0, 1.0, 1.0"
+    lifetime="60"
+    fadeouttime="20">
+    <sprite texture="Content/Particles/explosiondecal.png" sourcerect="0,0,512,512"/>
+  </explosion>
+  <burnt
+    color="1.0, 1.0, 1.0, 1.0"
+    lifetime="120"
+    fadeintime="30"
+    fadeouttime="30">
+    <sprite texture="Content/Particles/burnt.png" sourcerect="0,0,512,512"/>
+  </burnt>
 </prefabs>

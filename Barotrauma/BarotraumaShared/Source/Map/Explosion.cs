@@ -17,6 +17,9 @@ namespace Barotrauma
 
         private bool sparks, shockwave, flames, smoke;
 
+        private string decal;
+        private float decalSize;
+
         public Explosion(float range, float force, float damage, float structureDamage)
         {
             attack = new Attack(damage, structureDamage, 0.0f, range);
@@ -37,7 +40,10 @@ namespace Barotrauma
             flames      = ToolBox.GetAttributeBool(element, "flames", true);
             smoke       = ToolBox.GetAttributeBool(element, "smoke", true);
 
-            CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range*0.1f);
+            decal       = ToolBox.GetAttributeString(element, "decal", "");
+            decalSize   = ToolBox.GetAttributeFloat(element, "decalSize", 1.0f);
+
+            CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range * 0.1f);
         }
         
         public void Explode(Vector2 worldPosition)
