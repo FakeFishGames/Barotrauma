@@ -1232,13 +1232,14 @@ namespace Barotrauma
             if ((!isLocalPlayer && IsKeyHit(InputType.Select) && GameMain.Server == null) || (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)))
             {
                 focusedCharacter = FindCharacterAtPosition(mouseSimPos);
-                if (focusedCharacter != null)
+                focusedItem = FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.5f : 0.25f);
+
+                if (focusedCharacter != null && focusedItem != null)
                 {
-                    focusedItem = null; // We can only focus one thing at a time
-                }
-                else
-                {
-                    focusedItem = FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.5f : 0.25f);
+                    if (Vector2.DistanceSquared(mouseSimPos, focusedCharacter.SimPosition) > Vector2.DistanceSquared(mouseSimPos, focusedItem.SimPosition))
+                    {
+                        focusedCharacter = null;
+                    }
                 }
                 findFocusedTimer = 0.05f;
             }
@@ -1247,16 +1248,13 @@ namespace Barotrauma
                 findFocusedTimer -= deltaTime;
             }
 
-            if (focusedCharacter != null && IsKeyHit(InputType.Select))
+            if (selectedCharacter != null && IsKeyHit(InputType.Select))
             {
-                if (selectedCharacter != null)
-                {
-                    DeselectCharacter();
-                }
-                else
-                {
-                    SelectCharacter(focusedCharacter);
-                }
+                DeselectCharacter();
+            }
+            else if (focusedCharacter != null && IsKeyHit(InputType.Select))
+            {
+                SelectCharacter(focusedCharacter);                
             }
             else if (focusedItem != null)
             {
