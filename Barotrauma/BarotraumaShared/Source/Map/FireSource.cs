@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Barotrauma.Networking;
 #if CLIENT
 using Barotrauma.Lights;
+using Barotrauma.Particles;
 #endif
 
 namespace Barotrauma
@@ -21,6 +22,10 @@ namespace Barotrauma
         private Vector2 size;
 
         private Entity Submarine;
+
+#if CLIENT
+        private List<Decal> burnDecals = new List<Decal>();
+#endif
 
         public Vector2 Position
         {
@@ -110,8 +115,10 @@ namespace Barotrauma
             //combine overlapping fires
             for (int i = fireSources.Count - 1; i >= 0; i--)
             {
-                for (int j = i-1; j>=0 ; j--)
+                for (int j = i - 1; j >= 0; j--)
                 {
+                    if (fireSources[i].hull != fireSources[j].hull) continue;
+
                     i = Math.Min(i, fireSources.Count - 1);
                     j = Math.Min(j, i - 1);
 
@@ -124,7 +131,12 @@ namespace Barotrauma
                         - leftEdge;
 
                     fireSources[j].position.X = leftEdge;
-                    
+
+#if CLIENT
+                    fireSources[j].burnDecals.AddRange(fireSources[i].burnDecals);
+                    fireSources[j].burnDecals.Sort((d1, d2) => { return Math.Sign(d1.WorldPosition.X - d2.WorldPosition.X); });
+#endif
+
                     fireSources[i].Remove();
                 }
             }
@@ -311,6 +323,11 @@ namespace Barotrauma
                 Sounds.SoundManager.Stop(largeSoundIndex);
                 largeSoundIndex = -1;
             }
+
+            foreach (Decal d in burnDecals)
+            {
+                d.StopFadeIn();
+            }            
 #endif
 
             hull.RemoveFire(this);

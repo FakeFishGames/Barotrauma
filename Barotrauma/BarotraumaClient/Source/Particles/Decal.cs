@@ -7,26 +7,51 @@ namespace Barotrauma.Particles
     class Decal
     {
         public readonly DecalPrefab Prefab;
-        public Vector2 Position;
+        private Vector2 position;
 
         public readonly Sprite Sprite;
 
         private float fadeTimer;
-
-        public Color Color
-        {
-            get { return Prefab.Color; }
-        }
-
+        
         public float FadeTimer
         {
             get { return fadeTimer; }
+            set { fadeTimer = MathHelper.Clamp(value, 0.0f, LifeTime); }
+        }
+
+        public float FadeInTime
+        {
+            get { return Prefab.FadeInTime; }
+        }
+
+        public float FadeOutTime
+        {
+            get { return Prefab.FadeOutTime; }
         }
 
         public float LifeTime
         {
             get { return Prefab.LifeTime; }
         }
+        
+        public Color Color
+        {
+            get;
+            set;
+        }
+
+        public Vector2 WorldPosition
+        {
+            get
+            {
+                return position 
+                    + clippedSourceRect.Size.ToVector2() / 2 * scale
+                    + hull.Rect.Location.ToVector2() 
+                    + hull.Submarine.DrawPosition;
+            }
+        }
+
+        private Hull hull;
 
         private float scale;
 
@@ -36,12 +61,15 @@ namespace Barotrauma.Particles
         {
             Prefab = prefab;
 
-            //transform to hull-relative coordinates so we don't have to worry about the hull moving
-            Position = worldPosition - hull.WorldRect.Location.ToVector2();
+            this.hull = hull;
 
-            Vector2 drawPos = Position + hull.Rect.Location.ToVector2();
+            //transform to hull-relative coordinates so we don't have to worry about the hull moving
+            position = worldPosition - hull.WorldRect.Location.ToVector2();
+
+            Vector2 drawPos = position + hull.Rect.Location.ToVector2();
 
             Sprite = prefab.Sprites[Rand.Range(0, prefab.Sprites.Count, Rand.RandSync.Unsynced)];
+            Color = prefab.Color;
 
             Rectangle drawRect = new Rectangle(
                 (int)(drawPos.X - Sprite.size.X / 2 * scale),
@@ -61,7 +89,7 @@ namespace Barotrauma.Particles
                 Sprite.SourceRect.Width - (int)((overFlowAmount.X + overFlowAmount.Width) / scale),
                 Sprite.SourceRect.Height - (int)((overFlowAmount.Y + overFlowAmount.Height) / scale));
 
-            Position -= new Vector2(Sprite.size.X / 2 * scale - overFlowAmount.X, -Sprite.size.Y / 2 * scale + overFlowAmount.Y);
+            position -= new Vector2(Sprite.size.X / 2 * scale - overFlowAmount.X, -Sprite.size.Y / 2 * scale + overFlowAmount.Y);
 
             this.scale = scale;
         }
@@ -71,19 +99,32 @@ namespace Barotrauma.Particles
             fadeTimer += deltaTime;
         }
 
+        public void StopFadeIn()
+        {
+            Color *= GetAlpha();
+            fadeTimer = Prefab.FadeInTime;
+        }
+
         public void Draw(SpriteBatch spriteBatch, Hull hull)
         {
-            Vector2 drawPos = Position + hull.Rect.Location.ToVector2();
+            Vector2 drawPos = position + hull.Rect.Location.ToVector2();
             drawPos += hull.Submarine.DrawPosition;
             drawPos.Y = -drawPos.Y;
-
-            float a = 1.0f;
-            if (fadeTimer > Prefab.LifeTime - Prefab.FadeTime)
-            {
-                a = (Prefab.LifeTime - fadeTimer) / Prefab.FadeTime;
-            }
             
-            spriteBatch.Draw(Sprite.Texture, drawPos, clippedSourceRect, Color * a, 0, Vector2.Zero , scale, SpriteEffects.None, 1);
+            spriteBatch.Draw(Sprite.Texture, drawPos, clippedSourceRect, Color * GetAlpha(), 0, Vector2.Zero, scale, SpriteEffects.None, 1);
+        }
+
+        private float GetAlpha()
+        {
+            if (fadeTimer < Prefab.FadeInTime)
+            {
+                return fadeTimer / Prefab.FadeInTime;
+            }
+            else if (fadeTimer > Prefab.LifeTime - Prefab.FadeOutTime)
+            {
+                return (Prefab.LifeTime - fadeTimer) / Prefab.FadeOutTime;
+            }
+            return 1.0f;
         }
     }
 }

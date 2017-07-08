@@ -44,16 +44,18 @@ namespace Barotrauma
                 !Submarine.RectContains(MathUtils.ExpandRect(WorldRect, -8), position));
         }
 
-        public void AddDecal(string decalName, Vector2 position, float scale)
+        public Decal AddDecal(string decalName, Vector2 worldPosition, float scale = 1.0f)
         {
-            if (decals.Count >= MaxDecalsPerHull) return;
+            if (decals.Count >= MaxDecalsPerHull) return null;
 
-            var decal = GameMain.DecalManager.CreateDecal(decalName, scale, position, this);
+            var decal = GameMain.DecalManager.CreateDecal(decalName, scale, worldPosition, this);
 
             if (decal != null)
             {
                 decals.Add(decal);
             }
+
+            return decal;
         }
         
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
@@ -158,44 +160,10 @@ namespace Barotrauma
         {
             Rectangle hullDrawRect = rect;
             if (Submarine != null) hullDrawRect.Location += Submarine.DrawPosition.ToPoint();
-
-
-            
+                        
             foreach (Decal d in decals)
             {
                 d.Draw(spriteBatch, this);
-                continue;
-
-                Vector2 drawPos = d.Position + rect.Location.ToVector2();
-
-                Rectangle drawRect = new Rectangle(
-                    (int)(drawPos.X - d.Sprite.size.X / 2),
-                    (int)(drawPos.Y + d.Sprite.size.Y / 2), 
-                    (int)d.Sprite.size.X, 
-                    (int)d.Sprite.size.Y);
-
-                Rectangle overFlowAmount = new Rectangle(
-                    (int)Math.Max(hullDrawRect.X - drawRect.X, 0.0f),
-                    (int)Math.Max(drawRect.Y - hullDrawRect.Y, 0.0f),
-                    (int)Math.Max(drawRect.Right - hullDrawRect.Right, 0.0f),
-                    (int)Math.Max((hullDrawRect.Y - hullDrawRect.Height) - (drawRect.Y - drawRect.Height), 0.0f));
-
-                var clippedSourceRect = new Rectangle(d.Sprite.SourceRect.X + overFlowAmount.X,
-                                d.Sprite.SourceRect.Y + overFlowAmount.Y,
-                                d.Sprite.SourceRect.Width - overFlowAmount.X - overFlowAmount.Width,
-                                d.Sprite.SourceRect.Height - overFlowAmount.Y - overFlowAmount.Height);
-                
-                drawRect = new Rectangle(
-                    drawRect.X + overFlowAmount.X,
-                    drawRect.Y - overFlowAmount.Y,
-                    drawRect.Width - overFlowAmount.X - overFlowAmount.Width,
-                    drawRect.Height - overFlowAmount.Y - overFlowAmount.Height);
-
-                drawPos.Y = -drawPos.Y;
-                drawRect.Y = -drawRect.Y;
-                GUI.DrawRectangle(spriteBatch, drawRect, Color.Red);
-                GUI.DrawRectangle(spriteBatch, drawPos, Vector2.One * 3, Color.Red);
-                spriteBatch.Draw(d.Sprite.Texture, drawRect, clippedSourceRect, d.Color, 0, Vector2.Zero, SpriteEffects.None, 1.0f);
             }
         }
 

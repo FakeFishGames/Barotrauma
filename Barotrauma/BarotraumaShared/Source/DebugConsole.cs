@@ -493,7 +493,7 @@ namespace Barotrauma
                     if (GameMain.Client == null)
                     {
                         Hull.EditFire = !Hull.EditFire;
-                        NewMessage(Hull.EditWater ? "Fire spawning on" : "Fire spawning off", Color.White);
+                        NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);
                     }
                     
                     break;
