@@ -7,10 +7,10 @@ namespace Barotrauma.Networking
 {
     enum ChatMessageType
     {
-        Default, Error, Dead, Server, Radio, Private
-    }    
+        Default, Error, Dead, Server, Radio, Private, MessageBox
+    }
 
-    class ChatMessage
+    partial class ChatMessage
     {
         public const int MaxLength = 150;
 
@@ -129,13 +129,6 @@ namespace Barotrauma.Networking
             return sb.ToString();
         }
 
-        public void ClientWrite(NetOutgoingMessage msg)
-        {
-            msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
-            msg.Write(NetStateID);
-            msg.Write(Text);
-        }
-
         public static void ServerRead(NetIncomingMessage msg, Client c)
         {
             UInt16 ID = msg.ReadUInt16();
@@ -242,33 +235,5 @@ namespace Barotrauma.Networking
             }
         }
 
-        public static void ClientRead(NetIncomingMessage msg)
-        {
-            UInt16 ID = msg.ReadUInt16();
-            ChatMessageType type = (ChatMessageType)msg.ReadByte();           
-            string txt = msg.ReadString();
-
-            string senderName = "";
-            Character senderCharacter = null;
-            bool hasSenderCharacter = msg.ReadBoolean();
-            if (hasSenderCharacter)
-            {
-                senderCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
-                if (senderCharacter != null)
-                {
-                    senderName = senderCharacter.Name;
-                }
-            }
-            else
-            {
-                senderName = msg.ReadString();
-            }
-
-            if (NetIdUtils.IdMoreRecent(ID, LastID))
-            {
-                GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
-                LastID = ID;
-            }
-        }
     }
 }
