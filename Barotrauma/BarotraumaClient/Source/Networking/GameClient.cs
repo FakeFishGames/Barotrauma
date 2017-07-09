@@ -755,7 +755,7 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        private void ReadInitialUpdate(NetIncomingMessage inc, bool isDuplicate)
+        private void ReadInitialUpdate(NetIncomingMessage inc)
         {
             myID = inc.ReadByte();
 
@@ -776,19 +776,17 @@ namespace Barotrauma.Networking
                     submarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName), subHash, false));
                 }
             }
-
-            if (!isDuplicate)
-            {
-                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
-                GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);   
-            }         
+            
+            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
+            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);   
+                  
 
             gameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();
 
             SetPermissions((ClientPermissions)inc.ReadByte());
 
-            if (gameStarted && !isDuplicate)
+            if (gameStarted)
             {
                 new GUIMessageBox("Please wait",
                     (allowSpectating) ?
@@ -822,7 +820,7 @@ namespace Barotrauma.Networking
                                 {
                                     DebugConsole.NewMessage("Received initial lobby update, ID: " + updateID + ", last ID: " + GameMain.NetLobbyScreen.LastUpdateID, Color.Gray);
                                 }
-                                ReadInitialUpdate(inc, !NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID));
+                                ReadInitialUpdate(inc);
                             }
 
                             string selectSubName        = inc.ReadString();
