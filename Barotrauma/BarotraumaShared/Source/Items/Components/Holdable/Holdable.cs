@@ -93,18 +93,36 @@ namespace Barotrauma.Items.Components
             }
 
             canBePicked = true;
-
-            prevRequiredItems = new List<RelatedItem>(requiredItems);
-
+            
             if (attachable)
             {
                 prevMsg = Msg;
                 prevPickKey = PickKey;
+                prevRequiredItems = new List<RelatedItem>(requiredItems);
 
-                DeattachFromWall();
-            }
-            
-            if ((Screen.Selected == GameMain.EditMapScreen)) Use(1.0f);
+                
+                if (item.Submarine != null)
+                {
+                    if (item.Submarine.Loading)
+                    {
+                        AttachToWall();
+                        attached = false;
+                    }
+                    else //the submarine is not being loaded, which means we're either in the sub editor or the item has been spawned mid-round
+                    {
+                        if (Screen.Selected == GameMain.EditMapScreen && attachedByDefault)
+                        {
+                            //in the sub editor, attach
+                            AttachToWall();
+                        }
+                        else
+                        {
+                            //spawned mid-round, deattach
+                            DeattachFromWall();
+                        }
+                    }
+                }
+            }    
         }
 
         public override void Drop(Character dropper)
@@ -237,7 +255,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            item.body.Enabled = false;
+            body.Enabled = false;
             item.body = null;
             
             Msg = prevMsg;
@@ -265,6 +283,7 @@ namespace Barotrauma.Items.Components
             if (character != null)
             {
                 if (!character.IsKeyDown(InputType.Aim)) return false;
+                if (character.CurrentHull == null) return false;
                 if (character != null && GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
@@ -309,13 +328,11 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
-            prevRequiredItems = new List<RelatedItem>(requiredItems);
-
             if (!attachable) return;
-
+            
             if (Attached)
             {
-                Use(1.0f);
+                AttachToWall();
             }
             else
             {
@@ -327,8 +344,6 @@ namespace Barotrauma.Items.Components
                         body.Enabled = false;
                     }
                 }
-                attached = false;                
-
                 DeattachFromWall();
             }
         }
