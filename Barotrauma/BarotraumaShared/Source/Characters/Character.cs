@@ -1101,6 +1101,7 @@ namespace Barotrauma
                 if (ignoredItems != null && ignoredItems.Contains(item)) continue;
                 if (hull != null && item.CurrentHull != hull) continue;
                 if (item.body != null && !item.body.Enabled) continue;
+                if (item.ParentInventory != null) continue;
 
                 float distanceToItem = float.PositiveInfinity;
                 if (CanInteractWith(item, out distanceToItem))
