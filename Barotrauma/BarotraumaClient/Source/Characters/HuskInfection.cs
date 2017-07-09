@@ -20,9 +20,9 @@ namespace Barotrauma
                     new GUIMessageBox("", InfoTextManager.GetInfoText("HuskCantSpeak"));
                 }
             }
-            else
+            else if (state != InfectionState.Active && Character.Controlled == character)
             {
-                if (Character.Controlled == character) new GUIMessageBox("", InfoTextManager.GetInfoText("HuskActivate"));
+                new GUIMessageBox("", InfoTextManager.GetInfoText("HuskActivate"));
             }
         }
     }

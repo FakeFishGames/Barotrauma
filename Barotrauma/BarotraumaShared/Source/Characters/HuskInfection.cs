@@ -44,6 +44,7 @@ namespace Barotrauma
         {
             float prevTimer = IncubationTimer;
 
+            UpdateProjSpecific(prevTimer,character);
             if (IncubationTimer < 0.5f)
             {
                 UpdateDormantState(deltaTime, character);
@@ -56,7 +57,6 @@ namespace Barotrauma
             {
                 UpdateActiveState(deltaTime, character);
             }
-            UpdateProjSpecific(prevTimer,character);
         }
         partial void UpdateProjSpecific(float prevTimer, Character character);
 
@@ -86,7 +86,7 @@ namespace Barotrauma
                 state = InfectionState.Active;
             }
 
-            character.AddDamage(CauseOfDeath.Husk, 0.5f*deltaTime, null);
+            character.AddDamage(CauseOfDeath.Husk, 0.5f * deltaTime, null);
         }
 
 
