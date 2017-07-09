@@ -117,11 +117,9 @@ namespace Barotrauma
             {
                 for (int j = i - 1; j >= 0; j--)
                 {
-                    if (fireSources[i].hull != fireSources[j].hull) continue;
-
                     i = Math.Min(i, fireSources.Count - 1);
                     j = Math.Min(j, i - 1);
-
+                    
                     if (!fireSources[i].CheckOverLap(fireSources[j])) continue;
 
                     float leftEdge = Math.Min(fireSources[i].position.X, fireSources[j].position.X);
