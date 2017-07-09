@@ -1257,14 +1257,14 @@ namespace Barotrauma
             {
                 SelectCharacter(focusedCharacter);                
             }
+            else if (IsKeyHit(InputType.Select) && selectedConstruction != null)
+            {
+                selectedConstruction = null;
+            }
             else if (focusedItem != null)
             {
                 focusedItem.IsHighlighted = true;
                 focusedItem.TryInteract(this);
-            }
-            else if (IsKeyHit(InputType.Select) && selectedConstruction != null)
-            {
-                selectedConstruction = null;
             }
         }
         
