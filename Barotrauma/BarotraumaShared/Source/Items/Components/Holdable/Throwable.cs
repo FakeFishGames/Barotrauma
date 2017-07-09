@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -28,23 +29,7 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) return false;
             if (!character.IsKeyDown(InputType.Aim) || throwing) return false;
-
-            //Vector2 diff = Vector2.Normalize(Character.CursorPosition - Character.AnimController.RefLimb.Position);
-
-            //if (Character.SelectedItems[1]==item)
-            //{
-            //    Limb leftHand = Character.AnimController.GetLimb(LimbType.LeftHand);
-            //    leftHand.body.ApplyLinearImpulse(diff * 20.0f);
-            //    leftHand.Disabled = true;
-            //}
-
-            //if (Character.SelectedItems[0] == item)
-            //{
-            //    Limb rightHand = Character.AnimController.GetLimb(LimbType.RightHand);
-            //    rightHand.body.ApplyLinearImpulse(diff * 20.0f);
-            //    rightHand.Disabled = true;
-            //}
-
+            
             throwing = true;
 
             IsActive = true;
@@ -96,38 +81,22 @@ namespace Barotrauma.Items.Components
                 {
                     ac.HoldItem(deltaTime, item, handlePos, new Vector2(throwPos, 0.0f), aimPos, false, 0.0f);
                 }
-
-
             }
             else
             {
-                //Vector2 diff = Vector2.Normalize(picker.CursorPosition - ac.RefLimb.Position);
-                //diff.X = diff.X * ac.Dir;
-
-                throwPos -= deltaTime*15.0f;
-
-                //angl = -hitPos * 2.0f;
-                //    System.Diagnostics.Debug.WriteLine("<1.0f "+hitPos);
-
-
+                throwPos -= deltaTime * 15.0f;
 
                 ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.6f, 0.0f), new Vector2(-0.3f, 0.2f), false, throwPos);
-                //}
-                //else
-                //{
-                //    System.Diagnostics.Debug.WriteLine(">1.0f " + hitPos);
-                //    ac.HoldItem(deltaTime, item, handlePos, new Vector2(0.5f, 0.2f), new Vector2(1.0f, 0.2f), false, 0.0f);
-                //}
-
 
                 if (throwPos < -0.0)
                 {
-
                     Vector2 throwVector = picker.CursorWorldPosition - picker.WorldPosition;
                     throwVector = Vector2.Normalize(throwVector);
 
                     item.Drop();
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
+
+                    GameServer.Log(picker.Name + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 
                     ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector*10.0f);
                     ac.GetLimb(LimbType.Torso).body.ApplyLinearImpulse(throwVector * 10.0f);
