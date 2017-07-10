@@ -22,169 +22,148 @@ namespace Barotrauma
             }
         }
 
-        private static bool ExecProjSpecific(string[] commands)
+        private static void InitProjectSpecific()
         {
-            switch (commands[0].ToLower())
+            commands.Add(new Command("restart|reset", "restart/reset: Close and restart the server.", (string[] args) =>
             {
-                case "help":
+                NewMessage("*****************", Color.Lime);
+                NewMessage("RESTARTING SERVER", Color.Lime);
+                NewMessage("*****************", Color.Lime);
+                GameMain.Instance.CloseServer();
+                GameMain.Instance.StartServer();
+            }));
 
-                    NewMessage("start: start a new round", Color.Cyan);
-                    NewMessage("end: end the current round", Color.Cyan);
-                    NewMessage("restart: restart the server", Color.Cyan);
-                    NewMessage("quit: exit the game", Color.Cyan);
+            commands.Add(new Command("exit|quit|close", "exit/quit/close: Exit the application.", (string[] args) =>
+            {
+                GameMain.ShouldRun = false;
+            }));
 
-                    NewMessage(" ", Color.Cyan);
+            commands.Add(new Command("say", "say [message]: Send a chat message that displays \"HOST\" as the sender.", (string[] args) =>
+            {
+                string text = string.Join(" ", args);
+                text = "HOST: " + text;
+                GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
+            }));
 
-                    NewMessage("say [chat message]: send a chat message", Color.Cyan);
-                    NewMessage("clientlist: list the names and IPs of the connected clients", Color.Cyan);
-                    NewMessage("kick [name]: kick a player out from the server", Color.Cyan);
-                    NewMessage("ban [name]: kick and ban the player from the server", Color.Cyan);
-                    NewMessage("banip [IP address]: ban the IP address from the server", Color.Cyan);
-                    NewMessage("debugdraw: toggles the \"debug draw mode\"", Color.Cyan);
-                    NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
+            commands.Add(new Command("msg", "msg [message]: Send a chat message with no sender specified.", (string[] args) =>
+            {
+                string text = string.Join(" ", args);
+                GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
+            }));
 
-                    NewMessage(" ", Color.Cyan);
+            commands.Add(new Command("servername", "servername [name]: Change the name of the server.", (string[] args) =>
+            {
+                GameMain.Server.Name = string.Join(" ", args);
+                GameMain.NetLobbyScreen.ChangeServerName(string.Join(" ", args));
+            }));
 
-                    NewMessage("servername [name]: change the name of the server", Color.Cyan);
-                    NewMessage("servermsg [message]: change the message in the server lobby", Color.Cyan);
-                    NewMessage("seed [seed]: changes the level seed for the next round", Color.Cyan);
-                    NewMessage("gamemode [name]: select the specified game mode for the next round", Color.Cyan);
-                    NewMessage("gamemode [index]: select the specified game mode (0 = sandbox, 1 = mission, etc)", Color.Cyan);
-                    NewMessage("submarine [name]: select the specified game mode for the next round", Color.Cyan);
-                    NewMessage("shuttle [name]: select the specified submarine as the respawn shuttle for the next round", Color.Cyan);
+            commands.Add(new Command("servermsg", "servermsg [message]: Change the message displayed in the server lobby.", (string[] args) =>
+            {
+                GameMain.NetLobbyScreen.ChangeServerMessage(string.Join(" ", args));
+            }));
 
-                    NewMessage(" ", Color.Cyan);
+            commands.Add(new Command("seed|levelseed", "seed/levelseed: Changes the level seed for the next round.", (string[] args) =>
+            {
+                GameMain.NetLobbyScreen.LevelSeed = string.Join(" ", args);
+            }));
 
-                    NewMessage("spawn [creaturename] [near/inside/outside]: spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine)", Color.Cyan);
-                    
-                    NewMessage(" ", Color.Cyan);
-                    
-                    NewMessage("heal [character name]: restore the specified character to full health", Color.Cyan);
-                    NewMessage("revive [character name]: bring the specified character back from the dead", Color.Cyan);
-                    NewMessage("killmonsters: immediately kills all AI-controlled enemies in the level", Color.Cyan);
+            commands.Add(new Command("gamemode", "gamemode [name]/[index]: Select the game mode for the next round. The parameter can either be the name or the index number of the game mode (0 = sandbox, 1 = mission, etc).", (string[] args) =>
+            {
+                int index = -1;
+                if (int.TryParse(string.Join(" ", args), out index))
+                {
+                    GameMain.NetLobbyScreen.SelectedModeIndex = index;
+                }
+                else
+                {
+                    GameMain.NetLobbyScreen.SelectedModeName = string.Join(" ", args);
+                }
+                NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
+            }));
 
-                    NewMessage(" ", Color.Cyan);
+            commands.Add(new Command("mission", "mission [name]/[index]: Select the mission type for the next round. The parameter can either be the name or the index number of the mission type (0 = first mission type, 1 = second mission type, etc).", (string[] args) =>
+            {
+                int index = -1;
+                if (int.TryParse(string.Join(" ", args), out index))
+                {
+                    GameMain.NetLobbyScreen.MissionTypeIndex = index;
+                }
+                else
+                {
+                    GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
+                }
+                NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
+            }));
 
-                    NewMessage("fixwalls: fixes all the walls", Color.Cyan);
-                    NewMessage("fixitems: fixes every item/device in the sub", Color.Cyan);
-                    NewMessage("oxygen: replenishes the oxygen in every room to 100%", Color.Cyan);
-                    NewMessage("power [amount]: immediately sets the temperature of the reactor to the specified value", Color.Cyan);
-                    
-                    break;
-                case "restart":
-                case "reset":
-                    NewMessage("*****************", Color.Lime);
-                    NewMessage("RESTARTING SERVER", Color.Lime);
-                    NewMessage("*****************", Color.Lime);
-                    GameMain.Instance.CloseServer();
-                    GameMain.Instance.StartServer();
-                    break;
-                case "exit":
-                case "close":
-                case "quit":
-                    GameMain.ShouldRun = false;
-                    break;
-                case "say":
-                case "msg":
-                    string text = string.Join(" ", commands.Skip(1));
-                    if (commands[0].ToLower() == "say") text = "HOST: " + text;
-                    GameMain.Server.SendChatMessage(text, ChatMessageType.Server);
-                    break;
-                case "servername":
-                    GameMain.Server.Name = string.Join(" ", commands.Skip(1));
-                    GameMain.NetLobbyScreen.ChangeServerName(string.Join(" ", commands.Skip(1)));
-                    break;
-                case "servermsg":
-                    GameMain.NetLobbyScreen.ChangeServerMessage(string.Join(" ", commands.Skip(1)));
-                    break;
-                case "seed":
-                    GameMain.NetLobbyScreen.LevelSeed = string.Join(" ", commands.Skip(1));
-                    break;
-                case "gamemode":
-                    {
-                        int index = -1;
-                        if (int.TryParse(string.Join(" ", commands.Skip(1)), out index))
-                        {
-                            GameMain.NetLobbyScreen.SelectedModeIndex = index;
-                        }
-                        else
-                        {
-                            GameMain.NetLobbyScreen.SelectedModeName = string.Join(" ", commands.Skip(1));
-                        }
-                        NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
-                    }
-                    break;
-                case "mission":
-                    {
-                        int index = -1;
-                        if (int.TryParse(string.Join(" ", commands.Skip(1)), out index))
-                        {
-                            GameMain.NetLobbyScreen.MissionTypeIndex = index;
-                        }
-                        else
-                        {
-                            GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", commands.Skip(1));
-                        }
-                        NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
-                    }
-                    break;
-                case "sub":
-                case "submarine":
-                    {
-                        Submarine sub = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", commands.Skip(1)).ToLower());
+            commands.Add(new Command("sub|submarine", "submarine [name]: Select the submarine for the next round.", (string[] args) =>
+            {
+                Submarine sub = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", args).ToLower());
 
-                        if (sub != null)
-                        {
-                            GameMain.NetLobbyScreen.SelectedSub = sub;
-                        }
-                        sub = GameMain.NetLobbyScreen.SelectedSub;
-                        NewMessage("Selected sub: " + sub.Name + (sub.HasTag(SubmarineTag.Shuttle) ? " (shuttle)" : ""), Color.Cyan);
-                    }
-                    break;
-                case "shuttle":
-                    {
-                        Submarine shuttle = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", commands.Skip(1)).ToLower());
+                if (sub != null)
+                {
+                    GameMain.NetLobbyScreen.SelectedSub = sub;
+                }
+                sub = GameMain.NetLobbyScreen.SelectedSub;
+                NewMessage("Selected sub: " + sub.Name + (sub.HasTag(SubmarineTag.Shuttle) ? " (shuttle)" : ""), Color.Cyan);
+            }));
 
-                        if (shuttle != null)
-                        {
-                            GameMain.NetLobbyScreen.SelectedShuttle = shuttle;
-                        }
-                        shuttle = GameMain.NetLobbyScreen.SelectedShuttle;
-                        NewMessage("Selected shuttle: " + shuttle.Name + (shuttle.HasTag(SubmarineTag.Shuttle) ? "" : " (not shuttle)"), Color.Cyan);
-                    }
-                    break;
-                case "startgame":
-                case "startround":
-                case "start":
-                    if (Screen.Selected == GameMain.GameScreen) break;
-                    if (!GameMain.Server.StartGame()) NewMessage("Failed to start a new round", Color.Yellow);
-                    break;
-                case "endgame":
-                case "endround":
-                case "end":
-                    if (Screen.Selected == GameMain.NetLobbyScreen) break;
-                    GameMain.Server.EndGame();
-                    break;
-                case "entitydata":
-                    Entity ent = Entity.FindEntityByID(Convert.ToUInt16(commands[1]));
-                    if (ent != null)
-                    {
-                        NewMessage(ent.ToString(), Color.Lime);
-                    }
-                    break;
+            commands.Add(new Command("shuttle", "shuttle [name]: Select the specified submarine as the respawn shuttle for the next round.", (string[] args) =>
+            {
+                Submarine shuttle = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", args).ToLower());
+
+                if (shuttle != null)
+                {
+                    GameMain.NetLobbyScreen.SelectedShuttle = shuttle;
+                }
+                shuttle = GameMain.NetLobbyScreen.SelectedShuttle;
+                NewMessage("Selected shuttle: " + shuttle.Name + (shuttle.HasTag(SubmarineTag.Shuttle) ? "" : " (not shuttle)"), Color.Cyan);
+            }));
+
+            commands.Add(new Command("startgame|startround|start", "start/startgame/startround: Start a new round.", (string[] args) =>
+            {
+                if (Screen.Selected == GameMain.GameScreen) return;
+                if (!GameMain.Server.StartGame()) NewMessage("Failed to start a new round", Color.Yellow);
+            }));
+
+            commands.Add(new Command("endgame|endround|end", "end/endgame/endround: End the current round.", (string[] args) =>
+            {
+                if (Screen.Selected == GameMain.NetLobbyScreen) return;
+                GameMain.Server.EndGame();
+            }));
+
+            commands.Add(new Command("entitydata", "", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+                Entity ent = Entity.FindEntityByID(Convert.ToUInt16(args[0]));
+                if (ent != null)
+                {
+                    NewMessage(ent.ToString(), Color.Lime);
+                }
+            }));
 #if DEBUG
-                case "eventdata":
-                    ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events[Convert.ToUInt16(commands[1])];
-                    if (ev != null)
-                    {
-                        NewMessage(ev.StackTrace, Color.Lime);
-                    }
-                    break;
+            commands.Add(new Command("eventdata", "", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+                ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events[Convert.ToUInt16(args[0])];
+                if (ev != null)
+                {
+                    NewMessage(ev.StackTrace, Color.Lime);
+                }
+            }));
+
+            commands.Add(new Command("spamchatmessages", "", (string[] args) =>
+            {
+                int msgCount = 1000;
+                if (args.Length > 0) int.TryParse(args[0], out msgCount);
+                int msgLength = 50;
+                if (args.Length > 1) int.TryParse(args[1], out msgLength);
+
+                for (int i = 0; i < msgCount; i++)
+                {
+                    GameMain.Server.SendChatMessage(ToolBox.RandomSeed(msgLength), ChatMessageType.Default);
+                }
+            }));
 #endif
-                default:
-                    return false;
-            }
-            return true; //command found
-        }
+        }        
     }
 }
