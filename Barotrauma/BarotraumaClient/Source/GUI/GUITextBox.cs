@@ -304,18 +304,10 @@ namespace Barotrauma
             {
                 case '\b': //backspace
                     if (Text.Length > 0)  Text = Text.Substring(0, Text.Length - 1);
+                    if (OnTextChanged != null) OnTextChanged(this, Text);
                     break;
-                //case '\r': //return
-                //    if (OnEnterPressed != null)
-                //        OnEnterPressed(this);
-                //    break;
-                //case '\t': //tab
-                //    if (OnTabPressed != null)
-                //        OnTabPressed(this);
-                //    break;
             }
 
-           if (OnTextChanged != null) OnTextChanged(this, Text);
         }
 
         public void ReceiveSpecialInput(Keys key)

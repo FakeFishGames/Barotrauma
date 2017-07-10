@@ -42,17 +42,13 @@ namespace Barotrauma
             //listBox.Color = Color.Black * 0.7f;
 
             textBox = new GUITextBox(new Rectangle(0, 0, 0, 20), Color.Black, Color.White, Alignment.BottomLeft, Alignment.Left, "", frame);
-            //textBox.Color = Color.Black * 0.7f;
+            textBox.OnTextChanged += (textBox, text) =>
+                {
+                    ResetAutoComplete();
+                    return true;
+                };
 
-            //messages already added before initialization -> add them to the listbox
-            List<ColoredText> unInitializedMessages = new List<ColoredText>(Messages);
-            Messages.Clear();
-
-            foreach (ColoredText msg in unInitializedMessages)
-            {
-                NewMessage(msg.Text, msg.Color);
-            }
-
+            
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
             NewMessage("Enter \"help\" for a list of available console commands", Color.Cyan);
 
@@ -104,6 +100,10 @@ namespace Barotrauma
                 else if (PlayerInput.KeyHit(Keys.Down))
                 {
                     SelectMessage(1);
+                }
+                else if (PlayerInput.KeyHit(Keys.Tab))
+                {
+                    textBox.Text = AutoComplete(textBox.Text);
                 }
                 
                 if (PlayerInput.KeyHit(Keys.Enter))
@@ -195,390 +195,285 @@ namespace Barotrauma
             }
         }
 
-        private static bool ExecProjSpecific(string[] commands)
+        private static void InitProjectSpecific()
         {
-            switch (commands[0].ToLowerInvariant())
+            commands.Add(new Command("startclient", "", (string[] args) =>
             {
-                case "help":
-                    NewMessage("menu: go to main menu", Color.Cyan);
-                    NewMessage("game: enter the \"game screen\"", Color.Cyan);
-                    NewMessage("edit: switch to submarine editor", Color.Cyan);
-                    NewMessage("edit [submarine name]: load a submarine and switch to submarine editor", Color.Cyan);
-                    NewMessage("load [submarine name]: load a submarine", Color.Cyan);
-                    NewMessage("save [submarine name]: save the current submarine using the specified name", Color.Cyan);
+                if (args.Length == 0) return;
+                
+                if (GameMain.Client == null)
+                {
+                    GameMain.NetworkMember = new GameClient("Name");
+                    GameMain.Client.ConnectToServer(args[0]);
+                }
+            }));
 
-                    NewMessage(" ", Color.Cyan);
+            commands.Add(new Command("mainmenuscreen|mainmenu|menu", "mainmenu/menu: Go to the main menu.", (string[] args) =>
+            {
+                GameMain.GameSession = null;
 
-                    NewMessage("spawn [creaturename] [near/inside/outside]: spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine)", Color.Cyan);
-                    NewMessage("spawnitem [itemname] [cursor/inventory]: spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted", Color.Cyan);
+                List<Character> characters = new List<Character>(Character.CharacterList);
+                foreach (Character c in characters)
+                {
+                    c.Remove();
+                }
 
-                    NewMessage(" ", Color.Cyan);
+                GameMain.MainMenuScreen.Select();
+            }));
 
-                    NewMessage("lights: disable lighting", Color.Cyan);
-                    NewMessage("los: disable the line of sight effect", Color.Cyan);
-                    NewMessage("freecam: detach the camera from the controlled character", Color.Cyan);
-                    NewMessage("control [character name]: start controlling the specified character", Color.Cyan);
+            commands.Add(new Command("gamescreen|game", "gamescreen/game: Go to the \"in-game\" view.", (string[] args) =>
+            {
 
-                    NewMessage(" ", Color.Cyan);
+            }));
 
-                    NewMessage("water: allows adding water into rooms or removing it by holding the left/right mouse buttons", Color.Cyan);
-                    NewMessage("fire: allows putting up fires by left clicking", Color.Cyan);
+            commands.Add(new Command("editsubscreen|editsub|subeditor", "editsub/subeditor: Switch to the submarine editor.", (string[] args) =>
+            {
+                if (args.Length > 0)
+                {
+                    Submarine.Load(string.Join(" ", args), true);
+                }
+                GameMain.EditMapScreen.Select();
+            }));
 
-                    NewMessage(" ", Color.Cyan);
+            commands.Add(new Command("editcharacter", "", (string[] args) =>
+            {
+                GameMain.EditCharacterScreen.Select();
 
-                    NewMessage("teleport: teleport the controlled character to the position of the cursor", Color.Cyan);
-                    NewMessage("teleport [character name]: teleport the specified character to the position of the cursor", Color.Cyan);
-                    NewMessage("heal: restore the controlled character to full health", Color.Cyan);
-                    NewMessage("heal [character name]: restore the specified character to full health", Color.Cyan);
-                    NewMessage("revive: bring the controlled character back from the dead", Color.Cyan);
-                    NewMessage("revive [character name]: bring the specified character back from the dead", Color.Cyan);
-                    NewMessage("killmonsters: immediately kills all AI-controlled enemies in the level", Color.Cyan);
+            }));
 
-                    NewMessage(" ", Color.Cyan);
+            commands.Add(new Command("control|controlcharacter", "control [character name]: Start controlling the specified character.", (string[] args) =>
+            {
+                if (args.Length < 1) return;
 
-                    NewMessage("fixwalls: fixes all the walls", Color.Cyan);
-                    NewMessage("fixitems: fixes every item/device in the sub", Color.Cyan);
-                    NewMessage("oxygen: replenishes the oxygen in every room to 100%", Color.Cyan);
-                    NewMessage("power [amount]: immediately sets the temperature of the reactor to the specified value", Color.Cyan);
+                var character = FindMatchingCharacter(args, true);
 
-                    NewMessage(" ", Color.Cyan);
+                if (character != null)
+                {
+                    Character.Controlled = character;
+                }
+            }));
 
-                    NewMessage("kick [name]: kick a player out from the server", Color.Cyan);
-                    NewMessage("ban [name]: kick and ban the player from the server", Color.Cyan);
-                    NewMessage("banip [IP address]: ban the IP address from the server", Color.Cyan);
-                    NewMessage("debugdraw: toggles the \"debug draw mode\"", Color.Cyan);
-                    NewMessage("netstats: toggles the visibility of the network statistics panel", Color.Cyan);
+            commands.Add(new Command("shake", "", (string[] args) =>
+            {
+                GameMain.GameScreen.Cam.Shake = 10.0f;
+            }));
 
-                    break;
-                case "startclient":
-                    if (commands.Length == 1) return true;
-                    if (GameMain.Client == null)
+            commands.Add(new Command("los", "los: Toggle the line of sight effect on/off.", (string[] args) =>
+            {
+                GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
+                NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
+            }));
+
+            commands.Add(new Command("lighting|lights", "Toggle lighting on/off.", (string[] args) =>
+            {
+                GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
+                NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
+            }));
+
+            commands.Add(new Command("tutorial", "", (string[] args) =>
+            {
+                TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
+            }));
+
+            commands.Add(new Command("lobby|lobbyscreen", "", (string[] args) =>
+            {
+                GameMain.LobbyScreen.Select();
+            }));
+
+            commands.Add(new Command("save|savesub", "save [submarine name]: Save the currently loaded submarine using the specified name.", (string[] args) =>
+            {
+                if (args.Length < 1) return;
+
+                if (GameMain.EditMapScreen.CharacterMode)
+                {
+                    GameMain.EditMapScreen.ToggleCharacterMode();
+                }
+
+                string fileName = string.Join(" ", args);
+                if (fileName.Contains("../"))
+                {
+                    ThrowError("Illegal symbols in filename (../)");
+                    return;
+                }
+
+                if (Submarine.SaveCurrent(System.IO.Path.Combine(Submarine.SavePath, fileName + ".sub")))
+                {
+                    NewMessage("Sub saved", Color.Green);
+                }
+            }));
+
+            commands.Add(new Command("load|loadsub", "load [submarine name]: Load a submarine.", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+                Submarine.Load(string.Join(" ", args), true);
+            }));
+
+            commands.Add(new Command("cleansub", "", (string[] args) =>
+            {
+                for (int i = MapEntity.mapEntityList.Count - 1; i >= 0; i--)
+                {
+                    MapEntity me = MapEntity.mapEntityList[i];
+
+                    if (me.SimPosition.Length() > 2000.0f)
                     {
-                        GameMain.NetworkMember = new GameClient("Name");
-                        GameMain.Client.ConnectToServer(commands[1]);
+                        NewMessage("Removed " + me.Name + " (simposition " + me.SimPosition + ")", Color.Orange);
+                        MapEntity.mapEntityList.RemoveAt(i);
                     }
-                    break;
-                case "mainmenuscreen":
-                case "mainmenu":
-                case "menu":
-                    GameMain.GameSession = null;
-
-                    List<Character> characters = new List<Character>(Character.CharacterList);
-                    foreach (Character c in characters)
+                    else if (me.MoveWithLevel)
                     {
-                        c.Remove();
+                        NewMessage("Removed " + me.Name + " (MoveWithLevel==true)", Color.Orange);
+                        MapEntity.mapEntityList.RemoveAt(i);
                     }
-
-                    GameMain.MainMenuScreen.Select();
-                    break;
-                case "gamescreen":
-                case "game":
-                    GameMain.GameScreen.Select();
-                    break;
-                case "editmapscreen":
-                case "editmap":
-                case "edit":
-                    if (commands.Length > 1)
+                    else if (me is Item)
                     {
-                        Submarine.Load(string.Join(" ", commands.Skip(1)), true);
-                    }
-                    GameMain.EditMapScreen.Select();
-                    break;
-                case "editcharacter":
-                case "editchar":
-                    GameMain.EditCharacterScreen.Select();
-                    break;
-                case "controlcharacter":
-                case "control":
-                    {
-                        if (commands.Length < 2) break;
+                        Item item = me as Item;
+                        var wire = item.GetComponent<Wire>();
+                        if (wire == null) continue;
 
-                        var character = FindMatchingCharacter(commands, true);
-
-                        if (character != null)
+                        if (wire.GetNodes().Count > 0 && !wire.Connections.Any(c => c != null))
                         {
-                            Character.Controlled = character;
+                            wire.Item.Drop(null);
+                            NewMessage("Dropped wire (ID: " + wire.Item.ID + ") - attached on wall but no connections found", Color.Orange);
                         }
                     }
-                    break;
-                case "setclientcharacter":
-                    {
-                        if (GameMain.Server == null) break;
+                }
+            }));
 
-                        int separatorIndex = Array.IndexOf(commands, ";");
+            commands.Add(new Command("messagebox", "", (string[] args) =>
+            {
+                new GUIMessageBox("", string.Join(" ", args));
+            }));
 
-                        if (separatorIndex == -1 || commands.Length < 4)
-                        {
-                            ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] ; [character]\"");
-                            break;
-                        }
+            commands.Add(new Command("debugdraw", "debugdraw: Toggle the debug drawing mode on/off.", (string[] args) =>
+            {
+                GameMain.DebugDraw = !GameMain.DebugDraw;
+                NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
 
-                        string[] commandsLeft = commands.Take(separatorIndex).ToArray();
-                        string[] commandsRight = commands.Skip(separatorIndex).ToArray();
+            }));
 
-                        string clientName = String.Join(" ", commandsLeft.Skip(1));
+            commands.Add(new Command("togglehud|hud", "togglehud/hud: Toggle the character HUD (inventories, icons, buttons, etc) on/off.", (string[] args) =>
+            {
+                GUI.DisableHUD = !GUI.DisableHUD;
+                GameMain.Instance.IsMouseVisible = !GameMain.Instance.IsMouseVisible;
+                NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
+            }));
 
-                        var client = GameMain.Server.ConnectedClients.Find(c => c.name == clientName);
-                        if (client == null)
-                        {
-                            ThrowError("Client \"" + clientName + "\" not found.");
-                        }
+            commands.Add(new Command("followsub", "followsub: Toggle whether the ", (string[] args) =>
+            {
+                Camera.FollowSub = !Camera.FollowSub;
+                NewMessage(Camera.FollowSub ? "Set the camera to follow the closest submarine" : "Disabled submarine following.", Color.White);
+            }));
 
-                        var character = FindMatchingCharacter(commandsRight, false);
-                        GameMain.Server.SetClientCharacter(client, character);
-                    }
-                    break;
-                case "test":
-                    Submarine.Load("aegir mark ii", true);
-                    GameMain.DebugDraw = true;
-                    GameMain.LightManager.LosEnabled = false;
-                    GameMain.EditMapScreen.Select();
-                    break;
-                case "shake":
-                    GameMain.GameScreen.Cam.Shake = 10.0f;
-                    break;
-                case "losenabled":
-                case "los":
-                case "drawlos":
-                    GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
-                    break;
-                case "lighting":
-                case "lightingenabled":
-                case "light":
-                case "lights":
-                    GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
-                    break;
-                case "tutorial":
-                    TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
-                    break;
-                case "editortutorial":
-                    GameMain.EditMapScreen.Select();
-                    GameMain.EditMapScreen.StartTutorial();
-                    break;
-                case "lobbyscreen":
-                case "lobby":
-                    GameMain.LobbyScreen.Select();
-                    break;
-                case "savemap":
-                case "savesub":
-                case "save":
-                    if (commands.Length < 2) break;
-
-                    if (GameMain.EditMapScreen.CharacterMode)
-                    {
-                        GameMain.EditMapScreen.ToggleCharacterMode();
-                    }
-
-                    string fileName = string.Join(" ", commands.Skip(1));
-                    if (fileName.Contains("../"))
-                    {
-                        DebugConsole.ThrowError("Illegal symbols in filename (../)");
-                        return true;
-                    }
-
-                    if (Submarine.SaveCurrent(System.IO.Path.Combine(Submarine.SavePath, fileName + ".sub")))
-                    {
-                        NewMessage("Sub saved", Color.Green);
-                        //Submarine.Loaded.First().CheckForErrors();
-                    }
-
-                    break;
-                case "loadmap":
-                case "loadsub":
-                case "load":
-                    if (commands.Length < 2) break;
-
-                    Submarine.Load(string.Join(" ", commands.Skip(1)), true);
-                    break;
-                case "cleansub":
-                    for (int i = MapEntity.mapEntityList.Count - 1; i >= 0; i--)
-                    {
-                        MapEntity me = MapEntity.mapEntityList[i];
-
-                        if (me.SimPosition.Length() > 2000.0f)
-                        {
-                            DebugConsole.NewMessage("Removed " + me.Name + " (simposition " + me.SimPosition + ")", Color.Orange);
-                            MapEntity.mapEntityList.RemoveAt(i);
-                        }
-                        else if (me.MoveWithLevel)
-                        {
-                            DebugConsole.NewMessage("Removed " + me.Name + " (MoveWithLevel==true)", Color.Orange);
-                            MapEntity.mapEntityList.RemoveAt(i);
-                        }
-                        else if (me is Item)
-                        {
-                            Item item = me as Item;
-                            var wire = item.GetComponent<Wire>();
-                            if (wire == null) continue;
-
-                            if (wire.GetNodes().Count > 0 && !wire.Connections.Any(c => c != null))
-                            {
-                                wire.Item.Drop(null);
-                                DebugConsole.NewMessage("Dropped wire (ID: " + wire.Item.ID + ") - attached on wall but no connections found", Color.Orange);
-                            }
-                        }
-
-                    }
-                    break;
-                case "messagebox":
-                    if (commands.Length < 3) break;
-                    new GUIMessageBox(commands[1], commands[2]);
-                    break;
-                case "debugdraw":
-                    GameMain.DebugDraw = !GameMain.DebugDraw;
-                    break;
-                case "disablehud":
-                case "hud":
-                    GUI.DisableHUD = !GUI.DisableHUD;
-                    GameMain.Instance.IsMouseVisible = !GameMain.Instance.IsMouseVisible;
-                    break;
-                case "followsub":
-                    Camera.FollowSub = !Camera.FollowSub;
-                    break;
-                case "drawaitargets":
-                case "showaitargets":
-                    AITarget.ShowAITargets = !AITarget.ShowAITargets;
-                    break;
+            commands.Add(new Command("toggleaitargets|aitargets", "toggleaitargets/aitargets: Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from).", (string[] args) =>
+            {
+                AITarget.ShowAITargets = !AITarget.ShowAITargets;
+                NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
+            }));
 #if DEBUG
-                case "spamevents":
-                    foreach (Item item in Item.ItemList)
+            commands.Add(new Command("spamchatmessages", "", (string[] args) =>
+            {
+                int msgCount = 1000;
+                if (args.Length > 0) int.TryParse(args[0], out msgCount);
+                int msgLength = 50;
+                if (args.Length > 1) int.TryParse(args[1], out msgLength);
+
+                for (int i = 0; i < msgCount; i++)
+                {
+                    if (GameMain.Client != null)
                     {
-                        for (int i = 0; i<item.components.Count; i++)
-                        {
-                            if (item.components[i] is IServerSerializable)
-                            {
-                                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, i });
-                            }
-                            var itemContainer = item.GetComponent<ItemContainer>();
-                            if (itemContainer != null)
-                            {
-                                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.InventoryState });
-                            }
-
-                            GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
-
-                            item.NeedsPositionUpdate = true;
-                        }
+                        GameMain.Server.SendChatMessage(ToolBox.RandomSeed(msgLength), ChatMessageType.Default);
                     }
-
-                    foreach (Character c in Character.CharacterList)
+                    else
                     {
-                        GameMain.Server.CreateEntityEvent(c, new object[] { NetEntityEvent.Type.Status });
+                        GameMain.Client.SendChatMessage(ToolBox.RandomSeed(msgLength));
                     }
-
-                    foreach (Structure wall in Structure.WallList)
-                    {
-                        GameMain.Server.CreateEntityEvent(wall);
-                    }
-                    break;
-                case "spamchatmessages":
-                    int msgCount = 1000;
-                    if (commands.Length > 1) int.TryParse(commands[1], out msgCount);
-                    int msgLength = 50;
-                    if (commands.Length > 2) int.TryParse(commands[2], out msgLength);
-
-                    for (int i = 0; i < msgCount; i++)
-                    {
-                        if (GameMain.Server != null)
-                        {
-                            GameMain.Server.SendChatMessage(ToolBox.RandomSeed(msgLength), ChatMessageType.Default);
-                        }
-                        else
-                        {
-                            GameMain.Client.SendChatMessage(ToolBox.RandomSeed(msgLength));
-                        }
-                    }
-                    break;
+                }
+            }));
 #endif
-                case "cleanbuild":
-                    GameMain.Config.MusicVolume = 0.5f;
-                    GameMain.Config.SoundVolume = 0.5f;
-                    DebugConsole.NewMessage("Music and sound volume set to 0.5", Color.Green);
+            commands.Add(new Command("cleanbuild", "", (string[] args) =>
+            {
+                GameMain.Config.MusicVolume = 0.5f;
+                GameMain.Config.SoundVolume = 0.5f;
+                NewMessage("Music and sound volume set to 0.5", Color.Green);
 
-                    GameMain.Config.GraphicsWidth = 0;
-                    GameMain.Config.GraphicsHeight = 0;
-                    GameMain.Config.WindowMode = WindowMode.Fullscreen;
-                    DebugConsole.NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
-                    DebugConsole.NewMessage("Fullscreen enabled", Color.Green);
+                GameMain.Config.GraphicsWidth = 0;
+                GameMain.Config.GraphicsHeight = 0;
+                GameMain.Config.WindowMode = WindowMode.Fullscreen;
+                NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
+                NewMessage("Fullscreen enabled", Color.Green);
 
-                    GameSettings.VerboseLogging = false;
+                GameSettings.VerboseLogging = false;
 
-                    if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")
+                if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")
+                {
+                    ThrowError("MasterServerUrl \"" + GameMain.Config.MasterServerUrl + "\"!");
+                }
+
+                GameMain.Config.Save("config.xml");
+
+                var saveFiles = System.IO.Directory.GetFiles(SaveUtil.SaveFolder);
+
+                foreach (string saveFile in saveFiles)
+                {
+                    System.IO.File.Delete(saveFile);
+                    NewMessage("Deleted " + saveFile, Color.Green);
+                }
+
+                if (System.IO.Directory.Exists(System.IO.Path.Combine(SaveUtil.SaveFolder, "temp")))
+                {
+                    System.IO.Directory.Delete(System.IO.Path.Combine(SaveUtil.SaveFolder, "temp"), true);
+                    NewMessage("Deleted temp save folder", Color.Green);
+                }
+
+                if (System.IO.Directory.Exists(ServerLog.SavePath))
+                {
+                    var logFiles = System.IO.Directory.GetFiles(ServerLog.SavePath);
+
+                    foreach (string logFile in logFiles)
                     {
-                        DebugConsole.ThrowError("MasterServerUrl \"" + GameMain.Config.MasterServerUrl + "\"!");
+                        System.IO.File.Delete(logFile);
+                        NewMessage("Deleted " + logFile, Color.Green);
                     }
+                }
 
-                    GameMain.Config.Save("config.xml");
-
-                    var saveFiles = System.IO.Directory.GetFiles(SaveUtil.SaveFolder);
-
-                    foreach (string saveFile in saveFiles)
-                    {
-                        System.IO.File.Delete(saveFile);
-                        DebugConsole.NewMessage("Deleted " + saveFile, Color.Green);
-                    }
-
-                    if (System.IO.Directory.Exists(System.IO.Path.Combine(SaveUtil.SaveFolder, "temp")))
-                    {
-                        System.IO.Directory.Delete(System.IO.Path.Combine(SaveUtil.SaveFolder, "temp"), true);
-                        DebugConsole.NewMessage("Deleted temp save folder", Color.Green);
-                    }
-
-                    if (System.IO.Directory.Exists(ServerLog.SavePath))
-                    {
-                        var logFiles = System.IO.Directory.GetFiles(ServerLog.SavePath);
-
-                        foreach (string logFile in logFiles)
-                        {
-                            System.IO.File.Delete(logFile);
-                            DebugConsole.NewMessage("Deleted " + logFile, Color.Green);
-                        }
-                    }
-
-                    if (System.IO.File.Exists("filelist.xml"))
-                    {
-                        System.IO.File.Delete("filelist.xml");
-                        DebugConsole.NewMessage("Deleted filelist", Color.Green);
-                    }
+                if (System.IO.File.Exists("filelist.xml"))
+                {
+                    System.IO.File.Delete("filelist.xml");
+                    NewMessage("Deleted filelist", Color.Green);
+                }
 
 
-                    if (System.IO.File.Exists("Submarines/TutorialSub.sub"))
-                    {
-                        System.IO.File.Delete("Submarines/TutorialSub.sub");
+                if (System.IO.File.Exists("Submarines/TutorialSub.sub"))
+                {
+                    System.IO.File.Delete("Submarines/TutorialSub.sub");
 
-                        DebugConsole.NewMessage("Deleted TutorialSub from the submarine folder", Color.Green);
-                    }
+                    NewMessage("Deleted TutorialSub from the submarine folder", Color.Green);
+                }
 
-                    if (System.IO.File.Exists(GameServer.SettingsFile))
-                    {
-                        System.IO.File.Delete(GameServer.SettingsFile);
-                        DebugConsole.NewMessage("Deleted server settings", Color.Green);
-                    }
+                if (System.IO.File.Exists(GameServer.SettingsFile))
+                {
+                    System.IO.File.Delete(GameServer.SettingsFile);
+                    NewMessage("Deleted server settings", Color.Green);
+                }
 
-                    if (System.IO.File.Exists(GameServer.ClientPermissionsFile))
-                    {
-                        System.IO.File.Delete(GameServer.ClientPermissionsFile);
-                        DebugConsole.NewMessage("Deleted client permission file", Color.Green);
+                if (System.IO.File.Exists(GameServer.ClientPermissionsFile))
+                {
+                    System.IO.File.Delete(GameServer.ClientPermissionsFile);
+                    NewMessage("Deleted client permission file", Color.Green);
+                }
 
-                    }
+                if (System.IO.File.Exists("crashreport.txt"))
+                {
+                    System.IO.File.Delete("crashreport.txt");
+                    NewMessage("Deleted crashreport.txt", Color.Green);
+                }
 
-                    if (System.IO.File.Exists("crashreport.txt"))
-                    {
-                        System.IO.File.Delete("crashreport.txt");
-                        DebugConsole.NewMessage("Deleted crashreport.txt", Color.Green);
-                    }
+                if (!System.IO.File.Exists("Content/Map/TutorialSub.sub"))
+                {
+                    ThrowError("TutorialSub.sub not found!");
+                }
+            }));
 
-                    if (!System.IO.File.Exists("Content/Map/TutorialSub.sub"))
-                    {
-                        DebugConsole.ThrowError("TutorialSub.sub not found!");
-                    }
-
-                    break;
-                default:
-                    return false; //command not found
-                    break;
-            }
-            return true; //command found
         }
     }
 }
