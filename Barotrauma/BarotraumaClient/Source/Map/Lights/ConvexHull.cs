@@ -545,7 +545,9 @@ namespace Barotrauma.Lights
                     //light is outside, convexhull inside a sub
                     else
                     {
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos - chList.Submarine.WorldPosition, range, chList.Submarine.Borders)) continue;
+                        Rectangle subBorders = chList.Submarine.Borders;
+                        subBorders.Y -= chList.Submarine.Borders.Height;
+                        if (!MathUtils.CircleIntersectsRectangle(lightPos - chList.Submarine.WorldPosition, range, subBorders)) continue;
 
                         lightPos -= (chList.Submarine.WorldPosition - chList.Submarine.HiddenSubPosition);
 
