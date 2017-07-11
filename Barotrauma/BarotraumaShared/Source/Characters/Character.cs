@@ -1365,8 +1365,11 @@ namespace Barotrauma
                     if (PressureTimer >= 100.0f)
                     {
                         if (controlled == this) cam.Zoom = 5.0f;
-                        Implode();
-                        return;
+                        if (GameMain.Client == null)
+                        {
+                            Implode();
+                            return;
+                        }
                     }
                 }
                 else
