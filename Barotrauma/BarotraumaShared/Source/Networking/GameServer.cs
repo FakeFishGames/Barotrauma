@@ -842,7 +842,7 @@ namespace Barotrauma.Networking
                     if (!character.Enabled) continue;
                     if (c.Character != null &&
                         Vector2.DistanceSquared(character.WorldPosition, c.Character.WorldPosition) >=
-                        NetConfig.CharacterIgnoreDistance * NetConfig.CharacterIgnoreDistance)
+                        NetConfig.CharacterIgnoreDistanceSqr)
                     {
                         continue;
                     }
@@ -1876,6 +1876,7 @@ namespace Barotrauma.Networking
                 newCharacter.LastNetworkUpdateID = client.Character.LastNetworkUpdateID;
 
                 newCharacter.IsRemotePlayer = true;
+                newCharacter.Enabled = true;
                 client.Character = newCharacter;
                 CreateEntityEvent(newCharacter, new object[] { NetEntityEvent.Type.Control, client });
             }
