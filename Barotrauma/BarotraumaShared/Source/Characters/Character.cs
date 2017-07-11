@@ -1288,21 +1288,21 @@ namespace Barotrauma
                     
                     if (GameMain.Server != null)
                     {
-                        //disable AI characters that are far away from all clients and the host's character
+                        //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
                         c.Enabled =
+                            c == controlled ||
                             CharacterList.Any(c2 => 
                                 (c2.IsRemotePlayer || c2 == GameMain.Server.Character) && 
-                                Vector2.Distance(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistance);
+                                Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
                     }
                     else if (Submarine.MainSub != null)
                     {
                         //disable AI characters that are far away from the sub and the controlled character
-                        c.Enabled = Vector2.Distance(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistance ||
-                            (controlled != null && Vector2.Distance(controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistance);
+                        c.Enabled = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr ||
+                            (controlled != null && Vector2.DistanceSquared(controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
                     }
                 }
             }
-
 
             for (int i = 0; i < CharacterList.Count; i++)
             {
