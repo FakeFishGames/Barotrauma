@@ -57,6 +57,12 @@ namespace Barotrauma
 #endif
 
         private static List<Command> commands = new List<Command>();
+        
+        private static string currentAutoCompletedCommand;
+        private static int currentAutoCompletedIndex;
+
+        //used for keeping track of the message entered when pressing up/down
+        static int selectedIndex;
 
         static DebugConsole()
         {
@@ -205,7 +211,7 @@ namespace Barotrauma
                         break;
                 }
 
-                string itemName = string.Join(" ", commands.Take(args.Length - extraParams - 1)).ToLowerInvariant();
+                string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
 
                 var itemPrefab = MapEntityPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == itemName) as ItemPrefab;
                 if (itemPrefab == null)
@@ -672,9 +678,6 @@ namespace Barotrauma
             return commands.ToArray();
         }
 
-        private static string currentAutoCompletedCommand;
-        private static int currentAutoCompletedIndex;
-
         public static string AutoComplete(string command)
         {
             if (string.IsNullOrWhiteSpace(currentAutoCompletedCommand))
@@ -706,7 +709,20 @@ namespace Barotrauma
             currentAutoCompletedCommand = "";
             currentAutoCompletedIndex = 0;
         }
-        
+
+        public static string SelectMessage(int direction)
+        {
+            if (Messages.Count == 0) return "";
+
+            direction = MathHelper.Clamp(direction, -1, 1);
+
+            selectedIndex += direction;
+            if (selectedIndex < 0) selectedIndex = Messages.Count - 1;
+            selectedIndex = selectedIndex % Messages.Count;
+
+            return Messages[selectedIndex].Text;            
+        }
+
         public static void ExecuteCommand(string command, GameMain game)
         {
             if (activeQuestionCallback != null)
@@ -739,13 +755,20 @@ namespace Barotrauma
             }
 #endif
 
+            bool commandFound = false;
             foreach (Command c in commands)
             {
                 if (c.names.Contains(splitCommand[0].ToLowerInvariant()))
                 {
                     c.Execute(splitCommand.Skip(1).ToArray());
+                    commandFound = true;
                     break;
                 }
+            }
+
+            if (!commandFound)
+            {
+                ThrowError("Command \""+splitCommand[0]+"\" not found.");
             }
         }
         
@@ -755,9 +778,9 @@ namespace Barotrauma
 
             int characterIndex;
             string characterName;
-            if (int.TryParse(args.Last(), out characterIndex) && args.Length > 2)
+            if (int.TryParse(args.Last(), out characterIndex) && args.Length > 1)
             {
-                characterName = string.Join(" ", args.Take(args.Length - 2)).ToLowerInvariant();
+                characterName = string.Join(" ", args.Take(args.Length - 1)).ToLowerInvariant();
             }
             else
             {
@@ -811,7 +834,8 @@ namespace Barotrauma
             if (Messages.Count > MaxMessages)
             {
                 Messages.RemoveRange(0, Messages.Count - MaxMessages);
-            }
+            }            
+
 #elif CLIENT
             lock (queuedMessages)
             {

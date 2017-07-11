@@ -15,9 +15,6 @@ namespace Barotrauma
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
-        //used for keeping track of the message entered when pressing up/down
-        static int selectedIndex;
-
         public static bool IsOpen
         {
             get
@@ -95,11 +92,11 @@ namespace Barotrauma
 
                 if (PlayerInput.KeyHit(Keys.Up))
                 {
-                    SelectMessage(-1);
+                    textBox.Text = SelectMessage(-1);
                 }
                 else if (PlayerInput.KeyHit(Keys.Down))
                 {
-                    SelectMessage(1);
+                    textBox.Text = SelectMessage(1);
                 }
                 else if (PlayerInput.KeyHit(Keys.Tab))
                 {
@@ -112,20 +109,6 @@ namespace Barotrauma
                     textBox.Text = "";
                 }
             }
-        }
-
-        private static void SelectMessage(int direction)
-        {
-            int messageCount = listBox.children.Count;
-            if (messageCount == 0) return;
-
-            direction = Math.Min(Math.Max(-1, direction), 1);
-
-            selectedIndex += direction;
-            if (selectedIndex < 0) selectedIndex = messageCount - 1;
-            selectedIndex = selectedIndex % messageCount;
-
-            textBox.Text = (listBox.children[selectedIndex] as GUITextBlock).Text;
         }
 
         public static void Draw(SpriteBatch spriteBatch)
@@ -185,7 +168,7 @@ namespace Barotrauma
                 ThrowError("Failed to add a message to the debug console.", e);
             }
 
-            selectedIndex = listBox.children.Count;
+            selectedIndex = Messages.Count;
 
             if (activeQuestionText != null)
             {

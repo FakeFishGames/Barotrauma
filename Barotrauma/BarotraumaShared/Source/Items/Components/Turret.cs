@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -145,10 +146,10 @@ namespace Barotrauma.Items.Components
             float availablePower = 0.0f;
             foreach (PowerContainer battery in batteries)
             {
-                float batteryPower = Math.Min(battery.Charge*3600.0f, battery.MaxOutPut);
+                float batteryPower = Math.Min(battery.Charge * 3600.0f, battery.MaxOutPut);
                 float takePower = Math.Min(powerConsumption - availablePower, batteryPower);
 
-                battery.Charge -= takePower/3600.0f;
+                battery.Charge -= takePower / 3600.0f;
 
                 if (GameMain.Server != null)
                 {
@@ -160,7 +161,16 @@ namespace Barotrauma.Items.Components
 
             if (character != null)
             {
-                GameServer.Log(character.Name + " launched " + item.Name, ServerLog.MessageType.ItemInteraction);
+                string msg = character.Name + " launched " + item.Name + " (projectile: " + projectiles[0].Item.Name;
+                if (projectiles[0].Item.ContainedItems == null || projectiles[0].Item.ContainedItems.All(i => i == null))
+                {
+                    msg += ")";
+                }
+                else
+                {
+                    msg += ", contained items: " + string.Join(", ", Array.FindAll(projectiles[0].Item.ContainedItems, i => i != null).Select(i => i.Name)) + ")";
+                }
+                GameServer.Log(msg, ServerLog.MessageType.ItemInteraction);
             }
 
             return true;
