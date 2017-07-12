@@ -62,7 +62,12 @@ namespace Barotrauma
             objectiveManager.DoCurrentObjective(deltaTime);
          
             float currObjectivePriority = objectiveManager.GetCurrentPriority(Character);
-            float moveSpeed = MathHelper.Clamp(currObjectivePriority/10.0f, 1.0f, 3.0f);
+            float moveSpeed = 1.0f;
+
+            if (currObjectivePriority > 30.0f)
+            {
+                moveSpeed *= Character.AnimController.InWater ? Character.AnimController.SwimSpeedMultiplier : Character.AnimController.RunSpeedMultiplier;                
+            }
             
             steeringManager.Update(moveSpeed);
 
