@@ -10,7 +10,7 @@
            legtorque="15.0"
            thightorque="-5.0"
            walkspeed="1.5" swimspeed="2.0"
-           runspeedmultiplier="3.0" swimspeedmultiplier="1.5"
+           runspeedmultiplier="3.0" swimspeedmultiplier="1.2"
            colliderheightfromfloor="55"
            impacttolerance="7.5">
 
