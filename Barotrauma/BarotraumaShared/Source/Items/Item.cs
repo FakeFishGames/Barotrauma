@@ -552,17 +552,17 @@ namespace Barotrauma
         public Rectangle TransformTrigger(Rectangle trigger, bool world = false)
         {
             return world ? 
-            new Rectangle(
-                WorldRect.X + trigger.X,
-                WorldRect.Y + trigger.Y,
-                (trigger.Width == 0) ? Rect.Width : trigger.Width,
-                (trigger.Height == 0) ? Rect.Height : trigger.Height)
-                :
-            new Rectangle(
-                Rect.X + trigger.X,
-                Rect.Y + trigger.Y,
-                (trigger.Width == 0) ? Rect.Width : trigger.Width,
-                (trigger.Height == 0) ? Rect.Height : trigger.Height);
+                new Rectangle(
+                    WorldRect.X + trigger.X,
+                    WorldRect.Y + trigger.Y,
+                    (trigger.Width == 0) ? Rect.Width : trigger.Width,
+                    (trigger.Height == 0) ? Rect.Height : trigger.Height)
+                    :
+                new Rectangle(
+                    Rect.X + trigger.X,
+                    Rect.Y + trigger.Y,
+                    (trigger.Width == 0) ? Rect.Width : trigger.Width,
+                    (trigger.Height == 0) ? Rect.Height : trigger.Height);
         }
 
         /// <summary>
@@ -1033,7 +1033,7 @@ namespace Barotrauma
             return c != null && c.Character != null && c.Character.CanInteractWith(this);
         }
 
-        public bool TryInteract(Character picker, bool ignoreRequiredItems=false, bool forceSelectKey=false, bool forceActionKey=false)
+        public bool TryInteract(Character picker, bool ignoreRequiredItems = false, bool forceSelectKey = false, bool forceActionKey = false)
         {
             bool hasRequiredSkills = true;
 
