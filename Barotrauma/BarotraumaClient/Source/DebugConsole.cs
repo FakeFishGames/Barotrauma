@@ -206,7 +206,7 @@ namespace Barotrauma
 
             commands.Add(new Command("gamescreen|game", "gamescreen/game: Go to the \"in-game\" view.", (string[] args) =>
             {
-
+                GameMain.GameScreen.Select();
             }));
 
             commands.Add(new Command("editsubscreen|editsub|subeditor", "editsub/subeditor: Switch to the submarine editor.", (string[] args) =>
