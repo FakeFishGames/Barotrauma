@@ -251,13 +251,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (character.SelectedConstruction != null)
+                    var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
+                    if (selectedContainer != null && selectedContainer.Inventory != null)
                     {
-                        var selectedContainer = character.SelectedConstruction.GetComponent<ItemContainer>();
-                        if (selectedContainer != null && selectedContainer.Inventory != null)
-                        {
-                            selectedContainer.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
-                        }
+                        selectedContainer.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);                        
                     }
                     else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                     {
