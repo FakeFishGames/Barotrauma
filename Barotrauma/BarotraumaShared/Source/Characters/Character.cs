@@ -1011,36 +1011,18 @@ namespace Barotrauma
                 lowerBodyPosition += Submarine.Position;
             }
 
-            Vector2 playerDistanceCheckPosition;
-            Rectangle itemDisplayRect;
+            bool insideTrigger = item.IsInsideTrigger(upperBodyPosition) || item.IsInsideTrigger(lowerBodyPosition);
+            if (item.Prefab.Triggers.Count > 0 && !insideTrigger) return false;
 
-            bool insideTrigger = false;
-            if (item.Prefab.Triggers.Any())
-            {
-                foreach (Rectangle trigger in item.Prefab.Triggers)
-                {
-                    Rectangle transformedTrigger = new Rectangle(
-                        item.WorldRect.X + trigger.X,
-                        (item.WorldRect.Y + trigger.Y) - ((trigger.Height == 0) ? item.Rect.Height : trigger.Height),
-                        (trigger.Width == 0) ? item.Rect.Width : trigger.Width,
-                        (trigger.Height == 0) ? item.Rect.Height : trigger.Height);
-
-                    // Get the point along the line between lowerBodyPosition and upperBodyPosition which is closest to the center of itemDisplayRect
-                    playerDistanceCheckPosition = Vector2.Clamp(transformedTrigger.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
-
-                    if (!transformedTrigger.Contains(upperBodyPosition) && !transformedTrigger.Contains(lowerBodyPosition)) return false;
-
-                    insideTrigger = true;
-                }
-                if (!insideTrigger) return false;
-            }            
-            itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
+            Rectangle itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
 
             // Get the point along the line between lowerBodyPosition and upperBodyPosition which is closest to the center of itemDisplayRect
-            playerDistanceCheckPosition = Vector2.Clamp(itemDisplayRect.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
+            Vector2 playerDistanceCheckPosition = Vector2.Clamp(itemDisplayRect.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
 
             // Here we get the point on the itemDisplayRect which is closest to playerDistanceCheckPosition
-            Vector2 rectIntersectionPoint = new Vector2(Math.Max(itemDisplayRect.X, Math.Min(itemDisplayRect.X + itemDisplayRect.Width, playerDistanceCheckPosition.X)), Math.Max(itemDisplayRect.Y, Math.Min(itemDisplayRect.Y + itemDisplayRect.Height, playerDistanceCheckPosition.Y)));
+            Vector2 rectIntersectionPoint = new Vector2(
+                MathHelper.Clamp(playerDistanceCheckPosition.X, itemDisplayRect.X, itemDisplayRect.Right),
+                MathHelper.Clamp(playerDistanceCheckPosition.Y, itemDisplayRect.Y, itemDisplayRect.Bottom));
 
             // If playerDistanceCheckPosition is inside the itemDisplayRect then we consider the character to within 0 distance of the item
             if (!itemDisplayRect.Contains(playerDistanceCheckPosition))
@@ -1102,22 +1084,22 @@ namespace Barotrauma
                 if (hull != null && item.CurrentHull != hull) continue;
                 if (item.body != null && !item.body.Enabled) continue;
                 if (item.ParentInventory != null) continue;
-
-                float distanceToItem = float.PositiveInfinity;
-                if (CanInteractWith(item, out distanceToItem))
+                
+                if (CanInteractWith(item))
                 {
-                    if (item.IsMouseOn(displayPosition))
-                    {
-                        Console.WriteLine("Name: " + item.Name + " Priority:" + item.InteractPriority);
-                    }
                     if (item.IsMouseOn(displayPosition) && (highestPriorityItemAtPosition == null || 
                         ((highestPriorityItemAtPosition.InteractPriority < item.InteractPriority) ||
                         (highestPriorityItemAtPosition.InteractPriority == item.InteractPriority && highestPriorityItemAtPosition.GetDrawDepth() > item.GetDrawDepth()))))
                     {
                         highestPriorityItemAtPosition = item;
                     }
-                    else if (aimAssistModifier > 0.0f)
+                    else if (aimAssistModifier > 0.0f && SelectedConstruction == null)
                     {
+                        float distanceToItem = item.IsInsideTrigger(displayPosition) ? 0.0f : Vector2.Distance(item.WorldPosition, displayPosition);
+
+                        //aim assist can only be used if no item has been selected 
+                        //= can't switch selection to another item without deselecting the current one first UNLESS the cursor is directly on the item
+                        //otherwise it would be too easy to accidentally switch the selected item when rewiring items
                         if (distanceToItem < (100.0f * aimAssistModifier) && (closestItem == null || distanceToItem < closestItemDistance))
                         {
                             closestItem = item;
@@ -1257,14 +1239,14 @@ namespace Barotrauma
             {
                 SelectCharacter(focusedCharacter);                
             }
-            else if (IsKeyHit(InputType.Select) && selectedConstruction != null)
-            {
-                selectedConstruction = null;
-            }
             else if (focusedItem != null)
             {
                 focusedItem.IsHighlighted = true;
                 focusedItem.TryInteract(this);
+            }
+            else if (IsKeyHit(InputType.Select) && selectedConstruction != null)
+            {
+                selectedConstruction = null;
             }
         }
         
