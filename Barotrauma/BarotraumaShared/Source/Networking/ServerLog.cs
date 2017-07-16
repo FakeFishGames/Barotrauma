@@ -26,6 +26,7 @@ namespace Barotrauma.Networking
             ItemInteraction,
             Inventory,
             Attack,
+            Spawning,
             ServerMessage,
             Error
         }
@@ -36,6 +37,7 @@ namespace Barotrauma.Networking
             new Color(255, 142, 0),
             new Color(238, 208, 0),
             new Color(204, 74, 78),
+            new Color(163, 73, 164),
             new Color(157, 225, 160),
             Color.Red
         };
@@ -46,6 +48,7 @@ namespace Barotrauma.Networking
             "Item interaction",
             "Inventory usage",
             "Attack & death",
+            "Spawning",
             "Server message",
             "Error"
         };

@@ -268,7 +268,7 @@ namespace Barotrauma.Networking
                     ResetShuttle();
 
                     state = State.Waiting;
-                    GameServer.Log("The respawn shuttle has left.", ServerLog.MessageType.ServerMessage);
+                    GameServer.Log("The respawn shuttle has left.", ServerLog.MessageType.Spawning);
                     server.CreateEntityEvent(this);
 
                     respawnTimer = respawnInterval;
@@ -289,7 +289,7 @@ namespace Barotrauma.Networking
 
             shuttleSteering.TargetVelocity = Vector2.Zero;
 
-            GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.ServerMessage);
+            GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.Spawning);
 
             RespawnCharacters();
 
@@ -404,9 +404,10 @@ namespace Barotrauma.Networking
             }
 
             List<CharacterInfo> characterInfos = clients.Select(c => c.characterInfo).ToList();
-            if (server.Character != null && server.Character.IsDead) characterInfos.Add(server.CharacterInfo);
-
-            GameServer.Log("Respawning characters: "+string.Join(", ", characterInfos.Select(ci => ci.Name)), ServerLog.MessageType.ServerMessage);
+            if (server.Character != null && server.Character.IsDead)
+            {
+                characterInfos.Add(server.CharacterInfo);
+            }
 
             server.AssignJobs(clients, server.Character != null && server.Character.IsDead);
             foreach (Client c in clients)
@@ -445,12 +446,14 @@ namespace Barotrauma.Networking
                     Character.Controlled = character;
 
                     GameMain.LightManager.LosEnabled = true;
-
+                    GameServer.Log(string.Format("Respawning {0} (host) as {1}", character.Name, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
                 }
                 else
                 {
 #endif
                     clients[i].Character = character;
+                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
+
 #if CLIENT
                 }
 #endif
