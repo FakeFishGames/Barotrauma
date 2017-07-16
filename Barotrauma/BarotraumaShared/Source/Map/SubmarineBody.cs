@@ -369,7 +369,7 @@ namespace Barotrauma
         public bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
             Limb limb = f2.Body.UserData as Limb;
-            if (limb!= null)
+            if (limb != null)
             {
 
                 bool collision = HandleLimbCollision(contact, limb);
@@ -378,9 +378,13 @@ namespace Barotrauma
                 {
                     Vector2 normal = Vector2.Normalize(Body.SimPosition - limb.SimPosition);
 
-                    float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f;
+                    float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f * Math.Min(limb.Mass / 200.0f, 1);
 
-                    ApplyImpact(impact * Math.Min(limb.Mass / 200.0f, 1), -normal, contact);
+                    ApplyImpact(impact, -normal, contact);
+                    foreach (Submarine dockedSub in submarine.DockedTo)
+                    {
+                        dockedSub.SubBody.ApplyImpact(impact, -normal, contact);
+                    }
                 }
 
                 return collision;
@@ -394,40 +398,53 @@ namespace Barotrauma
                 float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
 
                 ApplyImpact(wallImpact, -collisionNormal, contact);
+                foreach (Submarine dockedSub in submarine.DockedTo)
+                {
+                    dockedSub.SubBody.ApplyImpact(wallImpact, -collisionNormal, contact);
+                }
 
                 Vector2 n;
                 FixedArray2<Vector2> particlePos;
                 contact.GetWorldManifold(out n, out particlePos);
 
 #if CLIENT
-                int particleAmount = (int)(wallImpact*10.0f);
+                int particleAmount = (int)(wallImpact * 10.0f);
                 for (int i = 0; i < particleAmount; i++)
                 {
                     GameMain.ParticleManager.CreateParticle("iceshards",
-                        ConvertUnits.ToDisplayUnits(particlePos[0]) + Rand.Vector(Rand.Range(1.0f, 50.0f)), 
-                        Rand.Vector(Rand.Range(50.0f,500.0f)) + Velocity);
+                        ConvertUnits.ToDisplayUnits(particlePos[0]) + Rand.Vector(Rand.Range(1.0f, 50.0f)),
+                        Rand.Vector(Rand.Range(50.0f, 500.0f)) + Velocity);
                 }
 #endif
-            
+
                 return true;
             }
 
-            Submarine sub = f2.Body.UserData as Submarine;
-            if (sub != null)
+            Submarine otherSub = f2.Body.UserData as Submarine;
+            if (otherSub != null)
             {
-                Debug.Assert(sub != submarine);
+                Debug.Assert(otherSub != submarine);
 
                 Vector2 normal;
                 FixedArray2<Vector2> points;
                 contact.GetWorldManifold(out normal, out points);
-                if (contact.FixtureA.Body == sub.SubBody.Body.FarseerBody)
+                if (contact.FixtureA.Body == otherSub.SubBody.Body.FarseerBody)
                 {
                     normal = -normal;
                 }
 
-                float massRatio = sub.SubBody.Body.Mass / (sub.SubBody.Body.Mass + Body.Mass);
+                float thisMass = Body.Mass + submarine.DockedTo.Sum(s => s.PhysicsBody.Mass);
+                float otherMass = otherSub.PhysicsBody.Mass + otherSub.DockedTo.Sum(s => s.PhysicsBody.Mass);
 
-                ApplyImpact((Vector2.Dot(Velocity - sub.Velocity, normal) / 2.0f)*massRatio, normal, contact);
+                float massRatio = otherMass / (thisMass + otherMass);
+
+                float impact = (Vector2.Dot(Velocity - otherSub.Velocity, normal) / 2.0f) * massRatio;
+
+                ApplyImpact(impact, normal, contact);
+                foreach (Submarine dockedSub in submarine.DockedTo)
+                {
+                    dockedSub.SubBody.ApplyImpact(impact, normal, contact);
+                }
 
                 return true;
             }
