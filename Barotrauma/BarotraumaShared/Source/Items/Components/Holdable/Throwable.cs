@@ -93,10 +93,10 @@ namespace Barotrauma.Items.Components
                     Vector2 throwVector = picker.CursorWorldPosition - picker.WorldPosition;
                     throwVector = Vector2.Normalize(throwVector);
 
+                    GameServer.Log(picker.Name + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
+
                     item.Drop();
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
-
-                    GameServer.Log(picker.Name + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 
                     ac.GetLimb(LimbType.Head).body.ApplyLinearImpulse(throwVector*10.0f);
                     ac.GetLimb(LimbType.Torso).body.ApplyLinearImpulse(throwVector * 10.0f);
