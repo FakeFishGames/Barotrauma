@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
@@ -169,7 +170,18 @@ namespace Barotrauma.Items.Components
 
                         draggingConnected.RemoveConnection(item);
 
-                        if (draggingConnected.Connect(this, !alreadyConnected, true)) Wires[index] = draggingConnected;
+                        if (draggingConnected.Connect(this, !alreadyConnected, true))
+                        {
+                            GameServer.Log(item.Name + " rewired by " + Character.Controlled.Name, ServerLog.MessageType.ItemInteraction);
+
+                            var otherConnection = draggingConnected.OtherConnection(this);
+
+                            GameServer.Log(item.Name + " rewired by " + Character.Controlled.Name + ": " +
+                                Name + " -> " +
+                                (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), ServerLog.MessageType.ItemInteraction);
+                            
+                            Wires[index] = draggingConnected;
+                        }
                     }
                 }
             }

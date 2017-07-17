@@ -49,7 +49,7 @@ namespace Barotrauma
                 if (Inventory != null)
                 {
                     spawnedItem = new Item(Prefab, Vector2.Zero, null);
-                    Inventory.TryPutItem(spawnedItem, spawnedItem.AllowedSlots);
+                    Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
                 }
                 else
                 {

@@ -162,7 +162,7 @@ namespace Barotrauma
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
                 if (character.Inventory.Items[i] == null) continue;
-                husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true);
+                husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, null);
             }
             
             character.Enabled = false;

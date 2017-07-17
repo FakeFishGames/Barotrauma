@@ -187,21 +187,21 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
-            ClearConnections();
+            ClearConnections(character);
 
             IsActive = true;
         }
 
         public override void Unequip(Character character)
         {
-            ClearConnections();
+            ClearConnections(character);
 
             IsActive = false;
         }
 
         public override void Drop(Character dropper)
         {
-            ClearConnections();
+            ClearConnections(dropper);
             
             IsActive = false;
         }
@@ -252,7 +252,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            ClearConnections();
+            ClearConnections(picker);
 
             return true;
         }
@@ -295,10 +295,30 @@ namespace Barotrauma.Items.Components
             Drawable = IsActive || sections.Count > 0;
         }
 
-        private void ClearConnections()
+        private void ClearConnections(Character user = null)
         {
             nodes.Clear();
             sections.Clear();
+            
+            if (user != null)
+            {
+                if (connections[0] != null && connections[1] != null)
+                {
+                    GameServer.Log(Character.Controlled.Name + " disconnected a wire from " + 
+                        connections[0].Item.Name + " (" + connections[0].Name + ") to "+
+                        connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
+                }
+                else if (connections[0] != null)
+                {
+                    GameServer.Log(Character.Controlled.Name + " disconnected a wire from " +
+                        connections[0].Item.Name + " (" + connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
+                }
+                else if (connections[1] != null)
+                {
+                    GameServer.Log(Character.Controlled.Name + " disconnected a wire from " +
+                        connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
+                }
+            }
 
             for (int i = 0; i < 2; i++)
             {

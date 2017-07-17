@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -38,9 +39,9 @@ namespace Barotrauma
         }
 
 
-        public override bool TryPutItem(Item item, System.Collections.Generic.List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
-            bool wasPut = base.TryPutItem(item, allowedSlots, createNetworkEvent);
+            bool wasPut = base.TryPutItem(item, user, allowedSlots, createNetworkEvent);
 
             if (wasPut)
             {
@@ -59,9 +60,9 @@ namespace Barotrauma
             return wasPut;
         }
 
-        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, int i, bool allowSwapping, Character user, bool createNetworkEvent = true)
         {
-            bool wasPut = base.TryPutItem(item, i, allowSwapping, createNetworkEvent);
+            bool wasPut = base.TryPutItem(item, i, allowSwapping, user, createNetworkEvent);
 
             if (wasPut)
             {
