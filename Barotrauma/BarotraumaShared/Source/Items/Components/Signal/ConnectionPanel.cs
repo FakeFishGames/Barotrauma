@@ -154,7 +154,7 @@ namespace Barotrauma.Items.Components
                 {
                     ushort wireId = msg.ReadUInt16();
 
-                    Item wireItem = MapEntity.FindEntityByID(wireId) as Item;
+                    Item wireItem = Entity.FindEntityByID(wireId) as Item;
                     if (wireItem == null) continue;
 
                     Wire wireComponent = wireItem.GetComponent<Wire>();
@@ -165,7 +165,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            item.CreateServerEvent<ConnectionPanel>(this);
+            item.CreateServerEvent(this);
 
             //check if the character can access this connectionpanel 
             //and all the wires they're trying to connect
@@ -182,25 +182,51 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
-            Networking.GameServer.Log(item.Name + " rewired by " + c.Character.Name, ServerLog.MessageType.ItemInteraction);
-
+            
             //update the connections
             for (int i = 0; i < Connections.Count; i++)
             {
+                Wire[] prevWires = new Wire[Connections[i].Wires.Length];
+                Array.Copy(Connections[i].Wires, prevWires, prevWires.Length);
+
                 Connections[i].ClearConnections();
 
                 for (int j = 0; j < wireCounts[i]; j++)
                 {
-                    if (wires[i, j] == null) continue;
+                    if (wires[i, j] == null)
+                    {
+                        if (prevWires[j] != null)
+                        {
+                            if (prevWires[j].Connections[0] != null && prevWires[j].Connections[1] != null)
+                            {
+                                GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                                    prevWires[j].Connections[0].Item.Name + " (" + prevWires[j].Connections[0].Name + ") to " +
+                                    prevWires[j].Connections[1].Item.Name + " (" + prevWires[j].Connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
+                            }
+                            else if (prevWires[j].Connections[0] != null)
+                            {
+                                GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                                    prevWires[j].Connections[0].Item.Name + " (" + prevWires[j].Connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
+                            }
+                            else if (prevWires[j].Connections[1] != null)
+                            {
+                                GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                                    prevWires[j].Connections[1].Item.Name + " (" + prevWires[j].Connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
+                            }
+                        }
+                        continue;
+                    }
+
+                    //already connected, no need to do anything
+                    if (wires[i, j] == prevWires[j]) continue;
 
                     Connections[i].Wires[j] = wires[i,j];
                     wires[i, j].Connect(Connections[i], true);
 
                     var otherConnection = Connections[i].Wires[j].OtherConnection(Connections[i]);
 
-                    Networking.GameServer.Log(
-                        item.Name + " (" + Connections[i].Name + ") -> " +
+                    GameServer.Log(item.Name + " rewired by " + c.Character.Name+ ": " +
+                        Connections[i].Name + " -> " +
                         (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), ServerLog.MessageType.ItemInteraction);
                 }
             }

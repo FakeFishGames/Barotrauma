@@ -80,7 +80,7 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public override bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
             if (allowedSlots == null || !allowedSlots.Any()) return false;
 
@@ -100,7 +100,7 @@ namespace Barotrauma
                 {
                     if (Items[i] != null || limbSlots[i] != InvSlotType.Any) continue;
 
-                    PutItem(item, i, true, createNetworkEvent);
+                    PutItem(item, i, user, true, createNetworkEvent);
                     item.Unequip(character);
                     return true;
                 }
@@ -128,7 +128,7 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(limbSlots[i]) && Items[i] == null)
                     {
-                        PutItem(item, i, !placed, createNetworkEvent);
+                        PutItem(item, i, user, !placed, createNetworkEvent);
                         item.Equip(character);
                         placed = true;
                     }
@@ -144,7 +144,7 @@ namespace Barotrauma
             return placed;
         }
 
-        public override bool TryPutItem(Item item, int index, bool allowSwapping, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, int index, bool allowSwapping, Character user, bool createNetworkEvent = true)
         {
             //there's already an item in the slot
             if (Items[index] != null)
@@ -174,10 +174,10 @@ namespace Barotrauma
                     Items[currentIndex] = null;
                     Items[index] = null;
                     //if the item in the slot can be moved to the slot of the moved item
-                    if (TryPutItem(existingItem, currentIndex, false, createNetworkEvent) &&
-                        TryPutItem(item, index, false, createNetworkEvent))
+                    if (TryPutItem(existingItem, currentIndex, false, user, createNetworkEvent) &&
+                        TryPutItem(item, index, false, user, createNetworkEvent))
                     {
-                        
+
                     }
                     else
                     {
@@ -185,11 +185,11 @@ namespace Barotrauma
                         Items[index] = null;
 
                         //swapping the items failed -> move them back to where they were
-                        TryPutItem(item, currentIndex, false, createNetworkEvent);
-                        TryPutItem(existingItem, index, false, createNetworkEvent);
+                        TryPutItem(item, currentIndex, false, user, createNetworkEvent);
+                        TryPutItem(existingItem, index, false, user, createNetworkEvent);
                     }
                 }
-                
+
                 return combined;
             }
 
@@ -198,7 +198,7 @@ namespace Barotrauma
                 if (!item.AllowedSlots.Contains(InvSlotType.Any)) return false;
                 if (Items[index] != null) return Items[index] == item;
 
-                PutItem(item, index, true, createNetworkEvent);
+                PutItem(item, index, user, true, createNetworkEvent);
                 return true;
             }
 
@@ -223,13 +223,13 @@ namespace Barotrauma
             }
 
             if (!slotsFree) return false;
-            
-            return TryPutItem(item, new List<InvSlotType>() {placeToSlots}, createNetworkEvent);
+
+            return TryPutItem(item, user, new List<InvSlotType>() { placeToSlots }, createNetworkEvent);
         }
 
-        protected override void PutItem(Item item, int i, bool removeItem = true, bool createNetworkEvent = true)
+        protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
-            base.PutItem(item, i, removeItem, createNetworkEvent);
+            base.PutItem(item, i, user, removeItem, createNetworkEvent);
             CreateSlots();
         }
 
@@ -247,30 +247,30 @@ namespace Barotrauma
             {
                 if (doubleClickedItem.ParentInventory != this)
                 {
-                    TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                    TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots, true);
                 }
                 else
                 {
                     var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
                     if (selectedContainer != null && selectedContainer.Inventory != null)
                     {
-                        selectedContainer.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);                        
+                        selectedContainer.Inventory.TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots, true);                        
                     }
                     else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                     {
-                        character.SelectedCharacter.Inventory.TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots, true);
+                        character.SelectedCharacter.Inventory.TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots, true);
                     }
                     else //doubleclicked and no other inventory is selected
                     {
                         //not equipped -> attempt to equip
                         if (IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
                         {
-                            TryPutItem(doubleClickedItem, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);
+                            TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);
                         }
                         //equipped -> attempt to unequip
                         else if (doubleClickedItem.AllowedSlots.Contains(InvSlotType.Any))
                         {
-                            TryPutItem(doubleClickedItem, new List<InvSlotType>() { InvSlotType.Any }, true);
+                            TryPutItem(doubleClickedItem, Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
                         }
                     }
                 }

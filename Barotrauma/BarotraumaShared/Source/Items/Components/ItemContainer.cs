@@ -183,7 +183,7 @@ namespace Barotrauma.Items.Components
         {
             if (!containableItems.Any(x => x.MatchesItem(item))) return false;
             
-            if (Inventory.TryPutItem(item))
+            if (Inventory.TryPutItem(item, null))
             {            
                 IsActive = true;
                 if (hideItems && item.body != null) item.body.Enabled = false;
@@ -200,10 +200,10 @@ namespace Barotrauma.Items.Components
 
             for (ushort i = 0; i < itemIds.Length; i++)
             {
-                Item item = MapEntity.FindEntityByID(itemIds[i]) as Item;
+                Item item = Entity.FindEntityByID(itemIds[i]) as Item;
                 if (item == null) continue;
 
-                Inventory.TryPutItem(item, i, false, false);
+                Inventory.TryPutItem(item, i, false, null, false);
             }
 
             itemIds = null;

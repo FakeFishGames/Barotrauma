@@ -724,7 +724,7 @@ namespace Barotrauma
 
                 var item = new Item(screwdriverPrefab, Vector2.Zero, null);
 
-                dummyCharacter.Inventory.TryPutItem(item, new List<InvSlotType>() {InvSlotType.RightHand});
+                dummyCharacter.Inventory.TryPutItem(item, null, new List<InvSlotType>() { InvSlotType.RightHand });
 
                 wiringToolPanel = CreateWiringPanel();
             }
@@ -816,7 +816,7 @@ namespace Barotrauma
                 existingWire.Remove();
             }
 
-            dummyCharacter.Inventory.TryPutItem(wire, slotIndex, false);
+            dummyCharacter.Inventory.TryPutItem(wire, slotIndex, false, dummyCharacter);
 
             return true;
            

@@ -137,21 +137,21 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
             int slot = FindAllowedSlot(item);
             if (slot < 0) return false;
 
-            PutItem(item, slot, true, createNetworkEvent);
+            PutItem(item, slot, user, true, createNetworkEvent);
             return true;
         }
 
-        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, Character user, bool createNetworkEvent = true)
         {
             if (Owner == null) return false;
-            if (CanBePut(item,i))
+            if (CanBePut(item, i))
             {
-                PutItem(item, i, true, createNetworkEvent);
+                PutItem(item, i, user, true, createNetworkEvent);
                 return true;
             }
             else
@@ -163,13 +163,13 @@ namespace Barotrauma
             }
         }
 
-        protected virtual void PutItem(Item item, int i, bool removeItem = true, bool createNetworkEvent = true)
+        protected virtual void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
             if (Owner == null) return;
 
             if (removeItem)
             {
-                item.Drop(null);
+                item.Drop(user);
                 if (item.ParentInventory != null) item.ParentInventory.RemoveItem(item);
             }
 
@@ -321,7 +321,7 @@ namespace Barotrauma
                     if (draggingItem != Items[slotIndex])
                     {
                         //selectedSlot = slotIndex;
-                        if (TryPutItem(draggingItem, slotIndex, true))
+                        if (TryPutItem(draggingItem, slotIndex, true, Character.Controlled))
                         {
 #if CLIENT
                             if (slots != null) slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
@@ -412,7 +412,7 @@ namespace Barotrauma
                     {
                         if (!item.CanClientAccess(c)) continue;
                     }
-                    TryPutItem(item, i, true, false);
+                    TryPutItem(item, i, true, c.Character, false);
                 }
             }
 
@@ -509,7 +509,7 @@ namespace Barotrauma
                     var item = Entity.FindEntityByID(receivedItemIDs[i]) as Item;
                     if (item == null) continue;
 
-                    TryPutItem(item, i, true, false);
+                    TryPutItem(item, i, true, null, false);
                 }
             }
 

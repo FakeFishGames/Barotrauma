@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
 
         protected virtual bool OnPicked(Character picker)
         {
-            if (picker.Inventory.TryPutItem(item, allowedSlots))
+            if (picker.Inventory.TryPutItem(item, picker, allowedSlots))
             {
                 if (!picker.HasSelectedItem(item) && item.body != null) item.body.Enabled = false;
                 this.picker = picker;

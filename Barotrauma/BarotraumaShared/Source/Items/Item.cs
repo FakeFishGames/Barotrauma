@@ -470,7 +470,7 @@ namespace Barotrauma
                 foreach (Item containedItem in ContainedItems)
                 {
                     var containedClone = containedItem.Clone();
-                    clone.ownInventory.TryPutItem(containedClone as Item);
+                    clone.ownInventory.TryPutItem(containedClone as Item, null);
                 }
             }
             return clone;
@@ -1520,11 +1520,11 @@ namespace Barotrauma
             if (inventory != null)
             {
                 if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
-                    inventory.TryPutItem(item, inventorySlotIndex, false, false))
+                    inventory.TryPutItem(item, inventorySlotIndex, false, null, false))
                 {
                     return null;
                 }
-                inventory.TryPutItem(item, item.AllowedSlots, false);
+                inventory.TryPutItem(item, null, item.AllowedSlots, false);
             }
 
             return item;
