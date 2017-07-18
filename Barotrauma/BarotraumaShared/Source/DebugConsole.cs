@@ -748,9 +748,9 @@ namespace Barotrauma
             }
 
 #if !DEBUG && CLIENT
-            if (GameMain.Client != null && !IsCommandPermitted(args[0].ToLowerInvariant(), GameMain.Client))
+            if (GameMain.Client != null && !IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
             {
-                ThrowError("You're not permitted to use the command \"" + args[0].ToLowerInvariant()+"\"!");
+                ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
                 return;
             }
 #endif
