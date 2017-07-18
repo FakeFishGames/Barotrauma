@@ -29,6 +29,19 @@ namespace Barotrauma
             get;
             private set;
         }
+        
+        public Vector2 AimSourcePos
+        {
+            get { return ConvertUnits.ToDisplayUnits(AimSourceSimPos); }
+        }
+
+        public virtual Vector2 AimSourceSimPos
+        {
+            get
+            {
+                return Collider.SimPosition;
+            }
+        }
 
         public AnimController(Character character, XElement element)
             : base(character, element)

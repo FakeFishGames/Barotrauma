@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class Character
     {
-               public virtual void ClientWrite(NetBuffer msg, object[] extraData = null)
+        public virtual void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             if (GameMain.Server != null) return;
 
@@ -97,7 +97,7 @@ namespace Barotrauma
                         if (aimInput)
                         {
                             double aimAngle = ((double)msg.ReadUInt16() / 65535.0) * 2.0 * Math.PI;
-                            cursorPosition = (ViewTarget == null ? AnimController.Collider.Position : ViewTarget.Position)
+                            cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
                                 + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
 
                             TransformCursorPos();
