@@ -40,6 +40,26 @@ namespace Barotrauma
             }
         }
 
+        public override Vector2 AimSourceSimPos
+        {
+            get
+            {
+                float shoulderHeight = Collider.height / 2.0f - 0.1f;
+                if (inWater)
+                {
+                    shoulderHeight += 0.4f;
+                }
+                else if (Crouching)
+                {
+                    shoulderHeight -= 0.15f;
+                }
+
+                return Collider.SimPosition + new Vector2(
+                    (float)Math.Sin(-Collider.Rotation),
+                    (float)Math.Cos(-Collider.Rotation)) * shoulderHeight;
+            }
+        }
+
         public HumanoidAnimController(Character character, XElement element)
             : base(character, element)
         {
@@ -1012,7 +1032,7 @@ namespace Barotrauma
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
 
-                Vector2 diff = (mousePos - torso.SimPosition) * Dir;
+                Vector2 diff = (mousePos - AimSourceSimPos) * Dir;
 
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torso.body.Rotation * Dir;
 
@@ -1064,12 +1084,8 @@ namespace Barotrauma
                     leftHand.Disabled = true;
                 }
 
-
-                itemPos.X = itemPos.X * Dir;
-
-                Matrix torsoTransform = Matrix.CreateRotationZ(itemAngle);
-
-                transformedHoldPos += Vector2.Transform(itemPos, torsoTransform);
+                itemPos.X = itemPos.X * Dir;                
+                transformedHoldPos += Vector2.Transform(itemPos, Matrix.CreateRotationZ(itemAngle));
             }
 
             item.body.ResetDynamics();
