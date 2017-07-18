@@ -385,7 +385,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    FindMatchingCharacter(args, false);
+                    tpCharacter = FindMatchingCharacter(args, false);
                 }
 
                 if (tpCharacter == null) return;
@@ -792,7 +792,7 @@ namespace Barotrauma
 
             if (!matchingCharacters.Any())
             {
-                NewMessage("Matching characters not found", Color.Red);
+                NewMessage("Character \""+ characterName + "\" not found", Color.Red);
                 return null;
             }
 
