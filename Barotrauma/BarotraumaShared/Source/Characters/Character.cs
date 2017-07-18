@@ -1425,12 +1425,23 @@ namespace Barotrauma
 
             if (!AnimController.HeadInWater && AnimController.CurrentHull != null)
             {
+                //don't decrease the amount of oxygen in the hull if the character has more oxygen available than the hull
+                //(i.e. if the character has some external source of oxygen)
+                if (OxygenAvailable * 0.98f < AnimController.CurrentHull.OxygenPercentage)
+                {
+                    AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
+                }
                 hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
-
-                AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
             }
-
-            OxygenAvailable += Math.Sign(hullAvailableOxygen - oxygenAvailable) * deltaTime * 50.0f;
+            
+            if (hullAvailableOxygen < OxygenAvailable)
+            {
+                OxygenAvailable -= Math.Max(deltaTime * 50.0f, oxygenAvailable - hullAvailableOxygen);
+            }
+            else
+            {
+                OxygenAvailable += Math.Min(deltaTime * 50.0f, hullAvailableOxygen - oxygenAvailable);
+            }
         }
         partial void UpdateOxygenProjSpecific(float prevOxygen);
 
