@@ -80,8 +80,12 @@ namespace Barotrauma.Networking
         
         private bool autoRestart;
 
-        private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
+        private bool isPublic;
 
+        private int maxPlayers;
+
+        private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
+        
         [HasDefaultValue(true, true)]
         public bool RandomizeSeed
         {
@@ -170,36 +174,15 @@ namespace Barotrauma.Networking
                 AutoRestartTimer = autoRestart ? AutoRestartInterval : 0.0f;
             }
         }
-
-        [HasDefaultValue(8, true)]
-        private int MaxPlayers
+        
+        [HasDefaultValue(true, true)]
+        public bool AllowRespawn
         {
             get;
             set;
-        }
-
-        [HasDefaultValue(false, true)]
-        private bool Public
-        {
-            get;
-            set;
-        }
-
-        [HasDefaultValue(false, true)]
-        private bool AttemptUPNP
-        {
-            get { return config.EnableUPnP; }
-            set { config.EnableUPnP = value; }
         }
 
         public YesNoMaybe TraitorsEnabled
-        {
-            get;
-            set;
-        }
-
-        [HasDefaultValue(true, true)]
-        public bool AllowRespawn
         {
             get;
             set;
@@ -246,6 +229,12 @@ namespace Barotrauma.Networking
             XDocument doc = new XDocument(new XElement("serversettings"));
 
             ObjectProperty.SaveProperties(this, doc.Root, true);
+            
+            doc.Root.SetAttributeValue("name", name);
+            doc.Root.SetAttributeValue("public", isPublic);
+            doc.Root.SetAttributeValue("port", config.Port);
+            doc.Root.SetAttributeValue("maxplayers", maxPlayers);
+            doc.Root.SetAttributeValue("enableupnp", config.EnableUPnP);
 
             doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
