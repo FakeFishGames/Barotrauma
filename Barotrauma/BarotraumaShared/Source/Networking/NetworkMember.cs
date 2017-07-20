@@ -91,14 +91,12 @@ namespace Barotrauma.Networking
 
         public Voting Voting;
         
-        [HasDefaultValue(14242, true)]
         public int Port
         {
             get;
             set;
         }
-
-        [HasDefaultValue("", true)]
+        
         public string Name
         {
             get { return name; }

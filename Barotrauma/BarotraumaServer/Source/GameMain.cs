@@ -102,7 +102,7 @@ namespace Barotrauma
             XDocument doc = ToolBox.TryLoadXml(GameServer.SettingsFile);
             if (doc == null)
             {
-                DebugConsole.ThrowError("File \""+GameServer.SettingsFile+"\" not found. Starting the server with default settings.");
+                DebugConsole.ThrowError("File \"" + GameServer.SettingsFile + "\" not found. Starting the server with default settings.");
                 Server = new GameServer("Server", 14242, false, "", false, 10);
                 return;
             }
@@ -112,7 +112,7 @@ namespace Barotrauma
                 ToolBox.GetAttributeInt(doc.Root, "port", 14242),
                 ToolBox.GetAttributeBool(doc.Root, "public", false),
                 ToolBox.GetAttributeString(doc.Root, "password", ""),
-                ToolBox.GetAttributeBool(doc.Root, "attemptupnp", false),
+                ToolBox.GetAttributeBool(doc.Root, "enableupnp", false),
                 ToolBox.GetAttributeInt(doc.Root, "maxplayers", 10));
         }
 

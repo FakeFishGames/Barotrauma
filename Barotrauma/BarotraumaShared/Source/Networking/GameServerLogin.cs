@@ -43,7 +43,7 @@ namespace Barotrauma.Networking
             if (unauthClient == null)
             {
                 //new client, generate nonce and add to unauth queue
-                if (ConnectedClients.Count >= MaxPlayers)
+                if (ConnectedClients.Count >= maxPlayers)
                 {
                     //server is full, can't allow new connection
                     conn.Disconnect("Server full");

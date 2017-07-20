@@ -76,7 +76,8 @@ namespace Barotrauma.Networking
             AdminAuthPass = "";
 
             this.name = name;
-            this.Public = isPublic;
+            this.isPublic = isPublic;
+            this.maxPlayers = maxPlayers;
             this.password = "";
             if (password.Length>0)
             {
@@ -107,14 +108,13 @@ namespace Barotrauma.Networking
                 config.EnableUPnP = true;
             }
 
-            config.MaximumConnections = maxPlayers*2; //double the lidgren connections for unauthenticated players
-            MaxPlayers = maxPlayers;
+            config.MaximumConnections = maxPlayers * 2; //double the lidgren connections for unauthenticated players            
 
-            config.DisableMessageType(NetIncomingMessageType.DebugMessage | 
+            config.DisableMessageType(NetIncomingMessageType.DebugMessage |
                 NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt |
                 NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error |
                 NetIncomingMessageType.UnconnectedData);
-                                    
+
             config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
             log = new ServerLog(name);
@@ -229,7 +229,7 @@ namespace Barotrauma.Networking
             request.AddParameter("servername", name);
             request.AddParameter("serverport", Port);
             request.AddParameter("currplayers", connectedClients.Count);
-            request.AddParameter("maxplayers", MaxPlayers);
+            request.AddParameter("maxplayers", maxPlayers);
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
             request.AddParameter("version", GameMain.Version.ToString());
             if (GameMain.Config.SelectedContentPackage != null)
@@ -284,7 +284,7 @@ namespace Barotrauma.Networking
             request.AddParameter("serverport", Port);
             request.AddParameter("gamestarted", gameStarted ? 1 : 0);
             request.AddParameter("currplayers", connectedClients.Count);
-            request.AddParameter("maxplayers", MaxPlayers);
+            request.AddParameter("maxplayers", maxPlayers);
 
             Log("Refreshing connection with master server...", ServerLog.MessageType.ServerMessage);
 
@@ -469,7 +469,7 @@ namespace Barotrauma.Networking
                             {
                                 inc.SenderConnection.Deny("You have been banned from the server");
                             }
-                            else if (ConnectedClients.Count >= MaxPlayers)
+                            else if (ConnectedClients.Count >= maxPlayers)
                             {
                                 inc.SenderConnection.Deny("Server full");
                             }
