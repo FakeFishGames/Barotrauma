@@ -1,4 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <config masterserverurl="http://www.undertowgames.com/baromaster" autocheckupdates="true" verboselogging="true">
-  <contentpackage path="Data/ContentPackages/Vanilla 0.3.xml" />
+  <contentpackage path="Data/ContentPackages/Vanilla 0.6.xml" />
 </config>
