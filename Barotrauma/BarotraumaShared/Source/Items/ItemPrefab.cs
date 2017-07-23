@@ -208,11 +208,17 @@ namespace Barotrauma
 
         public static void LoadAll(List<string> filePaths)
         {
-            DebugConsole.Log("Loading item prefabs: ");
+            if (GameSettings.VerboseLogging)
+            {
+                DebugConsole.Log("Loading item prefabs: ");
+            }
 
             foreach (string filePath in filePaths)
             {
-                DebugConsole.Log("*** "+filePath+" ***");
+                if (GameSettings.VerboseLogging)
+                {
+                    DebugConsole.Log("*** " + filePath + " ***");
+                }
 
                 XDocument doc = ToolBox.TryLoadXml(filePath);
                 if (doc == null) return;
