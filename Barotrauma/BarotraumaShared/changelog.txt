@@ -1,4 +1,65 @@
 ---------------------------------------------------------------------------------------------------------
+v0.6.1.0
+---------------------------------------------------------------------------------------------------------
+
+Multiplayer:
+	- Dedicated server application.
+	- Option to supply a reason for banning/kicking a client.
+	- Option to set a duration for bans.
+	- Respawning characters get ID card tags for both the shuttle and the main submarine, i.e. they are
+	able to open shuttle doors that require a specific clearence.
+	- Clients now get back control of their character if the server revives them using the debug commands.
+	- Added a console command for changing the character a client is controlling.
+	- Job preferences don't reset when quitting the game.
+	- Added MessageBox chat message type. Allows custom servers to display custom message boxes to the clients.
+	- Logging when a character throws an item.
+	- Logging which items are contained inside items characters use on themselves (e.g. which meds are 
+	inside a medical syringe).
+	- Logging which type of projectile was launched from a railgun and which items were contained inside it.
+	- More descriptive wiring logging: the logs don't list all the wires in a connection panel but only 
+	the changes players do to the wiring.
+
+Monsters: 
+	- Some creatures can hunt for smaller creatures (including humans) and eat them.
+	- Tweaked enemy AI to make their attacks less likely to miss.
+	- Some creatures flee when their health decreases below a specific threshold.
+	- Crawlers and mantises can attach to ice walls to "ambush" their prey.
+	- Enemies don't always move at a fixed speed, now they move faster when attacking or fleeing.
+	- Shooting watchers with a ranged weapon makes them attack.
+	- Split tiger thresher's and charybdis' bodies into more parts to make them a bit more agile.
+	- Option to make monster events spawn more monsters when previous ones are killed.
+	- The camera zooms further out when controlling a large non-humanoid character.
+
+Misc:
+	- Improved item interaction logic: highlighting items is more precise, with items directly under 
+	the cursor taking priority.
+	- Characters can be dismembered by creatures and explosions.
+	- New blood particles.
+	- Blood, explosion and fire decals.
+	- Added an artifact that attracts creatures. 
+	- Detached buttons and electrical components can be picked up just like any other item, instead of 
+	having to use a wrench and wait for the item to "detach".
+	- Wires can't be connected to detached items.
+	- Debug commands can be autocompleted using tab.
+	- Added a debug command for creating explosions.
+	
+Bugfixes:	
+	- Fixed "loading was interrupted due to an error" crashes on startup.
+	- Fixed "destination array was not long enough" errors in AddToGUIUpdateList.
+	- Fixed error messages when a character gets stunned for over 60 seconds in multiplayer.
+	- Characters don't consume oxygen from rooms when wearing a diving mask or a diving suit.
+	- Fixed occasionally seeing through walls when swimming outside a submarine.
+	- Fixed crashes during map generation caused by very large wall cells near the entrance of the level.
+	- When highlighting a wire in a connection panel, the physical wire and the items connected to it are 
+	highlighted.
+	- Fixed crashing when selecting a sonar monitor in a submarine with no hulls.
+	- Fixed submarine/shuttle lists occasionally appearing empty after joining a server.
+	- Fixed "received a position update for an item with no physics body" errors caused by detaching buttons
+	or other electrical components from the walls.
+	- Fixed a bug that caused characters to aim slightly off at the server's side when using a ranged weapon
+	or other aimable item.
+
+---------------------------------------------------------------------------------------------------------
 v0.6.0.2
 ---------------------------------------------------------------------------------------------------------
 
