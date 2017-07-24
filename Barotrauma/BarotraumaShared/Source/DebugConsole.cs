@@ -249,6 +249,36 @@ namespace Barotrauma
                 NewMessage("Crew AI enabled", Color.White);
             }));
 
+            commands.Add(new Command("autorestartinterval", "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length > 0)
+                {
+                    int parsedInt = 0;
+                    if (int.TryParse(args[0], out parsedInt) && parsedInt >= 0)
+                    {
+                        GameMain.Server.AutoRestartInterval = parsedInt;
+                        NewMessage("Autorestart interval set to " + GameMain.Server.AutoRestartInterval + " seconds.", Color.White);
+                    }
+                }
+            }));
+
+
+            commands.Add(new Command("autorestarttimer", "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length > 0)
+                {
+                    int parsedInt = 0;
+                    if (int.TryParse(args[0], out parsedInt) && parsedInt >= 0)
+                    {
+                        GameMain.Server.AutoRestartTimer = parsedInt;
+                        GameMain.NetLobbyScreen.LastUpdateID++;
+                        NewMessage("Autorestart timer set to " + GameMain.Server.AutoRestartTimer + " seconds.", Color.White);
+                    }
+                }
+            }));
+
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;

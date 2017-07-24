@@ -408,10 +408,10 @@ namespace Barotrauma.Networking
                     initiatedStartGame = false;
                 }
             }
-            else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count>0)
+            else if (autoRestart && Screen.Selected == GameMain.NetLobbyScreen && connectedClients.Count > 0)
             {
-                AutoRestartTimer -= deltaTime;
-                if (AutoRestartTimer < 0.0f && GameMain.NetLobbyScreen.StartButtonEnabled)
+                AutoRestartTimer -= deltaTime;                
+                if (AutoRestartTimer < 0.0f && !initiatedStartGame)
                 {
                     StartGame();
                 }
@@ -1057,6 +1057,7 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> InitiateStartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
         {
+            initiatedStartGame = true;
             GameMain.NetLobbyScreen.StartButtonEnabled = false;
 
             if (connectedClients.Any())
@@ -1113,9 +1114,7 @@ namespace Barotrauma.Networking
         }
 
         private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, GameModePreset selectedMode)
-        {
-            initiatedStartGame = true;
-            
+        {            
             entityEventManager.Clear();
 
             GameMain.NetLobbyScreen.StartButtonEnabled = false;
@@ -1353,7 +1352,12 @@ namespace Barotrauma.Networking
             Mission mission = GameMain.GameSession.Mission;
             GameMain.GameSession.gameMode.End(endMessage);
 
-            if (autoRestart) AutoRestartTimer = AutoRestartInterval;
+            if (autoRestart)
+            {
+                AutoRestartTimer = AutoRestartInterval;
+                //send a netlobby update to get the clients' autorestart timers up to date
+                GameMain.NetLobbyScreen.LastUpdateID++;
+            }
 
             if (SaveServerLogs) log.Save();
             
