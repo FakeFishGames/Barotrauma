@@ -197,7 +197,8 @@ namespace Launcher
 
             if (GUIMessageBox.VisibleBox != null)
             {
-                GUIComponent.ForceMouseOn(GUIMessageBox.VisibleBox);
+                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
+                GUIComponent.UpdateMouseOn();
                 GUIMessageBox.VisibleBox.Update(deltaTime);
                 return;
             }            
@@ -580,7 +581,8 @@ namespace Launcher
 
         private void ShowError(string header, string message)
         {
-            GUIFrame dummyFrame = new GUIFrame(new Rectangle(0,0,graphicsWidth,graphicsHeight));
+            GUIFrame dummyFrame = new GUIFrame(new Rectangle(0, 0, graphicsWidth, graphicsHeight));
+            dummyFrame.Padding = Vector4.Zero;
 
             GUIMessageBox errorBox = new GUIMessageBox(header, message, new string[] { "OK" }, 400, 250, Alignment.TopLeft, dummyFrame);
             errorBox.Buttons[0].OnClicked = errorBox.Close;
@@ -598,9 +600,9 @@ namespace Launcher
                     Alignment.TopLeft, Alignment.TopLeft,
                     updateInfoBox, true, GUI.SmallFont);
                 textBlock.TextColor = Color.Red;
-                //textBlock.CanBeFocused = false;
 
                 GUIFrame dummyFrame = new GUIFrame(new Rectangle(0, 0, graphicsWidth, graphicsHeight));
+                dummyFrame.Padding = Vector4.Zero;
                 GUIMessageBox errorBox = new GUIMessageBox("Error while updating", "Downloading the update failed.",
                     new string[] { "Retry", "Cancel" }, 400, 250, Alignment.TopLeft, dummyFrame);
 
