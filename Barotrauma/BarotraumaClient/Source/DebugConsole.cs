@@ -327,6 +327,13 @@ namespace Barotrauma
                 new GUIMessageBox("", string.Join(" ", args));
             }));
 
+            commands.Add(new Command("autorestart", "autorestart: Toggle autorestart on/off when hosting a server.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                GameMain.NetLobbyScreen.ToggleAutoRestart();
+                NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
+            }));
+
             commands.Add(new Command("debugdraw", "debugdraw: Toggle the debug drawing mode on/off.", (string[] args) =>
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;

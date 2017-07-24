@@ -12,7 +12,7 @@ namespace Barotrauma
         public UInt16 LastUpdateID
         {
             get { if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++; return lastUpdateID; }
-            set { if (GameMain.Server != null) return; lastUpdateID = value; }
+            set { lastUpdateID = value; }
         }
 
         //for guitextblock delegate
@@ -23,20 +23,6 @@ namespace Barotrauma
         
         private string levelSeed = "";
         
-        private float autoRestartTimer;
-
-        public string AutoRestartText()
-        {
-            if (GameMain.Server != null)
-            {
-                if (!GameMain.Server.AutoRestart) return "";
-                return "Restarting in " + ToolBox.SecondsToReadableTime(Math.Max(GameMain.Server.AutoRestartTimer, 0));
-            }
-
-            if (autoRestartTimer == 0.0f) return "";            
-            return "Restarting in " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
-        }
-
         public void ToggleTraitorsEnabled(int dir)
         {
             if (GameMain.Server == null) return;

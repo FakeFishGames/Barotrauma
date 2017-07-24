@@ -120,7 +120,7 @@ namespace Barotrauma.Networking
         public float AutoRestartInterval
         {
             get;
-            private set;
+            set;
         }
 
         [HasDefaultValue(true, true)]
@@ -166,7 +166,7 @@ namespace Barotrauma.Networking
 
         public bool AutoRestart
         {
-            get { return (connectedClients.Count != 0) && autoRestart; }
+            get { return autoRestart; }
             set
             {
                 autoRestart = value;
@@ -236,6 +236,8 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("maxplayers", maxPlayers);
             doc.Root.SetAttributeValue("enableupnp", config.EnableUPnP);
 
+            doc.Root.SetAttributeValue("autorestart", autoRestart);
+
             doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
             
@@ -278,6 +280,14 @@ namespace Barotrauma.Networking
             }
 
             ObjectProperties = ObjectProperty.InitProperties(this, doc.Root);
+
+            AutoRestart = ToolBox.GetAttributeBool(doc.Root, "autorestart", false);
+#if CLIENT
+            if (autoRestart)
+            {
+                GameMain.NetLobbyScreen.SetAutoRestart(autoRestart, AutoRestartInterval);
+            }
+#endif
 
             subSelectionMode = SelectionMode.Manual;
             Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "SubSelection", "Manual"), out subSelectionMode);

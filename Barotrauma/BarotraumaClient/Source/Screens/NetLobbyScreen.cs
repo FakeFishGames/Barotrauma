@@ -44,10 +44,11 @@ namespace Barotrauma
 
         private GUIDropDown shuttleList;
 
-
         private Sprite backgroundSprite;
 
         private GUITextBox serverMessage;
+
+        private float autoRestartTimer;
 
         public GUITextBox ServerMessage
         {
@@ -154,6 +155,17 @@ namespace Barotrauma
             }
         }
 
+        public string AutoRestartText()
+        {
+            if (GameMain.Server != null)
+            {
+                if (!GameMain.Server.AutoRestart || GameMain.Server.ConnectedClients.Count == 0) return "";
+                return "Restarting in " + ToolBox.SecondsToReadableTime(Math.Max(GameMain.Server.AutoRestartTimer, 0));
+            }
+
+            if (autoRestartTimer == 0.0f) return "";
+            return "Restarting in " + ToolBox.SecondsToReadableTime(Math.Max(autoRestartTimer, 0));
+        }
 
         public NetLobbyScreen()
         {
@@ -594,6 +606,12 @@ namespace Barotrauma
         {
             autoRestartBox.Selected = enabled;
             autoRestartTimer = timer;
+        }
+
+        public void ToggleAutoRestart()
+        {
+            autoRestartBox.Selected = !autoRestartBox.Selected;
+            ToggleAutoRestart(autoRestartBox);
         }
 
         private bool ToggleAutoRestart(GUITickBox tickBox)
