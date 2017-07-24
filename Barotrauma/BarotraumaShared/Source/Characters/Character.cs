@@ -1434,14 +1434,7 @@ namespace Barotrauma
                 hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
             }
             
-            if (hullAvailableOxygen < OxygenAvailable)
-            {
-                OxygenAvailable -= Math.Max(deltaTime * 50.0f, oxygenAvailable - hullAvailableOxygen);
-            }
-            else
-            {
-                OxygenAvailable += Math.Min(deltaTime * 50.0f, hullAvailableOxygen - oxygenAvailable);
-            }
+            OxygenAvailable += MathHelper.Clamp(hullAvailableOxygen - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
         }
         partial void UpdateOxygenProjSpecific(float prevOxygen);
 
