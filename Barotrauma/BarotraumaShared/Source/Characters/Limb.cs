@@ -361,27 +361,28 @@ namespace Barotrauma
                     hitArmor = true;
                     totalArmorValue += wearable.WearableComponent.ArmorValue;
                 }
-            }
-            
-#if CLIENT
-            float bloodAmount = hitArmor || bleedingAmount <= 0.0f ? 0 : (int)Math.Min((int)(amount * 2.0f), 20);
+            }            
 
-            DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
-        
             if (hitArmor)
             {
                 totalArmorValue = Math.Max(totalArmorValue, 0.0f);
 
-                damageSoundType = DamageSoundType.LimbArmor;
                 amount = Math.Max(0.0f, amount - totalArmorValue);
                 bleedingAmount = Math.Max(0.0f, bleedingAmount - totalArmorValue);
             }
 
+#if CLIENT
             if (playSound)
             {
+                DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
+                if (hitArmor) 
+                {
+                    damageSoundType = DamageSoundType.LimbArmor;
+                } 
+
                 SoundPlayer.PlayDamageSound(damageSoundType, amount, position);
             }
-
+            
             float bloodParticleAmount = hitArmor || bleedingAmount <= 0.0f ? 0 : (int)Math.Min(amount / 5, 10);
             float bloodParticleSize = MathHelper.Clamp(amount / 50.0f, 0.1f, 1.0f);
 
