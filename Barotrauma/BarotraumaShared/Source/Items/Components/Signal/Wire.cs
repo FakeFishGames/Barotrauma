@@ -227,14 +227,17 @@ namespace Barotrauma.Items.Components
         {
             if (character == Character.Controlled && character.SelectedConstruction != null) return false;
 
-            if (newNodePos!= Vector2.Zero && nodes.Count>0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
+            if (newNodePos != Vector2.Zero && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
                 nodes.Add(newNodePos);
                 UpdateSections();
-
                 Drawable = true;
-
                 newNodePos = Vector2.Zero;
+
+                if (GameMain.Server != null)
+                {
+                    item.CreateServerEvent(this);
+                }
             }
             return true;
         }
