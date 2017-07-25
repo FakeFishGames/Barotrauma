@@ -143,14 +143,15 @@ namespace Barotrauma.Items.Components
 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
-            int[] wireCounts = new int[Connections.Count];
-            Wire[,] wires = new Wire[Connections.Count, Connection.MaxLinked];
+            List<Wire>[] wires = new List<Wire>[Connections.Count];
 
             //read wire IDs for each connection
             for (int i = 0; i < Connections.Count; i++)
             {
-                wireCounts[i] = msg.ReadRangedInteger(0, Connection.MaxLinked);
-                for (int j = 0; j < wireCounts[i]; j++)
+                wires[i] = new List<Wire>();
+
+                int wireCount = msg.ReadRangedInteger(0, Connection.MaxLinked);
+                for (int j = 0; j < wireCount; j++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
@@ -160,7 +161,7 @@ namespace Barotrauma.Items.Components
                     Wire wireComponent = wireItem.GetComponent<Wire>();
                     if (wireComponent != null)
                     {
-                        wires[i, j] = wireComponent;
+                        wires[i].Add(wireComponent);
                     }
                 }
             }
@@ -170,67 +171,82 @@ namespace Barotrauma.Items.Components
             //check if the character can access this connectionpanel 
             //and all the wires they're trying to connect
             if (!item.CanClientAccess(c)) return;
-            foreach (Wire wire in wires)
+            for (int i = 0; i < Connections.Count; i++)
             {
-                if (wire != null)
+                foreach (Wire wire in wires[i])
                 {
                     //wire not found in any of the connections yet (client is trying to connect a new wire)
                     //  -> we need to check if the client has access to it
                     if (!Connections.Any(connection => connection.Wires.Contains(wire)))
                     {
                         if (!wire.Item.CanClientAccess(c)) return;
-                    }
+                    }                    
                 }
             }
             
-            //update the connections
+            //go through existing wire links
             for (int i = 0; i < Connections.Count; i++)
             {
-                Wire[] prevWires = new Wire[Connections[i].Wires.Length];
-                Array.Copy(Connections[i].Wires, prevWires, prevWires.Length);
-
-                Connections[i].ClearConnections();
-
-                for (int j = 0; j < wireCounts[i]; j++)
+                for (int j = 0; j < Connection.MaxLinked; j++)
                 {
-                    if (wires[i, j] == null)
+                    Wire existingWire = Connections[i].Wires[j];
+                    if (existingWire == null) continue;
+                    
+                    //existing wire not in the list of new wires -> disconnect it
+                    if (!wires[i].Contains(existingWire))
                     {
-                        if (prevWires[j] != null)
+                        existingWire.RemoveConnection(item);
+
+                        if (existingWire.Connections[0] == null && existingWire.Connections[1] == null)
                         {
-                            if (prevWires[j].Connections[0] != null && prevWires[j].Connections[1] != null)
-                            {
-                                GameServer.Log(c.Character.Name + " disconnected a wire from " +
-                                    prevWires[j].Connections[0].Item.Name + " (" + prevWires[j].Connections[0].Name + ") to " +
-                                    prevWires[j].Connections[1].Item.Name + " (" + prevWires[j].Connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
-                            }
-                            else if (prevWires[j].Connections[0] != null)
-                            {
-                                GameServer.Log(c.Character.Name + " disconnected a wire from " +
-                                    prevWires[j].Connections[0].Item.Name + " (" + prevWires[j].Connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
-                            }
-                            else if (prevWires[j].Connections[1] != null)
-                            {
-                                GameServer.Log(c.Character.Name + " disconnected a wire from " +
-                                    prevWires[j].Connections[1].Item.Name + " (" + prevWires[j].Connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
-                            }
+                            GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                                Connections[i].Item.Name + " (" + Connections[i].Name + ")", ServerLog.MessageType.ItemInteraction);
                         }
-                        continue;
+                        else if (existingWire.Connections[0] != null)
+                        {
+                            GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                                Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[0].Item.Name + " (" + existingWire.Connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
+                        }
+                        else if (existingWire.Connections[1] != null)
+                        {
+                            GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                                Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
+                        }
+
+                        Connections[i].Wires[j] = null;
                     }
-
-                    //already connected, no need to do anything
-                    if (wires[i, j] == prevWires[j]) continue;
-
-                    Connections[i].Wires[j] = wires[i,j];
-                    wires[i, j].Connect(Connections[i], true);
-
-                    var otherConnection = Connections[i].Wires[j].OtherConnection(Connections[i]);
-
-                    GameServer.Log(item.Name + " rewired by " + c.Character.Name+ ": " +
-                        Connections[i].Name + " -> " +
-                        (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), ServerLog.MessageType.ItemInteraction);
+                    
                 }
             }
-            
+
+            //go through new wires
+            for (int i = 0; i < Connections.Count; i++)
+            {
+                foreach (Wire newWire in wires[i])
+                {
+                    //already connected, no need to do anything
+                    if (Connections[i].Wires.Contains(newWire)) continue;
+
+                    Connections[i].TryAddLink(newWire);
+                    newWire.Connect(Connections[i]);
+
+                    var otherConnection = newWire.OtherConnection(Connections[i]);
+
+                    if (otherConnection == null)
+                    {
+                        GameServer.Log(c.Character.Name + " connected a wire to " +
+                            Connections[i].Item.Name + " (" + Connections[i].Name + ")", 
+                            ServerLog.MessageType.ItemInteraction);
+                    }
+                    else
+                    {
+                        GameServer.Log(c.Character.Name + " connected a wire from " +
+                            Connections[i].Item.Name + " (" + Connections[i].Name + ") to " +
+                            (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), 
+                            ServerLog.MessageType.ItemInteraction);
+                    }
+                }
+            }
         }
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)

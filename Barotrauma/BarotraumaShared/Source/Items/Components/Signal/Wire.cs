@@ -304,18 +304,18 @@ namespace Barotrauma.Items.Components
             {
                 if (connections[0] != null && connections[1] != null)
                 {
-                    GameServer.Log(Character.Controlled.Name + " disconnected a wire from " + 
+                    GameServer.Log(user.Name + " disconnected a wire from " + 
                         connections[0].Item.Name + " (" + connections[0].Name + ") to "+
                         connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (connections[0] != null)
                 {
-                    GameServer.Log(Character.Controlled.Name + " disconnected a wire from " +
+                    GameServer.Log(user.Name + " disconnected a wire from " +
                         connections[0].Item.Name + " (" + connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (connections[1] != null)
                 {
-                    GameServer.Log(Character.Controlled.Name + " disconnected a wire from " +
+                    GameServer.Log(user.Name + " disconnected a wire from " +
                         connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
             }
