@@ -172,13 +172,17 @@ namespace Barotrauma.Items.Components
 
                         if (draggingConnected.Connect(this, !alreadyConnected, true))
                         {
-                            GameServer.Log(item.Name + " rewired by " + Character.Controlled.Name, ServerLog.MessageType.ItemInteraction);
-
                             var otherConnection = draggingConnected.OtherConnection(this);
-
-                            GameServer.Log(item.Name + " rewired by " + Character.Controlled.Name + ": " +
-                                Name + " -> " +
-                                (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), ServerLog.MessageType.ItemInteraction);
+                            if (otherConnection == null)
+                            {
+                                GameServer.Log(Character.Controlled + " connected a wire to " +
+                                    Item.Name + " (" + Name + ")", ServerLog.MessageType.ItemInteraction);
+                            }
+                            else
+                            {
+                                GameServer.Log(Character.Controlled + " connected a wire from " +
+                                    Item.Name + " (" + Name + ") to " + otherConnection.item.Name + " (" + otherConnection.Name + ")", ServerLog.MessageType.ItemInteraction);
+                            }
                             
                             Wires[index] = draggingConnected;
                         }
