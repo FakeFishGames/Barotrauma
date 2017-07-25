@@ -138,6 +138,14 @@ namespace Barotrauma
             }
         }
 
+        public static void DequeueMessages()
+        {
+            while (queuedMessages.Count > 0)
+            {
+                AddMessage(queuedMessages.Dequeue());
+            }
+        }
+
         private static void AddMessage(ColoredText msg)
         {
             //listbox not created yet, don't attempt to add
