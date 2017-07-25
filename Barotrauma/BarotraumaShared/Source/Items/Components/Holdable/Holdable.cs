@@ -99,8 +99,7 @@ namespace Barotrauma.Items.Components
                 prevMsg = Msg;
                 prevPickKey = PickKey;
                 prevRequiredItems = new List<RelatedItem>(requiredItems);
-
-                
+                                
                 if (item.Submarine != null)
                 {
                     if (item.Submarine.Loading)
@@ -110,7 +109,7 @@ namespace Barotrauma.Items.Components
                     }
                     else //the submarine is not being loaded, which means we're either in the sub editor or the item has been spawned mid-round
                     {
-                        if (Screen.Selected == GameMain.EditMapScreen && attachedByDefault)
+                        if (Screen.Selected == GameMain.EditMapScreen)
                         {
                             //in the sub editor, attach
                             AttachToWall();
