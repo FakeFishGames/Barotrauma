@@ -228,7 +228,7 @@ namespace Barotrauma.Items.Components
                     if (Connections[i].Wires.Contains(newWire)) continue;
 
                     Connections[i].TryAddLink(newWire);
-                    newWire.Connect(Connections[i]);
+                    newWire.Connect(Connections[i], true, true);
 
                     var otherConnection = newWire.OtherConnection(Connections[i]);
 
