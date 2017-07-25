@@ -120,6 +120,8 @@ namespace Barotrauma
 
         static void CrashDump(GameMain game, string filePath, Exception exception)
         {
+            DebugConsole.DequeueMessages();
+
             StreamWriter sw = new StreamWriter(filePath);
 
             StringBuilder sb = new StringBuilder();
