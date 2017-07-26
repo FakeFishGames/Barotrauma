@@ -717,12 +717,12 @@ namespace Barotrauma.Items.Components
             {
                 msg.Write(dockingTarget.item.ID);
 
-                if (hullIds[0] != null && hullIds[1] != null && gapId != null)
+                if (hulls[0] != null && hulls[1] != null && gap != null)
                 {
                     msg.Write(true);
-                    msg.Write((ushort)hullIds[0]);
-                    msg.Write((ushort)hullIds[1]);
-                    msg.Write((ushort)gapId);
+                    msg.Write(hulls[0].ID);
+                    msg.Write(hulls[1].ID);
+                    msg.Write(gap.ID);
                 }
                 else
                 {
