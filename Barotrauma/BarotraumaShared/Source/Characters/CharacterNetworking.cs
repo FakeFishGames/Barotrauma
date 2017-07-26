@@ -530,6 +530,8 @@ namespace Barotrauma
             }
             else
             {
+                this.isDead = false;
+
                 health = msg.ReadRangedSingle(minHealth, maxHealth, 8);
 
                 bool lowOxygen = msg.ReadBoolean();

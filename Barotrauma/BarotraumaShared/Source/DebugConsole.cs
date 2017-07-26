@@ -499,6 +499,7 @@ namespace Barotrauma
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
                         if (c.Character != revivedCharacter) continue;
+
                         //clients stop controlling the character when it dies, force control back
                         GameMain.Server.SetClientCharacter(c, revivedCharacter);
                         break;
@@ -620,7 +621,7 @@ namespace Barotrauma
                 }
 
                 string[] argsLeft = args.Take(separatorIndex).ToArray();
-                string[] argsRight = args.Skip(separatorIndex).ToArray();
+                string[] argsRight = args.Skip(separatorIndex + 1).ToArray();
 
                 string clientName = String.Join(" ", argsLeft);
 

@@ -1868,13 +1868,12 @@ namespace Barotrauma.Networking
             {
                 if (client.Character != null) //removing control of the current character
                 {
-                    newCharacter.IsRemotePlayer = false;
                     CreateEntityEvent(client.Character, new object[] { NetEntityEvent.Type.Control, null });
                     client.Character = null;
                 }
 
             }
-            else if (client.Character != newCharacter) //taking control of a new character
+            else //taking control of a new character
             {
                 newCharacter.ResetNetState();
                 newCharacter.LastNetworkUpdateID = client.Character.LastNetworkUpdateID;
