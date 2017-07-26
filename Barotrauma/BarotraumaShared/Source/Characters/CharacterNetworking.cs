@@ -144,18 +144,31 @@ namespace Barotrauma
                         cursorPosition = (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position)
                             + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 60.0f;
 
-                        var closestEntity = Entity.FindEntityByID(memInput[memInput.Count - 1].interact);
+                        //reset focus when attempting to use/select something
+                        if (memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Use) ||
+                            memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Select))
+                        {
+                            focusedItem = null;
+                            focusedCharacter = null;
+                        }
+                        var closestEntity = FindEntityByID(memInput[memInput.Count - 1].interact);
                         if (closestEntity is Item)
                         {
-                            focusedItem = (Item)closestEntity;
-                            focusedCharacter = null;
+                            if (CanInteractWith((Item)closestEntity))
+                            {
+                                focusedItem = (Item)closestEntity;
+                                focusedCharacter = null;
+                            }
                         }
                         else if (closestEntity is Character)
                         {
-                            focusedCharacter = (Character)closestEntity;
-                            focusedItem = null;
+                            if (CanInteractWith((Character)closestEntity))
+                            {
+                                focusedCharacter = (Character)closestEntity;
+                                focusedItem = null;
+                            }
                         }
-                        
+
                         memInput.RemoveAt(memInput.Count - 1);
 
                         TransformCursorPos();

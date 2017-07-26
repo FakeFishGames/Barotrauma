@@ -978,6 +978,16 @@ namespace Barotrauma
             return true;
         }
 
+        public bool CanInteractWith(Character c, float maxDist = 200.0f)
+        {
+            if (c == this || !c.enabled || c.info == null || !c.IsHumanoid || !c.CanBeSelected) return false;
+
+            maxDist = ConvertUnits.ToSimUnits(maxDist);
+            if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;
+
+            return true;
+        }
+        
         public bool CanInteractWith(Item item)
         {
             float distanceToItem;
@@ -993,6 +1003,14 @@ namespace Barotrauma
             if (item.ParentInventory != null)
             {
                 return CanAccessInventory(item.ParentInventory);
+            }
+
+            Wire wire = item.GetComponent<Wire>();
+            if (wire != null)
+            {
+                //wires are interactable if the character has selected either of the items the wire is connected to
+                if (wire.Connections[0]?.Item != null && selectedConstruction == wire.Connections[0].Item) return true;
+                if (wire.Connections[1]?.Item != null && selectedConstruction == wire.Connections[1].Item) return true;
             }
 
             if (item.InteractDistance == 0.0f && !item.Prefab.Triggers.Any()) return false;
@@ -1126,7 +1144,7 @@ namespace Barotrauma
             
             foreach (Character c in CharacterList)
             {
-                if (c == this || !c.enabled || c.info == null || !c.IsHumanoid || !c.CanBeSelected) continue;
+                if (!CanInteractWith(c)) continue;
 
                 float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
                 if (dist < maxDist*maxDist && (closestCharacter == null || dist < closestDist))
@@ -1212,7 +1230,8 @@ namespace Barotrauma
                 focusedCharacter = null;
                 return;
             }
-            if ((!isLocalPlayer && IsKeyHit(InputType.Select) && GameMain.Server == null) || (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)))
+            if ((!isLocalPlayer && IsKeyHit(InputType.Select) && GameMain.Server == null) || 
+                (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)))
             {
                 focusedCharacter = FindCharacterAtPosition(mouseSimPos);
                 focusedItem = FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.5f : 0.25f);
@@ -1222,6 +1241,10 @@ namespace Barotrauma
                     if (Vector2.DistanceSquared(mouseSimPos, focusedCharacter.SimPosition) > Vector2.DistanceSquared(mouseSimPos, focusedItem.SimPosition))
                     {
                         focusedCharacter = null;
+                    }
+                    else
+                    {
+                        focusedItem = null;
                     }
                 }
                 findFocusedTimer = 0.05f;
@@ -1241,7 +1264,10 @@ namespace Barotrauma
             }
             else if (focusedItem != null)
             {
-                focusedItem.IsHighlighted = true;
+                if (Controlled == this)
+                {
+                    focusedItem.IsHighlighted = true;
+                }
                 focusedItem.TryInteract(this);
             }
             else if (IsKeyHit(InputType.Select) && selectedConstruction != null)

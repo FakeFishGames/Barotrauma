@@ -9,11 +9,7 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character)
         {
             if (character != Character.Controlled || character != user) return;
-
-            if (Screen.Selected != GameMain.EditMapScreen &&
-                character.IsKeyHit(InputType.Select) &&
-                character.SelectedConstruction == this.item) character.SelectedConstruction = null;
-
+            
             if (HighlightedWire != null)
             {
                 HighlightedWire.Item.IsHighlighted = true;
