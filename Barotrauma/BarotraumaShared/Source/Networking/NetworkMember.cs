@@ -215,7 +215,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (PlayerInput.KeyHit(InputType.Chat) && chatMsgBox.Visible)
+            //tab doesn't autoselect the chatbox when debug console is open, 
+            //because tab is used for autocompleting console commands
+            if (PlayerInput.KeyHit(InputType.Chat) && chatMsgBox.Visible && !DebugConsole.IsOpen)
             {
                 if (chatMsgBox.Selected)
                 {
