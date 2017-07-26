@@ -262,7 +262,7 @@ namespace Barotrauma
 
             character.Info.CreateInfoFrame(previewPlayer);
 
-            if (GameMain.NetworkMember != null) GameMain.NetworkMember.SelectCrewCharacter(character, crewList);
+            if (GameMain.NetworkMember != null) GameMain.NetworkMember.SelectCrewCharacter(character, previewPlayer);
 
             return true;
         }

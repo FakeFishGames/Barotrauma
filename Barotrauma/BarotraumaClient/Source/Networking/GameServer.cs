@@ -162,11 +162,10 @@ namespace Barotrauma.Networking
             };
         }
 
-        public override bool SelectCrewCharacter(Character character, GUIComponent crewFrame)
+        public override bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
         {
             if (character == null) return false;
-
-            var characterFrame = crewFrame.FindChild("selectedcharacter");
+            
             if (character != myCharacter)
             {
                 var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, "", characterFrame);

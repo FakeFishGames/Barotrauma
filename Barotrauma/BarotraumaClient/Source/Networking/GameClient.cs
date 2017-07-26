@@ -1184,12 +1184,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override bool SelectCrewCharacter(Character character, GUIComponent crewFrame)
+        public override bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
         {
             if (character == null) return false;
-
-            var characterFrame = crewFrame.FindChild("selectedcharacter");
-
+            
             if (character != myCharacter)
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
