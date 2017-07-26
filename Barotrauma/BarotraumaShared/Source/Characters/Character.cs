@@ -21,11 +21,18 @@ namespace Barotrauma
         {
             get
             {
-                return enabled;
+                return enabled && !Removed;
             }
             set
             {
                 if (value == enabled) return;
+
+                if (Removed)
+                {
+                    enabled = false;
+                    return;
+                }
+
                 enabled = value;
 
                 foreach (Limb limb in AnimController.Limbs)
@@ -980,7 +987,7 @@ namespace Barotrauma
 
         public bool CanInteractWith(Character c, float maxDist = 200.0f)
         {
-            if (c == this || !c.enabled || c.info == null || !c.IsHumanoid || !c.CanBeSelected) return false;
+            if (c == this || !c.Enabled || c.info == null || !c.IsHumanoid || !c.CanBeSelected) return false;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;

@@ -474,18 +474,27 @@ namespace Barotrauma
             if (isDead)
             {
                 msg.Write((byte)causeOfDeath);
-                List<int> severedJointIndices = new List<int>();
-                for (int i = 0; i < AnimController.LimbJoints.Length; i++)
+
+                if (AnimController?.LimbJoints == null)
                 {
-                    if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
-                    {
-                        severedJointIndices.Add(i);
-                    }
+                    //0 limbs severed
+                    msg.Write((byte)0);
                 }
-                msg.Write((byte)severedJointIndices.Count);
-                foreach (int jointIndex in severedJointIndices)
+                else
                 {
-                    msg.Write((byte)jointIndex);
+                    List<int> severedJointIndices = new List<int>();
+                    for (int i = 0; i < AnimController.LimbJoints.Length; i++)
+                    {
+                        if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
+                        {
+                            severedJointIndices.Add(i);
+                        }
+                    }
+                    msg.Write((byte)severedJointIndices.Count);
+                    foreach (int jointIndex in severedJointIndices)
+                    {
+                        msg.Write((byte)jointIndex);
+                    }
                 }
             }
             else
