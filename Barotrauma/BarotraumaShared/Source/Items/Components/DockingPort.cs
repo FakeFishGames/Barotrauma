@@ -717,7 +717,7 @@ namespace Barotrauma.Items.Components
             {
                 msg.Write(dockingTarget.item.ID);
 
-                if (hulls[0] != null && hulls[1] != null && gap != null)
+                if (hulls != null && hulls[0] != null && hulls[1] != null && gap != null)
                 {
                     msg.Write(true);
                     msg.Write(hulls[0].ID);
