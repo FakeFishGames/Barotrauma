@@ -175,7 +175,7 @@ namespace Barotrauma.Items.Components
 
             }
 
-            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies);
+            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies, Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem);
 
             if (targetBody == null || targetBody.UserData == null) return;
 
