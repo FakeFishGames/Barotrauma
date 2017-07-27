@@ -1,4 +1,21 @@
 ---------------------------------------------------------------------------------------------------------
+v0.6.1.2
+---------------------------------------------------------------------------------------------------------
+
+- Dedicated servers can use autorestart.
+- Fixed dedicated servers ignoring armor.
+- Fixed console messages not appearing in the crash reports if the game crashes during loading.
+- Attachable items (buttons, electrical components, etc) are automatically attached to walls when placed 
+in the submarine editor.
+- Fixed crashing if no matching character is found when using the SetClientCharacter console command.
+- Fixed wires disconnecting from a connection panel when a player moves any of the wires.
+- Tab doesn't autoselect the chatbox when the debug console is open.
+- Fixed missing kick/ban buttons in the crew menu.
+- Fixed a bug that caused ID mismatches in the hulls between docking ports. This caused, for example,
+mysterious client-side fires around docking ports and "unknown object header" errors.
+
+
+---------------------------------------------------------------------------------------------------------
 v0.6.1.1
 ---------------------------------------------------------------------------------------------------------
 
