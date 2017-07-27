@@ -168,6 +168,7 @@ namespace Barotrauma
                                 controlled = this;
                                 IsRemotePlayer = false;
                                 GameMain.Client.Character = this;
+                                GameMain.LightManager.LosEnabled = true;
                             }
                             else if (controlled == this)
                             {
