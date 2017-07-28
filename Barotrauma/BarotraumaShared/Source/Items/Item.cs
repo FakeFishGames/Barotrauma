@@ -352,9 +352,7 @@ namespace Barotrauma
             tags                = new HashSet<string>();
                        
             rect = newRect;
-            
-            if (submarine==null || !submarine.Loading) FindHull();
-            
+                        
             condition = prefab.Health;
             lastSentCondition = prefab.Health;
 
@@ -420,6 +418,8 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            if (submarine == null || !submarine.Loading) FindHull();
 
             //cache connections into a dictionary for faster lookups
             var connectionPanel = GetComponent<ConnectionPanel>();
