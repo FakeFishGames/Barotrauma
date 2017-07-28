@@ -86,6 +86,13 @@ namespace Barotrauma
                         keys[(int)InputType.Use].Held = useInput;
                         keys[(int)InputType.Use].SetState(false, useInput);
 
+                        if (AnimController is HumanoidAnimController)
+                        {
+                            bool crouching = msg.ReadBoolean();
+                            keys[(int)InputType.Crouch].Held = crouching;
+                            keys[(int)InputType.Crouch].SetState(false, crouching);
+                        }
+
                         bool hasAttackLimb = msg.ReadBoolean();
                         if (hasAttackLimb)
                         {
