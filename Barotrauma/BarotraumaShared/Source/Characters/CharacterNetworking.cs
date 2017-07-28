@@ -424,6 +424,10 @@ namespace Barotrauma
 
                     tempBuffer.Write(aiming);
                     tempBuffer.Write(use);
+                    if (AnimController is HumanoidAnimController)
+                    {
+                        tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
+                    }
 
                     bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null);
                     tempBuffer.Write(hasAttackLimb);
