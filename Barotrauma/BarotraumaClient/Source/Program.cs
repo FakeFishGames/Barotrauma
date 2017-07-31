@@ -66,6 +66,8 @@ namespace Barotrauma
 
             if (e is SharpDX.SharpDXException)
             {
+                DebugConsole.NewMessage("SharpDX exception caught. (" + e.Message + "). Attempting to fix...", Microsoft.Xna.Framework.Color.Red);
+
                 switch ((uint)((SharpDX.SharpDXException)e).ResultCode.Code)
                 {
                     case 0x887A0022: //DXGI_ERROR_NOT_CURRENTLY_AVAILABLE
@@ -73,10 +75,12 @@ namespace Barotrauma
                         {
                             case 0:
                                 //just wait and try again
+                                DebugConsole.NewMessage("Retrying after 100 ms...", Microsoft.Xna.Framework.Color.Red);
                                 System.Threading.Thread.Sleep(100);
                                 return true;
                             case 1:
                                 //force focus to this window
+                                DebugConsole.NewMessage("Forcing focus to the window and retrying...", Microsoft.Xna.Framework.Color.Red);
                                 var myForm = (System.Windows.Forms.Form)System.Windows.Forms.Form.FromHandle(game.Window.Handle);
                                 myForm.Focus();
                                 return true;
@@ -94,10 +98,13 @@ namespace Barotrauma
                             
                         }
                     case 0x80070057: //E_INVALIDARG/Invalid Arguments
-                        DebugConsole.NewMessage("Invalid graphics settings, attempting to fix", Microsoft.Xna.Framework.Color.Red);
+                        DebugConsole.NewMessage("Invalid graphics settings, attempting to fix...", Microsoft.Xna.Framework.Color.Red);
 
                         GameMain.Config.GraphicsWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
                         GameMain.Config.GraphicsHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+
+                        DebugConsole.NewMessage("Display size set to " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight, Microsoft.Xna.Framework.Color.Red);
+
                         game.ApplyGraphicsSettings();
 
                         return true;
@@ -149,17 +156,37 @@ namespace Barotrauma
             sb.AppendLine("\n");
             sb.AppendLine("System info:");
             sb.AppendLine("    Operating system: " + System.Environment.OSVersion + (System.Environment.Is64BitOperatingSystem ? " 64 bit" : " x86"));
+            
+            if (game.GraphicsDevice == null)
+            {
+                sb.AppendLine("    Graphics device not set");
+            }
+            else
+            {
+                if (game.GraphicsDevice.Adapter == null)
+                {
+                    sb.AppendLine("    Graphics adapter not set");
+                }
+                else
+                {
+                    sb.AppendLine("    GPU name: " + game.GraphicsDevice.Adapter.Description);
+                    sb.AppendLine("    Display mode: " + game.GraphicsDevice.Adapter.CurrentDisplayMode);
+                }
+
+                sb.AppendLine("    GPU status: " + game.GraphicsDevice.GraphicsDeviceStatus);
+            }
+
             sb.AppendLine("\n");
-            sb.AppendLine("Exception: "+exception.Message);
-            sb.AppendLine("Target site: " +exception.TargetSite.ToString());
+            sb.AppendLine("Exception: " + exception.Message);
+            sb.AppendLine("Target site: " + exception.TargetSite.ToString());
             sb.AppendLine("Stack trace: ");
             sb.AppendLine(exception.StackTrace);
             sb.AppendLine("\n");
 
             sb.AppendLine("Last debug messages:");
-            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i-- )
+            for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
             {
-                sb.AppendLine("   "+DebugConsole.Messages[i].Time+" - "+DebugConsole.Messages[i].Text);
+                sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
             }
 
 

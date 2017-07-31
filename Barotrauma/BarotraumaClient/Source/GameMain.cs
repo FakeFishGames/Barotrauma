@@ -142,11 +142,14 @@ namespace Barotrauma
             GraphicsHeight = Config.GraphicsHeight;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
 
-            //for whatever reason, window isn't centered automatically
-            //since MonoGame 3.6 (nuget package might be broken), so
-            //let's do it manually
-            Window.Position = new Point((GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - GraphicsWidth) / 2,
-                                        (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - GraphicsHeight) / 2);
+            if (Config.WindowMode == WindowMode.Windowed)
+            {
+                //for whatever reason, window isn't centered automatically
+                //since MonoGame 3.6 (nuget package might be broken), so
+                //let's do it manually
+                Window.Position = new Point((GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - GraphicsWidth) / 2,
+                                            (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - GraphicsHeight) / 2);
+            }
 
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
 
