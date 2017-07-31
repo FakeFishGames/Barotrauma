@@ -1,4 +1,17 @@
 ---------------------------------------------------------------------------------------------------------
+v0.6.1.3
+---------------------------------------------------------------------------------------------------------
+
+- Fixed hulls not being rendered in the submarine editor.
+- Crouching is synced between the server and the clients.
+- Plasma cutters and welding tools ignore platforms and stairs - placing a platform on a wall doesn't 
+prevent welding/cutting the wall anymore.
+- Using the SetClientCharacter console command forces the client's line of sight effect back on.
+- Fixed null reference exceptions when syncing docking ports that haven't been docked to anything.
+- Fixed invisible diving suits in some of the respawn shuttles (specifically ones where the suits spawn
+directly on the floor).
+
+---------------------------------------------------------------------------------------------------------
 v0.6.1.2
 ---------------------------------------------------------------------------------------------------------
 
@@ -13,7 +26,6 @@ in the submarine editor.
 - Fixed missing kick/ban buttons in the crew menu.
 - Fixed a bug that caused ID mismatches in the hulls between docking ports. This caused, for example,
 mysterious client-side fires around docking ports and "unknown object header" errors.
-
 
 ---------------------------------------------------------------------------------------------------------
 v0.6.1.1
