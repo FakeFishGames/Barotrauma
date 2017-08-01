@@ -1876,7 +1876,10 @@ namespace Barotrauma.Networking
             else //taking control of a new character
             {
                 newCharacter.ResetNetState();
-                newCharacter.LastNetworkUpdateID = client.Character.LastNetworkUpdateID;
+                if (client.Character != null)
+                {
+                    newCharacter.LastNetworkUpdateID = client.Character.LastNetworkUpdateID;
+                }
 
                 newCharacter.IsRemotePlayer = true;
                 newCharacter.Enabled = true;
@@ -1936,12 +1939,12 @@ namespace Barotrauma.Networking
                 {
                     assignedClientCount[GameMain.NetLobbyScreen.JobPreferences[0]] = 1;                
                 }
-                else if (myCharacter != null && !myCharacter.IsDead)
+                else if (myCharacter?.Info?.Job != null && !myCharacter.IsDead)
                 {
                     assignedClientCount[myCharacter.Info.Job.Prefab] = 1;  
                 }
             }
-            else if (myCharacter != null && !myCharacter.IsDead && myCharacter.TeamID == teamID)
+            else if (myCharacter?.Info?.Job != null && !myCharacter.IsDead && myCharacter.TeamID == teamID)
             {
                 assignedClientCount[myCharacter.Info.Job.Prefab]++;
             }
@@ -1950,7 +1953,7 @@ namespace Barotrauma.Networking
             foreach (Client c in connectedClients)
             {
                 if (c.TeamID != teamID || unassigned.Contains(c)) continue;
-                if (c.Character != null && !c.Character.IsDead)
+                if (c.Character?.Info?.Job != null && !c.Character.IsDead)
                 {
                     assignedClientCount[c.Character.Info.Job.Prefab]++;
                 }
