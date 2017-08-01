@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
-            jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, 3));
+            jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
 
             entityEventLastSent = new Dictionary<UInt16, float>();
         }
@@ -135,7 +135,7 @@ namespace Barotrauma.Networking
                 name = name.Substring(0, 20);
             }
             string rName = "";
-            for (int i=0;i<name.Length;i++)
+            for (int i = 0; i < name.Length; i++)
             {
                 if (name[i] < 32)
                 {

@@ -1921,7 +1921,11 @@ namespace Barotrauma.Networking
         {
             unassigned = new List<Client>(unassigned);
             
-            int[] assignedClientCount = new int[JobPrefab.List.Count];
+            Dictionary<JobPrefab, int> assignedClientCount = new Dictionary<JobPrefab, int>();
+            foreach (JobPrefab jp in JobPrefab.List)
+            {
+                assignedClientCount.Add(jp, 0);
+            }
 
             int teamID = 0;
             if (unassigned.Count > 0) teamID = unassigned[0].TeamID;
@@ -1930,16 +1934,16 @@ namespace Barotrauma.Networking
             {
                 if (characterInfo != null)
                 {
-                    assignedClientCount[JobPrefab.List.FindIndex(jp => jp == GameMain.NetLobbyScreen.JobPreferences[0])] = 1;                
+                    assignedClientCount[GameMain.NetLobbyScreen.JobPreferences[0]] = 1;                
                 }
                 else if (myCharacter != null && !myCharacter.IsDead)
                 {
-                    assignedClientCount[JobPrefab.List.IndexOf(myCharacter.Info.Job.Prefab)] = 1;  
+                    assignedClientCount[myCharacter.Info.Job.Prefab] = 1;  
                 }
             }
             else if (myCharacter != null && !myCharacter.IsDead && myCharacter.TeamID == teamID)
             {
-                assignedClientCount[JobPrefab.List.IndexOf(myCharacter.Info.Job.Prefab)]++;
+                assignedClientCount[myCharacter.Info.Job.Prefab]++;
             }
 
             //count the clients who already have characters with an assigned job
@@ -1948,7 +1952,7 @@ namespace Barotrauma.Networking
                 if (c.TeamID != teamID || unassigned.Contains(c)) continue;
                 if (c.Character != null && !c.Character.IsDead)
                 {
-                    assignedClientCount[JobPrefab.List.IndexOf(c.Character.Info.Job.Prefab)]++;
+                    assignedClientCount[c.Character.Info.Job.Prefab]++;
                 }
             }
 
@@ -1965,39 +1969,56 @@ namespace Barotrauma.Networking
             while (unassignedJobsFound && unassigned.Count > 0)
             {
                 unassignedJobsFound = false;
-                for (int i = 0; i < JobPrefab.List.Count; i++)
+
+                foreach (JobPrefab jobPrefab in JobPrefab.List)
                 {
                     if (unassigned.Count == 0) break;
-                    if (JobPrefab.List[i].MinNumber < 1 || assignedClientCount[i] >= JobPrefab.List[i].MinNumber) continue;
+                    if (jobPrefab.MinNumber < 1 || assignedClientCount[jobPrefab] >= jobPrefab.MinNumber) continue;
 
                     //find the client that wants the job the most, or force it to random client if none of them want it
-                    Client assignedClient = FindClientWithJobPreference(unassigned, JobPrefab.List[i], true);
+                    Client assignedClient = FindClientWithJobPreference(unassigned, jobPrefab, true);
 
-                    assignedClient.assignedJob = JobPrefab.List[i];
-
-                    assignedClientCount[i]++;
+                    assignedClient.assignedJob = jobPrefab;
+                    assignedClientCount[jobPrefab]++;
                     unassigned.Remove(assignedClient);
 
                     //the job still needs more crew members, set unassignedJobsFound to true to keep the while loop running
-                    if (assignedClientCount[i] < JobPrefab.List[i].MinNumber) unassignedJobsFound = true;
+                    if (assignedClientCount[jobPrefab] < jobPrefab.MinNumber) unassignedJobsFound = true;
                 }
             }
-            
+
             //find a suitable job for the rest of the players
-            for (int i = unassigned.Count - 1; i >= 0; i--)
+            foreach (Client c in unassigned)
             {
-                for (int preferenceIndex = 0; preferenceIndex < 3; preferenceIndex++)
+                foreach (JobPrefab preferredJob in c.jobPreferences)
                 {
-                    int jobIndex = JobPrefab.List.FindIndex(jp => jp == unassigned[i].jobPreferences[preferenceIndex]);
+                    //the maximum number of players that can have this job hasn't been reached yet
+                    // -> assign it to the client
+                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber)
+                    {
+                        c.assignedJob = preferredJob;
+                        assignedClientCount[preferredJob]++;
+                        break;
+                    }
+                    //none of the jobs the client prefers are available anymore
+                    else if (preferredJob == c.jobPreferences.Last())
+                    {
+                        //find all jobs that are still available
+                        var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[preferredJob] < jp.MaxNumber);
 
-                    //if there's enough crew members assigned to the job already, continue
-                    if (assignedClientCount[jobIndex] >= JobPrefab.List[jobIndex].MaxNumber) continue;
-
-                    unassigned[i].assignedJob = JobPrefab.List[jobIndex];
-
-                    assignedClientCount[jobIndex]++;
-                    unassigned.RemoveAt(i);
-                    break;
+                        //all jobs taken, give a random job
+                        if (remainingJobs.Count == 0)
+                        {
+                            DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
+                            c.assignedJob = JobPrefab.List[Rand.Range(0, JobPrefab.List.Count)];
+                            assignedClientCount[c.assignedJob]++;
+                        }
+                        else //some jobs still left, choose one of them by random
+                        {
+                            c.assignedJob = remainingJobs[Rand.Range(0, remainingJobs.Count)];
+                            assignedClientCount[c.assignedJob]++;
+                        }
+                    }
                 }
             }
         }
