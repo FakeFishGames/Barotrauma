@@ -361,6 +361,8 @@ namespace Barotrauma
             
             properties = ObjectProperty.InitProperties(this, element);
 
+            if (submarine == null || !submarine.Loading) FindHull();
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -419,7 +421,10 @@ namespace Barotrauma
                 }
             }
 
-            if (submarine == null || !submarine.Loading) FindHull();
+            if (body != null)
+            {
+                body.Submarine = submarine;
+            }
 
             //cache connections into a dictionary for faster lookups
             var connectionPanel = GetComponent<ConnectionPanel>();
