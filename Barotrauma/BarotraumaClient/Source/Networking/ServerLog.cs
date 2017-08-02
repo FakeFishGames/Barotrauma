@@ -49,6 +49,8 @@ namespace Barotrauma.Networking
                     return true;
                 };
 
+                tickBox.Selected = !msgTypeHidden[(int)msgType];
+
                 y += 20;
             }
 
@@ -58,6 +60,7 @@ namespace Barotrauma.Networking
             {
                 AddLine(line);
             }
+            FilterMessages();
 
             listBox.UpdateScrollBarSize();
 
