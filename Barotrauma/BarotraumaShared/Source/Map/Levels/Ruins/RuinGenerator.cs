@@ -60,9 +60,9 @@ namespace Barotrauma.RuinGeneration
         }
 
          /// <summary>
-        /// Goes through a list of line segments and "clips off" all parts of the lines that are inside the rectangle
+        /// Goes through all the walls of the ruin shape and clips off parts that are inside the rectangle
         /// </summary>
-        public void SplitLines(Rectangle rectangle)
+        public void SplitWalls(Rectangle rectangle)
         {
             List<Line> newLines = new List<Line>();
 
@@ -76,7 +76,8 @@ namespace Barotrauma.RuinGeneration
                     {
                         newLines.Add(line);
                     }
-                    else if (line.A.Y > rectangle.Y && line.B.Y < rectangle.Bottom)
+                    //line completely inside the rectangle, no need to create a wall at all
+                    else if (line.A.Y >= rectangle.Y && line.B.Y <= rectangle.Bottom)
                     {
                         continue;
                     }
@@ -106,7 +107,7 @@ namespace Barotrauma.RuinGeneration
 
                         newLines.Add(line);
                     }
-                    else if (line.A.X > rectangle.X && line.B.X < rectangle.Right)
+                    else if (line.A.X >= rectangle.X && line.B.X <= rectangle.Right)
                     {
                         continue;
                     }
@@ -256,7 +257,7 @@ namespace Barotrauma.RuinGeneration
             {
                 foreach (Corridor corridor in corridors)
                 {
-                    leaf.SplitLines(corridor.Rect);
+                    leaf.SplitWalls(corridor.Rect);
                 }
 
                 walls.AddRange(leaf.Walls);
@@ -269,13 +270,13 @@ namespace Barotrauma.RuinGeneration
 
                 foreach (BTRoom leaf in rooms)
                 {
-                    corridor.SplitLines(leaf.Rect);
+                    corridor.SplitWalls(leaf.Rect);
                 }
 
                 foreach (Corridor corridor2 in corridors)
                 {
                     if (corridor == corridor2) continue;
-                    corridor.SplitLines(corridor2.Rect);
+                    corridor.SplitWalls(corridor2.Rect);
                 }
 
 
