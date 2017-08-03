@@ -360,9 +360,19 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             bool isAttached = msg.ReadBoolean();
+
+            if (!attachable)
+            {
+                DebugConsole.ThrowError("Received an attachment event for an item that's not attachable.");
+                return;
+            }
+
             if (isAttached)
             {
-                item.Drop();
+                if (item.ParentInventory != null)
+                {
+                    item.ParentInventory.RemoveItem(item);
+                }
                 AttachToWall();
             }
             else
