@@ -377,11 +377,11 @@ namespace Barotrauma
 
                 for (int i = 0; i < msgCount; i++)
                 {
-                    if (GameMain.Client != null)
+                    if (GameMain.Server != null)
                     {
                         GameMain.Server.SendChatMessage(ToolBox.RandomSeed(msgLength), ChatMessageType.Default);
                     }
-                    else
+                    else if (GameMain.Client != null)
                     {
                         GameMain.Client.SendChatMessage(ToolBox.RandomSeed(msgLength));
                     }
