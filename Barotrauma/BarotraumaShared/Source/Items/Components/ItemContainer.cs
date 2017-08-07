@@ -162,7 +162,7 @@ namespace Barotrauma.Items.Components
             foreach (Pair<Item, StatusEffect> itemAndEffect in itemsWithStatusEffects)
             {
                 Item contained = itemAndEffect.First;
-                if (contained.Condition < 0.0f) continue;
+                if (contained.Condition <= 0.0f) continue;
 
                 StatusEffect effect = itemAndEffect.Second;
 
