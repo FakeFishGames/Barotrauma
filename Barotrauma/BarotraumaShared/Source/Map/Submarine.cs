@@ -306,10 +306,13 @@ namespace Barotrauma
             Rectangle dockedBorders = Borders;
             dockedBorders.Y -= dockedBorders.Height;
 
-            foreach (Submarine dockedSub in DockedTo)
+            var connectedSubs = GetConnectedSubs();
+
+            foreach (Submarine dockedSub in connectedSubs)
             {
-                Vector2 diff = dockedSub.Submarine == this ? dockedSub.WorldPosition : dockedSub.WorldPosition - WorldPosition;
-                    
+                if (dockedSub == this) continue;
+
+                Vector2 diff = dockedSub.Submarine == this ? dockedSub.WorldPosition : dockedSub.WorldPosition - WorldPosition;                    
 
                 Rectangle dockedSubBorders = dockedSub.Borders;
                 dockedSubBorders.Y -= dockedSubBorders.Height;
@@ -320,6 +323,29 @@ namespace Barotrauma
 
             dockedBorders.Y += dockedBorders.Height;
             return dockedBorders;
+        }
+
+        /// <summary>
+        /// Returns a list of all submarines that are connected to this one via docking ports.
+        /// </summary>
+        public List<Submarine> GetConnectedSubs()
+        {
+            List<Submarine> connectedSubs = new List<Submarine>();
+            connectedSubs.Add(this);
+            GetConnectedSubsRecursive(connectedSubs);
+
+            return connectedSubs;
+        }
+
+        private void GetConnectedSubsRecursive(List<Submarine> subs)
+        {
+            foreach (Submarine dockedSub in DockedTo)
+            {
+                if (subs.Contains(dockedSub)) continue;
+
+                subs.Add(dockedSub);
+                dockedSub.GetConnectedSubsRecursive(subs);
+            }
         }
 
         public Vector2 FindSpawnPos(Vector2 spawnPos)

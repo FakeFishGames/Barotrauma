@@ -193,12 +193,11 @@ namespace Barotrauma
                 Body.CorrectPosition(memPos, deltaTime, out newVelocity, out newPosition);
                 Vector2 moveAmount = ConvertUnits.ToDisplayUnits(newPosition - Body.SimPosition);
 
-                List<Submarine> subsToMove = new List<Submarine>() { this.submarine };
-                subsToMove.AddRange(submarine.DockedTo);
-
-                foreach (Submarine dockedSub in submarine.DockedTo)
+                List<Submarine> subsToMove = submarine.GetConnectedSubs();
+                foreach (Submarine dockedSub in subsToMove)
                 {
-                    //clear the position buffer of the docked sub to prevent unnecessary position corrections
+                    if (dockedSub == submarine) continue;
+                    //clear the position buffer of the docked subs to prevent unnecessary position corrections
                     dockedSub.SubBody.memPos.Clear();
                 }
 
@@ -213,7 +212,6 @@ namespace Barotrauma
                 }
 
                 bool displace = moveAmount.Length() > 100.0f;
-
                 foreach (Submarine sub in subsToMove)
                 {
                     sub.PhysicsBody.SetTransform(sub.PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(moveAmount), 0.0f);
