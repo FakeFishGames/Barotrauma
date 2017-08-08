@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
-            if (character == null) return false;
+            if (character == null || character.LockHands) return false;
 
             character.AnimController.Anim = AnimController.Animation.Climbing;
             //picker.SelectedConstruction = item;
