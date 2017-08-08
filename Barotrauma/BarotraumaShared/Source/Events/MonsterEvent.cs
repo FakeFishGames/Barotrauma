@@ -73,7 +73,7 @@ namespace Barotrauma
         {
             base.Init();
 
-            SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server));
+            monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server));
         }
 
         private Character[] SpawnMonsters(int amount)
@@ -90,7 +90,7 @@ namespace Barotrauma
             {
                 spawnPos.X += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
                 spawnPos.Y += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
-                monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null);
+                monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null, true, false);
             }
 
             return monsters;
@@ -103,13 +103,7 @@ namespace Barotrauma
                 Finished();
                 return;
             }
-
-            if (monsters == null)
-            {
-                monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server));
-                return;
-            }
-
+            
             if (repeat)
             {
                 //clients aren't allowed to spawn more monsters mid-round
