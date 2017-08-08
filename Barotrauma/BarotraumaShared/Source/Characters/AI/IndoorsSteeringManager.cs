@@ -137,9 +137,10 @@ namespace Barotrauma
 
             }
 
-            if (currentPath.CurrentNode!= null && currentPath.CurrentNode.Ladders!=null)
+            if (currentPath.CurrentNode != null && currentPath.CurrentNode.Ladders != null)
             {
-                if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item && currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
+                if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item &&
+                    currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
                 {
                     currentPath.CurrentNode.Ladders.Item.TryInteract(character, false, true);
                 }
