@@ -22,13 +22,14 @@ namespace Barotrauma
             : base(element, locations)
         {
             monsterFile = ToolBox.GetAttributeString(element, "monsterfile", "");
-        }
 
+        }
+        
         public override void Start(Level level)
         {
             Vector2 spawnPos = Level.Loaded.GetRandomInterestingPosition(true, Level.PositionType.MainPath, true);
 
-            monster = Character.Create(monsterFile, spawnPos, null, GameMain.Client != null);
+            monster = Character.Create(monsterFile, spawnPos, null, GameMain.Client != null, true, false);
             monster.Enabled = false;
             radarPosition = spawnPos;
         }

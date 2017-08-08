@@ -450,7 +450,7 @@ namespace Barotrauma
             return Create(characterInfo.File, position, characterInfo, isRemotePlayer, hasAi);
         }
 
-        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi=true)
+        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi=true, bool createNetworkEvent = true)
         {
 #if LINUX
             if (!System.IO.File.Exists(file)) 
@@ -508,8 +508,10 @@ namespace Barotrauma
                 newCharacter.minHealth = -100.0f;
             }
 
-            if (GameMain.Server != null && Entity.Spawner != null)
-                Entity.Spawner.CreateNetworkEvent(newCharacter, false);
+            if (GameMain.Server != null && Spawner != null && createNetworkEvent)
+            {
+                Spawner.CreateNetworkEvent(newCharacter, false);
+            }
 
             return newCharacter;
         }
