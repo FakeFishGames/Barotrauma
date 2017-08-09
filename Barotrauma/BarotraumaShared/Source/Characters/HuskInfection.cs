@@ -1,4 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 
@@ -140,13 +142,22 @@ namespace Barotrauma
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.Client != null) return;
+            
+            //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
+            CoroutineManager.StartCoroutine(CreateAIHusk(character));
+        }
+
+        private IEnumerable<object> CreateAIHusk(Character character)
+        {
+            character.Enabled = false;
+            Entity.Spawner.AddToRemoveQueue(character);
 
             var husk = Character.Create(
                 Path.Combine("Content", "Characters", "Human", "humanhusk.xml"),
                 character.WorldPosition,
-                character.Info, 
+                character.Info,
                 false, true);
-            
+
             foreach (Limb limb in husk.AnimController.Limbs)
             {
                 if (limb.type == LimbType.None)
@@ -155,18 +166,21 @@ namespace Barotrauma
                     continue;
                 }
 
-                var matchingLimb = character.AnimController.GetLimb(limb.type);                
-                limb.body.SetTransform(matchingLimb.SimPosition, matchingLimb.Rotation);
+                var matchingLimb = character.AnimController.GetLimb(limb.type);
+                if (matchingLimb?.body != null)
+                {
+                    limb.body.SetTransform(matchingLimb.SimPosition, matchingLimb.Rotation);
+                    limb.body.LinearVelocity = matchingLimb.LinearVelocity;
+                    limb.body.AngularVelocity = matchingLimb.body.AngularVelocity;
+                }
             }
-
             for (int i = 0; i < character.Inventory.Items.Length; i++)
             {
                 if (character.Inventory.Items[i] == null) continue;
                 husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, null);
             }
-            
-            character.Enabled = false;
-            Entity.Spawner.AddToRemoveQueue(character);
+
+            yield return CoroutineStatus.Success;
         }
     }
 }
