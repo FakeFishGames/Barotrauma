@@ -1,4 +1,26 @@
 ---------------------------------------------------------------------------------------------------------
+v0.6.1.4
+---------------------------------------------------------------------------------------------------------
+
+- Plasma cutters can cut alien ruins again.
+- Fixed reactors staying operational after the fuel rods run out.
+- Fixed spawning items at the cursor via the debug console.
+- Fixed job assignment logic causing crashes if the maximum amount of players per job has been reached
+on the top 3 preferences of a client (which can happen on modded servers that have several jobs with a 
+player limit).
+- Fixed errors during job assignment if a client or the host is controlling a non-human character.
+- The server log menu remembers the state of the filters when toggling it.
+- Fixed level generation errors in some specific seeds that caused the game to create ruin walls with
+a negative width/height (example seed: cBLgZ2im).
+- Fixed a submarine position syncing issue that caused erratic physics behavior on some specific 
+multi-part subs, because the game only moved one part of the sub and the parts docked to it, not taking
+into account that more parts may be docked to the docked parts.
+- Handcuffed AI characters can't climb ladders.
+- Fixed crashing when a huskified human is killed by an explosion.
+- Added some GPU info to the crash reports and extra debug logging to hopefully diagnose the 
+SharpDXExceptions during startup.
+
+---------------------------------------------------------------------------------------------------------
 v0.6.1.3
 ---------------------------------------------------------------------------------------------------------
 
