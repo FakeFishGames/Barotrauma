@@ -1,5 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -74,6 +76,19 @@ namespace Barotrauma
             return UseItemOnSelf(slotIndex);
         }
 
+
+        protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
+        {
+            base.PutItem(item, i, user, removeItem, createNetworkEvent);
+            CreateSlots();
+        }
+
+        public override void RemoveItem(Item item)
+        {
+            base.RemoveItem(item);
+            CreateSlots();
+        }
+
         protected override void CreateSlots()
         {
             if (slots == null) slots = new InventorySlot[capacity];
@@ -96,6 +111,110 @@ namespace Barotrauma
             }
 
             MergeSlots();
+        }
+
+
+        public override void Update(float deltaTime, bool subInventory = false)
+        {
+            base.Update(deltaTime);
+
+            if (doubleClickedItem != null)
+            {
+                bool wasPut = false;
+
+                if (doubleClickedItem.ParentInventory != this)
+                {
+                    wasPut = TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots, true);
+                }
+                else
+                {
+                    var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
+                    if (selectedContainer != null && selectedContainer.Inventory != null)
+                    {
+                        wasPut = selectedContainer.Inventory.TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots, true);
+                    }
+                    else if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                    {
+                        wasPut = character.SelectedCharacter.Inventory.TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots, true);
+                    }
+                    else //doubleclicked and no other inventory is selected
+                    {
+                        //not equipped -> attempt to equip
+                        if (IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
+                        {
+                            wasPut = TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots.FindAll(i => i != InvSlotType.Any), true);
+                        }
+                        //equipped -> attempt to unequip
+                        else if (doubleClickedItem.AllowedSlots.Contains(InvSlotType.Any))
+                        {
+                            wasPut = TryPutItem(doubleClickedItem, Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                        }
+                    }
+                }
+
+                GUI.PlayUISound(wasPut ? GUISoundType.PickItem : GUISoundType.PickItemFail);
+            }
+
+            if (selectedSlot > -1)
+            {
+                UpdateSubInventory(deltaTime, selectedSlot);
+            }
+            
+            if (character == Character.Controlled)
+            {
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (selectedSlot != i &&
+                        Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
+                    {
+                        //-3 because selected items are in slots 3 and 4 (hands)
+                        useOnSelfButton[i - 3].Update(deltaTime);
+                    }
+                }
+            }
+
+            //cancel dragging if too far away from the container of the dragged item
+            if (draggingItem != null)
+            {
+                var rootContainer = draggingItem.GetRootContainer();
+                var rootInventory = draggingItem.ParentInventory;
+
+                if (rootContainer != null)
+                {
+                    rootInventory = rootContainer.ParentInventory != null ?
+                        rootContainer.ParentInventory : rootContainer.GetComponent<Items.Components.ItemContainer>().Inventory;
+                }
+
+                if (rootInventory != null &&
+                    rootInventory.Owner != Character.Controlled &&
+                    rootInventory.Owner != Character.Controlled.SelectedConstruction &&
+                    rootInventory.Owner != Character.Controlled.SelectedCharacter)
+                {
+                    draggingItem = null;
+                }
+            }
+
+
+            doubleClickedItem = null;
+        }
+
+        private void MergeSlots()
+        {
+            for (int i = 0; i < capacity - 1; i++)
+            {
+                if (slots[i].Disabled || Items[i] == null) continue;
+
+                for (int n = i + 1; n < capacity; n++)
+                {
+                    if (Items[n] == Items[i])
+                    {
+                        slots[i].Rect = Rectangle.Union(slots[i].Rect, slots[n].Rect);
+                        slots[n].Disabled = true;
+                    }
+                }
+            }
+
+            selectedSlot = -1;
         }
 
         public void DrawOwn(SpriteBatch spriteBatch)

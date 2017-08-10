@@ -2,52 +2,17 @@
 using Barotrauma.Networking;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
-    partial class InventorySlot
-    {
-        public Rectangle Rect;
-        
-        public bool Disabled;
-
-        public InventorySlot(Rectangle rect)
-        {
-            Rect = rect;
-
-#if CLIENT
-            State = GUIComponent.ComponentState.None;
-
-            Color = Color.White * 0.4f;
-#endif
-        }
-
-    }
-
     partial class Inventory : IServerSerializable, IClientSerializable
     {
-        public static InventorySlot draggingSlot;
-        public static Item draggingItem;
-
-        public static Item doubleClickedItem;
-
         public readonly Entity Owner;
-        
-        private int slotsPerRow;
-
-        public int SlotsPerRow
-        {
-            set { slotsPerRow = Math.Max(1, value); }
-        }
 
         protected int capacity;
 
-        protected int selectedSlot = -1;
-
-        protected InventorySlot[] slots;
         public Item[] Items;
 
         private bool isSubInventory;
@@ -58,49 +23,19 @@ namespace Barotrauma
         private float syncItemsDelay;
         private CoroutineHandle syncItemsCoroutine;
 
-        private Vector2 centerPos;
-
-        public Vector2 CenterPos
-        {
-            get { return centerPos; }
-            set 
-            { 
-                centerPos = value;
-#if CLIENT
-                centerPos.X *= GameMain.GraphicsWidth;
-                centerPos.Y *= GameMain.GraphicsHeight;
-#endif
-            }
-        }
-
-        private Vector2 drawOffset;
-        public Vector2 DrawOffset
-        {
-            get
-            {
-                return drawOffset;
-            }
-
-            set
-            {
-                if (value == drawOffset) return;
-
-                drawOffset = value;
-                CreateSlots();
-            } 
-        }
-
         public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow=5)
         {
             this.capacity = capacity;
 
             this.Owner = owner;
 
-            this.slotsPerRow = slotsPerRow;
 
             Items = new Item[capacity];
 
+#if CLIENT
+            this.slotsPerRow = slotsPerRow;
             CenterPos = (centerPos==null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
+#endif
         }
 
         public int FindIndex(Item item)
@@ -225,155 +160,7 @@ namespace Barotrauma
                 item.ParentInventory = null;                
             }
         }
-                
-        protected virtual void CreateSlots()
-        {
-            slots = new InventorySlot[capacity];
-
-            int rectWidth = 40, rectHeight = 40;
-            int spacing = 10;
-
-            int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
-
-            int startX = (int)centerPos.X - (rectWidth * slotsPerRow + spacing * (slotsPerRow - 1)) / 2;
-            int startY = (int)centerPos.Y - rows * (spacing + rectHeight);
-
-            Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
-            for (int i = 0; i < capacity; i++)
-            {
-                slotRect.X = startX + (rectWidth + spacing) * (i % slotsPerRow) + (int)DrawOffset.X;
-                slotRect.Y = startY + (rectHeight + spacing) * ((int)Math.Floor((double)i / slotsPerRow)) + (int)DrawOffset.Y;
-
-                slots[i] = new InventorySlot(slotRect);
-            }
-        }
-
-        public virtual void Update(float deltaTime, bool subInventory = false)
-        {
-            syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
-
-            if (slots == null || isSubInventory != subInventory)
-            {
-                CreateSlots();
-                isSubInventory = subInventory;
-            }
-
-            for (int i = 0; i < capacity; i++)
-            {
-                if (slots[i].Disabled) continue;
-                UpdateSlot(slots[i], i, Items[i], false);
-            }
-
-
-            if (draggingItem != null &&
-                (draggingSlot == null || (!draggingSlot.Rect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
-            {
-                if (!PlayerInput.LeftButtonHeld())
-                {
-                    CreateNetworkEvent();
-
-                    draggingItem.Drop();
-                }
-            }
-
-        }
-
-        protected void UpdateSlot(InventorySlot slot, int slotIndex, Item item, bool isSubSlot)
-        {
-            bool mouseOn = slot.Rect.Contains(PlayerInput.MousePosition) && !Locked;
-
-#if CLIENT
-            slot.State = GUIComponent.ComponentState.None;
-#endif
-
-            if (!(this is CharacterInventory) && !mouseOn && selectedSlot==slotIndex)
-            {
-                selectedSlot = -1;
-            }
-
-            if (mouseOn && 
-                (draggingItem!=null || selectedSlot==slotIndex || selectedSlot==-1))
-            {
-#if CLIENT
-                slot.State = GUIComponent.ComponentState.Hover;
-#endif
-
-                if (!isSubSlot && selectedSlot == -1)
-                {
-                    selectedSlot = slotIndex;
-                }
-
-                if (draggingItem == null)
-                {
-                    if (PlayerInput.LeftButtonHeld())
-                    {
-                        draggingItem = Items[slotIndex];
-                        draggingSlot = slot;
-                    }  
-                }
-                else if (PlayerInput.LeftButtonReleased())
-                {
-                    if (PlayerInput.DoubleClicked())
-                    {
-                        doubleClickedItem = item;
-                    }
-
-                    if (draggingItem != Items[slotIndex])
-                    {
-                        //selectedSlot = slotIndex;
-                        if (TryPutItem(draggingItem, slotIndex, true, Character.Controlled))
-                        {
-#if CLIENT
-                            if (slots != null) slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
-#endif
-                        }
-                        else
-                        {
-#if CLIENT
-                            if (slots != null) slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
-#endif
-                        }
-                        draggingItem = null;
-                        draggingSlot = null;
-                    }
-                }
-            }
-        }
-
-        public void UpdateSubInventory(float deltaTime, int slotIndex)
-        {
-            var item = Items[slotIndex];
-            if (item == null) return;
-
-            var container = item.GetComponent<ItemContainer>();
-            if (container == null) return;
-
-            if (container.Inventory.slots == null) container.Inventory.CreateSlots();
-
-            int itemCapacity = container.Capacity;
-
-            var slot = slots[slotIndex];
-            new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
-                    slot.Rect.Width + 10, slot.Rect.Height + (40 + 10) * itemCapacity + 10);
-
-            Rectangle subRect = slot.Rect;
-            subRect.Height = 40;
-
-            for (int i = 0; i < itemCapacity; i++)
-            {
-                subRect.Y = subRect.Y - subRect.Height - 10;
-                container.Inventory.slots[i].Rect = subRect;
-            }
             
-            container.Inventory.isSubInventory = true;
-
-#if CLIENT
-            slots[slotIndex].State = GUIComponent.ComponentState.Hover;
-#endif
-
-            container.Inventory.Update(deltaTime, true);
-        }
-
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             ServerWrite(msg, null);

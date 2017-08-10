@@ -1,13 +1,23 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class InventorySlot
+    class InventorySlot
     {
+        public Rectangle Rect;
+
+        public bool Disabled;
+
         public GUIComponent.ComponentState State;
+        
+        public Color Color;
+
+        public Color BorderHighlightColor;
+        private CoroutineHandle BorderHighlightCoroutine;
 
         public bool IsHighlighted
         {
@@ -17,10 +27,12 @@ namespace Barotrauma
             }
         }
 
-        public Color Color;
-
-        public Color BorderHighlightColor;
-        private CoroutineHandle BorderHighlightCoroutine;
+        public InventorySlot(Rectangle rect)
+        {
+            Rect = rect;
+            State = GUIComponent.ComponentState.None;
+            Color = Color.White * 0.4f;
+        }
 
         public void ShowBorderHighlight(Color color, float fadeInDuration, float fadeOutDuration)
         {
@@ -52,6 +64,195 @@ namespace Barotrauma
 
     partial class Inventory
     {
+
+        public static InventorySlot draggingSlot;
+        public static Item draggingItem;
+
+        public static Item doubleClickedItem;
+
+        private int slotsPerRow;
+        public int SlotsPerRow
+        {
+            set { slotsPerRow = Math.Max(1, value); }
+        }
+
+        protected int selectedSlot = -1;
+
+        protected InventorySlot[] slots;
+
+        private Vector2 centerPos;
+
+        public Vector2 CenterPos
+        {
+            get { return centerPos; }
+            set
+            {
+                centerPos = value;
+                centerPos.X *= GameMain.GraphicsWidth;
+                centerPos.Y *= GameMain.GraphicsHeight;
+            }
+        }
+
+        private Vector2 drawOffset;
+        public Vector2 DrawOffset
+        {
+            get
+            {
+                return drawOffset;
+            }
+
+            set
+            {
+                if (value == drawOffset) return;
+
+                drawOffset = value;
+                CreateSlots();
+            }
+        }
+
+
+        protected virtual void CreateSlots()
+        {
+            slots = new InventorySlot[capacity];
+
+            int rectWidth = 40, rectHeight = 40;
+            int spacing = 10;
+
+            int rows = (int)Math.Ceiling((double)capacity / slotsPerRow);
+
+            int startX = (int)centerPos.X - (rectWidth * slotsPerRow + spacing * (slotsPerRow - 1)) / 2;
+            int startY = (int)centerPos.Y - rows * (spacing + rectHeight);
+
+            Rectangle slotRect = new Rectangle(startX, startY, rectWidth, rectHeight);
+            for (int i = 0; i < capacity; i++)
+            {
+                slotRect.X = startX + (rectWidth + spacing) * (i % slotsPerRow) + (int)DrawOffset.X;
+                slotRect.Y = startY + (rectHeight + spacing) * ((int)Math.Floor((double)i / slotsPerRow)) + (int)DrawOffset.Y;
+
+                slots[i] = new InventorySlot(slotRect);
+            }
+        }
+
+        public virtual void Update(float deltaTime, bool subInventory = false)
+        {
+            syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
+
+            if (slots == null || isSubInventory != subInventory)
+            {
+                CreateSlots();
+                isSubInventory = subInventory;
+            }
+
+            for (int i = 0; i < capacity; i++)
+            {
+                if (slots[i].Disabled) continue;
+                UpdateSlot(slots[i], i, Items[i], false);
+            }
+
+
+            if (draggingItem != null &&
+                (draggingSlot == null || (!draggingSlot.Rect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
+            {
+                if (!PlayerInput.LeftButtonHeld())
+                {
+                    CreateNetworkEvent();
+                    draggingItem.Drop();
+
+                    GUI.PlayUISound(GUISoundType.DropItem);
+                }
+            }
+
+        }
+
+        protected void UpdateSlot(InventorySlot slot, int slotIndex, Item item, bool isSubSlot)
+        {
+            bool mouseOn = slot.Rect.Contains(PlayerInput.MousePosition) && !Locked;
+            
+            slot.State = GUIComponent.ComponentState.None;
+
+            if (!(this is CharacterInventory) && !mouseOn && selectedSlot == slotIndex)
+            {
+                selectedSlot = -1;
+            }
+
+            if (mouseOn &&
+                (draggingItem != null || selectedSlot == slotIndex || selectedSlot == -1))
+            {
+                slot.State = GUIComponent.ComponentState.Hover;
+
+                if (!isSubSlot && selectedSlot == -1)
+                {
+                    selectedSlot = slotIndex;
+                }
+
+                if (draggingItem == null)
+                {
+                    if (PlayerInput.LeftButtonHeld())
+                    {
+                        draggingItem = Items[slotIndex];
+                        draggingSlot = slot;
+                    }
+                }
+                else if (PlayerInput.LeftButtonReleased())
+                {
+                    if (PlayerInput.DoubleClicked())
+                    {
+                        doubleClickedItem = item;
+                    }
+
+                    if (draggingItem != Items[slotIndex])
+                    {
+                        //selectedSlot = slotIndex;
+                        if (TryPutItem(draggingItem, slotIndex, true, Character.Controlled))
+                        {
+                            if (slots != null) slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                            GUI.PlayUISound(GUISoundType.PickItem);
+                        }
+                        else
+                        {
+                            if (slots != null) slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                            GUI.PlayUISound(GUISoundType.PickItemFail);
+                        }
+                        draggingItem = null;
+                        draggingSlot = null;
+                    }
+                }
+            }
+        }
+
+        public void UpdateSubInventory(float deltaTime, int slotIndex)
+        {
+            var item = Items[slotIndex];
+            if (item == null) return;
+
+            var container = item.GetComponent<ItemContainer>();
+            if (container == null) return;
+
+            if (container.Inventory.slots == null) container.Inventory.CreateSlots();
+
+            int itemCapacity = container.Capacity;
+
+            var slot = slots[slotIndex];
+            new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
+                    slot.Rect.Width + 10, slot.Rect.Height + (40 + 10) * itemCapacity + 10);
+
+            Rectangle subRect = slot.Rect;
+            subRect.Height = 40;
+
+            for (int i = 0; i < itemCapacity; i++)
+            {
+                subRect.Y = subRect.Y - subRect.Height - 10;
+                container.Inventory.slots[i].Rect = subRect;
+            }
+
+            container.Inventory.isSubInventory = true;
+            
+            slots[slotIndex].State = GUIComponent.ComponentState.Hover;
+
+            container.Inventory.Update(deltaTime, true);
+        }
+
+
         public virtual void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
             if (slots == null || isSubInventory != subInventory) return;
