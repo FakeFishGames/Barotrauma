@@ -8,18 +8,19 @@ namespace Barotrauma.Items.Components
 {
     class WearableSprite
     {
-        public Sprite Sprite;
-        public bool HideLimb;
-        public LimbType DepthLimb;
+        public readonly Sprite Sprite;
+        public readonly bool HideLimb;
+        public readonly bool InheritLimbDepth;
+        public readonly LimbType DepthLimb;
 
-        public Wearable WearableComponent;
+        public readonly Wearable WearableComponent;
 
-        public WearableSprite(Wearable item, Sprite sprite, bool hideLimb, LimbType depthLimb = LimbType.None)
+        public WearableSprite(Wearable item, Sprite sprite, bool hideLimb, bool inheritLimbDepth = true, LimbType depthLimb = LimbType.None)
         {
             WearableComponent = item;
             Sprite = sprite;
             HideLimb = hideLimb;
-
+            InheritLimbDepth = inheritLimbDepth;
             DepthLimb = depthLimb;
         }
     }
@@ -88,9 +89,10 @@ namespace Barotrauma.Items.Components
                 spritePath = Path.GetDirectoryName( item.Prefab.ConfigFile)+"/"+spritePath;
 
                 var sprite = new Sprite(subElement, "", spritePath);
-                wearableSprites[i] = new WearableSprite(this, sprite, ToolBox.GetAttributeBool(subElement, "hidelimb", false),
-                    (LimbType)Enum.Parse(typeof(LimbType),
-                    ToolBox.GetAttributeString(subElement, "depthlimb", "None"), true));
+                wearableSprites[i] = new WearableSprite(this, sprite, 
+                    ToolBox.GetAttributeBool(subElement, "hidelimb", false),
+                    ToolBox.GetAttributeBool(subElement, "inheritlimbdepth", true),
+                    (LimbType)Enum.Parse(typeof(LimbType), ToolBox.GetAttributeString(subElement, "depthlimb", "None"), true));
 
                 limbType[i] = (LimbType)Enum.Parse(typeof(LimbType),
                     ToolBox.GetAttributeString(subElement, "limb", "Head"), true);                
