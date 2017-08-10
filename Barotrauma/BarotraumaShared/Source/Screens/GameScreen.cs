@@ -132,12 +132,13 @@ namespace Barotrauma
             }
                 
             GameMain.World.Step((float)deltaTime);
-
+#if CLIENT
             if (!PlayerInput.LeftButtonHeld())
             {
                 Inventory.draggingSlot = null;
                 Inventory.draggingItem = null;
             }
+#endif
         }
     }
 }

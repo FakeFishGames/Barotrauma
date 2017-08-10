@@ -1156,6 +1156,9 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\StructureCrunch3.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\dropItem.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\fire.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -1196,6 +1199,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\pickItem.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\pickItemFail.ogg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\startDrone.ogg">

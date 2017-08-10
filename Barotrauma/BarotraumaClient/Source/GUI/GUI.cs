@@ -12,7 +12,9 @@ namespace Barotrauma
         RadioMessage,
         DeadMessage,
         Click,
-        Inventory,
+        PickItem,
+        PickItemFail,
+        DropItem
     }
     
     public class GUI
@@ -98,7 +100,9 @@ namespace Barotrauma
                 sounds[(int)GUISoundType.DeadMessage] = Sound.Load("Content/Sounds/UI/deadmsg.ogg", false);
                 sounds[(int)GUISoundType.Click] = Sound.Load("Content/Sounds/UI/beep-shinymetal.ogg", false);
 
-                sounds[(int)GUISoundType.Inventory] = Sound.Load("Content/Sounds/pickItem.ogg", false);
+                sounds[(int)GUISoundType.PickItem] = Sound.Load("Content/Sounds/pickItem.ogg", false);
+                sounds[(int)GUISoundType.PickItemFail] = Sound.Load("Content/Sounds/pickItemFail.ogg", false);
+                sounds[(int)GUISoundType.DropItem] = Sound.Load("Content/Sounds/dropItem.ogg", false);
 
             }
 

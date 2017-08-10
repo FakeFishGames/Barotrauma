@@ -86,9 +86,17 @@ namespace Barotrauma.Items.Components
                 DropConnectedWires(picker);
 
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
-                
+
+#if CLIENT
+                GUI.PlayUISound(GUISoundType.PickItem);
+#endif
+
                 return true;
             }
+
+#if CLIENT
+            GUI.PlayUISound(GUISoundType.PickItemFail);
+#endif
 
             return false;
         }
