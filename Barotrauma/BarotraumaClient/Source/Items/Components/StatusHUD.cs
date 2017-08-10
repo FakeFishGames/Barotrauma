@@ -46,10 +46,20 @@ namespace Barotrauma.Items.Components
                 {
                     int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 4.0f) * BleedingTexts.Length, 0, BleedingTexts.Length - 1);
                     texts.Add(BleedingTexts[bleedingTextIndex]);
-                }                
+                }
+
+                if (target.huskInfection != null)
+                {
+                    if (target.huskInfection.State != HuskInfection.InfectionState.Transition)
+                    {
+                        texts.Add("Velonaceps calyx infection");
+                    }
+                    else if (target.huskInfection.State != HuskInfection.InfectionState.Active)
+                    {
+                        texts.Add("Advanced Velonaceps calyx infection");
+                    }
+                }
             }
-
-
 
             foreach (string text in texts)
             {
