@@ -88,15 +88,19 @@ namespace Barotrauma
 
                 Vector2 origin = wearable.Sprite.Origin;
                 if (body.Dir == -1.0f) origin.X = wearable.Sprite.SourceRect.Width - origin.X;
+                
+                float depth = wearable.Sprite.Depth;
 
-                float depth = sprite.Depth - 0.000001f;
-
-                if (wearable.DepthLimb != LimbType.None)
+                if (wearable.InheritLimbDepth)
                 {
-                    Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
-                    if (depthLimb != null)
+                    depth = sprite.Depth - 0.000001f;
+                    if (wearable.DepthLimb != LimbType.None)
                     {
-                        depth = depthLimb.sprite.Depth - 0.000001f;
+                        Limb depthLimb = character.AnimController.GetLimb(wearable.DepthLimb);
+                        if (depthLimb != null)
+                        {
+                            depth = depthLimb.sprite.Depth - 0.000001f;
+                        }
                     }
                 }
 
