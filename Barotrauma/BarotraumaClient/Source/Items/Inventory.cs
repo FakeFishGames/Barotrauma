@@ -10,6 +10,8 @@ namespace Barotrauma
     {
         public Rectangle Rect;
 
+        public Rectangle InteractRect;
+
         public bool Disabled;
 
         public GUIComponent.ComponentState State;
@@ -30,6 +32,8 @@ namespace Barotrauma
         public InventorySlot(Rectangle rect)
         {
             Rect = rect;
+            InteractRect = rect;
+            InteractRect.Inflate(5, 5);
             State = GUIComponent.ComponentState.None;
             Color = Color.White * 0.4f;
         }
@@ -151,7 +155,7 @@ namespace Barotrauma
 
 
             if (draggingItem != null &&
-                (draggingSlot == null || (!draggingSlot.Rect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
+                (draggingSlot == null || (!draggingSlot.InteractRect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
             {
                 if (!PlayerInput.LeftButtonHeld())
                 {
@@ -166,7 +170,7 @@ namespace Barotrauma
 
         protected void UpdateSlot(InventorySlot slot, int slotIndex, Item item, bool isSubSlot)
         {
-            bool mouseOn = slot.Rect.Contains(PlayerInput.MousePosition) && !Locked;
+            bool mouseOn = slot.InteractRect.Contains(PlayerInput.MousePosition) && !Locked;
             
             slot.State = GUIComponent.ComponentState.None;
 
@@ -268,7 +272,7 @@ namespace Barotrauma
             }
 
             if (draggingItem != null &&
-                (draggingSlot == null || (!draggingSlot.Rect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
+                (draggingSlot == null || (!draggingSlot.InteractRect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
             {
                 Rectangle dragRect = new Rectangle(
                     (int)PlayerInput.MousePosition.X - 10,

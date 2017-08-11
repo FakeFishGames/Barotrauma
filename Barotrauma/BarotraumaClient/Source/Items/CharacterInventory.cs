@@ -95,18 +95,15 @@ namespace Barotrauma
 
             int rectWidth = 40, rectHeight = 40;
 
-            Rectangle slotRect = new Rectangle(0, 0, rectWidth, rectHeight);
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i] == null) slots[i] = new InventorySlot(slotRect);
+                Rectangle slotRect = new Rectangle(
+                    (int)(SlotPositions[i].X + DrawOffset.X), 
+                    (int)(SlotPositions[i].Y + DrawOffset.Y), 
+                    rectWidth, rectHeight);
 
-                slots[i].Disabled = false;
-
-                slotRect.X = (int)(SlotPositions[i].X + DrawOffset.X);
-                slotRect.Y = (int)(SlotPositions[i].Y + DrawOffset.Y);
-
-                slots[i].Rect = slotRect;
-
+                slots[i] = new InventorySlot(slotRect);
+                slots[i].Disabled = false;                
                 slots[i].Color = limbSlots[i] == InvSlotType.Any ? Color.White * 0.2f : Color.White * 0.4f;
             }
 
@@ -182,7 +179,7 @@ namespace Barotrauma
                 if (rootContainer != null)
                 {
                     rootInventory = rootContainer.ParentInventory != null ?
-                        rootContainer.ParentInventory : rootContainer.GetComponent<Items.Components.ItemContainer>().Inventory;
+                        rootContainer.ParentInventory : rootContainer.GetComponent<ItemContainer>().Inventory;
                 }
 
                 if (rootInventory != null &&
@@ -209,6 +206,7 @@ namespace Barotrauma
                     if (Items[n] == Items[i])
                     {
                         slots[i].Rect = Rectangle.Union(slots[i].Rect, slots[n].Rect);
+                        slots[i].InteractRect = Rectangle.Union(slots[i].InteractRect, slots[n].InteractRect);
                         slots[n].Disabled = true;
                     }
                 }
