@@ -196,10 +196,10 @@ namespace Barotrauma
             
             int lineNum = 0;
             Vector2 currentPos = position;
-            Vector2 advanceUnit = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+            Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i]=='\n')
+                if (text[i] == '\n')
                 {
                     lineNum++;
                     currentPos = position;
@@ -218,7 +218,8 @@ namespace Barotrauma
                         drawOffset.X = gd.drawOffset.X * advanceUnit.X * scale.X - gd.drawOffset.Y * advanceUnit.Y * scale.Y;
                         drawOffset.Y = gd.drawOffset.X * advanceUnit.Y * scale.Y + gd.drawOffset.Y * advanceUnit.X * scale.X;
 
-                        sb.Draw(tex, currentPos + drawOffset, null, gd.texCoords, origin, rotation, scale, color, se, layerDepth);
+
+                        sb.Draw(tex, currentPos + drawOffset, gd.texCoords, color, rotation, origin, scale, se, layerDepth);
                     }
                     currentPos += gd.advance * advanceUnit * scale.X;
                 }
