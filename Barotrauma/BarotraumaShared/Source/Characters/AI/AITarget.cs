@@ -31,12 +31,34 @@ namespace Barotrauma
 
         public Vector2 WorldPosition
         {
-            get { return Entity.WorldPosition; }
+            get
+            {
+                if (Entity == null)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);
+#endif
+                    return Vector2.Zero;
+                }
+
+                return Entity.WorldPosition;
+            }
         }
 
         public Vector2 SimPosition
         {
-            get { return Entity.SimPosition; }
+            get
+            {
+                if (Entity == null)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);
+#endif
+                    return Vector2.Zero;
+                }
+
+                return Entity.SimPosition;
+            }
         }
 
         public AITarget(Entity e)

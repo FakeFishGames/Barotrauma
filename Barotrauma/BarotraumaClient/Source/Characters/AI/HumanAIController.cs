@@ -21,7 +21,7 @@ namespace Barotrauma
 
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (selectedAiTarget != null)
+            if (selectedAiTarget?.Entity != null)
             {
                 GUI.DrawLine(spriteBatch,
                     new Vector2(Character.DrawPosition.X, -Character.DrawPosition.Y),
