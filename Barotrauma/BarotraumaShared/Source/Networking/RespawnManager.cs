@@ -59,6 +59,11 @@ namespace Barotrauma.Networking
 
         private float updateReturnTimer;
 
+        public Submarine RespawnShuttle
+        {
+            get { return respawnShuttle; }
+        }
+
         public RespawnManager(NetworkMember networkMember, Submarine shuttle)
             : base(shuttle)
         {

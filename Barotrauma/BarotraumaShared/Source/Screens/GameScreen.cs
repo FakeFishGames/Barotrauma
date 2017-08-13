@@ -24,15 +24,15 @@ namespace Barotrauma
         {
             base.Select();
 
-            if (Character.Controlled!=null)
+            if (Character.Controlled != null)
             {
                 cam.Position = Character.Controlled.WorldPosition;
-                cam.UpdateTransform();
+                cam.UpdateTransform(true, !GameMain.DebugDraw);
             }
             else if (Submarine.MainSub != null)
             {
                 cam.Position = Submarine.MainSub.WorldPosition;
-                cam.UpdateTransform();
+                cam.UpdateTransform(true, !GameMain.DebugDraw);
             }
 
             foreach (MapEntity entity in MapEntity.mapEntityList)

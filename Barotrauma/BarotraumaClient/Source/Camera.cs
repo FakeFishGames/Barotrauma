@@ -139,11 +139,16 @@ namespace Barotrauma
 
             if (Level.Loaded != null && clampPos)
             {
-                position.Y -= Math.Max(worldView.Y - Level.Loaded.Size.Y, 0.0f);
-                interpolatedPosition.Y -= Math.Max(worldView.Y - Level.Loaded.Size.Y, 0.0f);
+                float maxY = Level.Loaded.Size.Y + 100;
 
-                worldView.Y = Math.Min((int)Level.Loaded.Size.Y, worldView.Y); 
+                position.Y              -= Math.Max(worldView.Y - maxY, 0.0f);
+                interpolatedPosition.Y  -= Math.Max(worldView.Y - maxY, 0.0f);
+
+                position.Y              = Math.Max(position.Y, (int)Level.MaxCameraDepth);
+                interpolatedPosition.Y  = Math.Max(interpolatedPosition.Y, (int)Level.MaxCameraDepth);
+                worldView.Y             = MathHelper.Clamp(worldView.Y, (int)Level.MaxCameraDepth, (int)maxY);
             }
+
 
             transform = Matrix.CreateTranslation(
                 new Vector3(-interpolatedPosition.X, interpolatedPosition.Y, 0)) *

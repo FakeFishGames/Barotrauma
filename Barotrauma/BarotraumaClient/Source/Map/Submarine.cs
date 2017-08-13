@@ -39,7 +39,7 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                foreach (Submarine sub in Submarine.Loaded)
+                foreach (Submarine sub in Loaded)
                 {
                     Rectangle worldBorders = sub.Borders;
                     worldBorders.Location += sub.WorldPosition.ToPoint();

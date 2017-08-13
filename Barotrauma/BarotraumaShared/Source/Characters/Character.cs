@@ -1332,7 +1332,15 @@ namespace Barotrauma
             if (GameMain.Client != null && this == Controlled && !isSynced) return;
 
             if (!Enabled) return;
-            
+
+            if (Level.Loaded != null && WorldPosition.Y < Level.MaxEntityDepth ||
+                (Submarine != null && Submarine.WorldPosition.Y < Level.MaxEntityDepth))
+            {
+                Enabled = false;
+                Kill(CauseOfDeath.Pressure);
+                return;
+            }
+
             PreviousHull = CurrentHull;
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull, true);
             //if (PreviousHull != CurrentHull && Character.Controlled == this) Hull.DetectItemVisibility(this); //WIP item culling

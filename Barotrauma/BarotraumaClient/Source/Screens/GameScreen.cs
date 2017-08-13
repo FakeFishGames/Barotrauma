@@ -68,7 +68,7 @@ namespace Barotrauma
         
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-            cam.UpdateTransform(true);
+            cam.UpdateTransform(true, !GameMain.DebugDraw);
             Submarine.CullEntities(cam);
 
             DrawMap(graphics, spriteBatch);
@@ -88,11 +88,11 @@ namespace Barotrauma
             {
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
-                    if (Submarine.MainSubs[i] != null)
-                    {
-                        Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : Color.Red * 0.5f;
-                        DrawSubmarineIndicator(spriteBatch, Submarine.MainSubs[i], indicatorColor);
-                    }
+                    if (Submarine.MainSubs[i] == null) continue;
+                    if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) continue;
+                    
+                    Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : Color.Red * 0.5f;
+                    DrawSubmarineIndicator(spriteBatch, Submarine.MainSubs[i], indicatorColor);                    
                 }
             }
 
