@@ -117,6 +117,11 @@ namespace Barotrauma.Networking
             get { return null; }
         }
 
+        public RespawnManager RespawnManager
+        {
+            get { return respawnManager; }
+        }
+
         public NetworkMember()
         {
             InitProjSpecific();

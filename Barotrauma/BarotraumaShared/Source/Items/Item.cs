@@ -779,6 +779,12 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (Level.Loaded != null && WorldPosition.Y < Level.MaxEntityDepth)
+            {
+                Spawner.AddToRemoveQueue(this);
+                return;
+            }
+
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
             foreach (ItemComponent ic in components)

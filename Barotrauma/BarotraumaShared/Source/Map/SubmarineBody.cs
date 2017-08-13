@@ -16,8 +16,6 @@ namespace Barotrauma
     class SubmarineBody
     {
         public const float DamageDepth = -30000.0f;
-        //private const float PressureDamageMultiplier = 0.001f;
-
         private const float DamageMultiplier = 50.0f;
 
         private const float Friction = 0.2f, Restitution = 0.0f;

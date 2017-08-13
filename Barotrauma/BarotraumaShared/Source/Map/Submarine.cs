@@ -414,15 +414,17 @@ namespace Barotrauma
         public static void CullEntities(Camera cam)
         {
             HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
-            foreach (Submarine sub in Submarine.Loaded)
+            foreach (Submarine sub in Loaded)
             {
+                if (sub.WorldPosition.Y < Level.MaxEntityDepth) continue;
+
                 Rectangle worldBorders = new Rectangle(
                     sub.Borders.X + (int)sub.WorldPosition.X - 500,
                     sub.Borders.Y + (int)sub.WorldPosition.Y + 500,
                     sub.Borders.Width + 1000,
                     sub.Borders.Height + 1000);
 
-                if (Submarine.RectsOverlap(worldBorders, cam.WorldView))
+                if (RectsOverlap(worldBorders, cam.WorldView))
                 {
                     visibleSubs.Add(sub);
                 }
@@ -682,21 +684,46 @@ namespace Barotrauma
         {
             //if (PlayerInput.KeyHit(InputType.Crouch) && (this == MainSub)) FlipX();
 
-            if (Level.Loaded == null) return;
-            
-            if (subBody == null) return;
+            if (Level.Loaded == null || subBody == null) return;
+
+            if (WorldPosition.Y < Level.MaxEntityDepth &&
+                subBody.Body.Enabled && 
+                (GameMain.NetworkMember?.RespawnManager == null || this != GameMain.NetworkMember.RespawnManager.RespawnShuttle))
+            {
+                subBody.Body.ResetDynamics();
+                subBody.Body.Enabled = false;
+
+                foreach (MapEntity e in MapEntity.mapEntityList)
+                {
+                    if (e.Submarine == this)
+                    {
+                        Spawner.AddToRemoveQueue(e);
+                    }
+                }
+
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c.Submarine == this)
+                    {
+                        c.Kill(CauseOfDeath.Pressure);
+                        c.Enabled = false;
+                    }
+                }
+
+                return;
+            }
 
             subBody.Body.LinearVelocity = new Vector2(
                 LockX ? 0.0f : subBody.Body.LinearVelocity.X, 
                 LockY ? 0.0f : subBody.Body.LinearVelocity.Y);
-            
+                
             
             subBody.Update(deltaTime);
 
             for (int i = 0; i < 2; i++ )
             {
-                if (Submarine.MainSubs[i] == null) continue;
-                if (this != Submarine.MainSubs[i] && Submarine.MainSubs[i].DockedTo.Contains(this)) return;
+                if (MainSubs[i] == null) continue;
+                if (this != MainSubs[i] && MainSubs[i].DockedTo.Contains(this)) return;
             }
 
             //send updates more frequently if moving fast

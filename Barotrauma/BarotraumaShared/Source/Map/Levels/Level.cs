@@ -14,8 +14,12 @@ namespace Barotrauma
 {
     partial class Level
     {
-        public const float ShaftHeight = 1000.0f;
+        //all entities are disabled after they reach this depth
+        public const float MaxEntityDepth = -300000.0f;
+        public const float MaxCameraDepth = -290000.0f;
 
+        public const float ShaftHeight = 1000.0f;
+        
         public static Level Loaded
         {
             get { return loaded; }
