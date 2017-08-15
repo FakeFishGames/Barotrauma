@@ -161,7 +161,7 @@ namespace Barotrauma
         {
             string seed = locationConnection.Locations[0].Name + locationConnection.Locations[1].Name;
             
-            return new Level(seed, locationConnection.Difficulty, LevelGenerationParams.GetRandom(seed));
+            return new Level(seed, locationConnection.Difficulty, LevelGenerationParams.GetRandom(seed, locationConnection.Biome));
         }
 
         public static Level CreateRandom(string seed = "")

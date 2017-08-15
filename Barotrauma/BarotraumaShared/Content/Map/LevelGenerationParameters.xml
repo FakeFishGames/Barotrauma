@@ -1,6 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <LevelGenerationParameters>
+
+  <Biomes>
+    <Biome
+      name ="Cold Caverns"
+      description="asdgfdfg"/>
+
+    <Biome
+      name ="Volcanic Ridge"
+      description="asdgfdfg"/>
+	  
+    <Biome
+      name ="Great Sea"
+      description="asdgfdfg"/>
+  </Biomes>
+  
   <Default
+    biomes="Cold Caverns"
     width="150000"
     height="60000"
     VoronoiSiteInterval="2000,2000"
@@ -20,6 +36,7 @@
     />
 
   <Open
+    biomes="Great Sea"
     width="200000"
     height="50000"
     VoronoiSiteInterval="2000,2000"
@@ -34,6 +51,7 @@
     />
 
   <Pillars
+    biomes="Cold Caverns, Volcanic Ridge"
     width="100000"
     height="80000"
     VoronoiSiteInterval="1000,8000"
@@ -54,6 +72,7 @@
     />
 
   <Slabs
+    biomes="Cold Caverns"
     width="150000"
     height="50000"
     VoronoiSiteInterval="8000,1000"
@@ -69,6 +88,7 @@
     />
 
   <Maze
+    biomes="Cold Caverns"
     width="100000"
     height="70000"
     VoronoiSiteInterval="1500,1500"

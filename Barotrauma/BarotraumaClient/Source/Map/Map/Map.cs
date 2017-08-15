@@ -62,6 +62,7 @@ namespace Barotrauma
             foreach (LocationConnection connection in connections)
             {
                 Color crackColor = Color.White * Math.Max(connection.Difficulty / 100.0f, 1.5f);
+                
 
                 if (selectedLocation != currentLocation &&
                     (connection.Locations.Contains(selectedLocation) && connection.Locations.Contains(currentLocation)))
@@ -113,6 +114,12 @@ namespace Barotrauma
                         new Rectangle((int)start.X, (int)start.Y, (int)dist + 2, width),
                         new Rectangle(0, 0, iceCrack.Width, 60), crackColor, MathUtils.VectorToAngle(end - start),
                         new Vector2(0, 30), SpriteEffects.None, 0.01f);
+
+                    if (i == 0)
+                    {
+
+                        GUI.DrawString(spriteBatch, start, connection.Biome.Name, Color.White);
+                    }
                 }
             }
 

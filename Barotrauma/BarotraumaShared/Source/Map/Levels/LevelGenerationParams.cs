@@ -6,9 +6,29 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    class Biome
+    {
+        public readonly string Name;
+        public readonly string Description;
+
+        public Biome(string name, string description)
+        {
+            Name = name;
+            Description = description;
+        }
+
+        public Biome(XElement element)
+        {
+            Name = ToolBox.GetAttributeString(element, "name", "Biome");
+            Description = ToolBox.GetAttributeString(element, "description", "");
+        }
+    }
+
     class LevelGenerationParams : IPropertyObject
     {
-        private static List<LevelGenerationParams> presets;
+        private static List<LevelGenerationParams> levelParams;
+        private static List<Biome> biomes;
+
 
         public string Name
         {
@@ -46,6 +66,9 @@ namespace Barotrauma
         private float mountainHeightMin, mountainHeightMax;
 
         private int ruinCount;
+
+        //which biomes can this type of level appear in
+        private List<Biome> allowedBiomes = new List<Biome>();
 
         public Color BackgroundColor
         {
@@ -196,22 +219,39 @@ namespace Barotrauma
             set { bottomHoleProbability = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
         
-        public static LevelGenerationParams GetRandom(string seed)
+        public static List<Biome> GetBiomes()
+        {
+            return biomes;
+        }
+
+        public static LevelGenerationParams GetRandom(string seed, Biome biome = null)
         {
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            if (presets == null || !presets.Any())
+            if (levelParams == null || !levelParams.Any())
             {
                 DebugConsole.ThrowError("Level generation presets not found - using default presets");
                 return new LevelGenerationParams(null);
             }
 
-            return presets[Rand.Range(0, presets.Count, Rand.RandSync.Server)];
+            if (biome == null)
+            {
+                return levelParams[Rand.Range(0, levelParams.Count, Rand.RandSync.Server)];
+            }
+
+            var matchingLevelParams = levelParams.FindAll(lp => lp.allowedBiomes.Contains(biome));
+            if (matchingLevelParams.Count == 0)
+            {
+                DebugConsole.ThrowError("Level generation presets not found for the biome \"" + biome.Name + "\"!");
+                return new LevelGenerationParams(null);
+            }
+
+            return matchingLevelParams[Rand.Range(0, matchingLevelParams.Count, Rand.RandSync.Server)];
         }
 
         private LevelGenerationParams(XElement element)
         {
-            Name = element==null ? "default" : element.Name.ToString();
+            Name = element == null ? "default" : element.Name.ToString();
             ObjectProperties = ObjectProperty.InitProperties(this, element);
 
             Vector3 colorVector = ToolBox.GetAttributeVector3(element, "BackgroundColor", new Vector3(50, 46, 20));
@@ -224,18 +264,45 @@ namespace Barotrauma
             MainPathNodeIntervalRange = ToolBox.GetAttributeVector2(element, "MainPathNodeIntervalRange", new Vector2(5000.0f, 10000.0f));
 
             SmallTunnelLengthRange = ToolBox.GetAttributeVector2(element, "SmallTunnelLengthRange", new Vector2(5000.0f, 10000.0f));
+            
+            string biomeStr = ToolBox.GetAttributeString(element, "biomes", "");
+
+            if (string.IsNullOrWhiteSpace(biomeStr))
+            {
+                allowedBiomes = new List<Biome>(biomes);
+            }
+            else
+            {
+                string[] biomeNames = biomeStr.Split(',');
+                for (int i = 0; i < biomeNames.Length; i++)
+                {
+                    string biomeName = biomeNames[i].Trim().ToLowerInvariant();
+                    Biome matchingBiome = biomes.Find(b => b.Name.ToLowerInvariant() == biomeName);
+                    if (matchingBiome == null)
+                    {
+                        DebugConsole.ThrowError("Error in level generation parameters: biome \"" + biomeName + "\" not found.");
+                        continue;
+                    }
+
+                    allowedBiomes.Add(matchingBiome);
+                }
+            }
         }
 
         public static void LoadPresets()
         {
-            presets = new List<LevelGenerationParams>();
+            levelParams = new List<LevelGenerationParams>();
+            biomes = new List<Biome>();
 
             var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.LevelGenerationParameters);
             if (!files.Any())
             {
                 files.Add("Content/Map/LevelGenerationParameters.xml");
             }
-                        
+            
+            List<XElement> biomeElements = new List<XElement>();
+            List<XElement> levelParamElements = new List<XElement>();
+
             foreach (string file in files)
             {
                 XDocument doc = ToolBox.TryLoadXml(file);
@@ -243,8 +310,25 @@ namespace Barotrauma
 
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    presets.Add(new LevelGenerationParams(element));
+                    if (element.Name.ToString().ToLowerInvariant() == "biomes")
+                    {
+                        biomeElements.AddRange(element.Elements());
+                    }
+                    else
+                    {
+                        levelParamElements.Add(element);
+                    }
                 }
+            }
+
+            foreach (XElement biomeElement in biomeElements)
+            {
+                biomes.Add(new Biome(biomeElement));
+            }
+
+            foreach (XElement levelParamElement in levelParamElements)
+            {
+                levelParams.Add(new LevelGenerationParams(levelParamElement));
             }
         }
     }
