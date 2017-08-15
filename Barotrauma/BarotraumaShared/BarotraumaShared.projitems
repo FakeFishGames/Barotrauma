@@ -1442,7 +1442,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\RuinStructure.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Voronoi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\VoronoiElements.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\WrappingWall.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelWall.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\LinkedSubmarine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\MapEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\MapEntityPrefab.cs" />

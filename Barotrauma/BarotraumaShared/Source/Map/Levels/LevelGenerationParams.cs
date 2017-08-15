@@ -36,6 +36,15 @@ namespace Barotrauma
         //if 1.0f, the bottom will be completely open
         private float bottomHoleProbability;
 
+        //the y-position of the ocean floor (= the position from which the bottom formations extend upwards)
+        private float seaFloorBaseDepth;
+        //how much random variance there can be in the height of the formations
+        private float seaFloorVariance;
+
+        private int mountainCountMin, mountainCountMax;
+        
+        private float mountainHeightMin, mountainHeightMax;
+
         private int ruinCount;
 
         public Color BackgroundColor
@@ -74,9 +83,10 @@ namespace Barotrauma
         public Vector2 VoronoiSiteInterval
         {
             get { return voronoiSiteInterval; }
-            set { 
-                voronoiSiteInterval.X = MathHelper.Clamp(value.X, 100.0f, width/2);
-                voronoiSiteInterval.Y = MathHelper.Clamp(value.Y, 100.0f, height/2); 
+            set
+            {
+                voronoiSiteInterval.X = MathHelper.Clamp(value.X, 100.0f, width / 2);
+                voronoiSiteInterval.Y = MathHelper.Clamp(value.Y, 100.0f, height / 2);
             }
         }
 
@@ -115,6 +125,60 @@ namespace Barotrauma
             {
                 smallTunnelLengthRange.X = MathHelper.Clamp(value.X, 100.0f, width);
                 smallTunnelLengthRange.Y = MathHelper.Clamp(value.Y, smallTunnelLengthRange.X, width);
+            }
+        }
+
+        [HasDefaultValue(-300000.0f, false)]
+        public float SeaFloorDepth
+        {
+            get { return seaFloorBaseDepth; }
+            set { seaFloorBaseDepth = MathHelper.Clamp(value, Level.MaxEntityDepth, 0.0f); }
+        }
+
+        [HasDefaultValue(1000.0f, false)]
+        public float SeaFloorVariance
+        {
+            get { return seaFloorVariance; }
+            set { seaFloorVariance = value; }
+        }
+
+        [HasDefaultValue(0, false)]
+        public int MountainCountMin
+        {
+            get { return mountainCountMin; }
+            set
+            {
+                mountainCountMin = Math.Max(value, 0);
+            }
+        }
+
+        [HasDefaultValue(0, false)]
+        public int MountainCountMax
+        {
+            get { return mountainCountMax; }
+            set
+            {
+                mountainCountMax = Math.Max(value, 0);
+            }
+        }
+
+        [HasDefaultValue(1000.0f, false)]
+        public float MountainHeightMin
+        {
+            get { return mountainHeightMin; }
+            set
+            {
+                mountainHeightMin = Math.Max(value, 0);
+            }
+        }
+
+        [HasDefaultValue(5000.0f, false)]
+        public float MountainHeightMax
+        {
+            get { return mountainHeightMax; }
+            set
+            {
+                mountainHeightMax = Math.Max(value, 0);
             }
         }
 

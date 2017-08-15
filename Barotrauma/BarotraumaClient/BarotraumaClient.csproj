@@ -158,7 +158,7 @@
     <Compile Include="Source\Map\Levels\LevelRenderer.cs" />
     <Compile Include="Source\Map\Levels\Ruins\RuinGenerator.cs" />
     <Compile Include="Source\Map\Levels\WaterRenderer.cs" />
-    <Compile Include="Source\Map\Levels\WrappingWall.cs" />
+    <Compile Include="Source\Map\Levels\LevelWall.cs" />
     <Compile Include="Source\Map\Lights\ConvexHull.cs" />
     <Compile Include="Source\Map\Lights\LightManager.cs" />
     <Compile Include="Source\Map\Lights\LightSource.cs" />

@@ -128,7 +128,7 @@ namespace Barotrauma
 
         }
 
-        public void UpdateTransform(bool interpolate = true, bool clampPos = false)
+        public void UpdateTransform(bool interpolate = true)
         {
             Vector2 interpolatedPosition = interpolate ? Timing.Interpolate(prevPosition, position) : position;
 
@@ -136,20 +136,7 @@ namespace Barotrauma
 
             worldView.X = (int)(interpolatedPosition.X - worldView.Width / 2.0);
             worldView.Y = (int)(interpolatedPosition.Y + worldView.Height / 2.0);
-
-            if (Level.Loaded != null && clampPos)
-            {
-                float maxY = Level.Loaded.Size.Y + 100;
-
-                position.Y              -= Math.Max(worldView.Y - maxY, 0.0f);
-                interpolatedPosition.Y  -= Math.Max(worldView.Y - maxY, 0.0f);
-
-                position.Y              = Math.Max(position.Y, (int)Level.MaxCameraDepth);
-                interpolatedPosition.Y  = Math.Max(interpolatedPosition.Y, (int)Level.MaxCameraDepth);
-                worldView.Y             = MathHelper.Clamp(worldView.Y, (int)Level.MaxCameraDepth, (int)maxY);
-            }
-
-
+            
             transform = Matrix.CreateTranslation(
                 new Vector3(-interpolatedPosition.X, interpolatedPosition.Y, 0)) *
                 Matrix.CreateScale(new Vector3(interpolatedZoom, interpolatedZoom, 1)) *
