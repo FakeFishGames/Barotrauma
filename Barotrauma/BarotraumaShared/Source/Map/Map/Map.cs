@@ -209,7 +209,45 @@ namespace Barotrauma
                 connection.CrackSegments = MathUtils.GenerateJaggedLine(start, end, generations, 5.0f);
             }
 
+            List<LocationConnection> biomeSeeds = new List<LocationConnection>();
+            foreach (Biome biome in LevelGenerationParams.GetBiomes())
+            {
+                LocationConnection seed = connections[0];
+                while (biomeSeeds.Contains(seed))
+                {
+                    seed = connections[Rand.Range(0, connections.Count, Rand.RandSync.Server)];
+                }
+                seed.Biome = biome;
+                biomeSeeds.Add(seed);
+            }
+
+            ExpandBiomes(biomeSeeds);
         }
+
+        private void ExpandBiomes(List<LocationConnection> seeds)
+        {
+            List<LocationConnection> nextSeeds = new List<LocationConnection>(); 
+            foreach (LocationConnection connection in seeds)
+            {
+                foreach (Location location in connection.Locations)
+                {
+                    foreach (LocationConnection otherConnection in location.Connections)
+                    {
+                        if (otherConnection == connection) continue;                        
+                        if (otherConnection.Biome != null) continue; //already assigned
+
+                        otherConnection.Biome = connection.Biome;
+                        nextSeeds.Add(otherConnection);                        
+                    }
+                }
+            }
+
+            if (nextSeeds.Count > 0)
+            {
+                ExpandBiomes(nextSeeds);
+            }
+        }
+        
 
         private void GenerateDifficulties(Location start, List<LocationConnection> locations, float currDifficulty)
         {
@@ -257,6 +295,8 @@ namespace Barotrauma
     {
         private Location[] locations;
         private Level level;
+
+        public Biome Biome;
 
         public float Difficulty;
 
