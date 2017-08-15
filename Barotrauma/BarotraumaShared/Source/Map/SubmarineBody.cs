@@ -242,6 +242,12 @@ namespace Barotrauma
                         Body.LinearVelocity.X,
                         Math.Min(Body.LinearVelocity.Y, ConvertUnits.ToSimUnits(Level.Loaded.Size.Y - worldBorders.Y)));
                 }
+                else if (worldBorders.Y - worldBorders.Height < Level.Loaded.BottomPos)
+                {
+                    Body.LinearVelocity = new Vector2(
+                        Body.LinearVelocity.X,
+                        Math.Max(Body.LinearVelocity.Y, ConvertUnits.ToSimUnits(Level.Loaded.BottomPos - (worldBorders.Y - worldBorders.Height))));
+                }
             }
 
             //-------------------------

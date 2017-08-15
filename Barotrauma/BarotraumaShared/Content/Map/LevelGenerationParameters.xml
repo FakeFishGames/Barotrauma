@@ -12,6 +12,11 @@
     RuinCount="1"
     BottomHoleProbability="0.4"
     BackgroundSpriteAmount="1000"
+    MountainCountMin="0"
+    MountainCountMax="3"
+    SeaFloorDepth="-300000.0"
+    MountainHeightMin="10000"
+    MountainHeightMax="20000"    
     />
 
   <Open
@@ -25,7 +30,7 @@
     SmallTunnelLengthRange="5000,10000"
     RuinCount="1"
     BottomHoleProbability="1"
-    BackgroundSpriteAmount="800"
+    BackgroundSpriteAmount="800" 
     />
 
   <Pillars
@@ -40,6 +45,12 @@
     RuinCount="1"
     BottomHoleProbability="0.5"
     BackgroundSpriteAmount="1000"
+    MountainCountMin="1"
+    MountainCountMax="2"
+    SeaFloorDepth="-150000.0"
+    SeaFloorVariance="10000.0"
+    MountainHeightMin="50000"
+    MountainHeightMax="100000"
     />
 
   <Slabs
@@ -54,6 +65,7 @@
     RuinCount="1"
     BottomHoleProbability="0.0"
     BackgroundSpriteAmount="1000"
+    SeaFloorVariance="10000.0"
     />
 
   <Maze
@@ -68,5 +80,11 @@
     RuinCount="3"
     BottomHoleProbability="0.5"
     BackgroundSpriteAmount="1000"
+    MountainCountMin="2"
+    MountainCountMax="3"
+    SeaFloorDepth="-300000.0"
+    SeaFloorVariance="20000"
+    MountainHeightMin="10000"
+    MountainHeightMax="20000" 
     />
 </LevelGenerationParameters>

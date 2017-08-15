@@ -58,7 +58,7 @@ namespace Barotrauma
             //Vector2 diff = targetPos - sub.Position;
             float targetSpeed = 10.0f;
 
-            Level.Loaded.ShaftBody.Enabled = false;
+            Level.Loaded.TopBarrier.Enabled = false;
             
             cam.TargetPos = Vector2.Zero;
             float timer = 0.0f;
@@ -80,7 +80,7 @@ namespace Barotrauma
                 cam.Zoom = Math.Max(0.2f, cam.Zoom - CoroutineManager.UnscaledDeltaTime * 0.1f);
                 
                 Vector2 cameraPos = subs.First().Position + Submarine.MainSub.HiddenSubPosition;
-                cameraPos.Y = Math.Min(cameraPos.Y, ConvertUnits.ToDisplayUnits(Level.Loaded.ShaftBody.Position.Y) - cam.WorldView.Height / 2.0f);
+                cameraPos.Y = Math.Min(cameraPos.Y, ConvertUnits.ToDisplayUnits(Level.Loaded.TopBarrier.Position.Y) - cam.WorldView.Height / 2.0f);
                 cam.Translate((cameraPos - cam.Position) * CoroutineManager.UnscaledDeltaTime * 10.0f);
 #if CLIENT
                 GUI.ScreenOverlayColor = Color.Lerp(Color.TransparentBlack, Color.Black, timer/duration);

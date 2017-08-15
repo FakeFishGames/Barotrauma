@@ -3,7 +3,6 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,7 +15,6 @@ namespace Barotrauma
     {
         //all entities are disabled after they reach this depth
         public const float MaxEntityDepth = -300000.0f;
-        public const float MaxCameraDepth = -290000.0f;
 
         public const float ShaftHeight = 1000.0f;
         
@@ -53,7 +51,7 @@ namespace Barotrauma
         public const int GridCellSize = 2000;
         private List<VoronoiCell>[,] cellGrid;
 
-        //private WrappingWall[,] wrappingWalls;
+        private LevelWall[] extraWalls;
 
         //private float shaftHeight;
 
@@ -76,6 +74,7 @@ namespace Barotrauma
 
         private LevelGenerationParams generationParams;
 
+
         public Vector2 StartPosition
         {
             get { return startPosition; }
@@ -91,15 +90,27 @@ namespace Barotrauma
             get { return endPosition; }
         }
 
+        public float BottomPos
+        {
+            get;
+            private set;
+        }
+
+        public float SeaFloorTopPos
+        {
+            get;
+            private set;
+        }
+
         public List<Ruin> Ruins
         {
             get { return ruins; }
         }
         
-        //public WrappingWall[,] WrappingWalls
-        //{
-        //    get { return wrappingWalls; }
-        //}
+        public LevelWall[] WrappingWalls
+        {
+            get { return extraWalls; }
+        }
 
         public string Seed
         {
@@ -112,11 +123,18 @@ namespace Barotrauma
             private set;
         }
 
-        public Body ShaftBody
+        public Body TopBarrier
         {
             get;
             private set;
         }
+
+        public Body BottomBarrier
+        {
+            get;
+            private set;
+        }
+
 
         public LevelGenerationParams GenerationParams
         {
@@ -446,24 +464,23 @@ namespace Barotrauma
             bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out triangles);
 
 #if CLIENT
-            List<VertexPositionTexture> bodyVertices = CaveGenerator.GenerateRenderVerticeList(triangles);
-
-            renderer.SetBodyVertices(bodyVertices.ToArray());
-            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells));
+            renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), Color.White);
+            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells), Color.White);
 
             renderer.PlaceSprites(generationParams.BackgroundSpriteAmount);
 #endif
 
-            ShaftBody = BodyFactory.CreateEdge(GameMain.World, 
+            TopBarrier = BodyFactory.CreateEdge(GameMain.World, 
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
                 ConvertUnits.ToSimUnits(new Vector2(borders.Right, 0)));
 
-            ShaftBody.SetTransform(ConvertUnits.ToSimUnits(new Vector2(0.0f, borders.Height)), 0.0f);
-                
-            ShaftBody.BodyType = BodyType.Static;
-            ShaftBody.CollisionCategories = Physics.CollisionLevel;
+            TopBarrier.SetTransform(ConvertUnits.ToSimUnits(new Vector2(0.0f, borders.Height)), 0.0f);                
+            TopBarrier.BodyType = BodyType.Static;
+            TopBarrier.CollisionCategories = Physics.CollisionLevel;
 
-            bodies.Add(ShaftBody);    
+            bodies.Add(TopBarrier);
+
+            GenerateSeaFloor();
 
             foreach (VoronoiCell cell in cells)
             {
@@ -534,21 +551,9 @@ namespace Barotrauma
             var newWaypoint = new WayPoint(new Rectangle((int)pathCells[0].Center.X, borders.Height, 10, 10), null);
             newWaypoint.MoveWithLevel = true;
             wayPoints.Add(newWaypoint);
-
-            //WayPoint prevWaypoint = newWaypoint;
-
+            
             for (int i = 0; i < pathCells.Count; i++)
             {
-                ////clean "loops" from the path
-                //for (int n = 0; n < i; n++)
-                //{
-                //    if (pathCells[n] != pathCells[i]) continue;
-
-                //    pathCells.RemoveRange(n + 1, i - n);
-                //    break;
-                //}
-                //if (i >= pathCells.Count) break;
-
                 pathCells[i].CellType = CellType.Path;
 
                 newWaypoint = new WayPoint(new Rectangle((int)pathCells[i].Center.X, (int)pathCells[i].Center.Y, 10, 10), null);
@@ -567,8 +572,6 @@ namespace Barotrauma
 
                     break;
                 }
-                
-                //prevWaypoint = newWaypoint;
             }
 
             newWaypoint = new WayPoint(new Rectangle((int)pathCells[pathCells.Count - 1].Center.X, borders.Height, 10, 10), null);
@@ -666,9 +669,57 @@ namespace Barotrauma
             return newCells;
         }
 
+        private void GenerateSeaFloor()
+        {
+            BottomPos = generationParams.SeaFloorDepth;
+            SeaFloorTopPos = BottomPos;
+            
+            List<Vector2> bottomPositions = new List<Vector2>();
+            bottomPositions.Add(new Vector2(0, BottomPos));
+
+            int mountainCount = Rand.Range(generationParams.MountainCountMin, generationParams.MountainCountMax, Rand.RandSync.Server);
+            for (int i = 0; i < mountainCount; i++)
+            {
+                bottomPositions.Add(
+                    new Vector2(Size.X / (mountainCount + 1) * (i + 1),
+                    BottomPos + Rand.Range(generationParams.MountainHeightMin, generationParams.MountainHeightMax, Rand.RandSync.Server)));
+            }
+            bottomPositions.Add(new Vector2(Size.X, BottomPos));
+
+
+            float minVertexInterval = 5000.0f;
+            float currInverval = Size.X / 2.0f;
+            while (currInverval > minVertexInterval)
+            {
+                for (int i = 0; i < bottomPositions.Count - 1; i++)
+                {
+                    bottomPositions.Insert(i+1,
+                        (bottomPositions[i] + bottomPositions[i + 1]) / 2.0f +
+                        Vector2.UnitY * Rand.Range(0.0f, generationParams.SeaFloorVariance, Rand.RandSync.Server));
+                    
+                    i++;
+                }
+
+                currInverval /= 2.0f;
+            }
+
+            SeaFloorTopPos = bottomPositions.Max(p => p.Y);
+            
+            extraWalls = new LevelWall[] { new LevelWall(bottomPositions, new Vector2(0.0f, -2000.0f), backgroundColor) };
+
+            BottomBarrier = BodyFactory.CreateEdge(GameMain.World,
+                ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)),
+                ConvertUnits.ToSimUnits(new Vector2(borders.Right, 0)));
+
+            BottomBarrier.SetTransform(ConvertUnits.ToSimUnits(new Vector2(0.0f, BottomPos)), 0.0f);
+            BottomBarrier.BodyType = BodyType.Static;
+            BottomBarrier.CollisionCategories = Physics.CollisionLevel;
+
+            bodies.Add(BottomBarrier);
+        }
+
         private void GenerateRuin(List<VoronoiCell> mainPath)
         {
-
             Vector2 ruinSize = new Vector2(Rand.Range(5000.0f, 8000.0f, Rand.RandSync.Server), Rand.Range(5000.0f, 8000.0f, Rand.RandSync.Server));
             float ruinRadius = Math.Max(ruinSize.X, ruinSize.Y) * 0.5f;
 
@@ -893,20 +944,16 @@ namespace Barotrauma
                 ruins = null;
             }
 
-            /*
-            if (wrappingWalls!=null)
+
+            if (extraWalls != null)
             {
-                for (int side = 0; side < 2; side++)
+                foreach (LevelWall w in extraWalls)
                 {
-                    for (int i = 0; i < 2; i++)
-                    {
-                        if (wrappingWalls[side, i] != null) wrappingWalls[side, i].Dispose();
-                    }
+                    w.Dispose();
                 }
 
-                wrappingWalls = null;
-            }*/
-
+                extraWalls = null;
+            }
 
             cells = null;
             
