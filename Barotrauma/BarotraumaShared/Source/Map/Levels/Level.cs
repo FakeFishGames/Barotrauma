@@ -107,7 +107,7 @@ namespace Barotrauma
             get { return ruins; }
         }
         
-        public LevelWall[] WrappingWalls
+        public LevelWall[] ExtraWalls
         {
             get { return extraWalls; }
         }
@@ -907,31 +907,29 @@ namespace Barotrauma
                 }
             }
 
-            /*
-            if (wrappingWalls == null) return cells;
-
-            for (int side = 0; side < 2; side++)
+            if (extraWalls != null)
             {
-                for (int n = 0; n < 2; n++)
+                Debug.Assert(extraWalls.Count() == 1, "Level.GetCells may need to be updated to support extra walls other than the ocean floor.");
+                if (pos.Y - searchDepth * GridCellSize < SeaFloorTopPos)
                 {
-                    if (wrappingWalls[side, n] == null) continue;
-
-                    if (Vector2.Distance(wrappingWalls[side, n].MidPos, pos) > WrappingWall.WallWidth) continue;
-
-                    foreach (VoronoiCell cell in wrappingWalls[side, n].Cells)
+                    foreach (VoronoiCell cell in extraWalls[0].Cells)
                     {
-                        cells.Add(cell);
+                        if (Math.Abs(cell.Center.X - pos.X) < searchDepth * GridCellSize)
+                        {
+                            cells.Add(cell);
+                        }
                     }
                 }
-            }*/
+            }
 
+            
             return cells;
         }
 
         private void Unload()
         {
 #if CLIENT
-            if (renderer!=null) 
+            if (renderer != null) 
             {
                 renderer.Dispose();
                 renderer = null;
