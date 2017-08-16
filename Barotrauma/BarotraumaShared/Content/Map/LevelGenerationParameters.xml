@@ -3,16 +3,19 @@
 
   <Biomes>
     <Biome
-      name ="Cold Caverns"
-      description="asdgfdfg"/>
+      name = "Cold Caverns"
+      description= "asdgfdfg"/>
 
     <Biome
-      name ="Volcanic Ridge"
-      description="asdgfdfg"/>
+      name = "Volcanic Ridge"
+      description= "asdgfdfg"/>
 	  
     <Biome
-      name ="Great Sea"
-      description="asdgfdfg"/>
+      name = "Hydrothermal Wastes"
+      description= "asdgfdfg"/>
+    <Biome
+      name = "Great Sea"
+      description= "asdgfdfg"/>
   </Biomes>
   
   <Default
@@ -106,5 +109,26 @@
     SeaFloorVariance="20000"
     MountainHeightMin="10000"
     MountainHeightMax="20000" 
+    />
+
+  <Wastes
+    biomes="Hydrothermal Wastes"
+    width="100000"
+    height="50000"
+    VoronoiSiteInterval="1500,1500"
+    VoronoiSiteVariance="700,700"
+    MainPathNodeIntervalRange="6000,10000"
+    BackgroundColor="25,23,10"
+    SmallTunnelCount="10"
+    SmallTunnelLengthRange="5000,50000"
+    RuinCount="3"
+    BottomHoleProbability="0.5"
+    BackgroundSpriteAmount="1000"
+    MountainCountMin="2"
+    MountainCountMax="3"
+    SeaFloorDepth="-100000.0"
+    SeaFloorVariance="2000"
+    MountainHeightMin="50000"
+    MountainHeightMax="60000" 
     />
 </LevelGenerationParameters>

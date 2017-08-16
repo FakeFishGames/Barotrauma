@@ -270,7 +270,7 @@ namespace Barotrauma
             wallCenterEffect.CurrentTechnique.Passes[0].Apply();
             if (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height < level.SeaFloorTopPos + 1024)
             {
-                foreach (LevelWall wall in level.WrappingWalls)
+                foreach (LevelWall wall in level.ExtraWalls)
                 {
                     graphicsDevice.SetVertexBuffer(wall.BodyVertices);
                     graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.BodyVertices.VertexCount / 3.0f));
@@ -287,7 +287,7 @@ namespace Barotrauma
 
             if (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height < level.SeaFloorTopPos + 1024)
             {
-                foreach (LevelWall wall in level.WrappingWalls)
+                foreach (LevelWall wall in level.ExtraWalls)
                 {
                     graphicsDevice.SetVertexBuffer(wall.WallVertices);
                     graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallVertices.VertexCount / 3.0f));
