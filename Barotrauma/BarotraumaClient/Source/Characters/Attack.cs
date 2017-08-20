@@ -8,7 +8,7 @@ namespace Barotrauma
     {
         private Sound sound;
 
-        private ParticleEmitter particleEmitterPrefab;
+        private ParticleEmitter particleEmitter;
 
         partial void InitProjSpecific(XElement element)
         {
@@ -23,7 +23,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "particleemitter":
-                        particleEmitterPrefab = new ParticleEmitter(subElement);
+                        particleEmitter = new ParticleEmitter(subElement);
                         break;
                 }
 
@@ -32,9 +32,9 @@ namespace Barotrauma
 
         partial void DamageParticles(float deltaTime, Vector2 worldPosition)
         {
-            if (particleEmitterPrefab != null)
+            if (particleEmitter != null)
             {
-                particleEmitterPrefab.Emit(deltaTime, worldPosition);
+                particleEmitter.Emit(deltaTime, worldPosition);
             }
 
             if (sound != null)
