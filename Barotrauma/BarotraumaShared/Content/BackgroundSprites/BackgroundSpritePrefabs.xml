@@ -1,102 +1,102 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <backgroundsprites>
-  <hanging1 alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
+  <hanging1 spawnpos="Wall, RuinWall" alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,0,242,543" origin="0.5,0.15"/>
   </hanging1>
 
-  <hanging2 alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
+  <hanging2 spawnpos="Wall, RuinWall" alignment="Bottom" minsize="0.5" maxsize="1.5" commonness="5">
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="241,0,322,720" origin="0.5,0.15"/>
   </hanging2>
 
-  <kelp1 alignment="Top" minsize="0.5" maxsize="1.5" commonness="10">
+  <kelp1 spawnpos="Wall, RuinWall" alignment="Top" minsize="0.5" maxsize="1.5" commonness="10">
     <overridecommonness commonness="0" leveltype="Open" />
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="0,667,275,357" origin="0.5,1.0"/>
   </kelp1>
 
-  <stalk alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" swingamount="2" randomrotation="-10,10">
+  <stalk spawnpos="Wall" alignment="Top" minsize="0.5" maxsize="1.5" commonness="1" swingamount="2" randomrotation="-10,10">
     <overridecommonness commonness="0" leveltype="Open" />
     <overridecommonness commonness="5" leveltype="Maze" />
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="775,0,249,849" origin="0.5,0.95"/>
   </stalk>
 
-  <spike alignment="Top" minsize="0.5" maxsize="1.5" alignwithsurface="true" randomrotation="-20,20" commonness="2">
+  <spike spawnpos="Wall, RuinWall" alignment="Top" minsize="0.5" maxsize="1.5" alignwithsurface="true" randomrotation="-20,20" commonness="2">
     <overridecommonness commonness="0" leveltype="Open" />
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="544,0,228,561" origin="0.5,0.95"/>
   </spike>
 
-  <leaves minsize="0.5" maxsize="1.5" alignwithsurface="true" commonness="3">
+  <leaves spawnpos="Wall, RuinWall" minsize="0.5" maxsize="1.5" alignwithsurface="true" commonness="3">
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="305,722,461,301" origin="0.6,0.8"/>
-  </leaves>  
+  </leaves>
 
-  <branches1 minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
+  <branches1 spawnpos="Wall, RuinWall" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="Maze" />
     <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="0,0,525,484" origin="0.5,0.9"/>
   </branches1>
 
-  <branches2 minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
+  <branches2 spawnpos="Wall, RuinWall" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="Maze" />
     <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="247,0,278,479" origin="0.2,0.9"/>
   </branches2>
 
-  <branches3 minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
+  <branches3 spawnpos="Wall, RuinWall" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
     <overridecommonness commonness="10" leveltype="Maze" />
     <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="526,0,245,479" origin="0.4,0.9"/>
   </branches3>
-  
-  <fungus minsize="0.5" maxsize="1.5" alignwithsurface="true" swingamount="1" commonness="3">
+
+  <fungus spawnpos="Wall, RuinWall" minsize="0.5" maxsize="1.5" alignwithsurface="true" swingamount="1" commonness="3">
     <overridecommonness commonness="10" leveltype="Maze" />
     <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="0,681,442,343" origin="0.5,0.9"/>
   </fungus>
 
-  <thistle alignment="Top" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" commonness="3">
+  <thistle spawnpos="Wall" alignment="Top" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" commonness="3">
     <overridecommonness commonness="0" leveltype="Open" />
     <Sprite texture="Content/BackgroundSprites/vegetation2.png" sourcerect="449,500,252,524" origin="0.5,0.95"/>
   </thistle>
 
-  <branch alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" commonness="10">
+  <branch spawnpos="Wall, RuinWall" alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" commonness="10">
     <overridecommonness commonness="0" leveltype="Open" />
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <Sprite texture="Content/BackgroundSprites/vegetation3.png" origin="0.5,0.95"/>
   </branch>
 
-  <branch alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" commonness="10">
+  <branch spawnpos="Wall, RuinWall" alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" commonness="10">
     <overridecommonness commonness="0" leveltype="Open" />
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <Sprite texture="Content/BackgroundSprites/vegetation4.png" sourcerect="0,0,818,1024" origin="0.5,0.95"/>
   </branch>
 
-  <hay alignment="Top" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" commonness="3">
+  <hay spawnpos="Wall, RuinWall" alignment="Top" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" commonness="3">
     <overridecommonness commonness="0" leveltype="Open" />
     <Sprite texture="Content/BackgroundSprites/vegetation4.png" sourcerect="820,245,204,779" origin="0.5,0.95"/>
   </hay>
 
-  <branch minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" swingamount="10" commonness="0">
+  <branch spawnpos="Wall, RuinWall" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" swingamount="10" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <Sprite texture="Content/BackgroundSprites/vegetation5.png" sourcerect="0,0,555,1024" origin="0.6,0.95"/>
   </branch>
 
-  <branch minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" swingamount="10" commonness="0">
+  <branch spawnpos="Wall, RuinWall" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" swingamount="10" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
     <Sprite texture="Content/BackgroundSprites/vegetation5.png" sourcerect="580,151,444,873" origin="0.3,0.95"/>
   </branch>
 
-  <icechunk minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
+  <icechunk spawnpos="Wall, RuinWall" minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
     <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="0,0,668,523" origin="0.5,0.5"/>
   </icechunk>
-  
-  <icechunk minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
+
+  <icechunk spawnpos="Wall, RuinWall" minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
     <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="669,0,335,513" origin="0.5,0.5"/>
   </icechunk>
 
-  <icechunk minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
+  <icechunk spawnpos="Wall, RuinWall" minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
     <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="0,523,331,501" origin="0.5,0.5"/>
   </icechunk>
-  
-  <icechunk minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
+
+  <icechunk spawnpos="Wall, RuinWall" minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
     <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5"/>
   </icechunk>
 </backgroundsprites>

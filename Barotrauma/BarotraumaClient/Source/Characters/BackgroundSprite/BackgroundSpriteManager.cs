@@ -32,13 +32,17 @@ namespace Barotrauma
 
     class BackgroundSpriteManager
     {
-        const int GridSize = 1000;
+        const int GridSize = 2000;
 
         private List<BackgroundSpritePrefab> prefabs = new List<BackgroundSpritePrefab>();
         
         private List<BackgroundSprite>[,] sprites;
 
-        private float swingTimer;
+        private List<BackgroundSprite> visibleSprites = new List<BackgroundSprite>();
+
+        private Rectangle currentGridIndices;
+
+        private float swingTimer, swingState;
 
         public BackgroundSpriteManager(string configPath)
         {
@@ -74,16 +78,8 @@ namespace Barotrauma
         {
             sprites = new List<BackgroundSprite>[
                 (int)Math.Ceiling(level.Size.X / GridSize),
-                (int)Math.Ceiling(level.Size.Y / GridSize)];
-
-            for (int x = 0; x < sprites.GetLength(0); x++)
-            {
-                for (int y = 0; y < sprites.GetLength(1); y++)
-                {
-                    sprites[x, y] = new List<BackgroundSprite>();
-                }
-            }
-
+                (int)Math.Ceiling((level.Size.Y - level.BottomPos) / GridSize)];
+            
             for (int i = 0 ; i < amount; i++)
             {
                 BackgroundSpritePrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
@@ -133,14 +129,15 @@ namespace Barotrauma
                 int maxX = (int)Math.Floor((spriteCorners.Max(c => c.X) + newSprite.Position.Z) / GridSize);
                 if (minX < 0 || maxX >= sprites.GetLength(0)) continue;
 
-                int minY = (int)Math.Floor((spriteCorners.Min(c => c.Y) - newSprite.Position.Z) / GridSize);
-                int maxY = (int)Math.Floor((spriteCorners.Max(c => c.Y) + newSprite.Position.Z) / GridSize);
+                int minY = (int)Math.Floor((spriteCorners.Min(c => c.Y) - newSprite.Position.Z - level.BottomPos) / GridSize);
+                int maxY = (int)Math.Floor((spriteCorners.Max(c => c.Y) + newSprite.Position.Z - level.BottomPos) / GridSize);
                 if (minY < 0 || maxY >= sprites.GetLength(1)) continue;
 
                 for (int x = minX; x <= maxX; x++)
                 {
                     for (int y = minY; y <= maxY; y++)
                     {
+                        if (sprites[x, y] == null) sprites[x, y] = new List<BackgroundSprite>();
                         sprites[x, y].Add(newSprite);
                     }
                 }
@@ -156,13 +153,17 @@ namespace Barotrauma
                 Rand.Range(0.0f, level.Size.X, Rand.RandSync.ClientOnly), 
                 Rand.Range(0.0f, level.Size.Y, Rand.RandSync.ClientOnly));
 
-            if (!prefab.SpawnOnWalls) return randomPos;
+            if (prefab.SpawnPos == BackgroundSpritePrefab.SpawnPosType.None) return randomPos;
 
             List<GraphEdge> edges = new List<GraphEdge>();
             List<Vector2> normals = new List<Vector2>();
 
-            var cells = level.GetCells(randomPos);
+            System.Diagnostics.Debug.Assert(level.ExtraWalls.Length == 1);
+            List<VoronoiCell> cells = new List<VoronoiCell>();
 
+            if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.Wall)) cells.AddRange(level.GetCells(randomPos));
+            if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.SeaFloor)) cells.AddRange(level.ExtraWalls[0].Cells);
+            
             if (cells.Any())
             {
                 VoronoiCell cell = cells[Rand.Int(cells.Count, Rand.RandSync.ClientOnly)];
@@ -197,21 +198,24 @@ namespace Barotrauma
                     normals.Add(normal);
                 }
             }
-
-            foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
+            
+            if (prefab.SpawnPos.HasFlag(BackgroundSpritePrefab.SpawnPosType.RuinWall))
             {
-                Rectangle expandedArea = ruin.Area;
-                expandedArea.Inflate(ruin.Area.Width, ruin.Area.Height);
-                if (!expandedArea.Contains(randomPos)) continue;
-
-                foreach (var ruinShape in ruin.RuinShapes)
+                foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
                 {
-                    foreach (var wall in ruinShape.Walls)
-                    {
-                        if (!prefab.Alignment.HasFlag(ruinShape.GetLineAlignment(wall))) continue;
+                    Rectangle expandedArea = ruin.Area;
+                    expandedArea.Inflate(ruin.Area.Width, ruin.Area.Height);
+                    if (!expandedArea.Contains(randomPos)) continue;
 
-                        edges.Add(new GraphEdge(wall.A, wall.B));
-                        normals.Add((wall.A + wall.B) / 2.0f - ruinShape.Center);
+                    foreach (var ruinShape in ruin.RuinShapes)
+                    {
+                        foreach (var wall in ruinShape.Walls)
+                        {
+                            if (!prefab.Alignment.HasFlag(ruinShape.GetLineAlignment(wall))) continue;
+
+                            edges.Add(new GraphEdge(wall.A, wall.B));
+                            normals.Add((wall.A + wall.B) / 2.0f - ruinShape.Center);
+                        }
                     }
                 }
             }
@@ -232,6 +236,28 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             swingTimer += deltaTime;
+            swingState = (float)Math.Sin(swingTimer * 0.1f);
+
+            foreach (BackgroundSprite s in visibleSprites)
+            {
+                if (s.Prefab.ParticleEmitter != null)
+                {
+                    Vector2 emitterPos = new Vector2(s.Prefab.EmitterPosition.X, s.Prefab.EmitterPosition.Y);
+
+                    if (s.Rotation != 0.0f || s.Prefab.SwingAmount != 0.0f)
+                    {
+                        var ca = (float)Math.Cos(s.Rotation + swingState * s.Prefab.SwingAmount);
+                        var sa = (float)Math.Sin(s.Rotation + swingState * s.Prefab.SwingAmount);
+                    
+                        emitterPos = new Vector2(
+                            ca * emitterPos.X + sa * emitterPos.Y, 
+                            -sa * emitterPos.X + ca * emitterPos.Y);
+                    }
+
+                    s.Prefab.ParticleEmitter.Emit(deltaTime, new Vector2(s.Position.X, s.Position.Y) + emitterPos);
+                }
+            }
+            
         }
 
         public void DrawSprites(SpriteBatch spriteBatch, Camera cam)
@@ -239,12 +265,12 @@ namespace Barotrauma
             Rectangle indices = Rectangle.Empty;
             indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize);            
             if (indices.X >= sprites.GetLength(0)) return;
-            indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height) / (float)GridSize);
+            indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height - Level.Loaded.BottomPos) / (float)GridSize);
             if (indices.Y >= sprites.GetLength(1)) return;
 
             indices.Width = (int)Math.Floor(cam.WorldView.Right / (float)GridSize)+1;
             if (indices.Width < 0) return;
-            indices.Height = (int)Math.Floor(cam.WorldView.Y / (float)GridSize)+1;
+            indices.Height = (int)Math.Floor((cam.WorldView.Y - Level.Loaded.BottomPos) / (float)GridSize)+1;
             if (indices.Height < 0) return;
 
             indices.X = Math.Max(indices.X, 0);
@@ -252,42 +278,46 @@ namespace Barotrauma
             indices.Width = Math.Min(indices.Width, sprites.GetLength(0)-1);
             indices.Height = Math.Min(indices.Height, sprites.GetLength(1)-1);
 
-            float swingState = (float)Math.Sin(swingTimer * 0.1f);
-
-            List<BackgroundSprite> visibleSprites = new List<BackgroundSprite>();
-
             float z = 0.0f;
-            for (int x = indices.X; x <= indices.Width; x++)
+            if (currentGridIndices != indices)
             {
-                for (int y = indices.Y; y <= indices.Height; y++)
+                visibleSprites.Clear();
+
+                for (int x = indices.X; x <= indices.Width; x++)
                 {
-                    foreach (BackgroundSprite sprite in sprites[x, y])
+                    for (int y = indices.Y; y <= indices.Height; y++)
                     {
-                        int drawOrderIndex = 0;
-                        for (int i = 0; i < visibleSprites.Count; i++)
+                        if (sprites[x, y] == null) continue;
+                        foreach (BackgroundSprite sprite in sprites[x, y])
                         {
-                            if (visibleSprites[i] == sprite)
+                            int drawOrderIndex = 0;
+                            for (int i = 0; i < visibleSprites.Count; i++)
                             {
-                                drawOrderIndex = -1;
-                                break;
+                                if (visibleSprites[i] == sprite)
+                                {
+                                    drawOrderIndex = -1;
+                                    break;
+                                }
+
+                                if (visibleSprites[i].Position.Z > sprite.Position.Z)
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    drawOrderIndex = i + 1;
+                                }
                             }
 
-                            if (visibleSprites[i].Position.Z > sprite.Position.Z)
+                            if (drawOrderIndex >= 0)
                             {
-                                break;
+                                visibleSprites.Insert(drawOrderIndex, sprite);
                             }
-                            else
-                            {
-                                drawOrderIndex = i + 1;
-                            }
-                        }
-
-                        if (drawOrderIndex >= 0)
-                        {
-                            visibleSprites.Insert(drawOrderIndex, sprite);
                         }
                     }
                 }
+
+                currentGridIndices = indices;
             }
 
             foreach (BackgroundSprite sprite in visibleSprites)
