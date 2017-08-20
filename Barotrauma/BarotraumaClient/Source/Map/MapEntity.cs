@@ -234,6 +234,19 @@ namespace Barotrauma
                 if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
             }
 
+            Vector2 nudgeAmount = Vector2.Zero;
+            if (PlayerInput.KeyHit(Keys.Up))    nudgeAmount.Y = 1f;
+            if (PlayerInput.KeyHit(Keys.Down))  nudgeAmount.Y = -1f;
+            if (PlayerInput.KeyHit(Keys.Left))  nudgeAmount.X = -1f;
+            if (PlayerInput.KeyHit(Keys.Right)) nudgeAmount.X = 1f;            
+            if (nudgeAmount != Vector2.Zero)
+            {
+                foreach (MapEntity entityToNudge in selectedList)
+                {
+                    entityToNudge.Move(nudgeAmount);
+                }
+            }
+
             //started moving selected entities
             if (startMovingPos != Vector2.Zero)
             {
