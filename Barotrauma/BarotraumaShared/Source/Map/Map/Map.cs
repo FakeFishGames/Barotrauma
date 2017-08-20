@@ -57,7 +57,7 @@ namespace Barotrauma
         {
             string mapSeed = ToolBox.GetAttributeString(element, "seed", "a");
 
-            int size = ToolBox.GetAttributeInt(element, "size", 500);
+            int size = ToolBox.GetAttributeInt(element, "size", 1000);
             Map map = new Map(mapSeed, size);
 
             map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
@@ -119,7 +119,7 @@ namespace Barotrauma
             Voronoi voronoi = new Voronoi(0.5f);
 
             List<Vector2> sites = new List<Vector2>();
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < 100; i++)
             {
                 sites.Add(new Vector2(Rand.Range(0.0f, size, Rand.RandSync.Server), Rand.Range(0.0f, size, Rand.RandSync.Server)));
             }
@@ -159,6 +159,7 @@ namespace Barotrauma
                 connections.Add(new LocationConnection(newLocations[0], newLocations[1]));
             }
 
+            //remove connections that are too short
             float minDistance = 50.0f;
             for (int i = connections.Count - 1; i >= 0; i--)
             {
@@ -201,6 +202,7 @@ namespace Barotrauma
                 }
             }
 
+
             foreach (LocationConnection connection in connections)
             {
                 Vector2 start = connection.Locations[0].MapPosition;
@@ -208,12 +210,54 @@ namespace Barotrauma
                 int generations = (int)(Math.Sqrt(Vector2.Distance(start, end) / 10.0f));
                 connection.CrackSegments = MathUtils.GenerateJaggedLine(start, end, generations, 5.0f);
             }
+            
+            AssignBiomes();
+        }
 
+        private void AssignBiomes()
+        {
             List<LocationConnection> biomeSeeds = new List<LocationConnection>();
-            foreach (Biome biome in LevelGenerationParams.GetBiomes())
+
+            List<Biome> centerBiomes = LevelGenerationParams.GetBiomes().FindAll(b => b.Placement.HasFlag(Biome.MapPlacement.Center));
+            if (centerBiomes.Count > 0)
+            {
+                Vector2 mapCenter = new Vector2(locations.Sum(l => l.MapPosition.X), locations.Sum(l => l.MapPosition.Y)) / locations.Count;
+                foreach (Biome centerBiome in centerBiomes)
+                {
+                    LocationConnection closestConnection = null;
+                    float closestDist = float.PositiveInfinity;
+                    foreach (LocationConnection connection in connections)
+                    {
+                        if (connection.Biome != null) continue;
+
+                        float dist = Vector2.Distance(connection.CenterPos, mapCenter);
+                        if (closestConnection == null || dist < closestDist)
+                        {
+                            closestConnection = connection;
+                            closestDist = dist;
+                        }
+                    }
+
+                    closestConnection.Biome = centerBiome;
+                    biomeSeeds.Add(closestConnection);
+                }
+            }
+
+            List<Biome> edgeBiomes = LevelGenerationParams.GetBiomes().FindAll(b => b.Placement.HasFlag(Biome.MapPlacement.Edge));
+            if (edgeBiomes.Count > 0)
+            {
+                List<LocationConnection> edges = GetMapEdges();
+                foreach (LocationConnection edge in edges)
+                {
+                    edge.Biome = edgeBiomes[Rand.Range(0, edgeBiomes.Count, Rand.RandSync.Server)];
+                }
+            }
+            
+            List<Biome> randomBiomes = LevelGenerationParams.GetBiomes().FindAll(b => b.Placement.HasFlag(Biome.MapPlacement.Random));
+            foreach (Biome biome in randomBiomes)
             {
                 LocationConnection seed = connections[0];
-                while (biomeSeeds.Contains(seed))
+                while (seed.Biome != null)
                 {
                     seed = connections[Rand.Range(0, connections.Count, Rand.RandSync.Server)];
                 }
@@ -246,6 +290,25 @@ namespace Barotrauma
             {
                 ExpandBiomes(nextSeeds);
             }
+        }
+
+        private List<LocationConnection> GetMapEdges()
+        {
+            List<Vector2> verts = locations.Select(l => l.MapPosition).ToList();
+
+            List<Vector2> giftWrappedVerts = MathUtils.GiftWrap(verts);
+
+            List<LocationConnection> edges = new List<LocationConnection>();
+            foreach (LocationConnection connection in connections)
+            {
+                if (giftWrappedVerts.Contains(connection.Locations[0].MapPosition) || 
+                    giftWrappedVerts.Contains(connection.Locations[1].MapPosition))
+                {
+                    edges.Add(connection);
+                }
+            }
+            
+            return edges;
         }
         
 
@@ -338,6 +401,14 @@ namespace Barotrauma
         {
             get { return level; }
             set { level = value; }
+        }
+
+        public Vector2 CenterPos
+        {
+            get
+            {
+                return (locations[0].MapPosition + locations[1].MapPosition) / 2.0f;
+            }
         }
         
         public LocationConnection(Location location1, Location location2)

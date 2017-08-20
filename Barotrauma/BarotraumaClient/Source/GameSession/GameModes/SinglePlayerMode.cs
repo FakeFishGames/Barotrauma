@@ -112,7 +112,7 @@ namespace Barotrauma
 
         public void GenerateMap(string seed)
         {
-            Map = new Map(seed, 500);
+            Map = new Map(seed, 1000);
         }
 
         public override void Start()

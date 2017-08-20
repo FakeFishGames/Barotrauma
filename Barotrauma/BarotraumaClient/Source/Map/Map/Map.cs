@@ -114,13 +114,11 @@ namespace Barotrauma
                         new Rectangle((int)start.X, (int)start.Y, (int)dist + 2, width),
                         new Rectangle(0, 0, iceCrack.Width, 60), crackColor, MathUtils.VectorToAngle(end - start),
                         new Vector2(0, 30), SpriteEffects.None, 0.01f);
-
-                    if (i == 0)
-                    {
-
-                        GUI.DrawString(spriteBatch, start, connection.Biome.Name, Color.White);
-                    }
                 }
+
+                //TODO: remove
+                Vector2 center = rectCenter + (connection.CenterPos + offset) * scale;
+                GUI.DrawString(spriteBatch, center, connection.Biome.Name, Color.White);
             }
 
             rect.Inflate(8, 8);
