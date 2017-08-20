@@ -466,8 +466,6 @@ namespace Barotrauma
 #if CLIENT
             renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), Color.White);
             renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells), Color.White);
-
-            renderer.PlaceSprites(generationParams.BackgroundSpriteAmount);
 #endif
 
             TopBarrier = BodyFactory.CreateEdge(GameMain.World, 
@@ -481,6 +479,10 @@ namespace Barotrauma
             bodies.Add(TopBarrier);
 
             GenerateSeaFloor();
+
+#if CLIENT
+            renderer.PlaceSprites(generationParams.BackgroundSpriteAmount);
+#endif
 
             foreach (VoronoiCell cell in cells)
             {
