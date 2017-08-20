@@ -159,7 +159,7 @@ namespace Barotrauma.Lights
 
             lightEffect.World = Matrix.CreateTranslation(offset) * transform;
                         
-            GameMain.ParticleManager.Draw(spriteBatch, false, Particles.ParticleBlendState.Additive);
+            GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
 
             if (Character.Controlled != null)
             {

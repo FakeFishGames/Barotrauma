@@ -143,7 +143,7 @@ namespace Barotrauma
         
         public AttackResult DoDamage(IDamageable attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
-            DamageParticles(worldPosition);
+            DamageParticles(deltaTime, worldPosition);
 
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
 
@@ -168,6 +168,6 @@ namespace Barotrauma
 
             return attackResult;
         }
-        partial void DamageParticles(Vector2 worldPosition);
+        partial void DamageParticles(float deltaTime, Vector2 worldPosition);
     }
 }

@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {
-    class ParticleEmitterPrefab
+    class ParticleEmitter
     {        
         public readonly string Name;
 
@@ -15,10 +15,14 @@ namespace Barotrauma.Particles
         public readonly float VelocityMin, VelocityMax;
 
         public readonly float ScaleMin, ScaleMax;
+        
+        public readonly int ParticleAmount;
 
-        public readonly float ParticleAmount;
+        public readonly float ParticlesPerSecond;
+        
+        private float emitTimer;
 
-        public ParticleEmitterPrefab(XElement element)
+        public ParticleEmitter(XElement element)
         {
             Name = element.Name.ToString();
 
@@ -60,22 +64,40 @@ namespace Barotrauma.Particles
                 VelocityMax = VelocityMin;
             }
 
-            ParticleAmount = ToolBox.GetAttributeInt(element, "particleamount", 1);
+            ParticlesPerSecond = ToolBox.GetAttributeInt(element, "particlespersecond", 0);
+            ParticleAmount = ToolBox.GetAttributeInt(element, "particleamount", 0);
         }
 
-        public void Emit(Vector2 position, Hull hullGuess = null)
+        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null)
         {
+            emitTimer += deltaTime;
+            
+            if (ParticlesPerSecond > 0)
+            {
+                float emitInterval = 1.0f / ParticlesPerSecond;
+                while (emitTimer > emitInterval)
+                {
+                    Emit(position, hullGuess);
+                    emitTimer -= emitInterval;
+                }
+            }
+
             for (int i = 0; i<ParticleAmount; i++)
             {
-                float angle = Rand.Range(AngleMin, AngleMax);
-                Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(VelocityMin, VelocityMax);
+                Emit(position, hullGuess);
+            }
+        }
 
-                var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, 0.0f, hullGuess);
+        private void Emit(Vector2 position, Hull hullGuess = null)
+        {
+            float angle = Rand.Range(AngleMin, AngleMax);
+            Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(VelocityMin, VelocityMax);
 
-                if (particle!=null)
-                {
-                    particle.Size *= Rand.Range(ScaleMin, ScaleMax);
-                }
+            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, 0.0f, hullGuess);
+
+            if (particle != null)
+            {
+                particle.Size *= Rand.Range(ScaleMin, ScaleMax);
             }
         }
     }

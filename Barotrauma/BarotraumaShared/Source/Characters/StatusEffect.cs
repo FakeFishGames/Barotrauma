@@ -23,7 +23,7 @@ namespace Barotrauma
         private List<RelatedItem> requiredItems;
 
 #if CLIENT
-        private List<ParticleEmitterPrefab> particleEmitters;
+        private List<ParticleEmitter> particleEmitters;
 
         private Sound sound;
 #endif
@@ -77,7 +77,7 @@ namespace Barotrauma
             requiredItems = new List<RelatedItem>();
 
 #if CLIENT
-            particleEmitters = new List<ParticleEmitterPrefab>();
+            particleEmitters = new List<ParticleEmitter>();
 #endif
 
             IEnumerable<XAttribute> attributes = element.Attributes();            
@@ -179,7 +179,7 @@ namespace Barotrauma
                         break;
 #if CLIENT
                     case "particleemitter":
-                        particleEmitters.Add(new ParticleEmitterPrefab(subElement));
+                        particleEmitters.Add(new ParticleEmitter(subElement));
                         break;
 #endif
                 }
@@ -280,9 +280,9 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            foreach (ParticleEmitterPrefab emitter in particleEmitters)
+            foreach (ParticleEmitter emitter in particleEmitters)
             {
-                emitter.Emit(entity.WorldPosition, hull);
+                emitter.Emit(deltaTime, entity.WorldPosition, hull);
             }
 #endif
         }
@@ -331,8 +331,8 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Couldn't apply value "+value.ToString()+" ("+type+") to property \""+property.Name+"\" ("+property.GetValue().GetType()+")! "
-                    +"Make sure the type of the value set in the config files matches the type of the property.");
+                DebugConsole.ThrowError("Couldn't apply value " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                    + "Make sure the type of the value set in the config files matches the type of the property.");
             }
         }
 
