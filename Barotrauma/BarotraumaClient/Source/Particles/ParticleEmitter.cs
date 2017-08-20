@@ -5,10 +5,60 @@ using System.Xml.Linq;
 namespace Barotrauma.Particles
 {
     class ParticleEmitter
+    {
+        private float emitTimer;
+
+        public readonly ParticleEmitterPrefab Prefab;
+
+        public ParticleEmitter(XElement element)
+        {
+            Prefab = new ParticleEmitterPrefab(element);
+        }
+
+        public ParticleEmitter(ParticleEmitterPrefab prefab)
+        {
+            Prefab = prefab;
+        }
+
+        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null)
+        {
+            emitTimer += deltaTime;
+
+            if (Prefab.ParticlesPerSecond > 0)
+            {
+                float emitInterval = 1.0f / Prefab.ParticlesPerSecond;
+                while (emitTimer > emitInterval)
+                {
+                    Emit(position, hullGuess);
+                    emitTimer -= emitInterval;
+                }
+            }
+
+            for (int i = 0; i < Prefab.ParticleAmount; i++)
+            {
+                Emit(position, hullGuess);
+            }
+        }
+
+        private void Emit(Vector2 position, Hull hullGuess = null)
+        {
+            float angle = Rand.Range(Prefab.AngleMin, Prefab.AngleMax);
+            Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(Prefab.VelocityMin, Prefab.VelocityMax);
+
+            var particle = GameMain.ParticleManager.CreateParticle(Prefab.ParticlePrefab, position, velocity, 0.0f, hullGuess);
+
+            if (particle != null)
+            {
+                particle.Size *= Rand.Range(Prefab.ScaleMin, Prefab.ScaleMax);
+            }
+        }
+    }
+
+    class ParticleEmitterPrefab
     {        
         public readonly string Name;
 
-        public readonly ParticlePrefab particlePrefab;
+        public readonly ParticlePrefab ParticlePrefab;
 
         public readonly float AngleMin, AngleMax;
 
@@ -17,16 +67,13 @@ namespace Barotrauma.Particles
         public readonly float ScaleMin, ScaleMax;
         
         public readonly int ParticleAmount;
+        public readonly float ParticlesPerSecond;        
 
-        public readonly float ParticlesPerSecond;
-        
-        private float emitTimer;
-
-        public ParticleEmitter(XElement element)
+        public ParticleEmitterPrefab(XElement element)
         {
             Name = element.Name.ToString();
 
-            particlePrefab = GameMain.ParticleManager.FindPrefab(ToolBox.GetAttributeString(element, "particle", ""));
+            ParticlePrefab = GameMain.ParticleManager.FindPrefab(ToolBox.GetAttributeString(element, "particle", ""));
 
             if (element.Attribute("startrotation") == null)
             {
@@ -66,39 +113,6 @@ namespace Barotrauma.Particles
 
             ParticlesPerSecond = ToolBox.GetAttributeInt(element, "particlespersecond", 0);
             ParticleAmount = ToolBox.GetAttributeInt(element, "particleamount", 0);
-        }
-
-        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null)
-        {
-            emitTimer += deltaTime;
-            
-            if (ParticlesPerSecond > 0)
-            {
-                float emitInterval = 1.0f / ParticlesPerSecond;
-                while (emitTimer > emitInterval)
-                {
-                    Emit(position, hullGuess);
-                    emitTimer -= emitInterval;
-                }
-            }
-
-            for (int i = 0; i<ParticleAmount; i++)
-            {
-                Emit(position, hullGuess);
-            }
-        }
-
-        private void Emit(Vector2 position, Hull hullGuess = null)
-        {
-            float angle = Rand.Range(AngleMin, AngleMax);
-            Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(VelocityMin, VelocityMax);
-
-            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, 0.0f, hullGuess);
-
-            if (particle != null)
-            {
-                particle.Size *= Rand.Range(ScaleMin, ScaleMax);
-            }
         }
     }
 }

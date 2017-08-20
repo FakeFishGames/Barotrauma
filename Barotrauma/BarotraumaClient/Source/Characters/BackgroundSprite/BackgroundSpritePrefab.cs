@@ -30,7 +30,7 @@ namespace Barotrauma
 
         public readonly Vector2 DepthRange;
 
-        public readonly Particles.ParticleEmitter ParticleEmitter;
+        public readonly Particles.ParticleEmitterPrefab ParticleEmitterPrefab;
         public readonly Vector2 EmitterPosition;
 
         public readonly float SwingAmount;
@@ -90,7 +90,7 @@ namespace Barotrauma
                         }
                         break;
                     case "particleemitter":
-                        ParticleEmitter = new Particles.ParticleEmitter(subElement);
+                        ParticleEmitterPrefab = new Particles.ParticleEmitterPrefab(subElement);
                         EmitterPosition = ToolBox.GetAttributeVector2(subElement, "position", Vector2.Zero);
                         break;
                 }

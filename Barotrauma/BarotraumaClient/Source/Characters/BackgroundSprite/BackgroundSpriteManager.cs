@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Particles;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,8 @@ namespace Barotrauma
         public float Scale;
 
         public float Rotation;
+
+        public Particles.ParticleEmitter ParticleEmitter;
         
         //public Vector2[] spriteCorners;
 
@@ -27,6 +30,8 @@ namespace Barotrauma
             this.Scale = scale;
 
             this.Rotation = rotation;
+
+            this.ParticleEmitter = new ParticleEmitter(prefab.ParticleEmitterPrefab);
         }
     }
 
@@ -240,7 +245,7 @@ namespace Barotrauma
 
             foreach (BackgroundSprite s in visibleSprites)
             {
-                if (s.Prefab.ParticleEmitter != null)
+                if (s.Prefab.ParticleEmitterPrefab != null)
                 {
                     Vector2 emitterPos = new Vector2(s.Prefab.EmitterPosition.X, s.Prefab.EmitterPosition.Y);
 
@@ -254,7 +259,7 @@ namespace Barotrauma
                             -sa * emitterPos.X + ca * emitterPos.Y);
                     }
 
-                    s.Prefab.ParticleEmitter.Emit(deltaTime, new Vector2(s.Position.X, s.Position.Y) + emitterPos);
+                    s.ParticleEmitter.Emit(deltaTime, new Vector2(s.Position.X, s.Position.Y) + emitterPos);
                 }
             }
             
