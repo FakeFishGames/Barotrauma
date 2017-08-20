@@ -4,24 +4,29 @@
   <Biomes>
     <Biome
       name = "Cold Caverns"
-      description= "asdgfdfg"/>
+      description= "asdgfdfg"
+      MapPlacement="Center, Random"/>
 
     <Biome
       name = "Volcanic Ridge"
-      description= "asdgfdfg"/>
+      description= "asdgfdfg"
+      MapPlacement="Random"/>
 	  
     <Biome
       name = "Hydrothermal Wastes"
-      description= "asdgfdfg"/>
+      description= "asdgfdfg"
+      MapPlacement="Random"/>
+    
     <Biome
       name = "Great Sea"
-      description= "asdgfdfg"/>
+      description= "asdgfdfg"
+      MapPlacement="Edge"/>
   </Biomes>
   
   <Default
     biomes="Cold Caverns"
     width="150000"
-    height="60000"
+    height="60000"    
     VoronoiSiteInterval="2000,2000"
     VoronoiSiteVariance="800,800"
     MainPathNodeIntervalRange="10000,30000"

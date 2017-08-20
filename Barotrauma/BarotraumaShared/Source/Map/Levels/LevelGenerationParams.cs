@@ -8,9 +8,18 @@ namespace Barotrauma
 {
     class Biome
     {
+        public enum MapPlacement
+        {
+            Random = 1,
+            Center = 2,
+            Edge = 4
+        }
+
         public readonly string Name;
         public readonly string Description;
 
+        public readonly MapPlacement Placement;
+        
         public Biome(string name, string description)
         {
             Name = name;
@@ -21,6 +30,17 @@ namespace Barotrauma
         {
             Name = ToolBox.GetAttributeString(element, "name", "Biome");
             Description = ToolBox.GetAttributeString(element, "description", "");
+            
+            string[] placementsStrs = ToolBox.GetAttributeString(element, "MapPlacement", "Default").Split(',');
+            foreach (string placementStr in placementsStrs)
+            {
+                MapPlacement parsedPlacement;            
+                if (Enum.TryParse(placementStr.Trim(), out parsedPlacement))
+                {
+                    Placement |= parsedPlacement;
+                }
+            }
+
         }
     }
 
