@@ -270,8 +270,8 @@
       <StatusEffect type="OnUse" target="This" IsOn="true"/>
 
       <StatusEffect type="OnActive" target="This" Condition="-1.0">
-        <ParticleEmitter particle="flare"/>
-        <ParticleEmitter particle="bubbles"/>
+        <ParticleEmitter particle="flare" particlespersecond="30"/>
+        <ParticleEmitter particle="bubbles" particlespersecond="30"/>
       </StatusEffect>
 
       <StatusEffect type="OnBroken" target="This" IsOn="false"/>

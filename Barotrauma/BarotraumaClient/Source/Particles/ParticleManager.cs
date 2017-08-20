@@ -66,10 +66,18 @@ namespace Barotrauma.Particles
 
         public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation = 0.0f, Hull hullGuess = null)
         {
-            if (!Submarine.RectContains(MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist), position)) return null;
-            //if (!cam.WorldView.Contains(position)) return null;
-
             if (particleCount >= MaxParticles) return null;
+
+            //endPos = x + vt + 1/2 * at^2
+            Vector2 particleEndPos = position + speed * prefab.LifeTime + 0.5f * prefab.VelocityChange * prefab.LifeTime * prefab.LifeTime;
+
+            Vector2 minPos = new Vector2(Math.Min(position.X, particleEndPos.X), Math.Min(position.Y, particleEndPos.Y));
+            Vector2 maxPos = new Vector2(Math.Max(position.X, particleEndPos.X), Math.Max(position.Y, particleEndPos.Y));
+
+            Rectangle expandedViewRect = MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist);
+
+            if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) return null;
+            if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) return null;
 
             if (particles[particleCount] == null) particles[particleCount] = new Particle();
 
@@ -77,8 +85,7 @@ namespace Barotrauma.Particles
 
             particleCount++;
 
-            return particles[particleCount-1];
-
+            return particles[particleCount - 1];
         }
 
         public ParticlePrefab FindPrefab(string prefabName)
@@ -131,7 +138,7 @@ namespace Barotrauma.Particles
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool inWater, ParticleBlendState blendState)
+        public void Draw(SpriteBatch spriteBatch, bool inWater, bool? inSub, ParticleBlendState blendState)
         {
             ParticlePrefab.DrawTargetType drawTarget = inWater ? ParticlePrefab.DrawTargetType.Water : ParticlePrefab.DrawTargetType.Air;
 
@@ -139,6 +146,7 @@ namespace Barotrauma.Particles
             {
                 if (particles[i].BlendState != blendState) continue;
                 if (!particles[i].DrawTarget.HasFlag(drawTarget)) continue;
+                if (inSub.HasValue && (particles[i].CurrentHull == null) == inSub.Value) continue;
                 
                 particles[i].Draw(spriteBatch);
             }
