@@ -26,6 +26,7 @@
 
   <leaves spawnpos="Wall, RuinWall" minsize="0.5" maxsize="1.5" alignwithsurface="true" commonness="3">
     <Sprite texture="Content/BackgroundSprites/vegetation.png" sourcerect="305,722,461,301" origin="0.6,0.8"/>
+    <overridecommonness commonness="0" leveltype="Wastes" />
   </leaves>
 
   <branches1 spawnpos="Wall, RuinWall" minsize="0.5" maxsize="2.0" alignwithsurface="true" swingamount="3" randomrotation="-20,20" commonness="4">
@@ -55,6 +56,7 @@
 
   <branch spawnpos="Wall, RuinWall" alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="10" commonness="10">
     <overridecommonness commonness="0" leveltype="Open" />
+    <overridecommonness commonness="0" leveltype="Wastes" />
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <Sprite texture="Content/BackgroundSprites/vegetation3.png" origin="0.5,0.95"/>
@@ -62,6 +64,7 @@
 
   <branch spawnpos="Wall, RuinWall" alignment="Top" minsize="1" maxsize="3" randomrotation="-30,30" swingamount="8" commonness="10">
     <overridecommonness commonness="0" leveltype="Open" />
+    <overridecommonness commonness="0" leveltype="Wastes" />
     <overridecommonness commonness="1" leveltype="Pillars" />
     <overridecommonness commonness="1" leveltype="Slabs" />
     <Sprite texture="Content/BackgroundSprites/vegetation4.png" sourcerect="0,0,818,1024" origin="0.5,0.95"/>
@@ -69,18 +72,21 @@
 
   <hay spawnpos="Wall, RuinWall" alignment="Top" minsize="0.5" maxsize="1.5" randomrotation="-10,10" swingamount="5" commonness="3">
     <overridecommonness commonness="0" leveltype="Open" />
+    <overridecommonness commonness="0" leveltype="Wastes" />
     <Sprite texture="Content/BackgroundSprites/vegetation4.png" sourcerect="820,245,204,779" origin="0.5,0.95"/>
   </hay>
 
   <branch spawnpos="Wall, RuinWall" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" swingamount="10" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
+    <overridecommonness commonness="0" leveltype="Wastes" />
     <Sprite texture="Content/BackgroundSprites/vegetation5.png" sourcerect="0,0,555,1024" origin="0.6,0.95"/>
   </branch>
 
   <branch spawnpos="Wall, RuinWall" minsize="1" maxsize="3" alignwithsurface="true" randomrotation="-30,30" swingamount="10" commonness="0">
     <overridecommonness commonness="10" leveltype="Pillars" />
     <overridecommonness commonness="10" leveltype="Slabs" />
+    <overridecommonness commonness="0" leveltype="Wastes" />
     <Sprite texture="Content/BackgroundSprites/vegetation5.png" sourcerect="580,151,444,873" origin="0.3,0.95"/>
   </branch>
 
@@ -99,4 +105,45 @@
   <icechunk spawnpos="Wall, RuinWall" minsize="5" maxsize="8" randomrotation="-180,180" swingamount="0" commonness="10" depthrange="100,2000">
     <Sprite texture="Content/BackgroundSprites/ice.png" sourcerect="702,513,322,511" origin="0.5,0.5"/>
   </icechunk>
+
+
+  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="2" randomrotation="-5,5" commonness="0">
+    <overridecommonness commonness="1" leveltype="Wastes" />
+    <overridecommonness commonness="1" leveltype="Ridge" />
+    <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9"/>
+    <ParticleEmitter
+      particle="hydrosmoke"
+      particlespersecond="2"
+      position="0,1400"
+      anglemin="80"
+      anglemax="100"
+      velocitymin="500"
+      velocitymax="6000"/>
+  </blacksmoker>
+
+  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="2" randomrotation="-5,5" commonness="0">
+    <overridecommonness commonness="1" leveltype="Wastes" />
+    <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9"/>
+    <ParticleEmitter
+      particle="hydrosmoke"
+      particlespersecond="2"
+      position="-20,570"
+      anglemin="80"
+      anglemax="100"
+      velocitymin="500"
+      velocitymax="6000"/>
+  </blacksmoker>
+
+  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="2" randomrotation="-5,5" commonness="0">
+    <overridecommonness commonness="1" leveltype="Wastes" />
+    <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
+    <ParticleEmitter
+      particle="hydrosmoke"
+      particlespersecond="2"
+      position="-50,700"
+      anglemin="80"
+      anglemax="100"
+      velocitymin="500"
+      velocitymax="600"/>
+  </blacksmoker> 
 </backgroundsprites>
