@@ -41,6 +41,12 @@ namespace Barotrauma
                     {
                         limb.body.Enabled = enabled;
                     }
+#if CLIENT
+                    if (limb.LightSource != null)
+                    {
+                        limb.LightSource.Enabled = enabled;
+                    }
+#endif
                 }
                 AnimController.Collider.Enabled = value;
             }

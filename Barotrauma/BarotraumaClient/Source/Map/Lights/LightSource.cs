@@ -116,6 +116,8 @@ namespace Barotrauma.Lights
             }
         }
 
+        public bool Enabled = true;
+
         public LightSource (XElement element)
             : this(Vector2.Zero, 100.0f, Color.White, null)
         {

@@ -96,6 +96,12 @@ namespace Barotrauma
             set;
         }
 
+        public Color WallColor
+        {
+            get;
+            set;
+        }
+
         [HasDefaultValue(1000, false)]
         public int BackgroundSpriteAmount
         {
@@ -276,6 +282,9 @@ namespace Barotrauma
 
             Vector3 colorVector = ToolBox.GetAttributeVector3(element, "BackgroundColor", new Vector3(50, 46, 20));
             BackgroundColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
+
+            colorVector = ToolBox.GetAttributeVector3(element, "WallColor", new Vector3(255,255,255));
+            WallColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
 
             VoronoiSiteInterval = ToolBox.GetAttributeVector2(element, "VoronoiSiteInterval", new Vector2(3000, 3000));
 

@@ -49,6 +49,13 @@ namespace Barotrauma
                         GameMain.LobbyScreen.SelectLocation(highlightedLocation, connection);
                     }
                 }
+
+#if DEBUG
+                if (PlayerInput.DoubleClicked() && highlightedLocation != null)
+                {
+                    currentLocation = highlightedLocation;
+                }
+#endif
             }
         }
 
@@ -116,9 +123,11 @@ namespace Barotrauma
                         new Vector2(0, 30), SpriteEffects.None, 0.01f);
                 }
 
-                //TODO: remove
-                Vector2 center = rectCenter + (connection.CenterPos + offset) * scale;
-                GUI.DrawString(spriteBatch, center, connection.Biome.Name, Color.White);
+                if (GameMain.DebugDraw)
+                {
+                    Vector2 center = rectCenter + (connection.CenterPos + offset) * scale;
+                    GUI.DrawString(spriteBatch, center, connection.Biome.Name, Color.White);
+                }
             }
 
             rect.Inflate(8, 8);
