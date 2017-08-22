@@ -31,7 +31,10 @@ namespace Barotrauma
 
             this.Rotation = rotation;
 
-            this.ParticleEmitter = new ParticleEmitter(prefab.ParticleEmitterPrefab);
+            if (prefab.ParticleEmitterPrefab != null)
+            {
+                this.ParticleEmitter = new ParticleEmitter(prefab.ParticleEmitterPrefab);
+            }
         }
     }
 
@@ -107,7 +110,7 @@ namespace Barotrauma
                 
                 //calculate the positions of the corners of the rotated sprite
                 Vector2 halfSize = newSprite.Prefab.Sprite.size * newSprite.Scale / 2;
-                var spriteCorners = new Vector2[]
+                var spriteCorners = new List<Vector2>
                 {
                     -halfSize, new Vector2(-halfSize.X, halfSize.Y),
                     halfSize, new Vector2(halfSize.X, -halfSize.Y)
@@ -125,11 +128,16 @@ namespace Barotrauma
                         (float)(spriteCorners[j].X * Math.Cos(-rotation) - spriteCorners[j].Y * Math.Sin(-rotation)),
                         (float)(spriteCorners[j].X * Math.Sin(-rotation) + spriteCorners[j].Y * Math.Cos(-rotation)));
 
-                    spriteCorners[j] += (Vector2)pos + pivotOffset;
+                    spriteCorners[j] += pos.Value + pivotOffset;
                 }
 
-                //newSprite.spriteCorners = spriteCorners;
-                
+                if (newSprite.ParticleEmitter != null)
+                {
+                    Rectangle particleBounds = newSprite.ParticleEmitter.CalculateParticleBounds(pos.Value);
+                    spriteCorners.Add(particleBounds.Location.ToVector2());
+                    spriteCorners.Add(new Vector2(particleBounds.Right, particleBounds.Bottom));
+                }
+                                
                 int minX = (int)Math.Floor((spriteCorners.Min(c => c.X) - newSprite.Position.Z) / GridSize);
                 int maxX = (int)Math.Floor((spriteCorners.Max(c => c.X) + newSprite.Position.Z) / GridSize);
                 if (minX < 0 || maxX >= sprites.GetLength(0)) continue;

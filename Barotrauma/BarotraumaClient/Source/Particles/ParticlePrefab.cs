@@ -83,6 +83,9 @@ namespace Barotrauma.Particles
                 AngularVelocityMax = AngularVelocityMin;
             }
 
+            AngularVelocityMin = MathHelper.ToRadians(AngularVelocityMin);
+            AngularVelocityMax = MathHelper.ToRadians(AngularVelocityMax);
+
             if (element.Attribute("startsize") == null)
             {
                 StartSizeMin = ToolBox.GetAttributeVector2(element, "startsizemin", Vector2.One);
@@ -176,6 +179,12 @@ namespace Barotrauma.Particles
                     break;
                 
             }
+        }
+
+        public Vector2 CalculateEndPosition(Vector2 startPosition, Vector2 velocity)
+        {
+            //endPos = x + vt + 1/2 * at^2
+            return startPosition + velocity * LifeTime + 0.5f * VelocityChange * LifeTime * LifeTime;
         }
     }
 }
