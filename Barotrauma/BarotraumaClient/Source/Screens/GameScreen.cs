@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -103,6 +105,18 @@ namespace Barotrauma
 
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
+            HashSet<Character> outsideCharacters = new HashSet<Character>();
+            foreach (Character c in Character.CharacterList)
+            {
+                if (!c.AnimController.CanEnterSubmarine)
+                {
+                    outsideCharacters.Add(c);
+                }
+                else if (c.CurrentHull == null && !Submarine.Loaded.Any(s => Submarine.RectContains(s.WorldBorders, c.WorldPosition)))
+                {
+                    outsideCharacters.Add(c);
+                }
+            }
 
             foreach (Submarine sub in Submarine.Loaded)
             {
@@ -134,6 +148,18 @@ namespace Barotrauma
                 Level.Loaded.DrawBack(graphics, spriteBatch, cam, BackgroundCreatureManager);
             }
 
+            spriteBatch.Begin(SpriteSortMode.BackToFront,
+                BlendState.AlphaBlend,
+                null, null, null, null,
+                cam.Transform);
+            
+            foreach (Character c in outsideCharacters)
+            {
+                if (c.CurrentHull == null) c.Draw(spriteBatch);
+            }
+
+            spriteBatch.End();
+
 #if LINUX
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.NonPremultiplied,
@@ -141,9 +167,9 @@ namespace Barotrauma
                 cam.Transform);
 #else
             spriteBatch.Begin(SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            null, DepthStencilState.DepthRead, null, null,
-            cam.Transform);
+                BlendState.AlphaBlend,
+                null, DepthStencilState.DepthRead, null, null,
+                cam.Transform);
 #endif
             GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.AlphaBlend);
             spriteBatch.End();
@@ -178,7 +204,10 @@ namespace Barotrauma
 
             Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
 
-            foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (!outsideCharacters.Contains(c)) c.Draw(spriteBatch);
+            }
 
             spriteBatch.End();
 
