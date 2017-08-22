@@ -47,8 +47,6 @@ namespace Barotrauma.Items.Components
 
         private float load;
         
-        private PropertyTask powerUpTask;
-
         private bool unsentChanges;
         private float sendUpdateTimer;
 
@@ -218,13 +216,6 @@ namespace Barotrauma.Items.Components
                 MeltDown();
                 return;
             }
-            else if (temperature == 0.0f)
-            {
-                if (powerUpTask == null || powerUpTask.IsFinished)
-                {
-                    powerUpTask = new PropertyTask(item, IsRunning, 50.0f, "Power up the reactor");
-                }
-            }
 
             load = 0.0f;
 
@@ -325,7 +316,6 @@ namespace Barotrauma.Items.Components
 
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
  
-            new RepairTask(item, 60.0f, "Reactor meltdown!");
             item.Condition = 0.0f;
 
             var containedItems = item.ContainedItems;

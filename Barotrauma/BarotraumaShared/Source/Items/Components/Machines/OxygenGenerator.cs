@@ -8,8 +8,6 @@ namespace Barotrauma.Items.Components
 {
     class OxygenGenerator : Powered
     {
-        PropertyTask powerUpTask;
-
         float powerDownTimer;
 
         bool running;
@@ -59,11 +57,7 @@ namespace Barotrauma.Items.Components
             {
                 powerDownTimer += deltaTime;
                 running = false;
-                if ((powerUpTask==null || powerUpTask.IsFinished) && powerDownTimer>5.0f)
-                {
-                    powerUpTask = new PropertyTask(item, IsRunning, 50.0f, "Turn on the oxygen generator");
-                }
-                return;                
+                return;
             }
             else
             {

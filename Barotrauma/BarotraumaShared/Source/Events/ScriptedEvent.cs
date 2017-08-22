@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
@@ -8,15 +7,19 @@ namespace Barotrauma
 {
     class ScriptedEvent
     {
-        protected string name;
-        protected string description;
+        private static List<ScriptedEvent> prefabs;
 
-        protected int commonness;
-        protected int difficulty;
+        protected readonly string name;
+        protected readonly string description;
+
+        private readonly int minEventCount, maxEventCount;
 
         protected bool isFinished;
 
-        public Dictionary<string, int> OverrideCommonness;
+        private readonly XElement configElement;
+
+        private readonly Dictionary<string, int> overrideMinEventCount;
+        private readonly Dictionary<string, int> overrideMaxEventCount;
 
         public string Name
         {
@@ -27,12 +30,7 @@ namespace Barotrauma
         {
             get { return description; }
         }
-
-        public int Commonness
-        {
-            get { return commonness; }
-        }
-
+        
         public string MusicType
         {
             get;
@@ -48,134 +46,41 @@ namespace Barotrauma
         {
             get { return isFinished; }
         }
-
-        public int Difficulty
-        {
-            get { return difficulty; }
-        }
-
+        
         public override string ToString()
         {
-            return "ScriptedEvent ("+name+")";
+            return "ScriptedEvent (" + name + ")";
         }
 
-        public ScriptedEvent(XElement element)
+        protected ScriptedEvent(XElement element)
         {
+            configElement = element;
+
             name = ToolBox.GetAttributeString(element, "name", "");
             description = ToolBox.GetAttributeString(element, "description", "");
-
-            difficulty = ToolBox.GetAttributeInt(element, "difficulty", 1);
-            commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
+            
+            minEventCount = ToolBox.GetAttributeInt(element, "mineventcount", 0);
+            maxEventCount = ToolBox.GetAttributeInt(element, "maxeventcount", 0);
 
             MusicType = ToolBox.GetAttributeString(element, "musictype", "default");
 
-            OverrideCommonness = new Dictionary<string, int>();
+            overrideMinEventCount = new Dictionary<string, int>();
+            overrideMaxEventCount = new Dictionary<string, int>();
 
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "overridecommonness":
+                    case "overrideeventcount":
                         string levelType = ToolBox.GetAttributeString(subElement, "leveltype", "");
-                        if (!OverrideCommonness.ContainsKey(levelType))
+                        if (!overrideMinEventCount.ContainsKey(levelType))
                         {
-                            OverrideCommonness.Add(levelType, ToolBox.GetAttributeInt(subElement, "commonness", 1));
+                            overrideMinEventCount.Add(levelType, ToolBox.GetAttributeInt(subElement, "min", 0));
+                            overrideMaxEventCount.Add(levelType, ToolBox.GetAttributeInt(subElement, "max", 0));
                         }
                         break;
                 }
             }
-        }
-
-
-        public static ScriptedEvent LoadRandom(Random rand)
-        {
-            var configFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.RandomEvents);
-
-            if (!configFiles.Any())
-            {
-                DebugConsole.ThrowError("No config files for random events found in the selected content package");
-                return null;
-            }
-
-            string configFile = configFiles[0];
-
-            XDocument doc = ToolBox.TryLoadXml(configFile);
-            if (doc == null) return null;
-            
-            int eventCount = doc.Root.Elements().Count();
-            //int[] commonness = new int[eventCount];
-            float[] eventProbability = new float[eventCount];
-
-            float probabilitySum = 0.0f;
-
-            int i = 0;
-            foreach (XElement element in doc.Root.Elements())
-            {
-                eventProbability[i] = ToolBox.GetAttributeInt(element, "commonness", 1);
-
-                //if the event has been previously selected, it's less likely to be selected now
-                //int previousEventIndex = previousEvents.FindIndex(x => x == i);
-                //if (previousEventIndex >= 0)
-                //{
-                //    //how many shifts ago was the event last selected
-                //    int eventDist = eventCount - previousEventIndex;
-
-                //    float weighting = (1.0f / eventDist) * PreviouslyUsedWeight;
-
-                //    eventProbability[i] *= weighting;
-                //}
-
-                probabilitySum += eventProbability[i];
-
-                i++;
-            }
-
-            float randomNumber = (float)rand.NextDouble() * probabilitySum;
-
-            i = 0;
-            foreach (XElement element in doc.Root.Elements())
-            {
-                if (randomNumber <= eventProbability[i])
-                {
-                    Type t;
-                    string type = element.Name.ToString();
-
-                    try
-                    {
-                        t = Type.GetType("Barotrauma." + type, true, true);
-                        if (t == null)
-                        {
-                            DebugConsole.ThrowError("Error in " + configFile + "! Could not find an event class of the type \"" + type + "\".");
-                            continue;
-                        }
-                    }
-                    catch
-                    {
-                        DebugConsole.ThrowError("Error in " + configFile + "! Could not find an event class of the type \"" + type + "\".");
-                        continue;
-                    }
-
-                    ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
-                    object instance = null;
-                    try
-                    {
-                        instance = constructor.Invoke(new object[] { element });
-                    }
-                    catch (Exception ex)
-                    {
-                        DebugConsole.ThrowError(ex.InnerException!=null ? ex.InnerException.ToString() : ex.ToString());
-                    }
-
-                    //previousEvents.Add(i);
-
-                    return (ScriptedEvent)instance;
-                }
-
-                randomNumber -= eventProbability[i];
-                i++;
-            }
-
-            return null;
         }
 
         public virtual void Init()
@@ -191,5 +96,156 @@ namespace Barotrauma
         {
             isFinished = true;
         }
+
+
+        private static void LoadPrefabs()
+        {
+            prefabs = new List<ScriptedEvent>();
+            var configFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.RandomEvents);
+
+            if (configFiles.Count == 0)
+            {
+                DebugConsole.ThrowError("No config files for random events found in the selected content package");
+                return;
+            }
+
+            foreach (string configFile in configFiles)
+            {
+                XDocument doc = ToolBox.TryLoadXml(configFile);
+                if (doc == null) continue;
+
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    prefabs.Add(new ScriptedEvent(element));
+                }
+            }
+        }
+
+        public static List<ScriptedEvent> GenerateLevelEvents(Random random, Level level)
+        {
+            if (prefabs == null)
+            {
+                LoadPrefabs();
+            }
+
+            List<ScriptedEvent> events = new List<ScriptedEvent>();
+            foreach (ScriptedEvent scriptedEvent in prefabs)
+            {
+                int minCount = scriptedEvent.overrideMinEventCount.ContainsKey(level.GenerationParams.Name) ? 
+                    scriptedEvent.overrideMinEventCount[level.GenerationParams.Name] : scriptedEvent.minEventCount;
+                int maxCount = scriptedEvent.overrideMaxEventCount.ContainsKey(level.GenerationParams.Name) ?
+                    scriptedEvent.overrideMaxEventCount[level.GenerationParams.Name] : scriptedEvent.maxEventCount;
+
+                minCount = Math.Min(minCount, maxCount);
+
+                int count = random.Next(maxCount - minCount) + minCount;
+
+                for (int i = 0; i<count; i++)
+                {
+                    Type t;
+
+                    try
+                    {
+                        t = Type.GetType("Barotrauma." + scriptedEvent.configElement.Name, true, true);
+                        if (t == null)
+                        {
+                            DebugConsole.ThrowError("Could not find an event class of the type \"" + scriptedEvent.configElement.Name + "\".");
+                            continue;
+                        }
+                    }
+                    catch
+                    {
+                        DebugConsole.ThrowError("Could not find an event class of the type \"" + scriptedEvent.configElement.Name + "\".");
+                        continue;
+                    }
+
+                    ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
+                    object instance = null;
+                    try
+                    {
+                        instance = constructor.Invoke(new object[] { scriptedEvent.configElement });
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString());
+                    }
+
+                    events.Add((ScriptedEvent)instance);
+                }
+            }
+
+            return events;
+        }
+
+
+        /*public static ScriptedEvent Load(ScriptedEvent scriptedEvent)
+        {
+            if (prefabs == null)
+            {
+                LoadPrefabs();
+            }
+
+            if (prefabs.Count == 0) return null;
+
+            int eventCount = prefabs.Count;
+            float[] eventProbability = new float[eventCount];
+            float probabilitySum = 0.0f;
+
+            int i = 0;
+            foreach (ScriptedEvent scriptedEvent in prefabs)
+            {
+                eventProbability[i] = scriptedEvent.commonness;
+                if (level != null)
+                {
+                    scriptedEvent.OverrideCommonness.TryGetValue(level.GenerationParams.Name, out eventProbability[i]);
+                }
+                probabilitySum += eventProbability[i];
+                i++;
+            }
+
+            float randomNumber = (float)rand.NextDouble() * probabilitySum;
+
+            i = 0;
+            foreach (ScriptedEvent scriptedEvent in prefabs)
+            {
+                if (randomNumber <= eventProbability[i])
+                {
+                    Type t;
+
+                    try
+                    {
+                        t = Type.GetType("Barotrauma." + scriptedEvent.configElement.Name, true, true);
+                        if (t == null)
+                        {
+                            DebugConsole.ThrowError("Could not find an event class of the type \"" + scriptedEvent.configElement.Name + "\".");
+                            continue;
+                        }
+                    }
+                    catch
+                    {
+                        DebugConsole.ThrowError("Could not find an event class of the type \"" + scriptedEvent.configElement.Name + "\".");
+                        continue;
+                    }
+
+                    ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
+                    object instance = null;
+                    try
+                    {
+                        instance = constructor.Invoke(new object[] { scriptedEvent.configElement });
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString());
+                    }
+
+                    return (ScriptedEvent)instance;
+                }
+
+                randomNumber -= eventProbability[i];
+                i++;
+            }
+
+            return null;
+        }*/
     }
 }

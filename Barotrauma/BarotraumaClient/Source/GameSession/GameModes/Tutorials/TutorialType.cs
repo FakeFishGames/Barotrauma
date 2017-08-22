@@ -41,7 +41,7 @@ namespace Barotrauma.Tutorials
 
             GameMain.GameSession.StartShift("tuto");
 
-            GameMain.GameSession.TaskManager.Tasks.Clear();
+            GameMain.GameSession.TaskManager.Events.Clear();
 
             GameMain.GameScreen.Select();
         }
