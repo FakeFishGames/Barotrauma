@@ -71,9 +71,9 @@ namespace Barotrauma
         private List<Ruin> ruins;
 
         private Color backgroundColor;
+        private Color wallColor;
 
         private LevelGenerationParams generationParams;
-
 
         public Vector2 StartPosition
         {
@@ -144,6 +144,11 @@ namespace Barotrauma
         public Color BackgroundColor
         {
             get { return backgroundColor; }
+        }
+
+        public Color WallColor
+        {
+            get { return wallColor; }
         }
         
         public Level(string seed, float difficulty, LevelGenerationParams generationParams)
@@ -448,13 +453,13 @@ namespace Barotrauma
 
                 cellGrid[x, y].Add(cell);
             }
-            
+
             ruins = new List<Ruin>();
-            for (int i = 0; i<generationParams.RuinCount; i++)
+            for (int i = 0; i < generationParams.RuinCount; i++)
             {
                 GenerateRuin(mainPath);
             }
-            
+
             startPosition.Y = borders.Height;
             endPosition.Y = borders.Height;
 
@@ -464,8 +469,8 @@ namespace Barotrauma
             bodies = CaveGenerator.GeneratePolygons(cellsWithBody, out triangles);
 
 #if CLIENT
-            renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), Color.White);
-            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells), Color.White);
+            renderer.SetBodyVertices(CaveGenerator.GenerateRenderVerticeList(triangles).ToArray(), generationParams.WallColor);
+            renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cells), generationParams.WallColor);
 #endif
 
             TopBarrier = BodyFactory.CreateEdge(GameMain.World, 

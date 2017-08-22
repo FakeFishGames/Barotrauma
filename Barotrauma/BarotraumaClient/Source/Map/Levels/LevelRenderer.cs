@@ -261,14 +261,24 @@ namespace Barotrauma
         {
             if (wallVertices == null) return;
 
+            bool renderLevel = cam.WorldView.Y >= 0.0f;
+            bool renderSeaFloor = cam.WorldView.Y - cam.WorldView.Height < level.SeaFloorTopPos + 1024;
+
+            if (!renderLevel && !renderSeaFloor) return;
+
             wallEdgeEffect.World = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 100) * 0.5f;
             wallCenterEffect.World = wallEdgeEffect.World;
-
-            //render the solid center of the wall cells
+            
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
             wallCenterEffect.CurrentTechnique.Passes[0].Apply();
-            if (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height < level.SeaFloorTopPos + 1024)
+
+            if (renderLevel)
+            {
+                graphicsDevice.SetVertexBuffer(bodyVertices);
+                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(bodyVertices.VertexCount / 3.0f));
+            }
+            if (renderSeaFloor)
             {
                 foreach (LevelWall wall in level.ExtraWalls)
                 {
@@ -276,28 +286,23 @@ namespace Barotrauma
                     graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.BodyVertices.VertexCount / 3.0f));
                 }
             }
-            else
-            {
-                graphicsDevice.SetVertexBuffer(bodyVertices);
-                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(bodyVertices.VertexCount / 3.0f));
-            }
 
-            //render the edges of the wall cells
             wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
 
-            if (GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height < level.SeaFloorTopPos + 1024)
+            if (renderLevel)
+            {
+                wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
+                graphicsDevice.SetVertexBuffer(wallVertices);
+                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
+            }
+            if (renderSeaFloor)
             {
                 foreach (LevelWall wall in level.ExtraWalls)
                 {
                     graphicsDevice.SetVertexBuffer(wall.WallVertices);
                     graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallVertices.VertexCount / 3.0f));
                 }
-            }
-            else
-            {
-                graphicsDevice.SetVertexBuffer(wallVertices);
-                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
-            }
+            }          
         }
 
         public void Dispose()

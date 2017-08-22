@@ -151,7 +151,7 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in lights)
             {
-                if (light.Color.A < 1 || light.Range < 1.0f || !light.CastShadows) continue;
+                if (light.Color.A < 1 || light.Range < 1.0f || !light.CastShadows || !light.Enabled) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
 
                 light.Draw(spriteBatch, lightEffect, transform);

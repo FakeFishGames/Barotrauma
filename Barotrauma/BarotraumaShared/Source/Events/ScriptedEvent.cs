@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
@@ -14,7 +15,9 @@ namespace Barotrauma
         protected int difficulty;
 
         protected bool isFinished;
-        
+
+        public Dictionary<string, int> OverrideCommonness;
+
         public string Name
         {
             get { return name; }
@@ -65,6 +68,22 @@ namespace Barotrauma
             commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
 
             MusicType = ToolBox.GetAttributeString(element, "musictype", "default");
+
+            OverrideCommonness = new Dictionary<string, int>();
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "overridecommonness":
+                        string levelType = ToolBox.GetAttributeString(subElement, "leveltype", "");
+                        if (!OverrideCommonness.ContainsKey(levelType))
+                        {
+                            OverrideCommonness.Add(levelType, ToolBox.GetAttributeInt(subElement, "commonness", 1));
+                        }
+                        break;
+                }
+            }
         }
 
 

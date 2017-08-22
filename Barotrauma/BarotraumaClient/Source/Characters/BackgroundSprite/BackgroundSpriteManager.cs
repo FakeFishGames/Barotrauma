@@ -255,7 +255,7 @@ namespace Barotrauma
             {
                 if (s.Prefab.ParticleEmitterPrefab != null)
                 {
-                    Vector2 emitterPos = new Vector2(s.Prefab.EmitterPosition.X, s.Prefab.EmitterPosition.Y);
+                    Vector2 emitterPos = new Vector2(s.Prefab.EmitterPosition.X, s.Prefab.EmitterPosition.Y) * s.Scale;
 
                     if (s.Rotation != 0.0f || s.Prefab.SwingAmount != 0.0f)
                     {
