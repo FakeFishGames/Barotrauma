@@ -51,7 +51,7 @@ namespace Barotrauma.Particles
             return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)-Math.Sin(angle)) * speed, angle, hullGuess);
         }
 
-        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 speed, float rotation=0.0f, Hull hullGuess = null)
+        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 velocity, float rotation=0.0f, Hull hullGuess = null)
         {
             ParticlePrefab prefab = FindPrefab(prefabName);
 
@@ -61,15 +61,14 @@ namespace Barotrauma.Particles
                 return null;
             }
 
-            return CreateParticle(prefab, position, speed, rotation, hullGuess);
+            return CreateParticle(prefab, position, velocity, rotation, hullGuess);
         }
 
-        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation = 0.0f, Hull hullGuess = null)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null)
         {
-            if (particleCount >= MaxParticles) return null;
+            if (particleCount >= MaxParticles || prefab == null) return null;
 
-            //endPos = x + vt + 1/2 * at^2
-            Vector2 particleEndPos = position + speed * prefab.LifeTime + 0.5f * prefab.VelocityChange * prefab.LifeTime * prefab.LifeTime;
+            Vector2 particleEndPos = prefab.CalculateEndPosition(position, velocity);
 
             Vector2 minPos = new Vector2(Math.Min(position.X, particleEndPos.X), Math.Min(position.Y, particleEndPos.Y));
             Vector2 maxPos = new Vector2(Math.Max(position.X, particleEndPos.X), Math.Max(position.Y, particleEndPos.Y));
@@ -81,7 +80,7 @@ namespace Barotrauma.Particles
 
             if (particles[particleCount] == null) particles[particleCount] = new Particle();
 
-            particles[particleCount].Init(prefab, position, speed, rotation, hullGuess);
+            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess);
 
             particleCount++;
 

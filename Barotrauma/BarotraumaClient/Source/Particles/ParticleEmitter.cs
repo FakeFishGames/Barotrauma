@@ -17,6 +17,7 @@ namespace Barotrauma.Particles
 
         public ParticleEmitter(ParticleEmitterPrefab prefab)
         {
+            System.Diagnostics.Debug.Assert(prefab != null, "The prefab of a particle emitter cannot be null");
             Prefab = prefab;
         }
 
@@ -52,6 +53,27 @@ namespace Barotrauma.Particles
                 particle.Size *= Rand.Range(Prefab.ScaleMin, Prefab.ScaleMax);
             }
         }
+
+        public Rectangle CalculateParticleBounds(Vector2 startPosition)
+        {
+            Rectangle bounds = new Rectangle((int)startPosition.X, (int)startPosition.Y, (int)startPosition.X, (int)startPosition.Y);
+
+            for (float angle = Prefab.AngleMin; angle <= Prefab.AngleMax; angle += 0.1f)
+            {
+                Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Prefab.VelocityMax;
+                Vector2 endPosition = Prefab.ParticlePrefab.CalculateEndPosition(startPosition, velocity);
+
+                bounds = new Rectangle(
+                    (int)Math.Min(bounds.X, endPosition.X),
+                    (int)Math.Min(bounds.Y, endPosition.Y),
+                    (int)Math.Max(bounds.X, endPosition.X),
+                    (int)Math.Max(bounds.Y, endPosition.Y));
+            }
+
+            bounds = new Rectangle(bounds.X, bounds.Y, bounds.Width - bounds.X, bounds.Height - bounds.Y);
+
+            return bounds;
+        }
     }
 
     class ParticleEmitterPrefab
@@ -86,8 +108,8 @@ namespace Barotrauma.Particles
                 AngleMax = AngleMin;
             }
 
-            AngleMin = MathHelper.ToRadians(AngleMin);
-            AngleMax = MathHelper.ToRadians(AngleMax);
+            AngleMin = MathHelper.ToRadians(MathHelper.Clamp(AngleMin, -360.0f, 360.0f));
+            AngleMax = MathHelper.ToRadians(MathHelper.Clamp(AngleMax, -360.0f, 360.0f));
 
             if (element.Attribute("scalemin")==null)
             {
