@@ -1,110 +1,142 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Randomevents>
-  <MonsterEvent name="Under attack" description=""  
-    characterfile="Content/Characters/Crawler/crawler.xml" 
-    commonness="15" 
-    difficulty="10"
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Crawler/crawler.xml"
+    mineventcount="1" maxeventcount="3"
     minamount="2" maxamount="3"
     repeat="true"
     spawntype="mainpath,cave,ruin"
-    musictype="monster"/>
+    musictype="monster">
+    <OverrideEventCount leveltype="Ridge" min="5" max="6"/>
+    <OverrideEventCount leveltype="Wastes" min="5" max="6"/>
+    <OverrideEventCount leveltype="Open" min="-5" max="1"/>
+  </MonsterEvent>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Tigerthresher/tigerthresher.xml"
-    commonness="10"
-    difficulty="20"
-    minamount="1" maxamount="3"
+    mineventcount="0" maxeventcount="2"
     spawntype="mainpath"
-    musictype="monster"/>
+    musictype="monster">
+    <OverrideEventCount leveltype="Open" min="-5" max="1"/>
+    
+  </MonsterEvent>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Moloch/moloch.xml"
-    commonness="10"
-    difficulty="30"
+    mineventcount="-1" maxeventcount="2"
     spawntype="mainpath"
-    musictype="monster"/>
+    musictype="monster">
+    <OverrideEventCount leveltype="Ridge" min="-5" max="1"/>
+    <OverrideEventCount leveltype="Open" min="1" max="6"/>
+  </MonsterEvent>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Mantis/mantis.xml"
-    commonness="10"
-    difficulty="15"
+    mineventcount="0" maxeventcount="2"
+    minamount="0" maxamount="2"    
     repeat="true"
-    minamount="1" maxamount="2"
     spawntype="mainpath,cave,ruin"
-    musictype="monster"/>
+    musictype="monster">
+    <OverrideEventCount leveltype="Ridge" min="5" max="6"/>
+    <OverrideEventCount leveltype="Wastes" min="5" max="6"/>
+    <OverrideEventCount leveltype="Open" min="-5" max="1"/>
+  </MonsterEvent>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Coelanth/coelanth.xml"
-    spawndeep="true"
-    commonness="10"                
-    difficulty="5"
+    mineventcount="0" maxeventcount="3"
     minamount="1" maxamount="1"
+    spawndeep="true"
     spawntype="mainpath"
-    musictype="monster"/>
+    musictype="monster">
+  </MonsterEvent>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Charybdis/charybdis.xml"
-    spawndeep="true"
-    commonness="3"
-    difficulty="5"
+    mineventcount="-5" maxeventcount="2"
     minamount="1" maxamount="1"
+    spawndeep="true"
     spawntype="deep"
-    musictype="monster"/>
+    musictype="monster">
+    <OverrideEventCount leveltype="Ridge" max="0"/>
+  </MonsterEvent>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Charybdis/charybdis.xml"
+    maxamount="0"
+    spawntype="deep"
+    musictype="monster">
+    <OverrideEventCount leveltype="Open" min="0" max="3"/>
+  </MonsterEvent>
   
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Endworm/endworm.xml"
+    mineventcount="-5" maxeventcount="1"
     spawndeep="true"
-    commonness="1"
-    difficulty="20"
     minamount="1" maxamount="1"
     spawntype="mainpath"
-    musictype="deep"/>
+    musictype="deep">
+    <OverrideEventCount leveltype="Ridge" max="0"/>
+  </MonsterEvent>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Endworm/endworm.xml"
+    maxeventcount="0"
+    minamount="1" maxamount="1"
+    spawntype="mainpath"
+    musictype="deep">
+    <OverrideEventCount leveltype="Open" min="-1" max="2"/>
+  </MonsterEvent>  
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Watcher/watcher.xml"
-    commonness="3"
-    difficulty="5"
+    mineventcount="-3" maxeventcount="1"
     spawntype="mainpath,cave"
-    minamount="1" maxamount="1"/>
+    minamount="1" maxamount="3">
+    <OverrideEventCount leveltype="Ridge" max="0"/>
+    <OverrideEventCount leveltype="Wastes" max="0"/>    
+  </MonsterEvent>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Husk/husk.xml"
-    commonness="5"
-    difficulty="10"
+    mineventcount="-2" maxeventcount="3"
     minamount="2" maxamount="3"
     repeat="true"
     spawntype="mainpath,cave,ruin"
-    musictype="monster"/>
+    musictype="monster">
+    <OverrideEventCount leveltype="Wastes" min="1" max="3"/>
+  </MonsterEvent>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Fractalguardian/fractalguardian.xml"
-    commonness="3"
-    difficulty="1"
+    mineventcount="1" maxeventcount="2"
     minamount="1" maxamount="1"
     spawntype="ruin"
-    musictype="monster"/>
+    musictype="monster">
+  </MonsterEvent>
 
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml"
-    commonness="3"
-    difficulty="1"
+    mineventcount="1" maxeventcount="2"
     minamount="1" maxamount="1"
     spawntype="ruin"
-    musictype="monster"/>
+    musictype="monster">
+  </MonsterEvent>
 
   <ArtifactEvent name="Artifact" description=""
-    itemname="Skyholder Artifact"
-    commonness="5"
-    difficulty="0"/>
+    mineventcount="0" maxeventcount="5"
+    itemname="Skyholder Artifact"/>
 
   <ArtifactEvent name="Artifact" description=""
-    itemname="Thermal Artifact"
-    commonness="5"
-    difficulty="0"/>
+    mineventcount="0" maxeventcount="5"
+    itemname="Thermal Artifact"/>
 
   <ArtifactEvent name="Artifact" description=""
-    itemname="Faraday Artifact"
-    commonness="5"
-    difficulty="0"/>
+    mineventcount="0" maxeventcount="8"
+    itemname="Faraday Artifact"/>
+
+  <ArtifactEvent name="Artifact" description=""
+    mineventcount="0" maxeventcount="2"
+    itemname="Nasonov Artifact"/>
   
 </Randomevents>

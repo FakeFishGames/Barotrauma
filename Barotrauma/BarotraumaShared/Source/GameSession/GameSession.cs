@@ -7,7 +7,7 @@ namespace Barotrauma
     {
         public enum InfoFrameTab { Crew, Mission, ManagePlayers };
 
-        public readonly TaskManager TaskManager;
+        public readonly EventManager TaskManager;
         
         public readonly GameMode gameMode;
 
@@ -86,7 +86,7 @@ namespace Barotrauma
 
             GameMain.GameSession = this;
             
-            TaskManager = new TaskManager(this);
+            TaskManager = new EventManager(this);
             
             this.saveFile = saveFile;
 

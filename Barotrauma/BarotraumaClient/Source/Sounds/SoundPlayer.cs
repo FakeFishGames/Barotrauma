@@ -344,6 +344,13 @@ namespace Barotrauma
 
         private static List<BackgroundMusic> GetSuitableMusicClips()
         {
+
+            Submarine targetSubmarine = null;
+            if (Character.Controlled != null)
+            {
+                targetSubmarine = Character.Controlled.Submarine;
+            }
+
             string musicType = "default";
             if (OverrideMusicType != null)
             {
@@ -355,37 +362,14 @@ namespace Barotrauma
             {
                 musicType = "ruins";
             }
-            else if ((Character.Controlled != null && Character.Controlled.Submarine != null && Character.Controlled.Submarine.AtDamageDepth) ||
+            else if ((targetSubmarine != null && targetSubmarine.AtDamageDepth) ||
                     (Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
             {
                 musicType = "deep";
             }
-            else
+            else if (targetSubmarine != null)
             {
-                Task criticalTask = null;
-                if (GameMain.GameSession != null && GameMain.GameSession.TaskManager != null)
-                {
-                    foreach (Task task in GameMain.GameSession.TaskManager.Tasks)
-                    {
-                        if (!task.IsStarted) continue;
-                        if (criticalTask == null || task.Priority > criticalTask.Priority)
-                        {
-                            criticalTask = task;
-                        }
-                    }
-                }
-
-                if (criticalTask != null)
-                {
-                    var suitableClips =
-                        musicClips.Where(music =>
-                            music != null &&
-                            music.type == criticalTask.MusicType &&
-                            music.priorityRange.X < criticalTask.Priority &&
-                            music.priorityRange.Y > criticalTask.Priority).ToList();
-
-                    if (suitableClips.Count > 0) return suitableClips;
-                }
+                //TODO: determine whether to switch to monster or repair musictype                
             }
 
             return musicClips.Where(music => music != null && music.type == musicType).ToList();
