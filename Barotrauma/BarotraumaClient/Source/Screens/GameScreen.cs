@@ -22,7 +22,6 @@ namespace Barotrauma
 
         private Texture2D damageStencil;
 
-        public BackgroundCreatureManager BackgroundCreatureManager;
         
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
@@ -34,11 +33,6 @@ namespace Barotrauma
             renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             renderTargetAir = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
-            var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundCreaturePrefabs);
-            if (files.Count > 0)
-                BackgroundCreatureManager = new BackgroundCreatureManager(files);
-            else
-                BackgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundSprites/BackgroundCreaturePrefabs.xml");
 
 #if LINUX
             var blurEffect = content.Load<Effect>("blurshader_opengl");
@@ -145,7 +139,7 @@ namespace Barotrauma
             }
             else
             {
-                Level.Loaded.DrawBack(graphics, spriteBatch, cam, BackgroundCreatureManager);
+                Level.Loaded.DrawBack(graphics, spriteBatch, cam);
             }
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,

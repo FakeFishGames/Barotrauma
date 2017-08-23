@@ -7,6 +7,8 @@ namespace Barotrauma
 {
     partial class PhysicsBody
     {
+        private float bodyShapeTextureScale;
+
         private Texture2D bodyShapeTexture;
         public Texture2D BodyShapeTexture
         {
@@ -59,18 +61,45 @@ namespace Barotrauma
                 switch (BodyShape)
                 {
                     case PhysicsBody.Shape.Rectangle:
-                        bodyShapeTexture = GUI.CreateRectangle(
-                            (int)ConvertUnits.ToDisplayUnits(width),
-                            (int)ConvertUnits.ToDisplayUnits(height));
-                        break;
+                        {
+                            float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(width), ConvertUnits.ToDisplayUnits(height));
+                            if (maxSize > 128.0f)
+                            {
+                                bodyShapeTextureScale = 128.0f / maxSize;
+                            }
+                            else
+                            {
+                                bodyShapeTextureScale = 1.0f;
+                            }
 
+                            bodyShapeTexture = GUI.CreateRectangle(
+                                (int)ConvertUnits.ToDisplayUnits(width * bodyShapeTextureScale),
+                                (int)ConvertUnits.ToDisplayUnits(height * bodyShapeTextureScale));
+                            break;
+                        }
                     case PhysicsBody.Shape.Capsule:
-                        bodyShapeTexture = GUI.CreateCapsule(
-                            (int)ConvertUnits.ToDisplayUnits(radius),
-                            (int)ConvertUnits.ToDisplayUnits(Math.Max(height, width)));
-                        break;
+                        {
+                            float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(radius), ConvertUnits.ToDisplayUnits(Math.Max(height, width)));
+                            if (maxSize > 128.0f)
+                            {
+                                bodyShapeTextureScale = 128.0f / maxSize;
+                            }
+                            else
+                            {
+                                bodyShapeTextureScale = 1.0f;
+                            }
+
+                            bodyShapeTexture = GUI.CreateCapsule(
+                                (int)ConvertUnits.ToDisplayUnits(radius * bodyShapeTextureScale),
+                                (int)ConvertUnits.ToDisplayUnits(Math.Max(height, width) * bodyShapeTextureScale));
+                            break;
+                        }
                     case PhysicsBody.Shape.Circle:
-                        bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(radius));
+                        if (ConvertUnits.ToDisplayUnits(radius)> 128.0f)
+                        {
+                            bodyShapeTextureScale = 128.0f / ConvertUnits.ToDisplayUnits(radius);
+                        }
+                        bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(radius * bodyShapeTextureScale));
                         break;
                 }
             }
@@ -80,7 +109,7 @@ namespace Barotrauma
             {
                 rot -= MathHelper.PiOver2;
             }
-
+            
             spriteBatch.Draw(
                 bodyShapeTexture,
                 new Vector2(DrawPosition.X, -DrawPosition.Y),
@@ -88,7 +117,7 @@ namespace Barotrauma
                 color,
                 rot,
                 new Vector2(bodyShapeTexture.Width / 2, bodyShapeTexture.Height / 2),
-                1.0f, SpriteEffects.None, 0.0f);
+                1.0f / bodyShapeTextureScale, SpriteEffects.None, 0.0f);
         }
 
         partial void DisposeProjSpecific()

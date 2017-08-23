@@ -13,8 +13,6 @@ namespace Barotrauma
         private static Sprite dustParticles;
         private static Texture2D shaftTexture;
 
-        private static BackgroundSpriteManager backgroundSpriteManager;
-
         Vector2 dustOffset;
 
         private Level level;
@@ -57,31 +55,13 @@ namespace Barotrauma
                 };
                 wallCenterEffect.CurrentTechnique = wallCenterEffect.Techniques["BasicEffect_Texture"];
             }
-
-            
-            if (backgroundSpriteManager==null)
-            {
-
-                var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundSpritePrefabs);
-                if (files.Count > 0)
-                    backgroundSpriteManager = new BackgroundSpriteManager(files);
-                else
-                    backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
-            }
-
+                
             this.level = level;
         }
-
-        public void PlaceSprites(int amount)
-        {
-            backgroundSpriteManager.PlaceSprites(level, amount);
-        }
-
+        
         public void Update(float deltaTime)
         {
             dustOffset -= Vector2.UnitY * 10.0f * deltaTime;
-
-            backgroundSpriteManager.Update(deltaTime);
         }
 
         public static VertexPositionColorTexture[] GetColoredVertices(VertexPositionTexture[] vertices, Color color)
@@ -118,7 +98,9 @@ namespace Barotrauma
             bodyVertices.SetData(vertices);
         }
 
-        public void DrawBackground(SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundCreatureManager = null)
+        public void DrawBackground(SpriteBatch spriteBatch, Camera cam, 
+            BackgroundSpriteManager backgroundSpriteManager = null, 
+            BackgroundCreatureManager backgroundCreatureManager = null)
         {
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap);
 
@@ -152,11 +134,9 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
                 cam.Transform);
 
-            backgroundSpriteManager.DrawSprites(spriteBatch, cam);
-
-            if (backgroundCreatureManager!=null) backgroundCreatureManager.Draw(spriteBatch);
-
-
+            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam);
+            if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
+            
             for (int i = 0; i < 4; i++)
             {
                 float scale = 1.0f - i * 0.2f;

@@ -73,8 +73,6 @@
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreature.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreatureManager.cs" />
     <Compile Include="Source\Characters\BackgroundSprite\BackgroundCreaturePrefab.cs" />
-    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpriteManager.cs" />
-    <Compile Include="Source\Characters\BackgroundSprite\BackgroundSpritePrefab.cs" />
     <Compile Include="Source\Characters\Character.cs" />
     <Compile Include="Source\Characters\CharacterHUD.cs" />
     <Compile Include="Source\Characters\CharacterInfo.cs" />
@@ -153,6 +151,8 @@
     <Compile Include="Source\Map\FireSource.cs" />
     <Compile Include="Source\Map\Gap.cs" />
     <Compile Include="Source\Map\Hull.cs" />
+    <Compile Include="Source\Map\Levels\BackgroundSpriteManager.cs" />
+    <Compile Include="Source\Map\Levels\BackgroundSpritePrefab.cs" />
     <Compile Include="Source\Map\Levels\CaveGenerator.cs" />
     <Compile Include="Source\Map\Levels\Level.cs" />
     <Compile Include="Source\Map\Levels\LevelRenderer.cs" />

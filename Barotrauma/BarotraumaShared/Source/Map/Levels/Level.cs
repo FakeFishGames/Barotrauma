@@ -15,7 +15,6 @@ namespace Barotrauma
     {
         //all entities are disabled after they reach this depth
         public const float MaxEntityDepth = -300000.0f;
-
         public const float ShaftHeight = 1000.0f;
         
         public static Level Loaded
@@ -74,6 +73,8 @@ namespace Barotrauma
         private Color wallColor;
 
         private LevelGenerationParams generationParams;
+
+        private static BackgroundSpriteManager backgroundSpriteManager;
 
         public Vector2 StartPosition
         {
@@ -150,7 +151,7 @@ namespace Barotrauma
         {
             get { return wallColor; }
         }
-        
+
         public Level(string seed, float difficulty, LevelGenerationParams generationParams)
         {
             this.seed = seed;
@@ -183,6 +184,25 @@ namespace Barotrauma
 
         public void Generate(bool mirror = false)
         {
+            if (backgroundSpriteManager == null)
+            {
+                var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundSpritePrefabs);
+                if (files.Count > 0)
+                    backgroundSpriteManager = new BackgroundSpriteManager(files);
+                else
+                    backgroundSpriteManager = new BackgroundSpriteManager("Content/BackgroundSprites/BackgroundSpritePrefabs.xml");
+            }
+#if CLIENT
+            if (backgroundCreatureManager == null)
+            {
+                var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.BackgroundCreaturePrefabs);
+                if (files.Count > 0)
+                    backgroundCreatureManager = new BackgroundCreatureManager(files);
+                else
+                    backgroundCreatureManager = new BackgroundCreatureManager("Content/BackgroundSprites/BackgroundCreaturePrefabs.xml");
+            }
+#endif
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -485,8 +505,9 @@ namespace Barotrauma
 
             GenerateSeaFloor();
 
+            backgroundSpriteManager.PlaceSprites(this, generationParams.BackgroundSpriteAmount);
 #if CLIENT
-            renderer.PlaceSprites(generationParams.BackgroundSpriteAmount);
+            backgroundCreatureManager.SpawnSprites(80);
 #endif
 
             foreach (VoronoiCell cell in cells)
@@ -872,15 +893,13 @@ namespace Barotrauma
             return matchingPositions[Rand.Int(matchingPositions.Count, (useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced))].Position;
         }
 
-        public void Update(float deltaTime)
+        public void Update(float deltaTime, Camera cam)
         {
-            /*
-            if (Submarine.MainSub != null)
-            {
-                WrappingWall.UpdateWallShift(Submarine.MainSub.WorldPosition, wrappingWalls);
-            }*/
+            backgroundSpriteManager.Update(deltaTime);
 
 #if CLIENT
+            backgroundCreatureManager.Update(deltaTime, cam);
+
             if (Hull.renderer != null)
             {
                 Hull.renderer.ScrollWater((float)deltaTime);

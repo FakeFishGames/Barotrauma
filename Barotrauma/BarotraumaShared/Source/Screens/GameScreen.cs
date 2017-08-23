@@ -80,15 +80,13 @@ namespace Barotrauma
 
 #if CLIENT
             if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
-
-            BackgroundCreatureManager.Update((float)deltaTime, cam);
-
+            
             GameMain.ParticleManager.Update((float)deltaTime);
             
             GameMain.LightManager.Update((float)deltaTime);
 #endif
 
-            if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
+            if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime, cam);
 
 #if CLIENT
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))

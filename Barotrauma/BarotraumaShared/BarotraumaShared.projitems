@@ -1432,7 +1432,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Hull.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\IDamageable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\BackgroundSpriteManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\BackgroundSpritePrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\CaveGenerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelTrigger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Level.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\LevelGenerationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Levels\Ruins\BTRoom.cs" />

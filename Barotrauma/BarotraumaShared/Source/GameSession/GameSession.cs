@@ -184,10 +184,6 @@ namespace Barotrauma
                 level.Generate();
 
                 submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition - new Vector2(0.0f, 2000.0f)));
-
-#if CLIENT
-                GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(80);
-#endif
             }
 
             if (gameMode.Mission != null)
