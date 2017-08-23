@@ -40,6 +40,8 @@ namespace Barotrauma
         private readonly float damage;
         private readonly float bleedingDamage;
 
+        private readonly bool onlyHumans;
+
         private readonly List<StatusEffect> statusEffects;
 
         public readonly float Force;
@@ -99,14 +101,16 @@ namespace Barotrauma
 
             SeverLimbsProbability = ToolBox.GetAttributeFloat(element, "severlimbsprobability", 0.0f);
 
-            Force = ToolBox.GetAttributeFloat(element,"force", 0.0f);
+            Force = ToolBox.GetAttributeFloat(element, "force", 0.0f);
             TargetForce = ToolBox.GetAttributeFloat(element, "targetforce", 0.0f);
             Torque = ToolBox.GetAttributeFloat(element, "torque", 0.0f);
-            
+
             Range = ToolBox.GetAttributeFloat(element, "range", 0.0f);
             Duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
 
             priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
+
+            onlyHumans = ToolBox.GetAttributeBool(element, "onlyhumans", false);
 
             InitProjSpecific(element);
 
@@ -143,6 +147,12 @@ namespace Barotrauma
         
         public AttackResult DoDamage(IDamageable attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
+            if (onlyHumans)
+            {
+                Character character = target as Character;
+                if (character != null && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
+            }
+
             DamageParticles(deltaTime, worldPosition);
 
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);

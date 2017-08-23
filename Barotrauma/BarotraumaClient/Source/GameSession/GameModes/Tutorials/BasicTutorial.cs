@@ -17,10 +17,6 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<object> UpdateState()
         {
-            //spawn some fish next to the player
-            GameMain.GameScreen.BackgroundCreatureManager.SpawnSprites(2,
-                Submarine.MainSub.Position + Character.Controlled.Position);
-
             foreach (Item item in Item.ItemList)
             {
                 var wire = item.GetComponent<Wire>();

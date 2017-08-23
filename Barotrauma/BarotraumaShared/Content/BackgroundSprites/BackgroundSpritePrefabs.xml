@@ -109,41 +109,51 @@
 
   <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="2" randomrotation="-5,5" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
-    <overridecommonness commonness="1" leveltype="Ridge" />
+    <overridecommonness commonness="3" leveltype="Ridge" />
     <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="0,443,455,1605" origin="0.5,0.9"/>
+    <Trigger position="0,5500" radius="2000" height="10000">
+      <Attack damage="10.0" duration="1.0" targetforce="10.0" damagetype="Burn" onlyhumans="true"/>
+    </Trigger>
+    
     <ParticleEmitter
       particle="hydrosmoke"
-      particlespersecond="2"
+      particlespersecond="4"
       position="0,1400"
       anglemin="80"
       anglemax="100"
       velocitymin="500"
-      velocitymax="6000"/>
+      velocitymax="2000"/>
   </blacksmoker>
 
-  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="2" randomrotation="-5,5" commonness="0">
+  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="2" randomrotation="-90,90" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
     <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="463,1329,525,719" origin="0.5,0.9"/>
+    <Trigger position="0,5500" radius="2000" height="10000">
+      <Attack damage="10.0" duration="1.0" targetforce="10.0" damagetype="Burn" onlyhumans="true"/>
+    </Trigger>
     <ParticleEmitter
       particle="hydrosmoke"
-      particlespersecond="2"
+      particlespersecond="4"
       position="-20,570"
       anglemin="80"
       anglemax="100"
       velocitymin="500"
-      velocitymax="6000"/>
+      velocitymax="2000"/>
   </blacksmoker>
 
-  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="2" randomrotation="-5,5" commonness="0">
+  <blacksmoker spawnpos="SeaFloor" alignment="Top" minsize="1" maxsize="2" randomrotation="-90,90" commonness="0">
     <overridecommonness commonness="1" leveltype="Wastes" />
     <Sprite texture="Content/BackgroundSprites/seafloor.png" sourcerect="1030,1245,440,803" origin="0.5,0.9"/>
+    <Trigger position="0,5500" radius="2000" height="10000">
+      <Attack damage="10.0" duration="1.0" targetforce="10.0" damagetype="Burn" onlyhumans="true"/>
+    </Trigger>
     <ParticleEmitter
       particle="hydrosmoke"
-      particlespersecond="2"
+      particlespersecond="4"
       position="-50,700"
       anglemin="80"
       anglemax="100"
       velocitymin="500"
-      velocitymax="600"/>
+      velocitymax="2000"/>
   </blacksmoker> 
 </backgroundsprites>

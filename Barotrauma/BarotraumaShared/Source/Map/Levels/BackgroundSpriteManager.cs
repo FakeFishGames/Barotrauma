@@ -1,4 +1,6 @@
-﻿using Barotrauma.Particles;
+﻿#if CLIENT
+using Barotrauma.Particles;
+#endif
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -9,7 +11,7 @@ using Voronoi2;
 
 namespace Barotrauma
 {
-    class BackgroundSprite
+    partial class BackgroundSprite
     {
         public readonly BackgroundSpritePrefab Prefab;
         public Vector3 Position;
@@ -18,10 +20,8 @@ namespace Barotrauma
 
         public float Rotation;
 
-        public Particles.ParticleEmitter ParticleEmitter;
+        public LevelTrigger Trigger;
         
-        //public Vector2[] spriteCorners;
-
         public BackgroundSprite(BackgroundSpritePrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
         {
             this.Prefab = prefab;
@@ -31,25 +31,42 @@ namespace Barotrauma
 
             this.Rotation = rotation;
 
+            if (prefab.LevelTriggerElement != null)
+            {
+                Vector2 triggerPosition = ToolBox.GetAttributeVector2(prefab.LevelTriggerElement, "position", Vector2.Zero) * scale;
+
+                if (rotation != 0.0f)
+                {
+                    var ca = (float)Math.Cos(rotation);
+                    var sa = (float)Math.Sin(rotation);
+
+                    triggerPosition = new Vector2(
+                        ca * triggerPosition.X + sa * triggerPosition.Y,
+                        -sa * triggerPosition.X + ca * triggerPosition.Y);
+                }
+
+                this.Trigger = new LevelTrigger(prefab.LevelTriggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation);
+            }
+
+#if CLIENT
             if (prefab.ParticleEmitterPrefab != null)
             {
                 this.ParticleEmitter = new ParticleEmitter(prefab.ParticleEmitterPrefab);
             }
+#endif
+
         }
     }
 
-    class BackgroundSpriteManager
+    partial class BackgroundSpriteManager
     {
         const int GridSize = 2000;
 
         private List<BackgroundSpritePrefab> prefabs = new List<BackgroundSpritePrefab>();
+
+        private List<BackgroundSprite> sprites;
+        private List<BackgroundSprite>[,] spriteGrid;
         
-        private List<BackgroundSprite>[,] sprites;
-
-        private List<BackgroundSprite> visibleSprites = new List<BackgroundSprite>();
-
-        private Rectangle currentGridIndices;
-
         private float swingTimer, swingState;
 
         public BackgroundSpriteManager(string configPath)
@@ -84,9 +101,11 @@ namespace Barotrauma
 
         public void PlaceSprites(Level level, int amount)
         {
-            sprites = new List<BackgroundSprite>[
+            spriteGrid = new List<BackgroundSprite>[
                 (int)Math.Ceiling(level.Size.X / GridSize),
                 (int)Math.Ceiling((level.Size.Y - level.BottomPos) / GridSize)];
+
+            sprites = new List<BackgroundSprite>();
             
             for (int i = 0 ; i < amount; i++)
             {
@@ -131,27 +150,37 @@ namespace Barotrauma
                     spriteCorners[j] += pos.Value + pivotOffset;
                 }
 
+#if CLIENT
                 if (newSprite.ParticleEmitter != null)
                 {
                     Rectangle particleBounds = newSprite.ParticleEmitter.CalculateParticleBounds(pos.Value);
                     spriteCorners.Add(particleBounds.Location.ToVector2());
                     spriteCorners.Add(new Vector2(particleBounds.Right, particleBounds.Bottom));
                 }
-                                
+#endif
+
+                sprites.Add(newSprite);
+
                 int minX = (int)Math.Floor((spriteCorners.Min(c => c.X) - newSprite.Position.Z) / GridSize);
                 int maxX = (int)Math.Floor((spriteCorners.Max(c => c.X) + newSprite.Position.Z) / GridSize);
-                if (minX < 0 || maxX >= sprites.GetLength(0)) continue;
+
+                if (maxX < 0 || minX >= spriteGrid.GetLength(0)) continue;
 
                 int minY = (int)Math.Floor((spriteCorners.Min(c => c.Y) - newSprite.Position.Z - level.BottomPos) / GridSize);
                 int maxY = (int)Math.Floor((spriteCorners.Max(c => c.Y) + newSprite.Position.Z - level.BottomPos) / GridSize);
-                if (minY < 0 || maxY >= sprites.GetLength(1)) continue;
+                if (maxY < 0 || minY >= spriteGrid.GetLength(1)) continue;
+
+                minX = Math.Max(minX, 0);
+                maxX = Math.Min(maxX, spriteGrid.GetLength(0) - 1);
+                minY = Math.Max(minY, 0);
+                maxY = Math.Min(maxY, spriteGrid.GetLength(1) - 1);
 
                 for (int x = minX; x <= maxX; x++)
                 {
                     for (int y = minY; y <= maxY; y++)
                     {
-                        if (sprites[x, y] == null) sprites[x, y] = new List<BackgroundSprite>();
-                        sprites[x, y].Add(newSprite);
+                        if (spriteGrid[x, y] == null) spriteGrid[x, y] = new List<BackgroundSprite>();
+                        spriteGrid[x, y].Add(newSprite);
                     }
                 }
             }
@@ -251,118 +280,15 @@ namespace Barotrauma
             swingTimer += deltaTime;
             swingState = (float)Math.Sin(swingTimer * 0.1f);
 
-            foreach (BackgroundSprite s in visibleSprites)
+            foreach (BackgroundSprite sprite in sprites)
             {
-                if (s.Prefab.ParticleEmitterPrefab != null)
-                {
-                    Vector2 emitterPos = new Vector2(s.Prefab.EmitterPosition.X, s.Prefab.EmitterPosition.Y) * s.Scale;
-
-                    if (s.Rotation != 0.0f || s.Prefab.SwingAmount != 0.0f)
-                    {
-                        var ca = (float)Math.Cos(s.Rotation + swingState * s.Prefab.SwingAmount);
-                        var sa = (float)Math.Sin(s.Rotation + swingState * s.Prefab.SwingAmount);
-                    
-                        emitterPos = new Vector2(
-                            ca * emitterPos.X + sa * emitterPos.Y, 
-                            -sa * emitterPos.X + ca * emitterPos.Y);
-                    }
-
-                    s.ParticleEmitter.Emit(deltaTime, new Vector2(s.Position.X, s.Position.Y) + emitterPos);
-                }
+                sprite.Trigger?.Update(deltaTime);
             }
             
+            UpdateProjSpecific(deltaTime);            
         }
 
-        public void DrawSprites(SpriteBatch spriteBatch, Camera cam)
-        {
-            Rectangle indices = Rectangle.Empty;
-            indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize);            
-            if (indices.X >= sprites.GetLength(0)) return;
-            indices.Y = (int)Math.Floor((cam.WorldView.Y - cam.WorldView.Height - Level.Loaded.BottomPos) / (float)GridSize);
-            if (indices.Y >= sprites.GetLength(1)) return;
-
-            indices.Width = (int)Math.Floor(cam.WorldView.Right / (float)GridSize)+1;
-            if (indices.Width < 0) return;
-            indices.Height = (int)Math.Floor((cam.WorldView.Y - Level.Loaded.BottomPos) / (float)GridSize)+1;
-            if (indices.Height < 0) return;
-
-            indices.X = Math.Max(indices.X, 0);
-            indices.Y = Math.Max(indices.Y, 0);
-            indices.Width = Math.Min(indices.Width, sprites.GetLength(0)-1);
-            indices.Height = Math.Min(indices.Height, sprites.GetLength(1)-1);
-
-            float z = 0.0f;
-            if (currentGridIndices != indices)
-            {
-                visibleSprites.Clear();
-
-                for (int x = indices.X; x <= indices.Width; x++)
-                {
-                    for (int y = indices.Y; y <= indices.Height; y++)
-                    {
-                        if (sprites[x, y] == null) continue;
-                        foreach (BackgroundSprite sprite in sprites[x, y])
-                        {
-                            int drawOrderIndex = 0;
-                            for (int i = 0; i < visibleSprites.Count; i++)
-                            {
-                                if (visibleSprites[i] == sprite)
-                                {
-                                    drawOrderIndex = -1;
-                                    break;
-                                }
-
-                                if (visibleSprites[i].Position.Z > sprite.Position.Z)
-                                {
-                                    break;
-                                }
-                                else
-                                {
-                                    drawOrderIndex = i + 1;
-                                }
-                            }
-
-                            if (drawOrderIndex >= 0)
-                            {
-                                visibleSprites.Insert(drawOrderIndex, sprite);
-                            }
-                        }
-                    }
-                }
-
-                currentGridIndices = indices;
-            }
-
-            foreach (BackgroundSprite sprite in visibleSprites)
-            {              
-                Vector2 camDiff = new Vector2(sprite.Position.X, sprite.Position.Y) - cam.WorldViewCenter;
-                camDiff.Y = -camDiff.Y;
-
-                sprite.Prefab.Sprite.Draw(
-                    spriteBatch,
-                    new Vector2(sprite.Position.X, -sprite.Position.Y) - camDiff * sprite.Position.Z / 10000.0f,
-                    Color.Lerp(Color.White, Level.Loaded.BackgroundColor, sprite.Position.Z / 5000.0f),
-                    sprite.Rotation + swingState * sprite.Prefab.SwingAmount,
-                    sprite.Scale,
-                    SpriteEffects.None,
-                    z);
-
-                /*for (int i = 0; i < 4; i++)
-                {
-                    GUI.DrawLine(spriteBatch,
-                        new Vector2(sprite.spriteCorners[i].X, -sprite.spriteCorners[i].Y),
-                        new Vector2(sprite.spriteCorners[(i + 1) % 4].X, -sprite.spriteCorners[(i + 1) % 4].Y),
-                        Color.White, 0, 5);
-                }*/
-
-                if (GameMain.DebugDraw)
-                {
-                    GUI.DrawRectangle(spriteBatch, new Vector2(sprite.Position.X, -sprite.Position.Y), new Vector2(10.0f, 10.0f), Color.Red, true);
-                }
-
-                z += 0.0001f;
-            }
-        }
+        partial void UpdateProjSpecific(float deltaTime);
 
         private BackgroundSpritePrefab GetRandomPrefab(string levelType)
         {

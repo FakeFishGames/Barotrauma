@@ -11,9 +11,9 @@ namespace Barotrauma
     {
         const int MaxSprites = 100;
 
-        const float checkActiveInterval = 1.0f;
+        const float CheckActiveInterval = 1.0f;
 
-        float checkActiveTimer;
+        private float checkActiveTimer;
 
         private List<BackgroundCreaturePrefab> prefabs = new List<BackgroundCreaturePrefab>();
         private List<BackgroundCreature> activeSprites = new List<BackgroundCreature>();
@@ -104,15 +104,15 @@ namespace Barotrauma
 
         public void Update(float deltaTime, Camera cam)
         {
-            if (checkActiveTimer<0.0f)
+            if (checkActiveTimer < 0.0f)
             {
                 foreach (BackgroundCreature sprite in activeSprites)
                 {
-                    sprite.Enabled = (Math.Abs(sprite.TransformedPosition.X - cam.WorldViewCenter.X) < 4000.0f &&
-                    Math.Abs(sprite.TransformedPosition.Y - cam.WorldViewCenter.Y) < 4000.0f);                    
+                    sprite.Enabled = Math.Abs(sprite.TransformedPosition.X - cam.WorldViewCenter.X) < cam.WorldView.Width &&
+                                     Math.Abs(sprite.TransformedPosition.Y - cam.WorldViewCenter.Y) < cam.WorldView.Height;
                 }
 
-                checkActiveTimer = checkActiveInterval;
+                checkActiveTimer = CheckActiveInterval;
             }
             else
             {

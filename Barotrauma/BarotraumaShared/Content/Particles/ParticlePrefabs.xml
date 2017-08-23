@@ -169,9 +169,7 @@
     growtime="10"    
     lifetime="25"
     drawtarget="water"
-    collideswithwalls="true"
-    collisionradius="102.0"
-    velocitychange="0.0, 2.0">    
+    velocitychange="0.0, 0.0">    
       <sprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="0,410,204,204"/>
       <sprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="204,410,204,204"/>
       <sprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="410,410,204,204"/>

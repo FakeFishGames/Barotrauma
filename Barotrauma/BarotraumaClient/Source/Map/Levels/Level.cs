@@ -7,6 +7,8 @@ namespace Barotrauma
     {
         private LevelRenderer renderer;
 
+        private BackgroundCreatureManager backgroundCreatureManager;
+        
         public void DrawFront(SpriteBatch spriteBatch)
         {
             if (renderer == null) return;
@@ -32,7 +34,7 @@ namespace Barotrauma
             }
         }
 
-        public void DrawBack(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundSpriteManager = null)
+        public void DrawBack(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, BackgroundCreatureManager backgroundCreatureManager = null)
         {
             float brightness = MathHelper.Clamp(50.0f + (cam.Position.Y - Size.Y) / 2000.0f, 10.0f, 40.0f);
 
@@ -42,7 +44,7 @@ namespace Barotrauma
             graphics.Clear(backgroundColor);
 
             if (renderer == null) return;
-            renderer.DrawBackground(spriteBatch, cam, backgroundSpriteManager);
+            renderer.DrawBackground(spriteBatch, cam, backgroundSpriteManager, backgroundCreatureManager);
         }
     }
 }

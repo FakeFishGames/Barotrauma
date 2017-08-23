@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class BackgroundSpritePrefab
+    partial class BackgroundSpritePrefab
     {
         [Flags]
         public enum SpawnPosType
@@ -15,10 +15,12 @@ namespace Barotrauma
             RuinWall = 2,
             SeaFloor = 4
         }
+        
+        public readonly Alignment Alignment;
+
+        public readonly Vector2 DepthRange;
 
         public readonly Sprite Sprite;
-
-        public readonly Alignment Alignment;
 
         public readonly Vector2 Scale;
 
@@ -27,17 +29,14 @@ namespace Barotrauma
         public readonly bool AlignWithSurface;
         
         public readonly Vector2 RandomRotation;
-
-        public readonly Vector2 DepthRange;
-
-        public readonly Particles.ParticleEmitterPrefab ParticleEmitterPrefab;
-        public readonly Vector2 EmitterPosition;
-
+        
         public readonly float SwingAmount;
 
         public readonly int Commonness;
 
         public Dictionary<string, int> OverrideCommonness;
+
+        public readonly XElement LevelTriggerElement;
 
         public BackgroundSpritePrefab(XElement element)
         {
@@ -89,10 +88,16 @@ namespace Barotrauma
                             OverrideCommonness.Add(levelType, ToolBox.GetAttributeInt(subElement, "commonness", 1));
                         }
                         break;
+                    case "leveltrigger":
+                    case "trigger":
+                        LevelTriggerElement = subElement;
+                        break;
+#if CLIENT
                     case "particleemitter":
                         ParticleEmitterPrefab = new Particles.ParticleEmitterPrefab(subElement);
                         EmitterPosition = ToolBox.GetAttributeVector2(subElement, "position", Vector2.Zero);
                         break;
+#endif
                 }
             }
         }
