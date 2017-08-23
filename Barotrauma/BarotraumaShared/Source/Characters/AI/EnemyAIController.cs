@@ -64,6 +64,16 @@ namespace Barotrauma
         {
             get { return selectedAiTarget; }
         }
+
+        public float AttackHumans
+        {
+            get { return attackHumans; }
+        }
+
+        public float AttackRooms
+        {
+            get { return attackRooms; }
+        }
                         
         public EnemyAIController(Character c, string file) : base(c)
         {

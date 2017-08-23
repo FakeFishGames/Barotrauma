@@ -1,4 +1,5 @@
-﻿using Barotrauma.Sounds;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -59,12 +60,15 @@ namespace Barotrauma
 
         //music
         public static float MusicVolume = 1.0f;
-        private const float MusicLerpSpeed = 0.1f;
+        private const float MusicLerpSpeed = 1.0f;
+        private const float UpdateMusicInterval = 5.0f;
 
         private static BackgroundMusic currentMusic;
         private static BackgroundMusic targetMusic;
         private static BackgroundMusic[] musicClips;
         private static float currMusicVolume;
+
+        private static float updateMusicTimer;
 
         //ambience
         private static Sound[] waterAmbiences = new Sound[2];
@@ -187,9 +191,9 @@ namespace Barotrauma
         }
         
 
-        public static void Update()
+        public static void Update(float deltaTime)
         {
-            UpdateMusic();
+            UpdateMusic(deltaTime);
 
             if (startDrone != null && !startDrone.IsPlaying)
             {
@@ -284,29 +288,34 @@ namespace Barotrauma
             if (sound != null) sound.Play(volume, range, position);
         }
 
-        private static void UpdateMusic()
+        private static void UpdateMusic(float deltaTime)
         {
             if (musicClips == null) return;
-            
-            List<BackgroundMusic> suitableMusic = GetSuitableMusicClips();
 
-            if (suitableMusic.Count == 0)
+            updateMusicTimer -= deltaTime;
+            if (updateMusicTimer <= 0.0f)
             {
-                targetMusic = null;
-            }                
-            else if (!suitableMusic.Contains(currentMusic))
-            {
-                int index = Rand.Int(suitableMusic.Count);
+                List<BackgroundMusic> suitableMusic = GetSuitableMusicClips();
 
-                if (currentMusic == null || suitableMusic[index].file != currentMusic.file)
+                if (suitableMusic.Count == 0)
                 {
-                    targetMusic = suitableMusic[index];
+                    targetMusic = null;
+                }                
+                else if (!suitableMusic.Contains(currentMusic))
+                {
+                    int index = Rand.Int(suitableMusic.Count);
+
+                    if (currentMusic == null || suitableMusic[index].file != currentMusic.file)
+                    {
+                        targetMusic = suitableMusic[index];
+                    }
                 }
+                updateMusicTimer = UpdateMusicInterval;
             }
 
             if (targetMusic == null || currentMusic == null || targetMusic.file != currentMusic.file)
             {
-                currMusicVolume = MathHelper.Lerp(currMusicVolume, 0.0f, MusicLerpSpeed);
+                currMusicVolume = MathHelper.Lerp(currMusicVolume, 0.0f, MusicLerpSpeed * deltaTime);
                 if (currentMusic != null) Sound.StreamVolume(currMusicVolume);
 
                 if (currMusicVolume < 0.01f)
@@ -327,7 +336,7 @@ namespace Barotrauma
             }
             else
             {
-                currMusicVolume = MathHelper.Lerp(currMusicVolume, MusicVolume, MusicLerpSpeed);
+                currMusicVolume = MathHelper.Lerp(currMusicVolume, MusicVolume, MusicLerpSpeed * deltaTime);
                 Sound.StreamVolume(currMusicVolume);
             }
         }
@@ -344,35 +353,86 @@ namespace Barotrauma
 
         private static List<BackgroundMusic> GetSuitableMusicClips()
         {
+            string musicType = GetCurrentMusicType();
+            return musicClips.Where(music => music != null && music.type == musicType).ToList();
+        }
 
-            Submarine targetSubmarine = null;
-            if (Character.Controlled != null)
-            {
-                targetSubmarine = Character.Controlled.Submarine;
-            }
-
-            string musicType = "default";
-            if (OverrideMusicType != null)
-            {
-                musicType = OverrideMusicType;
-            }
-            else if (Character.Controlled != null &&
+        private static string GetCurrentMusicType()
+        {
+            if (OverrideMusicType != null) return OverrideMusicType;
+            
+            if (Character.Controlled != null &&
                 Level.Loaded != null && Level.Loaded.Ruins != null &&
                 Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
             {
-                musicType = "ruins";
-            }
-            else if ((targetSubmarine != null && targetSubmarine.AtDamageDepth) ||
-                    (Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
-            {
-                musicType = "deep";
-            }
-            else if (targetSubmarine != null)
-            {
-                //TODO: determine whether to switch to monster or repair musictype                
+                return "ruins";
             }
 
-            return musicClips.Where(music => music != null && music.type == musicType).ToList();
+            Submarine targetSubmarine = Character.Controlled?.Submarine;
+
+            if ((targetSubmarine != null && targetSubmarine.AtDamageDepth) ||
+                (Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
+            {
+                return "deep";
+            }
+
+            if (targetSubmarine != null)
+            {
+                List<Reactor> reactors = new List<Reactor>();
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine != targetSubmarine) continue;
+                    var reactor = item.GetComponent<Reactor>();
+                    if (reactor != null)
+                    {
+                        reactors.Add(reactor);
+                    }
+                }
+
+                if (reactors.All(r => r.Temperature < 1.0f)) return "repair";
+
+                float floodedArea = 0.0f;
+                float totalArea = 0.0f;
+                foreach (Hull hull in Hull.hullList)
+                {
+                    if (hull.Submarine != targetSubmarine) continue;
+                    floodedArea += hull.Volume;
+                    totalArea += hull.FullVolume;
+                }
+
+                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) return "repair";             
+            }
+
+
+            float enemyDistThreshold = 5000.0f;
+
+            if (targetSubmarine != null)
+            {
+                enemyDistThreshold = Math.Max(enemyDistThreshold, Math.Max(targetSubmarine.Borders.Width, targetSubmarine.Borders.Height) * 2.0f);
+            }
+
+            foreach (Character character in Character.CharacterList)
+            {
+                EnemyAIController enemyAI = character.AIController as EnemyAIController;
+                if (enemyAI == null || (enemyAI.AttackHumans < 0.0f && enemyAI.AttackRooms < 0.0f)) continue;
+
+                if (targetSubmarine != null)
+                {
+                    if (Vector2.DistanceSquared(character.WorldPosition, targetSubmarine.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
+                    {
+                        return "monster";
+                    }
+                }
+                else if (Character.Controlled != null)
+                {
+                    if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
+                    {
+                        return "monster";
+                    }
+                }
+            }
+
+            return "default";
         }
 
         public static void PlaySplashSound(Vector2 worldPosition, float strength)

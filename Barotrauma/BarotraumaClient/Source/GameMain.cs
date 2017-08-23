@@ -349,7 +349,7 @@ namespace Barotrauma
                 }
                 else if (hasLoaded)
                 {
-                    SoundPlayer.Update();
+                    SoundPlayer.Update((float)Timing.Step);
 
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
