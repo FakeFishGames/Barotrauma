@@ -184,7 +184,7 @@ namespace Barotrauma.Sounds
             if (Disabled) return;
 
             if (sourceIndex < 1) return;
-            
+
             var state = AL.GetSourceState(alSources[sourceIndex]);
             if (state == ALSourceState.Playing || state == ALSourceState.Paused)
             {
@@ -194,6 +194,20 @@ namespace Barotrauma.Sounds
                 soundsPlaying[sourceIndex] = null;
             }
         }
+
+        public static void Stop(Sound sound)
+        {
+            if (Disabled) return;
+
+            for (int i = 0; i < soundsPlaying.Length; i++)
+            {
+                if (soundsPlaying[i] == sound)
+                {
+                    Stop(i);
+                }
+            }
+        }
+
 
         public static Sound GetPlayingSound(int sourceIndex)
         {
@@ -213,6 +227,29 @@ namespace Barotrauma.Sounds
             if (sourceIndex < 1 || sourceIndex>alSources.Count-1) return false;
 
             return AL.GetSourceState(alSources[sourceIndex]) == ALSourceState.Playing;
+        }
+
+        public static bool IsPlaying(Sound sound)
+        {
+            int temp;
+            return IsPlaying(sound, out temp);
+        }
+
+        public static bool IsPlaying(Sound sound, out int sourceIndex)
+        {
+            sourceIndex = -1;
+            if (Disabled) return false;
+
+            for (int i = 0; i < soundsPlaying.Length; i++)
+            {
+                if (soundsPlaying[i] == sound && AL.GetSourceState(alSources[i]) == ALSourceState.Playing)
+                {
+                    sourceIndex = i;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static bool IsPaused(int sourceIndex)

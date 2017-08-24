@@ -66,7 +66,8 @@
     <Body width="11" height="24" density="30"/>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stungrenade.ogg">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" damage="5" stun="25" force="0.1"/>
       </StatusEffect>
     </Throwable>
@@ -83,7 +84,8 @@
     <Body width="11" height="24" density="30"/>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0" sound="Content/Items/Weapons/stungrenade.ogg">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" damage="5" stun="1" force="0.1"/>
         <Fire size="300.0"/>
       </StatusEffect>
@@ -110,11 +112,13 @@
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="50,0" handle1="-5,0" holdangle="10" reload="1.0">
       <Attack damage="2" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
-      <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true" sound="Content/Items/Weapons/stunbaton.ogg">
+      <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">
+        <sound file="Content/Items/Weapons/stunbaton.ogg"/>
         <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
         <Explosion range="100.0" force="0.1" shockwave="false" flames="false" camerashake="5.0"/>
       </StatusEffect>
-      <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="30.0" disabledeltatime="true" sound="Content/Items/Weapons/stunbaton.ogg">
+      <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="30.0" disabledeltatime="true">
+        <sound file="Content/Items/Weapons/stunbaton.ogg"/>
         <RequiredItem name="Fulgurium Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
         <Explosion range="100.0" force="0.5" shockwave="false" flames="false" camerashake="5.0"/>
       </StatusEffect>      

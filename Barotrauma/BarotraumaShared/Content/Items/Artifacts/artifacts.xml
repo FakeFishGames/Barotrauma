@@ -103,7 +103,8 @@
     <Holdable slots="Any,RightHand,LeftHand" handle1="0,-5">
       <StatusEffect type="Always" target="Hull" oxygen="5000.0"/>
 
-      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true" sound="Content/Items/Reactor/explosion.ogg">
+      <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
+        <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="600.0" structuredamage="400" damage="300" stun="5" force="20.0"/>
       </StatusEffect>
     </Holdable>
@@ -168,7 +169,8 @@
     <Projectile launchimpulse="80.0">
       <Attack damage="1000" bleedingdamage="10" structuredamage="500" damagetype="Blunt"/>
 
-      <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Artifacts/alienweapon.ogg">
+      <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
+        <sound file="Content/Items/Artifacts/alienweapon.ogg"/>
         <Explosion range="1000.0" structuredamage="5000" damage="1000" stun="10" force="50.0"/>
       </StatusEffect>
 

@@ -81,7 +81,8 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
     <Projectile launchimpulse="5.0">
-      <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true" sound="Content/Items/Weapons/bigexplosion.ogg">
+      <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
+        <sound file="Content/Items/Weapons/bigexplosion.ogg" range="10000"/>
         <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0"/>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>

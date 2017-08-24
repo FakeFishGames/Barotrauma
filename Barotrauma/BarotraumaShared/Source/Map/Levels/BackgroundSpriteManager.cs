@@ -53,8 +53,30 @@ namespace Barotrauma
             {
                 this.ParticleEmitter = new ParticleEmitter(prefab.ParticleEmitterPrefab);
             }
-#endif
 
+            if (prefab.SoundElement != null)
+            {
+                Sound = Sound.Load(prefab.SoundElement, true);
+            }
+#endif
+        }
+
+        public Vector2 LocalToWorld(Vector2 localPosition, float swingState = 0.0f)
+        {
+            Vector2 emitterPos = localPosition * Scale;
+
+            if (Rotation != 0.0f || Prefab.SwingAmount != 0.0f)
+            {
+                float rot = Rotation + swingState * Prefab.SwingAmount;
+
+                var ca = (float)Math.Cos(rot);
+                var sa = (float)Math.Sin(rot);
+
+                emitterPos = new Vector2(
+                    ca * emitterPos.X + sa * emitterPos.Y,
+                    -sa * emitterPos.X + ca * emitterPos.Y);
+            }
+            return new Vector2(Position.X, Position.Y) + emitterPos;
         }
     }
 

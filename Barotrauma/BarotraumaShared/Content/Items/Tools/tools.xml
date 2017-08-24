@@ -117,7 +117,8 @@
     <Body width="12" height="33" density="5"/>
 
     <Holdable slots="RightHand,Any" holdpos="30,-15" handle1="0,5" handle2="0,-5">
-      <StatusEffect type="OnFire" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg" disabledeltatime="true">
+      <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
+        <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="15" damage="25" stun="5" force="3.0"/>
       </StatusEffect>
     </Holdable>

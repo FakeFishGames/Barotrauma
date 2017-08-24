@@ -26,6 +26,7 @@ namespace Barotrauma
         private List<ParticleEmitter> particleEmitters;
 
         private Sound sound;
+        private bool loopSound;
 #endif
 
         public string[] propertyNames;
@@ -132,11 +133,10 @@ namespace Barotrauma
                     case "duration":
                         duration = ToolBox.GetAttributeFloat(attribute, 0.0f);
                         break;
-#if CLIENT
                     case "sound":
-                        sound = Sound.Load(attribute.Value.ToString());
+                        DebugConsole.ThrowError("Error in StatusEffect " + element.Parent.Name.ToString() +
+                            " - sounds should be defined as child elements of the StatusEffect, not as attributes.");
                         break;
-#endif
                     default:
                         propertyAttributes.Add(attribute);
                         break;
@@ -180,6 +180,10 @@ namespace Barotrauma
 #if CLIENT
                     case "particleemitter":
                         particleEmitters.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "sound":
+                        sound = Sound.Load(subElement);
+                        loopSound = ToolBox.GetAttributeBool(subElement, "loop", false);
                         break;
 #endif
                 }
@@ -227,7 +231,24 @@ namespace Barotrauma
         protected void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)
         {
 #if CLIENT
-            if (sound != null) sound.Play(1.0f, 1000.0f, entity.WorldPosition);
+            if (sound != null)
+            {
+                if (loopSound)
+                {
+                    if (!Sounds.SoundManager.IsPlaying(sound))
+                    {
+                        sound.Play(entity.WorldPosition);
+                    }
+                    else
+                    {
+                        sound.UpdatePosition(entity.WorldPosition);
+                    }
+                }
+                else
+                {
+                    sound.Play(entity.WorldPosition);
+                }
+            }
 #endif
 
             if (useItem)

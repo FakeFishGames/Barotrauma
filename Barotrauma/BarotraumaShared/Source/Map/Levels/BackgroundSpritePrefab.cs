@@ -97,6 +97,10 @@ namespace Barotrauma
                         ParticleEmitterPrefab = new Particles.ParticleEmitterPrefab(subElement);
                         EmitterPosition = ToolBox.GetAttributeVector2(subElement, "position", Vector2.Zero);
                         break;
+                    case "sound":
+                        SoundElement = subElement;
+                        SoundPosition = ToolBox.GetAttributeVector2(subElement, "position", Vector2.Zero);
+                        break;
 #endif
                 }
             }

@@ -16,7 +16,8 @@
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
 
-      <StatusEffect type="OnUse" target="Contained, Character" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Medical/syringe.ogg">
+      <StatusEffect type="OnUse" target="Contained, Character" Condition="-25.0" disabledeltatime="true" >
+        <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem name="chem" type="Contained"/>
         <Use/>
       </StatusEffect>
@@ -42,8 +43,10 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
-      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true" sound="Content/Items/Medical/bandage.ogg"/>
-      <StatusEffect type="OnUse" target="This, Character" bleeding="-0.1" duration="5.0"  sound="Content/Items/Medical/bandage.ogg"/>
+      <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
+      <StatusEffect type="OnUse" target="This, Character" bleeding="-0.1" duration="5.0">
+        <Sound file="Content/Items/Medical/bandage.ogg" range="500"/>
+      </StatusEffect>
     </MeleeWeapon>
   </Item>
 
@@ -275,7 +278,8 @@
 
     <Holdable slots="Any,RightHand,LeftHand">
       <StatusEffect type="OnFire" target="this" condition="-50"/> 
-      <StatusEffect type="OnBroken" target="This" Condition="-100.0" sound="Content/Items/Reactor/explosion.ogg">
+      <StatusEffect type="OnBroken" target="This" Condition="-100.0">
+        <Sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="500" damage="5" stun="3" force="0.1"/>
       </StatusEffect>
     </Holdable>
