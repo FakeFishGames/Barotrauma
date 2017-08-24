@@ -23,6 +23,8 @@ namespace Barotrauma
 
         private List<Entity> triggerers = new List<Entity>();
 
+        private float cameraShake;
+
         public Vector2 WorldPosition
         {
             get { return ConvertUnits.ToDisplayUnits(physicsBody.Position); }
@@ -52,6 +54,8 @@ namespace Barotrauma
             physicsBody.FarseerBody.IsKinematic = true;
 
             physicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
+
+            cameraShake = ToolBox.GetAttributeFloat(element, "camerashake", 0.0f);
             
             foreach (XElement subElement in element.Elements())
             {
@@ -127,6 +131,11 @@ namespace Barotrauma
                     {
                         attack.DoDamage(null, damageable, WorldPosition, deltaTime, false);
                     }
+                }
+
+                if (triggerer == Character.Controlled || triggerer == Character.Controlled?.Submarine)
+                {
+                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, cameraShake);
                 }
             }
         }
