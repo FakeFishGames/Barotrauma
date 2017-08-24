@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -17,17 +18,21 @@ namespace Barotrauma
 
         private OggSound oggSound;
 
-        string filePath;
+        private readonly string filePath;
+        private readonly bool destroyOnGameEnd;
+
+        private float baseVolume;
+        private float range;
 
         private int alSourceId;
-
-        private bool destroyOnGameEnd;
-                
         
-        //public float Volume
-        //{
-        //    set { SoundManager.Volume(sourceIndex, value); }
-        //}
+        public bool IsPlaying
+        {
+            get
+            {
+                return SoundManager.IsPlaying(alSourceId);
+            }
+        }
 
         private Sound(string file, bool destroyOnGameEnd)
         {
@@ -52,11 +57,14 @@ namespace Barotrauma
                 ALHelper.Check();
             }
 
+            baseVolume = 1.0f;
+            range = 1000.0f;
+
             this.destroyOnGameEnd = destroyOnGameEnd;
                 
             loadedSounds.Add(this);
         }
-
+          
         public string FilePath
         {
             get { return filePath; }
@@ -83,6 +91,20 @@ namespace Barotrauma
             return new Sound(file, destroyOnGameEnd);
         }
 
+        public static Sound Load(XElement element, bool destroyOnGameEnd = true)
+        {
+            string filePath = ToolBox.GetAttributeString(element, "file", "");           
+
+            var newSound = new Sound(filePath, destroyOnGameEnd);
+            if (newSound != null)
+            {
+                newSound.baseVolume = ToolBox.GetAttributeFloat(element, "volume", 1.0f);
+                newSound.range = ToolBox.GetAttributeFloat(element, "range", 1000.0f);
+            }
+
+            return newSound;
+        }
+
         public int Play(float volume = 1.0f)
         {
             if (volume <= 0.0f) return -1;
@@ -91,76 +113,52 @@ namespace Barotrauma
             return alSourceId;
         }
 
+        public int Play(Vector2 position)
+        {
+            return Play(baseVolume, range, position);
+        }
+
         public int Play(float baseVolume, float range, Vector2 position)
         {          
-            //position = new Vector2(position.X - CameraPos.X, position.Y - CameraPos.Y);
-            
-            //volume = (range == 0.0f) ? 0.0f : MathHelper.Clamp(volume * (range - position.Length())/range, 0.0f, 1.0f);
-
             Vector2 relativePos = GetRelativePosition(position);
             float volume = GetVolume(relativePos, range, baseVolume);
 
             if (volume <= 0.0f) return -1;
 
-            alSourceId = SoundManager.Play(this, relativePos/100.0f, volume);
+            alSourceId = SoundManager.Play(this, relativePos, volume);
 
             return alSourceId;
-
-            //if (newIndex == -1) return -1;
-
-            //return UpdatePosition(newIndex, position, range, volume);
         }
 
-        //public int Play(float volume, float range, Body body)
-        //{
-        //    //Vector2 bodyPosition = ConvertUnits.ToDisplayUnits(body.Position);
-        //    //bodyPosition.Y = -bodyPosition.Y;
+        public void UpdatePosition(Vector2 position)
+        {
+            int sourceIndex = -1;
+            if (SoundManager.IsPlaying(this, out sourceIndex))
+            {
+                Vector2 relativePos = GetRelativePosition(position);
+                float volume = GetVolume(relativePos, range, baseVolume);
 
-
-        //    alSourceId = Play(volume, range, ConvertUnits.ToDisplayUnits(body.Position));
-
-        //    return alSourceId;
-        //}
-
+                if (volume <= 0.0f)
+                {
+                    SoundManager.Stop(this);
+                    return;
+                }
+                
+                SoundManager.UpdateSoundPosition(sourceIndex, relativePos, volume);
+            }
+        }
+        
         private float GetVolume(Vector2 relativePosition, float range, float baseVolume)
         {
-            float volume = (range == 0.0f) ? 0.0f : MathHelper.Clamp(baseVolume * (range - relativePosition.Length()) / range, 0.0f, 1.0f);
+            float volume = (range == 0.0f) ? 0.0f : MathHelper.Clamp(baseVolume * (range - (relativePosition.Length() * 100.0f)) / range, 0.0f, 1.0f);
 
             return volume;
         }
 
         private Vector2 GetRelativePosition(Vector2 position)
         {
-            return new Vector2(position.X - CameraPos.X, position.Y - CameraPos.Y);
+            return new Vector2(position.X - CameraPos.X, position.Y - CameraPos.Y) / 100.0f;
         }
-
-        //public static int UpdatePosition(int sourceIndex, Vector2 position, float range, float baseVolume = 1.0f)
-        //{
-        //    position = new Vector2(position.X - CameraPos.X, position.Y - CameraPos.Y);
-        //    float volume = (range == 0.0f) ? 0.0f : MathHelper.Clamp(baseVolume * (range - position.Length())/range, 0.0f, 1.0f);
-
-        //    if (volume <= 0.0f)
-        //    {
-        //        if (sourceIndex > 0)
-        //        {
-        //            SoundManager.Stop(sourceIndex);
-        //            sourceIndex = -1;
-        //        }
-
-        //        return sourceIndex;
-        //    }
-
-        //    SoundManager.UpdateSoundPosition(sourceIndex, position, volume, volume);
-
-        //    return sourceIndex;
-        //}
-
-        //public int UpdatePosition(int sourceIndex, Body body, float range, float baseVolume = 1.0f)
-        //{
-        //    Vector2 bodyPosition = ConvertUnits.ToDisplayUnits(body.Position);
-        //    bodyPosition.Y = -bodyPosition.Y;
-        //    return UpdatePosition(sourceIndex, bodyPosition, range, baseVolume);
-        //}
 
         public int Loop(int sourceIndex, float volume)
         {
@@ -196,16 +194,8 @@ namespace Barotrauma
                 return sourceIndex;
             }
 
-            alSourceId = SoundManager.Loop(this, sourceIndex, relativePos / 100.0f, volume);
+            alSourceId = SoundManager.Loop(this, sourceIndex, relativePos, volume);
             return alSourceId;
-        }
-
-        public bool IsPlaying
-        {
-            get
-            {
-                return SoundManager.IsPlaying(alSourceId);
-            }
         }
 
         public static void OnGameEnd()

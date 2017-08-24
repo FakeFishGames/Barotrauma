@@ -9,6 +9,7 @@ namespace Barotrauma
     partial class BackgroundSprite
     {
         public ParticleEmitter ParticleEmitter;
+        public Sound Sound;
     }
 
     partial class BackgroundSpriteManager
@@ -21,21 +22,24 @@ namespace Barotrauma
         {
             foreach (BackgroundSprite s in visibleSprites)
             {
-                if (s.Prefab.ParticleEmitterPrefab != null)
+                if (s.ParticleEmitter != null)
                 {
-                    Vector2 emitterPos = new Vector2(s.Prefab.EmitterPosition.X, s.Prefab.EmitterPosition.Y) * s.Scale;
+                    Vector2 emitterPos = s.LocalToWorld(new Vector2(s.Prefab.EmitterPosition.X, s.Prefab.EmitterPosition.Y));                        
+                    s.ParticleEmitter.Emit(deltaTime, emitterPos);
+                }
 
-                    if (s.Rotation != 0.0f || s.Prefab.SwingAmount != 0.0f)
+                if (s.Sound != null)
+                {
+                    int sourceIndex;
+                    Vector2 soundPos = s.LocalToWorld(new Vector2(s.Prefab.SoundPosition.X, s.Prefab.SoundPosition.Y));
+                    if (!Sounds.SoundManager.IsPlaying(s.Sound, out sourceIndex))
                     {
-                        var ca = (float)Math.Cos(s.Rotation + swingState * s.Prefab.SwingAmount);
-                        var sa = (float)Math.Sin(s.Rotation + swingState * s.Prefab.SwingAmount);
-
-                        emitterPos = new Vector2(
-                            ca * emitterPos.X + sa * emitterPos.Y,
-                            -sa * emitterPos.X + ca * emitterPos.Y);
+                        s.Sound.Play(soundPos);
                     }
-
-                    s.ParticleEmitter.Emit(deltaTime, new Vector2(s.Position.X, s.Position.Y) + emitterPos);
+                    else
+                    {
+                        s.Sound.UpdatePosition(soundPos);                        
+                    }
                 }
             }
         }
