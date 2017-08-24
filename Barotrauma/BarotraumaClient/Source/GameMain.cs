@@ -102,6 +102,11 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public bool LoadingScreenOpen
+        {
+            get { return loadingScreenOpen; }
+        }
                                 
         public GameMain()
         {
