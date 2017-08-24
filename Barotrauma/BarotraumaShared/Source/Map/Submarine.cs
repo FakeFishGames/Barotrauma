@@ -1153,8 +1153,8 @@ namespace Barotrauma
                 }
                 Item.ItemList.Clear();
             }
-            
-            PhysicsBody.list.Clear();
+
+            PhysicsBody.RemoveAll();
 
             Ragdoll.list.Clear();
 

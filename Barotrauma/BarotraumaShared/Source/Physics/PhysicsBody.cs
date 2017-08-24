@@ -65,7 +65,11 @@ namespace Barotrauma
             Circle, Rectangle, Capsule
         };
 
-        public static List<PhysicsBody> list = new List<PhysicsBody>();
+        private static List<PhysicsBody> list = new List<PhysicsBody>();
+        public static List<PhysicsBody> List
+        {
+            get { return list; }
+        }
 
         //the farseer physics body of the item
         private Body body;
@@ -532,6 +536,15 @@ namespace Barotrauma
             GameMain.World.RemoveBody(body);
 
             DisposeProjSpecific();
+        }
+
+        public static void RemoveAll()
+        {
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                list[i].Remove();
+            }
+            System.Diagnostics.Debug.Assert(list.Count == 0);
         }
 
         partial void DisposeProjSpecific();

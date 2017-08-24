@@ -113,7 +113,7 @@ namespace Barotrauma
                 sub.SetPrevTransform(sub.Position);
             }
 
-            foreach (PhysicsBody pb in PhysicsBody.list)
+            foreach (PhysicsBody pb in PhysicsBody.List)
             {
                 pb.SetPrevTransform(pb.SimPosition, pb.Rotation);
             }
