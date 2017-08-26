@@ -25,9 +25,11 @@ namespace Barotrauma
 
         private float cameraShake;
 
+        private Vector2 force;
+
         public Vector2 WorldPosition
         {
-            get { return ConvertUnits.ToDisplayUnits(physicsBody.Position); }
+            get { return physicsBody.Position; }
             set { physicsBody.SetTransform(ConvertUnits.ToSimUnits(value), physicsBody.Rotation); }
         }
 
@@ -56,6 +58,8 @@ namespace Barotrauma
             physicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
 
             cameraShake = ToolBox.GetAttributeFloat(element, "camerashake", 0.0f);
+
+            force = ToolBox.GetAttributeVector2(element, "force", Vector2.Zero);
             
             foreach (XElement subElement in element.Elements())
             {
@@ -110,6 +114,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            triggerers.RemoveAll(t => t.Removed);
             foreach (Entity triggerer in triggerers)
             {
                 foreach (StatusEffect effect in statusEffects)
@@ -130,6 +135,18 @@ namespace Barotrauma
                     foreach (Attack attack in attacks)
                     {
                         attack.DoDamage(null, damageable, WorldPosition, deltaTime, false);
+                    }
+                }
+
+                if (force != Vector2.Zero)
+                {
+                    if (triggerer is Character)
+                    {
+                        ((Character)triggerer).AnimController.Collider.ApplyForce(force * deltaTime);
+                    }
+                    else if (triggerer is Submarine)
+                    {
+                        ((Submarine)triggerer).ApplyForce(force * deltaTime);
                     }
                 }
 

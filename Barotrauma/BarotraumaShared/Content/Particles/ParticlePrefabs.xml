@@ -177,6 +177,21 @@
       <sprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="819,410,204,204"/>
   </hydrosmoke>
 
+  <hydrosmokesmall
+    startsizemin="2.0,2.0" startsizemax="5.0,5.0"
+    sizechangemin="0.25,0.25" sizechangemax="0.3,0.3"
+    startrotationmin ="0.0" startrotationmax="360"
+    startcolor="0.2, 0.2, 0.2" startalpha="1.0"
+    angularvelocitymin="-20" angularvelocitymax="20"
+    colorchange="0.0, 0.0, 0.0, -0.16"
+    growtime="1"
+    lifetime="6"
+    drawtarget="water"
+    animduration="3"
+    loopanim="false">
+    <animatedsprite texture="Content/Particles/SmokeParticleSheet.png" sourcerect="0,0,1024,1024" columns="5" rows="5"/>
+  </hydrosmokesmall>
+
   <explosionfire
     startsizemin="0.25,0.15" startsizemax="0.5,0.25"
     sizechangemin="0.2,0.2" sizechangemax="0.3,0.3"
