@@ -368,15 +368,15 @@ namespace Barotrauma
             body.ApplyTorque(torque);
         }
 
-        public void SetTransform(Vector2 position, float rotation)
+        public void SetTransform(Vector2 simPosition, float rotation)
         {
-            System.Diagnostics.Debug.Assert(MathUtils.IsValid(position));
-            System.Diagnostics.Debug.Assert(Math.Abs(position.X) < 1000000.0f);
-            System.Diagnostics.Debug.Assert(Math.Abs(position.Y) < 1000000.0f);
+            System.Diagnostics.Debug.Assert(MathUtils.IsValid(simPosition));
+            System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
+            System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
             
 
-            body.SetTransform(position, rotation);
-            SetPrevTransform(position, rotation);
+            body.SetTransform(simPosition, rotation);
+            SetPrevTransform(simPosition, rotation);
         }
 
         public void SetPrevTransform(Vector2 position, float rotation)

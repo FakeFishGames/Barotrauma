@@ -45,13 +45,17 @@ namespace Barotrauma
                         -sa * triggerPosition.X + ca * triggerPosition.Y);
                 }
 
-                this.Trigger = new LevelTrigger(prefab.LevelTriggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation);
+                this.Trigger = new LevelTrigger(prefab.LevelTriggerElement, new Vector2(position.X, position.Y) + triggerPosition, -rotation, scale);
             }
 
 #if CLIENT
-            if (prefab.ParticleEmitterPrefab != null)
+            if (prefab.ParticleEmitterPrefabs != null)
             {
-                this.ParticleEmitter = new ParticleEmitter(prefab.ParticleEmitterPrefab);
+                ParticleEmitters = new List<ParticleEmitter>();
+                foreach (ParticleEmitterPrefab emitterPrefab in prefab.ParticleEmitterPrefabs)
+                {
+                    ParticleEmitters.Add(new ParticleEmitter(emitterPrefab));
+                }
             }
 
             if (prefab.SoundElement != null)
@@ -172,34 +176,44 @@ namespace Barotrauma
                     spriteCorners[j] += pos.Value + pivotOffset;
                 }
 
+                float minX = spriteCorners.Min(c => c.X) - newSprite.Position.Z;
+                float maxX = spriteCorners.Max(c => c.X) + newSprite.Position.Z;
+                
+                float minY = spriteCorners.Min(c => c.Y) - newSprite.Position.Z - level.BottomPos;
+                float maxY = spriteCorners.Max(c => c.Y) + newSprite.Position.Z - level.BottomPos;
+
 #if CLIENT
-                if (newSprite.ParticleEmitter != null)
+                if (newSprite.ParticleEmitters != null)
                 {
-                    Rectangle particleBounds = newSprite.ParticleEmitter.CalculateParticleBounds(pos.Value);
-                    spriteCorners.Add(particleBounds.Location.ToVector2());
-                    spriteCorners.Add(new Vector2(particleBounds.Right, particleBounds.Bottom));
+                    foreach (ParticleEmitter emitter in newSprite.ParticleEmitters)
+                    {
+                        Rectangle particleBounds = emitter.CalculateParticleBounds(pos.Value);
+                        minX = Math.Min(minX, particleBounds.X);
+                        maxX = Math.Max(maxX, particleBounds.Right);
+                        minY = Math.Min(minY, particleBounds.Y - level.BottomPos);
+                        maxY = Math.Max(maxY, particleBounds.Bottom - level.BottomPos);
+                    }
                 }
 #endif
 
                 sprites.Add(newSprite);
 
-                int minX = (int)Math.Floor((spriteCorners.Min(c => c.X) - newSprite.Position.Z) / GridSize);
-                int maxX = (int)Math.Floor((spriteCorners.Max(c => c.X) + newSprite.Position.Z) / GridSize);
+                int xStart  = (int)Math.Floor(minX / GridSize);
+                int xEnd    = (int)Math.Floor(maxX / GridSize);
+                if (xEnd < 0 || xStart >= spriteGrid.GetLength(0)) continue;
 
-                if (maxX < 0 || minX >= spriteGrid.GetLength(0)) continue;
+                int yStart  = (int)Math.Floor(minY / GridSize);
+                int yEnd    = (int)Math.Floor(maxY / GridSize);
+                if (yEnd < 0 || yStart >= spriteGrid.GetLength(1)) continue;
 
-                int minY = (int)Math.Floor((spriteCorners.Min(c => c.Y) - newSprite.Position.Z - level.BottomPos) / GridSize);
-                int maxY = (int)Math.Floor((spriteCorners.Max(c => c.Y) + newSprite.Position.Z - level.BottomPos) / GridSize);
-                if (maxY < 0 || minY >= spriteGrid.GetLength(1)) continue;
+                xStart  = Math.Max(xStart, 0);
+                xEnd    = Math.Min(xEnd, spriteGrid.GetLength(0) - 1);
+                yStart  = Math.Max(yStart, 0);
+                yEnd    = Math.Min(yEnd, spriteGrid.GetLength(1) - 1);
 
-                minX = Math.Max(minX, 0);
-                maxX = Math.Min(maxX, spriteGrid.GetLength(0) - 1);
-                minY = Math.Max(minY, 0);
-                maxY = Math.Min(maxY, spriteGrid.GetLength(1) - 1);
-
-                for (int x = minX; x <= maxX; x++)
+                for (int x = xStart; x <= xEnd; x++)
                 {
-                    for (int y = minY; y <= maxY; y++)
+                    for (int y = yStart; y <= yEnd; y++)
                     {
                         if (spriteGrid[x, y] == null) spriteGrid[x, y] = new List<BackgroundSprite>();
                         spriteGrid[x, y].Add(newSprite);

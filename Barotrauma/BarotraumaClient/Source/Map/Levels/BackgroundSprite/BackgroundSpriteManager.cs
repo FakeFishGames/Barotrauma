@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class BackgroundSprite
     {
-        public ParticleEmitter ParticleEmitter;
+        public List<ParticleEmitter> ParticleEmitters;
         public Sound Sound;
     }
 
@@ -22,10 +22,13 @@ namespace Barotrauma
         {
             foreach (BackgroundSprite s in visibleSprites)
             {
-                if (s.ParticleEmitter != null)
+                if (s.ParticleEmitters != null)
                 {
-                    Vector2 emitterPos = s.LocalToWorld(new Vector2(s.Prefab.EmitterPosition.X, s.Prefab.EmitterPosition.Y));                        
-                    s.ParticleEmitter.Emit(deltaTime, emitterPos);
+                    for (int i = 0; i < s.ParticleEmitters.Count; i++)
+                    {
+                        Vector2 emitterPos = s.LocalToWorld(s.Prefab.EmitterPositions[i]);
+                        s.ParticleEmitters[i].Emit(deltaTime, emitterPos);
+                    }
                 }
 
                 if (s.Sound != null)
@@ -38,7 +41,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        s.Sound.UpdatePosition(soundPos);                        
+                        s.Sound.UpdatePosition(soundPos);
                     }
                 }
             }

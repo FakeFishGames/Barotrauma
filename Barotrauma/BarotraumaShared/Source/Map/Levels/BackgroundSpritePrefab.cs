@@ -94,8 +94,14 @@ namespace Barotrauma
                         break;
 #if CLIENT
                     case "particleemitter":
-                        ParticleEmitterPrefab = new Particles.ParticleEmitterPrefab(subElement);
-                        EmitterPosition = ToolBox.GetAttributeVector2(subElement, "position", Vector2.Zero);
+                        if (ParticleEmitterPrefabs == null)
+                        {
+                            ParticleEmitterPrefabs = new List<Particles.ParticleEmitterPrefab>();
+                            EmitterPositions = new List<Vector2>();
+                        }
+
+                        ParticleEmitterPrefabs.Add(new Particles.ParticleEmitterPrefab(subElement));
+                        EmitterPositions.Add(ToolBox.GetAttributeVector2(subElement, "position", Vector2.Zero));
                         break;
                     case "sound":
                         SoundElement = subElement;
