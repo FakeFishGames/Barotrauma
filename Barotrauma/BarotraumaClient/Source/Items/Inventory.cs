@@ -247,6 +247,9 @@ namespace Barotrauma
             {
                 subRect.Y = subRect.Y - subRect.Height - 10;
                 container.Inventory.slots[i].Rect = subRect;
+                container.Inventory.slots[i].InteractRect = subRect;
+                container.Inventory.slots[i].InteractRect.Inflate(5, 5);
+
             }
 
             container.Inventory.isSubInventory = true;
@@ -284,7 +287,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i].IsHighlighted && !slots[i].Disabled && Items[i] != null)
+                if (slots[i].InteractRect.Contains(PlayerInput.MousePosition) && !slots[i].Disabled && Items[i] != null)
                 {
                     string toolTip = "";
                     if (GameMain.DebugDraw)
