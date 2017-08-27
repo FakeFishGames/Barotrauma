@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using Voronoi2;
 
 namespace Barotrauma
@@ -188,6 +189,18 @@ namespace Barotrauma
                     foreach (Vector2 point in cell.bodyVertices)
                     {
                         GUI.DrawRectangle(spriteBatch, new Vector2(point.X, -point.Y), new Vector2(10.0f, 10.0f), Color.White, true);
+                    }
+                }
+
+                foreach (List<Vector2> nodeList in level.SmallTunnels)
+                {
+                    for (int i = 1; i<nodeList.Count; i++)
+                    {
+                        GUI.DrawLine(spriteBatch, 
+                            new Vector2(nodeList[i-1].X, -nodeList[i - 1].Y),
+                            new Vector2(nodeList[i].X, -nodeList[i].Y), 
+                            Color.Lerp(Color.Yellow, Color.Red, i / (float)nodeList.Count), 0, 10);
+
                     }
                 }
             }
