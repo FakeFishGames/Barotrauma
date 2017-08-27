@@ -151,14 +151,12 @@ namespace Barotrauma
 
         public Rectangle Borders
         {
-            get { return subBody.Borders; } 
+            get 
+            { 
+                return subBody.Borders;                
+            }
         }
-
-        public Rectangle WorldBorders
-        {
-            get { return SubBody.WorldBorders; }
-        }
-
+        
         public override Vector2 Position
         {
             get { return subBody==null ? Vector2.Zero : subBody.Position - HiddenSubPosition; }

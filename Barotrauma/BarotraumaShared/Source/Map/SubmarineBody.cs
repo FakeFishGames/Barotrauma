@@ -39,12 +39,6 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        public Rectangle WorldBorders
-        {
-            get;
-            private set;
-        }
                 
         public Vector2 Velocity
         {
@@ -187,10 +181,6 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            var worldBorders = Borders;
-            worldBorders.Location += MathUtils.ToPoint(Position);
-            WorldBorders = worldBorders;
-
             if (GameMain.Client != null)
             {
                 if (memPos.Count == 0) return;
@@ -242,6 +232,9 @@ namespace Barotrauma
             //if outside left or right edge of the level
             if (Position.X < 0 || Position.X > Level.Loaded.Size.X)
             {
+                Rectangle worldBorders = Borders;
+                worldBorders.Location += MathUtils.ToPoint(Position);
+
                 //push the sub back below the upper "barrier" of the level
                 if (worldBorders.Y > Level.Loaded.Size.Y)
                 {
