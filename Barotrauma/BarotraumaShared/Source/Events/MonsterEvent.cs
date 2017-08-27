@@ -80,8 +80,15 @@ namespace Barotrauma
         {
             if (disallowed) return null;
             
-            Vector2 spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType, true);
-            
+            Vector2 spawnPos;
+            if (!Level.Loaded.TryGetInterestingPosition(true, spawnPosType, true, out spawnPos))
+            {
+                //no suitable position found, disable the event
+                repeat = false;
+                Finished();
+                return null;
+            }            
+
             var monsters = new Character[amount];
 
             if (spawnDeep) spawnPos.Y -= Level.Loaded.Size.Y;

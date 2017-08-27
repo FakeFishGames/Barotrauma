@@ -5,11 +5,19 @@
     mineventcount="1" maxeventcount="3"
     minamount="2" maxamount="3"
     repeat="true"
-    spawntype="mainpath,cave,ruin"
+    spawntype="mainpath,ruin"
     musictype="monster">
     <OverrideEventCount leveltype="Ridge" min="5" max="6"/>
     <OverrideEventCount leveltype="Wastes" min="5" max="6"/>
     <OverrideEventCount leveltype="Open" min="-5" max="1"/>
+  </MonsterEvent>
+
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Crawler/crawler.xml"
+    mineventcount="0" maxeventcount="2"
+    minamount="4" maxamount="6"
+    spawntype="cave"
+    musictype="monster">
   </MonsterEvent>
 
   <MonsterEvent name="Under attack" description=""
@@ -33,15 +41,23 @@
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Mantis/mantis.xml"
     mineventcount="0" maxeventcount="2"
-    minamount="0" maxamount="2"    
+    minamount="1" maxamount="2"    
     repeat="true"
-    spawntype="mainpath,cave,ruin"
+    spawntype="mainpath,ruin"
     musictype="monster">
     <OverrideEventCount leveltype="Ridge" min="5" max="6"/>
     <OverrideEventCount leveltype="Wastes" min="5" max="6"/>
     <OverrideEventCount leveltype="Open" min="-5" max="1"/>
   </MonsterEvent>
 
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Mantis/mantis.xml"
+    mineventcount="0" maxeventcount="1"
+    minamount="2" maxamount="3"
+    spawntype="cave"
+    musictype="monster">
+  </MonsterEvent>
+  
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Coelanth/coelanth.xml"
     mineventcount="0" maxeventcount="3"
@@ -102,11 +118,19 @@
     mineventcount="-2" maxeventcount="3"
     minamount="2" maxamount="3"
     repeat="true"
-    spawntype="mainpath,cave,ruin"
+    spawntype="mainpath,ruin"
     musictype="monster">
     <OverrideEventCount leveltype="Wastes" min="1" max="3"/>
   </MonsterEvent>
 
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Husk/husk.xml"
+    mineventcount="-1" maxeventcount="1"
+    minamount="2" maxamount="6"
+    spawntype="cave"
+    musictype="monster">
+  </MonsterEvent>
+  
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Fractalguardian/fractalguardian.xml"
     mineventcount="1" maxeventcount="2"

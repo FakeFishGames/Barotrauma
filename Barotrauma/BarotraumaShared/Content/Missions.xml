@@ -29,12 +29,38 @@
   <SalvageMission
     name="Salvaging an artifact"
     description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
+    commonness="5"
+    reward="1500"
+    radarlabel="Infrasonic signal"
+    failuremessage="Retrieving the artifact failed"
+    successmessage="The artifact has been succesfully retrieved"
+    spawntype="cave"
+    itemname="Thermal Artifact">
+    <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
+  </SalvageMission>
+
+  <SalvageMission
+    name="Salvaging an artifact"
+    description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
     commonness="10"
     reward="2000"
     radarlabel="Infrasonic signal"
     failuremessage="Retrieving the artifact failed"
     successmessage="The artifact has been succesfully retrieved"
     spawntype="ruin"
+    itemname="Nasonov Artifact">
+    <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
+  </SalvageMission>
+
+  <SalvageMission
+    name="Salvaging an artifact"
+    description="Researchers of [location1] have picked up an infrasonic signal highly similar to those emitted by alien artifacts previously discovered on Europa. Investigate the signal and retrieve the potential artifact."
+    commonness="5"
+    reward="1500"
+    radarlabel="Infrasonic signal"
+    failuremessage="Retrieving the artifact failed"
+    successmessage="The artifact has been succesfully retrieved"
+    spawntype="cave"
     itemname="Nasonov Artifact">
     <message header="Artifact collected" text="The artifact is now on board. Navigate the submarine out of the cavern to claim the reward."/>
   </SalvageMission>
