@@ -89,16 +89,19 @@ namespace Barotrauma.Items.Components
                     //so that the player can't shoot himself
                     Projectile projectileComponent= projectile.GetComponent<Projectile>();
                     if (projectileComponent == null) continue;
+
+                    float rotation = ((item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi) + Rand.Range(-degreeOfFailure, degreeOfFailure);
                 
                     projectile.body.ResetDynamics();
-                    projectile.SetTransform(TransformedBarrelPos, 
-                        ((item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi)
-                        + Rand.Range(-degreeOfFailure, degreeOfFailure));
+                    projectile.SetTransform(TransformedBarrelPos, rotation);
 
                     projectile.Use(deltaTime);
                     projectileComponent.User = character;
 
                     projectile.body.ApplyTorque(projectile.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
+
+                    //set the rotation of the projectile again because dropping the projectile resets the rotation
+                    projectile.SetTransform(projectile.SimPosition, rotation);
 
                     //recoil
                     item.body.ApplyLinearImpulse(
