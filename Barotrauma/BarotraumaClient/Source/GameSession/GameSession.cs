@@ -20,11 +20,10 @@ namespace Barotrauma
             }
         }
         
-        private ShiftSummary shiftSummary;
-
-        public ShiftSummary ShiftSummary
+        private RoundSummary roundSummary;
+        public RoundSummary RoundSummary
         {
-            get { return shiftSummary; }
+            get { return roundSummary; }
         }
 
         public bool LoadPrevious(GUIButton button, object obj)

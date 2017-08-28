@@ -275,7 +275,7 @@ namespace Barotrauma
         //    return true;
         //}
 
-        public void StartShift()
+        public void StartRound()
         {
             listBox.ClearChildren();
             characters.Clear();
@@ -310,7 +310,7 @@ namespace Barotrauma
             if (characters.Any()) listBox.Select(0);// SelectCharacter(null, characters[0]);
         }
 
-        public void EndShift()
+        public void EndRound()
         {
             foreach (Character c in characters)
             {

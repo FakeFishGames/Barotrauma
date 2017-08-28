@@ -73,7 +73,7 @@
   <music file="Content/Sounds/Music/Simplex.ogg" type="default"/>
   <music file="Content/Sounds/Music/Tenebrous Brothers Carnival - Prelude.ogg" type="default"/>
   
-  <music file="Content/Sounds/Music/The Descent.ogg" type="endshift"/>
+  <music file="Content/Sounds/Music/The Descent.ogg" type="endround"/>
   <music file="Content/Sounds/Music/Road to Hell.ogg" type="crewdead"/>
   
   <music file="Content/Sounds/Music/Enter the Maze.ogg" type="repair" priorityrange="30,60"/>

@@ -95,7 +95,7 @@ namespace Barotrauma
 
             if (endMessage != "" || this.endMessage == null) this.endMessage = endMessage;
 
-            GameMain.GameSession.EndShift(endMessage);
+            GameMain.GameSession.EndRound(endMessage);
         }
         
 

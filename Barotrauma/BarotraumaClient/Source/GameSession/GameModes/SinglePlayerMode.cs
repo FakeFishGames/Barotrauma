@@ -13,7 +13,7 @@ namespace Barotrauma
         //public readonly CrewManager CrewManager;
         //public readonly HireManager hireManager;
 
-        private GUIButton endShiftButton;
+        private GUIButton endRoundButton;
 
         public readonly CargoManager CargoManager;
         
@@ -54,9 +54,9 @@ namespace Barotrauma
 
             CargoManager = new CargoManager();
 
-            endShiftButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End shift", null, Alignment.TopLeft, Alignment.Center, "");
-            endShiftButton.Font = GUI.SmallFont;
-            endShiftButton.OnClicked = TryEndShift;
+            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End round", null, Alignment.TopLeft, Alignment.Center, "");
+            endRoundButton.Font = GUI.SmallFont;
+            endRoundButton.OnClicked = TryEndRound;
 
             for (int i = 0; i < 3; i++)
             {
@@ -129,7 +129,7 @@ namespace Barotrauma
 
             isRunning = true;
 
-            CrewManager.StartShift();
+            CrewManager.StartRound();
         }
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
@@ -191,26 +191,26 @@ namespace Barotrauma
 
             if (leavingSub == null)
             {
-                endShiftButton.Visible = false;
+                endRoundButton.Visible = false;
             }
             else if (leavingSub.AtEndPosition)
             {
-                endShiftButton.Text = ToolBox.LimitString("Enter " + Map.SelectedLocation.Name, endShiftButton.Font, endShiftButton.Rect.Width - 5);
-                endShiftButton.UserData = leavingSub;
-                endShiftButton.Visible = true;
+                endRoundButton.Text = ToolBox.LimitString("Enter " + Map.SelectedLocation.Name, endRoundButton.Font, endRoundButton.Rect.Width - 5);
+                endRoundButton.UserData = leavingSub;
+                endRoundButton.Visible = true;
             }
             else if (leavingSub.AtStartPosition)
             {
-                endShiftButton.Text = ToolBox.LimitString("Enter " + Map.CurrentLocation.Name, endShiftButton.Font, endShiftButton.Rect.Width - 5);
-                endShiftButton.UserData = leavingSub;
-                endShiftButton.Visible = true;
+                endRoundButton.Text = ToolBox.LimitString("Enter " + Map.CurrentLocation.Name, endRoundButton.Font, endRoundButton.Rect.Width - 5);
+                endRoundButton.UserData = leavingSub;
+                endRoundButton.Visible = true;
             }
             else
             {
-                endShiftButton.Visible = false;
+                endRoundButton.Visible = false;
             }
 
-            endShiftButton.Draw(spriteBatch);
+            endRoundButton.Draw(spriteBatch);
         }
 
         public override void AddToGUIUpdateList()
@@ -221,7 +221,7 @@ namespace Barotrauma
 
             CrewManager.AddToGUIUpdateList();
 
-            endShiftButton.AddToGUIUpdateList();
+            endRoundButton.AddToGUIUpdateList();
         }
 
         public override void Update(float deltaTime)
@@ -232,7 +232,7 @@ namespace Barotrauma
 
             CrewManager.Update(deltaTime);
 
-            endShiftButton.Update(deltaTime);
+            endRoundButton.Update(deltaTime);
 
             if (!crewDead)
             {
@@ -242,7 +242,7 @@ namespace Barotrauma
             {
                 endTimer -= deltaTime;
 
-                if (endTimer <= 0.0f) EndShift(null, null);
+                if (endTimer <= 0.0f) EndRound(null, null);
             }  
         }
 
@@ -264,7 +264,7 @@ namespace Barotrauma
                 }
             }
             
-            GameMain.GameSession.EndShift("");
+            GameMain.GameSession.EndRound("");
 
             if (success)
             {
@@ -309,7 +309,7 @@ namespace Barotrauma
                 }
             }
 
-            CrewManager.EndShift();
+            CrewManager.EndRound();
             for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
             {
                 Character.CharacterList[i].Remove();
@@ -318,7 +318,7 @@ namespace Barotrauma
             Submarine.Unload();
         }
 
-        private bool TryEndShift(GUIButton button, object obj)
+        private bool TryEndRound(GUIButton button, object obj)
         {
             leavingSub = obj as Submarine;
             if (leavingSub != null)
@@ -341,7 +341,7 @@ namespace Barotrauma
                 }
 
                 var msgBox = new GUIMessageBox("Warning", msg, new string[] {"Yes", "No"});
-                msgBox.Buttons[0].OnClicked += EndShift;
+                msgBox.Buttons[0].OnClicked += EndRound;
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
                 msgBox.Buttons[0].UserData = Submarine.Loaded.FindAll(s => !subsToLeaveBehind.Contains(s));
 
@@ -349,13 +349,13 @@ namespace Barotrauma
             }
             else
             {
-                EndShift(button, obj);
+                EndRound(button, obj);
             }
 
             return true;
         }
 
-        private bool EndShift(GUIButton button, object obj)
+        private bool EndRound(GUIButton button, object obj)
         {
             isRunning = false;
 
@@ -364,7 +364,7 @@ namespace Barotrauma
             
             var cinematic = new TransitionCinematic(leavingSubs, GameMain.GameScreen.Cam, 5.0f);
 
-            SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endshift" : "crewdead";
+            SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endround" : "crewdead";
 
             CoroutineManager.StartCoroutine(EndCinematic(cinematic),"EndCinematic");
 
