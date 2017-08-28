@@ -554,7 +554,7 @@ namespace Barotrauma.Networking
                         //game already started -> send start message immediately
                         if (gameStarted)
                         {
-                            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClient);
+                            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClient);
                         }
                     }
                     break;
@@ -1131,8 +1131,8 @@ namespace Barotrauma.Networking
         
             GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
 
-            if (GameMain.GameSession.gameMode.Mission != null &&
-                GameMain.GameSession.gameMode.Mission.AssignTeamIDs(connectedClients, out hostTeam))
+            if (GameMain.GameSession.GameMode.Mission != null &&
+                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(connectedClients, out hostTeam))
             {
                 teamCount = 2;
             }
@@ -1149,8 +1149,8 @@ namespace Barotrauma.Networking
             GameServer.Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
 
             bool missionAllowRespawn = 
-                !(GameMain.GameSession.gameMode is MissionMode) || 
-                ((MissionMode)GameMain.GameSession.gameMode).Mission.AllowRespawn;
+                !(GameMain.GameSession.GameMode is MissionMode) || 
+                ((MissionMode)GameMain.GameSession.GameMode).Mission.AllowRespawn;
 
             if (AllowRespawn && missionAllowRespawn) respawnManager = new RespawnManager(this, selectedShuttle);
 
@@ -1261,7 +1261,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.gameMode.Preset, connectedClients);
+            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClients);
 
             yield return CoroutineStatus.Running;
             
@@ -1308,8 +1308,8 @@ namespace Barotrauma.Networking
             msg.Write(selectedMode.Name);
 
             bool missionAllowRespawn =
-                !(GameMain.GameSession.gameMode is MissionMode) ||
-                ((MissionMode)GameMain.GameSession.gameMode).Mission.AllowRespawn;
+                !(GameMain.GameSession.GameMode is MissionMode) ||
+                ((MissionMode)GameMain.GameSession.GameMode).Mission.AllowRespawn;
 
             msg.Write(AllowRespawn && missionAllowRespawn);
             msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
@@ -1350,7 +1350,7 @@ namespace Barotrauma.Networking
             }
 
             Mission mission = GameMain.GameSession.Mission;
-            GameMain.GameSession.gameMode.End(endMessage);
+            GameMain.GameSession.GameMode.End(endMessage);
 
             if (autoRestart)
             {

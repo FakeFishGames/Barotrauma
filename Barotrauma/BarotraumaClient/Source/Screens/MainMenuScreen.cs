@@ -508,8 +508,8 @@ namespace Barotrauma
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
-            GUI.Font.DrawString(spriteBatch, "Barotrauma v"+GameMain.Version, new Vector2(10, GameMain.GraphicsHeight-20), Color.White);
-            
+            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version, new Vector2(10, GameMain.GraphicsHeight - 20), Color.White);
+
             spriteBatch.End();
         }
 
@@ -542,15 +542,10 @@ namespace Barotrauma
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
             
             GameMain.GameSession = new GameSession(selectedSub, saveNameBox.Text, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
-            (GameMain.GameSession.gameMode as SinglePlayerMode).GenerateMap(seedBox.Text);
+            (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(seedBox.Text);
 
             GameMain.LobbyScreen.Select();
-
-            //new GUIMessageBox("Welcome to Barotrauma!", "Please note that the single player mode is very unfinished at the moment; "+
-            //"for example, the NPCs don't have an AI yet and there are only a couple of different quests to complete. The multiplayer "+
-            //"mode should be much more enjoyable to play at the moment, so my recommendation is to try out and get a hang of the game mechanics "+
-            //"in the single player mode and then move on to multiplayer. Have fun!\n - Regalis, the main dev of Subsurface", 400, 350);
-
+            
             return true;
         }
 

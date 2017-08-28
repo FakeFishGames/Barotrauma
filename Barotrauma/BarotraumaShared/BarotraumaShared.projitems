@@ -1366,9 +1366,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\FrameCounter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CargoManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CampaignMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\GameModePreset.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MissionMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiplayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameSession.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\InfoTextManager.cs" />

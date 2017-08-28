@@ -34,7 +34,7 @@ namespace Barotrauma
         public static void Init()
         {
 #if CLIENT
-            new GameModePreset("Single Player", typeof(SinglePlayerMode), true);
+            new GameModePreset("Single Player", typeof(SinglePlayerCampaign), true);
             new GameModePreset("Tutorial", typeof(TutorialMode), true);
 #endif
 

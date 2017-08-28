@@ -152,7 +152,7 @@ namespace Barotrauma
 
                 if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession != null)
                 {
-                    SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
+                    SinglePlayerCampaign spMode = GameMain.GameSession.GameMode as SinglePlayerCampaign;
                     if (spMode != null)
                     {
                         button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, "", pauseMenu);
@@ -165,7 +165,7 @@ namespace Barotrauma
 
                 if (Screen.Selected == GameMain.LobbyScreen)
                 {
-                    SinglePlayerMode spMode = GameMain.GameSession.gameMode as SinglePlayerMode;
+                    SinglePlayerCampaign spMode = GameMain.GameSession.GameMode as SinglePlayerCampaign;
                     if (spMode != null)
                     {
                         button = new GUIButton(new Rectangle(0, y, 0, 30), "Save & quit", Alignment.CenterX, "", pauseMenu);

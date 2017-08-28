@@ -724,7 +724,7 @@ namespace Barotrauma.Networking
         {
             if (!gameStarted) yield return CoroutineStatus.Success;
 
-            if (GameMain.GameSession != null) GameMain.GameSession.gameMode.End(endMessage);
+            if (GameMain.GameSession != null) GameMain.GameSession.GameMode.End(endMessage);
 
             gameStarted = false;
             Character.Controlled = null;

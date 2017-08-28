@@ -169,7 +169,7 @@ namespace Barotrauma
 #if CLIENT
                     if (GameMain.GameSession != null)
                     {
-                        SinglePlayerMode mode = GameMain.GameSession.gameMode as SinglePlayerMode;
+                        SinglePlayerCampaign mode = GameMain.GameSession.GameMode as SinglePlayerCampaign;
                         if (mode != null)
                         {
                             Character.Controlled = spawnedCharacter;

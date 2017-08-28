@@ -6,19 +6,10 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class SinglePlayerMode : GameMode
+    class SinglePlayerCampaign : CampaignMode
     {
-        //private const int StartCharacterAmount = 3;
-
-        //public readonly CrewManager CrewManager;
-        //public readonly HireManager hireManager;
-
         private GUIButton endRoundButton;
-
-        public readonly CargoManager CargoManager;
-        
-        public Map Map;
-
+                
         private bool crewDead;
         private float endTimer;
 
@@ -29,31 +20,14 @@ namespace Barotrauma
         private Submarine leavingSub;
         private bool atEndPosition;
 
-        public override Mission Mission
+        protected CrewManager CrewManager
         {
-            get
-            {
-                return Map.SelectedConnection.Mission;
-            }
+            get { return GameMain.GameSession?.CrewManager; }
         }
 
-        public int Money
-        {
-            get { return GameMain.GameSession.CrewManager.Money; }
-            set { GameMain.GameSession.CrewManager.Money = value; }
-        }
-
-        private CrewManager CrewManager
-        {
-            get { return GameMain.GameSession.CrewManager; }
-        }
-
-        public SinglePlayerMode(GameModePreset preset, object param)
+        public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
-        {
-
-            CargoManager = new CargoManager();
-
+        {            
             endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End round", null, Alignment.TopLeft, Alignment.Center, "");
             endRoundButton.Font = GUI.SmallFont;
             endRoundButton.OnClicked = TryEndRound;
@@ -73,48 +47,11 @@ namespace Barotrauma
                         jobPrefab = JobPrefab.List.Find(jp => jp.Name == "Mechanic");
                         break;
                 }
-
-                CharacterInfo characterInfo =
-                    new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab);
-                CrewManager.characterInfos.Add(characterInfo);
+                
+                CrewManager.CharacterInfos.Add(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
             }
-  
         }
-
-        public SinglePlayerMode(XElement element)
-            : this(GameModePreset.list.Find(gm => gm.Name == "Single Player"), null)
-        {            
-            foreach (XElement subElement in element.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "crew":
-                        GameMain.GameSession.CrewManager = new CrewManager(subElement); 
-                        break;
-                    case "map":
-                        Map = Map.Load(subElement);
-                        break;
-                }               
-            }
-
-            //backwards compatibility with older save files
-            if (Map==null)
-            {
-                string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
-
-                GenerateMap(mapSeed);
-
-                Map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
-            }
-
-            savedOnStart = true;
-        }
-
-        public void GenerateMap(string seed)
-        {
-            Map = new Map(seed, 1000);
-        }
-
+              
         public override void Start()
         {
             CargoManager.CreateItems();
@@ -134,22 +71,15 @@ namespace Barotrauma
 
         public bool TryHireCharacter(HireManager hireManager, CharacterInfo characterInfo)
         {
-            if (CrewManager.Money < characterInfo.Salary) return false;
+            if (Money < characterInfo.Salary) return false;
 
             hireManager.availableCharacters.Remove(characterInfo);
-            CrewManager.characterInfos.Add(characterInfo);
-
-            CrewManager.Money -= characterInfo.Salary;
+            CrewManager.CharacterInfos.Add(characterInfo);
+            Money -= characterInfo.Salary;
 
             return true;
         }
-
-        public string GetMoney()
-        {
-            return "Money: " + CrewManager.Money;
-        }
-
-
+        
         private Submarine GetLeavingSub()
         {
             if (Character.Controlled != null && Character.Controlled.Submarine != null)
@@ -168,15 +98,6 @@ namespace Barotrauma
             }
 
             return null;
-        }
-
-        private List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)
-        {
-            //leave subs behind if they're not docked to the leaving sub and not at the same exit
-            return Submarine.Loaded.FindAll(s =>
-                s != leavingSub &&
-                !leavingSub.DockedTo.Contains(s) &&
-                (s.AtEndPosition != leavingSub.AtEndPosition || s.AtStartPosition != leavingSub.AtStartPosition));
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -218,9 +139,7 @@ namespace Barotrauma
             if (!isRunning) return;
 
             base.AddToGUIUpdateList();
-
             CrewManager.AddToGUIUpdateList();
-
             endRoundButton.AddToGUIUpdateList();
         }
 
@@ -361,12 +280,12 @@ namespace Barotrauma
 
             List<Submarine> leavingSubs = obj as List<Submarine>;
             if (leavingSubs == null) leavingSubs = new List<Submarine>() { GetLeavingSub() };
-            
+
             var cinematic = new TransitionCinematic(leavingSubs, GameMain.GameScreen.Cam, 5.0f);
 
             SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endround" : "crewdead";
 
-            CoroutineManager.StartCoroutine(EndCinematic(cinematic),"EndCinematic");
+            CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
 
             return true;
         }
@@ -391,14 +310,43 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public void Save(XElement element)
+        public static SinglePlayerCampaign Load(XElement element)
         {
-            //element.Add(new XAttribute("day", day));
-            XElement modeElement = new XElement("gamemode");
+            SinglePlayerCampaign campaign = new SinglePlayerCampaign(GameModePreset.list.Find(gm => gm.Name == "Single Player"), null);
 
-            //modeElement.Add(new XAttribute("currentlocation", Map.CurrentLocationIndex));
-            //modeElement.Add(new XAttribute("mapseed", Map.Seed));
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "crew":
+                        GameMain.GameSession.CrewManager = new CrewManager(subElement);
+                        break;
+                    case "map":
+                        campaign.map = Map.Load(subElement);
+                        break;
+                }
+            }
+
+            campaign.Money = ToolBox.GetAttributeInt(element, "money", 0);
+
+            //backwards compatibility with older save files
+            if (campaign.map == null)
+            {
+                string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
+                campaign.GenerateMap(mapSeed);
+                campaign.map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
+            }
+
+            campaign.savedOnStart = true;
+
+            return campaign;
+        }
+
+        public override void Save(XElement element)
+        {
+            XElement modeElement = new XElement("gamemode");
             
+            modeElement.Add(new XAttribute("money", Money));
             
             CrewManager.Save(modeElement);
             Map.Save(modeElement);

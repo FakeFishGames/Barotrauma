@@ -10,11 +10,9 @@ namespace Barotrauma
     class CrewManager
     {
         public List<Character> characters;
-        public List<CharacterInfo> characterInfos;
+        public List<CharacterInfo> CharacterInfos;
 
         public int WinningTeam = 1;
-        
-        private int money;
         
         private GUIFrame guiFrame;
         private GUIListBox listBox, orderListBox;
@@ -26,16 +24,10 @@ namespace Barotrauma
             get { return commander; }
         }
         
-        public int Money
-        {
-            get { return money; }
-            set { money = (int)Math.Max(value, 0.0f); }
-        }
-
         public CrewManager()
         {
             characters = new List<Character>();
-            characterInfos = new List<CharacterInfo>();
+            CharacterInfos = new List<CharacterInfo>();
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
             guiFrame.Padding = Vector4.One * 5.0f;
@@ -49,20 +41,16 @@ namespace Barotrauma
             orderListBox.OnSelected = SelectCharacterOrder;
 
             commander = new CrewCommander(this);
-
-            money = 10000;
         }
 
         public CrewManager(XElement element)
             : this()
         {
-            money = ToolBox.GetAttributeInt(element, "money", 0);
-
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "character") continue;
 
-                characterInfos.Add(new CharacterInfo(subElement));
+                CharacterInfos.Add(new CharacterInfo(subElement));
             }
         }
 
@@ -120,9 +108,9 @@ namespace Barotrauma
         public void AddCharacter(Character character)
         {
             characters.Add(character);
-            if (!characterInfos.Contains(character.Info))
+            if (!CharacterInfos.Contains(character.Info))
             {
-                characterInfos.Add(character.Info);
+                CharacterInfos.Add(character.Info);
             }
 
             if (character is AICharacter)
@@ -280,21 +268,21 @@ namespace Barotrauma
             listBox.ClearChildren();
             characters.Clear();
 
-            WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub, false);
+            WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(CharacterInfos, Submarine.MainSub, false);
 
             for (int i = 0; i < waypoints.Length; i++)
             {
                 Character character;
 
-                if (characterInfos[i].HullID != null)
+                if (CharacterInfos[i].HullID != null)
                 {
-                    var hull = Entity.FindEntityByID((ushort)characterInfos[i].HullID) as Hull;
+                    var hull = Entity.FindEntityByID((ushort)CharacterInfos[i].HullID) as Hull;
                     if (hull == null) continue;
-                    character = Character.Create(characterInfos[i], hull.WorldPosition);
+                    character = Character.Create(CharacterInfos[i], hull.WorldPosition);
                 }
                 else
                 {
-                    character = Character.Create(characterInfos[i], waypoints[i].WorldPosition);
+                    character = Character.Create(CharacterInfos[i], waypoints[i].WorldPosition);
                     Character.Controlled = character;
 
                     if (character.Info != null && !character.Info.StartItemsGiven)
@@ -320,8 +308,8 @@ namespace Barotrauma
                     continue;
                 }
 
-                CharacterInfo deadInfo = characterInfos.Find(x => c.Info == x);
-                if (deadInfo != null) characterInfos.Remove(deadInfo);
+                CharacterInfo deadInfo = CharacterInfos.Find(x => c.Info == x);
+                if (deadInfo != null) CharacterInfos.Remove(deadInfo);
             }
 
             characters.Clear();
@@ -344,10 +332,8 @@ namespace Barotrauma
         public void Save(XElement parentElement)
         {
             XElement element = new XElement("crew");
-                
-            element.Add(new XAttribute("money", money));
-            
-            foreach (CharacterInfo ci in characterInfos)
+
+            foreach (CharacterInfo ci in CharacterInfos)
             {
                 ci.Save(element);
             }
