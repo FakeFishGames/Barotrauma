@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class ShiftSummary
+    class RoundSummary
     {
         private Location startLocation, endLocation;
 
@@ -11,7 +11,7 @@ namespace Barotrauma
 
         private Mission selectedMission;
                
-        public ShiftSummary(GameSession gameSession)
+        public RoundSummary(GameSession gameSession)
         {
             this.gameSession = gameSession;
 

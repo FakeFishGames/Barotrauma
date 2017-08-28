@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -19,7 +18,7 @@ namespace Barotrauma
             events = new List<ScriptedEvent>();        
         }
         
-        public void StartShift(Level level)
+        public void StartRound(Level level)
         {
             CreateScriptedEvents(level);
             foreach (ScriptedEvent ev in events)
@@ -28,7 +27,7 @@ namespace Barotrauma
             }
         }
 
-        public void EndShift()
+        public void EndRound()
         {
             events.Clear();
         }

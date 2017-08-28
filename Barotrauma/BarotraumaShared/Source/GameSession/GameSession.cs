@@ -143,14 +143,14 @@ namespace Barotrauma
             }
         }
 
-        public void StartShift(string levelSeed, bool loadSecondSub = false)
+        public void StartRound(string levelSeed, bool loadSecondSub = false)
         {
             Level randomLevel = Level.CreateRandom(levelSeed);
 
-            StartShift(randomLevel, true, loadSecondSub);
+            StartRound(randomLevel, true, loadSecondSub);
         }
 
-        public void StartShift(Level level, bool reloadSub = true, bool loadSecondSub = false)
+        public void StartRound(Level level, bool reloadSub = true, bool loadSecondSub = false)
         {
 #if CLIENT
             GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
@@ -195,21 +195,21 @@ namespace Barotrauma
 
             if (gameMode.Mission != null) Mission.Start(Level.Loaded);
             
-            TaskManager.StartShift(level);
+            TaskManager.StartRound(level);
 
             if (gameMode != null) gameMode.MsgBox();
 
             Entity.Spawner = new EntitySpawner();
 
 #if CLIENT
-            shiftSummary = new ShiftSummary(this);
+            roundSummary = new RoundSummary(this);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
             SoundPlayer.SwitchMusic();
 #endif
         }
 
-        public void EndShift(string endMessage)
+        public void EndRound(string endMessage)
         {
             if (Mission != null) Mission.End();
 
@@ -225,16 +225,16 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            if (shiftSummary != null)
+            if (roundSummary != null)
             {
-                GUIFrame summaryFrame = shiftSummary.CreateSummaryFrame(endMessage);
+                GUIFrame summaryFrame = roundSummary.CreateSummaryFrame(endMessage);
                 GUIMessageBox.MessageBoxes.Add(summaryFrame);
                 var okButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Ok", Alignment.BottomRight, "", summaryFrame.children[0]);
                 okButton.OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
             }
 #endif
 
-            TaskManager.EndShift();
+            TaskManager.EndRound();
 
             currentMission = null;
 

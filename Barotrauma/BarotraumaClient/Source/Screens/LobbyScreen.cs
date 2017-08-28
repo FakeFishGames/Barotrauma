@@ -114,7 +114,7 @@ namespace Barotrauma
 
             startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",
                 Alignment.BottomRight, "", bottomPanel[(int)PanelTab.Map]);
-            startButton.OnClicked = StartShift;
+            startButton.OnClicked = StartRound;
             startButton.Enabled = false;
             
             //---------------------------------------
@@ -520,18 +520,18 @@ namespace Barotrauma
             return false;
         }
 
-        private bool StartShift(GUIButton button, object selection)
+        private bool StartRound(GUIButton button, object selection)
         {
             if (GameMain.GameSession.Map.SelectedConnection == null) return false;
 
-            GameMain.Instance.ShowLoading(ShiftLoading());
+            GameMain.Instance.ShowLoading(LoadRound());
                         
             return true;
         }
 
-        private IEnumerable<object> ShiftLoading()
+        private IEnumerable<object> LoadRound()
         {
-            GameMain.GameSession.StartShift(selectedLevel, true);
+            GameMain.GameSession.StartRound(selectedLevel, true);
             GameMain.GameScreen.Select();
 
             yield return CoroutineStatus.Success;

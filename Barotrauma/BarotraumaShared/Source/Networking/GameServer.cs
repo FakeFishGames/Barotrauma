@@ -1141,7 +1141,7 @@ namespace Barotrauma.Networking
                 connectedClients.ForEach(c => c.TeamID = hostTeam);
             }
 
-            GameMain.GameSession.StartShift(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
+            GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
 
             GameServer.Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
             GameServer.Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);

@@ -704,7 +704,7 @@ namespace Barotrauma.Networking
             Rand.SetSyncedSeed(seed);
 
             GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
-            GameMain.GameSession.StartShift(levelSeed,loadSecondSub);
+            GameMain.GameSession.StartRound(levelSeed,loadSecondSub);
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
             
