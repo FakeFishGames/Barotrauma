@@ -7,9 +7,9 @@ namespace Barotrauma
     {
         public enum InfoFrameTab { Crew, Mission, ManagePlayers };
 
-        public readonly EventManager TaskManager;
+        public readonly EventManager EventManager;
         
-        public readonly GameMode gameMode;
+        public readonly GameMode GameMode;
 
         //two locations used as the start and end in the MP mode
         private Location[] dummyLocations;
@@ -79,14 +79,14 @@ namespace Barotrauma
         {
             get { return saveFile; }
         }
-        
-        public GameSession(Submarine submarine, string saveFile, GameModePreset gameModePreset = null, string missionType="")
+
+        public GameSession(Submarine submarine, string saveFile, GameModePreset gameModePreset = null, string missionType = "")
         {
             Submarine.MainSub = submarine;
 
             GameMain.GameSession = this;
             
-            TaskManager = new EventManager(this);
+            EventManager = new EventManager(this);
             
             this.saveFile = saveFile;
 
@@ -97,7 +97,7 @@ namespace Barotrauma
             infoButton.OnClicked = ToggleInfoFrame;
 #endif
 
-            if (gameModePreset != null) gameMode = gameModePreset.Instantiate(missionType);
+            if (gameModePreset != null) GameMode = gameModePreset.Instantiate(missionType);
             this.submarine = submarine;
         }
         
@@ -117,7 +117,7 @@ namespace Barotrauma
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "gamemode") continue;
 
-                gameMode = new SinglePlayerMode(subElement);
+                GameMode = SinglePlayerCampaign.Load(subElement);
             }
 #endif
         }
@@ -186,18 +186,18 @@ namespace Barotrauma
                 submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition - new Vector2(0.0f, 2000.0f)));
             }
 
-            if (gameMode.Mission != null)
+            if (GameMode.Mission != null)
             {
-                currentMission = gameMode.Mission;
+                currentMission = GameMode.Mission;
             }
 
-            if (gameMode!=null) gameMode.Start();
+            if (GameMode!=null) GameMode.Start();
 
-            if (gameMode.Mission != null) Mission.Start(Level.Loaded);
+            if (GameMode.Mission != null) Mission.Start(Level.Loaded);
             
-            TaskManager.StartRound(level);
+            EventManager.StartRound(level);
 
-            if (gameMode != null) gameMode.MsgBox();
+            if (GameMode != null) GameMode.MsgBox();
 
             Entity.Spawner = new EntitySpawner();
 
@@ -234,7 +234,7 @@ namespace Barotrauma
             }
 #endif
 
-            TaskManager.EndRound();
+            EventManager.EndRound();
 
             currentMission = null;
 

@@ -248,12 +248,10 @@ namespace Barotrauma
 
         public void GiveReward()
         {
-#if CLIENT
-            var mode = GameMain.GameSession.gameMode as SinglePlayerMode;
+            var mode = GameMain.GameSession.GameMode as CampaignMode;
             if (mode == null) return;
 
             mode.Money += reward;
-#endif
         }
     }
 }
