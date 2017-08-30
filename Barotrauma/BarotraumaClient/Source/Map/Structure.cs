@@ -16,7 +16,7 @@ namespace Barotrauma
 
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
-        List<ConvexHull> convexHulls;
+        private List<ConvexHull> convexHulls;
 
         private void GenerateConvexHull()
         {
@@ -148,40 +148,6 @@ namespace Barotrauma
             }
 
             prefab.sprite.effects = oldEffects;
-        }
-
-
-        public override XElement Save(XElement parentElement)
-        {
-            XElement element = new XElement("Structure");
-
-            element.Add(new XAttribute("name", prefab.Name),
-                new XAttribute("ID", ID),
-                new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
-
-            for (int i = 0; i < sections.Length; i++)
-            {
-                if (sections[i].damage == 0.0f) continue;
-
-                var sectionElement =
-                    new XElement("section",
-                        new XAttribute("i", i),
-                        new XAttribute("damage", sections[i].damage));
-
-                if (sections[i].gap != null)
-                {
-                    sectionElement.Add(new XAttribute("gap", sections[i].gap.ID));
-                }
-
-                element.Add(sectionElement);
-            }
-
-            parentElement.Add(element);
-
-            return element;
         }
     }
 }

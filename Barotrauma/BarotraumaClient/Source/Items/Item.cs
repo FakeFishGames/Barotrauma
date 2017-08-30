@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -379,55 +378,6 @@ namespace Barotrauma
 
             return true;
         }
-
-        public override XElement Save(XElement parentElement)
-        {
-            XElement element = new XElement("Item");
-
-            element.Add(new XAttribute("name", prefab.Name),
-                new XAttribute("ID", ID));
-
-            System.Diagnostics.Debug.Assert(Submarine != null);
-
-            if (ResizeHorizontal || ResizeVertical)
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
-            }
-            else
-            {
-                element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y)));
-            }
-
-            if (linkedTo != null && linkedTo.Count > 0)
-            {
-                string[] linkedToIDs = new string[linkedTo.Count];
-
-                for (int i = 0; i < linkedTo.Count; i++)
-                {
-                    linkedToIDs[i] = linkedTo[i].ID.ToString();
-                }
-
-                element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
-            }
-
-
-            ObjectProperty.SaveProperties(this, element);
-
-            foreach (ItemComponent ic in components)
-            {
-                ic.Save(element);
-            }
-
-            parentElement.Add(element);
-
-            return element;
-        }
-
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {

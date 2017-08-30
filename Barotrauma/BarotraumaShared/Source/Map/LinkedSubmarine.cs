@@ -237,5 +237,86 @@ namespace Barotrauma
             sub.SetPosition(sub.WorldPosition - Submarine.WorldPosition);
             sub.Submarine = Submarine;
         }
+
+        public override XElement Save(XElement parentElement)
+        {
+            XElement saveElement = null;
+
+            if (sub == null)
+            {
+                if (this.saveElement == null)
+                {
+                    var doc = Submarine.OpenFile(filePath);
+                    saveElement = doc.Root;
+
+                    saveElement.Name = "LinkedSubmarine";
+
+                    saveElement.Add(new XAttribute("filepath", filePath));
+                }
+                else
+                {
+                    saveElement = this.saveElement;
+                }
+
+                if (saveElement.Attribute("pos") != null) saveElement.Attribute("pos").Remove();
+                saveElement.Add(new XAttribute("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition)));
+
+
+
+                var linkedPort = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
+                if (linkedPort != null)
+                {
+                    if (saveElement.Attribute("linkedto") != null) saveElement.Attribute("linkedto").Remove();
+
+                    saveElement.Add(new XAttribute("linkedto", linkedPort.ID));
+                }
+            }
+            else
+            {
+
+                saveElement = new XElement("LinkedSubmarine");
+
+
+                sub.SaveToXElement(saveElement);
+            }
+
+            if (sub != null)
+            {
+                bool leaveBehind = false;
+                if (!sub.DockedTo.Contains(Submarine.MainSub))
+                {
+                    System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEndPosition || Submarine.MainSub.AtStartPosition);
+                    if (Submarine.MainSub.AtEndPosition)
+                    {
+                        leaveBehind = sub.AtEndPosition != Submarine.MainSub.AtEndPosition;
+                    }
+                    else
+                    {
+                        leaveBehind = sub.AtStartPosition != Submarine.MainSub.AtStartPosition;
+                    }
+                }
+
+
+                if (leaveBehind)
+                {
+                    saveElement.SetAttributeValue("location", Level.Loaded.Seed);
+                    saveElement.SetAttributeValue("worldpos", ToolBox.Vector2ToString(sub.SubBody.Position));
+
+                }
+                else
+                {
+                    if (saveElement.Attribute("location") != null) saveElement.Attribute("location").Remove();
+                    if (saveElement.Attribute("worldpos") != null) saveElement.Attribute("worldpos").Remove();
+                }
+
+                saveElement.SetAttributeValue("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition));
+            }
+
+
+
+            parentElement.Add(saveElement);
+
+            return saveElement;
+        }
     }
 }

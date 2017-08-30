@@ -477,6 +477,24 @@ namespace Barotrauma.Items.Components
             Drawable = nodes.Any();
         }
 
+        public override XElement Save(XElement parentElement)
+        {
+            XElement componentElement = base.Save(parentElement);
+
+            if (nodes == null || nodes.Count == 0) return componentElement;
+
+            string[] nodeCoords = new string[nodes.Count * 2];
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                nodeCoords[i * 2] = nodes[i].X.ToString(CultureInfo.InvariantCulture);
+                nodeCoords[i * 2 + 1] = nodes[i].Y.ToString(CultureInfo.InvariantCulture);
+            }
+
+            componentElement.Add(new XAttribute("nodes", string.Join(";", nodeCoords)));
+
+            return componentElement;
+        }
+
         protected override void ShallowRemoveComponentSpecific()
         {
             for (int i = 0; i < 2; i++)

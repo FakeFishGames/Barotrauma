@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework.Graphics;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -25,18 +24,6 @@ namespace Barotrauma.Items.Components
             HighlightedWire = null;
             Connection.DrawConnections(spriteBatch, this, character);
 
-        }
-
-        public override XElement Save(XElement parentElement)
-        {
-            XElement componentElement = base.Save(parentElement);
-
-            foreach (Connection c in Connections)
-            {
-                c.Save(componentElement);
-            }
-
-            return componentElement;
         }
     }
 }

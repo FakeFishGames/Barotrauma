@@ -1105,6 +1105,50 @@ namespace Barotrauma
             return sub;            
         }
 
+
+        public bool Save()
+        {
+            return SaveAs(filePath);
+        }
+
+        public bool SaveAs(string filePath)
+        {
+            name = System.IO.Path.GetFileNameWithoutExtension(filePath);
+
+            XDocument doc = new XDocument(new XElement("Submarine"));
+            SaveToXElement(doc.Root);
+
+            hash = new Md5Hash(doc);
+            doc.Root.Add(new XAttribute("md5hash", hash.Hash));
+
+            try
+            {
+                SaveUtil.CompressStringToFile(filePath, doc.ToString());
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Saving submarine \"" + filePath + "\" failed!", e);
+                return false;
+            }
+
+            return true;
+        }
+
+        public void SaveToXElement(XElement element)
+        {
+            element.Add(new XAttribute("name", name));
+            element.Add(new XAttribute("description", Description == null ? "" : Description));
+
+            element.Add(new XAttribute("tags", tags.ToString()));
+
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (e.MoveWithLevel || e.Submarine != this) continue;
+                e.Save(element);
+            }
+        }
+
+
         public static bool Unloading
         {
             get;

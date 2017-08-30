@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -75,19 +74,9 @@ namespace Barotrauma
             get { return selectedList.Contains(this); }
         }
 
-        protected bool ResizeHorizontal
-        {
-            get { return prefab != null && prefab.ResizeHorizontal; }
-        }
-        protected bool ResizeVertical
-        {
-            get { return prefab != null && prefab.ResizeVertical; }
-        }
-
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back = true) { }
 
         public virtual void DrawDamage(SpriteBatch spriteBatch, Effect damageEffect) { }
-
 
         /// <summary>
         /// Update the selection logic in submarine editor
@@ -635,13 +624,5 @@ namespace Barotrauma
 
             return foundEntities;
         }
-
-
-        public virtual XElement Save(XElement parentElement)
-        {
-            DebugConsole.ThrowError("Saving entity " + GetType() + " failed.");
-            return null;
-        }
-
     }
 }

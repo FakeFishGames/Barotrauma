@@ -251,22 +251,5 @@ namespace Barotrauma.Items.Components
 
             yield return CoroutineStatus.Success;
         }
-
-        public virtual XElement Save(XElement parentElement)
-        {
-            XElement componentElement = new XElement(name);
-
-            foreach (RelatedItem ri in requiredItems)
-            {
-                XElement newElement = new XElement("requireditem");
-                ri.Save(newElement);
-                componentElement.Add(newElement);
-            }
-
-            ObjectProperty.SaveProperties(this, componentElement);
-
-            parentElement.Add(componentElement);
-            return componentElement;
-        }
     }
 }
