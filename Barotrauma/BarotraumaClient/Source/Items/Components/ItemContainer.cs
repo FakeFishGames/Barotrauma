@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -63,21 +62,6 @@ namespace Barotrauma.Items.Components
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             Inventory.Draw(spriteBatch);
-        }
-
-        public override XElement Save(XElement parentElement)
-        {
-            XElement componentElement = base.Save(parentElement);
-
-            string[] itemIdStrings = new string[Inventory.Items.Length];
-            for (int i = 0; i < Inventory.Items.Length; i++)
-            {
-                itemIdStrings[i] = (Inventory.Items[i] == null) ? "0" : Inventory.Items[i].ID.ToString();
-            }
-
-            componentElement.Add(new XAttribute("contained", string.Join(",", itemIdStrings)));
-
-            return componentElement;
         }
     }
 }

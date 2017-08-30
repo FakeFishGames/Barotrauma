@@ -594,6 +594,42 @@ namespace Barotrauma
             }
         }
 
+        public override XElement Save(XElement parentElement)
+        {
+            if (MoveWithLevel) return null;
+            XElement element = new XElement("WayPoint");
+
+            element.Add(new XAttribute("ID", ID),
+                new XAttribute("x", (int)(rect.X - Submarine.HiddenSubPosition.X)),
+                new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
+                new XAttribute("spawn", spawnType));
+
+            if (idCardTags.Length > 0)
+            {
+                element.Add(new XAttribute("idcardtags", string.Join(",", idCardTags)));
+            }
+
+            if (assignedJob != null) element.Add(new XAttribute("job", assignedJob.Name));
+
+
+            if (ConnectedGap != null) element.Add(new XAttribute("gap", ConnectedGap.ID));
+            if (Ladders != null) element.Add(new XAttribute("ladders", Ladders.Item.ID));
+
+            parentElement.Add(element);
+
+            if (linkedTo != null)
+            {
+                int i = 0;
+                foreach (MapEntity e in linkedTo)
+                {
+                    element.Add(new XAttribute("linkedto" + i, e.ID));
+                    i += 1;
+                }
+            }
+
+            return element;
+        }
+
         public override void ShallowRemove()
         {
             base.ShallowRemove();

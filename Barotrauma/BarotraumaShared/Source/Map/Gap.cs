@@ -685,12 +685,24 @@ namespace Barotrauma
             g.ID = (ushort)int.Parse(element.Attribute("ID").Value);
             
             g.linkedToID = new List<ushort>();
-            //int i = 0;
-            //while (element.Attribute("linkedto" + i) != null)
-            //{
-            //    g.linkedToID.Add(int.Parse(element.Attribute("linkedto" + i).Value));
-            //    i += 1;
-            //}
+        }
+
+        public override XElement Save(XElement parentElement)
+        {
+            XElement element = new XElement("Gap");
+
+            element.Add(
+                new XAttribute("ID", ID),
+                new XAttribute("horizontal", isHorizontal ? "true" : "false"));
+
+            element.Add(new XAttribute("rect",
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                    rect.Width + "," + rect.Height));
+
+            parentElement.Add(element);
+
+            return element;
         }
     }
 }

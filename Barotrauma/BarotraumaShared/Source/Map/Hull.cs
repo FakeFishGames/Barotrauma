@@ -735,6 +735,25 @@ namespace Barotrauma
 
             h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
         }
-        
+
+        public override XElement Save(XElement parentElement)
+        {
+            XElement element = new XElement("Hull");
+
+            element.Add
+            (
+                new XAttribute("ID", ID),
+                new XAttribute("rect",
+                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
+                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
+                    rect.Width + "," + rect.Height),
+                new XAttribute("water", volume)
+            );
+
+            parentElement.Add(element);
+
+            return element;
+        }
+
     }
 }

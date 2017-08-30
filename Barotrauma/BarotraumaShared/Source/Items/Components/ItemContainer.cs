@@ -10,10 +10,12 @@ namespace Barotrauma.Items.Components
     {
         public const int MaxInventoryCount = 4;
 
-        List<RelatedItem> containableItems;
+        private List<RelatedItem> containableItems;
         public ItemInventory Inventory;
 
         private List<Pair<Item, StatusEffect>> itemsWithStatusEffects;
+        
+        private ushort[] itemIds;
 
         //how many items can be contained
         [HasDefaultValue(5, false)]
@@ -240,6 +242,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        ushort[] itemIds;
+        public override XElement Save(XElement parentElement)
+        {
+            XElement componentElement = base.Save(parentElement);
+
+            string[] itemIdStrings = new string[Inventory.Items.Length];
+            for (int i = 0; i < Inventory.Items.Length; i++)
+            {
+                itemIdStrings[i] = (Inventory.Items[i] == null) ? "0" : Inventory.Items[i].ID.ToString();
+            }
+
+            componentElement.Add(new XAttribute("contained", string.Join(",", itemIdStrings)));
+
+            return componentElement;
+        }
     }
 }

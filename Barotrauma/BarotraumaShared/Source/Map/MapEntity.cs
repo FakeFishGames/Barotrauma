@@ -3,10 +3,10 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-//using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -87,6 +87,15 @@ namespace Barotrauma
         public virtual bool IsLinkable
         {
             get { return false; }
+        }
+
+        protected bool ResizeHorizontal
+        {
+            get { return prefab != null && prefab.ResizeHorizontal; }
+        }
+        protected bool ResizeVertical
+        {
+            get { return prefab != null && prefab.ResizeVertical; }
         }
 
         public virtual bool SelectableInEditor
@@ -374,10 +383,14 @@ namespace Barotrauma
                 linkedSub.OnMapLoaded();
             }
         }
-
-
-        public virtual void OnMapLoaded() { }
         
+        public virtual void OnMapLoaded() { }
+
+        public virtual XElement Save(XElement parentElement)
+        {
+            DebugConsole.ThrowError("Saving entity " + GetType() + " failed.");
+            return null;
+        }
 
         public void RemoveLinked(MapEntity e)
         {

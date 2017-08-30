@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -57,35 +56,6 @@ namespace Barotrauma
                     depth,
                     (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
-        }
-
-        public override XElement Save(XElement parentElement)
-        {
-            XElement element = new XElement("Gap");
-
-            element.Add(
-                new XAttribute("ID", ID),
-                new XAttribute("horizontal", isHorizontal ? "true" : "false"));
-
-            element.Add(new XAttribute("rect",
-                    (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
-                    (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
-                    rect.Width + "," + rect.Height));
-
-            //if (linkedTo != null)
-            //{
-            //    int i = 0;
-            //    foreach (Entity e in linkedTo)
-            //    {
-            //        if (e == null) continue;
-            //        element.Add(new XAttribute("linkedto" + i, e.ID));
-            //        i += 1;
-            //    }
-            //}
-
-            parentElement.Add(element);
-
-            return element;
         }
     }
 }

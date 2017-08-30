@@ -108,6 +108,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override XElement Save(XElement parentElement)
+        {
+            XElement componentElement = base.Save(parentElement);
+
+            foreach (Connection c in Connections)
+            {
+                c.Save(componentElement);
+            }
+
+            return componentElement;
+        }
+
         protected override void RemoveComponentSpecific()
         {
             foreach (Connection c in Connections)
@@ -140,7 +152,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-
+        
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             List<Wire>[] wires = new List<Wire>[Connections.Count];

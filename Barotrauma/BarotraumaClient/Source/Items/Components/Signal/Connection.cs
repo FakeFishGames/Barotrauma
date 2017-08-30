@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -269,31 +268,6 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-        }
-
-        public void Save(XElement parentElement)
-        {
-            XElement newElement = new XElement(IsOutput ? "output" : "input", new XAttribute("name", Name));
-
-            Array.Sort(Wires, delegate (Wire wire1, Wire wire2)
-            {
-                if (wire1 == null) return 1;
-                if (wire2 == null) return -1;
-                return wire1.Item.ID.CompareTo(wire2.Item.ID);
-            });
-
-            for (int i = 0; i < MaxLinked; i++)
-            {
-                if (Wires[i] == null) continue;
-
-                //Connection recipient = wires[i].OtherConnection(this);
-
-                //int connectionIndex = recipient.item.Connections.FindIndex(x => x == recipient);
-                newElement.Add(new XElement("link",
-                    new XAttribute("w", Wires[i].Item.ID.ToString())));
-            }
-
-            parentElement.Add(newElement);
         }
     }
 }
