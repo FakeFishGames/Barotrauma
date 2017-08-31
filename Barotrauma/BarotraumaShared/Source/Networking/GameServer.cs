@@ -1128,8 +1128,16 @@ namespace Barotrauma.Networking
             
             int teamCount = 1;
             byte hostTeam = 1;
+
+            string levelSeed = GameMain.NetLobbyScreen.LevelSeed;
+
+            MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
         
-            GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
+            //don't instantiate a new gamesession if we're playing a campaign
+            if (campaign == null || GameMain.GameSession == null)
+            {
+                GameMain.GameSession = new GameSession(selectedSub, "", selectedMode, Mission.MissionTypes[GameMain.NetLobbyScreen.MissionTypeIndex]);
+            }
 
             if (GameMain.GameSession.GameMode.Mission != null &&
                 GameMain.GameSession.GameMode.Mission.AssignTeamIDs(connectedClients, out hostTeam))
@@ -1141,7 +1149,14 @@ namespace Barotrauma.Networking
                 connectedClients.ForEach(c => c.TeamID = hostTeam);
             }
 
-            GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
+            if (campaign != null)
+            {
+                GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, teamCount > 1);
+            }
+            else
+            {
+                GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, teamCount > 1);
+            }
 
             GameServer.Log("Starting a new round...", ServerLog.MessageType.ServerMessage);
             GameServer.Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);

@@ -37,7 +37,6 @@ namespace Barotrauma
             new GameModePreset("Single Player", typeof(SinglePlayerCampaign), true);
             new GameModePreset("Tutorial", typeof(TutorialMode), true);
 #endif
-            new GameModePreset("Campaign", typeof(MultiplayerCampaign), false);
 
             var mode = new GameModePreset("SandBox", typeof(GameMode), false);
             mode.Description = "A game mode with no specific objectives.";
@@ -46,6 +45,8 @@ namespace Barotrauma
             mode.Description = "The crew must work together to complete a specific task, such as retrieving "
                 + "an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends "
                 + "when the task is completed or everyone in the crew has died.";
+
+            new GameModePreset("Campaign", typeof(MultiplayerCampaign), false);
         }
     }
 }

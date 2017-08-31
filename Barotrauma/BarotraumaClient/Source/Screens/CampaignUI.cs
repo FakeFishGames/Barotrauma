@@ -29,7 +29,7 @@ namespace Barotrauma
 
         private Level selectedLevel;
 
-        float mapZoom = 3.0f;
+        private float mapZoom = 3.0f;
 
         public Action StartRound;
         public Action<Location, LocationConnection> OnLocationSelected;
@@ -126,11 +126,10 @@ namespace Barotrauma
                 x += 110;
             }
 
-            SelectTab(Tab.Crew);
+            SelectTab(Tab.Map);
 
             GameMain.GameSession.Map.OnLocationSelected += SelectLocation;
         }
-
 
         private void UpdateLocationTab(Location location)
         {
@@ -163,11 +162,14 @@ namespace Barotrauma
             mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
             mapZoom = MathHelper.Clamp(mapZoom, 1.0f, 4.0f);
 
-            GameMain.GameSession.Map.Update((float)deltaTime, new Rectangle(
-                tabs[(int)selectedTab].Rect.X + 20,
-                tabs[(int)selectedTab].Rect.Y + 20,
-                tabs[(int)selectedTab].Rect.Width - 310,
-                tabs[(int)selectedTab].Rect.Height - 40), mapZoom);
+            if (GameMain.GameSession?.Map != null)
+            {
+                GameMain.GameSession.Map.Update(deltaTime, new Rectangle(
+                    tabs[(int)selectedTab].Rect.X + 20,
+                    tabs[(int)selectedTab].Rect.Y + 20,
+                    tabs[(int)selectedTab].Rect.Width - 310,
+                    tabs[(int)selectedTab].Rect.Height - 40), mapZoom);
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -179,7 +181,7 @@ namespace Barotrauma
             
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
             */
-             if (selectedTab == Tab.Map)
+             if (selectedTab == Tab.Map && GameMain.GameSession?.Map != null)
              {
                  GameMain.GameSession.Map.Draw(spriteBatch, new Rectangle(
                      tabs[(int)selectedTab].Rect.X + 20, 
@@ -278,17 +280,15 @@ namespace Barotrauma
 
             if (location == null) return;
 
-            new GUITextBlock(new Rectangle(0, 0, 250, 0), location.Name, "", Alignment.TopLeft, Alignment.TopCenter, locationPanel, true, GUI.LargeFont);
+            var titleText = new GUITextBlock(new Rectangle(0, 0, 250, 0), location.Name, "", Alignment.TopLeft, Alignment.TopCenter, locationPanel, true, GUI.LargeFont);
 
             if (GameMain.GameSession.Map.SelectedConnection != null && GameMain.GameSession.Map.SelectedConnection.Mission != null)
             {
                 var mission = GameMain.GameSession.Map.SelectedConnection.Mission;
 
-                new GUITextBlock(new Rectangle(0, 80, 0, 20), "Mission: " + mission.Name, "", locationPanel);
-
-                new GUITextBlock(new Rectangle(0, 100, 0, 20), "Reward: " + mission.Reward + " credits", "", locationPanel);
-
-                new GUITextBlock(new Rectangle(0, 130, 0, 0), mission.Description, "", locationPanel, true);
+                new GUITextBlock(new Rectangle(0, titleText.Rect.Height + 20, 0, 20), "Mission: " + mission.Name, "", locationPanel);
+                new GUITextBlock(new Rectangle(0, titleText.Rect.Height + 40, 0, 20), "Reward: " + mission.Reward + " credits", "", locationPanel);
+                new GUITextBlock(new Rectangle(0, titleText.Rect.Height + 70, 0, 0), mission.Description, "", Alignment.TopLeft, Alignment.TopLeft, locationPanel, true, GUI.SmallFont);
             }
 
             startButton.Enabled = true;

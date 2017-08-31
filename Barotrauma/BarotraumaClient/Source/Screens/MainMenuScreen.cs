@@ -11,15 +11,12 @@ namespace Barotrauma
     class MainMenuScreen : Screen
     {
         public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4 }
-        
-        GUIFrame buttonsTab;
+
+        private GUIFrame buttonsTab;
 
         private GUIFrame[] menuTabs;
-        private GUIListBox subList;
 
-        private GUIListBox saveList;
-
-        private GUITextBox saveNameBox, seedBox;
+        private CampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, portBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, useUpnpBox;
@@ -30,12 +27,10 @@ namespace Barotrauma
 
         public MainMenuScreen(GameMain game)
         {
-            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length+1];
+            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
 
-            buttonsTab = new GUIFrame(new Rectangle(0,0,0,0), Color.Transparent, Alignment.Left | Alignment.CenterY);
+            buttonsTab = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Transparent, Alignment.Left | Alignment.CenterY);
             buttonsTab.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-            //menuTabs[(int)Tabs.Main].Padding = GUI.style.smallPadding;
-
 
             int y = (int)(GameMain.GraphicsHeight * 0.3f);
 
@@ -86,62 +81,17 @@ namespace Barotrauma
             //----------------------------------------------------------------------
 
             menuTabs[(int)Tab.NewGame] = new GUIFrame(panelRect, "");
-            menuTabs[(int)Tab.NewGame].Padding = new Vector4(20.0f,20.0f,20.0f,20.0f);
-
-            //new GUITextBlock(new Rectangle(0, -20, 0, 30), "New Game", null, null, Alignment.CenterX, "", menuTabs[(int)Tabs.NewGame]);
-
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Selected submarine:", null, null, Alignment.Left, "", menuTabs[(int)Tab.NewGame]);
-            subList = new GUIListBox(new Rectangle(0, 30, 230, panelRect.Height-100), "", menuTabs[(int)Tab.NewGame]);
-
-            UpdateSubList();
-
-            new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 0, 100, 20),
-                "Save name: ", "", Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
-
-            saveNameBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 30, 180, 20),
-                Alignment.TopLeft, "", menuTabs[(int)Tab.NewGame]);
-
-            new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 60, 100, 20),
-                "Map Seed: ", "", Alignment.Left, Alignment.Left, menuTabs[(int)Tab.NewGame]);
-
-            seedBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 90, 180, 20),
-                Alignment.TopLeft, "", menuTabs[(int)Tab.NewGame]);
-            seedBox.Text = ToolBox.RandomSeed(8);
-
-
-            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, "",  menuTabs[(int)Tab.NewGame]);
-            button.OnClicked = (GUIButton btn, object userData) =>
-                {
-                    Submarine selectedSub = subList.SelectedData as Submarine;
-                    if (selectedSub != null && selectedSub.HasTag(SubmarineTag.Shuttle))
-                    {
-                        var msgBox = new GUIMessageBox("Shuttle selected",                             
-                            "Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. "+
-                            "Are you sure you want to choose a shuttle as your vessel?", 
-                            new string[] {"Yes", "No"});
-
-                        msgBox.Buttons[0].OnClicked = StartGame;
-                        msgBox.Buttons[0].OnClicked += msgBox.Close;
-
-                        msgBox.Buttons[1].OnClicked = msgBox.Close;
-                        return false;
-                    }
-
-                    StartGame(btn, userData);
-
-                    return true;
-                };
-            
-            //----------------------------------------------------------------------
+            menuTabs[(int)Tab.NewGame].Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(panelRect, "");
-            //menuTabs[(int)Tabs.LoadGame].Padding = GUI.style.smallPadding;
 
+            campaignSetupUI = new CampaignSetupUI(false, menuTabs[(int)Tab.NewGame], menuTabs[(int)Tab.LoadGame]);
+            campaignSetupUI.LoadGame = LoadGame;
+            campaignSetupUI.StartNewGame = StartGame;
+
+            //----------------------------------------------------------------------
 
             menuTabs[(int)Tab.HostServer] = new GUIFrame(panelRect, "");
-            //menuTabs[(int)Tabs.JoinServer].Padding = GUI.style.smallPadding;
-
-            //new GUITextBlock(new Rectangle(0, -25, 0, 30), "Host Server", "", Alignment.CenterX, Alignment.CenterX, menuTabs[(int)Tabs.HostServer], false, GUI.LargeFont);
 
             new GUITextBlock(new Rectangle(0, 0, 100, 30), "Server Name:", "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
@@ -194,41 +144,11 @@ namespace Barotrauma
 
             Submarine.Unload();
 
-            UpdateSubList();
+            campaignSetupUI.UpdateSubList();
 
             SelectTab(null, 0);
         }
 
-        private void UpdateSubList()
-        {
-            var subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
-
-            subList.ClearChildren();
-
-            foreach (Submarine sub in subsToShow)
-            {
-                var textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "ListBoxElement",
-                    Alignment.Left, Alignment.Left, subList)
-                {
-                    Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
-                    ToolTip = sub.Description,
-                    UserData = sub
-                };
-
-                if (sub.HasTag(SubmarineTag.Shuttle))
-                {
-                    textBlock.TextColor = textBlock.TextColor * 0.85f;
-
-                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", "", Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
-                    shuttleText.TextColor = textBlock.TextColor * 0.8f;
-                    shuttleText.ToolTip = textBlock.ToolTip;
-                }
-            }
-            if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
-        }
-        
         public bool SelectTab(GUIButton button, object obj)
         {
             try
@@ -276,10 +196,10 @@ namespace Barotrauma
             switch (selectedTab)
             {
                 case Tab.NewGame:
-                    saveNameBox.Text = SaveUtil.CreateSavePath();
+                    campaignSetupUI.CreateDefaultSaveName();
                     break;
                 case Tab.LoadGame:
-                    UpdateLoadScreen();
+                    campaignSetupUI.UpdateLoadMenu();
                     break;
                 case Tab.Settings:
                     GameMain.Config.ResetSettingsFrame();
@@ -379,99 +299,6 @@ namespace Barotrauma
             return true;
         }
 
-        private void UpdateLoadScreen()
-        {
-            menuTabs[(int)Tab.LoadGame].ClearChildren();
-
-            string[] saveFiles = SaveUtil.GetSaveFiles();
-
-            saveList = new GUIListBox(new Rectangle(0, 0, 200, menuTabs[(int)Tab.LoadGame].Rect.Height - 80), Color.White, "", menuTabs[(int)Tab.LoadGame]);
-            saveList.OnSelected = SelectSaveFile;
-
-            foreach (string saveFile in saveFiles)
-            {
-                GUITextBlock textBlock = new GUITextBlock(
-                    new Rectangle(0, 0, 0, 25),
-                    saveFile,
-                    "ListBoxElement",
-                    Alignment.Left,
-                    Alignment.Left,
-                    saveList);
-                textBlock.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
-                textBlock.UserData = saveFile;
-            }
-
-            var button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.Right | Alignment.Bottom, "", menuTabs[(int)Tab.LoadGame]);
-            button.OnClicked = LoadGame;
-        }
-
-        private bool SelectSaveFile(GUIComponent component, object obj)
-        {
-            string fileName = (string)obj;
-            
-            XDocument doc = SaveUtil.LoadGameSessionDoc(fileName);
-
-            if (doc==null)
-            {
-                DebugConsole.ThrowError("Error loading save file \""+fileName+"\". The file may be corrupted.");
-                return false;
-            }
-
-            RemoveSaveFrame();
-
-            string subName = ToolBox.GetAttributeString(doc.Root, "submarine", "");
-
-            string saveTime = ToolBox.GetAttributeString(doc.Root, "savetime", "unknown");
-
-            string mapseed = ToolBox.GetAttributeString(doc.Root, "mapseed", "unknown");
-
-            GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 0, 200, 230), Color.Black*0.4f, "", menuTabs[(int)Tab.LoadGame]);
-            saveFileFrame.UserData = "savefileframe";
-            saveFileFrame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
-
-            new GUITextBlock(new Rectangle(0,0,0,20), fileName, "", Alignment.TopLeft, Alignment.TopLeft, saveFileFrame, false, GUI.LargeFont);
-
-            new GUITextBlock(new Rectangle(0, 35, 0, 20), "Submarine: ", "", saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 52, 0, 20), subName, "", saveFileFrame).Font = GUI.SmallFont;
-
-            new GUITextBlock(new Rectangle(0, 70, 0, 20), "Last saved: ", "", saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 85, 0, 20), saveTime, "", saveFileFrame).Font = GUI.SmallFont;
-
-            new GUITextBlock(new Rectangle(0, 105, 0, 20), "Map seed: ", "", saveFileFrame).Font = GUI.SmallFont;
-            new GUITextBlock(new Rectangle(15, 120, 0, 20), mapseed, "", saveFileFrame).Font = GUI.SmallFont;
-
-            var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Delete", Alignment.BottomCenter, "", saveFileFrame);
-            deleteSaveButton.UserData = fileName;
-            deleteSaveButton.OnClicked = DeleteSave;
-
-            return true;
-        }
-
-        private bool DeleteSave(GUIButton button, object obj)
-        {
-            string saveFile = obj as string;
-
-            if (obj == null) return false;
-
-            SaveUtil.DeleteSave(saveFile);
-
-            UpdateLoadScreen();
-
-            return true;
-        }
-
-        private void RemoveSaveFrame()
-		{
-            GUIComponent prevFrame = null;
-            foreach (GUIComponent child in menuTabs[(int)Tab.LoadGame].children)
-            {
-                if (child.UserData as string != "savefileframe") continue;
-
-                prevFrame = child;
-                break;
-            }
-            menuTabs[(int)Tab.LoadGame].RemoveChild(prevFrame);
-        }
 
         public override void AddToGUIUpdateList()
         {
@@ -513,53 +340,42 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private bool StartGame(GUIButton button, object userData)
+        private void StartGame(Submarine selectedSub, string saveName, string mapSeed)
         {
-            if (string.IsNullOrEmpty(saveNameBox.Text)) return false;
+            if (string.IsNullOrEmpty(saveName)) return;
 
-            string[] existingSaveFiles = SaveUtil.GetSaveFiles();
+            string[] existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
 
-            if (Array.Find(existingSaveFiles, s => s == saveNameBox.Text)!=null)
+            if (Array.Find(existingSaveFiles, s => s == saveName) != null)
             {
                 new GUIMessageBox("Save name already in use", "Please choose another name for the save file");
-                return false;
+                return;
             }
-
-            Submarine selectedSub = subList.SelectedData as Submarine;
+            
             if (selectedSub == null)
             {
                 new GUIMessageBox("Submarine not selected", "Please select a submarine");
-                return false;
+                return;
             }
-            
+
             if (!Directory.Exists(SaveUtil.TempPath))
             {
                 Directory.CreateDirectory(SaveUtil.TempPath);
             }
 
-            File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name+".sub"), true);
+            File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), true);
 
             selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
-            
-            GameMain.GameSession = new GameSession(selectedSub, saveNameBox.Text, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
-            (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(seedBox.Text);
+
+            GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
+            (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(mapSeed);
 
             GameMain.LobbyScreen.Select();
-            
-            return true;
         }
-
-        private bool PreviousTab(GUIButton button, object obj)
+        
+        private void LoadGame(string saveFile)
         {
-            //selectedTab = (int)Tabs.Main;
-
-            return true;
-        }
-
-        private bool LoadGame(GUIButton button, object obj)
-        {
-            string saveFile = saveList.SelectedData as string;
-            if (string.IsNullOrWhiteSpace(saveFile)) return false;
+            if (string.IsNullOrWhiteSpace(saveFile)) return;
 
             try
             {
@@ -568,13 +384,11 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Loading save \""+saveFile+"\" failed", e);
-                return false;
+                return;
             }
 
 
             GameMain.LobbyScreen.Select();
-
-            return true;
         }
 
     }

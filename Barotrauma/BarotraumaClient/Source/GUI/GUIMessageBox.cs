@@ -20,6 +20,11 @@ namespace Barotrauma
             get { return MessageBoxes.Count == 0 ? null : MessageBoxes[0]; }
         }
 
+        public GUIFrame InnerFrame
+        {
+            get { return children[0] as GUIFrame; }
+        }
+
         public string Text
         {
             get { return (children[0].children[1] as GUITextBlock).Text; }
@@ -78,12 +83,15 @@ namespace Barotrauma
             MessageBoxes.Add(this);
         }
 
-
-
-        public bool Close(GUIButton button, object obj)
+        public void Close()
         {
             if (parent != null) parent.RemoveChild(this);
             if (MessageBoxes.Contains(this)) MessageBoxes.Remove(this);
+        }
+
+        public bool Close(GUIButton button, object obj)
+        {
+            Close();
 
             return true;
         }
