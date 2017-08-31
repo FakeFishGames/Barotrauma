@@ -9,6 +9,8 @@ namespace Barotrauma.Items.Components
     {
         private float maxPower;
         
+        private bool isOn;
+
         [Editable, HasDefaultValue(1000.0f, true)]
         public float MaxPower
         {
@@ -18,31 +20,36 @@ namespace Barotrauma.Items.Components
                 maxPower = Math.Max(0.0f, value);
             }
         }
-
-        private bool isOn;
-
+        
         [Editable, HasDefaultValue(false, true)]
         public bool IsOn
         {
             get
             {
-                return IsActive;
+                return isOn;
             }
             set
             {
                 isOn = value;
-                IsActive = value;
-                if (!IsActive)
+                if (!isOn)
                 {
                     currPowerConsumption = 0.0f;
                 }
             }
         }
 
+        public override bool CanTransfer
+        {
+            get
+            {
+                return isOn;
+            }
+        }
+
         public RelayComponent(Item item, XElement element)
             : base (item, element)
         {
-            IsActive = isOn;
+            IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)

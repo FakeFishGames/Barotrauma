@@ -249,7 +249,8 @@
 
       <output name="power_out"/>
       <output name="signal_out1"/>
-      <output name="signal_out2"/>      
+      <output name="signal_out2"/>
+      <output name="state_out"/>
     </ConnectionPanel>
   </Item>
 

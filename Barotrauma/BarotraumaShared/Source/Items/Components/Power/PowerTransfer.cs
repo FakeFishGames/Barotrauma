@@ -30,6 +30,12 @@ namespace Barotrauma.Items.Components
             get { return powerLoad; }
         }
 
+        //can the component transfer power
+        public virtual bool CanTransfer
+        {
+            get { return IsActive; }
+        }
+
         public PowerTransfer(Item item, XElement element)
             : base(item, element)
         {
@@ -40,6 +46,8 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
+            if (!CanTransfer) return;
+
             if (updateTimer > 0)
             {
                 //this junction box has already been updated this frame
@@ -135,6 +143,7 @@ namespace Barotrauma.Items.Components
                         PowerTransfer powerTransfer = powered as PowerTransfer;
                         if (powerTransfer != null)
                         {
+                            if (!powerTransfer.CanTransfer) continue;
                             powerTransfer.CheckJunctions(deltaTime);
                             continue;
                         }
