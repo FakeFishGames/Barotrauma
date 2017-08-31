@@ -15,7 +15,7 @@ namespace Barotrauma
         {
             get
             {
-                SinglePlayerCampaign mode = (GameMode as SinglePlayerCampaign);
+                CampaignMode mode = (GameMode as CampaignMode);
                 return (mode == null) ? null : mode.Map;
             }
         }
@@ -167,33 +167,6 @@ namespace Barotrauma
 
             if (GameMode != null) GameMode.Draw(spriteBatch);
             if (infoFrame != null) infoFrame.Draw(spriteBatch);
-        }
-
-        public void Save(string filePath)
-        {
-            if (!(GameMode is CampaignMode))
-            {
-                throw new NotSupportedException("GameSessions can only be saved when playing in a campaign mode.");
-            }
-
-            XDocument doc = new XDocument(
-                new XElement("Gamesession"));
-
-            var now = DateTime.Now;
-            doc.Root.Add(new XAttribute("savetime", now.ToShortTimeString() + ", " + now.ToShortDateString()));
-            doc.Root.Add(new XAttribute("submarine", submarine == null ? "" : submarine.Name));
-            doc.Root.Add(new XAttribute("mapseed", Map.Seed));
-
-            ((CampaignMode)GameMode).Save(doc.Root);
-
-            try
-            {
-                doc.Save(filePath);
-            }
-            catch
-            {
-                DebugConsole.ThrowError("Saving gamesession to \"" + filePath + "\" failed!");
-            }
         }
     }
 }

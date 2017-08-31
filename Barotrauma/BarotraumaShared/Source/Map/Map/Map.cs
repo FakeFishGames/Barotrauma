@@ -351,6 +351,31 @@ namespace Barotrauma
             currentLocation = locations[index];
             currentLocation.Discovered = true;
         }
+
+        public void Save(XElement element)
+        {
+            XElement mapElement = new XElement("map");
+
+            mapElement.Add(new XAttribute("currentlocation", CurrentLocationIndex));
+            mapElement.Add(new XAttribute("seed", Seed));
+            mapElement.Add(new XAttribute("size", size));
+
+            List<int> discoveredLocations = new List<int>();
+            for (int i = 0; i < locations.Count; i++)
+            {
+                if (locations[i].Discovered) discoveredLocations.Add(i);
+            }
+            mapElement.Add(new XAttribute("discovered", string.Join(",", discoveredLocations)));
+
+            List<int> passedConnections = new List<int>();
+            for (int i = 0; i < connections.Count; i++)
+            {
+                if (connections[i].Passed) passedConnections.Add(i);
+            }
+            mapElement.Add(new XAttribute("passed", string.Join(",", passedConnections)));
+
+            element.Add(mapElement);
+        }
     }
 
 

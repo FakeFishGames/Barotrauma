@@ -344,7 +344,7 @@ namespace Barotrauma
 
         public override void Save(XElement element)
         {
-            XElement modeElement = new XElement("gamemode");
+            XElement modeElement = new XElement("SinglePlayerCampaign");
             
             modeElement.Add(new XAttribute("money", Money));
             

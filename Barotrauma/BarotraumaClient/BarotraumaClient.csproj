@@ -196,6 +196,7 @@
     <Compile Include="Source\PlayerInput.cs" />
     <Compile Include="Source\Program.cs" />
     <Compile Include="Source\Screens\BlurEffect.cs" />
+    <Compile Include="Source\Screens\CampaignSetupUI.cs" />
     <Compile Include="Source\Screens\CampaignUI.cs" />
     <Compile Include="Source\Screens\EditCharacterScreen.cs" />
     <Compile Include="Source\Screens\EditMapScreen.cs" />

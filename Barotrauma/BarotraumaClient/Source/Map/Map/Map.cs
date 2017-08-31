@@ -1,9 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -67,6 +65,9 @@ namespace Barotrauma
         {
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
             Vector2 offset = -currentLocation.MapPosition;
+
+            Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
+            GameMain.Instance.GraphicsDevice.ScissorRectangle = rect;
 
             iceTexture.DrawTiled(spriteBatch, new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), Vector2.Zero, Color.White * 0.8f);
 
@@ -197,31 +198,8 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, pos, location.Name, Color.White, Color.Black * 0.8f, 3);
             }
 
-        }
 
-        public void Save(XElement element)
-        {
-            XElement mapElement = new XElement("map");
-
-            mapElement.Add(new XAttribute("currentlocation", CurrentLocationIndex));
-            mapElement.Add(new XAttribute("seed", Seed));
-            mapElement.Add(new XAttribute("size", size));
-
-            List<int> discoveredLocations = new List<int>();
-            for (int i = 0; i < locations.Count; i++)
-            {
-                if (locations[i].Discovered) discoveredLocations.Add(i);
-            }
-            mapElement.Add(new XAttribute("discovered", string.Join(",", discoveredLocations)));
-
-            List<int> passedConnections = new List<int>();
-            for (int i = 0; i < connections.Count; i++)
-            {
-                if (connections[i].Passed) passedConnections.Add(i);
-            }
-            mapElement.Add(new XAttribute("passed", string.Join(",", passedConnections)));
-
-            element.Add(mapElement);
+            GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
         }
     }
 }

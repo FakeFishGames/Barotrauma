@@ -525,9 +525,19 @@ namespace Barotrauma
             if (children.Contains(child)) children.Remove(child);            
         }
 
-        public GUIComponent FindChild(object userData)
+        public GUIComponent FindChild(object userData, bool recursive = false)
         {
-            return children.FirstOrDefault(c => c.userData == userData);
+            var matchingChild = children.FirstOrDefault(c => c.userData == userData);
+            if (recursive && matchingChild == null)
+            {
+                foreach (GUIComponent child in children)
+                {
+                    matchingChild = child.FindChild(userData, recursive);
+                    if (matchingChild != null) return matchingChild;
+                }
+            }
+
+            return matchingChild;
         }
 
         public List<GUIComponent> FindChildren(object userData)

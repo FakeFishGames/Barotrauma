@@ -34,6 +34,10 @@ namespace Barotrauma
 
         private GUITextBox textBox, seedBox;
 
+        private GUIFrame defaultModeContainer, campaignContainer;
+
+        private GUIButton campaignViewButton;
+
         private GUIFrame myPlayerFrame;
 
         private GUIFrame jobInfoFrame;
@@ -43,6 +47,8 @@ namespace Barotrauma
         private GUITickBox autoRestartBox;
 
         private GUIDropDown shuttleList;
+
+        private CampaignUI campaignUI;
 
         private Sprite backgroundSprite;
 
@@ -215,37 +221,43 @@ namespace Barotrauma
             playerList = new GUIListBox(new Rectangle(0, 0, 0, 0), null, "", playerListFrame);
             playerList.OnSelected = SelectPlayer;
 
+            defaultModeContainer = new GUIFrame(new Rectangle(0, 10, 0, 0), null, infoFrame);
+
+            campaignContainer = new GUIFrame(new Rectangle(0, 20, 0, 0), null, infoFrame);
+            campaignContainer.Visible = false;
+            var backButton = new GUIButton(new Rectangle(0, -20, 100, 30), "Back", "", campaignContainer);
+            backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
+
+
             //submarine list ------------------------------------------------------------------
 
             int columnWidth = infoFrame.Rect.Width / 3 - 5;
             int columnX = 0;
 
-            new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Submarine:", "", infoFrame);
-            subList = new GUIListBox(new Rectangle(columnX, 150, columnWidth, infoFrame.Rect.Height - 150 - 80), Color.White, "", infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 110, columnWidth, 30), "Submarine:", "", defaultModeContainer);
+            subList = new GUIListBox(new Rectangle(columnX, 140, columnWidth, defaultModeContainer.Rect.Height - 170), Color.White, "", defaultModeContainer);
             subList.OnSelected = VotableClicked;
 
-            var voteText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Votes: ", "", Alignment.TopLeft, Alignment.TopRight, infoFrame);
+            var voteText = new GUITextBlock(new Rectangle(columnX, 110, columnWidth, 30), "Votes: ", "", Alignment.TopLeft, Alignment.TopRight, defaultModeContainer);
             voteText.UserData = "subvotes";
             voteText.Visible = false;
-
-            //UpdateSubList(Submarine.SavedSubmarines);
-
+            
             columnX += columnWidth + 20;
 
 
             //respawn shuttle ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 120, 20, 20), "Respawn shuttle:", "", infoFrame);
-            shuttleList = new GUIDropDown(new Rectangle(columnX, 150, 200, 20), "", "", infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 110, 20, 20), "Respawn shuttle:", "", defaultModeContainer);
+            shuttleList = new GUIDropDown(new Rectangle(columnX, 140, 200, 20), "", "", defaultModeContainer);
 
 
             //gamemode ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 180, 0, 30), "Game mode: ", "", infoFrame);
-            modeList = new GUIListBox(new Rectangle(columnX, 200, columnWidth, infoFrame.Rect.Height - 300), "", infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 170, 0, 30), "Game mode: ", "", defaultModeContainer);
+            modeList = new GUIListBox(new Rectangle(columnX, 200, columnWidth, defaultModeContainer.Rect.Height - 230), "", defaultModeContainer);
             modeList.OnSelected = VotableClicked;
 
-            voteText = new GUITextBlock(new Rectangle(columnX, 120, columnWidth, 30), "Votes: ", "", Alignment.TopLeft, Alignment.TopRight, infoFrame);
+            voteText = new GUITextBlock(new Rectangle(columnX, 170, columnWidth, 30), "Votes: ", "", Alignment.TopLeft, Alignment.TopRight, defaultModeContainer);
             voteText.UserData = "modevotes";
             voteText.Visible = false;
 
@@ -265,7 +277,7 @@ namespace Barotrauma
 
             //mission type ------------------------------------------------------------------
 
-            missionTypeBlock = new GUITextBlock(new Rectangle(columnX, -10, 300, 20), "Mission type:", "", Alignment.BottomLeft, Alignment.CenterLeft, infoFrame);
+            missionTypeBlock = new GUITextBlock(new Rectangle(columnX, -10, 300, 20), "Mission type:", "", Alignment.BottomLeft, Alignment.CenterLeft, defaultModeContainer);
             missionTypeBlock.Padding = Vector4.Zero;
             missionTypeBlock.UserData = 0;
 
@@ -296,46 +308,46 @@ namespace Barotrauma
 
             //seed ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 120, 180, 20),
-                "Level Seed: ", "", Alignment.Left, Alignment.TopLeft, infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 110, 180, 20),
+                "Level Seed: ", "", Alignment.Left, Alignment.TopLeft, defaultModeContainer);
 
-            seedBox = new GUITextBox(new Rectangle(columnX, 150, columnWidth / 2, 20),
-                Alignment.TopLeft, "", infoFrame);
+            seedBox = new GUITextBox(new Rectangle(columnX, 140, columnWidth / 2, 20),
+                Alignment.TopLeft, "", defaultModeContainer);
             seedBox.OnTextChanged = SelectSeed;
             LevelSeed = ToolBox.RandomSeed(8);
 
             //traitor probability ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 180, 20, 20), "Traitors:", "", infoFrame);
+            new GUITextBlock(new Rectangle(columnX, 170, 20, 20), "Traitors:", "", defaultModeContainer);
 
             traitorProbabilityButtons = new GUIButton[2];
 
-            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 205, 20, 20), "<", "", infoFrame);
+            traitorProbabilityButtons[0] = new GUIButton(new Rectangle(columnX, 195, 20, 20), "<", "", defaultModeContainer);
             traitorProbabilityButtons[0].UserData = -1;
 
-            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX + 20, 205, 80, 20), "No", null, null, Alignment.Center, "", infoFrame);
+            traitorProbabilityText = new GUITextBlock(new Rectangle(columnX + 20, 195, 80, 20), "No", null, null, Alignment.Center, "", defaultModeContainer);
 
-            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 205, 20, 20), ">", "", infoFrame);
+            traitorProbabilityButtons[1] = new GUIButton(new Rectangle(columnX + 100, 195, 20, 20), ">", "", defaultModeContainer);
             traitorProbabilityButtons[1].UserData = 1;
 
 
             //automatic restart ------------------------------------------------------------------
 
-            autoRestartBox = new GUITickBox(new Rectangle(columnX, 240, 20, 20), "Automatic restart", Alignment.TopLeft, infoFrame);
+            autoRestartBox = new GUITickBox(new Rectangle(columnX, 230, 20, 20), "Automatic restart", Alignment.TopLeft, defaultModeContainer);
             autoRestartBox.OnSelected = ToggleAutoRestart;
 
-            var restartText = new GUITextBlock(new Rectangle(columnX, 265, 20, 20), "", "", infoFrame);
+            var restartText = new GUITextBlock(new Rectangle(columnX, 255, 20, 20), "", "", defaultModeContainer);
             restartText.Font = GUI.SmallFont;
             restartText.TextGetter = AutoRestartText;
 
             //server info ------------------------------------------------------------------
 
-            var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, "", infoFrame);
+            var serverName = new GUITextBox(new Rectangle(0, 0, 200, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, "", defaultModeContainer);
             serverName.TextGetter = GetServerName;
             serverName.Enabled = GameMain.Server != null;
             serverName.OnTextChanged = ChangeServerName;
 
-            serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, "", infoFrame);
+            serverMessage = new GUITextBox(new Rectangle(0, 30, 360, 70), null, null, Alignment.TopLeft, Alignment.TopLeft, "", defaultModeContainer);
             serverMessage.Wrap = true;
             serverMessage.OnTextChanged = UpdateServerMessage;
 
@@ -422,10 +434,14 @@ namespace Barotrauma
                 missionTypeButtons[0].OnClicked = ToggleMissionType;
                 missionTypeButtons[1].OnClicked = ToggleMissionType;
 
-                StartButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, "", infoFrame);
+                StartButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, "", defaultModeContainer);
                 StartButton.OnClicked = GameMain.Server.StartGameClicked;
 
-                GUIButton settingsButton = new GUIButton(new Rectangle(-100, 0, 80, 30), "Settings", Alignment.BottomRight, "", infoFrame);
+                campaignViewButton = new GUIButton(new Rectangle(0, 0, 130, 30), "Campaign view", Alignment.BottomRight, "", defaultModeContainer);
+                campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
+                campaignViewButton.Visible = false;
+
+                GUIButton settingsButton = new GUIButton(new Rectangle(-110, 0, 80, 20), "Settings", Alignment.TopRight, "", infoFrame);
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
                 settingsButton.UserData = "settingsButton";
 
@@ -983,6 +999,12 @@ namespace Barotrauma
                 menu.Update((float)deltaTime);
             }
 
+            if (campaignContainer.Visible && campaignUI != null)
+            {
+                campaignContainer.Update((float)deltaTime);
+                campaignUI.Update((float)deltaTime);
+            }
+
             if (autoRestartTimer != 0.0f && autoRestartBox.Selected)
             {
                 autoRestartTimer = Math.Max(autoRestartTimer - (float)deltaTime, 0.0f);
@@ -1008,6 +1030,11 @@ namespace Barotrauma
             //if (previewPlayer!=null) previewPlayer.Draw(spriteBatch);
 
             if (playerFrame != null) playerFrame.Draw(spriteBatch);
+
+            if (campaignContainer.Visible && campaignUI != null)
+            {
+                campaignUI.Draw(spriteBatch);
+            }
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
@@ -1071,25 +1098,48 @@ namespace Barotrauma
         {
             modeList.Select(modeIndex, true);
 
+            ToggleCampaignMode(SelectedMode.Name == "Campaign");
             missionTypeBlock.Visible = SelectedMode != null && SelectedMode.Name == "Mission";
         }
 
         private bool SelectMode(GUIComponent component, object obj)
         {
             if (GameMain.NetworkMember == null) return false;
-
-            //if (GameMain.Server==null)
-            //{
-            //    return VotableClicked(component, obj);
-            //}
-
+            
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
-
+            
             missionTypeBlock.Visible = modePreset.Name == "Mission";
-            lastUpdateID++;
+            
+            if (modePreset.Name == "Campaign")
+            {
+                MultiplayerCampaign.StartCampaignSetup();
+            }
 
+            lastUpdateID++;
             return true;
+        }
+
+        public void ToggleCampaignView(bool enabled)
+        {
+            defaultModeContainer.Visible = !enabled;
+            StartButton.Visible = !enabled;
+
+            campaignContainer.Visible = enabled;
+        }
+
+        public void ToggleCampaignMode(bool enabled)
+        {
+            StartButton.Visible = !enabled;
+            campaignViewButton.Visible = enabled;
+
+            ToggleCampaignView(enabled);
+
+            if (enabled && campaignUI == null)
+            {
+                campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer);
+                campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
+            }
         }
 
         private bool SelectSeed(GUITextBox textBox, string seed)
@@ -1102,26 +1152,7 @@ namespace Barotrauma
 
             return true;
         }
-
-        //private bool ChangeCharacterName(GUITextBox textBox, string newName)
-        //{
-        //    if (string.IsNullOrEmpty(newName)) return false;
-
-        //    if (GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo == null) return true;
-
-        //    GameMain.NetworkMember.CharacterInfo.Name = newName;
-        //    if (GameMain.Client != null)
-        //    {
-        //        GameMain.Client.Name = newName;
-        //        GameMain.Client.SendCharacterData();
-        //    }
-
-        //    textBox.Text = newName;
-        //    textBox.Selected = false;
-
-        //    return true;
-        //}
-
+        
         private bool ViewJobInfo(GUIButton button, object obj)
         {
             GUIComponent jobText = button.Parent;

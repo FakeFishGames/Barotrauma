@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -112,14 +113,23 @@ namespace Barotrauma
 
 #if CLIENT
             CrewManager = new CrewManager();
-
+#endif
             foreach (XElement subElement in doc.Root.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "gamemode") continue;
-
-                GameMode = SinglePlayerCampaign.Load(subElement);
-            }
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+#if CLIENT
+                    case "gamemode": //legacy support
+                    case "singleplayercampaign":
+                        GameMode = SinglePlayerCampaign.Load(subElement);
+                        break;
 #endif
+                    case "multiplayercampaign":
+                        GameMode = MultiplayerCampaign.Load(subElement);
+                        break;
+                }
+            }
+
         }
 
         private void CreateDummyLocations()
@@ -253,6 +263,33 @@ namespace Barotrauma
 #if CLIENT
             CrewManager.ReviveCharacter(character);
 #endif
+        }
+
+        public void Save(string filePath)
+        {
+            if (!(GameMode is CampaignMode))
+            {
+                throw new NotSupportedException("GameSessions can only be saved when playing in a campaign mode.");
+            }
+
+            XDocument doc = new XDocument(
+                new XElement("Gamesession"));
+
+            var now = DateTime.Now;
+            doc.Root.Add(new XAttribute("savetime", now.ToShortTimeString() + ", " + now.ToShortDateString()));
+            doc.Root.Add(new XAttribute("submarine", submarine == null ? "" : submarine.Name));
+            doc.Root.Add(new XAttribute("mapseed", Map.Seed));
+
+            ((CampaignMode)GameMode).Save(doc.Root);
+
+            try
+            {
+                doc.Save(filePath);
+            }
+            catch
+            {
+                DebugConsole.ThrowError("Saving gamesession to \"" + filePath + "\" failed!");
+            }
         }
 
     }
