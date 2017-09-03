@@ -196,7 +196,7 @@ namespace Barotrauma
         {
             if (button.UserData as string == "save")
             {
-                SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
+                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 
             if (GameMain.NetworkMember != null)

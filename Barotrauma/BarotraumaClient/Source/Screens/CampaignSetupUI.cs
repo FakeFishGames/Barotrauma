@@ -71,7 +71,8 @@ namespace Barotrauma
                     return false;
                 }
 
-                StartNewGame?.Invoke(selectedSub, saveNameBox.Text, seedBox.Text);
+                string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
+                StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
 
                 return true;
             };
@@ -81,7 +82,8 @@ namespace Barotrauma
 
         public void CreateDefaultSaveName()
         {
-            saveNameBox.Text = SaveUtil.CreateSavePath();
+            string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer);
+            saveNameBox.Text = Path.GetFileNameWithoutExtension(savePath);
         }
 
         public void UpdateSubList()

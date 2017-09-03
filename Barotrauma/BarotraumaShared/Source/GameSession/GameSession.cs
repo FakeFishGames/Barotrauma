@@ -15,7 +15,7 @@ namespace Barotrauma
         //two locations used as the start and end in the MP mode
         private Location[] dummyLocations;
 
-        private string saveFile;
+        private string savePath;
 
         private Submarine submarine;
 
@@ -76,12 +76,12 @@ namespace Barotrauma
             set { submarine = value; }
         }
 
-        public string SaveFile
+        public string SavePath
         {
-            get { return saveFile; }
+            get { return savePath; }
         }
 
-        public GameSession(Submarine submarine, string saveFile, GameModePreset gameModePreset = null, string missionType = "")
+        public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset = null, string missionType = "")
         {
             Submarine.MainSub = submarine;
 
@@ -89,7 +89,7 @@ namespace Barotrauma
             
             EventManager = new EventManager(this);
             
-            this.saveFile = saveFile;
+            this.savePath = savePath;
 
 #if CLIENT
             CrewManager = new CrewManager();

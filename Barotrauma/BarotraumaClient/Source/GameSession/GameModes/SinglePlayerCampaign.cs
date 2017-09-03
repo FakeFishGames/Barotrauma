@@ -58,7 +58,7 @@ namespace Barotrauma
 
             if (!savedOnStart)
             {
-                SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
+                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
                 savedOnStart = true;
             }
 
@@ -205,7 +205,7 @@ namespace Barotrauma
                     Map.MoveToNextLocation();
                 }
 
-                SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
+                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 
 

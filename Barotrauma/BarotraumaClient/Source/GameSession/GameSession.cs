@@ -30,7 +30,7 @@ namespace Barotrauma
         {
             Submarine.Unload();
 
-            SaveUtil.LoadGame(saveFile);
+            SaveUtil.LoadGame(savePath);
 
             GameMain.LobbyScreen.Select();
 

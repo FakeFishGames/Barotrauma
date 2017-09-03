@@ -76,13 +76,11 @@ namespace Barotrauma
             }
 
             locationTitle.Text = "Location: " + campaign.Map.CurrentLocation.Name;
-            
-            if (campaignUI == null)
-            {
-                campaignUI = new CampaignUI(campaign, bottomPanel);
-                campaignUI.StartRound = StartRound;
-                campaignUI.OnLocationSelected = SelectLocation;
-            }
+
+            bottomPanel.ClearChildren();
+            campaignUI = new CampaignUI(campaign, bottomPanel);
+            campaignUI.StartRound = StartRound;
+            campaignUI.OnLocationSelected = SelectLocation;            
             campaignUI.UpdateCharacterLists();
         }
         
