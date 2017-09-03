@@ -520,10 +520,11 @@ namespace Barotrauma
             Body closestBody = null;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                if (fixture == null || 
+                if (fixture == null ||
+                    fixture.IsSensor ||
                     fixture.CollisionCategories == Category.None || 
                     fixture.CollisionCategories == Physics.CollisionItem) return -1;
-
+                
                 if (collisionCategory != null && 
                     !fixture.CollisionCategories.HasFlag((Category)collisionCategory) &&
                     !((Category)collisionCategory).HasFlag(fixture.CollisionCategories)) return -1;
@@ -568,7 +569,7 @@ namespace Barotrauma
             
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                if (fixture == null || 
+                if (fixture == null || fixture.IsSensor ||
                     (!fixture.CollisionCategories.HasFlag(Physics.CollisionWall) && !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel))) return -1;
 
                 if (ignoreLevel && fixture.CollisionCategories == Physics.CollisionLevel) return -1;
