@@ -91,6 +91,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (voltage > minVoltage)
             {
+                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
                 if (!powerOnSoundPlayed)
                 {
                     powerOnSound.Play(1.0f, 600.0f, item.WorldPosition);
@@ -100,6 +101,11 @@ namespace Barotrauma.Items.Components
             else if (voltage < 0.1f)            
             {
                 powerOnSoundPlayed = false;
+            }
+#else
+            if (voltage > minVoltage)
+            {
+                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
 #endif
         }

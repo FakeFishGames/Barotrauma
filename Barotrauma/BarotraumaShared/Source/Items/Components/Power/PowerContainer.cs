@@ -110,9 +110,7 @@ namespace Barotrauma.Items.Components
             float chargeRatio = (float)(Math.Sqrt(charge / capacity));
             float gridPower = 0.0f;
             float gridLoad = 0.0f;
-
-            //if (item.linkedTo.Count == 0) return;
-
+            
             foreach (Connection c in item.Connections)
             {
                 if (c.Name == "power_in") continue;
@@ -125,18 +123,12 @@ namespace Barotrauma.Items.Components
                     gridPower -= pt.CurrPowerConsumption;
                 }
             }
-
-
-            //float gridRate = voltage;
-
+            
             if (chargeRatio > 0.0f)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
-
-            //recharge
-            //if (gridRate >= chargeRate)
-            //{
+            
             if (charge >= capacity)
             {
                 rechargeVoltage = 0.0f;
@@ -149,9 +141,7 @@ namespace Barotrauma.Items.Components
                 currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
                 Charge += currPowerConsumption * rechargeVoltage / 3600.0f;
             }
-
-            //}
-
+            
             //provide power to the grid
             if (gridLoad > 0.0f)
             {

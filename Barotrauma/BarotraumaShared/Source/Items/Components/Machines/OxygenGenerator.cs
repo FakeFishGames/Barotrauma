@@ -64,8 +64,6 @@ namespace Barotrauma.Items.Components
                 powerDownTimer = 0.0f;
             }
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-
             running = true;
 
             CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount*100.0f;

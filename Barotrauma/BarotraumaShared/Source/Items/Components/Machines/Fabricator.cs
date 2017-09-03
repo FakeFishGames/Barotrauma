@@ -209,13 +209,15 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
 #if CLIENT
-            if (progressBar!=null)
+            if (progressBar != null)
             {
                 progressBar.BarSize = fabricatedItem == null ? 0.0f : (fabricatedItem.RequiredTime - timeUntilReady) / fabricatedItem.RequiredTime;
             }
 #endif
 
             if (voltage < minVoltage) return;
+
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             if (powerConsumption == 0) voltage = 1.0f;
 

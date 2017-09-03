@@ -129,7 +129,9 @@ namespace Barotrauma.Items.Components
             }
      
             if (voltage < minVoltage && powerConsumption > 0.0f) return;
-               
+
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+
             if (autoPilot)
             {
                 UpdateAutoPilot(deltaTime);
@@ -138,11 +140,9 @@ namespace Barotrauma.Items.Components
             item.SendSignal(0, targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out", null);
 
             float targetLevel = -targetVelocity.Y;
-
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
 
             item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", null);
-
 
             voltage -= deltaTime;
         }
