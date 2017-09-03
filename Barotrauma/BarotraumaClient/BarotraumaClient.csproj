@@ -214,7 +214,6 @@
     <Compile Include="Source\Sprite\Sprite.cs" />
     <Compile Include="Source\Sprite\SpriteSheet.cs" />
     <Compile Include="Source\Utils\MathUtils.cs" />
-    <Compile Include="Source\Utils\SaveUtil.cs" />
     <Compile Include="Source\Utils\TextureLoader.cs" />
     <Compile Include="Source\Utils\ToolBox.cs" />
   </ItemGroup>

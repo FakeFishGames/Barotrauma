@@ -114,6 +114,13 @@ namespace Barotrauma
             }
         }
 
+        public static string GetSavePath(SaveType saveType, string saveName)
+        {
+
+            string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
+            return Path.Combine(folder, saveName);
+        }
+
         public static string[] GetSaveFiles(SaveType saveType)
         {
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
@@ -140,17 +147,24 @@ namespace Barotrauma
 
             return files;
         }
-
-        public static string CreateSavePath(string fileName = "Save")
+        
+        public static string CreateSavePath(SaveType saveType, string fileName = "Save")
         {
+            string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
+
             if (!Directory.Exists(SaveFolder))
             {
-                DebugConsole.ThrowError("Save folder \"" + SaveFolder + "\" not found. Created new folder");
-                Directory.CreateDirectory(SaveFolder);
+                DebugConsole.ThrowError("Save folder \"" + folder + "\" not found. Created new folder");
+                Directory.CreateDirectory(folder);
             }
 
             string extension = ".save";
-            string pathWithoutExtension = Path.Combine(SaveFolder, fileName);
+            string pathWithoutExtension = Path.Combine(folder, fileName);
+
+            if (!File.Exists(pathWithoutExtension + extension))
+            {
+                return pathWithoutExtension + extension;
+            }
 
             int i = 0;
             while (File.Exists(pathWithoutExtension + " " + i + extension))
@@ -158,7 +172,7 @@ namespace Barotrauma
                 i++;
             }
 
-            return pathWithoutExtension + " " + i;
+            return pathWithoutExtension + " " + i + extension;
         }
         
         public static void CompressStringToFile(string fileName, string value)

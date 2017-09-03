@@ -110,7 +110,7 @@ namespace Barotrauma
                     Map.MoveToNextLocation();
                 }
 
-                SaveUtil.SaveGame(GameMain.GameSession.SaveFile);
+                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 
 
