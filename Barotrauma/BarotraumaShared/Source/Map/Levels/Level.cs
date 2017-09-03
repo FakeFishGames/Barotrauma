@@ -752,11 +752,16 @@ namespace Barotrauma
             while (currLength < tunnelLength)
             {
                 Vector2 dir = Rand.Vector(1.0f, Rand.RandSync.Server);
-
+                                
                 dir.Y += Math.Sign(tunnelNodes[tunnelNodes.Count - 1].Y - Size.Y / 2) * 0.5f;
                 if (tunnelNodes.Count > 1)
                 {
-                    dir += Vector2.Normalize(tunnelNodes[tunnelNodes.Count - 1] - tunnelNodes[tunnelNodes.Count - 2]) * 0.5f;
+                    //keep heading roughly in the same direction as the previous nodes
+                    Vector2 prevNodeDiff = tunnelNodes[tunnelNodes.Count - 1] - tunnelNodes[tunnelNodes.Count - 2];
+                    if (prevNodeDiff != Vector2.Zero)
+                    {
+                        dir += Vector2.Normalize(tunnelNodes[tunnelNodes.Count - 1] - tunnelNodes[tunnelNodes.Count - 2]) * 0.5f;
+                    }
                 }
 
                 float avoidDist = 20000.0f;
