@@ -33,6 +33,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (voltage < minVoltage) return;
+            
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
 

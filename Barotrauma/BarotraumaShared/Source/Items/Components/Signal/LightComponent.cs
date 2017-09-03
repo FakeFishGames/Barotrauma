@@ -135,9 +135,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             light.ParentSub = item.Submarine;
 #endif
-
-            ApplyStatusEffects(ActionType.OnActive, deltaTime);
-
+            
 #if CLIENT
             if (item.Container != null)
             {

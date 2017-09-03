@@ -186,16 +186,16 @@ namespace Barotrauma.Items.Components
             }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-            
+
             fissionRate = Math.Min(fissionRate, AvailableFuel);
-            
-            float heat = 80 * fissionRate * (AvailableFuel/2000.0f);
+
+            float heat = 80 * fissionRate * (AvailableFuel / 2000.0f);
             float heatDissipation = 50 * coolingRate + Math.Max(ExtraCooling, 5.0f);
 
             float deltaTemp = (((heat - heatDissipation) * 5) - temperature) / 10000.0f;
             Temperature = temperature + deltaTemp;
 
-            if (temperature>fireTemp && temperature-deltaTemp<fireTemp)
+            if (temperature > fireTemp && temperature - deltaTemp < fireTemp)
             {
 #if CLIENT
                 Vector2 baseVel = Rand.Vector(300.0f);

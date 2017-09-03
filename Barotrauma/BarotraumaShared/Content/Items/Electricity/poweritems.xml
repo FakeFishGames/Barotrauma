@@ -43,7 +43,7 @@
     
     description="Generally used for storing backup power in case of a reactor failure.">
 
-    <Sprite texture ="battery.png" depth="0.8"/>
+    <Sprite texture ="battery.png" sourcerect="0,0,58,77" depth="0.8"/>
 
     <PowerContainer capacity="2000.0" maxrechargespeed="500.0" maxoutput="1000.0" canbeselected = "true">
       <GuiFrame rect="0,-100,350,160" alignment="Center" style="ItemUI"/>
@@ -85,5 +85,32 @@
       <input name="power_out"/>
       <input name="power_in"/>
     </ConnectionPanel>
+  </Item>
+
+  <Item
+    name="Charging Dock"
+    category="Electrical"
+    linkable="true"
+    
+    description="A wall-mounted battery cell charging dock.">
+
+    <Sprite texture ="battery.png" sourcerect="0,80,58,16" depth="0.8"/>
+
+    <Powered powerconsumption="200" currpowerconsumption="200" isactive="true">
+      <GuiFrame rect="0,-100,350,160" alignment="Center" style="ItemUI"/>
+      <StatusEffect type="OnActive" target="Contained" targetnames="loadable" Condition="2.0"/>
+    </Powered>
+
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="Rewire [Screwdriver]">
+      <StatusEffect type="OnFailure" target="Character">
+        <Explosion range="100.0" damage="15" stun="10" force="3.0" flames="false" shockwave="false" sparks="true"/>
+      </StatusEffect>
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="power_in"/>
+    </ConnectionPanel>
+
+    <ItemContainer capacity="4" canbeselected="true" hideitems="false" itempos="9,9" iteminterval="14,0" itemrotation="90">
+      <Containable name="loadable"/>
+    </ItemContainer>
   </Item>
 </Items>

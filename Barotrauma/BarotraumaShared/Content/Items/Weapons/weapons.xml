@@ -115,7 +115,7 @@
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-25.0" stun="15.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/stunbaton.ogg"/>
         <RequiredItem name="Battery Cell" type="Contained" msg="Loaded Battery Cell required"/>        
-        <Explosion range="100.0" force="0.1" shockwave="false" flames="false" camerashake="5.0"/>
+        <Explosion range="100.0" force="0.1" shockwave="false" flames="false" smoke="false" camerashake="5.0"/>
       </StatusEffect>
       <StatusEffect type="OnUse" target="Contained,Character" Condition="-15.0" stun="30.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/stunbaton.ogg"/>
