@@ -89,7 +89,7 @@ namespace Barotrauma.Networking
 
             entityEventManager = new ClientEntityEventManager(this);
 
-            fileReceiver = new FileReceiver("Submarines/Downloaded");
+            fileReceiver = new FileReceiver();
             fileReceiver.OnFinished += OnFileReceived;
             
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name,Gender.None,null);
@@ -703,8 +703,11 @@ namespace Barotrauma.Networking
 
             Rand.SetSyncedSeed(seed);
 
-            GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
-            GameMain.GameSession.StartRound(levelSeed,loadSecondSub);
+            if (gameMode.Name != "Campaign")
+            {
+                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
+            }
+            GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
 
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
             
@@ -896,7 +899,16 @@ namespace Barotrauma.Networking
                                 Voting.AllowModeVoting = allowModeVoting;
                             }
                         }
+
+                        bool campaignUpdated = inc.ReadBoolean();
+                        inc.ReadPadBits();
+                        if (campaignUpdated)
+                        {
+                            MultiplayerCampaign.ClientRead(inc);
+                        }
+
                         lastSentChatMsgID = inc.ReadUInt16();
+
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
@@ -960,6 +972,9 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
+
+            var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+            outmsg.Write(campaign == null ? 0 : campaign.LastUpdateID);
 
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
             for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
@@ -1038,8 +1053,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
             msg.Write((byte)FileTransferMessageType.Initiate);
             msg.Write((byte)fileType);
-            msg.Write(file);
-            msg.Write(fileHash);
+            if (file != null) msg.Write(file);
+            if (fileHash != null) msg.Write(fileHash);
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
@@ -1083,6 +1098,22 @@ namespace Barotrauma.Networking
                         textBlock.UserData = newSub;
                         textBlock.ToolTip = newSub.Description;
                     }
+                    break;
+                case FileTransferType.CampaignSave:
+                    var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+                    if (campaign == null) return;
+
+                    GameMain.GameSession.SavePath = transfer.FilePath;
+                    campaign.LastSaveID = campaign.PendingSaveID;
+
+                    if (GameMain.GameSession.Submarine == null)
+                    {
+                        var gameSessionDoc = SaveUtil.LoadGameSessionDoc(GameMain.GameSession.SavePath);
+                        string subPath = Path.Combine(SaveUtil.TempPath, ToolBox.GetAttributeString(gameSessionDoc.Root, "submarine", "")) + ".sub";
+
+                        GameMain.GameSession.Submarine = new Submarine(subPath, "");
+                    }
+
                     break;
             }
         }

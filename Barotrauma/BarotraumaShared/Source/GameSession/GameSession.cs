@@ -79,6 +79,7 @@ namespace Barotrauma
         public string SavePath
         {
             get { return savePath; }
+            set { savePath = value; }
         }
 
         public GameSession(Submarine submarine, string savePath, GameModePreset gameModePreset = null, string missionType = "")
@@ -168,7 +169,7 @@ namespace Barotrauma
                         
             this.level = level;
 
-            if (submarine==null)
+            if (submarine == null)
             {
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected");
                 return;

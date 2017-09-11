@@ -1001,7 +1001,7 @@ namespace Barotrauma
 
             if (campaignContainer.Visible && campaignUI != null)
             {
-                campaignContainer.Update((float)deltaTime);
+                //campaignContainer.Update((float)deltaTime);
                 campaignUI.Update((float)deltaTime);
             }
 
@@ -1096,9 +1096,18 @@ namespace Barotrauma
 
         public void SelectMode(int modeIndex)
         {
-            modeList.Select(modeIndex, true);
+            if (modeIndex < 0 || modeIndex >= modeList.children.Count) return;
 
-            ToggleCampaignMode(SelectedMode.Name == "Campaign");
+            if (GameMain.Server != null)
+            {
+                if (((GameModePreset)modeList.children[modeIndex].UserData).Name == "Campaign")
+                {
+                    MultiplayerCampaign.StartCampaignSetup();
+                    return;
+                }
+            }
+
+            modeList.Select(modeIndex, true);            
             missionTypeBlock.Visible = SelectedMode != null && SelectedMode.Name == "Mission";
         }
 
@@ -1110,35 +1119,49 @@ namespace Barotrauma
             if (modePreset == null) return false;
             
             missionTypeBlock.Visible = modePreset.Name == "Mission";
-            
-            if (modePreset.Name == "Campaign")
+                        
+            if (GameMain.Server != null)
             {
-                MultiplayerCampaign.StartCampaignSetup();
-            }
-
+                //campaign selected and the campaign view has not been set up yet
+                // -> don't select the mode yet and start campaign setup
+                if (modePreset.Name == "Campaign" && !campaignContainer.Visible)
+                {
+                    MultiplayerCampaign.StartCampaignSetup();
+                    return false;
+                }
+            }            
+            
             lastUpdateID++;
             return true;
         }
 
         public void ToggleCampaignView(bool enabled)
         {
-            defaultModeContainer.Visible = !enabled;
-            StartButton.Visible = !enabled;
-
             campaignContainer.Visible = enabled;
+            defaultModeContainer.Visible = !enabled;
+            if (StartButton != null)
+            {
+                StartButton.Visible = !enabled;
+            }
         }
 
         public void ToggleCampaignMode(bool enabled)
         {
-            StartButton.Visible = !enabled;
-            campaignViewButton.Visible = enabled;
-
             ToggleCampaignView(enabled);
 
-            if (enabled && campaignUI == null)
+            if (enabled)
             {
-                campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer);
-                campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
+                if (campaignUI == null)
+                {
+                    campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer);
+                    campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
+                }
+                modeList.Select(2, true);
+            }
+
+            if (GameMain.Server != null)
+            {
+                lastUpdateID++;
             }
         }
 

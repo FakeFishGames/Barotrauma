@@ -1,10 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -18,6 +15,8 @@ namespace Barotrauma
 
         private GUITextBox saveNameBox, seedBox;
 
+        private GUIButton loadGameButton;
+        
         public Action<Submarine, string, string> StartNewGame;
         public Action<string> LoadGame;
 
@@ -138,8 +137,14 @@ namespace Barotrauma
                 textBlock.UserData = saveFile;
             }
 
-            var button = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.Right | Alignment.Bottom, "", loadGameContainer);
-            button.OnClicked = (btn, obj) => { LoadGame?.Invoke(saveList.SelectedData as string); return true; };
+            loadGameButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.Right | Alignment.Bottom, "", loadGameContainer);
+            loadGameButton.OnClicked = (btn, obj) => 
+            {
+                if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) return false;
+                LoadGame?.Invoke(saveList.SelectedData as string);
+                return true;
+            };
+            loadGameButton.Enabled = false;
         }
 
         private bool SelectSaveFile(GUIComponent component, object obj)
@@ -153,6 +158,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error loading save file \"" + fileName + "\". The file may be corrupted.");
                 return false;
             }
+
+            loadGameButton.Enabled = true;
 
             RemoveSaveFrame();
 

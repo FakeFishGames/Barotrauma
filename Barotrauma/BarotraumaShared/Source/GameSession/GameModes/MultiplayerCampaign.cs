@@ -1,14 +1,34 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
+using Lidgren.Network;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
     class MultiplayerCampaign : CampaignMode
     {
+        private UInt16 lastUpdateID;
+        public UInt16 LastUpdateID
+        {
+            get { if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++; return lastUpdateID; }
+            set { lastUpdateID = value; }
+        }
+
+        private UInt16 lastSaveID;
+        public UInt16 LastSaveID
+        {
+            get { if (GameMain.Server != null && lastSaveID < 1) lastSaveID++; return lastSaveID; }
+            set { lastSaveID = value; }
+        }
+        
+        public UInt16 PendingSaveID
+        {
+            get;
+            set;
+        }
 
         public MultiplayerCampaign(GameModePreset preset, object param) : 
             base(preset, param)
@@ -49,88 +69,123 @@ namespace Barotrauma
                 GameMain.GameSession = new GameSession(sub, saveName, GameModePreset.list.Find(g => g.Name == "Campaign"));
                 var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
                 campaign.GenerateMap(mapSeed);
+                campaign.map.OnLocationSelected += (loc, connection) => { campaign.LastUpdateID++; };
+
                 setupBox.Close();
 
                 GameMain.NetLobbyScreen.ToggleCampaignMode(true);
+                
+                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                campaign.LastSaveID++;                
             };
 
             campaignSetupUI.LoadGame = (string fileName) =>
             {
                 SaveUtil.LoadGame(fileName);
+                var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
+                campaign.LastSaveID++;
+
                 setupBox.Close();
 
                 GameMain.NetLobbyScreen.ToggleCampaignMode(true);
             };
+
+            var cancelButton = new GUIButton(new Rectangle(0,0,120,30), "Cancel", Alignment.BottomLeft, "", setupBox.InnerFrame);
+            cancelButton.OnClicked += (btn, obj) =>
+            {
+                setupBox.Close();
+                int otherModeIndex = 0;
+                for (otherModeIndex = 0; otherModeIndex < GameMain.NetLobbyScreen.ModeList.children.Count; otherModeIndex++)
+                {
+                    if (GameMain.NetLobbyScreen.ModeList.children[otherModeIndex].UserData is MultiplayerCampaign) continue;
+                    break;
+                }
+
+                GameMain.NetLobbyScreen.SelectMode(otherModeIndex);
+                return true;
+            };
         }
 
 #endif
+
+        public override void Start()
+        {
+            base.Start();
+            
+            lastUpdateID++;
+        }
 
 
         public override void End(string endMessage = "")
         {
             isRunning = false;
 
-            bool success = 
-                GameMain.Server.ConnectedClients.Any(c => c.inGame && c.Character != null && !c.Character.IsDead) ||
-                (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
-
-            /*if (success)
+            if (GameMain.Server != null)
             {
-                if (subsToLeaveBehind == null || leavingSub == null)
+                lastUpdateID++;
+
+                bool success = 
+                    GameMain.Server.ConnectedClients.Any(c => c.inGame && c.Character != null && !c.Character.IsDead) ||
+                    (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
+
+                /*if (success)
                 {
-                    DebugConsole.ThrowError("Leaving submarine not selected -> selecting the closest one");
-
-                    leavingSub = GetLeavingSub();
-
-                    subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-                }
-            }*/
-
-            GameMain.GameSession.EndRound("");
-
-            if (success)
-            {
-                bool atEndPosition = Submarine.MainSub.AtEndPosition;
-
-                /*if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
-                {
-                    Submarine.MainSub = leavingSub;
-
-                    GameMain.GameSession.Submarine = leavingSub;
-
-                    foreach (Submarine sub in subsToLeaveBehind)
+                    if (subsToLeaveBehind == null || leavingSub == null)
                     {
-                        MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
-                        LinkedSubmarine.CreateDummy(leavingSub, sub);
+                        DebugConsole.ThrowError("Leaving submarine not selected -> selecting the closest one");
+
+                        leavingSub = GetLeavingSub();
+
+                        subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
                     }
                 }*/
 
-                if (atEndPosition)
+                GameMain.GameSession.EndRound("");
+
+                if (success)
                 {
-                    Map.MoveToNextLocation();
+                    bool atEndPosition = Submarine.MainSub.AtEndPosition;
+
+                    /*if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
+                    {
+                        Submarine.MainSub = leavingSub;
+
+                        GameMain.GameSession.Submarine = leavingSub;
+
+                        foreach (Submarine sub in subsToLeaveBehind)
+                        {
+                            MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
+                            LinkedSubmarine.CreateDummy(leavingSub, sub);
+                        }
+                    }*/
+
+                    if (atEndPosition)
+                    {
+                        Map.MoveToNextLocation();
+                    }
+
+                    SaveUtil.SaveGame(GameMain.GameSession.SavePath);
                 }
 
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-            }
 
-
-            if (!success)
-            {
-               /* var summaryScreen = GUIMessageBox.VisibleBox;
-
-                if (summaryScreen != null)
+                if (!success)
                 {
-                    summaryScreen = summaryScreen.children[0];
-                    summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
+                   /* var summaryScreen = GUIMessageBox.VisibleBox;
 
-                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), "Load game", Alignment.BottomRight, "", summaryScreen);
-                    okButton.OnClicked += GameMain.GameSession.LoadPrevious;
-                    okButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    if (summaryScreen != null)
+                    {
+                        summaryScreen = summaryScreen.children[0];
+                        summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
 
-                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Quit", Alignment.BottomRight, "", summaryScreen);
-                    quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
-                    quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
-                }*/
+                        var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), "Load game", Alignment.BottomRight, "", summaryScreen);
+                        okButton.OnClicked += GameMain.GameSession.LoadPrevious;
+                        okButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+
+                        var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Quit", Alignment.BottomRight, "", summaryScreen);
+                        quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
+                        quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    }*/
+                }
             }
             
             for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
@@ -165,6 +220,8 @@ namespace Barotrauma
                 campaign.map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
             }
 
+            campaign.map.OnLocationSelected += (loc, connection) => { campaign.LastUpdateID++; };
+
             //campaign.savedOnStart = true;
             return campaign;
         }
@@ -175,6 +232,73 @@ namespace Barotrauma
             modeElement.Add(new XAttribute("money", Money));            
             Map.Save(modeElement);
             element.Add(modeElement);
+
+            lastSaveID++;
         }
+
+        public void ServerWrite(NetBuffer msg, Client c)
+        {
+            System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
+
+            msg.Write(lastUpdateID);
+            msg.Write(lastSaveID);
+            msg.Write(map.Seed);
+            msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
+            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+
+        }
+
+#if CLIENT
+        public static void ClientRead(NetBuffer msg)
+        {
+            //static because we may need to instantiate the campaign if it hasn't been done yet
+
+            UInt16 updateID         = msg.ReadUInt16();
+            UInt16 saveID           = msg.ReadUInt16();
+            string mapSeed          = msg.ReadString();
+            UInt16 currentLocIndex  = msg.ReadUInt16();
+            UInt16 selectedLocIndex = msg.ReadUInt16();
+
+            MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+            if (campaign == null)
+            {
+                string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
+                
+                GameMain.GameSession = new GameSession(
+                    null, //TODO: set the sub (after receiving the save file?)
+                    savePath, GameModePreset.list.Find(g => g.Name == "Campaign"));
+
+                campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
+                campaign.GenerateMap(mapSeed);
+
+                GameMain.NetLobbyScreen.ToggleCampaignMode(true);
+            }
+            if (NetIdUtils.IdMoreRecent(campaign.lastUpdateID, updateID)) return;
+
+            //server has a newer save file
+            if (NetIdUtils.IdMoreRecent(saveID, campaign.PendingSaveID))
+            {
+                //stop any active campaign save transfers, they're outdated now
+                List<FileReceiver.FileTransferIn> saveTransfers = 
+                    GameMain.Client.FileReceiver.ActiveTransfers.FindAll(t => t.FileType == FileTransferType.CampaignSave);
+
+                foreach (var transfer in saveTransfers)
+                {
+                    GameMain.Client.FileReceiver.StopTransfer(transfer);                    
+                }
+
+                GameMain.Client.RequestFile(FileTransferType.CampaignSave, null, null);
+                campaign.PendingSaveID = saveID;
+            }
+            //we've got the latest save file
+            else if (!NetIdUtils.IdMoreRecent(saveID, campaign.lastSaveID))
+            {
+                campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
+                campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+                campaign.lastUpdateID = updateID;
+            }
+        }
+
+#endif
     }
 }

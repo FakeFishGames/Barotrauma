@@ -40,10 +40,19 @@ namespace Barotrauma
 
             try
             {
-                if (Submarine.MainSub != null && Submarine.Loaded.Contains(Submarine.MainSub))
+                string subPath = Path.Combine(tempPath, Submarine.MainSub.Name + ".sub");
+                if (Submarine.MainSub != null)
                 {
-                    Submarine.MainSub.FilePath = Path.Combine(tempPath, Submarine.MainSub.Name + ".sub");
-                    Submarine.MainSub.SaveAs(Submarine.MainSub.FilePath);
+                    if (Submarine.Loaded.Contains(Submarine.MainSub))
+                    {
+                        Submarine.MainSub.FilePath = subPath;
+                        Submarine.MainSub.SaveAs(Submarine.MainSub.FilePath);
+                    }
+                    else
+                    {
+                        File.Copy(Submarine.MainSub.FilePath, subPath);
+                        Submarine.MainSub.FilePath = subPath;
+                    }
                 }
             }
             catch (Exception e)
@@ -79,8 +88,8 @@ namespace Barotrauma
             XDocument doc = ToolBox.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
 
             string subPath = Path.Combine(TempPath, ToolBox.GetAttributeString(doc.Root, "submarine", "")) + ".sub";
-            Submarine selectedMap = new Submarine(subPath, "");
-            GameMain.GameSession = new GameSession(selectedMap, filePath, doc);
+            Submarine selectedSub = new Submarine(subPath, "");
+            GameMain.GameSession = new GameSession(selectedSub, filePath, doc);
         }
 
         public static XDocument LoadGameSessionDoc(string filePath)

@@ -142,14 +142,18 @@ namespace Barotrauma.Networking
 
         private List<FileTransferIn> activeTransfers;
 
-        private string downloadFolder;
+        private Dictionary<FileTransferType, string> downloadFolders = new Dictionary<FileTransferType, string>()
+        {
+            { FileTransferType.Submarine, "Submarines/Downloaded" },
+            { FileTransferType.CampaignSave, "Data/Saves/Multiplayer" }
+        };
 
         public List<FileTransferIn> ActiveTransfers
         {
             get { return activeTransfers; }
         }
 
-        public FileReceiver(string downloadFolder)
+        public FileReceiver()
         {
             if (GameMain.Server != null)
             {
@@ -157,8 +161,6 @@ namespace Barotrauma.Networking
             }
 
             activeTransfers = new List<FileTransferIn>();
-
-            this.downloadFolder = downloadFolder;
         }
         
         public void ReadMessage(NetIncomingMessage inc)
@@ -201,10 +203,12 @@ namespace Barotrauma.Networking
                     if (GameSettings.VerboseLogging)
                     {
                         DebugConsole.Log("Received file transfer initiation message: ");
-                        DebugConsole.Log("  File: "+fileName);
+                        DebugConsole.Log("  File: " + fileName);
                         DebugConsole.Log("  Size: " + fileSize);
                         DebugConsole.Log("  Sequence channel: " + inc.SequenceChannel);
                     }
+
+                    string downloadFolder = downloadFolders[(FileTransferType)fileType];
 
                     if (!Directory.Exists(downloadFolder))
                     {
@@ -214,7 +218,7 @@ namespace Barotrauma.Networking
                         }
                         catch (Exception e)
                         {
-                            DebugConsole.ThrowError("Could not start a file transfer: failed to create the folder \""+downloadFolder+"\".", e);
+                            DebugConsole.ThrowError("Could not start a file transfer: failed to create the folder \"" + downloadFolder + "\".", e);
                             return;
                         }
                     }
@@ -322,6 +326,13 @@ namespace Barotrauma.Networking
                         return false;
                     }
                     break;
+                case (byte)FileTransferType.CampaignSave:
+                    if (Path.GetExtension(fileName) != ".save")
+                    {
+                        errorMessage = "Wrong file extension ''" + Path.GetExtension(fileName) + "''! (Expected .save)";
+                        return false;
+                    }
+                    break;
             }
 
             return true;
@@ -375,6 +386,9 @@ namespace Barotrauma.Networking
 
                     stream.Close();
                     stream.Dispose();
+                    break;
+                case FileTransferType.CampaignSave:
+                    //TODO: verify that the received file is a valid save file
                     break;
             }
 

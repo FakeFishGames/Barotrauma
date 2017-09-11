@@ -36,7 +36,9 @@ namespace Barotrauma.Networking
 
         public UInt16 lastSentEntityEventID = 0;
         public UInt16 lastRecvEntityEventID = 0;
-        
+
+        public UInt16 lastRecvCampaignUpdate = 0;
+
         public List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
         public UInt16 lastChatMsgQueueID;
 
