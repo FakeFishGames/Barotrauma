@@ -40,9 +40,9 @@ namespace Barotrauma
 
             try
             {
-                string subPath = Path.Combine(tempPath, Submarine.MainSub.Name + ".sub");
                 if (Submarine.MainSub != null)
                 {
+                    string subPath = Path.Combine(tempPath, Submarine.MainSub.Name + ".sub");
                     if (Submarine.Loaded.Contains(Submarine.MainSub))
                     {
                         Submarine.MainSub.FilePath = subPath;
