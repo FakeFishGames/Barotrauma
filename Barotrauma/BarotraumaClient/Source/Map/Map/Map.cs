@@ -11,8 +11,6 @@ namespace Barotrauma
         private static Texture2D iceCraters;
         private static Texture2D iceCrack;
 
-        public Action<Location, LocationConnection> OnLocationSelected;
-
         public void Update(float deltaTime, Rectangle rect, float scale = 1.0f)
         {
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);

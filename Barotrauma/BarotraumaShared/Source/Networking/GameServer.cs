@@ -611,6 +611,8 @@ namespace Barotrauma.Networking
                         //TODO: might want to use a clever class for this
                         c.lastRecvGeneralUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.lastRecvGeneralUpdate, GameMain.NetLobbyScreen.LastUpdateID);
                         c.lastRecvChatMsgID     = NetIdUtils.Clamp(inc.ReadUInt16(), c.lastRecvChatMsgID, c.lastChatMsgQueueID);
+
+                        c.lastRecvCampaignUpdate    = inc.ReadUInt16();
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
@@ -964,6 +966,27 @@ namespace Barotrauma.Networking
                 outmsg.Write(false);
                 outmsg.WritePadBits();
             }
+
+            var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+            if (campaign != null)
+            {
+                if (NetIdUtils.IdMoreRecent(campaign.LastUpdateID, c.lastRecvCampaignUpdate))
+                {
+                    outmsg.Write(true);
+                    outmsg.WritePadBits();
+                    campaign.ServerWrite(outmsg, c);
+                }
+                else
+                {
+                    outmsg.Write(false);
+                    outmsg.WritePadBits();
+                }
+            }
+            else
+            {
+                outmsg.Write(false);
+                outmsg.WritePadBits();
+            }
             
             outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
             
@@ -1128,9 +1151,7 @@ namespace Barotrauma.Networking
             
             int teamCount = 1;
             byte hostTeam = 1;
-
-            string levelSeed = GameMain.NetLobbyScreen.LevelSeed;
-
+            
             MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
         
             //don't instantiate a new gamesession if we're playing a campaign
@@ -1310,7 +1331,7 @@ namespace Barotrauma.Networking
 
             msg.Write(seed);
 
-            msg.Write(GameMain.NetLobbyScreen.LevelSeed);
+            msg.Write(GameMain.GameSession.Level.Seed);
 
             msg.Write((byte)GameMain.NetLobbyScreen.MissionTypeIndex);
 

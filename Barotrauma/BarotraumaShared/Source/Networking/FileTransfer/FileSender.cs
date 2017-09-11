@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
 
     enum FileTransferType
     {
-        Submarine
+        Submarine, CampaignSave
     }
 
     class FileSender
@@ -275,6 +275,12 @@ namespace Barotrauma.Networking
                     if (requestedSubmarine != null)
                     {
                         StartTransfer(inc.SenderConnection, FileTransferType.Submarine, requestedSubmarine.FilePath);
+                    }
+                    break;
+                case (byte)FileTransferType.CampaignSave:
+                    if (GameMain.GameSession != null)
+                    {
+                        StartTransfer(inc.SenderConnection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
                     }
                     break;
             }

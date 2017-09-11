@@ -28,6 +28,8 @@ namespace Barotrauma
 
         private LocationConnection selectedConnection;
 
+        public Action<Location, LocationConnection> OnLocationSelected;
+
         public Location CurrentLocation
         {
             get { return currentLocation; }
@@ -43,6 +45,11 @@ namespace Barotrauma
             get { return selectedLocation; }
         }
 
+        public int SelectedLocationIndex
+        {
+            get { return locations.IndexOf(selectedLocation); }
+        }
+
         public LocationConnection SelectedConnection
         {
             get { return selectedConnection; }
@@ -51,6 +58,11 @@ namespace Barotrauma
         public string Seed
         {
             get { return seed; }
+        }
+
+        public List<Location> Locations
+        {
+            get { return locations; }
         }
 
         public static Map Load(XElement element)
@@ -342,6 +354,12 @@ namespace Barotrauma
 
         public void SetLocation(int index)
         {
+            if (index == -1)
+            {
+                currentLocation = null;
+                return;
+            }
+
             if (index < 0 || index >= locations.Count)
             {
                 DebugConsole.ThrowError("Location index out of bounds");
@@ -350,6 +368,28 @@ namespace Barotrauma
 
             currentLocation = locations[index];
             currentLocation.Discovered = true;
+        }
+
+        public void SelectLocation(int index)
+        {
+            if (index == -1)
+            {
+                selectedLocation = null;
+                selectedConnection = null;
+
+                OnLocationSelected?.Invoke(null, null);
+                return;
+            }
+
+            if (index < 0 || index >= locations.Count)
+            {
+                DebugConsole.ThrowError("Location index out of bounds");
+                return;
+            }
+
+            selectedLocation = locations[index];
+            selectedConnection = connections.Find(c => c.Locations.Contains(currentLocation) && c.Locations.Contains(selectedLocation));
+            OnLocationSelected?.Invoke(selectedLocation, selectedConnection);
         }
 
         public void Save(XElement element)
