@@ -499,6 +499,11 @@ namespace Barotrauma
             Debug.WriteLine("Generated a map with " + sites.Count + " sites in " + sw.ElapsedMilliseconds + " ms");
             Debug.WriteLine("Seed: " + seed);
             Debug.WriteLine("**********************************************************************************");
+
+            if (GameSettings.VerboseLogging)
+            {
+                DebugConsole.NewMessage("Generated level with the seed " + seed + " (type: " + generationParams.Name + ")", Color.White);
+            }
         }
 
 

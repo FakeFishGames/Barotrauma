@@ -85,10 +85,13 @@ namespace Barotrauma
             tabs[(int)Tab.Map] = new GUIFrame(Rectangle.Empty, null, container);
             tabs[(int)Tab.Map].Padding = Vector4.One * 10.0f;
 
-            startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",
-                Alignment.BottomRight, "", tabs[(int)Tab.Map]);
-            startButton.OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; };
-            startButton.Enabled = false;
+            if (GameMain.Client == null)
+            {
+                startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",
+                    Alignment.BottomRight, "", tabs[(int)Tab.Map]);
+                startButton.OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; };
+                startButton.Enabled = false;
+            }
 
             //---------------------------------------
 

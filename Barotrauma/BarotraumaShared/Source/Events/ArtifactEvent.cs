@@ -55,6 +55,11 @@ namespace Barotrauma
                 itemContainer.Combine(item);
                 break;
             }
+
+            if (GameSettings.VerboseLogging)
+            {
+                DebugConsole.NewMessage("Initialized ArtifactEvent (" + item.Name + ")", Color.White);
+            }
         }
 
         public override void Update(float deltaTime)

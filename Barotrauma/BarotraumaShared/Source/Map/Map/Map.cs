@@ -451,6 +451,10 @@ namespace Barotrauma
                     if (rand.NextDouble() < 0.3f) return null;
 
                     mission = Mission.LoadRandom(locations, rand, "", true);
+                    if (GameSettings.VerboseLogging && mission != null)
+                    {
+                        DebugConsole.NewMessage("Generated a new mission for a location connection (seed: " + seed + ", type: " + mission.Name + ")", Color.White);
+                    }
                 }
 
                 return mission;
