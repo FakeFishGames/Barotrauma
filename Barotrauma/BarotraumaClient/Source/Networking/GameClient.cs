@@ -684,6 +684,8 @@ namespace Barotrauma.Networking
             inc.ReadPadBits();
 
             GameModePreset gameMode = GameModePreset.list.Find(gm => gm.Name == modeName);
+            MultiplayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
+                GameMain.GameSession?.GameMode as MultiplayerCampaign : null;
 
             if (gameMode == null)
             {
@@ -691,24 +693,31 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-            if (!GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList))
+            if (campaign == null)
             {
-                yield return CoroutineStatus.Success;
-            }
+                if (!GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList))
+                {
+                    yield return CoroutineStatus.Success;
+                }
 
-            if (!GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox))
-            {
-                yield return CoroutineStatus.Success;
+                if (!GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox))
+                {
+                    yield return CoroutineStatus.Success;
+                }
             }
 
             Rand.SetSyncedSeed(seed);
 
-            if (gameMode.Name != "Campaign")
+            if (campaign == null)
             {
                 GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
+                GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
             }
-            GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
-
+            else
+            {
+                GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, false);
+            }
+            
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
             
             if (isTraitor)
@@ -1112,6 +1121,10 @@ namespace Barotrauma.Networking
                         string subPath = Path.Combine(SaveUtil.TempPath, ToolBox.GetAttributeString(gameSessionDoc.Root, "submarine", "")) + ".sub";
 
                         GameMain.GameSession.Submarine = new Submarine(subPath, "");
+                    }
+                    else
+                    {
+                        SaveUtil.DecompressToDirectory(GameMain.GameSession.SavePath, SaveUtil.TempPath, null);
                     }
 
                     break;

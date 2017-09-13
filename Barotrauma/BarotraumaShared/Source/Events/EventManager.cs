@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -34,7 +35,15 @@ namespace Barotrauma
 
         private void CreateScriptedEvents(Level level)
         {
+            System.Diagnostics.Debug.Assert(events.Count == 0);
+
             MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+
+            if (GameSettings.VerboseLogging)
+            {
+                DebugConsole.NewMessage("Generating events (seed: " + level.Seed + ")", Color.White);
+            }
+
             events.AddRange(ScriptedEvent.GenerateLevelEvents(rand, level));
         }
         

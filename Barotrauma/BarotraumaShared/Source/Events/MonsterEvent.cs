@@ -74,6 +74,10 @@ namespace Barotrauma
             base.Init();
 
             monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server));
+            if (GameSettings.VerboseLogging)
+            {
+                DebugConsole.NewMessage("Initialized MonsterEvent (" + monsters[0]?.SpeciesName + " x" + monsters.Length + ")", Color.White);
+            }
         }
 
         private Character[] SpawnMonsters(int amount)
