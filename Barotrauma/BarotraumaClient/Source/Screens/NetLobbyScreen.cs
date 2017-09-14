@@ -225,9 +225,6 @@ namespace Barotrauma
 
             campaignContainer = new GUIFrame(new Rectangle(0, 20, 0, 0), null, infoFrame);
             campaignContainer.Visible = false;
-            var backButton = new GUIButton(new Rectangle(0, -20, 100, 30), "Back", "", campaignContainer);
-            backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
-
 
             //submarine list ------------------------------------------------------------------
 
@@ -408,8 +405,10 @@ namespace Barotrauma
             infoFrame.RemoveChild(infoFrame.children.Find(c => c.UserData as string == "spectateButton"));
 
             InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
-
-            //playerList.Parent.RemoveChild(playerList.Parent.children.Find(c => c.UserData as string == "banListButton"));
+            
+            campaignViewButton = new GUIButton(new Rectangle(0, 0, 130, 30), "Campaign view", Alignment.BottomRight, "", defaultModeContainer);
+            campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
+            campaignViewButton.Visible = false;
 
             if (IsServer && GameMain.Server != null)
             {
@@ -437,9 +436,6 @@ namespace Barotrauma
                 StartButton = new GUIButton(new Rectangle(0, 0, 80, 30), "Start", Alignment.BottomRight, "", defaultModeContainer);
                 StartButton.OnClicked = GameMain.Server.StartGameClicked;
 
-                campaignViewButton = new GUIButton(new Rectangle(0, 0, 130, 30), "Campaign view", Alignment.BottomRight, "", defaultModeContainer);
-                campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
-                campaignViewButton.Visible = false;
 
                 GUIButton settingsButton = new GUIButton(new Rectangle(-110, 0, 80, 20), "Settings", Alignment.TopRight, "", infoFrame);
                 settingsButton.OnClicked = GameMain.Server.ToggleSettingsFrame;
@@ -1096,15 +1092,19 @@ namespace Barotrauma
 
         public void SelectMode(int modeIndex)
         {
-            if (modeIndex < 0 || modeIndex >= modeList.children.Count) return;
+            if (modeIndex < 0 || modeIndex >= modeList.children.Count || modeList.SelectedIndex == modeIndex) return;
 
-            if (GameMain.Server != null)
+            if (((GameModePreset)modeList.children[modeIndex].UserData).Name == "Campaign")
             {
-                if (((GameModePreset)modeList.children[modeIndex].UserData).Name == "Campaign")
+                if (GameMain.Server != null)
                 {
                     MultiplayerCampaign.StartCampaignSetup();
                     return;
                 }
+            }
+            else
+            {
+                ToggleCampaignMode(false);
             }
 
             modeList.Select(modeIndex, true);            
@@ -1113,24 +1113,28 @@ namespace Barotrauma
 
         private bool SelectMode(GUIComponent component, object obj)
         {
-            if (GameMain.NetworkMember == null) return false;
+            if (GameMain.NetworkMember == null || obj == modeList.SelectedData) return false;
             
             GameModePreset modePreset = obj as GameModePreset;
             if (modePreset == null) return false;
             
             missionTypeBlock.Visible = modePreset.Name == "Mission";
-                        
-            if (GameMain.Server != null)
+
+            if (modePreset.Name == "Campaign")
             {
                 //campaign selected and the campaign view has not been set up yet
                 // -> don't select the mode yet and start campaign setup
-                if (modePreset.Name == "Campaign" && !campaignContainer.Visible)
+                if (GameMain.Server != null && !campaignContainer.Visible)
                 {
                     MultiplayerCampaign.StartCampaignSetup();
                     return false;
                 }
-            }            
-            
+            }
+            else
+            {
+                ToggleCampaignMode(false);
+            }
+
             lastUpdateID++;
             return true;
         }
@@ -1139,22 +1143,43 @@ namespace Barotrauma
         {
             campaignContainer.Visible = enabled;
             defaultModeContainer.Visible = !enabled;
-            if (StartButton != null)
-            {
-                StartButton.Visible = !enabled;
-            }
         }
 
         public void ToggleCampaignMode(bool enabled)
         {
             ToggleCampaignView(enabled);
 
+            subList.Enabled = !enabled;
+            shuttleList.Enabled = !enabled;
+            seedBox.Enabled = !enabled;
+
+            if (campaignViewButton != null) campaignViewButton.Visible = enabled;
+            if (StartButton != null) StartButton.Visible = !enabled;            
+
             if (enabled)
             {
-                if (campaignUI == null)
+                if (campaignUI == null || campaignUI.Campaign != GameMain.GameSession.GameMode)
                 {
+                    campaignContainer.ClearChildren();                    
+
                     campaignUI = new CampaignUI(GameMain.GameSession.GameMode as CampaignMode, campaignContainer);
                     campaignUI.StartRound = () => { GameMain.Server.StartGame(); };
+
+                    var backButton = new GUIButton(new Rectangle(0, -20, 100, 30), "Back", "", campaignContainer);
+                    backButton.OnClicked += (btn, obj) => { ToggleCampaignView(false); return true; };
+
+                    int buttonX = backButton.Rect.Width + 50;
+                    List<CampaignUI.Tab> tabTypes = new List<CampaignUI.Tab>() { CampaignUI.Tab.Map, CampaignUI.Tab.Store };
+                    foreach (CampaignUI.Tab tab in tabTypes)
+                    {
+                        var tabButton = new GUIButton(new Rectangle(buttonX, -10, 100, 20), tab.ToString(), "", campaignContainer);
+                        tabButton.OnClicked += (btn, obj) =>
+                        {
+                            campaignUI.SelectTab(tab);
+                            return true;
+                        };
+                        buttonX += 110;
+                    }
                 }
                 modeList.Select(2, true);
             }

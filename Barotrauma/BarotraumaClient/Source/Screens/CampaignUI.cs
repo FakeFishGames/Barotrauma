@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -37,6 +38,11 @@ namespace Barotrauma
         public Level SelectedLevel
         {
             get { return selectedLevel; }
+        }
+
+        public CampaignMode Campaign
+        {
+            get { return campaign; }
         }
 
         private string CostTextGetter()
@@ -112,13 +118,16 @@ namespace Barotrauma
             storeItemList = new GUIListBox(new Rectangle(0, 30, sellColumnWidth, tabs[(int)Tab.Store].Rect.Height - 80), Color.White * 0.7f, Alignment.TopRight, "", tabs[(int)Tab.Store]);
             storeItemList.OnSelected = SelectItem;
 
-            int x = selectedItemList.Rect.Width + 40;
-            foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
-            {
-                var items = MapEntityPrefab.list.FindAll(ep => ep.Price > 0.0f && ep.Category.HasFlag(category));
-                if (!items.Any()) continue;
+            int x = storeItemList.Rect.X - storeItemList.Parent.Rect.X;
 
-                var categoryButton = new GUIButton(new Rectangle(x, 0, 100, 20), category.ToString(), "", tabs[(int)Tab.Store]);
+            List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
+            //don't show categories with no buyable items
+            itemCategories.RemoveAll(c => !MapEntityPrefab.list.Any(ep => ep.Price > 0.0f && ep.Category.HasFlag(c)));
+
+            int buttonWidth = Math.Min(sellColumnWidth / itemCategories.Count, 100);
+            foreach (MapEntityCategory category in itemCategories)
+            {
+                var categoryButton = new GUIButton(new Rectangle(x, 0, buttonWidth, 20), category.ToString(), "", tabs[(int)Tab.Store]);
                 categoryButton.UserData = category;
                 categoryButton.OnClicked = SelectItemCategory;
 
@@ -126,7 +135,7 @@ namespace Barotrauma
                 {
                     SelectItemCategory(categoryButton, category);
                 }
-                x += 110;
+                x += buttonWidth;
             }
 
             SelectTab(Tab.Map);
@@ -294,14 +303,12 @@ namespace Barotrauma
                 new GUITextBlock(new Rectangle(0, titleText.Rect.Height + 70, 0, 0), mission.Description, "", Alignment.TopLeft, Alignment.TopLeft, locationPanel, true, GUI.SmallFont);
             }
 
-            startButton.Enabled = true;
+            if (startButton != null) startButton.Enabled = true;
 
             selectedLevel = connection.Level;
 
             OnLocationSelected?.Invoke(location, connection);
         }
-
-
 
         private bool BuyItems(GUIButton button, object obj)
         {

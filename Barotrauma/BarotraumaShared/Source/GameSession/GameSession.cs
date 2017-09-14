@@ -197,20 +197,15 @@ namespace Barotrauma
                 submarine.SetPosition(submarine.FindSpawnPos(level.StartPosition - new Vector2(0.0f, 2000.0f)));
             }
 
-            if (GameMode.Mission != null)
-            {
-                currentMission = GameMode.Mission;
-            }
+            Entity.Spawner = new EntitySpawner();
 
-            if (GameMode!=null) GameMode.Start();
-
+            if (GameMode.Mission != null) currentMission = GameMode.Mission;
+            if (GameMode != null) GameMode.Start();
             if (GameMode.Mission != null) Mission.Start(Level.Loaded);
-            
+
             EventManager.StartRound(level);
 
             if (GameMode != null) GameMode.MsgBox();
-
-            Entity.Spawner = new EntitySpawner();
 
 #if CLIENT
             roundSummary = new RoundSummary(this);

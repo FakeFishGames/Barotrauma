@@ -21,7 +21,7 @@ namespace Barotrauma
         {
             WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
 
-            if (wp==null)
+            if (wp == null)
             {
                 DebugConsole.ThrowError("The submarine must have a waypoint marked as Cargo for bought items to be placed correctly!");
                 return;
@@ -41,7 +41,15 @@ namespace Barotrauma
                     Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20),
                     cargoRoom.Rect.Y - cargoRoom.Rect.Height + prefab.Size.Y/2);
 
-                new Item(prefab, position, wp.Submarine);
+                if (GameMain.Server != null)
+                {
+                    Entity.Spawner.AddToSpawnQueue(prefab, position, wp.Submarine);
+                }
+                else
+                {
+                    new Item(prefab, position, wp.Submarine);
+                }
+
             }
 
             purchasedItems.Clear();

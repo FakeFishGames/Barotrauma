@@ -142,7 +142,7 @@ namespace Barotrauma
 
         private bool OnClicked(GUIComponent component, object obj)
         {
-            if (wasOpened) return false;
+            if (wasOpened || !Enabled) return false;
             
             wasOpened = true;
             Dropped = !Dropped;
