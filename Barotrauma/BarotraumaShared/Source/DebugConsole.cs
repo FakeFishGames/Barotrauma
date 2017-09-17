@@ -50,7 +50,7 @@ namespace Barotrauma
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
-        private delegate void QuestionCallback(string answer);
+        public delegate void QuestionCallback(string answer);
         private static QuestionCallback activeQuestionCallback;
 #if CLIENT
         private static GUIComponent activeQuestionText;
@@ -634,6 +634,65 @@ namespace Barotrauma
                 var character = FindMatchingCharacter(argsRight, false);
                 GameMain.Server.SetClientCharacter(client, character);
             }));
+
+            commands.Add(new Command("campaigninfo|campaignstatus", "campaigninfo: Display information about the state of the currently active campaign.", (string[] args) =>
+            {
+                var campaign = GameMain.GameSession?.GameMode as CampaignMode;
+                if (campaign == null)
+                {
+                    ThrowError("No campaign active!");
+                    return;
+                }
+
+                campaign.LogState();
+            }));
+
+            commands.Add(new Command("campaigndestination|setcampaigndestination", "campaigndestination [index]: Set the location to head towards in the currently active campaign.", (string[] args) =>
+            {
+                var campaign = GameMain.GameSession?.GameMode as CampaignMode;
+                if (campaign == null)
+                {
+                    ThrowError("No campaign active!");
+                    return;
+                }
+
+                if (args.Length == 0)
+                {
+                    int i = 0;
+                    foreach (LocationConnection connection in campaign.Map.CurrentLocation.Connections)
+                    {
+                        NewMessage("     " + i + ". " + connection.OtherLocation(campaign.Map.CurrentLocation).Name, Color.White);
+                        i++;
+                    }
+                    ShowQuestionPrompt("Select a destination (0 - " + (campaign.Map.CurrentLocation.Connections.Count - 1) + "):", (string selectedDestination) =>
+                    {
+                        int destinationIndex = -1;
+                        if (!int.TryParse(selectedDestination, out destinationIndex)) return;
+                        if (destinationIndex < 0 || destinationIndex >= campaign.Map.CurrentLocation.Connections.Count)
+                        {
+                            NewMessage("Index out of bounds!", Color.Red);
+                            return;
+                        }
+                        Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
+                        campaign.Map.SelectLocation(location);
+                        NewMessage(location.Name+" selected.", Color.White);                        
+                    });
+                }
+                else
+                {
+                    int destinationIndex = -1;
+                    if (!int.TryParse(args[0], out destinationIndex)) return;
+                    if (destinationIndex < 0 || destinationIndex >= campaign.Map.CurrentLocation.Connections.Count)
+                    {
+                        NewMessage("Index out of bounds!", Color.Red);
+                        return;
+                    }
+                    Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
+                    campaign.Map.SelectLocation(location);
+                    NewMessage(location.Name + " selected.", Color.White);                    
+                }
+            }));
+
 #if DEBUG
             commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
             {
@@ -875,7 +934,7 @@ namespace Barotrauma
 #endif
         }
 
-        private static void ShowQuestionPrompt(string question, QuestionCallback onAnswered)
+        public static void ShowQuestionPrompt(string question, QuestionCallback onAnswered)
         {
             NewMessage("   >>" + question, Color.Cyan);
             activeQuestionCallback += onAnswered;

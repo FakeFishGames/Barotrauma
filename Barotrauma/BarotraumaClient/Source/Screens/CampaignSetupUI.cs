@@ -63,15 +63,18 @@ namespace Barotrauma
                         "Are you sure you want to choose a shuttle as your vessel?",
                         new string[] { "Yes", "No" });
 
-                    msgBox.Buttons[0].OnClicked = (button, obj) => { StartNewGame?.Invoke(selectedSub, saveNameBox.Text, seedBox.Text); return true; };
+                    string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
+                    msgBox.Buttons[0].OnClicked = (button, obj) => { StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text); return true; };
                     msgBox.Buttons[0].OnClicked += msgBox.Close;
 
                     msgBox.Buttons[1].OnClicked = msgBox.Close;
                     return false;
                 }
-
-                string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
-                StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                else
+                {
+                    string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
+                    StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                }
 
                 return true;
             };

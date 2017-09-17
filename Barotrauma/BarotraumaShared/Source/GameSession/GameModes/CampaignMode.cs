@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -58,5 +59,33 @@ namespace Barotrauma
         }
 
         public abstract void Save(XElement element);
+
+
+        public void LogState()
+        {
+            DebugConsole.NewMessage("********* CAMPAIGN STATUS *********", Color.White);
+            DebugConsole.NewMessage("   Money: " + Money, Color.White);
+            DebugConsole.NewMessage("   Current location: " + map.CurrentLocation.Name, Color.White);
+
+            DebugConsole.NewMessage("   Available destinations: ", Color.White);
+            for (int i = 0; i < map.CurrentLocation.Connections.Count; i++)
+            {
+                Location destination = map.CurrentLocation.Connections[i].OtherLocation(map.CurrentLocation);
+                if (destination == map.SelectedLocation)
+                {
+                    DebugConsole.NewMessage("     " + i + ". " + destination.Name + " [SELECTED]", Color.White);
+                }
+                else
+                {
+                    DebugConsole.NewMessage("     " + i + ". " + destination.Name, Color.White);
+                }
+            }
+            
+            if (map.SelectedConnection?.Mission != null)
+            {
+                DebugConsole.NewMessage("   Selected mission: " + map.SelectedConnection.Mission.Name, Color.White);
+                DebugConsole.NewMessage("\n" + map.SelectedConnection.Mission.Description, Color.White);
+            }
+        }
     }
 }

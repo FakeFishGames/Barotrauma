@@ -8,15 +8,6 @@ namespace Barotrauma
         private InfoFrameTab selectedTab;
         private GUIButton infoButton;
         private GUIFrame infoFrame;
-
-        public Map Map
-        {
-            get
-            {
-                CampaignMode mode = (GameMode as CampaignMode);
-                return (mode == null) ? null : mode.Map;
-            }
-        }
         
         private RoundSummary roundSummary;
         public RoundSummary RoundSummary

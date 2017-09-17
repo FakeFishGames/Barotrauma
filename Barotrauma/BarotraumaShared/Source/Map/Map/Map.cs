@@ -397,6 +397,19 @@ namespace Barotrauma
             OnLocationSelected?.Invoke(selectedLocation, selectedConnection);
         }
 
+        public void SelectLocation(Location location)
+        {
+            if (!locations.Contains(location))
+            {
+                DebugConsole.ThrowError("Failed to select a location. "+location.Name+" not found in the map.");
+                return;
+            }
+
+            selectedLocation = location;
+            selectedConnection = connections.Find(c => c.Locations.Contains(currentLocation) && c.Locations.Contains(selectedLocation));
+            OnLocationSelected?.Invoke(selectedLocation, selectedConnection);
+        }
+
         public void Save(XElement element)
         {
             XElement mapElement = new XElement("map");
