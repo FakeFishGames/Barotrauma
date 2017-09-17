@@ -29,6 +29,7 @@ namespace Barotrauma
         private LocationConnection selectedConnection;
 
         public Action<Location, LocationConnection> OnLocationSelected;
+        public Action<Location> OnLocationChanged;
 
         public Location CurrentLocation
         {
@@ -350,6 +351,8 @@ namespace Barotrauma
             currentLocation = selectedLocation;
             currentLocation.Discovered = true;
             selectedLocation = null;
+
+            OnLocationChanged?.Invoke(currentLocation);
         }
 
         public void SetLocation(int index)
@@ -368,6 +371,8 @@ namespace Barotrauma
 
             currentLocation = locations[index];
             currentLocation.Discovered = true;
+
+            OnLocationChanged?.Invoke(currentLocation);
         }
 
         public void SelectLocation(int index)

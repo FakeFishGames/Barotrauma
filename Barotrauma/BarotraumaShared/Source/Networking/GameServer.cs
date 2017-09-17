@@ -748,7 +748,7 @@ namespace Barotrauma.Networking
 
             if (!sender.HasPermission(command))
             {
-                Log("Client \""+sender.name+"\" sent a server command \""+command+"\". Permission denied.", ServerLog.MessageType.ServerMessage);
+                Log("Client \"" + sender.name + "\" sent a server command \"" + command + "\". Permission denied.", ServerLog.MessageType.ServerMessage);
                 return;
             }
 
@@ -779,6 +779,13 @@ namespace Barotrauma.Networking
                     {
                         Log("Client \"" + sender.name + "\" ended the round.", ServerLog.MessageType.ServerMessage);
                         EndGame();
+                    }
+                    break;
+                case ClientPermissions.ManageCampaign:
+                    MultiplayerCampaign campaign = GameMain.GameSession.GameMode as MultiplayerCampaign;
+                    if (campaign != null)
+                    {
+                        campaign.ServerRead(inc, sender);
                     }
                     break;
             }

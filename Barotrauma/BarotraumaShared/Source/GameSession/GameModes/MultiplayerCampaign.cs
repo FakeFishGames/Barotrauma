@@ -69,12 +69,11 @@ namespace Barotrauma
                 GameMain.GameSession = new GameSession(new Submarine(sub.FilePath, ""), saveName, GameModePreset.list.Find(g => g.Name == "Campaign"));
                 var campaign = ((MultiplayerCampaign)GameMain.GameSession.GameMode);
                 campaign.GenerateMap(mapSeed);
-                campaign.map.OnLocationSelected += (loc, connection) => { campaign.LastUpdateID++; };
+                campaign.SetDelegates();
 
                 setupBox.Close();
 
                 GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-                
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
                 campaign.LastSaveID++;                
             };
@@ -105,8 +104,16 @@ namespace Barotrauma
                 return true;
             };
         }
-
 #endif
+
+        private void SetDelegates()
+        {
+            if (GameMain.Server != null)
+            {
+                CargoManager.OnItemsChanged += () => { LastUpdateID++; };
+                Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
+            }
+        }
 
         public override void Start()
         {
@@ -186,6 +193,7 @@ namespace Barotrauma
 
                 if (!success)
                 {
+#if CLIENT
                     var summaryScreen = GUIMessageBox.VisibleBox;
                     if (summaryScreen != null)
                     {
@@ -200,6 +208,7 @@ namespace Barotrauma
                         quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                         quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
                     }
+#endif
                 }
             }
             else
@@ -232,9 +241,8 @@ namespace Barotrauma
                 campaign.map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
             }
 
-            campaign.map.OnLocationSelected += (loc, connection) => { campaign.LastUpdateID++; };
-
-            //campaign.savedOnStart = true;
+            campaign.SetDelegates();
+            
             return campaign;
         }
 
@@ -258,8 +266,15 @@ namespace Barotrauma
             msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
 
-        }
+            msg.Write(Money);
 
+            msg.Write((UInt16)CargoManager.PurchasedItems.Count);
+            foreach (ItemPrefab ip in CargoManager.PurchasedItems)
+            {
+                msg.Write((UInt16)MapEntityPrefab.list.IndexOf(ip));
+            }
+        }
+        
 #if CLIENT
         public static void ClientRead(NetBuffer msg)
         {
@@ -270,6 +285,16 @@ namespace Barotrauma
             string mapSeed          = msg.ReadString();
             UInt16 currentLocIndex  = msg.ReadUInt16();
             UInt16 selectedLocIndex = msg.ReadUInt16();
+
+            int money = msg.ReadInt32();
+
+            UInt16 purchasedItemCount = msg.ReadUInt16();
+            List<ItemPrefab> purchasedItems = new List<ItemPrefab>();
+            for (int i = 0; i<purchasedItemCount; i++)
+            {
+                UInt16 itemPrefabIndex = msg.ReadUInt16();
+                purchasedItems.Add(MapEntityPrefab.list[itemPrefabIndex] as ItemPrefab);
+            }
 
             MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
             if (campaign == null || mapSeed != campaign.Map.Seed)
@@ -284,7 +309,7 @@ namespace Barotrauma
 
             GameMain.NetLobbyScreen.ToggleCampaignMode(true);
             if (NetIdUtils.IdMoreRecent(campaign.lastUpdateID, updateID)) return;
-
+            
             //server has a newer save file
             if (NetIdUtils.IdMoreRecent(saveID, campaign.PendingSaveID))
             {
@@ -305,10 +330,58 @@ namespace Barotrauma
             {
                 campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                 campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+
+                campaign.Money = money;
+                campaign.CargoManager.SetPurchasedItems(purchasedItems);
+
                 campaign.lastUpdateID = updateID;
             }
         }
-
 #endif
+
+        public void ClientWrite(NetBuffer msg)
+        {
+            System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
+            
+            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+
+            msg.Write((UInt16)CargoManager.PurchasedItems.Count);
+            foreach (ItemPrefab ip in CargoManager.PurchasedItems)
+            {
+                msg.Write((UInt16)MapEntityPrefab.list.IndexOf(ip));
+            }
+        }
+
+        public void ServerRead(NetBuffer msg, Client sender)
+        {
+            UInt16 selectedLocIndex = msg.ReadUInt16();
+            UInt16 purchasedItemCount = msg.ReadUInt16();
+
+            List<ItemPrefab> purchasedItems = new List<ItemPrefab>();
+            for (int i = 0; i < purchasedItemCount; i++)
+            {
+                UInt16 itemPrefabIndex = msg.ReadUInt16();
+                purchasedItems.Add(MapEntityPrefab.list[itemPrefabIndex] as ItemPrefab);
+            }
+
+            if (!sender.HasPermission(ClientPermissions.ManageCampaign))
+            {
+                DebugConsole.ThrowError("Client \""+sender.name+"\" does not have a permission to manage the campaign");
+                return;
+            }
+
+            Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+
+            List<ItemPrefab> currentItems = new List<ItemPrefab>(CargoManager.PurchasedItems);
+            foreach (ItemPrefab ip in currentItems)
+            {
+                CargoManager.SellItem(ip);
+            }
+
+            foreach (ItemPrefab ip in purchasedItems)
+            {
+                CargoManager.PurchaseItem(ip);
+            }
+        }
     }
 }
