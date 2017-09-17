@@ -39,7 +39,16 @@ namespace Barotrauma
         {
             get { return level; }
         }
-        
+
+        public Map Map
+        {
+            get
+            {
+                CampaignMode mode = (GameMode as CampaignMode);
+                return (mode == null) ? null : mode.Map;
+            }
+        }
+
         public Location StartLocation
         {
             get 

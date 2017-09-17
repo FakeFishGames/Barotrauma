@@ -72,11 +72,27 @@ namespace Barotrauma
                 int index = -1;
                 if (int.TryParse(string.Join(" ", args), out index))
                 {
-                    GameMain.NetLobbyScreen.SelectedModeIndex = index;
+                    if (index > 0 && index < GameMain.NetLobbyScreen.GameModes.Length && 
+                        GameMain.NetLobbyScreen.GameModes[index].Name == "Campaign")
+                    {
+                        MultiplayerCampaign.StartCampaignSetup();
+                    }
+                    else
+                    {
+                        GameMain.NetLobbyScreen.SelectedModeIndex = index;
+                    }
                 }
                 else
                 {
-                    GameMain.NetLobbyScreen.SelectedModeName = string.Join(" ", args);
+                    string modeName = string.Join(" ", args);
+                    if (modeName.ToLowerInvariant() == "campaign")
+                    {
+                        MultiplayerCampaign.StartCampaignSetup();
+                    }
+                    else
+                    {
+                        GameMain.NetLobbyScreen.SelectedModeName = modeName;
+                    }
                 }
                 NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
             }));

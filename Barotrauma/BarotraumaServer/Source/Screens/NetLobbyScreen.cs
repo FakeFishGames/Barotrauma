@@ -21,26 +21,31 @@ namespace Barotrauma
             set { selectedShuttle = value; lastUpdateID++; }
         }
 
-        private GameModePreset[] GameModes;
+        private GameModePreset[] gameModes;
+        public GameModePreset[] GameModes
+        {
+            get { return gameModes; }
+        }
 
         private int selectedModeIndex;
         public int SelectedModeIndex
         {
             get { return selectedModeIndex; }
-            set {
+            set
+            {
                 lastUpdateID++;
-                selectedModeIndex = Math.Max(0, Math.Min(GameModes.Count()-1, value));
+                selectedModeIndex = MathHelper.Clamp(value, 0, gameModes.Length - 1);
             }
         }
 
         public string SelectedModeName
         {
-            get { return GameModes[SelectedModeIndex].Name; }
+            get { return gameModes[SelectedModeIndex].Name; }
             set
             {
-                for (int i = 0; i < GameModes.Count(); i++)
+                for (int i = 0; i < gameModes.Count(); i++)
                 {
-                    if (GameModes[i].Name.ToLower() == value.ToLower())
+                    if (gameModes[i].Name.ToLower() == value.ToLower())
                     {
                         SelectedModeIndex = i;
                         break;
@@ -51,7 +56,7 @@ namespace Barotrauma
 
         public GameModePreset SelectedMode
         {
-            get { return GameModes[SelectedModeIndex]; }
+            get { return gameModes[SelectedModeIndex]; }
         }
 
         public string ServerMessageText;
@@ -117,14 +122,9 @@ namespace Barotrauma
             DebugConsole.NewMessage("Selected sub: " + SelectedSub.Name, Color.White);
             DebugConsole.NewMessage("Selected shuttle: " + SelectedShuttle.Name, Color.White);
 
-            GameModes = GameModePreset.list.ToArray();
+            gameModes = GameModePreset.list.ToArray();
         }
-
-        public override void Select()
-        {
-            base.Select();
-        }
-
+        
         private List<Submarine> subs;
         public List<Submarine> GetSubList()
         {
@@ -151,6 +151,20 @@ namespace Barotrauma
         {
             get { return true; }
             set { /* do nothing */ }
+        }
+
+        public void ToggleCampaignMode(bool enabled)
+        {
+            for (int i = 0; i < GameModes.Length; i++)
+            {
+                if ((GameModes[i].Name == "Campaign") == enabled)
+                {
+                    selectedModeIndex = i;
+                    break;
+                }
+            }
+
+            lastUpdateID++;
         }
     }
 }
