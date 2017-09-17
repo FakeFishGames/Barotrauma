@@ -1,20 +1,56 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
     class CargoManager
     {
-        private List<ItemPrefab> purchasedItems;
+        private readonly List<ItemPrefab> purchasedItems;
+
+        private readonly CampaignMode campaign;
+
+        public Action OnItemsChanged;
+
+        public List<ItemPrefab> PurchasedItems
+        {
+            get { return purchasedItems; }
+        }
         
-        public CargoManager()
+        public CargoManager(CampaignMode campaign)
         {
             purchasedItems = new List<ItemPrefab>();
+            this.campaign = campaign;
         }
 
-        public void AddItem(ItemPrefab item)
+        public void SetPurchasedItems(List<ItemPrefab> items)
         {
+            purchasedItems.Clear();
+            purchasedItems.AddRange(items);
+
+            OnItemsChanged?.Invoke();
+        }
+
+        public void PurchaseItem(ItemPrefab item)
+        {
+            campaign.Money -= item.Price;
             purchasedItems.Add(item);
+
+            OnItemsChanged?.Invoke();
+        }
+
+        public void SellItem(ItemPrefab item)
+        {
+            campaign.Money += item.Price;
+            purchasedItems.Remove(item);
+
+            OnItemsChanged?.Invoke();
+        }
+
+        public int GetTotalItemCost()
+        {
+            return purchasedItems.Sum(i => i.Price);
         }
 
         public void CreateItems()

@@ -1312,6 +1312,24 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
+        public void SendCampaignState()
+        {
+            MultiplayerCampaign campaign = GameMain.GameSession.GameMode as MultiplayerCampaign;
+            if (campaign == null)
+            {
+                DebugConsole.ThrowError("Failed send campaign state to the server (no campaign active).\n" + Environment.StackTrace);
+                return;
+            }
+
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
+            msg.Write((byte)ClientPermissions.ManageCampaign);
+            campaign.ClientWrite(msg);
+            msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
         public void RequestRoundEnd()
         {
             NetOutgoingMessage msg = client.CreateMessage();

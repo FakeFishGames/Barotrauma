@@ -29,7 +29,7 @@ namespace Barotrauma
             bool gameOver = gameSession.CrewManager.characters.All(c => c.IsDead);
             bool progress = Submarine.MainSub.AtEndPosition;
             
-            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.8f);
+            GUIFrame frame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.8f, null);
             
             int width = 760, height = 400;
             GUIFrame innerFrame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, "", frame);

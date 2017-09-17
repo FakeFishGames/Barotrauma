@@ -1022,15 +1022,13 @@ namespace Barotrauma
             menu.Draw(spriteBatch);
 
             if (jobInfoFrame != null) jobInfoFrame.Draw(spriteBatch);
-
-            //if (previewPlayer!=null) previewPlayer.Draw(spriteBatch);
-
-            if (playerFrame != null) playerFrame.Draw(spriteBatch);
-
+            
             if (campaignContainer.Visible && campaignUI != null)
             {
                 campaignUI.Draw(spriteBatch);
             }
+
+            if (playerFrame != null) playerFrame.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, null);
 
@@ -1180,6 +1178,9 @@ namespace Barotrauma
                         };
                         buttonX += 110;
                     }
+
+                    var moneyText = new GUITextBlock(new Rectangle(120,0,200,20), "Money", "", Alignment.BottomLeft, Alignment.TopLeft, campaignContainer);
+                    moneyText.TextGetter = campaignUI.GetMoney;
                 }
                 modeList.Select(2, true);
             }

@@ -15,7 +15,9 @@ namespace Barotrauma.Networking
         [Description("Kick")]
         Kick = 2,
         [Description("Ban")]
-        Ban = 4
+        Ban = 4,
+        [Description("Manage campaign")]
+        ManageCampaign = 8
     }
 
     class Client

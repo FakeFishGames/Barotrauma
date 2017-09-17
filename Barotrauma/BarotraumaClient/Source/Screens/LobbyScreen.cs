@@ -20,6 +20,11 @@ namespace Barotrauma
             get { return GameMain.GameSession.CrewManager; }
         }
 
+        public string GetMoney()
+        {
+            return campaignUI == null ? "" : campaignUI.GetMoney();
+        }
+
         public LobbyScreen()
         {
             Rectangle panelRect = new Rectangle(
@@ -37,7 +42,7 @@ namespace Barotrauma
 
             GUITextBlock moneyText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "", "", 
                 Alignment.BottomLeft, Alignment.BottomLeft, topPanel);
-            //moneyText.TextGetter = GetMoney;
+            moneyText.TextGetter = GetMoney;
             
             GUIButton button = new GUIButton(new Rectangle(-240, 0, 100, 30), "Map", null, Alignment.BottomRight, "", topPanel);
             button.UserData = CampaignUI.Tab.Map;

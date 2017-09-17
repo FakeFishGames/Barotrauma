@@ -35,7 +35,7 @@ namespace Barotrauma
             : base(preset, param)
         {
             Money = InitialMoney;
-            CargoManager = new CargoManager();            
+            CargoManager = new CargoManager(this);            
         }
 
         public void GenerateMap(string seed)
