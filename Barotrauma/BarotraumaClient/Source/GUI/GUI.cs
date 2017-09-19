@@ -156,8 +156,12 @@ namespace Barotrauma
                     if (spMode != null)
                     {
                         button = new GUIButton(new Rectangle(0, y, 0, 30), "Load previous", Alignment.CenterX, "", pauseMenu);
-                        button.OnClicked += TogglePauseMenu;
-                        button.OnClicked += GameMain.GameSession.LoadPrevious;
+                        button.OnClicked += (btn, userData) =>
+                        {
+                            TogglePauseMenu(btn, userData);
+                            GameMain.GameSession.LoadPrevious();
+                            return true;
+                        };
 
                         y += 60;
                     }

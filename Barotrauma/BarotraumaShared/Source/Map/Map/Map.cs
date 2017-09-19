@@ -24,8 +24,6 @@ namespace Barotrauma
         private Location currentLocation;
         private Location selectedLocation;
 
-        private Location highlightedLocation;
-
         private LocationConnection selectedConnection;
 
         public Action<Location, LocationConnection> OnLocationSelected;
@@ -64,35 +62,6 @@ namespace Barotrauma
         public List<Location> Locations
         {
             get { return locations; }
-        }
-
-        public static Map Load(XElement element)
-        {
-            string mapSeed = ToolBox.GetAttributeString(element, "seed", "a");
-
-            int size = ToolBox.GetAttributeInt(element, "size", 1000);
-            Map map = new Map(mapSeed, size);
-
-            map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
-
-            string discoveredStr = ToolBox.GetAttributeString(element, "discovered", "");
-
-            string[] discoveredStrs = discoveredStr.Split(',');
-            for (int i = 0; i < discoveredStrs.Length; i++)
-            {
-                int index = -1;
-                if (int.TryParse(discoveredStrs[i], out index)) map.locations[index].Discovered = true;
-            }
-
-            string passedStr = ToolBox.GetAttributeString(element, "passed", "");
-            string[] passedStrs = passedStr.Split(',');
-            for (int i = 0; i < passedStrs.Length; i++)
-            {
-                int index = -1;
-                if (int.TryParse(passedStrs[i], out index)) map.connections[index].Passed = true;
-            }
-
-            return map;
         }
 
         public Map(string seed, int size)
@@ -408,6 +377,54 @@ namespace Barotrauma
             selectedLocation = location;
             selectedConnection = connections.Find(c => c.Locations.Contains(currentLocation) && c.Locations.Contains(selectedLocation));
             OnLocationSelected?.Invoke(selectedLocation, selectedConnection);
+        }
+
+        public void SelectRandomLocation(bool preferUndiscovered)
+        {
+            List<Location> nextLocations = currentLocation.Connections.Select(c => c.OtherLocation(currentLocation)).ToList();            
+            List<Location> undiscoveredLocations = nextLocations.FindAll(l => !l.Discovered);
+            
+            if (undiscoveredLocations.Count > 0 && preferUndiscovered)
+            {
+                SelectLocation(undiscoveredLocations[Rand.Int(undiscoveredLocations.Count, Rand.RandSync.Unsynced)]);
+            }
+            else
+            {
+                SelectLocation(nextLocations[Rand.Int(nextLocations.Count, Rand.RandSync.Unsynced)]);
+            }
+        }
+
+        public static Map LoadNew(XElement element)
+        {
+            string mapSeed = ToolBox.GetAttributeString(element, "seed", "a");
+
+            int size = ToolBox.GetAttributeInt(element, "size", 1000);
+            Map map = new Map(mapSeed, size);
+            map.Load(element);
+
+            return map;
+        }
+
+        public void Load(XElement element)
+        {
+            SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
+
+            string discoveredStr = ToolBox.GetAttributeString(element, "discovered", "");
+
+            string[] discoveredStrs = discoveredStr.Split(',');
+            for (int i = 0; i < discoveredStrs.Length; i++)
+            {
+                int index = -1;
+                if (int.TryParse(discoveredStrs[i], out index)) locations[index].Discovered = true;
+            }
+
+            string passedStr = ToolBox.GetAttributeString(element, "passed", "");
+            string[] passedStrs = passedStr.Split(',');
+            for (int i = 0; i < passedStrs.Length; i++)
+            {
+                int index = -1;
+                if (int.TryParse(passedStrs[i], out index)) connections[index].Passed = true;
+            }
         }
 
         public void Save(XElement element)

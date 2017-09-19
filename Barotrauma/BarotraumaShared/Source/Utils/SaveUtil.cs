@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public partial class SaveUtil
+    partial class SaveUtil
     {
         public static string SaveFolder = "Data" + Path.DirectorySeparatorChar + "Saves";
         public static string MultiplayerSaveFolder = "Data" + Path.DirectorySeparatorChar + "Saves" + Path.DirectorySeparatorChar + "Multiplayer";
@@ -92,6 +92,13 @@ namespace Barotrauma
             GameMain.GameSession = new GameSession(selectedSub, filePath, doc);
         }
 
+        public static void LoadGame(string filePath, GameSession gameSession)
+        {
+            DecompressToDirectory(filePath, TempPath, null);
+            XDocument doc = ToolBox.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            gameSession.Load(doc.Root);
+        }
+
         public static XDocument LoadGameSessionDoc(string filePath)
         {
             string tempPath = Path.Combine(SaveFolder, "temp");
@@ -110,8 +117,6 @@ namespace Barotrauma
 
         public static void DeleteSave(string filePath)
         {
-            //filePath = Path.Combine(SaveFolder, filePath + ".save");
-
             try
             {
                 File.Delete(filePath);

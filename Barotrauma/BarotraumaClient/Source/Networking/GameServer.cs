@@ -201,6 +201,15 @@ namespace Barotrauma.Networking
         void FinishUPnP()
         {
             upnpBox.Close(null, null);
+
+            if (server.UPnP.Status == UPnPStatus.NotAvailable)
+            {
+                new GUIMessageBox("Error", "UPnP not available");
+            }
+            else if (server.UPnP.Status == UPnPStatus.Discovering)
+            {
+                new GUIMessageBox("Error", "UPnP discovery timed out");
+            }
         }
 
         public bool StartGameClicked(GUIButton button, object obj)

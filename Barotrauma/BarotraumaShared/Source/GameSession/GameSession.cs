@@ -10,7 +10,7 @@ namespace Barotrauma
 
         public readonly EventManager EventManager;
         
-        public readonly GameMode GameMode;
+        public GameMode GameMode;
 
         //two locations used as the start and end in the MP mode
         private Location[] dummyLocations;
@@ -51,19 +51,19 @@ namespace Barotrauma
 
         public Location StartLocation
         {
-            get 
+            get
             {
                 if (Map != null) return Map.CurrentLocation;
 
-                if (dummyLocations==null)
+                if (dummyLocations == null)
                 {
                     CreateDummyLocations();
                 }
 
-                return dummyLocations[0]; 
+                return dummyLocations[0];
             }
         }
-         
+
         public Location EndLocation
         {
             get
@@ -118,12 +118,11 @@ namespace Barotrauma
             Submarine.MainSub = submarine;
 
             GameMain.GameSession = this;
-            
             selectedSub.Name = ToolBox.GetAttributeString(doc.Root, "submarine", selectedSub.Name);
-
 #if CLIENT
             CrewManager = new CrewManager();
 #endif
+
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -135,11 +134,10 @@ namespace Barotrauma
                         break;
 #endif
                     case "multiplayercampaign":
-                        GameMode = MultiplayerCampaign.Load(subElement);
+                        GameMode = MultiplayerCampaign.LoadNew(subElement);
                         break;
                 }
             }
-
         }
 
         private void CreateDummyLocations()
@@ -161,6 +159,12 @@ namespace Barotrauma
             {
                 dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f));
             }
+        }
+        
+        public void LoadPrevious()
+        {
+            Submarine.Unload();
+            SaveUtil.LoadGame(savePath);
         }
 
         public void StartRound(string levelSeed, bool loadSecondSub = false)
@@ -294,6 +298,32 @@ namespace Barotrauma
             catch
             {
                 DebugConsole.ThrowError("Saving gamesession to \"" + filePath + "\" failed!");
+            }
+        }
+
+        public void Load(XElement saveElement)
+        {
+            foreach (XElement subElement in saveElement.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+#if CLIENT
+                    case "gamemode": //legacy support
+                    case "singleplayercampaign":
+                        GameMode = SinglePlayerCampaign.Load(subElement);
+                        break;
+#endif
+                    case "multiplayercampaign":
+                        MultiplayerCampaign mpCampaign = GameMode as MultiplayerCampaign;
+                        if (mpCampaign == null)
+                        {
+                            DebugConsole.ThrowError("Error while loading a save file: the save file is for a multiplayer campaign but the current gamemode is "+GameMode.GetType().ToString());
+                            break;
+                        }
+
+                        mpCampaign.Load(subElement);
+                        break;
+                }
             }
         }
 

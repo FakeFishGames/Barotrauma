@@ -219,8 +219,13 @@ namespace Barotrauma
                     summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
 
                     var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), "Load game", Alignment.BottomRight, "", summaryScreen);
-                    okButton.OnClicked += GameMain.GameSession.LoadPrevious;
-                    okButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    okButton.OnClicked += (GUIButton button, object obj) => 
+                    {
+                        GameMain.GameSession.LoadPrevious();
+                        GameMain.LobbyScreen.Select();
+                        GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                        return true;
+                    };
 
                     var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Quit", Alignment.BottomRight, "", summaryScreen);
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
@@ -322,7 +327,7 @@ namespace Barotrauma
                         GameMain.GameSession.CrewManager = new CrewManager(subElement);
                         break;
                     case "map":
-                        campaign.map = Map.Load(subElement);
+                        campaign.map = Map.LoadNew(subElement);
                         break;
                 }
             }
