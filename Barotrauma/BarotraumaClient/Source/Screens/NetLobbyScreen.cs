@@ -1181,6 +1181,10 @@ namespace Barotrauma
 
                     var moneyText = new GUITextBlock(new Rectangle(120,0,200,20), "Money", "", Alignment.BottomLeft, Alignment.TopLeft, campaignContainer);
                     moneyText.TextGetter = campaignUI.GetMoney;
+
+                    var restartText = new GUITextBlock(new Rectangle(-250, -20, 100, 30), "", "", Alignment.BottomRight, Alignment.BottomLeft, campaignContainer);
+                    restartText.Font = GUI.SmallFont;
+                    restartText.TextGetter = AutoRestartText;
                 }
                 modeList.Select(2, true);
             }

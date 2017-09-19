@@ -15,17 +15,6 @@ namespace Barotrauma
             get { return roundSummary; }
         }
 
-        public bool LoadPrevious(GUIButton button, object obj)
-        {
-            Submarine.Unload();
-
-            SaveUtil.LoadGame(savePath);
-
-            GameMain.LobbyScreen.Select();
-
-            return true;
-        }
-
         private bool ToggleInfoFrame(GUIButton button, object obj)
         {
             if (infoFrame == null)

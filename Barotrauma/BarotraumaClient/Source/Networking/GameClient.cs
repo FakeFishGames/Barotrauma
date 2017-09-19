@@ -1118,15 +1118,11 @@ namespace Barotrauma.Networking
                     if (GameMain.GameSession.Submarine == null)
                     {
                         var gameSessionDoc = SaveUtil.LoadGameSessionDoc(GameMain.GameSession.SavePath);
-                        string subPath = Path.Combine(SaveUtil.TempPath, ToolBox.GetAttributeString(gameSessionDoc.Root, "submarine", "")) + ".sub";
-
+                        string subPath = Path.Combine(SaveUtil.TempPath, ToolBox.GetAttributeString(gameSessionDoc.Root, "submarine", "")) + ".sub";  
                         GameMain.GameSession.Submarine = new Submarine(subPath, "");
                     }
-                    else
-                    {
-                        SaveUtil.DecompressToDirectory(GameMain.GameSession.SavePath, SaveUtil.TempPath, null);
-                    }
 
+                    SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
                     break;
             }
         }

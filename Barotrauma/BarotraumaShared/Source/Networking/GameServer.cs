@@ -190,17 +190,6 @@ namespace Barotrauma.Networking
                 }
 
                 FinishUPnP();
-
-#if CLIENT
-                if (server.UPnP.Status == UPnPStatus.NotAvailable)
-                {
-                    new GUIMessageBox("Error", "UPnP not available");
-                }
-                else if (server.UPnP.Status == UPnPStatus.Discovering)
-                {
-                    new GUIMessageBox("Error", "UPnP discovery timed out");
-                }
-#endif
             }
 
             if (isPublic)
@@ -376,9 +365,9 @@ namespace Barotrauma.Networking
                     (myCharacter == null || myCharacter.IsDead || myCharacter.IsUnconscious);
 
                 //restart if all characters are dead or submarine is at the end of the level
-                if ((autoRestart && isCrewDead) 
-                    || 
-                    (EndRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition && Submarine.MainSubs[1]==null))
+                if ((autoRestart && isCrewDead)
+                    ||
+                    (EndRoundAtLevelEnd && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition && Submarine.MainSubs[1] == null))
                 {
                     if (AutoRestart && isCrewDead)
                     {
