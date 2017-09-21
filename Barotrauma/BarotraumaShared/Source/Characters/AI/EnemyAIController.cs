@@ -556,7 +556,7 @@ namespace Barotrauma
                     targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), 10.0f, false);
 
                     //keep severing joints until there is only one limb left
-                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered);
+                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered && l.CanBeSevered);
                     if (nonSeveredJoints.Length == 0)
                     {
                         //only one limb left, the character is now full eaten

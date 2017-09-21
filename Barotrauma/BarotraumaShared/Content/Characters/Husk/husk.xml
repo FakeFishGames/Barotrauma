@@ -94,9 +94,9 @@
     <!-- head to body -->
     <joint limb1="0" limb1anchor="-10,-10" limb2="1" limb2anchor="-3,28" lowerlimit="0" upperlimit="10" canbesevered="true"/>
     <!-- spike to head -->
-    <joint limb1="0" limb1anchor="35,-8" limb2="13" limb2anchor="30,0" lowerlimit="-40" upperlimit="0"/>
+    <joint limb1="0" limb1anchor="35,-8" limb2="13" limb2anchor="30,0" lowerlimit="-40" upperlimit="0" canbesevered="false"/>
     
-    <joint limb1="1" limb1anchor="0,-17" limb2="12" limb2anchor="0,15" lowerlimit="30" upperlimit="60"/>       
+    <joint limb1="1" limb1anchor="0,-17" limb2="12" limb2anchor="0,15" lowerlimit="30" upperlimit="60" canbesevered="false"/>       
     
     <!-- body to left arm -->
     <joint limb1="1" limb1anchor="-3,14" limb2="2" limb2anchor="0,12"/>
