@@ -27,7 +27,14 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                if (!body.Awake) color = Color.Blue;
+                if (!body.Enabled)
+                {
+                    color = Color.Gray;
+                }
+                else if (!body.Awake)
+                {
+                    color = Color.Blue;
+                }
 
                 if (targetPosition != null)
                 {

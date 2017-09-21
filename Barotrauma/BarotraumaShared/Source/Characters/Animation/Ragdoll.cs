@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
@@ -388,7 +389,7 @@ namespace Barotrauma
             limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
 
             LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos);
-            joint.CanBeSevered = ToolBox.GetAttributeBool(subElement, "canbesevered", false);
+            joint.CanBeSevered = ToolBox.GetAttributeBool(subElement, "canbesevered", true);
 
             if (subElement.Attribute("lowerlimit") != null)
             {
@@ -522,6 +523,11 @@ namespace Barotrauma
 
         public void SeverLimbJoint(LimbJoint limbJoint)
         {
+            if (!limbJoint.CanBeSevered)
+            {
+                return;
+            }
+
             limbJoint.IsSevered = true;
             limbJoint.Enabled = false;
 
@@ -535,6 +541,11 @@ namespace Barotrauma
                 {
                     limb.IsSevered = true;
                 }
+            }
+            
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
             }
         }
 
