@@ -1001,6 +1001,8 @@ namespace Barotrauma.Networking
                 //and assume the message was received, so we don't have to keep resending
                 //these large initial messages until the client acknowledges receiving them
                 c.lastRecvGeneralUpdate++;
+                
+                SendVoteStatus(new List<Client>() { c });
             }
             else
             {
@@ -1559,11 +1561,13 @@ namespace Barotrauma.Networking
             Log(msg, ServerLog.MessageType.ServerMessage);
 
             client.Connection.Disconnect(targetmsg);
+            connectedClients.Remove(client);
 
 #if CLIENT
-            GameMain.NetLobbyScreen.RemovePlayer(client.name);        
+            GameMain.NetLobbyScreen.RemovePlayer(client.name);
+            Voting.UpdateVoteTexts(connectedClients, VoteType.Sub);
+            Voting.UpdateVoteTexts(connectedClients, VoteType.Mode);
 #endif
-            connectedClients.Remove(client);
 
             UpdateVoteStatus();
 
@@ -1851,14 +1855,8 @@ namespace Barotrauma.Networking
             }
 
             GameMain.NetLobbyScreen.LastUpdateID++;
-
-            NetOutgoingMessage msg = server.CreateMessage();
-            msg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
-            msg.Write((byte)ServerNetObject.VOTE);
-            Voting.ServerWrite(msg);
-            msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
-
-            server.SendMessage(msg, connectedClients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
+            
+            SendVoteStatus(connectedClients);
 
             if (Voting.AllowEndVoting && EndVoteMax > 0 &&
                 ((float)EndVoteCount / (float)EndVoteMax) >= EndVoteRequiredRatio)
@@ -1866,6 +1864,17 @@ namespace Barotrauma.Networking
                 Log("Ending round by votes (" + EndVoteCount + "/" + (EndVoteMax - EndVoteCount) + ")", ServerLog.MessageType.ServerMessage);
                 EndGame();
             }
+        }
+
+        public void SendVoteStatus(List<Client> recipients)
+        {
+            NetOutgoingMessage msg = server.CreateMessage();
+            msg.Write((byte)ServerPacketHeader.UPDATE_LOBBY);
+            msg.Write((byte)ServerNetObject.VOTE);
+            Voting.ServerWrite(msg);
+            msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            server.SendMessage(msg, recipients.Select(c => c.Connection).ToList(), NetDeliveryMethod.ReliableUnordered, 0);
         }
 
         public void UpdateClientPermissions(Client client)
