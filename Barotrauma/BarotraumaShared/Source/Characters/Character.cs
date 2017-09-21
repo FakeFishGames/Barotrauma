@@ -1314,7 +1314,9 @@ namespace Barotrauma
                         //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
                         c.Enabled =
                             c == controlled ||
+                            c.IsRemotePlayer ||
                             CharacterList.Any(c2 => 
+                                c != c2 &&
                                 (c2.IsRemotePlayer || c2 == GameMain.Server.Character) && 
                                 Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
                     }
