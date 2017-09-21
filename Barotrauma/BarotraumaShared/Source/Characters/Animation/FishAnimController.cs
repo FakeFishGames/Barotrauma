@@ -120,12 +120,10 @@ namespace Barotrauma
                 UpdateWalkAnim(deltaTime);
             }
             
-
-            if (mirror || !inWater)
+            if (!character.IsRemotePlayer)
             {
-                if (!character.IsRemotePlayer)
+                if (mirror || !inWater)
                 {
-                    //targetDir = (movement.X > 0.0f) ? Direction.Right : Direction.Left;
                     if (targetMovement.X > 0.1f && targetMovement.X > Math.Abs(targetMovement.Y) * 0.5f)
                     {
                         TargetDir = Direction.Right;
@@ -135,40 +133,39 @@ namespace Barotrauma
                         TargetDir = Direction.Left;
                     }
                 }
-
-            }
-            else
-            {
-                Limb head = GetLimb(LimbType.Head);
-                if (head == null) head = GetLimb(LimbType.Torso);
-
-                float rotation = MathUtils.WrapAngleTwoPi(head.Rotation);
-                rotation = MathHelper.ToDegrees(rotation);
-
-                if (rotation < 0.0f) rotation += 360;
-
-                if (rotation > 20 && rotation < 160)
+                else
                 {
-                    TargetDir = Direction.Left;
-                }
-                else if (rotation > 200 && rotation < 340)
-                {
-                    TargetDir = Direction.Right;
+                    Limb head = GetLimb(LimbType.Head);
+                    if (head == null) head = GetLimb(LimbType.Torso);
+
+                    float rotation = MathUtils.WrapAngleTwoPi(head.Rotation);
+                    rotation = MathHelper.ToDegrees(rotation);
+
+                    if (rotation < 0.0f) rotation += 360;
+
+                    if (rotation > 20 && rotation < 160)
+                    {
+                        TargetDir = Direction.Left;
+                    }
+                    else if (rotation > 200 && rotation < 340)
+                    {
+                        TargetDir = Direction.Right;
+                    }
                 }
             }
-            
+
             if (!flip) return;
 
             flipTimer += deltaTime;
 
             if (TargetDir != Direction.None && TargetDir != dir) 
-            {   
-                if (flipTimer>1.0f || character.IsRemotePlayer)
+            {
+                if (flipTimer > 1.0f || character.IsRemotePlayer)
                 {
                     Flip();
                     if (mirror || !inWater) Mirror();
                     flipTimer = 0.0f;
-                }              
+                }
             }
         }
 
