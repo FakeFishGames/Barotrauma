@@ -763,6 +763,8 @@ namespace Barotrauma
             else if (component.Parent == GameMain.NetLobbyScreen.ModeList)
             {
                 if (!GameMain.Client.Voting.AllowModeVoting) return false;
+                if (!((GameModePreset)userData).Votable) return false;
+
                 voteType = VoteType.Mode;
             }
             else

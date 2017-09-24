@@ -38,6 +38,15 @@ namespace Barotrauma
                 allowModeVoting = value;
                 GameMain.NetLobbyScreen.ModeList.Enabled = value || GameMain.Server != null;
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("modevotes", true).Visible = value;
+
+                //gray out modes that can't be voted
+                foreach (GUITextBlock comp in GameMain.NetLobbyScreen.ModeList.children)
+                {
+                    comp.TextColor =
+                        new Color(comp.TextColor.R, comp.TextColor.G, comp.TextColor.B, 
+                            !allowModeVoting || ((GameModePreset)comp.UserData).Votable ? (byte)255 : (byte)100);
+                }
+
                 if (GameMain.Server != null)
                 {
                     UpdateVoteTexts(value ? GameMain.Server.ConnectedClients : null, VoteType.Mode);
@@ -56,7 +65,7 @@ namespace Barotrauma
             GUIListBox listBox = (voteType == VoteType.Sub) ?
                 GameMain.NetLobbyScreen.SubList : GameMain.NetLobbyScreen.ModeList;
 
-            foreach (GUIComponent comp in listBox.children)
+            foreach (GUITextBlock comp in listBox.children)
             {
                 GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;
                 if (voteText != null) comp.RemoveChild(voteText);

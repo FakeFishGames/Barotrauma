@@ -10,17 +10,34 @@ namespace Barotrauma
 
         public ConstructorInfo Constructor;
         public string Name;
-        public bool IsSinglePlayer;
 
-        public string Description;
+        public bool IsSinglePlayer
+        {
+            get;
+            private set;
+        }
 
-        public GameModePreset(string name, Type type, bool isSinglePlayer = false)
+        //are clients allowed to vote for this gamemode
+        public bool Votable
+        {
+            get;
+            private set;
+        }
+
+        public string Description
+        {
+            get;
+            private set;
+        }
+
+        public GameModePreset(string name, Type type, bool isSinglePlayer = false, bool votable = true)
         {
             this.Name = name;
 
             Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset), typeof(object) });
 
             IsSinglePlayer = isSinglePlayer;
+            Votable = votable;
 
             list.Add(this);
         }
@@ -46,7 +63,7 @@ namespace Barotrauma
                 + "an alien artifact or killing a creature that's terrorizing nearby outposts. The game ends "
                 + "when the task is completed or everyone in the crew has died.";
 
-            new GameModePreset("Campaign", typeof(MultiplayerCampaign), false);
+            new GameModePreset("Campaign", typeof(MultiplayerCampaign), false, false);
         }
     }
 }
