@@ -770,6 +770,22 @@ namespace Barotrauma.Networking
                         EndGame();
                     }
                     break;
+                case ClientPermissions.SelectSub:
+                    UInt16 subIndex = inc.ReadUInt16();
+                    var subList = GameMain.NetLobbyScreen.GetSubList();
+                    if (subIndex >= subList.Count)
+                    {
+                        DebugConsole.NewMessage("Client \"" + sender.name + "\" attempted to select a sub, index out of bounds (" + subIndex + ")", Color.Red);
+                    }
+                    else
+                    {
+                        GameMain.NetLobbyScreen.SelectedSub = subList[subIndex];
+                    }
+                    break;
+                case ClientPermissions.SelectMode:
+                    UInt16 modeIndex = inc.ReadUInt16();
+                    var modeList = GameMain.NetLobbyScreen.SelectedModeIndex = modeIndex;
+                    break;
                 case ClientPermissions.ManageCampaign:
                     MultiplayerCampaign campaign = GameMain.GameSession.GameMode as MultiplayerCampaign;
                     if (campaign != null)

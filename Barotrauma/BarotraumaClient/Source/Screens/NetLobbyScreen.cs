@@ -112,6 +112,7 @@ namespace Barotrauma
         public Submarine SelectedSub
         {
             get { return subList.SelectedData as Submarine; }
+            set { subList.Select(value); }
         }
 
         public Submarine SelectedShuttle
@@ -384,10 +385,14 @@ namespace Barotrauma
             Character.Controlled = null;
             //GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
-            subList.Enabled = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting;
+            subList.Enabled = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowSubVoting ||
+                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
             shuttleList.Enabled = subList.Enabled;
-            //playerList.Enabled      = GameMain.Server != null;
-            modeList.Enabled = GameMain.Server != null || GameMain.NetworkMember.Voting.AllowModeVoting;
+
+            modeList.Enabled = 
+                GameMain.Server != null || GameMain.NetworkMember.Voting.AllowModeVoting || 
+                (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectMode));
+
             seedBox.Enabled = GameMain.Server != null;
             serverMessage.Enabled = GameMain.Server != null;
             autoRestartBox.Enabled = GameMain.Server != null;
@@ -548,7 +553,6 @@ namespace Barotrauma
 
                 jobList = new GUIListBox(new Rectangle(0, 150, 0, 0), "", myPlayerFrame);
                 jobList.Enabled = false;
-
 
                 int i = 1;
                 foreach (string jobName in GameMain.Config.JobNamePreferences)
@@ -757,13 +761,29 @@ namespace Barotrauma
             VoteType voteType;
             if (component.Parent == GameMain.NetLobbyScreen.SubList)
             {
-                if (!GameMain.Client.Voting.AllowSubVoting) return false;
+                if (!GameMain.Client.Voting.AllowSubVoting)
+                {
+                    if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
+                    {
+                        GameMain.Client.RequestSelectSub(component.Parent.children.IndexOf(component));
+                        return true;
+                    }
+                    return false;
+                }
                 voteType = VoteType.Sub;
             }
             else if (component.Parent == GameMain.NetLobbyScreen.ModeList)
             {
-                if (!GameMain.Client.Voting.AllowModeVoting) return false;
                 if (!((GameModePreset)userData).Votable) return false;
+                if (!GameMain.Client.Voting.AllowModeVoting)
+                {
+                    if (GameMain.Client.HasPermission(ClientPermissions.SelectMode))
+                    {
+                        GameMain.Client.RequestSelectMode(component.Parent.children.IndexOf(component));
+                        return true;
+                    }
+                    return false;
+                }
 
                 voteType = VoteType.Mode;
             }
@@ -843,7 +863,7 @@ namespace Barotrauma
 
                 new GUITextBlock(new Rectangle(0, 25, 150, 15), selectedClient.Connection.RemoteEndPoint.Address.ToString(), "", playerFrameInner);
 
-                var permissionsBox = new GUIFrame(new Rectangle(0, 60, 0, 90), "", playerFrameInner);
+                var permissionsBox = new GUIFrame(new Rectangle(0, 60, 0, 90), null, playerFrameInner);
                 permissionsBox.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 permissionsBox.UserData = selectedClient;
 
@@ -858,7 +878,7 @@ namespace Barotrauma
 
                     string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
 
-                    var permissionTick = new GUITickBox(new Rectangle(x, y + 20, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
+                    var permissionTick = new GUITickBox(new Rectangle(x, y + 25, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
                     permissionTick.UserData = permission;
                     permissionTick.Selected = selectedClient.HasPermission(permission);
 
