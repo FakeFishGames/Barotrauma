@@ -16,8 +16,12 @@ namespace Barotrauma.Networking
         Kick = 2,
         [Description("Ban")]
         Ban = 4,
+        [Description("Select submarine")]
+        SelectSub = 8,
+        [Description("Select game mode")]
+        SelectMode = 16,
         [Description("Manage campaign")]
-        ManageCampaign = 8
+        ManageCampaign = 32
     }
 
     class Client

@@ -14,7 +14,8 @@ namespace Barotrauma
             {
                 if (value == allowSubVoting) return;
                 allowSubVoting = value;
-                GameMain.NetLobbyScreen.SubList.Enabled = value || GameMain.Server != null;
+                GameMain.NetLobbyScreen.SubList.Enabled = value || GameMain.Server != null ||
+                    (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("subvotes", true).Visible = value;
 
                 if (GameMain.Server != null)
@@ -36,7 +37,10 @@ namespace Barotrauma
             {
                 if (value == allowModeVoting) return;
                 allowModeVoting = value;
-                GameMain.NetLobbyScreen.ModeList.Enabled = value || GameMain.Server != null;
+                GameMain.NetLobbyScreen.ModeList.Enabled = 
+                    value || GameMain.Server != null || 
+                    (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectMode));
+
                 GameMain.NetLobbyScreen.InfoFrame.FindChild("modevotes", true).Visible = value;
 
                 //gray out modes that can't be voted
