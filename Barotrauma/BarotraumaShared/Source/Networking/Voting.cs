@@ -103,6 +103,8 @@ namespace Barotrauma
                 case VoteType.Mode:
                     string modeName = inc.ReadString();
                     GameModePreset mode = GameModePreset.list.Find(gm => gm.Name == modeName);
+                    if (!mode.Votable) break;
+
                     sender.SetVote(voteType, mode);
 #if CLIENT
                     UpdateVoteTexts(GameMain.Server.ConnectedClients, voteType);

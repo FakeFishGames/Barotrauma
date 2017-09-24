@@ -8,13 +8,9 @@ namespace Barotrauma
         public static List<GameModePreset> PresetList = new List<GameModePreset>();
 
         protected DateTime startTime;
-
-        //public readonly bool IsSinglePlayer;
-
+        
         protected bool isRunning;
-
-        //protected string name;
-
+        
         protected GameModePreset preset;
 
         private string endMessage;
@@ -57,13 +53,6 @@ namespace Barotrauma
         public virtual void Start()
         {
             startTime = DateTime.Now;
-            //if (duration!=TimeSpan.Zero)
-            //{
-            //    endTime = startTime + duration;
-            //    this.duration = duration;
-
-            //    timerBar = new GUIProgressBar(new Rectangle(GameMain.GraphicsWidth - 120, 20, 100, 25), Color.Gold, 0.0f, null);  
-            //}
 
             endMessage = "The round has ended!";
 
@@ -74,20 +63,7 @@ namespace Barotrauma
 
         public virtual void AddToGUIUpdateList() { }
 
-        public virtual void Update(float deltaTime)
-        {
-            //if (!isRunning) return;
-
-            //if (duration != TimeSpan.Zero)
-            //{
-            //    double elapsedTime = (DateTime.Now - startTime).TotalSeconds;
-            //    timerBar.BarSize = (float)(elapsedTime / duration.TotalSeconds);
-            //}
-            //if (DateTime.Now >= endTime)
-            //{
-            //    End(endMessage);                
-            //}
-        }
+        public virtual void Update(float deltaTime) { }
 
         public virtual void End(string endMessage = "")
         {
