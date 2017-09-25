@@ -793,8 +793,7 @@ namespace Barotrauma.Networking
             }
             
             GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, submarines);
-            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);   
-                  
+            GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.ShuttleList.ListBox, submarines);
 
             gameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();
@@ -847,6 +846,8 @@ namespace Barotrauma.Networking
                             bool allowSubVoting         = inc.ReadBoolean();
                             bool allowModeVoting        = inc.ReadBoolean();
 
+                            bool allowSpectating        = inc.ReadBoolean();
+
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
                             int missionTypeIndex        = inc.ReadRangedInteger(0, Mission.MissionTypes.Count - 1);
                             int modeIndex               = inc.ReadByte();
@@ -888,6 +889,8 @@ namespace Barotrauma.Networking
                                 {
                                     GameMain.NetLobbyScreen.SelectMode(modeIndex);
                                 }
+                                
+                                GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);                                
 
                                 GameMain.NetLobbyScreen.LevelSeed = levelSeed;
                                 
@@ -1213,6 +1216,7 @@ namespace Barotrauma.Networking
         
         public void WriteCharacterInfo(NetOutgoingMessage msg)
         {
+            msg.Write(characterInfo == null);
             if (characterInfo == null) return;
 
             msg.Write(characterInfo.Gender == Gender.Male);

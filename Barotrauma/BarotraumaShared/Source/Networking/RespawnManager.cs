@@ -110,7 +110,10 @@ namespace Barotrauma.Networking
         
         private List<Client> GetClientsToRespawn()
         {
-            return networkMember.ConnectedClients.FindAll(c => c.inGame && (c.Character == null || c.Character.IsDead));
+            return networkMember.ConnectedClients.FindAll(c => 
+                c.inGame && 
+                (!c.SpectateOnly || !((GameServer)networkMember).AllowSpectating) && 
+                (c.Character == null || c.Character.IsDead));
         }
 
         public void Update(float deltaTime)

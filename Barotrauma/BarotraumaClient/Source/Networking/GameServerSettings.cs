@@ -314,6 +314,7 @@ namespace Barotrauma.Networking
             allowSpecBox.OnSelected = (GUITickBox) =>
             {
                 AllowSpectating = GUITickBox.Selected;
+                GameMain.NetLobbyScreen.LastUpdateID++;
                 return true;
             };
 
