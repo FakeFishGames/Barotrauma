@@ -952,6 +952,8 @@ namespace Barotrauma.Networking
                 outmsg.Write(Voting.AllowSubVoting);
                 outmsg.Write(Voting.AllowModeVoting);
 
+                outmsg.Write(AllowSpectating);
+
                 outmsg.WriteRangedInteger(0, 2, (int)TraitorsEnabled);
 
                 outmsg.WriteRangedInteger(0, Mission.MissionTypes.Count - 1, (GameMain.NetLobbyScreen.MissionTypeIndex));
@@ -1209,8 +1211,12 @@ namespace Barotrauma.Networking
             for (int teamID = 1; teamID <= teamCount; teamID++)
             {
                 //find the clients in this team
-                List<Client> teamClients = teamCount == 1 ? connectedClients : connectedClients.FindAll(c => c.TeamID == teamID);
-                
+                List<Client> teamClients = teamCount == 1 ? new List<Client>(connectedClients) : connectedClients.FindAll(c => c.TeamID == teamID);
+                if (AllowSpectating)
+                {
+                    teamClients.RemoveAll(c => c.SpectateOnly);
+                }
+
                 if (!teamClients.Any() && teamID > 1) continue;
 
                 AssignJobs(teamClients, teamID == hostTeam);
@@ -1949,6 +1955,12 @@ namespace Barotrauma.Networking
 
         private void UpdateCharacterInfo(NetIncomingMessage message, Client sender)
         {
+            sender.SpectateOnly = message.ReadBoolean() && AllowSpectating;
+            if (sender.SpectateOnly)
+            {
+                return;
+            }
+
             Gender gender = Gender.Male;
             int headSpriteId = 0;
             try
