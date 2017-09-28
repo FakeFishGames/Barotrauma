@@ -7,9 +7,8 @@
     
     price="100">
 
-    <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
-
-    <Body width="16" height="7"/>
+    <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
+    <Body width="24" height="8"/>
 
     <Pickable slots="Any">
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
@@ -23,11 +22,11 @@
     name="Compound N"
     category="Equipment"
     Tags="smallitem,explosive"
+    spritecolor="1.0,0.5,1.0,1.0"
     >
 
-    <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
-
-    <Body width="16" height="7"/>
+    <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
+    <Body width="24" height="8"/>
 
     <Pickable slots="Any">
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
@@ -42,11 +41,11 @@
     name="Volatile Compound N"
     category="Equipment"
     Tags="smallitem,explosive"
+    spritecolor="1.0,0.5,1.0,1.0"
     >
 
-    <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
-
-    <Body width="16" height="7"/>
+    <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
+    <Body width="24" height="8"/>
 
     <Pickable slots="Any">
       <StatusEffect type="Always" target="This" Condition="-0.35"/>
@@ -63,11 +62,11 @@
     description="A compound made of C-4 and incendium."
     category="Equipment"
     Tags="smallitem,explosive"
+    spritecolor="1.0,0.0,0.0,1.0"
     >
 
-    <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,0,16,7"/>
-
-    <Body width="16" height="7"/>
+    <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
+    <Body width="24" height="8"/>
 
     <Pickable slots="Any">
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
@@ -83,13 +82,12 @@
     name="Detonator"
     description="A device that detonates any contained explosive when receiving a signal."
     category="Equipment"
-    Tags="smallitem"
-    
+    Tags="smallitem"    
     price="50">
 
-    <Sprite texture="weapons.png"  depth="0.8" sourcerect="112,7,16,9"/>
+    <Sprite texture="weapons.png"  depth="0.8" sourcerect="0,107,14,12"/>
 
-    <Body width="16" height="9"/>
+    <Body width="14" height="12"/>
 
     <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" aimpos="35,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
