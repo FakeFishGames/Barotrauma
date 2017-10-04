@@ -72,8 +72,7 @@ namespace Barotrauma
             }
             else if (property.PropertyType == typeof(float))
             {
-                float floatVal = 0.0f;
-
+                float floatVal;
                 if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))
                 {
                     propertyInfo.SetValue(obj, floatVal, null);
@@ -81,15 +80,29 @@ namespace Barotrauma
             }
             else if (property.PropertyType == typeof(bool))
             {
-                propertyInfo.SetValue(obj, (value.ToLowerInvariant() == "true"), null);                
+                propertyInfo.SetValue(obj, value.ToLowerInvariant() == "true", null);                
             }
             else if (property.PropertyType == typeof(int))
             {
-                int intVal = 0;
+                int intVal;
                 if (int.TryParse(value, out intVal))
                 {
                     propertyInfo.SetValue(obj, intVal, null);
                 }
+            }
+            else if (property.PropertyType.IsEnum)
+            {
+                object enumVal;
+                try
+                {
+                    enumVal = Enum.Parse(propertyInfo.PropertyType, value);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj + "\" to " + value + " (not a valid " + propertyInfo.PropertyType + ")", e);
+                    return false;
+                }
+                propertyInfo.SetValue(obj, enumVal);
             }
             else
             {
@@ -105,12 +118,12 @@ namespace Barotrauma
         public bool TrySetValue(object value)
         {
             if (value == null) return false;
-                     
-            if (property.PropertyType!= value.GetType())
-            {
-                DebugConsole.ThrowError("Failed to set the value of the property \""+Name+"\" of \""+obj.ToString()+"\" to "+value.ToString());
 
-                DebugConsole.ThrowError("(Non-matching type, should be "+property.PropertyType+" instead of " +value.GetType()+")");
+            if (property.PropertyType != value.GetType())
+            {
+                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
+
+                DebugConsole.ThrowError("(Non-matching type, should be " + property.PropertyType + " instead of " + value.GetType() + ")");
                 return false;
             }
 
