@@ -60,15 +60,15 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("0.0,0.0", false)]
         public string HoldPos
         {
-            get { return ToolBox.Vector2ToString(ConvertUnits.ToDisplayUnits(holdPos)); }
-            set { holdPos = ConvertUnits.ToSimUnits(ToolBox.ParseToVector2(value)); }
+            get { return XMLExtensions.Vector2ToString(ConvertUnits.ToDisplayUnits(holdPos)); }
+            set { holdPos = ConvertUnits.ToSimUnits(XMLExtensions.ParseToVector2(value)); }
         }
 
         [HasDefaultValue("0.0,0.0", false)]
         public string AimPos
         {
-            get { return ToolBox.Vector2ToString(ConvertUnits.ToDisplayUnits(aimPos)); }
-            set { aimPos = ConvertUnits.ToSimUnits(ToolBox.ParseToVector2(value)); }
+            get { return XMLExtensions.Vector2ToString(ConvertUnits.ToDisplayUnits(aimPos)); }
+            set { aimPos = ConvertUnits.ToSimUnits(XMLExtensions.ParseToVector2(value)); }
         }
 
         [HasDefaultValue(0.0f, false)]
@@ -87,7 +87,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 1; i < 3; i++)
             {
-                handlePos[i - 1] = ToolBox.GetAttributeVector2(element, "handle" + i, Vector2.Zero);
+                handlePos[i - 1] = element.GetAttributeVector2("handle" + i, Vector2.Zero);
 
                 handlePos[i - 1] = ConvertUnits.ToSimUnits(handlePos[i - 1]);
             }

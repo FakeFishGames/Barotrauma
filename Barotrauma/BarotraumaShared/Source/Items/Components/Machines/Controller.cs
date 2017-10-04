@@ -44,9 +44,9 @@ namespace Barotrauma.Items.Components
         {
             limbPositions = new List<LimbPos>();
 
-            userPos = ToolBox.GetAttributeVector2(element, "UserPos", Vector2.Zero);
+            userPos = element.GetAttributeVector2("UserPos", Vector2.Zero);
 
-            Enum.TryParse<Direction>(ToolBox.GetAttributeString(element, "direction", "None"), out dir);
+            Enum.TryParse<Direction>(element.GetAttributeString("direction", "None"), out dir);
                 
             foreach (XElement el in element.Elements())
             {
@@ -63,7 +63,7 @@ namespace Barotrauma.Items.Components
                     DebugConsole.ThrowError("Error in " + element + ": " + e.Message, e);
                 }
 
-                lp.position = ToolBox.GetAttributeVector2(el, "position", Vector2.Zero);
+                lp.position = el.GetAttributeVector2("position", Vector2.Zero);
 
                 limbPositions.Add(lp);
             }
@@ -189,7 +189,7 @@ namespace Barotrauma.Items.Components
 
             if (focusTarget == null)
             {
-                item.SendSignal(0, ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out", character);
+                item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
                 return;
             }
             
@@ -206,7 +206,7 @@ namespace Barotrauma.Items.Components
             
             if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)
             {
-                item.SendSignal(0, ToolBox.Vector2ToString(character.CursorWorldPosition), "position_out", character);
+                item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
             }
         }
 

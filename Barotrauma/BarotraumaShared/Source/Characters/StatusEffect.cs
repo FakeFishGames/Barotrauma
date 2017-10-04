@@ -117,10 +117,10 @@ namespace Barotrauma
 
                         break;
                     case "disabledeltatime":                        
-                        disableDeltaTime = ToolBox.GetAttributeBool(attribute, false);
+                        disableDeltaTime = attribute.GetAttributeBool(false);
                         break;
                     case "setvalue":                        
-                        setValue = ToolBox.GetAttributeBool(attribute, false);
+                        setValue = attribute.GetAttributeBool(false);
                         break;
                     case "targetnames":
                         string[] names = attribute.Value.Split(',');
@@ -131,7 +131,7 @@ namespace Barotrauma
                         }
                         break;
                     case "duration":
-                        duration = ToolBox.GetAttributeFloat(attribute, 0.0f);
+                        duration = attribute.GetAttributeFloat(0.0f);
                         break;
                     case "sound":
                         DebugConsole.ThrowError("Error in StatusEffect " + element.Parent.Name.ToString() +
@@ -151,7 +151,7 @@ namespace Barotrauma
             foreach (XAttribute attribute in propertyAttributes)
             {
                 propertyNames[n] = attribute.Name.ToString().ToLowerInvariant();
-                propertyEffects[n] = ToolBox.GetAttributeObject(attribute);
+                propertyEffects[n] = XMLExtensions.GetAttributeObject(attribute);
                 n++;
             }
 
@@ -163,7 +163,7 @@ namespace Barotrauma
                         explosion = new Explosion(subElement);
                         break;
                     case "fire":
-                        FireSize = ToolBox.GetAttributeFloat(subElement,"size",10.0f);
+                        FireSize = subElement.GetAttributeFloat("size",10.0f);
                         break;
                     case "use":
                     case "useitem":
@@ -183,7 +183,7 @@ namespace Barotrauma
                         break;
                     case "sound":
                         sound = Sound.Load(subElement);
-                        loopSound = ToolBox.GetAttributeBool(subElement, "loop", false);
+                        loopSound = subElement.GetAttributeBool("loop", false);
                         break;
 #endif
                 }

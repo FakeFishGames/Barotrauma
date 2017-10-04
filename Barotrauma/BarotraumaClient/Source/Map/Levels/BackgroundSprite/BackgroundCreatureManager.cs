@@ -33,7 +33,7 @@ namespace Barotrauma
         {
             try
             {
-                XDocument doc = ToolBox.TryLoadXml(configPath);
+                XDocument doc = XMLExtensions.TryLoadXml(configPath);
                 if (doc == null || doc.Root == null) return;
 
                 foreach (XElement element in doc.Root.Elements())

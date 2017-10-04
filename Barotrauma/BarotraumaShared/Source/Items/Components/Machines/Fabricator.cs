@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
 
         public FabricableItem(XElement element)
         {
-            string name = ToolBox.GetAttributeString(element, "name", "");
+            string name = element.GetAttributeString("name", "");
 
             TargetItem = ItemPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == name.ToLowerInvariant()) as ItemPrefab;
             if (TargetItem == null)
@@ -31,11 +31,11 @@ namespace Barotrauma.Items.Components
 
             RequiredSkills = new List<Skill>();
 
-            RequiredTime = ToolBox.GetAttributeFloat(element, "requiredtime", 1.0f);
+            RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
 
             RequiredItems = new List<Tuple<ItemPrefab, int>>();
             
-            string[] requiredItemNames = ToolBox.GetAttributeString(element, "requireditems", "").Split(',');
+            string[] requiredItemNames = element.GetAttributeString("requireditems", "").Split(',');
             foreach (string requiredItemName in requiredItemNames)
             {
                 if (string.IsNullOrWhiteSpace(requiredItemName)) continue;
@@ -68,8 +68,8 @@ namespace Barotrauma.Items.Components
                 {
                     case "requiredskill":
                         RequiredSkills.Add(new Skill(
-                            ToolBox.GetAttributeString(subElement, "name", ""), 
-                            ToolBox.GetAttributeInt(subElement, "level", 0)));
+                            subElement.GetAttributeString("name", ""), 
+                            subElement.GetAttributeInt("level", 0)));
                         break;
                 }
             }

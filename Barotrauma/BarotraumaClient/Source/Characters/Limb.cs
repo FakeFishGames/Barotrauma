@@ -34,7 +34,7 @@ namespace Barotrauma
                         LightSource = new LightSource(subElement);
                         break;
                     case "sound":
-                        hitSound = Sound.Load(ToolBox.GetAttributeString(subElement, "file", ""));
+                        hitSound = Sound.Load(subElement.GetAttributeString("file", ""));
                         break;
                 }
             }

@@ -27,7 +27,7 @@ namespace Barotrauma.RuinGeneration
 
         private RuinStructure(XElement element)
         {
-            string prefab = ToolBox.GetAttributeString(element, "prefab", "").ToLowerInvariant();
+            string prefab = element.GetAttributeString("prefab", "").ToLowerInvariant();
             Prefab = MapEntityPrefab.list.Find(s => s.Name.ToLowerInvariant() == prefab);
 
             if (Prefab == null)
@@ -36,21 +36,21 @@ namespace Barotrauma.RuinGeneration
                 return;
             }
 
-            string alignmentStr = ToolBox.GetAttributeString(element,"alignment","Bottom");
+            string alignmentStr = element.GetAttributeString("alignment","Bottom");
             if (!Enum.TryParse<Alignment>(alignmentStr, true, out Alignment))
             {
                 DebugConsole.ThrowError("Error in ruin structure \""+prefab+"\" - "+alignmentStr+" is not a valid alignment");
             }
             
 
-            string typeStr = ToolBox.GetAttributeString(element,"type","");
+            string typeStr = element.GetAttributeString("type","");
             if (!Enum.TryParse<RuinStructureType>(typeStr,true, out Type))
             {
                 DebugConsole.ThrowError("Error in ruin structure \"" + prefab + "\" - " + typeStr + " is not a valid type");
                 return;
             }
 
-            commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
+            commonness = element.GetAttributeInt("commonness", 1);
 
             list.Add(this);
         }
@@ -59,7 +59,7 @@ namespace Barotrauma.RuinGeneration
         {
             list = new List<RuinStructure>();
 
-            XDocument doc = ToolBox.TryLoadXml(ConfigFile);
+            XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
             if (doc == null || doc.Root == null) return;
 
             foreach (XElement element in doc.Root.Elements())

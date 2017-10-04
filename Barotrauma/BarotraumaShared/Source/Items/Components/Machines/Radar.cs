@@ -63,7 +63,7 @@ namespace Barotrauma.Items.Components
             radarBlips = new List<RadarBlip>();
 #endif
 
-            displayBorderSize = ToolBox.GetAttributeFloat(element, "displaybordersize", 0.0f);
+            displayBorderSize = element.GetAttributeFloat("displaybordersize", 0.0f);
 
             foreach (XElement subElement in element.Elements())
             {

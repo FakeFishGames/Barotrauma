@@ -63,12 +63,12 @@ namespace Barotrauma
         public HumanoidAnimController(Character character, XElement element)
             : base(character, element)
         {
-            walkAnimSpeed = ToolBox.GetAttributeFloat(element, "walkanimspeed", 4.0f);
+            walkAnimSpeed = element.GetAttributeFloat("walkanimspeed", 4.0f);
             walkAnimSpeed = MathHelper.ToRadians(walkAnimSpeed);
 
-            movementLerp = ToolBox.GetAttributeFloat(element, "movementlerp", 0.4f);
+            movementLerp = element.GetAttributeFloat("movementlerp", 0.4f);
 
-            thighTorque = ToolBox.GetAttributeFloat(element, "thightorque", -5.0f);
+            thighTorque = element.GetAttributeFloat("thightorque", -5.0f);
         }
 
         public override void UpdateAnim(float deltaTime)

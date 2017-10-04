@@ -808,7 +808,7 @@ namespace Barotrauma
         
         public static void Load(XElement element, Submarine submarine)
         {
-            string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
+            string rectString = element.GetAttributeString("rect", "0,0,0,0");
             string[] rectValues = rectString.Split(',');
 
             Rectangle rect = new Rectangle(
@@ -843,13 +843,13 @@ namespace Barotrauma
                 switch (subElement.Name.ToString())
                 {
                     case "section":
-                        int index = ToolBox.GetAttributeInt(subElement, "i", -1);
+                        int index = subElement.GetAttributeInt("i", -1);
                         if (index == -1) continue;
 
                         s.sections[index].damage = 
-                            ToolBox.GetAttributeFloat(subElement, "damage", 0.0f);
+                            subElement.GetAttributeFloat("damage", 0.0f);
 
-                        s.sections[index].GapID = ToolBox.GetAttributeInt(subElement, "gap", -1);
+                        s.sections[index].GapID = subElement.GetAttributeInt("gap", -1);
 
                         break;
                 }

@@ -45,10 +45,10 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("0.0,360.0", false)]
         public string ArmorSector
         {
-            get { return ToolBox.Vector2ToString(armorSector); }
+            get { return XMLExtensions.Vector2ToString(armorSector); }
             set 
             { 
-                armorSector = ToolBox.ParseToVector2(value);
+                armorSector = XMLExtensions.ParseToVector2(value);
                 armorSector.X = MathHelper.ToRadians(armorSector.X);
                 armorSector.Y = MathHelper.ToRadians(armorSector.Y);
             }
@@ -90,12 +90,12 @@ namespace Barotrauma.Items.Components
 
                 var sprite = new Sprite(subElement, "", spritePath);
                 wearableSprites[i] = new WearableSprite(this, sprite, 
-                    ToolBox.GetAttributeBool(subElement, "hidelimb", false),
-                    ToolBox.GetAttributeBool(subElement, "inheritlimbdepth", true),
-                    (LimbType)Enum.Parse(typeof(LimbType), ToolBox.GetAttributeString(subElement, "depthlimb", "None"), true));
+                    subElement.GetAttributeBool("hidelimb", false),
+                    subElement.GetAttributeBool("inheritlimbdepth", true),
+                    (LimbType)Enum.Parse(typeof(LimbType), subElement.GetAttributeString("depthlimb", "None"), true));
 
                 limbType[i] = (LimbType)Enum.Parse(typeof(LimbType),
-                    ToolBox.GetAttributeString(subElement, "limb", "Head"), true);                
+                    subElement.GetAttributeString("limb", "Head"), true);                
 
                 i++;
             }

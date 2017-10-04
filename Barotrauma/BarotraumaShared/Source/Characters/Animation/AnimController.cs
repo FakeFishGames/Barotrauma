@@ -48,16 +48,16 @@ namespace Barotrauma
         {
             this.character = character;
 
-            stepSize = ToolBox.GetAttributeVector2(element, "stepsize", Vector2.One);
+            stepSize = element.GetAttributeVector2("stepsize", Vector2.One);
             stepSize = ConvertUnits.ToSimUnits(stepSize);
 
-            walkSpeed = ToolBox.GetAttributeFloat(element, "walkspeed", 1.0f);
-            swimSpeed = ToolBox.GetAttributeFloat(element, "swimspeed", 1.0f);
+            walkSpeed = element.GetAttributeFloat("walkspeed", 1.0f);
+            swimSpeed = element.GetAttributeFloat("swimspeed", 1.0f);
 
-            RunSpeedMultiplier = ToolBox.GetAttributeFloat(element, "runspeedmultiplier", 2f);
-            SwimSpeedMultiplier = ToolBox.GetAttributeFloat(element, "swimspeedmultiplier", 1.5f);
+            RunSpeedMultiplier = element.GetAttributeFloat("runspeedmultiplier", 2f);
+            SwimSpeedMultiplier = element.GetAttributeFloat("swimspeedmultiplier", 1.5f);
             
-            legTorque = ToolBox.GetAttributeFloat(element, "legtorque", 0.0f);
+            legTorque = element.GetAttributeFloat("legtorque", 0.0f);
         }
 
         public virtual void UpdateAnim(float deltaTime) { }

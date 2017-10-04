@@ -50,8 +50,8 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("32.0,32.0", false)]
         public string DistanceTolerance
         {
-            get { return ToolBox.Vector2ToString(distanceTolerance); }
-            set { distanceTolerance = ToolBox.ParseToVector2(value); }
+            get { return XMLExtensions.Vector2ToString(distanceTolerance); }
+            set { distanceTolerance = XMLExtensions.ParseToVector2(value); }
         }
 
         [HasDefaultValue(32.0f, false)]
@@ -104,7 +104,7 @@ namespace Barotrauma.Items.Components
             // isOpen = false;
             foreach (XElement subElement in element.Elements())
             {
-                string texturePath = ToolBox.GetAttributeString(subElement, "texture", "");
+                string texturePath = subElement.GetAttributeString("texture", "");
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":

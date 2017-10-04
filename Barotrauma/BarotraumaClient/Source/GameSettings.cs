@@ -129,9 +129,9 @@ namespace Barotrauma
             }
 
             XElement graphicsMode = doc.Root.Element("graphicsmode");
-            GraphicsWidth = ToolBox.GetAttributeInt(graphicsMode, "width", 0);
-            GraphicsHeight = ToolBox.GetAttributeInt(graphicsMode, "height", 0);
-            VSyncEnabled = ToolBox.GetAttributeBool(graphicsMode, "vsync", true);
+            GraphicsWidth = graphicsMode.GetAttributeInt("width", 0);
+            GraphicsHeight = graphicsMode.GetAttributeInt("height", 0);
+            VSyncEnabled = graphicsMode.GetAttributeBool("vsync", true);
 
             if (GraphicsWidth == 0 || GraphicsHeight == 0)
             {
@@ -141,16 +141,16 @@ namespace Barotrauma
 
             //FullScreenEnabled = ToolBox.GetAttributeBool(graphicsMode, "fullscreen", true);
 
-            var windowModeStr = ToolBox.GetAttributeString(graphicsMode, "displaymode", "Fullscreen");
+            var windowModeStr = graphicsMode.GetAttributeString("displaymode", "Fullscreen");
             if (!Enum.TryParse<WindowMode>(windowModeStr, out windowMode))
             {
                 windowMode = WindowMode.Fullscreen;
             }
 
-            SoundVolume = ToolBox.GetAttributeFloat(doc.Root, "soundvolume", 1.0f);
-            MusicVolume = ToolBox.GetAttributeFloat(doc.Root, "musicvolume", 0.3f);
+            SoundVolume = doc.Root.GetAttributeFloat("soundvolume", 1.0f);
+            MusicVolume = doc.Root.GetAttributeFloat("musicvolume", 0.3f);
 
-            EnableSplashScreen = ToolBox.GetAttributeBool(doc.Root, "enablesplashscreen", true);
+            EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", true);
 
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Up] = new KeyOrMouse(Keys.W);
@@ -198,7 +198,7 @@ namespace Barotrauma
                         JobNamePreferences = new List<string>();
                         foreach (XElement ele in subElement.Element("jobpreferences").Elements("job"))
                         {
-                            JobNamePreferences.Add(ToolBox.GetAttributeString(ele, "name", ""));
+                            JobNamePreferences.Add(ele.GetAttributeString("name", ""));
                         }
                         break;
                 }

@@ -39,14 +39,14 @@ namespace Barotrauma
         public MonsterEvent(XElement element)
             : base (element)
         {
-            characterFile = ToolBox.GetAttributeString(element, "characterfile", "");
+            characterFile = element.GetAttributeString("characterfile", "");
 
-            int defaultAmount = ToolBox.GetAttributeInt(element, "amount", 1);
+            int defaultAmount = element.GetAttributeInt("amount", 1);
 
-            minAmount = ToolBox.GetAttributeInt(element, "minamount", defaultAmount);
-            maxAmount = Math.Max(ToolBox.GetAttributeInt(element, "maxamount", 1), minAmount);
+            minAmount = element.GetAttributeInt("minamount", defaultAmount);
+            maxAmount = Math.Max(element.GetAttributeInt("maxamount", 1), minAmount);
 
-            var spawnPosTypeStr = ToolBox.GetAttributeString(element, "spawntype", "");
+            var spawnPosTypeStr = element.GetAttributeString("spawntype", "");
 
             if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
                 !Enum.TryParse<Level.PositionType>(spawnPosTypeStr, true, out spawnPosType))
@@ -54,9 +54,9 @@ namespace Barotrauma
                 spawnPosType = Level.PositionType.MainPath;
             }
 
-            spawnDeep = ToolBox.GetAttributeBool(element, "spawndeep", false);
+            spawnDeep = element.GetAttributeBool("spawndeep", false);
 
-            repeat = ToolBox.GetAttributeBool(element, "repeat", repeat);
+            repeat = element.GetAttributeBool("repeat", repeat);
 
             if (GameMain.NetworkMember != null)
             {

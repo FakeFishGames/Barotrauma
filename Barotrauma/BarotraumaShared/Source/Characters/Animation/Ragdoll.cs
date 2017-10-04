@@ -279,25 +279,25 @@ namespace Barotrauma
 
             dir = Direction.Right;
 
-            float scale = ToolBox.GetAttributeFloat(element, "scale", 1.0f);
+            float scale = element.GetAttributeFloat("scale", 1.0f);
             
             Limbs           = new Limb[element.Elements("limb").Count()];
             LimbJoints      = new LimbJoint[element.Elements("joint").Count()];
             limbDictionary  = new Dictionary<LimbType, Limb>();
 
-            headPosition    = ToolBox.GetAttributeFloat(element, "headposition", 50.0f);
+            headPosition    = element.GetAttributeFloat("headposition", 50.0f);
             headPosition    = ConvertUnits.ToSimUnits(headPosition);
-            headAngle       = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "headangle", 0.0f));
+            headAngle       = MathHelper.ToRadians(element.GetAttributeFloat("headangle", 0.0f));
 
-            torsoPosition   = ToolBox.GetAttributeFloat(element, "torsoposition", 50.0f);
+            torsoPosition   = element.GetAttributeFloat("torsoposition", 50.0f);
             torsoPosition   = ConvertUnits.ToSimUnits(torsoPosition);
-            torsoAngle      = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "torsoangle", 0.0f));
+            torsoAngle      = MathHelper.ToRadians(element.GetAttributeFloat("torsoangle", 0.0f));
 
-            ImpactTolerance = ToolBox.GetAttributeFloat(element, "impacttolerance", 50.0f);
+            ImpactTolerance = element.GetAttributeFloat("impacttolerance", 50.0f);
 
-            CanEnterSubmarine = ToolBox.GetAttributeBool(element, "canentersubmarine", true);
+            CanEnterSubmarine = element.GetAttributeBool("canentersubmarine", true);
 
-            colliderHeightFromFloor = ToolBox.GetAttributeFloat(element, "colliderheightfromfloor", 45.0f);
+            colliderHeightFromFloor = element.GetAttributeFloat("colliderheightfromfloor", 45.0f);
             colliderHeightFromFloor = ConvertUnits.ToSimUnits(colliderHeightFromFloor);
 
             collider = new List<PhysicsBody>();
@@ -382,14 +382,14 @@ namespace Barotrauma
             byte limb1ID = Convert.ToByte(subElement.Attribute("limb1").Value);
             byte limb2ID = Convert.ToByte(subElement.Attribute("limb2").Value);
 
-            Vector2 limb1Pos = ToolBox.GetAttributeVector2(subElement, "limb1anchor", Vector2.Zero) * scale;
+            Vector2 limb1Pos = subElement.GetAttributeVector2("limb1anchor", Vector2.Zero) * scale;
             limb1Pos = ConvertUnits.ToSimUnits(limb1Pos);
 
-            Vector2 limb2Pos = ToolBox.GetAttributeVector2(subElement, "limb2anchor", Vector2.Zero) * scale;
+            Vector2 limb2Pos = subElement.GetAttributeVector2("limb2anchor", Vector2.Zero) * scale;
             limb2Pos = ConvertUnits.ToSimUnits(limb2Pos);
 
             LimbJoint joint = new LimbJoint(Limbs[limb1ID], Limbs[limb2ID], limb1Pos, limb2Pos);
-            joint.CanBeSevered = ToolBox.GetAttributeBool(subElement, "canbesevered", true);
+            joint.CanBeSevered = subElement.GetAttributeBool("canbesevered", true);
 
             if (subElement.Attribute("lowerlimit") != null)
             {

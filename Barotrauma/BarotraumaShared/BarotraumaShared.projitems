@@ -1414,6 +1414,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\MotionSensor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\NotComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\OrComponent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\OscillatorComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\OxygenDetector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\RegExFindComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\RelayComponent.cs" />
@@ -1500,5 +1501,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\SaveUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\XMLExtensions.cs" />
   </ItemGroup>
 </Project>

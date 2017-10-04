@@ -55,16 +55,16 @@ namespace Barotrauma
 
         public JobPrefab(XElement element)
         {
-            Name = ToolBox.GetAttributeString(element, "name", "name not found");
+            Name = element.GetAttributeString("name", "name not found");
 
-            Description = ToolBox.GetAttributeString(element, "description", "");
+            Description = element.GetAttributeString("description", "");
 
-            MinNumber = ToolBox.GetAttributeInt(element, "minnumber", 0);
-            MaxNumber = ToolBox.GetAttributeInt(element, "maxnumber", 10);
+            MinNumber = element.GetAttributeInt("minnumber", 0);
+            MaxNumber = element.GetAttributeInt("maxnumber", 10);
 
-            Commonness = ToolBox.GetAttributeInt(element, "commonness", 10);
+            Commonness = element.GetAttributeInt("commonness", 10);
 
-            AllowAlways = ToolBox.GetAttributeBool(element, "allowalways", false);
+            AllowAlways = element.GetAttributeBool("allowalways", false);
 
             ItemNames = new List<string>();
 
@@ -78,7 +78,7 @@ namespace Barotrauma
                         Items = subElement;
                         foreach (XElement itemElement in subElement.Elements())
                         {
-                            string itemName = ToolBox.GetAttributeString(itemElement, "name", "");
+                            string itemName = itemElement.GetAttributeString("name", "");
                             if (!string.IsNullOrWhiteSpace(itemName)) ItemNames.Add(itemName);
                         }
                         break;
@@ -105,7 +105,7 @@ namespace Barotrauma
 
             foreach (string filePath in filePaths)
             {
-                XDocument doc = ToolBox.TryLoadXml(filePath);
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null || doc.Root == null) return;
 
                 foreach (XElement element in doc.Root.Elements())

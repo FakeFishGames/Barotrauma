@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public void Load(string filePath)
         {
-            XDocument doc = ToolBox.TryLoadXml(filePath);
+            XDocument doc = XMLExtensions.TryLoadXml(filePath);
 
             if (doc == null)
             {
@@ -37,12 +37,12 @@ namespace Barotrauma
                 return;
             }
             
-            MasterServerUrl = ToolBox.GetAttributeString(doc.Root, "masterserverurl", "");
+            MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
-            AutoCheckUpdates = ToolBox.GetAttributeBool(doc.Root, "autocheckupdates", true);
-            WasGameUpdated = ToolBox.GetAttributeBool(doc.Root, "wasgameupdated", false);
+            AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
+            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", false);
 
-            VerboseLogging = ToolBox.GetAttributeBool(doc.Root, "verboselogging", false);
+            VerboseLogging = doc.Root.GetAttributeBool("verboselogging", false);
 
             InitProjSpecific(doc);
 
@@ -51,7 +51,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "contentpackage":
-                        string path = ToolBox.GetAttributeString(subElement, "path", "");
+                        string path = subElement.GetAttributeString("path", "");
 
 
                         SelectedContentPackage = ContentPackage.list.Find(cp => cp.Path == path);

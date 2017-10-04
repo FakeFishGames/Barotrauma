@@ -30,10 +30,10 @@ namespace Barotrauma.Items.Components
         [Editable, HasDefaultValue("0.0,0.0,0.0,1.0", true)]
         public string TextColor
         {
-            get { return ToolBox.Vector4ToString(textColor.ToVector4()); }
+            get { return XMLExtensions.Vector4ToString(textColor.ToVector4()); }
             set
             {
-                textColor = new Color(ToolBox.ParseToVector4(value));
+                textColor = new Color(XMLExtensions.ParseToVector4(value));
                 if (textBlock != null) textBlock.TextColor = textColor;
             }
         }

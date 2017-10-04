@@ -271,7 +271,7 @@ namespace Barotrauma.Networking
             XDocument doc = null;
             if (File.Exists(SettingsFile))
             {
-                doc = ToolBox.TryLoadXml(SettingsFile);
+                doc = XMLExtensions.TryLoadXml(SettingsFile);
             }           
 
             if (doc == null || doc.Root == null)
@@ -281,7 +281,7 @@ namespace Barotrauma.Networking
 
             ObjectProperties = ObjectProperty.InitProperties(this, doc.Root);
 
-            AutoRestart = ToolBox.GetAttributeBool(doc.Root, "autorestart", false);
+            AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
 #if CLIENT
             if (autoRestart)
             {
@@ -290,15 +290,15 @@ namespace Barotrauma.Networking
 #endif
 
             subSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "SubSelection", "Manual"), out subSelectionMode);
+            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("SubSelection", "Manual"), out subSelectionMode);
             Voting.AllowSubVoting = subSelectionMode == SelectionMode.Vote;
 
             modeSelectionMode = SelectionMode.Manual;
-            Enum.TryParse<SelectionMode>(ToolBox.GetAttributeString(doc.Root, "ModeSelection", "Manual"), out modeSelectionMode);
+            Enum.TryParse<SelectionMode>(doc.Root.GetAttributeString("ModeSelection", "Manual"), out modeSelectionMode);
             Voting.AllowModeVoting = modeSelectionMode == SelectionMode.Vote;
 
             var traitorsEnabled = TraitorsEnabled;
-            Enum.TryParse<YesNoMaybe>(ToolBox.GetAttributeString(doc.Root, "TraitorsEnabled", "No"), out traitorsEnabled);
+            Enum.TryParse<YesNoMaybe>(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
             
@@ -308,7 +308,7 @@ namespace Barotrauma.Networking
 #endif
                 )
             {
-                GameMain.NetLobbyScreen.ServerMessageText = ToolBox.GetAttributeString(doc.Root, "ServerMessage", "");
+                GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             }
 
 #if CLIENT

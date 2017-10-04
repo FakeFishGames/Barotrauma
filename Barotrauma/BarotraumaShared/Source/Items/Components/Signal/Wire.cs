@@ -451,7 +451,7 @@ namespace Barotrauma.Items.Components
         {
             base.Load(componentElement);
 
-            string nodeString = ToolBox.GetAttributeString(componentElement, "nodes", "");
+            string nodeString = componentElement.GetAttributeString("nodes", "");
             if (nodeString == "") return;
 
             string[] nodeCoords = nodeString.Split(';');

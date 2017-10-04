@@ -71,7 +71,7 @@ namespace Barotrauma.Items.Components
             Wires = new Wire[MaxLinked];
 
             IsOutput = (element.Name.ToString() == "output");
-            Name = ToolBox.GetAttributeString(element, "name", (IsOutput) ? "output" : "input");
+            Name = element.GetAttributeString("name", (IsOutput) ? "output" : "input");
 
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
@@ -91,7 +91,7 @@ namespace Barotrauma.Items.Components
                         }
                         if (index == -1) break;
 
-                        int id = ToolBox.GetAttributeInt(subElement, "w", 0);
+                        int id = subElement.GetAttributeInt("w", 0);
                         if (id < 0) id = 0;
                         wireId[index] = (ushort)id;
 

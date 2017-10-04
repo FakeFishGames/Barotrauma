@@ -70,10 +70,10 @@ namespace Barotrauma.Items.Components
         [InGameEditable, HasDefaultValue("1.0,1.0,1.0,1.0", true)]
         public string LightColor
         {
-            get { return ToolBox.Vector4ToString(lightColor.ToVector4(), "0.00"); }
+            get { return XMLExtensions.Vector4ToString(lightColor.ToVector4(), "0.00"); }
             set
             {
-                Vector4 newColor = ToolBox.ParseToVector4(value, false);
+                Vector4 newColor = XMLExtensions.ParseToVector4(value, false);
                 newColor.X = MathHelper.Clamp(newColor.X, 0.0f, 1.0f);
                 newColor.Y = MathHelper.Clamp(newColor.Y, 0.0f, 1.0f);
                 newColor.Z = MathHelper.Clamp(newColor.Z, 0.0f, 1.0f);

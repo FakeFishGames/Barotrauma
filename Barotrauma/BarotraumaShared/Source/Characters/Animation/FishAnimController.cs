@@ -28,15 +28,15 @@ namespace Barotrauma
         public FishAnimController(Character character, XElement element)
             : base(character, element)
         {
-            waveAmplitude   = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "waveamplitude", 0.0f));
-            waveLength      = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "wavelength", 0.0f));
+            waveAmplitude   = ConvertUnits.ToSimUnits(element.GetAttributeFloat("waveamplitude", 0.0f));
+            waveLength      = ConvertUnits.ToSimUnits(element.GetAttributeFloat("wavelength", 0.0f));
 
-            steerTorque     = ToolBox.GetAttributeFloat(element, "steertorque", 25.0f);
+            steerTorque     = element.GetAttributeFloat("steertorque", 25.0f);
             
-            flip            = ToolBox.GetAttributeBool(element, "flip", true);
-            mirror          = ToolBox.GetAttributeBool(element, "mirror", false);
+            flip            = element.GetAttributeBool("flip", true);
+            mirror          = element.GetAttributeBool("mirror", false);
             
-            float footRot = ToolBox.GetAttributeFloat(element, "footrotation", float.NaN);
+            float footRot = element.GetAttributeFloat("footrotation", float.NaN);
             if (float.IsNaN(footRot))
             {
                 footRotation = null;
@@ -46,7 +46,7 @@ namespace Barotrauma
                 footRotation = MathHelper.ToRadians(footRot);
             }
 
-            rotateTowardsMovement = ToolBox.GetAttributeBool(element, "rotatetowardsmovement", true);
+            rotateTowardsMovement = element.GetAttributeBool("rotatetowardsmovement", true);
         }
 
         public override void UpdateAnim(float deltaTime)

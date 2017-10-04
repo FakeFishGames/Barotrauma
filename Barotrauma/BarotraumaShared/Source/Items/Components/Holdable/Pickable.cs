@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
         {
             allowedSlots = new List<InvSlotType>();
 
-            string slotString = ToolBox.GetAttributeString(element, "slots", "Any");
+            string slotString = element.GetAttributeString("slots", "Any");
             string[] slotCombinations = slotString.Split(',');
             foreach (string slotCombination in slotCombinations)
             {

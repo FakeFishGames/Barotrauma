@@ -72,21 +72,21 @@ namespace Barotrauma
 
             ChildStyles = new Dictionary<string, GUIComponentStyle>();
 
-            Padding = ToolBox.GetAttributeVector4(element, "padding", Vector4.Zero);
+            Padding = element.GetAttributeVector4("padding", Vector4.Zero);
 
-            Vector4 colorVector = ToolBox.GetAttributeVector4(element, "color", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+            Vector4 colorVector = element.GetAttributeVector4("color", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
             Color = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
 
-            colorVector = ToolBox.GetAttributeVector4(element, "textcolor", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+            colorVector = element.GetAttributeVector4("textcolor", new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
             textColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
 
-            colorVector = ToolBox.GetAttributeVector4(element, "hovercolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+            colorVector = element.GetAttributeVector4("hovercolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
             HoverColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
 
-            colorVector = ToolBox.GetAttributeVector4(element, "selectedcolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+            colorVector = element.GetAttributeVector4("selectedcolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
             SelectedColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
 
-            colorVector = ToolBox.GetAttributeVector4(element, "outlinecolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+            colorVector = element.GetAttributeVector4("outlinecolor", new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
             OutlineColor = new Color(colorVector.X, colorVector.Y, colorVector.Z, colorVector.W);
             
             foreach (XElement subElement in element.Elements())
@@ -95,16 +95,16 @@ namespace Barotrauma
                 {
                     case "sprite":
                         Sprite sprite = new Sprite(subElement);
-                        bool maintainAspect = ToolBox.GetAttributeBool(subElement, "maintainaspectratio",false);
-                        bool tile = ToolBox.GetAttributeBool(subElement, "tile", true);
+                        bool maintainAspect = subElement.GetAttributeBool("maintainaspectratio",false);
+                        bool tile = subElement.GetAttributeBool("tile", true);
 
-                        string stateStr = ToolBox.GetAttributeString(subElement, "state", "None");
+                        string stateStr = subElement.GetAttributeString("state", "None");
                         GUIComponent.ComponentState spriteState = GUIComponent.ComponentState.None;
                         Enum.TryParse(stateStr, out spriteState);
 
                         UISprite newSprite = new UISprite(sprite, tile, maintainAspect);
 
-                        Vector4 sliceVec = ToolBox.GetAttributeVector4(subElement, "slice", Vector4.Zero);
+                        Vector4 sliceVec = subElement.GetAttributeVector4("slice", Vector4.Zero);
                         if (sliceVec != Vector4.Zero)
                         {
                             Rectangle slice = new Rectangle((int)sliceVec.X, (int)sliceVec.Y, (int)(sliceVec.Z - sliceVec.X), (int)(sliceVec.W - sliceVec.Y));

@@ -105,14 +105,14 @@ namespace Barotrauma
 
             //ID = -1;
 
-            XDocument doc = ToolBox.TryLoadXml(file);
+            XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null) return;
 
-            if (ToolBox.GetAttributeBool(doc.Root, "genders", false))
+            if (doc.Root.GetAttributeBool("genders", false))
             {
                 if (gender == Gender.None)
                 {
-                    float femaleRatio = ToolBox.GetAttributeFloat(doc.Root, "femaleratio", 0.5f);
+                    float femaleRatio = doc.Root.GetAttributeFloat("femaleratio", 0.5f);
                     this.gender = (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < femaleRatio) ? Gender.Female : Gender.Male;
                 }
                 else
@@ -121,12 +121,12 @@ namespace Barotrauma
                 }
             }
                        
-            headSpriteRange[0] = ToolBox.GetAttributeVector2(doc.Root, "headid", Vector2.Zero);
+            headSpriteRange[0] = doc.Root.GetAttributeVector2("headid", Vector2.Zero);
             headSpriteRange[1] = headSpriteRange[0];
             if (headSpriteRange[0] == Vector2.Zero)
             {
-                headSpriteRange[0] = ToolBox.GetAttributeVector2(doc.Root, "maleheadid", Vector2.Zero);
-                headSpriteRange[1] = ToolBox.GetAttributeVector2(doc.Root, "femaleheadid", Vector2.Zero);
+                headSpriteRange[0] = doc.Root.GetAttributeVector2("maleheadid", Vector2.Zero);
+                headSpriteRange[1] = doc.Root.GetAttributeVector2("femaleheadid", Vector2.Zero);
             }
 
             int genderIndex = (this.gender == Gender.Female) ? 1 : 0;
@@ -147,14 +147,14 @@ namespace Barotrauma
 
             if (doc.Root.Element("name") != null)
             {
-                string firstNamePath = ToolBox.GetAttributeString(doc.Root.Element("name"), "firstname", "");
+                string firstNamePath = doc.Root.Element("name").GetAttributeString("firstname", "");
                 if (firstNamePath != "")
                 {
                     firstNamePath = firstNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
                     this.Name = ToolBox.GetRandomLine(firstNamePath);
                 }
 
-                string lastNamePath = ToolBox.GetAttributeString(doc.Root.Element("name"), "lastname", "");
+                string lastNamePath = doc.Root.Element("name").GetAttributeString("lastname", "");
                 if (lastNamePath != "")
                 {
                     lastNamePath = lastNamePath.Replace("[GENDER]", (this.gender == Gender.Female) ? "f" : "");
@@ -168,13 +168,13 @@ namespace Barotrauma
 
         private void LoadHeadSprite()
         {
-            XDocument doc = ToolBox.TryLoadXml(File);
+            XDocument doc = XMLExtensions.TryLoadXml(File);
             if (doc == null) return;
 
             XElement ragdollElement = doc.Root.Element("ragdoll");
             foreach (XElement limbElement in ragdollElement.Elements())
             {
-                if (ToolBox.GetAttributeString(limbElement, "type", "").ToLowerInvariant() != "head") continue;
+                if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") continue;
 
                 XElement spriteElement = limbElement.Element("sprite");
 
@@ -221,22 +221,22 @@ namespace Barotrauma
 
         public CharacterInfo(XElement element)
         {
-            Name = ToolBox.GetAttributeString(element, "name", "unnamed");
+            Name = element.GetAttributeString("name", "unnamed");
 
-            string genderStr = ToolBox.GetAttributeString(element, "gender", "male").ToLowerInvariant();
+            string genderStr = element.GetAttributeString("gender", "male").ToLowerInvariant();
             gender = (genderStr == "m") ? Gender.Male : Gender.Female;
 
-            File            = ToolBox.GetAttributeString(element, "file", "");
-            Salary          = ToolBox.GetAttributeInt(element, "salary", 1000);
-            headSpriteId    = ToolBox.GetAttributeInt(element, "headspriteid", 1);
-            StartItemsGiven = ToolBox.GetAttributeBool(element, "startitemsgiven", false);
+            File            = element.GetAttributeString("file", "");
+            Salary          = element.GetAttributeInt("salary", 1000);
+            headSpriteId    = element.GetAttributeInt("headspriteid", 1);
+            StartItemsGiven = element.GetAttributeBool("startitemsgiven", false);
             
-            int hullId = ToolBox.GetAttributeInt(element, "hull", -1);
+            int hullId = element.GetAttributeInt("hull", -1);
             if (hullId > 0 && hullId <= ushort.MaxValue) this.HullID = (ushort)hullId;            
 
             pickedItems = new List<ushort>();
 
-            string pickedItemString = ToolBox.GetAttributeString(element, "items", "");
+            string pickedItemString = element.GetAttributeString("items", "");
             if (!string.IsNullOrEmpty(pickedItemString))
             {
                 string[] itemIds = pickedItemString.Split(',');

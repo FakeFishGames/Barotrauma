@@ -118,7 +118,7 @@ namespace Barotrauma
             Submarine.MainSub = submarine;
 
             GameMain.GameSession = this;
-            selectedSub.Name = ToolBox.GetAttributeString(doc.Root, "submarine", selectedSub.Name);
+            selectedSub.Name = doc.Root.GetAttributeString("submarine", selectedSub.Name);
 #if CLIENT
             CrewManager = new CrewManager();
 #endif

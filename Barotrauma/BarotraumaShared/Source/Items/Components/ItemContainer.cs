@@ -50,8 +50,8 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("0.0,0.0", false)]
         public string ItemPos
         {
-            get { return ToolBox.Vector2ToString(itemPos); }
-            set { itemPos = ToolBox.ParseToVector2(value); }
+            get { return XMLExtensions.Vector2ToString(itemPos); }
+            set { itemPos = XMLExtensions.ParseToVector2(value); }
         }
         private Vector2 itemPos;
 
@@ -59,8 +59,8 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("0.0,0.0", false)]
         public string ItemInterval
         {
-            get { return ToolBox.Vector2ToString(itemInterval); }
-            set { itemInterval = ToolBox.ParseToVector2(value); }
+            get { return XMLExtensions.Vector2ToString(itemInterval); }
+            set { itemInterval = XMLExtensions.ParseToVector2(value); }
         }
         private Vector2 itemInterval;
 
@@ -76,10 +76,10 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("0.5,0.9", false)]
         public string HudPos
         {
-            get { return ToolBox.Vector2ToString(hudPos); }
+            get { return XMLExtensions.Vector2ToString(hudPos); }
             set 
             { 
-                hudPos = ToolBox.ParseToVector2(value);
+                hudPos = XMLExtensions.ParseToVector2(value);
                 //inventory.CenterPos = hudPos;
             }
         }
@@ -228,7 +228,7 @@ namespace Barotrauma.Items.Components
         {
             base.Load(componentElement);
 
-            string containedString = ToolBox.GetAttributeString(componentElement, "contained", "");
+            string containedString = componentElement.GetAttributeString("contained", "");
 
             string[] itemIdStrings = containedString.Split(',');
 

@@ -63,7 +63,7 @@ namespace Barotrauma
         public ContentPackage(string filePath)
             : this()
         {
-            XDocument doc = ToolBox.TryLoadXml(filePath);
+            XDocument doc = XMLExtensions.TryLoadXml(filePath);
 
             Path = filePath;
 
@@ -74,12 +74,12 @@ namespace Barotrauma
             }
 
 
-            name = ToolBox.GetAttributeString(doc.Root, "name", "");
+            name = doc.Root.GetAttributeString("name", "");
             
             foreach (XElement subElement in doc.Root.Elements())
             {
                 ContentType type = (ContentType)Enum.Parse(typeof(ContentType), subElement.Name.ToString(), true);
-                files.Add(new ContentFile(ToolBox.GetAttributeString(subElement, "file", ""), type));                
+                files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));                
             }
         }
 

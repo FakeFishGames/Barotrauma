@@ -332,14 +332,14 @@ namespace Barotrauma
                 }
             }
 
-            campaign.Money = ToolBox.GetAttributeInt(element, "money", 0);
+            campaign.Money = element.GetAttributeInt("money", 0);
 
             //backwards compatibility with older save files
             if (campaign.map == null)
             {
-                string mapSeed = ToolBox.GetAttributeString(element, "mapseed", "a");
+                string mapSeed = element.GetAttributeString("mapseed", "a");
                 campaign.GenerateMap(mapSeed);
-                campaign.map.SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
+                campaign.map.SetLocation(element.GetAttributeInt("currentlocation", 0));
             }
 
             campaign.savedOnStart = true;

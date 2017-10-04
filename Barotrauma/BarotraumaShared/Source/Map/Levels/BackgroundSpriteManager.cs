@@ -33,7 +33,7 @@ namespace Barotrauma
 
             if (prefab.LevelTriggerElement != null)
             {
-                Vector2 triggerPosition = ToolBox.GetAttributeVector2(prefab.LevelTriggerElement, "position", Vector2.Zero) * scale;
+                Vector2 triggerPosition = prefab.LevelTriggerElement.GetAttributeVector2("position", Vector2.Zero) * scale;
 
                 if (rotation != 0.0f)
                 {
@@ -110,7 +110,7 @@ namespace Barotrauma
         {
             try
             {
-                XDocument doc = ToolBox.TryLoadXml(configPath);
+                XDocument doc = XMLExtensions.TryLoadXml(configPath);
                 if (doc == null || doc.Root == null) return;
 
                 foreach (XElement element in doc.Root.Elements())

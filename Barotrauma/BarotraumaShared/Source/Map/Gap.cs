@@ -655,7 +655,7 @@ namespace Barotrauma
 
             if (element.Attribute("rect") != null)
             {
-                string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
+                string rectString = element.GetAttributeString("rect", "0,0,0,0");
                 string[] rectValues = rectString.Split(',');
 
                 rect = new Rectangle(

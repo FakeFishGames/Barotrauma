@@ -172,10 +172,10 @@ namespace Barotrauma
         [Editable, HasDefaultValue("1.0,1.0,1.0,1.0", true)]
         public string SpriteColor
         {
-            get { return ToolBox.Vector4ToString(spriteColor.ToVector4()); }
+            get { return XMLExtensions.Vector4ToString(spriteColor.ToVector4()); }
             set
             {
-                spriteColor = new Color(ToolBox.ParseToVector4(value));
+                spriteColor = new Color(XMLExtensions.ParseToVector4(value));
             }
         }
 
@@ -378,8 +378,8 @@ namespace Barotrauma
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this);
-                        aiTarget.SightRange = ToolBox.GetAttributeFloat(subElement, "sightrange", 1000.0f);
-                        aiTarget.SoundRange = ToolBox.GetAttributeFloat(subElement, "soundrange", 0.0f);
+                        aiTarget.SightRange = subElement.GetAttributeFloat("sightrange", 1000.0f);
+                        aiTarget.SoundRange = subElement.GetAttributeFloat("soundrange", 0.0f);
                         break;
                     case "fixrequirement":
                         FixRequirements.Add(new FixRequirement(subElement));
@@ -1595,7 +1595,7 @@ namespace Barotrauma
 
         public static void Load(XElement element, Submarine submarine)
         {          
-            string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
+            string rectString = element.GetAttributeString("rect", "0,0,0,0");
             string[] rectValues = rectString.Split(',');
             Rectangle rect = Rectangle.Empty;
             if (rectValues.Length==4)
@@ -1655,7 +1655,7 @@ namespace Barotrauma
                     if (shouldBeLoaded) property.TrySetValue(attribute.Value);
                 }
 
-                string linkedToString = ToolBox.GetAttributeString(element, "linked", "");
+                string linkedToString = element.GetAttributeString("linked", "");
                 if (linkedToString!="")
                 {
                     string[] linkedToIds = linkedToString.Split(',');

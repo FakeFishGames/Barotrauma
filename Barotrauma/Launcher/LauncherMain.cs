@@ -408,9 +408,9 @@ namespace Launcher
             Version currentVersion = new Version(version);
 
 
-            string latestVersionStr = ToolBox.GetAttributeString(doc.Root, "latestversion", "");
-            latestVersionFolder = ToolBox.GetAttributeString(doc.Root, "latestversionfolder", "");
-            latestVersionFileList = ToolBox.GetAttributeString(doc.Root, "latestversionfilelist", "");
+            string latestVersionStr = doc.Root.GetAttributeString("latestversion", "");
+            latestVersionFolder = doc.Root.GetAttributeString("latestversionfolder", "");
+            latestVersionFileList = doc.Root.GetAttributeString("latestversionfilelist", "");
 
 
             Version latestVersion = new Version(latestVersionStr);
@@ -435,7 +435,7 @@ namespace Launcher
 
                 foreach (XElement patchNote in patchNotes.Elements())
                 {
-                    string patchNumber = ToolBox.GetAttributeString(patchNote, "version", "");
+                    string patchNumber = patchNote.GetAttributeString("version", "");
 
                     //read the patch notes until we reach the user's version
                     if (patchNumber == version) break;
@@ -443,7 +443,7 @@ namespace Launcher
                     Version patchVersion = new Version(patchNumber);
                     if (currentVersion.CompareTo(patchVersion) >= 0) break;
 
-                    string innerText = ToolBox.ElementInnerText(patchNote);
+                    string innerText = patchNote.ElementInnerText();
 
                     innerText = innerText.Replace("\r\n", "\n");
                     innerText = innerText.Replace("\t", "");
@@ -488,7 +488,7 @@ namespace Launcher
             latestVersionFiles = UpdaterUtil.GetFileList(doc);
             filesToDownload = UpdaterUtil.GetRequiredFiles(doc);
 
-            string updaterVersion = ToolBox.GetAttributeString(doc.Root, "updaterversion", "1.1");
+            string updaterVersion = doc.Root.GetAttributeString("updaterversion", "1.1");
             if (updaterVersion!=UpdaterUtil.Version)
             {
                 ShowError("Warning", "The update may contain changes which can't be installed by the autoupdater. If you receive any error messages during the install, please download and install the update manually.");

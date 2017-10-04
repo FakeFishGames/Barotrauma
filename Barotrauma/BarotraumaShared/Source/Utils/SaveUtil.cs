@@ -85,9 +85,9 @@ namespace Barotrauma
         {
             DecompressToDirectory(filePath, TempPath, null);
 
-            XDocument doc = ToolBox.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
 
-            string subPath = Path.Combine(TempPath, ToolBox.GetAttributeString(doc.Root, "submarine", "")) + ".sub";
+            string subPath = Path.Combine(TempPath, doc.Root.GetAttributeString("submarine", "")) + ".sub";
             Submarine selectedSub = new Submarine(subPath, "");
             GameMain.GameSession = new GameSession(selectedSub, filePath, doc);
         }
@@ -95,7 +95,7 @@ namespace Barotrauma
         public static void LoadGame(string filePath, GameSession gameSession)
         {
             DecompressToDirectory(filePath, TempPath, null);
-            XDocument doc = ToolBox.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
             gameSession.Load(doc.Root);
         }
 
@@ -112,7 +112,7 @@ namespace Barotrauma
                 return null;
             }
 
-            return ToolBox.TryLoadXml(Path.Combine(tempPath, "gamesession.xml"));
+            return XMLExtensions.TryLoadXml(Path.Combine(tempPath, "gamesession.xml"));
         }
 
         public static void DeleteSave(string filePath)

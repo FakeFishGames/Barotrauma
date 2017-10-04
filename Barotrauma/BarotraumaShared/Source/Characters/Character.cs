@@ -545,14 +545,14 @@ namespace Barotrauma
                 Info = new CharacterInfo(file);
             }
 
-            XDocument doc = ToolBox.TryLoadXml(file);
+            XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 
             InitProjSpecific(doc);
 
-            SpeciesName = ToolBox.GetAttributeString(doc.Root, "name", "Unknown");
+            SpeciesName = doc.Root.GetAttributeString("name", "Unknown");
             
-            IsHumanoid = ToolBox.GetAttributeBool(doc.Root, "humanoid", false);
+            IsHumanoid = doc.Root.GetAttributeBool("humanoid", false);
             
             if (IsHumanoid)
             {
@@ -568,14 +568,14 @@ namespace Barotrauma
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
             
-            maxHealth = ToolBox.GetAttributeFloat(doc.Root, "health", 100.0f);
+            maxHealth = doc.Root.GetAttributeFloat("health", 100.0f);
             health = maxHealth;
 
-            DoesBleed = ToolBox.GetAttributeBool(doc.Root, "doesbleed", true);
-            BleedingDecreaseSpeed = ToolBox.GetAttributeFloat(doc.Root, "bleedingdecreasespeed", 0.05f);
+            DoesBleed = doc.Root.GetAttributeBool("doesbleed", true);
+            BleedingDecreaseSpeed = doc.Root.GetAttributeFloat("bleedingdecreasespeed", 0.05f);
 
-            needsAir = ToolBox.GetAttributeBool(doc.Root, "needsair", false);
-            drowningTime = ToolBox.GetAttributeFloat(doc.Root, "drowningtime", 10.0f);
+            needsAir = doc.Root.GetAttributeBool("needsair", false);
+            drowningTime = doc.Root.GetAttributeFloat("drowningtime", 10.0f);
             
             if (file == humanConfigFile)
             {

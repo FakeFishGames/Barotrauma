@@ -99,7 +99,7 @@ namespace Barotrauma
         {
             OverrideMusicType = null;
 
-            XDocument doc = ToolBox.TryLoadXml("Content/Sounds/sounds.xml");
+            XDocument doc = XMLExtensions.TryLoadXml("Content/Sounds/sounds.xml");
             if (doc == null) yield return CoroutineStatus.Failure;
 
             SoundCount = 16 + doc.Root.Elements().Count();
@@ -134,9 +134,9 @@ namespace Barotrauma
                 int i = 0;
                 foreach (XElement element in xMusic)
                 {
-                    string file = ToolBox.GetAttributeString(element, "file", "");
-                    string type = ToolBox.GetAttributeString(element, "type", "").ToLowerInvariant();
-                    Vector2 priority = ToolBox.GetAttributeVector2(element, "priorityrange", new Vector2(0.0f, 100.0f));
+                    string file = element.GetAttributeString("file", "");
+                    string type = element.GetAttributeString("type", "").ToLowerInvariant();
+                    Vector2 priority = element.GetAttributeVector2("priorityrange", new Vector2(0.0f, 100.0f));
 
                     musicClips[i] = new BackgroundMusic(file, type, priority);
 
@@ -158,21 +158,21 @@ namespace Barotrauma
                     case "music":
                         continue;
                     case "damagesound":
-                        Sound damageSound = Sound.Load(ToolBox.GetAttributeString(subElement, "file", ""), false);
+                        Sound damageSound = Sound.Load(subElement.GetAttributeString("file", ""), false);
                         if (damageSound == null) continue;
                     
                         DamageSoundType damageSoundType = DamageSoundType.None;
-                        Enum.TryParse<DamageSoundType>(ToolBox.GetAttributeString(subElement, "damagesoundtype", "None"), false, out damageSoundType);
+                        Enum.TryParse<DamageSoundType>(subElement.GetAttributeString("damagesoundtype", "None"), false, out damageSoundType);
 
                         damageSounds.Add(new DamageSound(
                             damageSound, 
-                            ToolBox.GetAttributeVector2(subElement, "damagerange", new Vector2(0.0f, 100.0f)), 
+                            subElement.GetAttributeVector2("damagerange", new Vector2(0.0f, 100.0f)), 
                             damageSoundType, 
-                            ToolBox.GetAttributeString(subElement, "requiredtag", "")));
+                            subElement.GetAttributeString("requiredtag", "")));
 
                         break;
                     default:
-                        Sound sound = Sound.Load(ToolBox.GetAttributeString(subElement, "file", ""), false);
+                        Sound sound = Sound.Load(subElement.GetAttributeString("file", ""), false);
                         if (sound != null)
                         {
                             miscSoundList.Add(new KeyValuePair<string, Sound>(subElement.Name.ToString().ToLowerInvariant(), sound));

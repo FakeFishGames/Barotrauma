@@ -195,13 +195,13 @@ namespace Barotrauma
             
             dir = Direction.Right;
 
-            doesFlip = ToolBox.GetAttributeBool(element, "flip", false);
+            doesFlip = element.GetAttributeBool("flip", false);
 
             this.scale = scale;
 
             body = new PhysicsBody(element, scale);
 
-            if (ToolBox.GetAttributeBool(element, "ignorecollisions", false))
+            if (element.GetAttributeBool("ignorecollisions", false))
             {
                 body.CollisionCategories = Category.None;
                 body.CollidesWith = Category.None;
@@ -234,13 +234,13 @@ namespace Barotrauma
                 }
 
 
-                pullJointPos = ToolBox.GetAttributeVector2(element, "pullpos", Vector2.Zero) * scale;
+                pullJointPos = element.GetAttributeVector2("pullpos", Vector2.Zero) * scale;
                 pullJointPos = ConvertUnits.ToSimUnits(pullJointPos);
 
-                stepOffset = ToolBox.GetAttributeVector2(element, "stepoffset", Vector2.Zero) * scale;
+                stepOffset = element.GetAttributeVector2("stepoffset", Vector2.Zero) * scale;
                 stepOffset = ConvertUnits.ToSimUnits(stepOffset);
 
-                refJointIndex = ToolBox.GetAttributeInt(element, "refjoint", -1);
+                refJointIndex = element.GetAttributeInt("refjoint", -1);
 
             }
             else
@@ -254,19 +254,19 @@ namespace Barotrauma
 
             GameMain.World.AddJoint(pullJoint);
 
-            steerForce = ToolBox.GetAttributeFloat(element, "steerforce", 0.0f);
+            steerForce = element.GetAttributeFloat("steerforce", 0.0f);
 
             //maxHealth = Math.Max(ToolBox.GetAttributeFloat(element, "health", 100.0f),1.0f);
 
-            armorSector = ToolBox.GetAttributeVector2(element, "armorsector", Vector2.Zero);
+            armorSector = element.GetAttributeVector2("armorsector", Vector2.Zero);
             armorSector.X = MathHelper.ToRadians(armorSector.X);
             armorSector.Y = MathHelper.ToRadians(armorSector.Y);
 
-            armorValue = Math.Max(ToolBox.GetAttributeFloat(element, "armor", 0.0f), 0.0f);
+            armorValue = Math.Max(element.GetAttributeFloat("armor", 0.0f), 0.0f);
 
             if (element.Attribute("mouthpos") != null)
             {
-                MouthPos = ConvertUnits.ToSimUnits(ToolBox.GetAttributeVector2(element, "mouthpos", Vector2.Zero));
+                MouthPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("mouthpos", Vector2.Zero));
             }
 
             body.BodyType = BodyType.Dynamic;

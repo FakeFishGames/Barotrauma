@@ -21,18 +21,18 @@ namespace Barotrauma
         
         public BackgroundCreaturePrefab(XElement element)
         {
-            Speed = ToolBox.GetAttributeFloat(element, "speed", 1.0f);
+            Speed = element.GetAttributeFloat("speed", 1.0f);
 
-            WanderAmount = ToolBox.GetAttributeFloat(element, "wanderamount", 0.0f);
+            WanderAmount = element.GetAttributeFloat("wanderamount", 0.0f);
 
-            WanderZAmount = ToolBox.GetAttributeFloat(element, "wanderzamount", 0.0f);
+            WanderZAmount = element.GetAttributeFloat("wanderzamount", 0.0f);
             
-            SwarmMin = ToolBox.GetAttributeInt(element, "swarmmin", 1);
-            SwarmMax = ToolBox.GetAttributeInt(element, "swarmmax", 1);
+            SwarmMin = element.GetAttributeInt("swarmmin", 1);
+            SwarmMax = element.GetAttributeInt("swarmmax", 1);
 
-            SwarmRadius = ToolBox.GetAttributeFloat(element, "swarmradius", 200.0f);
+            SwarmRadius = element.GetAttributeFloat("swarmradius", 200.0f);
 
-            DisableRotation = ToolBox.GetAttributeBool(element, "disablerotation", false);
+            DisableRotation = element.GetAttributeBool("disablerotation", false);
 
             foreach (XElement subElement in element.Elements())
             {

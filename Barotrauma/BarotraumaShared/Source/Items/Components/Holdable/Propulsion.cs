@@ -41,7 +41,7 @@ namespace Barotrauma.Items.Components
         public Propulsion(Item item, XElement element)
             : base(item,element)
         {
-            switch (ToolBox.GetAttributeString(element, "usablein", "both").ToLowerInvariant())
+            switch (element.GetAttributeString("usablein", "both").ToLowerInvariant())
             {
                 case "air":
                     usableIn = UsableIn.Air;
