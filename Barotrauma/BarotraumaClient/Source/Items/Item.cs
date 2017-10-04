@@ -218,7 +218,7 @@ namespace Barotrauma
 
                 if (value is bool)
                 {
-                    GUITickBox propertyTickBox = new GUITickBox(new Rectangle(10, y, 18, 18), objectProperty.Name,
+                    GUITickBox propertyTickBox = new GUITickBox(new Rectangle(10, y, 18, boxHeight), objectProperty.Name,
                         Alignment.Left, editingHUD);
                     propertyTickBox.Font = GUI.SmallFont;
 
@@ -226,6 +226,24 @@ namespace Barotrauma
 
                     propertyTickBox.UserData = objectProperty;
                     propertyTickBox.OnSelected = EnterProperty;
+                }
+                else if (value.GetType().IsEnum)
+                {
+                    new GUITextBlock(new Rectangle(0, y, 100, 18), objectProperty.Name, "", Alignment.TopLeft, Alignment.Left, editingHUD, false, GUI.SmallFont);
+                    GUIDropDown enumDropDown = new GUIDropDown(new Rectangle(180, y, 250, boxHeight), "", "", editingHUD);
+                    foreach (object enumValue in Enum.GetValues(value.GetType()))
+                    {
+                        var enumTextBlock = new GUITextBlock(new Rectangle(0, 0, 200, 25), enumValue.ToString(), "", enumDropDown);
+                        enumTextBlock.UserData = enumValue;
+                    }
+
+                    enumDropDown.OnSelected += (selected, val) =>
+                    {
+                        objectProperty.TrySetValue(val);
+                        return true;
+                    };
+
+                    enumDropDown.SelectItem(value);
                 }
                 else
                 {
