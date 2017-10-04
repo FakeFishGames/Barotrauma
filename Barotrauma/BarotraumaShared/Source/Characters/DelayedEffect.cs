@@ -23,7 +23,7 @@ namespace Barotrauma
         public DelayedEffect(XElement element)
             : base(element)
         {
-            delay = ToolBox.GetAttributeFloat(element, "delay", 1.0f);
+            delay = element.GetAttributeFloat("delay", 1.0f);
         }
 
         public override void Apply(ActionType type, float deltaTime, Entity entity, List<IPropertyObject> targets)

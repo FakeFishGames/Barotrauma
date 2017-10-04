@@ -396,9 +396,9 @@ namespace Barotrauma
 
         public static Map LoadNew(XElement element)
         {
-            string mapSeed = ToolBox.GetAttributeString(element, "seed", "a");
+            string mapSeed = element.GetAttributeString("seed", "a");
 
-            int size = ToolBox.GetAttributeInt(element, "size", 1000);
+            int size = element.GetAttributeInt("size", 1000);
             Map map = new Map(mapSeed, size);
             map.Load(element);
 
@@ -407,9 +407,9 @@ namespace Barotrauma
 
         public void Load(XElement element)
         {
-            SetLocation(ToolBox.GetAttributeInt(element, "currentlocation", 0));
+            SetLocation(element.GetAttributeInt("currentlocation", 0));
 
-            string discoveredStr = ToolBox.GetAttributeString(element, "discovered", "");
+            string discoveredStr = element.GetAttributeString("discovered", "");
 
             string[] discoveredStrs = discoveredStr.Split(',');
             for (int i = 0; i < discoveredStrs.Length; i++)
@@ -418,7 +418,7 @@ namespace Barotrauma
                 if (int.TryParse(discoveredStrs[i], out index)) locations[index].Discovered = true;
             }
 
-            string passedStr = ToolBox.GetAttributeString(element, "passed", "");
+            string passedStr = element.GetAttributeString("passed", "");
             string[] passedStrs = passedStr.Split(',');
             for (int i = 0; i < passedStrs.Length; i++)
             {

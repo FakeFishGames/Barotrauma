@@ -33,7 +33,7 @@ namespace Barotrauma
         {
             PrefabList = new List<Order>();
 
-            XDocument doc = ToolBox.TryLoadXml(ConfigFile);
+            XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
             if (doc == null || doc.Root == null) return;
 
             foreach (XElement orderElement in doc.Root.Elements())
@@ -57,10 +57,10 @@ namespace Barotrauma
 
         private Order(XElement orderElement)
         {
-            Name = ToolBox.GetAttributeString(orderElement, "name", "Name not found");
-            DoingText = ToolBox.GetAttributeString(orderElement, "doingtext", "");
+            Name = orderElement.GetAttributeString("name", "Name not found");
+            DoingText = orderElement.GetAttributeString("doingtext", "");
 
-            string targetItemName = ToolBox.GetAttributeString(orderElement, "targetitemtype", "");
+            string targetItemName = orderElement.GetAttributeString("targetitemtype", "");
 
             if (!string.IsNullOrWhiteSpace(targetItemName))
             {
@@ -75,13 +75,13 @@ namespace Barotrauma
                 }
             }
 
-            ItemName = ToolBox.GetAttributeString(orderElement, "targetitemname", "");
+            ItemName = orderElement.GetAttributeString("targetitemname", "");
 
-            Color = new Color(ToolBox.GetAttributeVector4(orderElement, "color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f)));
+            Color = new Color(orderElement.GetAttributeVector4("color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f)));
 
-            UseController = ToolBox.GetAttributeBool(orderElement, "usecontroller", false);
+            UseController = orderElement.GetAttributeBool("usecontroller", false);
 
-            string optionStr = ToolBox.GetAttributeString(orderElement, "options", "");
+            string optionStr = orderElement.GetAttributeString("options", "");
 
             if (string.IsNullOrWhiteSpace(optionStr))
             {

@@ -21,7 +21,7 @@ namespace Barotrauma
         public MonsterMission(XElement element, Location[] locations)
             : base(element, locations)
         {
-            monsterFile = ToolBox.GetAttributeString(element, "monsterfile", "");
+            monsterFile = element.GetAttributeString("monsterfile", "");
 
         }
         

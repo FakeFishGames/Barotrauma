@@ -62,19 +62,19 @@ namespace Barotrauma.Items.Components
         public Rope(Item item, XElement element)
             : base(item, element)
         {
-            string spritePath = ToolBox.GetAttributeString(element, "sprite", "");
+            string spritePath = element.GetAttributeString("sprite", "");
             if (spritePath == "") DebugConsole.ThrowError("Sprite "+spritePath+" in "+element+" not found!");
 
-            float length = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "length", 200.0f));
+            float length = ConvertUnits.ToSimUnits(element.GetAttributeFloat("length", 200.0f));
 
-            pullForce = ToolBox.GetAttributeFloat(element, "pullforce", 10.0f);
+            pullForce = element.GetAttributeFloat("pullforce", 10.0f);
 
             projectileAnchor = Vector2.Zero;
-            projectileAnchor.X = ToolBox.GetAttributeFloat(element, "projectileanchorx", 0.0f);
-            projectileAnchor.Y = ToolBox.GetAttributeFloat(element, "projectileanchory", 0.0f);
+            projectileAnchor.X = element.GetAttributeFloat("projectileanchorx", 0.0f);
+            projectileAnchor.Y = element.GetAttributeFloat("projectileanchory", 0.0f);
             projectileAnchor = ConvertUnits.ToSimUnits(projectileAnchor);
 
-            characterUsable = ToolBox.GetAttributeBool(element, "characterusable", false);
+            characterUsable = element.GetAttributeBool("characterusable", false);
                             
             sprite = new Sprite(spritePath, new Vector2(0.5f,0.5f));
             sectionLength = ConvertUnits.ToSimUnits(sprite.size.X);

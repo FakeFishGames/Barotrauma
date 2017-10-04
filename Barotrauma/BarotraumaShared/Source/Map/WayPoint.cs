@@ -568,22 +568,22 @@ namespace Barotrauma
 
             w.ID = (ushort)int.Parse(element.Attribute("ID").Value);
 
-            Enum.TryParse<SpawnType>(ToolBox.GetAttributeString(element, "spawn", "Path"), out w.spawnType);
+            Enum.TryParse<SpawnType>(element.GetAttributeString("spawn", "Path"), out w.spawnType);
 
-            string idCardTagString = ToolBox.GetAttributeString(element, "idcardtags", "");
+            string idCardTagString = element.GetAttributeString("idcardtags", "");
             if (!string.IsNullOrWhiteSpace(idCardTagString))
             {
                 w.IdCardTags = idCardTagString.Split(',');
             }
 
-            string jobName = ToolBox.GetAttributeString(element, "job", "").ToLowerInvariant();
+            string jobName = element.GetAttributeString("job", "").ToLowerInvariant();
             if (!string.IsNullOrWhiteSpace(jobName))
             {
                 w.assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName);
             }
 
-            w.ladderId = (ushort)ToolBox.GetAttributeInt(element, "ladders", 0);
-            w.gapId = (ushort)ToolBox.GetAttributeInt(element, "gap", 0);
+            w.ladderId = (ushort)element.GetAttributeInt("ladders", 0);
+            w.gapId = (ushort)element.GetAttributeInt("gap", 0);
 
             w.linkedToID = new List<ushort>();
             int i = 0;

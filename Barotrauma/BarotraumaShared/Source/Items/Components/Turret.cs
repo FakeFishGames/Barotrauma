@@ -31,11 +31,11 @@ namespace Barotrauma.Items.Components
         {
             get 
             { 
-                return ToolBox.Vector2ToString(barrelPos); 
+                return XMLExtensions.Vector2ToString(barrelPos); 
             }
             set 
             { 
-                barrelPos = ToolBox.ParseToVector2(value); 
+                barrelPos = XMLExtensions.ParseToVector2(value); 
             }
         }
 
@@ -62,11 +62,11 @@ namespace Barotrauma.Items.Components
                 limits.X = MathHelper.ToDegrees(limits.X);
                 limits.Y = MathHelper.ToDegrees(limits.Y);
 
-                return ToolBox.Vector2ToString(limits); 
+                return XMLExtensions.Vector2ToString(limits); 
             }
             set
             {
-                Vector2 vector = ToolBox.ParseToVector2(value);
+                Vector2 vector = XMLExtensions.ParseToVector2(value);
                 minRotation = MathHelper.ToRadians(vector.X);
                 maxRotation = MathHelper.ToRadians(vector.Y);
 
@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
 
-            string barrelSpritePath = ToolBox.GetAttributeString(element, "barrelsprite", "");
+            string barrelSpritePath = element.GetAttributeString("barrelsprite", "");
 
             if (!string.IsNullOrWhiteSpace(barrelSpritePath))
             {
@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
 
                 barrelSprite = new Sprite(
                     barrelSpritePath,
-                    ToolBox.GetAttributeVector2(element, "origin", Vector2.Zero));
+                    element.GetAttributeVector2("origin", Vector2.Zero));
             }
         }
 
@@ -355,7 +355,7 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "position_in":
-                    Vector2 receivedPos = ToolBox.ParseToVector2(signal, false);
+                    Vector2 receivedPos = XMLExtensions.ParseToVector2(signal, false);
 
                     Vector2 centerPos = new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y);
 

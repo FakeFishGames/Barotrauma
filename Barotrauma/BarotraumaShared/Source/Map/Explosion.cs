@@ -33,17 +33,17 @@ namespace Barotrauma
         {
             attack = new Attack(element);
 
-            force = ToolBox.GetAttributeFloat(element, "force", 0.0f);
+            force = element.GetAttributeFloat("force", 0.0f);
 
-            sparks      = ToolBox.GetAttributeBool(element, "sparks", true);
-            shockwave   = ToolBox.GetAttributeBool(element, "shockwave", true);
-            flames      = ToolBox.GetAttributeBool(element, "flames", true);
-            smoke       = ToolBox.GetAttributeBool(element, "smoke", true);
+            sparks      = element.GetAttributeBool("sparks", true);
+            shockwave   = element.GetAttributeBool("shockwave", true);
+            flames      = element.GetAttributeBool("flames", true);
+            smoke       = element.GetAttributeBool("smoke", true);
 
-            decal       = ToolBox.GetAttributeString(element, "decal", "");
-            decalSize   = ToolBox.GetAttributeFloat(element, "decalSize", 1.0f);
+            decal       = element.GetAttributeString("decal", "");
+            decalSize   = element.GetAttributeFloat("decalSize", 1.0f);
 
-            CameraShake = ToolBox.GetAttributeFloat(element, "camerashake", attack.Range * 0.1f);
+            CameraShake = element.GetAttributeFloat("camerashake", attack.Range * 0.1f);
         }
         
         public void Explode(Vector2 worldPosition)

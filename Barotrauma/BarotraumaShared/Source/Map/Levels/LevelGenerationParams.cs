@@ -28,10 +28,10 @@ namespace Barotrauma
 
         public Biome(XElement element)
         {
-            Name = ToolBox.GetAttributeString(element, "name", "Biome");
-            Description = ToolBox.GetAttributeString(element, "description", "");
+            Name = element.GetAttributeString("name", "Biome");
+            Description = element.GetAttributeString("description", "");
             
-            string[] placementsStrs = ToolBox.GetAttributeString(element, "MapPlacement", "Default").Split(',');
+            string[] placementsStrs = element.GetAttributeString("MapPlacement", "Default").Split(',');
             foreach (string placementStr in placementsStrs)
             {
                 MapPlacement parsedPlacement;            
@@ -280,21 +280,21 @@ namespace Barotrauma
             Name = element == null ? "default" : element.Name.ToString();
             ObjectProperties = ObjectProperty.InitProperties(this, element);
 
-            Vector3 colorVector = ToolBox.GetAttributeVector3(element, "BackgroundColor", new Vector3(50, 46, 20));
+            Vector3 colorVector = element.GetAttributeVector3("BackgroundColor", new Vector3(50, 46, 20));
             BackgroundColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
 
-            colorVector = ToolBox.GetAttributeVector3(element, "WallColor", new Vector3(255,255,255));
+            colorVector = element.GetAttributeVector3("WallColor", new Vector3(255,255,255));
             WallColor = new Color((int)colorVector.X, (int)colorVector.Y, (int)colorVector.Z);
 
-            VoronoiSiteInterval = ToolBox.GetAttributeVector2(element, "VoronoiSiteInterval", new Vector2(3000, 3000));
+            VoronoiSiteInterval = element.GetAttributeVector2("VoronoiSiteInterval", new Vector2(3000, 3000));
 
-            VoronoiSiteVariance = ToolBox.GetAttributeVector2(element, "VoronoiSiteVariance", new Vector2(voronoiSiteInterval.X, voronoiSiteInterval.Y) * 0.4f);
+            VoronoiSiteVariance = element.GetAttributeVector2("VoronoiSiteVariance", new Vector2(voronoiSiteInterval.X, voronoiSiteInterval.Y) * 0.4f);
 
-            MainPathNodeIntervalRange = ToolBox.GetAttributeVector2(element, "MainPathNodeIntervalRange", new Vector2(5000.0f, 10000.0f));
+            MainPathNodeIntervalRange = element.GetAttributeVector2("MainPathNodeIntervalRange", new Vector2(5000.0f, 10000.0f));
 
-            SmallTunnelLengthRange = ToolBox.GetAttributeVector2(element, "SmallTunnelLengthRange", new Vector2(5000.0f, 10000.0f));
+            SmallTunnelLengthRange = element.GetAttributeVector2("SmallTunnelLengthRange", new Vector2(5000.0f, 10000.0f));
             
-            string biomeStr = ToolBox.GetAttributeString(element, "biomes", "");
+            string biomeStr = element.GetAttributeString("biomes", "");
 
             if (string.IsNullOrWhiteSpace(biomeStr))
             {
@@ -334,7 +334,7 @@ namespace Barotrauma
 
             foreach (string file in files)
             {
-                XDocument doc = ToolBox.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file);
                 if (doc == null || doc.Root == null) return;
 
                 foreach (XElement element in doc.Root.Elements())

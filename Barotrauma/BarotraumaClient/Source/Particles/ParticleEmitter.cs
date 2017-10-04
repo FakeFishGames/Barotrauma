@@ -95,16 +95,16 @@ namespace Barotrauma.Particles
         {
             Name = element.Name.ToString();
 
-            ParticlePrefab = GameMain.ParticleManager.FindPrefab(ToolBox.GetAttributeString(element, "particle", ""));
+            ParticlePrefab = GameMain.ParticleManager.FindPrefab(element.GetAttributeString("particle", ""));
 
             if (element.Attribute("startrotation") == null)
             {
-                AngleMin = ToolBox.GetAttributeFloat(element, "anglemin", 0.0f);
-                AngleMax = ToolBox.GetAttributeFloat(element, "anglemax", 0.0f);
+                AngleMin = element.GetAttributeFloat("anglemin", 0.0f);
+                AngleMax = element.GetAttributeFloat("anglemax", 0.0f);
             }
             else
             {
-                AngleMin = ToolBox.GetAttributeFloat(element, "angle", 0.0f);
+                AngleMin = element.GetAttributeFloat("angle", 0.0f);
                 AngleMax = AngleMin;
             }
 
@@ -118,23 +118,23 @@ namespace Barotrauma.Particles
             }
             else
             {
-                ScaleMin = ToolBox.GetAttributeFloat(element,"scalemin",1.0f);
-                ScaleMax = Math.Max(ScaleMin, ToolBox.GetAttributeFloat(element, "scalemax", 1.0f));
+                ScaleMin = element.GetAttributeFloat("scalemin",1.0f);
+                ScaleMax = Math.Max(ScaleMin, element.GetAttributeFloat("scalemax", 1.0f));
             }
 
             if (element.Attribute("velocity") == null)
             {
-                VelocityMin = ToolBox.GetAttributeFloat(element, "velocitymin", 0.0f);
-                VelocityMax = ToolBox.GetAttributeFloat(element, "velocitymax", 0.0f);
+                VelocityMin = element.GetAttributeFloat("velocitymin", 0.0f);
+                VelocityMax = element.GetAttributeFloat("velocitymax", 0.0f);
             }
             else
             {
-                VelocityMin = ToolBox.GetAttributeFloat(element, "velocity", 0.0f);
+                VelocityMin = element.GetAttributeFloat("velocity", 0.0f);
                 VelocityMax = VelocityMin;
             }
 
-            ParticlesPerSecond = ToolBox.GetAttributeInt(element, "particlespersecond", 0);
-            ParticleAmount = ToolBox.GetAttributeInt(element, "particleamount", 0);
+            ParticlesPerSecond = element.GetAttributeInt("particlespersecond", 0);
+            ParticleAmount = element.GetAttributeInt("particleamount", 0);
         }
     }
 }

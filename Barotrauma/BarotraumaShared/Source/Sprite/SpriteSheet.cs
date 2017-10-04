@@ -16,8 +16,8 @@ namespace Barotrauma
         public SpriteSheet(XElement element, string path = "", string file = "")
             : base(element, path, file)
         {
-            int columnCount = Math.Max(ToolBox.GetAttributeInt(element, "columns", 1), 1);
-            int rowCount = Math.Max(ToolBox.GetAttributeInt(element, "rows", 1), 1);
+            int columnCount = Math.Max(element.GetAttributeInt("columns", 1), 1);
+            int rowCount = Math.Max(element.GetAttributeInt("rows", 1), 1);
 
             sourceRects = new Rectangle[rowCount * columnCount];
 
@@ -32,7 +32,7 @@ namespace Barotrauma
                 }
             }
 
-            origin = ToolBox.GetAttributeVector2(element, "origin", new Vector2(0.5f, 0.5f));
+            origin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
             origin.X = origin.X * cellWidth;
             origin.Y = origin.Y * cellHeight;
         }

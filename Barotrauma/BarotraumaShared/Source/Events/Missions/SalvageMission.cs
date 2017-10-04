@@ -26,11 +26,11 @@ namespace Barotrauma
         public SalvageMission(XElement element, Location[] locations)
             : base(element, locations)
         {
-            string itemName = ToolBox.GetAttributeString(element, "itemname", "");
+            string itemName = element.GetAttributeString("itemname", "");
 
             itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
             
-            string spawnPositionTypeStr = ToolBox.GetAttributeString(element, "spawntype", "");
+            string spawnPositionTypeStr = element.GetAttributeString("spawntype", "");
 
             if (string.IsNullOrWhiteSpace(spawnPositionTypeStr) ||
                 !Enum.TryParse<Level.PositionType>(spawnPositionTypeStr, true, out spawnPositionType))

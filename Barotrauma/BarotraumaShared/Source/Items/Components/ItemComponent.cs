@@ -183,7 +183,7 @@ namespace Barotrauma.Items.Components
 
             try
             {
-                string selectKeyStr = ToolBox.GetAttributeString(element, "selectkey", "Select");
+                string selectKeyStr = element.GetAttributeString("selectkey", "Select");
                 selectKeyStr = ToolBox.ConvertInputType(selectKeyStr);
                 SelectKey = (InputType)Enum.Parse(typeof(InputType), selectKeyStr, true);
             }
@@ -196,7 +196,7 @@ namespace Barotrauma.Items.Components
 
             try
             {
-                string pickKeyStr = ToolBox.GetAttributeString(element, "selectkey", "Select");
+                string pickKeyStr = element.GetAttributeString("selectkey", "Select");
                 pickKeyStr = ToolBox.ConvertInputType(pickKeyStr);
                 PickKey = (InputType)Enum.Parse(typeof(InputType),pickKeyStr, true);
             }
@@ -219,8 +219,8 @@ namespace Barotrauma.Items.Components
 
                     case "requiredskill":
                     case "requiredskills":
-                        string skillName = ToolBox.GetAttributeString(subElement, "name", "");
-                        requiredSkills.Add(new Skill(skillName, ToolBox.GetAttributeInt(subElement, "level", 0)));
+                        string skillName = subElement.GetAttributeString("name", "");
+                        requiredSkills.Add(new Skill(skillName, subElement.GetAttributeInt("level", 0)));
                         break;
                     case "statuseffect":
                         var statusEffect = StatusEffect.Load(subElement);

@@ -54,18 +54,18 @@ namespace Barotrauma
 
         public Job(XElement element)
         {
-            string name = ToolBox.GetAttributeString(element, "name", "").ToLowerInvariant();
+            string name = element.GetAttributeString("name", "").ToLowerInvariant();
             prefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == name);
 
             skills = new Dictionary<string, Skill>();
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "skill") continue;
-                string skillName = ToolBox.GetAttributeString(subElement, "name", "");
+                string skillName = subElement.GetAttributeString("name", "");
                 if (string.IsNullOrEmpty(name)) continue;
                 skills.Add(
                     skillName,
-                    new Skill(skillName, ToolBox.GetAttributeInt(subElement, "level", 0)));
+                    new Skill(skillName, subElement.GetAttributeInt("level", 0)));
             }
         }
         
@@ -96,7 +96,7 @@ namespace Barotrauma
 
         private void InitializeJobItem(Character character, WayPoint spawnPoint, XElement itemElement, Item parentItem = null)
         {
-            string itemName = ToolBox.GetAttributeString(itemElement, "name", "");
+            string itemName = itemElement.GetAttributeString("name", "");
               
             ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
             if (itemPrefab == null)
@@ -112,7 +112,7 @@ namespace Barotrauma
                 Entity.Spawner.CreateNetworkEvent(item, false);
             }
 
-            if (ToolBox.GetAttributeBool(itemElement, "equip", false))
+            if (itemElement.GetAttributeBool("equip", false))
             {
                 List<InvSlotType> allowedSlots = new List<InvSlotType>(item.AllowedSlots);
                 allowedSlots.Remove(InvSlotType.Any);

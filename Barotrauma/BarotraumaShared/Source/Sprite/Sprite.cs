@@ -65,7 +65,7 @@ namespace Barotrauma
         {
             if (file == "")
             {
-                file = ToolBox.GetAttributeString(element, "texture", "");
+                file = element.GetAttributeString("texture", "");
             }
             
             if (file == "")
@@ -81,7 +81,7 @@ namespace Barotrauma
 
             this.file = path + file;
             
-            Vector4 sourceVector = ToolBox.GetAttributeVector4(element, "sourcerect", Vector4.Zero);
+            Vector4 sourceVector = element.GetAttributeVector4("sourcerect", Vector4.Zero);
 
             bool shouldReturn = false;
             LoadTexture(ref sourceVector, ref shouldReturn);
@@ -91,15 +91,15 @@ namespace Barotrauma
                 (int)sourceVector.X, (int)sourceVector.Y,
                 (int)sourceVector.Z, (int)sourceVector.W);
 
-            origin = ToolBox.GetAttributeVector2(element, "origin", new Vector2(0.5f, 0.5f));
+            origin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
             origin.X = origin.X * sourceRect.Width;
             origin.Y = origin.Y * sourceRect.Height;
 
-            size = ToolBox.GetAttributeVector2(element, "size", Vector2.One);
+            size = element.GetAttributeVector2("size", Vector2.One);
             size.X *= sourceRect.Width;
             size.Y *= sourceRect.Height;
 
-            Depth = ToolBox.GetAttributeFloat(element, "depth", 0.0f);
+            Depth = element.GetAttributeFloat("depth", 0.0f);
 
             list.Add(this);
         }

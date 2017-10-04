@@ -127,7 +127,7 @@ namespace Barotrauma
 
         public static RelatedItem Load(XElement element)
         {
-            string nameString = ToolBox.GetAttributeString(element, "name", "");
+            string nameString = element.GetAttributeString("name", "");
             if (nameString == "") return null;
 
             string[] names = nameString.Split(',');
@@ -136,7 +136,7 @@ namespace Barotrauma
 
             try
             {
-                ri.type = (RelationType)Enum.Parse(typeof(RelationType), ToolBox.GetAttributeString(element, "type", "None"));
+                ri.type = (RelationType)Enum.Parse(typeof(RelationType), element.GetAttributeString("type", "None"));
             }
 
             catch
@@ -144,7 +144,7 @@ namespace Barotrauma
                 ri.type = RelationType.None;
             }
 
-            ri.Msg = ToolBox.GetAttributeString(element, "msg", "");
+            ri.Msg = element.GetAttributeString("msg", "");
 
             foreach (XElement subElement in element.Elements())
             {

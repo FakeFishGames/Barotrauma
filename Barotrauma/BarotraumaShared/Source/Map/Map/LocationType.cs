@@ -56,7 +56,7 @@ namespace Barotrauma
         {
             name = element.Name.ToString();
 
-            commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
+            commonness = element.GetAttributeInt("commonness", 1);
             totalWeight += commonness;
 
             nameFormats = new List<string>();
@@ -70,7 +70,7 @@ namespace Barotrauma
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "hireable") continue;
 
-                string jobName = ToolBox.GetAttributeString(subElement, "name", "");
+                string jobName = subElement.GetAttributeString("name", "");
 
                 JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName.ToLowerInvariant());
                 if (jobPrefab==null)
@@ -78,7 +78,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Invalid job name ("+jobName+") in location type "+name);
                 }
 
-                float jobCommonness = ToolBox.GetAttributeFloat(subElement, "commonness", 1.0f);
+                float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
                 totalHireableWeight += jobCommonness;
 
                 Tuple<JobPrefab, float> hireableJob = new Tuple<JobPrefab, float>(jobPrefab, jobCommonness);
@@ -86,10 +86,10 @@ namespace Barotrauma
                 hireableJobs.Add(hireableJob);
             }
 
-            string spritePath = ToolBox.GetAttributeString(element, "symbol", "Content/Map/beaconSymbol.png");
+            string spritePath = element.GetAttributeString("symbol", "Content/Map/beaconSymbol.png");
             symbolSprite = new Sprite(spritePath, new Vector2(0.5f, 0.5f));
 
-            string backgroundPath = ToolBox.GetAttributeString(element, "background", "");
+            string backgroundPath = element.GetAttributeString("background", "");
             backGround = new Sprite(backgroundPath, Vector2.Zero);
         }
 
@@ -132,7 +132,7 @@ namespace Barotrauma
             
             foreach (string file in locationTypeFiles)
             {
-                XDocument doc = ToolBox.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file);
 
                 if (doc==null)
                 {

@@ -79,30 +79,30 @@ namespace Barotrauma
         {
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
 
-            XDocument doc = ToolBox.TryLoadXml(file);
+            XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 
             XElement aiElement = doc.Root.Element("ai");
             if (aiElement == null) return;
 
-            attackRooms     = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackrooms", "attackpriorityrooms") / 100.0f;
-            attackHumans    = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackhumans", "attackpriorityhumans") / 100.0f;
-            attackWeaker    = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackweaker", "attackpriorityweaker") / 100.0f;
-            attackStronger  = ToolBox.GetAttributeFloat(aiElement, 0.0f, "attackstronger", "attackprioritystronger") / 100.0f;
-            eatDeadPriority = ToolBox.GetAttributeFloat(aiElement, "eatpriority", 0.0f) / 100.0f;
+            attackRooms     = aiElement.GetAttributeFloat(0.0f, "attackrooms", "attackpriorityrooms") / 100.0f;
+            attackHumans    = aiElement.GetAttributeFloat(0.0f, "attackhumans", "attackpriorityhumans") / 100.0f;
+            attackWeaker    = aiElement.GetAttributeFloat(0.0f, "attackweaker", "attackpriorityweaker") / 100.0f;
+            attackStronger  = aiElement.GetAttributeFloat(0.0f, "attackstronger", "attackprioritystronger") / 100.0f;
+            eatDeadPriority = aiElement.GetAttributeFloat("eatpriority", 0.0f) / 100.0f;
 
-            combatStrength = ToolBox.GetAttributeFloat(aiElement, "combatstrength", 1.0f);
+            combatStrength = aiElement.GetAttributeFloat("combatstrength", 1.0f);
 
-            attackCoolDown  = ToolBox.GetAttributeFloat(aiElement, "attackcooldown", 5.0f);
+            attackCoolDown  = aiElement.GetAttributeFloat("attackcooldown", 5.0f);
 
-            sight           = ToolBox.GetAttributeFloat(aiElement, "sight", 0.0f);
-            hearing         = ToolBox.GetAttributeFloat(aiElement, "hearing", 0.0f);
+            sight           = aiElement.GetAttributeFloat("sight", 0.0f);
+            hearing         = aiElement.GetAttributeFloat("hearing", 0.0f);
 
-            attackWhenProvoked = ToolBox.GetAttributeBool(aiElement, "attackwhenprovoked", false);
+            attackWhenProvoked = aiElement.GetAttributeBool("attackwhenprovoked", false);
 
-            fleeHealthThreshold = ToolBox.GetAttributeFloat(aiElement, "fleehealththreshold", 0.0f);
+            fleeHealthThreshold = aiElement.GetAttributeFloat("fleehealththreshold", 0.0f);
 
-            attachToWalls = ToolBox.GetAttributeBool(aiElement, "attachtowalls", false);
+            attachToWalls = aiElement.GetAttributeBool("attachtowalls", false);
 
             outsideSteering = new SteeringManager(this);
             insideSteering = new IndoorsSteeringManager(this, false);

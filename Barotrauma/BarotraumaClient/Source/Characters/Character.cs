@@ -46,7 +46,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XDocument doc)
         {
-            soundInterval = ToolBox.GetAttributeFloat(doc.Root, "soundinterval", 10.0f);
+            soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
 
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
 

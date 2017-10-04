@@ -18,7 +18,7 @@ namespace Barotrauma
         {
             itemConfig = element.Element("Items");
 
-            requiredDeliveryAmount = ToolBox.GetAttributeInt(element, "requireddeliveryamount", 0);
+            requiredDeliveryAmount = element.GetAttributeInt("requireddeliveryamount", 0);
         }
 
         private void InitItems()
@@ -41,7 +41,7 @@ namespace Barotrauma
 
         private void LoadItemAsChild(XElement element, Item parent)
         {
-            string itemName = ToolBox.GetAttributeString(element, "name", "");
+            string itemName = element.GetAttributeString("name", "");
 
             ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
             if (itemPrefab==null)
@@ -79,7 +79,7 @@ namespace Barotrauma
             
             foreach (XElement subElement in element.Elements())
             {
-                int amount = ToolBox.GetAttributeInt(subElement, "amount", 1);
+                int amount = subElement.GetAttributeInt("amount", 1);
                 for (int i = 0; i < amount; i++)
                 {
                     LoadItemAsChild(subElement, item);

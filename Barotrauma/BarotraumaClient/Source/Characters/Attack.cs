@@ -12,7 +12,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element)
         {
-            string soundPath = ToolBox.GetAttributeString(element, "sound", "");
+            string soundPath = element.GetAttributeString("sound", "");
             if (!string.IsNullOrWhiteSpace(soundPath))
             {
                 sound = Sound.Load(soundPath);

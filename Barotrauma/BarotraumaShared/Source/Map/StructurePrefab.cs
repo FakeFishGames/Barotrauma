@@ -69,7 +69,7 @@ namespace Barotrauma
         {            
             foreach (string filePath in filePaths)
             {
-                XDocument doc = ToolBox.TryLoadXml(filePath);
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null || doc.Root == null) return;
 
                 foreach (XElement el in doc.Root.Elements())
@@ -87,7 +87,7 @@ namespace Barotrauma
             sp.name = element.Name.ToString();
             
             sp.tags = new List<string>();
-            sp.tags.AddRange(ToolBox.GetAttributeString(element, "tags", "").Split(','));
+            sp.tags.AddRange(element.GetAttributeString("tags", "").Split(','));
 
             foreach (XElement subElement in element.Elements())
             {
@@ -96,20 +96,20 @@ namespace Barotrauma
                     case "sprite":
                         sp.sprite = new Sprite(subElement);
 
-                        if (ToolBox.GetAttributeBool(subElement, "fliphorizontal", false)) 
+                        if (subElement.GetAttributeBool("fliphorizontal", false)) 
                             sp.sprite.effects = SpriteEffects.FlipHorizontally;
-                        if (ToolBox.GetAttributeBool(subElement, "flipvertical", false)) 
+                        if (subElement.GetAttributeBool("flipvertical", false)) 
                             sp.sprite.effects = SpriteEffects.FlipVertically;
                         
-                        sp.canSpriteFlipX = ToolBox.GetAttributeBool(subElement, "canflipx", true);
+                        sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
 
                         break;
                     case "backgroundsprite":
                         sp.BackgroundSprite = new Sprite(subElement);
 
-                        if (ToolBox.GetAttributeBool(subElement, "fliphorizontal", false)) 
+                        if (subElement.GetAttributeBool("fliphorizontal", false)) 
                             sp.BackgroundSprite.effects = SpriteEffects.FlipHorizontally;
-                        if (ToolBox.GetAttributeBool(subElement, "flipvertical", false)) 
+                        if (subElement.GetAttributeBool("flipvertical", false)) 
                             sp.BackgroundSprite.effects = SpriteEffects.FlipVertically;
 
                         break;
@@ -118,33 +118,33 @@ namespace Barotrauma
 
             MapEntityCategory category;
 
-            if (!Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Structure"), true, out category))
+            if (!Enum.TryParse(element.GetAttributeString("category", "Structure"), true, out category))
             {
                 category = MapEntityCategory.Structure;
             }
 
             sp.Category = category;
 
-            sp.Description = ToolBox.GetAttributeString(element, "description", "");
+            sp.Description = element.GetAttributeString("description", "");
 
             sp.size = Vector2.Zero;
-            sp.size.X = ToolBox.GetAttributeFloat(element, "width", 0.0f);
-            sp.size.Y = ToolBox.GetAttributeFloat(element, "height", 0.0f);
+            sp.size.X = element.GetAttributeFloat("width", 0.0f);
+            sp.size.Y = element.GetAttributeFloat("height", 0.0f);
             
-            string spriteColorStr = ToolBox.GetAttributeString(element, "spritecolor", "1.0,1.0,1.0,1.0");
-            sp.SpriteColor = new Color(ToolBox.ParseToVector4(spriteColorStr));
+            string spriteColorStr = element.GetAttributeString("spritecolor", "1.0,1.0,1.0,1.0");
+            sp.SpriteColor = new Color(XMLExtensions.ParseToVector4(spriteColorStr));
 
-            sp.maxHealth = ToolBox.GetAttributeFloat(element, "health", 100.0f);
+            sp.maxHealth = element.GetAttributeFloat("health", 100.0f);
 
-            sp.resizeHorizontal = ToolBox.GetAttributeBool(element, "resizehorizontal", false);
-            sp.resizeVertical = ToolBox.GetAttributeBool(element, "resizevertical", false);
+            sp.resizeHorizontal = element.GetAttributeBool("resizehorizontal", false);
+            sp.resizeVertical = element.GetAttributeBool("resizevertical", false);
             
-            sp.isPlatform = ToolBox.GetAttributeBool(element, "platform", false);
-            sp.stairDirection = (Direction)Enum.Parse(typeof(Direction), ToolBox.GetAttributeString(element, "stairdirection", "None"), true);
+            sp.isPlatform = element.GetAttributeBool("platform", false);
+            sp.stairDirection = (Direction)Enum.Parse(typeof(Direction), element.GetAttributeString("stairdirection", "None"), true);
 
-            sp.castShadow = ToolBox.GetAttributeBool(element, "castshadow", false); 
+            sp.castShadow = element.GetAttributeBool("castshadow", false); 
             
-            sp.hasBody = ToolBox.GetAttributeBool(element, "body", false); 
+            sp.hasBody = element.GetAttributeBool("body", false); 
             
             return sp;
         }

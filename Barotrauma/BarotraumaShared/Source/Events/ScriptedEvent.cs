@@ -56,13 +56,13 @@ namespace Barotrauma
         {
             configElement = element;
 
-            name = ToolBox.GetAttributeString(element, "name", "");
-            description = ToolBox.GetAttributeString(element, "description", "");
+            name = element.GetAttributeString("name", "");
+            description = element.GetAttributeString("description", "");
             
-            minEventCount = ToolBox.GetAttributeInt(element, "mineventcount", 0);
-            maxEventCount = ToolBox.GetAttributeInt(element, "maxeventcount", 0);
+            minEventCount = element.GetAttributeInt("mineventcount", 0);
+            maxEventCount = element.GetAttributeInt("maxeventcount", 0);
 
-            MusicType = ToolBox.GetAttributeString(element, "musictype", "default");
+            MusicType = element.GetAttributeString("musictype", "default");
 
             overrideMinEventCount = new Dictionary<string, int>();
             overrideMaxEventCount = new Dictionary<string, int>();
@@ -72,11 +72,11 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "overrideeventcount":
-                        string levelType = ToolBox.GetAttributeString(subElement, "leveltype", "");
+                        string levelType = subElement.GetAttributeString("leveltype", "");
                         if (!overrideMinEventCount.ContainsKey(levelType))
                         {
-                            overrideMinEventCount.Add(levelType, ToolBox.GetAttributeInt(subElement, "min", 0));
-                            overrideMaxEventCount.Add(levelType, ToolBox.GetAttributeInt(subElement, "max", 0));
+                            overrideMinEventCount.Add(levelType, subElement.GetAttributeInt("min", 0));
+                            overrideMaxEventCount.Add(levelType, subElement.GetAttributeInt("max", 0));
                         }
                         break;
                 }
@@ -111,7 +111,7 @@ namespace Barotrauma
 
             foreach (string configFile in configFiles)
             {
-                XDocument doc = ToolBox.TryLoadXml(configFile);
+                XDocument doc = XMLExtensions.TryLoadXml(configFile);
                 if (doc == null) continue;
 
                 foreach (XElement element in doc.Root.Elements())

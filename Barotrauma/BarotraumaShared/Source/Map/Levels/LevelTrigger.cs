@@ -57,9 +57,9 @@ namespace Barotrauma
 
             physicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
 
-            cameraShake = ToolBox.GetAttributeFloat(element, "camerashake", 0.0f);
+            cameraShake = element.GetAttributeFloat("camerashake", 0.0f);
 
-            force = ToolBox.GetAttributeVector2(element, "force", Vector2.Zero);
+            force = element.GetAttributeVector2("force", Vector2.Zero);
             
             foreach (XElement subElement in element.Elements())
             {

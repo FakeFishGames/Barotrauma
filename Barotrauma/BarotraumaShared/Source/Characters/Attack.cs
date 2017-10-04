@@ -87,34 +87,34 @@ namespace Barotrauma
         {
             try
             {
-                DamageType = (DamageType)Enum.Parse(typeof(DamageType), ToolBox.GetAttributeString(element, "damagetype", "None"), true);
+                DamageType = (DamageType)Enum.Parse(typeof(DamageType), element.GetAttributeString("damagetype", "None"), true);
             }
             catch
             {
                 DamageType = DamageType.None;
             }
 
-            damage          = ToolBox.GetAttributeFloat(element, "damage", 0.0f);
-            structureDamage = ToolBox.GetAttributeFloat(element, "structuredamage", 0.0f);
-            bleedingDamage  = ToolBox.GetAttributeFloat(element, "bleedingdamage", 0.0f);
-            Stun            = ToolBox.GetAttributeFloat(element, "stun", 0.0f);
+            damage          = element.GetAttributeFloat("damage", 0.0f);
+            structureDamage = element.GetAttributeFloat("structuredamage", 0.0f);
+            bleedingDamage  = element.GetAttributeFloat("bleedingdamage", 0.0f);
+            Stun            = element.GetAttributeFloat("stun", 0.0f);
 
-            SeverLimbsProbability = ToolBox.GetAttributeFloat(element, "severlimbsprobability", 0.0f);
+            SeverLimbsProbability = element.GetAttributeFloat("severlimbsprobability", 0.0f);
 
-            Force = ToolBox.GetAttributeFloat(element, "force", 0.0f);
-            TargetForce = ToolBox.GetAttributeFloat(element, "targetforce", 0.0f);
-            Torque = ToolBox.GetAttributeFloat(element, "torque", 0.0f);
+            Force = element.GetAttributeFloat("force", 0.0f);
+            TargetForce = element.GetAttributeFloat("targetforce", 0.0f);
+            Torque = element.GetAttributeFloat("torque", 0.0f);
 
-            Range = ToolBox.GetAttributeFloat(element, "range", 0.0f);
-            Duration = ToolBox.GetAttributeFloat(element, "duration", 0.0f); 
+            Range = element.GetAttributeFloat("range", 0.0f);
+            Duration = element.GetAttributeFloat("duration", 0.0f); 
 
-            priority = ToolBox.GetAttributeFloat(element, "priority", 1.0f);
+            priority = element.GetAttributeFloat("priority", 1.0f);
 
-            onlyHumans = ToolBox.GetAttributeBool(element, "onlyhumans", false);
+            onlyHumans = element.GetAttributeBool("onlyhumans", false);
 
             InitProjSpecific(element);
 
-            string limbIndicesStr = ToolBox.GetAttributeString(element, "applyforceonlimbs", "");
+            string limbIndicesStr = element.GetAttributeString("applyforceonlimbs", "");
             if (!string.IsNullOrWhiteSpace(limbIndicesStr))
             {
                 ApplyForceOnLimbs = new List<int>();

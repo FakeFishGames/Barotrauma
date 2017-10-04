@@ -61,8 +61,8 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("0.0,0.0", false)]
         public string BarrelPos
         {
-            get { return ToolBox.Vector2ToString(barrelPos); }
-            set { barrelPos = ToolBox.ParseToVector2(value); }
+            get { return XMLExtensions.Vector2ToString(barrelPos); }
+            set { barrelPos = XMLExtensions.ParseToVector2(value); }
         }
 
         public Vector2 TransformedBarrelPos

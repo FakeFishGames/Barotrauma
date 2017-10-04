@@ -10,7 +10,7 @@ namespace Barotrauma.Particles
 
         public DecalManager(string configFile)
         {
-            XDocument doc = ToolBox.TryLoadXml(configFile);
+            XDocument doc = XMLExtensions.TryLoadXml(configFile);
             if (doc == null || doc.Root == null) return;
 
             prefabs = new Dictionary<string, DecalPrefab>();

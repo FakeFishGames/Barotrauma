@@ -91,11 +91,11 @@ namespace Barotrauma.Items.Components
         [HasDefaultValue("0.0,0.0,0.0,0.0", false)]
         public string Window
         {
-            get { return ToolBox.Vector4ToString(new Vector4(window.X, window.Y, window.Width, window.Height)); }
+            get { return XMLExtensions.Vector4ToString(new Vector4(window.X, window.Y, window.Width, window.Height)); }
             set
             {
-                Vector4 vector = ToolBox.ParseToVector4(value);
-                if (vector.Z!=0.0f || vector.W !=0.0f)
+                Vector4 vector = XMLExtensions.ParseToVector4(value);
+                if (vector.Z != 0.0f || vector.W != 0.0f)
                 {
                     window = new Rectangle((int)vector.X, (int)vector.Y, (int)vector.Z, (int)vector.W);
                 }
@@ -141,12 +141,12 @@ namespace Barotrauma.Items.Components
         {
             //Vector2 position = new Vector2(newRect.X, newRect.Y);
 
-            isHorizontal = ToolBox.GetAttributeBool(element, "horizontal", false);
+            isHorizontal = element.GetAttributeBool("horizontal", false);
 
            // isOpen = false;
             foreach (XElement subElement in element.Elements())
             {
-                string texturePath = ToolBox.GetAttributeString(subElement, "texture", "");
+                string texturePath = subElement.GetAttributeString("texture", "");
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":

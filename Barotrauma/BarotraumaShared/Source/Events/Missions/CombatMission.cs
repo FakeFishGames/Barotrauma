@@ -58,9 +58,9 @@ namespace Barotrauma
         {
             descriptions = new string[]
             {
-                ToolBox.GetAttributeString(element, "descriptionneutral", ""),
-                ToolBox.GetAttributeString(element, "description1", ""),
-                ToolBox.GetAttributeString(element, "description2", "")
+                element.GetAttributeString("descriptionneutral", ""),
+                element.GetAttributeString("description1", ""),
+                element.GetAttributeString("description2", "")
             };
 
             for (int i = 0; i < descriptions.Length; i++)
@@ -73,8 +73,8 @@ namespace Barotrauma
 
             teamNames = new string[]
             {
-                ToolBox.GetAttributeString(element, "teamname1", "Team A"),
-                ToolBox.GetAttributeString(element, "teamname2", "Team B")
+                element.GetAttributeString("teamname1", "Team A"),
+                element.GetAttributeString("teamname2", "Team B")
             };
         }
 

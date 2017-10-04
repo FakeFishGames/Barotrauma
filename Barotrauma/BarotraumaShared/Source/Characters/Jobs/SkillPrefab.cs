@@ -28,12 +28,12 @@ namespace Barotrauma
 
         public SkillPrefab(XElement element) 
         {
-            name = ToolBox.GetAttributeString(element, "name", "");
+            name = element.GetAttributeString("name", "");
             
-            var levelString = ToolBox.GetAttributeString(element, "level", "");
+            var levelString = element.GetAttributeString("level", "");
             if (levelString.Contains(","))
             {
-                levelRange = ToolBox.ParseToVector2(levelString, false);
+                levelRange = XMLExtensions.ParseToVector2(levelString, false);
             }
             else
             {

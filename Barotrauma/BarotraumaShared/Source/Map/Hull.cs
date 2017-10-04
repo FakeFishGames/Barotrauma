@@ -711,7 +711,7 @@ namespace Barotrauma
 
             if (element.Attribute("rect") != null)
             {
-                string rectString = ToolBox.GetAttributeString(element, "rect", "0,0,0,0");
+                string rectString = element.GetAttributeString("rect", "0,0,0,0");
                 string[] rectValues = rectString.Split(',');
 
                 rect = new Rectangle(
@@ -731,7 +731,7 @@ namespace Barotrauma
 
             Hull h = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), rect, submarine);
 
-            h.volume = ToolBox.GetAttributeFloat(element, "pressure", 0.0f);
+            h.volume = element.GetAttributeFloat("pressure", 0.0f);
 
             h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
         }

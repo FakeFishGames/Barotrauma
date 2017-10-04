@@ -336,7 +336,7 @@ namespace Barotrauma.Items.Components
         {
             if (connection.Name == "velocity_in")
             {
-                currVelocity = ToolBox.ParseToVector2(signal, false);
+                currVelocity = XMLExtensions.ParseToVector2(signal, false);
             }
             else
             {

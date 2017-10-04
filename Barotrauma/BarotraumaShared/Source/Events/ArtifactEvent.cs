@@ -20,7 +20,7 @@ namespace Barotrauma
         public ArtifactEvent(XElement element)
             : base(element)
         {
-            string itemName = ToolBox.GetAttributeString(element, "itemname", "");
+            string itemName = element.GetAttributeString("itemname", "");
 
             itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
 

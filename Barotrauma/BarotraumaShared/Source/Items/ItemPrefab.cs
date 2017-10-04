@@ -220,7 +220,7 @@ namespace Barotrauma
                     DebugConsole.Log("*** " + filePath + " ***");
                 }
 
-                XDocument doc = ToolBox.TryLoadXml(filePath);
+                XDocument doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc == null) return;
 
                 if (doc.Root.Name.ToString().ToLowerInvariant() == "item")
@@ -244,35 +244,35 @@ namespace Barotrauma
             configFile = filePath;
             ConfigElement = element;
 
-            name = ToolBox.GetAttributeString(element, "name", "");
+            name = element.GetAttributeString("name", "");
             if (name == "") DebugConsole.ThrowError("Unnamed item in "+filePath+"!");
 
             DebugConsole.Log("    "+name);
 
-            Description = ToolBox.GetAttributeString(element, "description", "");
+            Description = element.GetAttributeString("description", "");
 
-            interactThroughWalls    = ToolBox.GetAttributeBool(element, "interactthroughwalls", false);
-            interactDistance        = ToolBox.GetAttributeFloat(element, "interactdistance", 120.0f); // Default to 120 as the new item picking method is tuned to this number
-            interactPriority        = ToolBox.GetAttributeFloat(element, "interactpriority", 0.0f);
+            interactThroughWalls    = element.GetAttributeBool("interactthroughwalls", false);
+            interactDistance        = element.GetAttributeFloat("interactdistance", 120.0f); // Default to 120 as the new item picking method is tuned to this number
+            interactPriority        = element.GetAttributeFloat("interactpriority", 0.0f);
 
-            isLinkable          = ToolBox.GetAttributeBool(element, "linkable", false);
+            isLinkable          = element.GetAttributeBool("linkable", false);
 
-            resizeHorizontal    = ToolBox.GetAttributeBool(element, "resizehorizontal", false);
-            resizeVertical      = ToolBox.GetAttributeBool(element, "resizevertical", false);
+            resizeHorizontal    = element.GetAttributeBool("resizehorizontal", false);
+            resizeVertical      = element.GetAttributeBool("resizevertical", false);
 
-            focusOnSelected     = ToolBox.GetAttributeBool(element, "focusonselected", false);
+            focusOnSelected     = element.GetAttributeBool("focusonselected", false);
 
-            offsetOnSelected    = ToolBox.GetAttributeFloat(element, "offsetonselected", 0.0f);
+            offsetOnSelected    = element.GetAttributeFloat("offsetonselected", 0.0f);
 
-            CanUseOnSelf        = ToolBox.GetAttributeBool(element, "canuseonself", false);
+            CanUseOnSelf        = element.GetAttributeBool("canuseonself", false);
             
 
-            Health              = ToolBox.GetAttributeFloat(element, "health", 100.0f);
-            Indestructible      = ToolBox.GetAttributeBool(element, "indestructible", false);
-            FireProof           = ToolBox.GetAttributeBool(element, "fireproof", false);
-            ImpactTolerance     = ToolBox.GetAttributeFloat(element, "impacttolerance", 0.0f);
+            Health              = element.GetAttributeFloat("health", 100.0f);
+            Indestructible      = element.GetAttributeBool("indestructible", false);
+            FireProof           = element.GetAttributeBool("fireproof", false);
+            ImpactTolerance     = element.GetAttributeFloat("impacttolerance", 0.0f);
 
-            string aliases = ToolBox.GetAttributeString(element, "aliases", "");
+            string aliases = element.GetAttributeString("aliases", "");
             if (!string.IsNullOrWhiteSpace(aliases))
             {
                 Aliases = aliases.Split(',');
@@ -280,7 +280,7 @@ namespace Barotrauma
 
             MapEntityCategory category;
 
-            if (!Enum.TryParse(ToolBox.GetAttributeString(element, "category", "Misc"), true, out category))
+            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out category))
             {
                 category = MapEntityCategory.Misc;
             }
@@ -288,10 +288,10 @@ namespace Barotrauma
             Category = category;
             
             
-            string spriteColorStr = ToolBox.GetAttributeString(element, "spritecolor", "1.0,1.0,1.0,1.0");
-            SpriteColor = new Color(ToolBox.ParseToVector4(spriteColorStr));
+            string spriteColorStr = element.GetAttributeString("spritecolor", "1.0,1.0,1.0,1.0");
+            SpriteColor = new Color(XMLExtensions.ParseToVector4(spriteColorStr));
 
-            price = ToolBox.GetAttributeInt(element, "price", 0);
+            price = element.GetAttributeInt("price", 0);
             
             Triggers            = new List<Rectangle>();
 
@@ -299,7 +299,7 @@ namespace Barotrauma
             DeconstructTime     = 1.0f;
 
             tags = new List<string>();
-            tags.AddRange(ToolBox.GetAttributeString(element, "tags", "").Split(','));
+            tags.AddRange(element.GetAttributeString("tags", "").Split(','));
 
             foreach (XElement subElement in element.Elements())
             {
@@ -307,24 +307,24 @@ namespace Barotrauma
                 {
                     case "sprite":
                         string spriteFolder = "";
-                        if (!ToolBox.GetAttributeString(subElement, "texture", "").Contains("/"))
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
                             spriteFolder = Path.GetDirectoryName(filePath);
                         }
 
-                        canSpriteFlipX = ToolBox.GetAttributeBool(subElement, "canflipx", true);
+                        canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
 
                         sprite = new Sprite(subElement, spriteFolder);
                         size = sprite.size;
                         break;
                     case "deconstruct":
-                        DeconstructTime = ToolBox.GetAttributeFloat(subElement, "time", 10.0f);
+                        DeconstructTime = subElement.GetAttributeFloat("time", 10.0f);
 
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
 
-                            string deconstructItemName = ToolBox.GetAttributeString(deconstructItem, "name", "not found");
-                            bool requireFullCondition = ToolBox.GetAttributeBool(deconstructItem, "requirefullcondition", false);
+                            string deconstructItemName = deconstructItem.GetAttributeString("name", "not found");
+                            bool requireFullCondition = deconstructItem.GetAttributeBool("requirefullcondition", false);
 
                             DeconstructItems.Add(new DeconstructItem(deconstructItemName, requireFullCondition));
 
@@ -334,11 +334,11 @@ namespace Barotrauma
                     case "trigger":
                         Rectangle trigger = new Rectangle(0, 0, 10,10);
 
-                        trigger.X = ToolBox.GetAttributeInt(subElement, "x", 0);
-                        trigger.Y = ToolBox.GetAttributeInt(subElement, "y", 0);
+                        trigger.X = subElement.GetAttributeInt("x", 0);
+                        trigger.Y = subElement.GetAttributeInt("y", 0);
 
-                        trigger.Width = ToolBox.GetAttributeInt(subElement, "width", 0);
-                        trigger.Height = ToolBox.GetAttributeInt(subElement, "height", 0);
+                        trigger.Width = subElement.GetAttributeInt("width", 0);
+                        trigger.Height = subElement.GetAttributeInt("height", 0);
 
                         Triggers.Add(trigger);
 

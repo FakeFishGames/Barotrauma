@@ -166,9 +166,9 @@ namespace Barotrauma
 
             RemoveSaveFrame();
 
-            string subName = ToolBox.GetAttributeString(doc.Root, "submarine", "");
-            string saveTime = ToolBox.GetAttributeString(doc.Root, "savetime", "unknown");
-            string mapseed = ToolBox.GetAttributeString(doc.Root, "mapseed", "unknown");
+            string subName = doc.Root.GetAttributeString("submarine", "");
+            string saveTime = doc.Root.GetAttributeString("savetime", "unknown");
+            string mapseed = doc.Root.GetAttributeString("mapseed", "unknown");
 
             GUIFrame saveFileFrame = new GUIFrame(new Rectangle((int)(saveList.Rect.Width + 20), 0, 200, 230), Color.Black * 0.4f, "", loadGameContainer);
             saveFileFrame.UserData = "savefileframe";

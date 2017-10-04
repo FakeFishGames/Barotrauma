@@ -40,16 +40,16 @@ namespace Barotrauma
 
         public BackgroundSpritePrefab(XElement element)
         {
-            string alignmentStr = ToolBox.GetAttributeString(element, "alignment", "");
+            string alignmentStr = element.GetAttributeString("alignment", "");
 
             if (string.IsNullOrEmpty(alignmentStr) || !Enum.TryParse(alignmentStr, out Alignment))
             {
                 Alignment = Alignment.Top | Alignment.Bottom | Alignment.Left | Alignment.Right;
             }
 
-            Commonness = ToolBox.GetAttributeInt(element, "commonness", 1);
+            Commonness = element.GetAttributeInt("commonness", 1);
             
-            string[] spawnPosStrs = ToolBox.GetAttributeString(element, "spawnpos", "Wall").Split(',');
+            string[] spawnPosStrs = element.GetAttributeString("spawnpos", "Wall").Split(',');
             foreach (string spawnPosStr in spawnPosStrs)
             {
                 SpawnPosType parsedSpawnPos;
@@ -59,18 +59,18 @@ namespace Barotrauma
                 }
             }
 
-            Scale.X = ToolBox.GetAttributeFloat(element, "minsize", 1.0f);
-            Scale.Y = ToolBox.GetAttributeFloat(element, "maxsize", 1.0f);
+            Scale.X = element.GetAttributeFloat("minsize", 1.0f);
+            Scale.Y = element.GetAttributeFloat("maxsize", 1.0f);
 
-            DepthRange = ToolBox.GetAttributeVector2(element, "depthrange", new Vector2(0.0f, 1.0f));
+            DepthRange = element.GetAttributeVector2("depthrange", new Vector2(0.0f, 1.0f));
 
-            AlignWithSurface = ToolBox.GetAttributeBool(element, "alignwithsurface", false);
+            AlignWithSurface = element.GetAttributeBool("alignwithsurface", false);
 
-            RandomRotation = ToolBox.GetAttributeVector2(element, "randomrotation", Vector2.Zero);
+            RandomRotation = element.GetAttributeVector2("randomrotation", Vector2.Zero);
             RandomRotation.X = MathHelper.ToRadians(RandomRotation.X);
             RandomRotation.Y = MathHelper.ToRadians(RandomRotation.Y);
 
-            SwingAmount = MathHelper.ToRadians(ToolBox.GetAttributeFloat(element, "swingamount", 0.0f));
+            SwingAmount = MathHelper.ToRadians(element.GetAttributeFloat("swingamount", 0.0f));
 
             OverrideCommonness = new Dictionary<string, int>();
 
@@ -82,10 +82,10 @@ namespace Barotrauma
                         Sprite = new Sprite(subElement);
                         break;
                     case "overridecommonness":
-                        string levelType = ToolBox.GetAttributeString(subElement, "leveltype", "");
+                        string levelType = subElement.GetAttributeString("leveltype", "");
                         if (!OverrideCommonness.ContainsKey(levelType))
                         {
-                            OverrideCommonness.Add(levelType, ToolBox.GetAttributeInt(subElement, "commonness", 1));
+                            OverrideCommonness.Add(levelType, subElement.GetAttributeInt("commonness", 1));
                         }
                         break;
                     case "leveltrigger":
@@ -101,11 +101,11 @@ namespace Barotrauma
                         }
 
                         ParticleEmitterPrefabs.Add(new Particles.ParticleEmitterPrefab(subElement));
-                        EmitterPositions.Add(ToolBox.GetAttributeVector2(subElement, "position", Vector2.Zero));
+                        EmitterPositions.Add(subElement.GetAttributeVector2("position", Vector2.Zero));
                         break;
                     case "sound":
                         SoundElement = subElement;
-                        SoundPosition = ToolBox.GetAttributeVector2(subElement, "position", Vector2.Zero);
+                        SoundPosition = subElement.GetAttributeVector2("position", Vector2.Zero);
                         break;
 #endif
                 }

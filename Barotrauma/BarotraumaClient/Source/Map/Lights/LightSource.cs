@@ -121,10 +121,10 @@ namespace Barotrauma.Lights
         public LightSource (XElement element)
             : this(Vector2.Zero, 100.0f, Color.White, null)
         {
-            range = ToolBox.GetAttributeFloat(element, "range", 100.0f);
-            color = new Color(ToolBox.GetAttributeVector4(element, "color", Vector4.One));
+            range = element.GetAttributeFloat("range", 100.0f);
+            color = new Color(element.GetAttributeVector4("color", Vector4.One));
 
-            CastShadows = ToolBox.GetAttributeBool(element, "castshadows", true);
+            CastShadows = element.GetAttributeBool("castshadows", true);
             
             foreach (XElement subElement in element.Elements())
             {

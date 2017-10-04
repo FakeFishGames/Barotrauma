@@ -100,7 +100,7 @@ namespace Barotrauma
 
         private void AttachHuskAppendage(Character character)
         {
-            XDocument doc = ToolBox.TryLoadXml(Path.Combine("Content", "Characters", "Human", "huskappendage.xml"));
+            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine("Content", "Characters", "Human", "huskappendage.xml"));
             if (doc == null || doc.Root == null) return;
 
             var limbElement = doc.Root.Element("limb");

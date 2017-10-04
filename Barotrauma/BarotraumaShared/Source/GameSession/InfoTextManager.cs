@@ -21,7 +21,7 @@ namespace Barotrauma
         {
             infoTexts = new Dictionary<string, List<string>>();
 
-            XDocument doc = ToolBox.TryLoadXml(file);
+            XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;            
 
             foreach (XElement subElement in doc.Root.Elements())

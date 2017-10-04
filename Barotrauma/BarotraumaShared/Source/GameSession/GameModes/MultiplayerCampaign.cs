@@ -262,7 +262,7 @@ namespace Barotrauma
 
         public void Load(XElement element)
         {
-            Money = ToolBox.GetAttributeInt(element, "money", 0);
+            Money = element.GetAttributeInt("money", 0);
 
             foreach (XElement subElement in element.Elements())
             {

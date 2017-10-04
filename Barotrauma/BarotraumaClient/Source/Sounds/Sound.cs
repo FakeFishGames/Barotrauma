@@ -93,13 +93,13 @@ namespace Barotrauma
 
         public static Sound Load(XElement element, bool destroyOnGameEnd = true)
         {
-            string filePath = ToolBox.GetAttributeString(element, "file", "");           
+            string filePath = element.GetAttributeString("file", "");           
 
             var newSound = new Sound(filePath, destroyOnGameEnd);
             if (newSound != null)
             {
-                newSound.baseVolume = ToolBox.GetAttributeFloat(element, "volume", 1.0f);
-                newSound.range = ToolBox.GetAttributeFloat(element, "range", 1000.0f);
+                newSound.baseVolume = element.GetAttributeFloat("volume", 1.0f);
+                newSound.range = element.GetAttributeFloat("range", 1000.0f);
             }
 
             return newSound;

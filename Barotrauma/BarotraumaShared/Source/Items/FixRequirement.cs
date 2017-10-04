@@ -14,7 +14,7 @@ namespace Barotrauma
 
         public FixRequirement(XElement element)
         {
-            name = ToolBox.GetAttributeString(element, "name", "");
+            name = element.GetAttributeString("name", "");
 
             requiredSkills = new List<Skill>();
             requiredItems = new List<string>();
@@ -24,13 +24,13 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "skill":
-                        string skillName = ToolBox.GetAttributeString(subElement, "name", "");
-                        int level = ToolBox.GetAttributeInt(subElement, "level", 1);
+                        string skillName = subElement.GetAttributeString("name", "");
+                        int level = subElement.GetAttributeInt("level", 1);
 
                         requiredSkills.Add(new Skill(skillName, level));
                         break;
                     case "item":
-                        string itemName = ToolBox.GetAttributeString(subElement, "name", "");
+                        string itemName = subElement.GetAttributeString("name", "");
 
                         requiredItems.Add(itemName);
                         break;

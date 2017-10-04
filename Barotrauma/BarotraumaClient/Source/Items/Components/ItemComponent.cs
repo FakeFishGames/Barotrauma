@@ -145,26 +145,26 @@ namespace Barotrauma.Items.Components
             switch (subElement.Name.ToString().ToLowerInvariant())
             {
                 case "guiframe":
-                    string rectStr = ToolBox.GetAttributeString(subElement, "rect", "0.0,0.0,0.5,0.5");
+                    string rectStr = subElement.GetAttributeString("rect", "0.0,0.0,0.5,0.5");
 
                     string[] components = rectStr.Split(',');
                     if (components.Length < 4) break;
 
-                    Vector4 rect = ToolBox.GetAttributeVector4(subElement, "rect", Vector4.One);
+                    Vector4 rect = subElement.GetAttributeVector4("rect", Vector4.One);
                     if (components[0].Contains(".")) rect.X *= GameMain.GraphicsWidth;
                     if (components[1].Contains(".")) rect.Y *= GameMain.GraphicsHeight;
                     if (components[2].Contains(".")) rect.Z *= GameMain.GraphicsWidth;
                     if (components[3].Contains(".")) rect.W *= GameMain.GraphicsHeight;
 
-                    string style = ToolBox.GetAttributeString(subElement, "style", "");
+                    string style = subElement.GetAttributeString("style", "");
 
-                    Vector4 color = ToolBox.GetAttributeVector4(subElement, "color", Vector4.One);
+                    Vector4 color = subElement.GetAttributeVector4("color", Vector4.One);
 
                     Alignment alignment = Alignment.Center;
                     try
                     {
                         alignment = (Alignment)Enum.Parse(typeof(Alignment),
-                            ToolBox.GetAttributeString(subElement, "alignment", "Center"), true);
+                            subElement.GetAttributeString("alignment", "Center"), true);
                     }
                     catch
                     {
@@ -178,9 +178,9 @@ namespace Barotrauma.Items.Components
 
                     break;
                 case "sound":
-                    string filePath = ToolBox.GetAttributeString(subElement, "file", "");
+                    string filePath = subElement.GetAttributeString("file", "");
 
-                    if (filePath == "") filePath = ToolBox.GetAttributeString(subElement, "sound", "");
+                    if (filePath == "") filePath = subElement.GetAttributeString("sound", "");
 
                     if (filePath == "")
                     {
@@ -197,7 +197,7 @@ namespace Barotrauma.Items.Components
 
                     try
                     {
-                        type = (ActionType)Enum.Parse(typeof(ActionType), ToolBox.GetAttributeString(subElement, "type", ""), true);
+                        type = (ActionType)Enum.Parse(typeof(ActionType), subElement.GetAttributeString("type", ""), true);
                     }
                     catch (Exception e)
                     {
@@ -207,11 +207,11 @@ namespace Barotrauma.Items.Components
 
                     Sound sound = Sound.Load(filePath);
 
-                    float range = ToolBox.GetAttributeFloat(subElement, "range", 800.0f);
-                    bool loop = ToolBox.GetAttributeBool(subElement, "loop", false);
+                    float range = subElement.GetAttributeFloat("range", 800.0f);
+                    bool loop = subElement.GetAttributeBool("loop", false);
                     ItemSound itemSound = new ItemSound(sound, type, range, loop);
-                    itemSound.VolumeProperty = ToolBox.GetAttributeString(subElement, "volume", "");
-                    itemSound.VolumeMultiplier = ToolBox.GetAttributeFloat(subElement, "volumemultiplier", 1.0f);
+                    itemSound.VolumeProperty = subElement.GetAttributeString("volume", "");
+                    itemSound.VolumeMultiplier = subElement.GetAttributeFloat("volumemultiplier", 1.0f);
 
                     List<ItemSound> soundList = null;
                     if (!sounds.TryGetValue(itemSound.Type, out soundList))

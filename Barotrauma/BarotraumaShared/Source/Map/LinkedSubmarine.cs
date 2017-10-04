@@ -111,10 +111,10 @@ namespace Barotrauma
             {
                 if (element.Name != "Structure") continue;
 
-                string name = ToolBox.GetAttributeString(element, "name", "");
+                string name = element.GetAttributeString("name", "");
                 if (!wallPrefabs.Any(wp => wp.Name == name)) continue;
 
-                var rect = ToolBox.GetAttributeVector4(element, "rect", Vector4.Zero);
+                var rect = element.GetAttributeVector4("rect", Vector4.Zero);
                 
                 points.Add(new Vector2(rect.X, rect.Y));
                 points.Add(new Vector2(rect.X + rect.Z, rect.Y));
@@ -127,7 +127,7 @@ namespace Barotrauma
 
         public static void Load(XElement element, Submarine submarine)
         {
-            Vector2 pos = ToolBox.GetAttributeVector2(element, "pos", Vector2.Zero);
+            Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
 
             LinkedSubmarine linkedSub = null;
 
@@ -143,7 +143,7 @@ namespace Barotrauma
                 linkedSub = new LinkedSubmarine(submarine);
                 linkedSub.saveElement = element;
 
-                string levelSeed = ToolBox.GetAttributeString(element, "location", "");
+                string levelSeed = element.GetAttributeString("location", "");
                 if (!string.IsNullOrWhiteSpace(levelSeed) && GameMain.GameSession.Level != null && GameMain.GameSession.Level.Seed != levelSeed)
                 {
                     linkedSub.loadSub = false;
@@ -155,9 +155,9 @@ namespace Barotrauma
                 linkedSub.rect.Location = MathUtils.ToPoint(pos);
             }
 
-            linkedSub.filePath = ToolBox.GetAttributeString(element, "filepath", "");
+            linkedSub.filePath = element.GetAttributeString("filepath", "");
 
-            string linkedToString = ToolBox.GetAttributeString(element, "linkedto", "");
+            string linkedToString = element.GetAttributeString("linkedto", "");
             if (linkedToString != "")
             {
                 string[] linkedToIds = linkedToString.Split(',');
@@ -175,7 +175,7 @@ namespace Barotrauma
 
             sub = Submarine.Load(saveElement, false);
             
-            Vector2 worldPos = ToolBox.GetAttributeVector2(saveElement, "worldpos", Vector2.Zero);
+            Vector2 worldPos = saveElement.GetAttributeVector2("worldpos", Vector2.Zero);
             if (worldPos != Vector2.Zero)
             {
                 sub.SetPosition(worldPos);
@@ -259,7 +259,7 @@ namespace Barotrauma
                 }
 
                 if (saveElement.Attribute("pos") != null) saveElement.Attribute("pos").Remove();
-                saveElement.Add(new XAttribute("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition)));
+                saveElement.Add(new XAttribute("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition)));
 
 
 
@@ -300,7 +300,7 @@ namespace Barotrauma
                 if (leaveBehind)
                 {
                     saveElement.SetAttributeValue("location", Level.Loaded.Seed);
-                    saveElement.SetAttributeValue("worldpos", ToolBox.Vector2ToString(sub.SubBody.Position));
+                    saveElement.SetAttributeValue("worldpos", XMLExtensions.Vector2ToString(sub.SubBody.Position));
 
                 }
                 else
@@ -309,7 +309,7 @@ namespace Barotrauma
                     if (saveElement.Attribute("worldpos") != null) saveElement.Attribute("worldpos").Remove();
                 }
 
-                saveElement.SetAttributeValue("pos", ToolBox.Vector2ToString(Position - Submarine.HiddenSubPosition));
+                saveElement.SetAttributeValue("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition));
             }
 
 

@@ -50,7 +50,7 @@ namespace Barotrauma
 
             foreach (XElement file in fileListElement.Elements())
             {
-                string filePath = ToolBox.GetAttributeString(file, "path", "");
+                string filePath = file.GetAttributeString("path", "");
 
                 fileList.Add(filePath);
             }
@@ -71,7 +71,7 @@ namespace Barotrauma
 
             foreach (XElement file in fileList.Elements())
             {
-                string filePath = ToolBox.GetAttributeString(file, "path", "");
+                string filePath = file.GetAttributeString("path", "");
 
                 if (!File.Exists(filePath))
                 {
@@ -79,7 +79,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                string md5 = ToolBox.GetAttributeString(file, "md5", "");
+                string md5 = file.GetAttributeString("md5", "");
 
                 if (GetFileMd5Hash(filePath) != md5)
                 {

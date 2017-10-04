@@ -267,8 +267,8 @@ namespace Barotrauma
 
                 if (doc != null && doc.Root != null)
                 {
-                    Description = ToolBox.GetAttributeString(doc.Root, "description", "");
-                    Enum.TryParse(ToolBox.GetAttributeString(doc.Root, "tags", ""), out tags);
+                    Description = doc.Root.GetAttributeString("description", "");
+                    Enum.TryParse(doc.Root.GetAttributeString("tags", ""), out tags);
                 }
             }
 
@@ -949,8 +949,8 @@ namespace Barotrauma
                 submarineElement = doc.Root;
             }
 
-            Description = ToolBox.GetAttributeString(submarineElement, "description", "");
-            Enum.TryParse(ToolBox.GetAttributeString(submarineElement, "tags", ""), out tags);
+            Description = submarineElement.GetAttributeString("description", "");
+            Enum.TryParse(submarineElement.GetAttributeString("tags", ""), out tags);
 
             //place the sub above the top of the level
             HiddenSubPosition = HiddenSubStartPosition;
@@ -1081,7 +1081,7 @@ namespace Barotrauma
 
             //tryload -> false
 
-            Submarine sub = new Submarine(ToolBox.GetAttributeString(element, "name", ""), "", false);
+            Submarine sub = new Submarine(element.GetAttributeString("name", ""), "", false);
             sub.Load(unloadPrevious, element);
 
             return sub; 

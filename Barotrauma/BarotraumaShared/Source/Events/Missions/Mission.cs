@@ -78,7 +78,7 @@ namespace Barotrauma
             var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.Missions);
             foreach (string file in files)
             {
-                XDocument doc = ToolBox.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file);
                 if (doc == null || doc.Root == null) continue;
 
                 foreach (XElement element in doc.Root.Elements())
@@ -94,26 +94,26 @@ namespace Barotrauma
 
         public Mission(XElement element, Location[] locations)
         {
-            name = ToolBox.GetAttributeString(element, "name", "");
+            name = element.GetAttributeString("name", "");
 
-            description = ToolBox.GetAttributeString(element, "description", "");
+            description = element.GetAttributeString("description", "");
 
-            reward = ToolBox.GetAttributeInt(element, "reward", 1);
+            reward = element.GetAttributeInt("reward", 1);
 
-            successMessage = ToolBox.GetAttributeString(element, "successmessage", 
+            successMessage = element.GetAttributeString("successmessage", 
                 "Mission completed successfully");
-            failureMessage = ToolBox.GetAttributeString(element, "failuremessage", 
+            failureMessage = element.GetAttributeString("failuremessage", 
                 "Mission failed");
 
-            radarLabel = ToolBox.GetAttributeString(element, "radarlabel", "");
+            radarLabel = element.GetAttributeString("radarlabel", "");
 
             messages = new List<string>();
             headers = new List<string>();
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "message") continue;
-                headers.Add(ToolBox.GetAttributeString(subElement, "header", ""));
-                messages.Add(ToolBox.GetAttributeString(subElement, "text", ""));
+                headers.Add(subElement.GetAttributeString("header", ""));
+                messages.Add(subElement.GetAttributeString("text", ""));
             }
             
             for (int n = 0; n < 2; n++)
@@ -137,7 +137,7 @@ namespace Barotrauma
             var files = GameMain.SelectedPackage.GetFilesOfType(ContentType.Missions);
             string configFile = files[rand.Next(files.Count)];
 
-            XDocument doc = ToolBox.TryLoadXml(configFile);
+            XDocument doc = XMLExtensions.TryLoadXml(configFile);
             if (doc == null) return null;
 
             int eventCount = doc.Root.Elements().Count();
@@ -167,17 +167,17 @@ namespace Barotrauma
 
             if (isSinglePlayer)
             {
-                matchingElements.RemoveAll(m => ToolBox.GetAttributeBool(m, "multiplayeronly", false));
+                matchingElements.RemoveAll(m => m.GetAttributeBool("multiplayeronly", false));
             }
             else
             {
-                matchingElements.RemoveAll(m => ToolBox.GetAttributeBool(m, "singleplayeronly", false));
+                matchingElements.RemoveAll(m => m.GetAttributeBool("singleplayeronly", false));
             }
             
             int i = 0;
             foreach (XElement element in matchingElements)
             {
-                eventProbability[i] = ToolBox.GetAttributeInt(element, "commonness", 1);
+                eventProbability[i] = element.GetAttributeInt("commonness", 1);
 
                 probabilitySum += eventProbability[i];
 

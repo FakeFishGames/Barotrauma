@@ -279,11 +279,11 @@ namespace Barotrauma
 
         public PhysicsBody(XElement element, Vector2 position, float scale=1.0f)
         {
-            float radius = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "radius", 0.0f)) * scale;
-            float height = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "height", 0.0f)) * scale;
-            float width = ConvertUnits.ToSimUnits(ToolBox.GetAttributeFloat(element, "width", 0.0f)) * scale;
+            float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
+            float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
+            float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
 
-            density = ToolBox.GetAttributeFloat(element, "density", 10.0f);
+            density = element.GetAttributeFloat("density", 10.0f);
 
             CreateBody(width, height, radius, density);
 
@@ -292,8 +292,8 @@ namespace Barotrauma
             body.CollisionCategories = Physics.CollisionItem;
             body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
 
-            body.Friction = ToolBox.GetAttributeFloat(element, "friction", 0.3f);
-            body.Restitution = ToolBox.GetAttributeFloat(element, "restitution", 0.05f);
+            body.Friction = element.GetAttributeFloat("friction", 0.3f);
+            body.Restitution = element.GetAttributeFloat("restitution", 0.05f);
             
             body.BodyType = BodyType.Dynamic;
 

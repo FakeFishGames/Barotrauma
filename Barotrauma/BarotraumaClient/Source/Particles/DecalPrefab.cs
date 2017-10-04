@@ -31,11 +31,11 @@ namespace Barotrauma.Particles
                 }
             }  
             
-            Color = new Color(ToolBox.GetAttributeVector4(element, "color", Vector4.One));
+            Color = new Color(element.GetAttributeVector4("color", Vector4.One));
 
-            LifeTime = ToolBox.GetAttributeFloat(element, "lifetime", 10.0f);
-            FadeOutTime = Math.Min(LifeTime, ToolBox.GetAttributeFloat(element, "fadeouttime", 1.0f));
-            FadeInTime = Math.Min(LifeTime - FadeOutTime, ToolBox.GetAttributeFloat(element, "fadeintime", 0.0f));
+            LifeTime = element.GetAttributeFloat("lifetime", 10.0f);
+            FadeOutTime = Math.Min(LifeTime, element.GetAttributeFloat("fadeouttime", 1.0f));
+            FadeInTime = Math.Min(LifeTime - FadeOutTime, element.GetAttributeFloat("fadeintime", 0.0f));
         }
     }
 }
