@@ -89,7 +89,6 @@ namespace Barotrauma
 
         protected bool needsAir;
         protected float oxygen, oxygenAvailable;
-        protected float drowningTime;
 
         private float health, lastSentHealth;
         protected float minHealth, maxHealth;
@@ -584,7 +583,6 @@ namespace Barotrauma
             BleedingDecreaseSpeed = doc.Root.GetAttributeFloat("bleedingdecreasespeed", 0.05f);
 
             needsAir = doc.Root.GetAttributeBool("needsair", false);
-            drowningTime = doc.Root.GetAttributeFloat("drowningtime", 10.0f);
             
             if (file == humanConfigFile)
             {
