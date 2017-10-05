@@ -34,6 +34,10 @@ namespace Barotrauma
 
         public bool StartItemsGiven;
 
+        public CauseOfDeath CauseOfDeath;
+
+        public byte TeamID;
+
         public List<ushort> PickedItemIDs
         {
             get { return pickedItems; }

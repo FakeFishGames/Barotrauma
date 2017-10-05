@@ -72,7 +72,16 @@ namespace Barotrauma
         private Item selectedConstruction;
         private Item[] selectedItems;
 
-        public byte TeamID = 0;
+        private byte teamID;
+        public byte TeamID
+        {
+            get { return teamID; }
+            set
+            {
+                teamID = value;
+                if (info != null) info.TeamID = value;
+            }
+        }
 
         public AnimController AnimController;
 
@@ -1706,6 +1715,7 @@ namespace Barotrauma
             isDead = true;
             
             this.causeOfDeath = causeOfDeath;
+            if (info != null) info.CauseOfDeath = causeOfDeath;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
 

@@ -240,6 +240,8 @@ namespace Barotrauma
             }
 
             Submarine.Unload();
+            
+            GameMain.LobbyScreen.Select();
         }
 
         private bool TryEndRound(GUIButton button, object obj)

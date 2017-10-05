@@ -308,10 +308,13 @@ namespace Barotrauma
                     continue;
                 }
 
-                CharacterInfo deadInfo = CharacterInfos.Find(x => c.Info == x);
-                if (deadInfo != null) CharacterInfos.Remove(deadInfo);
+                CharacterInfos.Remove(c.Info);
             }
 
+            //remove characterinfos whose character doesn't exist anymore
+            //(i.e. character was removed during the round)
+            CharacterInfos.RemoveAll(c => c.Character == null);
+            
             characters.Clear();
             listBox.ClearChildren();
             orderListBox.ClearChildren();
