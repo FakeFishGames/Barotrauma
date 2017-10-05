@@ -31,7 +31,12 @@ namespace Barotrauma.Items.Components
         public float Frequency
         {
             get { return frequency; }
-            set { frequency = Math.Max(0.0f, value); }
+            set
+            {
+                //capped to 240 Hz (= 4 signals per frame) to prevent players 
+                //from wrecking the performance by setting the value too high
+                frequency = MathHelper.Clamp(value, 0.0f, 240.0f);
+            }
         }
 
         public OscillatorComponent(Item item, XElement element) : 
