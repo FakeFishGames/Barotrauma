@@ -99,7 +99,7 @@
     <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialType.cs" />
     <Compile Include="Source\GameSession\GameSession.cs" />
     <Compile Include="Source\GameSession\HireManager.cs" />
-    <Compile Include="Source\GameSession\ShiftSummary.cs" />
+    <Compile Include="Source\GameSession\RoundSummary.cs" />
     <Compile Include="Source\GameSettings.cs" />
     <Compile Include="Source\GUI\ComponentStyle.cs" />
     <Compile Include="Source\GUI\GUI.cs" />
