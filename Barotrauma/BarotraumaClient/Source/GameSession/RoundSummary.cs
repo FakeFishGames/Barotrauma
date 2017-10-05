@@ -59,10 +59,10 @@ namespace Barotrauma
             GUIListBox listBox = new GUIListBox(new Rectangle(0,y,0,90), null, Alignment.TopLeft, "", innerFrame, true);
 
             int x = 0;
-            foreach (Character character in gameSession.CrewManager.characters)
+            foreach (CharacterInfo characterInfo in gameSession.CrewManager.CharacterInfos)
             {
-                if (GameMain.GameSession.Mission is CombatMission && 
-                    character.TeamID != GameMain.GameSession.CrewManager.WinningTeam)
+                if (GameMain.GameSession.Mission is CombatMission &&
+                    characterInfo.TeamID != GameMain.GameSession.CrewManager.WinningTeam)
                 {
                     continue;
                 }
@@ -72,15 +72,16 @@ namespace Barotrauma
                 characterFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 characterFrame.CanBeFocused = false;
 
-                character.Info.CreateCharacterFrame(characterFrame,
-                    character.Info.Job != null ? (character.Info.Name + '\n' + "(" + character.Info.Job.Name + ")") : character.Info.Name, null);
+                characterInfo.CreateCharacterFrame(characterFrame,
+                    characterInfo.Job != null ? (characterInfo.Name + '\n' + "(" + characterInfo.Job.Name + ")") : characterInfo.Name, null);
                 
                 string statusText = "OK";
                 Color statusColor = Color.DarkGreen;
 
-                if (character.IsDead)
+                Character character = characterInfo.Character;
+                if (character == null || character.IsDead)
                 {
-                    statusText = InfoTextManager.GetInfoText("CauseOfDeath." + character.CauseOfDeath.ToString());
+                    statusText = InfoTextManager.GetInfoText("CauseOfDeath." + characterInfo.CauseOfDeath.ToString());
                     statusColor = Color.DarkRed;
                 }
                 else
