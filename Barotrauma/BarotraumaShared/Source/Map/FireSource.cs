@@ -154,7 +154,7 @@ namespace Barotrauma
             DamageCharacters(deltaTime);
             DamageItems(deltaTime);
 
-            if (hull.Volume > 0.0f) HullWaterExtinquish(deltaTime);
+            if (hull.WaterVolume > 0.0f) HullWaterExtinquish(deltaTime);
 
             hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
 
@@ -263,7 +263,7 @@ namespace Barotrauma
             size.X -= extinquishAmount;
 
             //evaporate some of the water
-            hull.Volume -= extinquishAmount;
+            hull.WaterVolume -= extinquishAmount;
             
             if (GameMain.Client != null) return;
 
@@ -299,7 +299,7 @@ namespace Barotrauma
             position.X += extinquishAmount / 2.0f;
             size.X -= extinquishAmount;
 
-            hull.Volume -= extinquishAmount;
+            hull.WaterVolume -= extinquishAmount;
 
             if (GameMain.Client != null) return;
 

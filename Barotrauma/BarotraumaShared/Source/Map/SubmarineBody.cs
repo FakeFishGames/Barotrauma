@@ -315,11 +315,11 @@ namespace Barotrauma
             {
                 if (hull.Submarine != submarine) continue;
 
-                waterVolume += hull.Volume;
-                volume += hull.FullVolume;
+                waterVolume += hull.WaterVolume;
+                volume += hull.Volume;
             }
 
-            float waterPercentage = volume==0.0f ? 0.0f : waterVolume / volume;
+            float waterPercentage = volume <= 0.0f ? 0.0f : waterVolume / volume;
 
             float neutralPercentage = 0.07f;
 

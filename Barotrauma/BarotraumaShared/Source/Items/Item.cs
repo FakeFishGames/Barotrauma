@@ -868,7 +868,7 @@ namespace Barotrauma
             if (CurrentHull != null)
             {
                 float floor = CurrentHull.Rect.Y - CurrentHull.Rect.Height;
-                float waterLevel = (floor + CurrentHull.Volume / CurrentHull.Rect.Width);
+                float waterLevel = floor + CurrentHull.WaterVolume / CurrentHull.Rect.Width;
 
                 //forceFactor is 1.0f if the item is completely submerged, 
                 //and goes to 0.0f as the item goes through the surface

@@ -137,7 +137,7 @@ namespace Barotrauma
             if (currentHull == null) return true;
 
             //there's lots of water in the room -> get a suit
-            if (currentHull.Volume / currentHull.FullVolume > 0.5f) return true;
+            if (currentHull.WaterVolume / currentHull.Volume > 0.5f) return true;
 
             if (currentHull.OxygenPercentage < 30.0f) return true;
 
@@ -185,7 +185,7 @@ namespace Barotrauma
         {
             if (hull == null) return 0.0f;
 
-            float waterPercentage = (hull.Volume / hull.FullVolume) * 100.0f;
+            float waterPercentage = (hull.WaterVolume / hull.Volume) * 100.0f;
             float fireAmount = 0.0f;
 
             var nearbyHulls = hull.GetConnectedHulls(3);

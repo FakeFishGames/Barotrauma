@@ -69,9 +69,7 @@ namespace Barotrauma
 
         private string GetTotalHullVolume()
         {
-            float totalVol = 0.0f;
-            Hull.hullList.ForEach(h => { totalVol += h.FullVolume; });
-            return "Total Hull Volume:\n" + totalVol;
+            return "Total Hull Volume:\n" + Hull.hullList.Sum(h => h.Volume);
         }
 
         private string GetSelectedHullVolume()
@@ -79,16 +77,17 @@ namespace Barotrauma
             float buoyancyVol = 0.0f;
             float selectedVol = 0.0f;
             float neutralPercentage = 0.07f;
-            Hull.hullList.ForEach(h => {
-                buoyancyVol += h.FullVolume;
+            Hull.hullList.ForEach(h =>
+            {
+                buoyancyVol += h.Volume;
                 if (h.IsSelected)
                 {
-                    selectedVol += h.FullVolume;
+                    selectedVol += h.Volume;
                 }
             });
             buoyancyVol *= neutralPercentage;
             string retVal = "Selected Hull Volume:\n" + selectedVol;
-            if (selectedVol>0.0f && buoyancyVol>0.0f)
+            if (selectedVol > 0.0f && buoyancyVol > 0.0f)
             {
                 if (buoyancyVol / selectedVol < 1.0f)
                 {

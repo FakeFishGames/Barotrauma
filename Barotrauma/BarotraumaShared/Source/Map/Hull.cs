@@ -49,7 +49,7 @@ namespace Barotrauma
         private float lethalPressure;
 
         private float surface;
-        private float volume;
+        private float waterVolume;
         private float pressure;
 
         private float oxygen;
@@ -93,7 +93,7 @@ namespace Barotrauma
                     Gap.UpdateHulls();
                 }
 
-                surface = rect.Y - rect.Height + Volume / rect.Width;
+                surface = rect.Y - rect.Height + WaterVolume / rect.Width;
                 Pressure = surface;
             }
         }
@@ -127,15 +127,15 @@ namespace Barotrauma
             get { return surface; }
         }
 
-        public float Volume
+        public float WaterVolume
         {
-            get { return volume; }
+            get { return waterVolume; }
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                volume = MathHelper.Clamp(value, 0.0f, FullVolume + MaxCompress);
-                if (volume < FullVolume) Pressure = rect.Y - rect.Height + volume / rect.Width;
-                if (volume > 0.0f) update = true;
+                waterVolume = MathHelper.Clamp(value, 0.0f, Volume + MaxCompress);
+                if (waterVolume < Volume) Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
+                if (waterVolume > 0.0f) update = true;
             }
         }
 
@@ -146,19 +146,19 @@ namespace Barotrauma
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                oxygen = MathHelper.Clamp(value, 0.0f, FullVolume); 
+                oxygen = MathHelper.Clamp(value, 0.0f, Volume); 
             }
         }
 
         public float OxygenPercentage
         {
-            get { return oxygen / FullVolume * 100.0f; }
-            set { Oxygen = (value / 100.0f) * FullVolume; }
+            get { return oxygen / Volume * 100.0f; }
+            set { Oxygen = (value / 100.0f) * Volume; }
         }
 
-        public float FullVolume
+        public float Volume
         {
-            get { return (rect.Width * rect.Height); }
+            get { return rect.Width * rect.Height; }
         }
 
         public float Pressure
@@ -213,14 +213,14 @@ namespace Barotrauma
             hullList.Add(this);
 
             ConnectedGaps = new List<Gap>();
-            
-            if (submarine==null || !submarine.Loading)
+
+            if (submarine == null || !submarine.Loading)
             {
                 Item.UpdateHulls();
                 Gap.UpdateHulls();
             }
 
-            Volume = 0.0f;
+            WaterVolume = 0.0f;
 
             InsertToList();
         }
@@ -309,7 +309,7 @@ namespace Barotrauma
                 Gap.UpdateHulls();
             }
 
-            surface = rect.Y - rect.Height + Volume / rect.Width;
+            surface = rect.Y - rect.Height + WaterVolume / rect.Width;
             Pressure = surface;
         }
 
@@ -403,7 +403,7 @@ namespace Barotrauma
          
             //update client hulls if the amount of water has changed by >10%
             //or if oxygen percentage has changed by 5%
-            if (Math.Abs(lastSentVolume - volume) > FullVolume * 0.1f ||
+            if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f)
             {
                 if (GameMain.Server != null)
@@ -412,7 +412,7 @@ namespace Barotrauma
                     if (sendUpdateTimer < 0.0f)
                     {
                         GameMain.Server.CreateEntityEvent(this);
-                        lastSentVolume = volume;
+                        lastSentVolume = waterVolume;
                         lastSentOxygen = OxygenPercentage;
                         sendUpdateTimer = NetworkUpdateInterval;
                     }
@@ -425,7 +425,7 @@ namespace Barotrauma
                 return;
             }
 
-            float surfaceY = rect.Y - rect.Height + Volume / rect.Width;
+            float surfaceY = rect.Y - rect.Height + WaterVolume / rect.Width;
             for (int i = 0; i < waveY.Length; i++)
             {
                 waveY[i] = waveY[i] + waveVel[i];
@@ -467,10 +467,10 @@ namespace Barotrauma
             //interpolate the position of the rendered surface towards the "target surface"
             surface = Math.Max(MathHelper.Lerp(surface, surfaceY, deltaTime*10.0f), rect.Y - rect.Height);
 
-            if (volume < FullVolume)
+            if (waterVolume < Volume)
             {
                 LethalPressure -= 10.0f * deltaTime;
-                if (Volume == 0.0f)
+                if (WaterVolume <= 0.0f)
                 {
                     //wait for the surface to be lerped back to bottom and the waves to settle until disabling update
                     if (surface > rect.Y - rect.Height + 1) return;
@@ -611,10 +611,10 @@ namespace Barotrauma
             }
         }
 
-        private bool CanSeeOther(Hull other,bool allowIndirect=true)
+        private bool CanSeeOther(Hull other, bool allowIndirect = true)
         {
             if (other == this) return true;
-            
+
             if (other != null && other.Submarine==Submarine)
             {
                 bool retVal = false;
@@ -641,7 +641,7 @@ namespace Barotrauma
 
         public void ServerWrite(NetBuffer message, Client c, object[] extraData = null)
         {
-            message.WriteRangedSingle(MathHelper.Clamp(volume / FullVolume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
+            message.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
             message.WriteRangedSingle(MathHelper.Clamp(OxygenPercentage, 0.0f, 100.0f), 0.0f, 100.0f, 8);
 
             message.Write(fireSources.Count > 0);
@@ -664,7 +664,7 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, NetBuffer message, float sendingTime)
         {
-            Volume = message.ReadRangedSingle(0.0f, 1.5f, 8) * FullVolume;
+            WaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
             OxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
 
             bool hasFireSources = message.ReadBoolean();
@@ -731,7 +731,7 @@ namespace Barotrauma
 
             Hull h = new Hull(MapEntityPrefab.list.Find(m => m.Name == "Hull"), rect, submarine);
 
-            h.volume = element.GetAttributeFloat("pressure", 0.0f);
+            h.waterVolume = element.GetAttributeFloat("pressure", 0.0f);
 
             h.ID = (ushort)int.Parse(element.Attribute("ID").Value);
         }
@@ -747,7 +747,7 @@ namespace Barotrauma
                     (int)(rect.X - Submarine.HiddenSubPosition.X) + "," +
                     (int)(rect.Y - Submarine.HiddenSubPosition.Y) + "," +
                     rect.Width + "," + rect.Height),
-                new XAttribute("water", volume)
+                new XAttribute("water", waterVolume)
             );
 
             parentElement.Add(element);

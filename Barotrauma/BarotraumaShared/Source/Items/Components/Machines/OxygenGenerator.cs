@@ -90,17 +90,12 @@ namespace Barotrauma.Items.Components
 
                 Vent vent = linkedItem.GetComponent<Vent>();
                 if (vent == null) continue;
-                
+
                 ventList.Add(vent);
-                if (linkedItem.CurrentHull!=null) totalHullVolume += linkedItem.CurrentHull.FullVolume;
+                if (linkedItem.CurrentHull != null) totalHullVolume += linkedItem.CurrentHull.Volume;
             }
         }
-
-        //public override void OnMapLoaded()
-        //{
-        //    GetVents();
-        //}
-                
+        
         private void UpdateVents(float deltaOxygen)
         {
             if (ventList == null)
@@ -109,13 +104,13 @@ namespace Barotrauma.Items.Components
                 GetVents();
             }
 
-            if (!ventList.Any() || totalHullVolume == 0.0f) return;
+            if (!ventList.Any() || totalHullVolume <= 0.0f) return;
 
             foreach (Vent v in ventList)
             {
                 if (v.Item.CurrentHull == null) continue;
 
-                v.OxygenFlow = deltaOxygen * (v.Item.CurrentHull.FullVolume / totalHullVolume);
+                v.OxygenFlow = deltaOxygen * (v.Item.CurrentHull.Volume / totalHullVolume);
                 v.IsActive = true;
             }
         }

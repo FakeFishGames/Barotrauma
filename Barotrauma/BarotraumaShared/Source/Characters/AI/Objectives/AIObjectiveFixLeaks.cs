@@ -81,7 +81,7 @@ namespace Barotrauma
             if (gap == null) return 0.0f;
 
             //larger gap -> higher priority
-            float gapPriority = (gap.isHorizontal ? gap.Rect.Width : gap.Rect.Height) * gap.Open;
+            float gapPriority = (gap.IsHorizontal ? gap.Rect.Width : gap.Rect.Height) * gap.Open;
 
             //prioritize gaps that are close
             gapPriority /= Math.Max(Vector2.Distance(character.WorldPosition, gap.WorldPosition), 1.0f);

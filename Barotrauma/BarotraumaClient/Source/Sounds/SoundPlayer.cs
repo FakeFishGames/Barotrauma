@@ -396,8 +396,8 @@ namespace Barotrauma
                 foreach (Hull hull in Hull.hullList)
                 {
                     if (hull.Submarine != targetSubmarine) continue;
-                    floodedArea += hull.Volume;
-                    totalArea += hull.FullVolume;
+                    floodedArea += hull.WaterVolume;
+                    totalArea += hull.Volume;
                 }
 
                 if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) return "repair";             
