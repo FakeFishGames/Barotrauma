@@ -370,7 +370,7 @@ namespace Barotrauma.Tutorials
                 (commandDoor1.IsOpen || (commandDoor2.IsOpen || commandDoor3.IsOpen)))
             {
                 //prevent the hull from filling up completely and crushing the player
-                steering.Item.CurrentHull.Volume = Math.Min(steering.Item.CurrentHull.Volume, steering.Item.CurrentHull.FullVolume * 0.9f);
+                steering.Item.CurrentHull.WaterVolume = Math.Min(steering.Item.CurrentHull.WaterVolume, steering.Item.CurrentHull.Volume * 0.9f);
                 yield return CoroutineStatus.Running;
             }
 
@@ -589,7 +589,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("The pump is up and running. Wait for the water to be drained out.");
 
-            while (pump.Item.CurrentHull.Volume > 1000.0f)
+            while (pump.Item.CurrentHull.WaterVolume > 1000.0f)
             {
                 yield return CoroutineStatus.Running;
             }

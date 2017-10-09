@@ -32,7 +32,7 @@ namespace Barotrauma
 
             for (int i = 0; i < linkedTo.Count; i++)
             {
-                Vector2 dir = isHorizontal ?
+                Vector2 dir = IsHorizontal ?
                     new Vector2(Math.Sign(linkedTo[i].Rect.Center.X - rect.Center.X), 0.0f)
                     : new Vector2(0.0f, Math.Sign((linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f) - (rect.Y - rect.Height / 2.0f)));
 
@@ -42,7 +42,7 @@ namespace Barotrauma
                 GUI.Arrow.Draw(sb,
                     arrowPos, clr * 0.8f,
                     GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
-                    isHorizontal ? new Vector2(rect.Height / 16.0f, 1.0f) : new Vector2(rect.Width / 16.0f, 1.0f),
+                    IsHorizontal ? new Vector2(rect.Height / 16.0f, 1.0f) : new Vector2(rect.Width / 16.0f, 1.0f),
                     SpriteEffects.None, depth);
             }
 

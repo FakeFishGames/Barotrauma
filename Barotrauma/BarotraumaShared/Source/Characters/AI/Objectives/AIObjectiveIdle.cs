@@ -132,7 +132,7 @@ namespace Barotrauma
             {
                 List<Hull> targetHulls = new List<Hull>(Hull.hullList);
                 //ignore all hulls with fires or water in them
-                targetHulls.RemoveAll(h => h.FireSources.Any() || (h.Volume/h.FullVolume)>0.1f);
+                targetHulls.RemoveAll(h => h.FireSources.Any() || h.WaterVolume / h.Volume > 0.1f);
                 if (!targetHulls.Any()) return null;
 
                 return targetHulls[Rand.Range(0, targetHulls.Count)].AiTarget;

@@ -106,7 +106,7 @@ namespace Barotrauma
             //suit can be taken off if there character is inside a hull and there's air in the room
             bool canTakeOffSuit = Character.AnimController.CurrentHull != null &&
                 Character.AnimController.CurrentHull.OxygenPercentage > 30.0f &&
-                Character.AnimController.CurrentHull.Volume < Character.AnimController.CurrentHull.FullVolume * 0.3f;
+                Character.AnimController.CurrentHull.WaterVolume < Character.AnimController.CurrentHull.Volume * 0.3f;
 
             //the suit can be taken off and the character is running out of oxygen (couldn't find a tank for the suit?) or idling
             //-> take the suit off

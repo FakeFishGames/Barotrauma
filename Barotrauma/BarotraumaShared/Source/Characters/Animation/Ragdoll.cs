@@ -816,7 +816,7 @@ namespace Barotrauma
                 headInWater = false;
 
                 inWater = false;
-                if (currentHull.Volume > currentHull.FullVolume * 0.95f)
+                if (currentHull.WaterVolume > currentHull.Volume * 0.95f)
                 {
                     inWater = true;
                 }
@@ -836,7 +836,7 @@ namespace Barotrauma
             }
 
             if (currentHull == null ||
-                currentHull.Volume > currentHull.FullVolume * 0.95f ||
+                currentHull.WaterVolume > currentHull.Volume * 0.95f ||
                 ConvertUnits.ToSimUnits(currentHull.Surface) > Collider.SimPosition.Y)
             {
                 Collider.ApplyWaterForces();
@@ -858,7 +858,7 @@ namespace Barotrauma
                     limb.inWater = true;
                     if (limb.type == LimbType.Head) headInWater = true;
                 }
-                else if (limbHull.Volume > 0.0f && Submarine.RectContains(limbHull.Rect, limb.Position))
+                else if (limbHull.WaterVolume > 0.0f && Submarine.RectContains(limbHull.Rect, limb.Position))
                 {
                     if (limb.Position.Y < limbHull.Surface)
                     {

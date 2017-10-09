@@ -229,9 +229,9 @@ namespace Barotrauma.Particles
                     bool gapFound = false;
                     foreach (Gap gap in hullGaps)
                     {
-                        if (gap.isHorizontal != (collisionNormal.X != 0.0f)) continue;
+                        if (gap.IsHorizontal != (collisionNormal.X != 0.0f)) continue;
 
-                        if (gap.isHorizontal)
+                        if (gap.IsHorizontal)
                         {
                             if (gap.WorldRect.Y < position.Y || gap.WorldRect.Y - gap.WorldRect.Height > position.Y) continue;
                             int gapDir = Math.Sign(gap.WorldRect.Center.X - currentHull.WorldRect.Center.X);

@@ -250,7 +250,7 @@ namespace Barotrauma.Items.Components
             //steer closer if almost in range
             if (dist > range)
             {
-                Vector2 standPos = leak.isHorizontal ?
+                Vector2 standPos = leak.IsHorizontal ?
                     new Vector2(Math.Sign(item.WorldPosition.X - leak.WorldPosition.X), 0.0f)
                     : new Vector2(0.0f, Math.Sign(item.WorldPosition.Y - leak.WorldPosition.Y));
 

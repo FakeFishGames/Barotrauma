@@ -104,7 +104,7 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        hullData.Water = Math.Min(senderHull.Volume / senderHull.FullVolume, 1.0f);
+                        hullData.Water = Math.Min(senderHull.WaterVolume / senderHull.Volume, 1.0f);
                     }
                     break;
                 case "oxygen_data_in":

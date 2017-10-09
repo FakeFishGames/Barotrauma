@@ -356,7 +356,7 @@ namespace Barotrauma
                         
             foreach (Gap gap in Gap.GapList)
             {
-                if (!gap.isHorizontal) continue;
+                if (!gap.IsHorizontal) continue;
                 
                 //too small to walk through
                 if (gap.Rect.Height < 150.0f) continue;
@@ -381,7 +381,7 @@ namespace Barotrauma
 
             foreach (Gap gap in Gap.GapList)
             {
-                if (gap.isHorizontal || gap.IsRoomToRoom) continue;
+                if (gap.IsHorizontal || gap.IsRoomToRoom) continue;
 
                 //too small to walk through
                 if (gap.Rect.Width < 100.0f) continue;

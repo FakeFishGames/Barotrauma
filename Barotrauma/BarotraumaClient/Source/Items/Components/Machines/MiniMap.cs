@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
                 {
                     waterAmount = hullData != null && hullData.Water != null ?
                         (float)hullData.Water :
-                        Math.Min(hull.Volume / hull.FullVolume, 1.0f);
+                        Math.Min(hull.WaterVolume / hull.Volume, 1.0f);
 
                     if (hullRect.Height * waterAmount > 3.0f)
                     {

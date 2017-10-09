@@ -66,12 +66,11 @@ namespace Barotrauma
                 {
                     if (PlayerInput.LeftButtonHeld())
                     {
-                        //waveY[GetWaveIndex(position.X - rect.X - Submarine.Position.X) / WaveWidth] = 100.0f;
-                        Volume = Volume + 1500.0f;
+                        WaterVolume += 1500.0f;
                     }
                     else if (PlayerInput.RightButtonHeld())
                     {
-                        Volume = Volume - 1500.0f;
+                        WaterVolume -= 1500.0f;
                     }
                 }
             }
@@ -209,12 +208,14 @@ namespace Barotrauma
             {
                 GUI.SmallFont.DrawString(spriteBatch, "Pressure: " + ((int)pressure - rect.Y).ToString() +
                     " - Oxygen: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 5, -drawRect.Y + 5), Color.White);
-                GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
+                GUI.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
 
-                foreach (FireSource fs in fireSources)
+                GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * Math.Min(waterVolume / Volume, 1.0f))), Color.Cyan, true);
+                if (WaterVolume > Volume)
                 {
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.WorldPosition.X, (int)-fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y), Color.Orange, false);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / MaxCompress)), Color.Red, true);
                 }
+                GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
             }
 
             if ((IsSelected || isHighlighted) && editing)

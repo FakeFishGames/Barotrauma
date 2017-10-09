@@ -62,7 +62,7 @@ namespace Barotrauma
                 //make some of the particles create another firesource when they enter another hull
                 if (Rand.Int(20) == 1) particle.OnChangeHull = OnChangeHull;
 
-                particle.Size *= MathHelper.Clamp(size.X / 60.0f * Math.Max(hull.Oxygen / hull.FullVolume, 0.4f), 0.5f, 1.0f);
+                particle.Size *= MathHelper.Clamp(size.X / 60.0f * Math.Max(hull.Oxygen / hull.Volume, 0.4f), 0.5f, 1.0f);
 
                 if (Rand.Int(5) == 1)
                 {
@@ -71,7 +71,7 @@ namespace Barotrauma
 
                     if (smokeParticle != null)
                     {
-                        smokeParticle.Size *= MathHelper.Clamp(size.X / 100.0f * Math.Max(hull.Oxygen / hull.FullVolume, 0.4f), 0.5f, 1.0f);
+                        smokeParticle.Size *= MathHelper.Clamp(size.X / 100.0f * Math.Max(hull.Oxygen / hull.Volume, 0.4f), 0.5f, 1.0f);
                     }
                 }
             }

@@ -215,7 +215,7 @@ namespace Barotrauma
 
                 bool shouldBeOpen = false;
 
-                if (door.LinkedGap.isHorizontal)
+                if (door.LinkedGap.IsHorizontal)
                 {
                     int currentDir = Math.Sign(nextNode.WorldPosition.X - door.Item.WorldPosition.X);
 
@@ -291,7 +291,7 @@ namespace Barotrauma
                 }
             }
 
-            if (node.Waypoint!=null && node.Waypoint.CurrentHull!=null)
+            if (node.Waypoint != null && node.Waypoint.CurrentHull != null)
             {
                 var hull = node.Waypoint.CurrentHull;
 
@@ -303,8 +303,8 @@ namespace Barotrauma
                     }
                 }
 
-                if (character.NeedsAir && hull.Volume / hull.Rect.Width > 100.0f) penalty += 500.0f;
-                if (character.PressureProtection < 10.0f && hull.Volume > hull.FullVolume) penalty += 1000.0f;
+                if (character.NeedsAir && hull.WaterVolume / hull.Rect.Width > 100.0f) penalty += 500.0f;
+                if (character.PressureProtection < 10.0f && hull.WaterVolume > hull.Volume) penalty += 1000.0f;
             }
 
             return penalty;
