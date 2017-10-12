@@ -25,7 +25,8 @@ namespace Barotrauma.Items.Components
 
         private PhysicsBody body;
 
-        private Sprite doorSprite, weldedSprite;
+        private Sprite doorSprite, weldedSprite, brokenSprite;
+        private bool scaleBrokenSprite, fadeBrokenSprite;
 
         private bool isHorizontal;
 
@@ -33,6 +34,28 @@ namespace Barotrauma.Items.Components
         
         private bool? predictedState;
         private float resetPredictionTimer;
+
+        private Rectangle doorRect;
+
+        private bool isBroken;
+
+        public bool IsBroken
+        {
+            get { return isBroken; }
+            set
+            {
+                if (isBroken == value) return;
+                isBroken = value;
+                if (isBroken)
+                {
+                    DisableBody();
+                }
+                else
+                {
+                    EnableBody();
+                }
+            }
+        }
 
         public PhysicsBody Body
         {
@@ -45,7 +68,7 @@ namespace Barotrauma.Items.Components
             get { return stuck; }
             set 
             {
-                if (isOpen) return;
+                if (isOpen || isBroken) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (stuck == 0.0f) isStuck = false;
                 if (stuck == 100.0f) isStuck = true;
@@ -117,8 +140,6 @@ namespace Barotrauma.Items.Components
                 OpenState = (isOpen) ? 1.0f : 0.0f;
             }
         }
-
-        private Rectangle doorRect;
                 
         public float OpenState
         {
@@ -139,11 +160,8 @@ namespace Barotrauma.Items.Components
         public Door(Item item, XElement element)
             : base(item, element)
         {
-            //Vector2 position = new Vector2(newRect.X, newRect.Y);
-
             isHorizontal = element.GetAttributeBool("horizontal", false);
-
-           // isOpen = false;
+            
             foreach (XElement subElement in element.Elements())
             {
                 string texturePath = subElement.GetAttributeString("texture", "");
@@ -154,6 +172,11 @@ namespace Barotrauma.Items.Components
                         break;
                     case "weldedsprite":
                         weldedSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        break;
+                    case "brokensprite":
+                        brokenSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        scaleBrokenSprite = subElement.GetAttributeBool("scale", false);
+                        fadeBrokenSprite = subElement.GetAttributeBool("fade", false);
                         break;
                 }
             }
@@ -177,9 +200,6 @@ namespace Barotrauma.Items.Components
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
                 0.0f);
             body.Friction = 0.5f;
-
-
-            //string spritePath = Path.GetDirectoryName(item.Prefab.ConfigFile) + "\\"+ ToolBox.GetAttributeString(element, "sprite", "");
             
             IsActive = true;
         }
@@ -187,17 +207,12 @@ namespace Barotrauma.Items.Components
         public override void Move(Vector2 amount)
         {
             base.Move(amount);
-
-            //LinkedGap.Move(amount);
-
+            
             body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
 
 #if CLIENT
             UpdateConvexHulls();
 #endif
-
-            //convexHull.Move(amount);
-            //if (convexHull2 != null) convexHull2.Move(amount);
         }
 
 
@@ -216,17 +231,27 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (isBroken)
+            {
+                //the door has to be restored to 50% health before collision detection on the body is re-enabled
+                if (item.Condition > 50.0f)
+                {
+                    IsBroken = false;
+                }
+                return;
+            }
+
             bool isClosing = false;
             if (!isStuck)
             {
                 if (predictedState == null)
                 {
-                    OpenState += deltaTime * ((isOpen) ? 2.0f : -2.0f);
+                    OpenState += deltaTime * (isOpen ? 2.0f : -2.0f);
                     isClosing = openState > 0.0f && openState < 1.0f && !isOpen;
                 }
                 else
                 {
-                    OpenState += deltaTime * (((bool)predictedState) ? 2.0f : -2.0f);
+                    OpenState += deltaTime * ((bool)predictedState ? 2.0f : -2.0f);
                     isClosing = openState > 0.0f && openState < 1.0f && !(bool)predictedState;
 
                     resetPredictionTimer -= deltaTime;
@@ -252,14 +277,34 @@ namespace Barotrauma.Items.Components
             //other items to an incorrect state if the prediction is wrong
             item.SendSignal(0, (isOpen) ? "1" : "0", "state_out", null);
         }
-
+        
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
-            body.Enabled = false;
-
-            linkedGap.Open = 1.0f;
+            IsBroken = true;
         }
-        
+
+        private void EnableBody()
+        {
+            body.FarseerBody.IsSensor = false;
+#if CLIENT
+            UpdateConvexHulls();
+#endif
+            isBroken = false;
+        }
+
+        private void DisableBody()
+        {
+            //change the body to a sensor instead of disabling it completely, 
+            //because otherwise repairtool raycasts won't hit it
+            body.FarseerBody.IsSensor = true;
+            linkedGap.Open = 1.0f;
+            IsOpen = false;
+#if CLIENT
+            if (convexHull != null) convexHull.Enabled = false;
+            if (convexHull2 != null) convexHull2.Enabled = false;
+#endif
+        }
+
         public override void OnMapLoaded()
         {
             LinkedGap.ConnectedDoor = this;
@@ -280,19 +325,19 @@ namespace Barotrauma.Items.Components
             base.RemoveComponentSpecific();
 
             if (body != null)
-            {                
+            {
                 body.Remove();
                 body = null;
             }
 
 
-            if (linkedGap!=null) linkedGap.Remove();
+            if (linkedGap != null) linkedGap.Remove();
 
             doorSprite.Remove();
             if (weldedSprite != null) weldedSprite.Remove();
 
 #if CLIENT
-            if (convexHull!=null) convexHull.Remove();
+            if (convexHull != null) convexHull.Remove();
             if (convexHull2 != null) convexHull2.Remove();
 #endif
         }
@@ -398,8 +443,8 @@ namespace Barotrauma.Items.Components
             {
                 //clients can "predict" that the door opens/closes when a signal is received
 
-//the prediction will be reset after 1 second, setting the door to a state
-//sent by the server, or reverting it back to its old state if no msg from server was received
+                //the prediction will be reset after 1 second, setting the door to a state
+                //sent by the server, or reverting it back to its old state if no msg from server was received
 
 #if CLIENT
                 if (open != predictedState) PlaySound(ActionType.OnUse, item.WorldPosition);
@@ -437,7 +482,7 @@ namespace Barotrauma.Items.Components
         {
             SetState(msg.ReadBoolean(), true);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-
+            
             predictedState = null;
         }
     }

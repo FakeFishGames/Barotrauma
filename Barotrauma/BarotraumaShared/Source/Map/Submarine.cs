@@ -509,7 +509,7 @@ namespace Barotrauma
             }
         }
 
-        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null)
+        public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, List<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true)
         {
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
             {
@@ -521,7 +521,7 @@ namespace Barotrauma
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (fixture == null ||
-                    fixture.IsSensor ||
+                    (ignoreSensors && fixture.IsSensor) ||
                     fixture.CollisionCategories == Category.None || 
                     fixture.CollisionCategories == Physics.CollisionItem) return -1;
                 
@@ -556,7 +556,7 @@ namespace Barotrauma
         /// check visibility between two points (in sim units)
         /// </summary>
         /// <returns>a physics body that was between the points (or null)</returns>
-        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false)
+        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false, bool ignoreSensors = true)
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
@@ -569,7 +569,8 @@ namespace Barotrauma
             
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
-                if (fixture == null || fixture.IsSensor ||
+                if (fixture == null ||
+                    (ignoreSensors && fixture.IsSensor) ||
                     (!fixture.CollisionCategories.HasFlag(Physics.CollisionWall) && !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel))) return -1;
 
                 if (ignoreLevel && fixture.CollisionCategories == Physics.CollisionLevel) return -1;
