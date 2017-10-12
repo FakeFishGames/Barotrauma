@@ -111,6 +111,7 @@ namespace Barotrauma
         public GameMain()
         {
             GraphicsDeviceManager = new GraphicsDeviceManager(this);
+
             Window.Title = "Barotrauma";
             
             Instance = this;
@@ -145,6 +146,9 @@ namespace Barotrauma
         {
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
+            GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
+            GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Bgra32;
+            GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
 
             if (Config.WindowMode == WindowMode.Windowed)

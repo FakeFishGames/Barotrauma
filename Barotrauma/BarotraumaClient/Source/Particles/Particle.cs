@@ -23,6 +23,9 @@ namespace Barotrauma.Particles
 
         private float angularVelocity;
 
+        private Vector2 dragVec = Vector2.Zero;
+        private int dragWait = 0;
+
         private Vector2 size;
         private Vector2 sizeChange;
 
@@ -271,10 +274,24 @@ namespace Barotrauma.Particles
 
         private void ApplyDrag(float dragCoefficient, float deltaTime)
         {
+            if (velocity.LengthSquared() < dragVec.LengthSquared())
+            {
+                velocity = Vector2.Zero;
+                return;
+            }
             if (Math.Abs(velocity.X) < 0.0001f && Math.Abs(velocity.Y) < 0.0001f) return;
-            float speed = velocity.Length();
 
-            velocity -= (velocity / speed) * Math.Min(speed * speed * dragCoefficient * deltaTime, 1.0f);
+            dragWait--;
+            if (dragWait<=0)
+            {
+                dragWait = 30;
+
+                float speed = velocity.Length();
+
+                dragVec = (velocity / speed) * Math.Min(speed * speed * dragCoefficient * deltaTime, 1.0f);
+            }
+
+            velocity -= dragVec;
         }
 
         private void OnWallCollisionInside(Hull prevHull, Vector2 collisionNormal)
