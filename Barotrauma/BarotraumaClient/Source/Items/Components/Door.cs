@@ -87,11 +87,7 @@ namespace Barotrauma.Items.Components
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
             Color color = (item.IsSelected) ? Color.Green : Color.White;
-            color = color * (item.Condition / item.Prefab.Health);
-            color.A = 255;
-
-            //prefab.sprite.Draw(spriteBatch, new Vector2(rect.X, -rect.Y), new Vector2(rect.Width, rect.Height), color);
-
+            
             if (stuck > 0.0f && weldedSprite != null)
             {
                 Vector2 weldSpritePos = new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height / 2.0f);
@@ -114,10 +110,25 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
-                spriteBatch.Draw(doorSprite.Texture, pos,
-                    new Rectangle((int)(doorSprite.SourceRect.X + doorSprite.size.X * openState), (int)doorSprite.SourceRect.Y,
-                     (int)(doorSprite.size.X * (1.0f - openState)), (int)doorSprite.size.Y),
-                    color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
+                if (brokenSprite == null || item.Health > 0.0f)
+                {
+                    spriteBatch.Draw(doorSprite.Texture, pos,
+                        new Rectangle((int) (doorSprite.SourceRect.X + doorSprite.size.X * openState),
+                            (int) doorSprite.SourceRect.Y,
+                            (int) (doorSprite.size.X * (1.0f - openState)), (int) doorSprite.size.Y),
+                        color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
+                }
+
+                if (brokenSprite != null && item.Health < item.Prefab.Health)
+                {
+                    Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f, 1.0f - item.Health / item.Prefab.Health) : Vector2.One;
+                    float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.Prefab.Health : 1.0f;
+                    spriteBatch.Draw(brokenSprite.Texture, pos,
+                        new Rectangle((int)(brokenSprite.SourceRect.X + brokenSprite.size.X * openState), brokenSprite.SourceRect.Y,
+                            (int)(brokenSprite.size.X * (1.0f - openState)), (int)brokenSprite.size.Y),
+                        color * alpha, 0.0f, brokenSprite.Origin, scale, SpriteEffects.None,
+                        brokenSprite.Depth);
+                }
             }
             else
             {
@@ -125,10 +136,25 @@ namespace Barotrauma.Items.Components
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
-                spriteBatch.Draw(doorSprite.Texture, pos,
-                    new Rectangle(doorSprite.SourceRect.X, (int)(doorSprite.SourceRect.Y + doorSprite.size.Y * openState),
-                    (int)doorSprite.size.X, (int)(doorSprite.size.Y * (1.0f - openState))),
-                    color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
+                if (brokenSprite == null || item.Health > 0.0f)
+                {
+                    spriteBatch.Draw(doorSprite.Texture, pos,
+                        new Rectangle(doorSprite.SourceRect.X,
+                            (int) (doorSprite.SourceRect.Y + doorSprite.size.Y * openState),
+                            (int) doorSprite.size.X, (int) (doorSprite.size.Y * (1.0f - openState))),
+                        color, 0.0f, doorSprite.Origin, 1.0f, SpriteEffects.None, doorSprite.Depth);
+                }
+
+                if (brokenSprite != null && item.Health < item.Prefab.Health)
+                {
+                    Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - item.Health / item.Prefab.Health, 1.0f) : Vector2.One;
+                    float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.Prefab.Health : 1.0f;
+                    spriteBatch.Draw(brokenSprite.Texture, pos,
+                        new Rectangle(brokenSprite.SourceRect.X, (int)(brokenSprite.SourceRect.Y + brokenSprite.size.Y * openState),
+                            (int)brokenSprite.size.X, (int)(brokenSprite.size.Y * (1.0f - openState))),
+                        color * alpha, 0.0f, brokenSprite.Origin, scale, SpriteEffects.None, brokenSprite.Depth);
+                }
+
             }
 
         }
