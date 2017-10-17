@@ -146,8 +146,8 @@ namespace Barotrauma
         {
             GraphicsWidth = Config.GraphicsWidth;
             GraphicsHeight = Config.GraphicsHeight;
-            GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
-            GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Bgra32;
+            GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.Reach;
+            GraphicsDeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
 
