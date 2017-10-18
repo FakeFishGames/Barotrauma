@@ -4,8 +4,7 @@
   <Item
     name="Spear"
     category="Equipment"
-    
-    pickthroughwalls="true"
+    interactthroughwalls="true"
     price="50">
 
     <Deconstruct time="5">
@@ -18,7 +17,7 @@
 
     <Pickable slots="Any"/>
     <Projectile launchimpulse="20.0" doesstick="true">
-      <Attack damage="20" bleedingdamage="2" structuredamage="50" damagetype="Blunt"/>
+      <Attack damage="20" bleedingdamage="2" structuredamage="50" damagetype="Blunt" stun="0.2" targetforce="50"/>
     </Projectile>
   </Item>
   
@@ -42,15 +41,67 @@
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true"
               holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7"/>
     
-    <RangedWeapon barrelpos="49,10">
+    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10">
       <Sound file="harpoon1.ogg" type="OnUse"/>
       <Sound file="harpoon2.ogg" type="OnUse"/>
+      <StatusEffect type="OnUse">
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" flash="false" sparks="false" camerashake="5.0"/>
+      </StatusEffect>
       <RequiredItems name="Spear" type="Contained" msg="Spear required to shoot"/>
       <RequiredSkill name="Weapons" level="30"/>
     </RangedWeapon>
 
     <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false">
       <Containable name="Spear"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
+    name="Revolver Round"
+    category="Equipment"
+    interactthroughwalls="true"
+    price="10">
+
+    <Sprite texture="weapons.png" sourcerect="52,99,8,3" depth="0.55"/>
+
+    <Body width="8" height="3" density="40"/>
+
+    <Pickable slots="Any"/>
+    <Projectile hitscan="true" doesstick="false" removeonhit="true" >
+      <Attack damage="40" bleedingdamage="3" structuredamage="100" damagetype="Blunt" stun="0.5" targetforce="50"/>
+    </Projectile>
+  </Item>
+  
+  <Item
+    name="Revolver"
+    category="Equipment"    
+    price="700"
+    tags="weapon">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="Aluminium"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+
+    <Sprite texture="weapons.png" sourcerect="26,97,25,19" depth="0.55"/>
+
+    <Body width="25" height="15" density="50"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
+              aimpos="90,10" handle1="-11,-7"/>
+
+    <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2">
+      <Sound file="revolver.ogg" type="OnUse" range="3000"/>
+      <StatusEffect type="OnUse">
+        <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" camerashake="5.0"/>
+      </StatusEffect>
+      <RequiredItems name="Revolver Round" type="Contained" msg="Out of ammo"/>
+      <RequiredSkill name="Weapons" level="40"/>
+    </RangedWeapon>
+
+    <ItemContainer capacity="4" hideitems="true">
+      <Containable name="Revolver Round"/>
     </ItemContainer>
   </Item>
 

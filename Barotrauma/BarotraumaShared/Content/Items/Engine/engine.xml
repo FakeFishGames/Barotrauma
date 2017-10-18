@@ -5,7 +5,6 @@
     name="Engine"
     linkable="true"
     category="Machine"
-    pickthroughwalls="true"
     >
 
     <Sprite texture ="engine.png" depth="0.8" sourcerect="0,0,373,113" canflipx="true"/>
@@ -35,7 +34,6 @@
     name="Shuttle Engine"
     linkable="true"
     category="Machine"
-    pickthroughwalls="true"
     >
 
     <Sprite texture ="engine.png" depth="0.8" sourcerect="0,115,224,73" canflipx="true"/>
