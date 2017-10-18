@@ -33,6 +33,6 @@ technique StencilShader
 {
     pass Pass1
     {
-        PixelShader = compile ps_4_0_level_9_3 main();
+        PixelShader = compile ps_4_0_level_9_1 main();
     }
 }
