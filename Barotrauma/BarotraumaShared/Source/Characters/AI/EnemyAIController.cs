@@ -461,7 +461,7 @@ namespace Barotrauma
 
             if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
-            targetMemory.Priority += amount;
+            targetMemory.Priority += amount / Math.Max(Character.Health, 1.0f);
         }
 
         private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackPosition)

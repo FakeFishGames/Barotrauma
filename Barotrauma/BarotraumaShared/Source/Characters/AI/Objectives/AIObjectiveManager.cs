@@ -36,6 +36,15 @@ namespace Barotrauma
             objectives.Add(objective);
         }
 
+        public T GetObjective<T>() where T : AIObjective
+        {
+            foreach (AIObjective objective in objectives)
+            {
+                if (objective is T) return (T)objective;
+            }
+            return null;
+        }
+
         public float GetCurrentPriority(Character character)
         {
             if (currentObjective != null) return OrderPriority;

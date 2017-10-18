@@ -145,6 +145,11 @@ namespace Barotrauma
             if (enemy == null || enemy == Character) return;
 
             objectiveManager.AddObjective(new AIObjectiveCombat(Character, enemy));
+
+            //the objective in the manager is not necessarily the same as the one we just instantiated,
+            //because the objective isn't added if there's already an identical objective in the manager
+            var combatObjective = objectiveManager.GetObjective<AIObjectiveCombat>();
+            combatObjective.MaxEnemyDamage = Math.Max(amount, combatObjective.MaxEnemyDamage);
         }
 
         public void SetOrder(Order order, string option)
