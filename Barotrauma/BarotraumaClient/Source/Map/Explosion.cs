@@ -42,12 +42,14 @@ namespace Barotrauma
                 hull.AddDecal(decal, worldPosition, decalSize);
             }
 
-            float displayRange = attack.Range;
-            if (displayRange < 0.1f) return;
+            if (flash)
+            {
+                float displayRange = attack.Range;
+                if (displayRange < 0.1f) return;
 
-            var light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
-            CoroutineManager.StartCoroutine(DimLight(light));
-
+                var light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
+                CoroutineManager.StartCoroutine(DimLight(light));
+            }
         }
 
         private IEnumerable<object> DimLight(LightSource light)

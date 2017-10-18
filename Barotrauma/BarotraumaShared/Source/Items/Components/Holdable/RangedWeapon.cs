@@ -27,6 +27,20 @@ namespace Barotrauma.Items.Components
             set { reload = Math.Max(value, 0.0f); }
         }
 
+        [HasDefaultValue(0.0f, false)]
+        public float Spread
+        {
+            get;
+            set;
+        }
+
+        [HasDefaultValue(0.0f, false)]
+        public float UnskilledSpread
+        {
+            get;
+            set;
+        }
+
         public Vector2 TransformedBarrelPos
         {
             get
@@ -41,8 +55,6 @@ namespace Barotrauma.Items.Components
         public RangedWeapon(Item item, XElement element)
             : base(item, element)
         {
-            //barrelPos = ToolBox.GetAttributeVector2(element, "barrelpos", Vector2.Zero);
-            //barrelPos = ConvertUnits.ToSimUnits(barrelPos);
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -90,13 +102,16 @@ namespace Barotrauma.Items.Components
                     Projectile projectileComponent= projectile.GetComponent<Projectile>();
                     if (projectileComponent == null) continue;
 
-                    float rotation = ((item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi) + Rand.Range(-degreeOfFailure, degreeOfFailure);
+                    float spread = MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
+                    float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
+                    rotation += spread * Rand.Range(-0.5f, 0.5f);
                 
                     projectile.body.ResetDynamics();
                     projectile.SetTransform(TransformedBarrelPos, rotation);
+                    projectileComponent.User = character;
+                    projectileComponent.IgnoredBodies = new List<Body>(limbBodies);
 
                     projectile.Use(deltaTime);
-                    projectileComponent.User = character;
 
                     projectile.body.ApplyTorque(projectile.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
 
@@ -105,9 +120,7 @@ namespace Barotrauma.Items.Components
 
                     //recoil
                     item.body.ApplyLinearImpulse(
-                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);
-                
-                    projectileComponent.IgnoredBodies = limbBodies;
+                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);                
 
                     item.RemoveContained(projectile);
                 
@@ -117,9 +130,6 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             }
-
-
-
 
             return true;      
         }

@@ -15,7 +15,7 @@ namespace Barotrauma
         
         public float CameraShake;
 
-        private bool sparks, shockwave, flames, smoke;
+        private bool sparks, shockwave, flames, smoke, flash;
 
         private string decal;
         private float decalSize;
@@ -39,6 +39,7 @@ namespace Barotrauma
             shockwave   = element.GetAttributeBool("shockwave", true);
             flames      = element.GetAttributeBool("flames", true);
             smoke       = element.GetAttributeBool("smoke", true);
+            flash       = element.GetAttributeBool("flash", true);
 
             decal       = element.GetAttributeString("decal", "");
             decalSize   = element.GetAttributeFloat("decalSize", 1.0f);

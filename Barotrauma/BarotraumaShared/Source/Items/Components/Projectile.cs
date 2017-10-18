@@ -44,6 +44,20 @@ namespace Barotrauma.Items.Components
             set { doesStick = value; }
         }
 
+        [HasDefaultValue(false, false)]
+        public bool Hitscan
+        {
+            get;
+            set;
+        }
+
+        [HasDefaultValue(false, false)]
+        public bool RemoveOnHit
+        {
+            get;
+            set;
+        }
+
         public Projectile(Item item, XElement element) 
             : base (item, element)
         {
@@ -60,11 +74,18 @@ namespace Barotrauma.Items.Components
         {
             if (character != null && !characterUsable) return false;
 
-            User = character;
+            Vector2 launchDir = new Vector2((float)Math.Cos(item.body.Rotation), (float)Math.Sin(item.body.Rotation));
 
-            Launch(new Vector2(
-                (float)Math.Cos(item.body.Rotation),
-                (float)Math.Sin(item.body.Rotation)) * launchImpulse * item.body.Mass);
+            if (Hitscan)
+            {
+                DoHitscan(launchDir);
+            }
+            else
+            {
+                Launch(launchDir * launchImpulse * item.body.Mass);
+            }
+
+            User = character;
 
             return true;
         }
@@ -73,7 +94,7 @@ namespace Barotrauma.Items.Components
         {
             item.Drop();
 
-            item.body.Enabled = true;
+            item.body.Enabled = true;            
             item.body.ApplyLinearImpulse(impulse);
             
             item.body.FarseerBody.OnCollision += OnProjectileCollision;
@@ -104,12 +125,52 @@ namespace Barotrauma.Items.Components
             GameMain.World.RemoveJoint(stickJoint);
             stickJoint = null;
         }
+
+        private void DoHitscan(Vector2 dir)
+        {
+            float rotation = item.body.Rotation;
+            item.Drop();
+
+            item.body.Enabled = true;
+            //set the velocity of the body because the OnProjectileCollision method
+            //uses it to determine the direction from which the projectile hit
+            item.body.LinearVelocity = dir;
+            IsActive = true;
+
+            Vector2 rayStart = item.SimPosition;
+            Vector2 rayEnd = item.SimPosition + dir * 1000.0f;
+
+            bool hitSomething = false;
+            GameMain.World.RayCast((fixture, point, normal, fraction) =>
+            {
+                if (fixture == null || fixture.IsSensor) return -1;
+
+                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
+                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
+                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return -1;
+
+                item.body.SetTransform(point, rotation);
+                if (OnProjectileCollision(fixture, normal))
+                {
+                    hitSomething = true;
+                    return 0;
+                }                
+                return 1;
+            }, rayStart, rayEnd);
+
+            //the raycast didn't hit anything -> the projectile flew somewhere outside the level and is permanently lost
+            if (!hitSomething)
+            {
+                Item.Spawner.AddToRemoveQueue(item);
+            }
+        }
         
         public override void Update(float deltaTime, Camera cam)
         {
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null); 
 
-            if (stickJoint != null && stickJoint.JointTranslation < 0.01f)  
+            if (stickJoint != null && 
+                (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f))  
             {
                 if (stickTarget != null)
                 {
@@ -117,7 +178,7 @@ namespace Barotrauma.Items.Components
                     {
                         item.body.FarseerBody.RestoreCollisionWith(stickTarget);
                     }
-                    catch 
+                    catch
                     {
                         //the body that the projectile was stuck to has been removed
                     }
@@ -142,9 +203,14 @@ namespace Barotrauma.Items.Components
 
         private bool OnProjectileCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            if (IgnoredBodies.Contains(f2.Body)) return false;
+            return OnProjectileCollision(f2, contact.Manifold.LocalNormal);
+        }
 
-            if (f2.CollisionCategories == Physics.CollisionCharacter && !(f2.Body.UserData is Limb))
+        private bool OnProjectileCollision(Fixture target, Vector2 collisionNormal)
+        {
+            if (IgnoredBodies.Contains(target.Body)) return false;
+
+            if (target.CollisionCategories == Physics.CollisionCharacter && !(target.Body.UserData is Limb))
             {
                 return false;
             }
@@ -152,7 +218,7 @@ namespace Barotrauma.Items.Components
             AttackResult attackResult = new AttackResult();
             if (attack != null)
             {
-                var submarine = f2.Body.UserData as Submarine;
+                var submarine = target.Body.UserData as Submarine;
                 if (submarine != null)
                 {
                     item.Move(-submarine.Position);
@@ -164,11 +230,11 @@ namespace Barotrauma.Items.Components
 
                 Limb limb;
                 Structure structure;
-                if ((limb = (f2.Body.UserData as Limb)) != null)
+                if ((limb = (target.Body.UserData as Limb)) != null)
                 {
                     attackResult = attack.DoDamage(User, limb.character, item.WorldPosition, 1.0f);
                 }
-                else if ((structure = (f2.Body.UserData as Structure)) != null)
+                else if ((structure = (target.Body.UserData as Structure)) != null)
                 {
                     attackResult = attack.DoDamage(User, structure, item.WorldPosition, 1.0f);
                 }
@@ -187,7 +253,7 @@ namespace Barotrauma.Items.Components
 
             IgnoredBodies.Clear();
 
-            f2.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
+            target.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
 
             if (attackResult.HitArmor)
             {
@@ -195,12 +261,15 @@ namespace Barotrauma.Items.Components
             }
             else if (doesStick)
             {
-                Vector2 normal = contact.Manifold.LocalNormal;
                 Vector2 dir = new Vector2(
-                    (float)Math.Cos(item.body.Rotation), 
+                    (float)Math.Cos(item.body.Rotation),
                     (float)Math.Sin(item.body.Rotation));
 
-                if (Vector2.Dot(f1.Body.LinearVelocity, normal) < 0.0f) return StickToTarget(f2.Body, dir);
+                if (Vector2.Dot(item.body.LinearVelocity, collisionNormal) < 0.0f)
+                {
+                    StickToTarget(target.Body, dir);
+                    return Hitscan;
+                }
             }
             else
             {
@@ -220,27 +289,52 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            return f2.CollisionCategories != Physics.CollisionCharacter;
+            if (RemoveOnHit)
+            {
+                Item.Spawner.AddToRemoveQueue(item);
+            }
+
+            return true;
         }
 
-        private bool StickToTarget(Body targetBody, Vector2 axis)
+        private void StickToTarget(Body targetBody, Vector2 axis)
         {
-            if (stickJoint != null) return false;
+            if (stickJoint != null) return;
 
             stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.SimPosition, axis, true);
             stickJoint.MotorEnabled = true;
             stickJoint.MaxMotorForce = 30.0f;
 
             stickJoint.LimitEnabled = true;
-            if (item.Sprite != null) stickJoint.UpperLimit = ConvertUnits.ToSimUnits(item.Sprite.size.X*0.7f);
+            if (item.Sprite != null)
+            {
+                stickJoint.LowerLimit = ConvertUnits.ToSimUnits(item.Sprite.size.X * -0.3f);
+                stickJoint.UpperLimit = ConvertUnits.ToSimUnits(item.Sprite.size.X * 0.3f);
+            }
 
             item.body.FarseerBody.IgnoreCollisionWith(targetBody);
             stickTarget = targetBody;
             GameMain.World.AddJoint(stickJoint);
 
             IsActive = true;
+        }
 
-            return false;
+        protected override void RemoveComponentSpecific()
+        {
+            if (stickJoint != null)
+            {
+                try
+                {
+                    GameMain.World.RemoveJoint(stickJoint);
+                }
+                catch
+                {
+                    //the body that the projectile was stuck to has been removed
+                }
+
+                stickJoint = null;
+            }
+
         }
     }
 }
