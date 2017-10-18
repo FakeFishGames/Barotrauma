@@ -61,7 +61,7 @@ namespace Barotrauma
         {
             AttackResult result = base.AddDamage(attacker, worldPosition, attack, deltaTime, playSound);
 
-            aiController.OnAttacked(attacker, (result.Damage + result.Bleeding) / Math.Max(Health, 1.0f));
+            aiController.OnAttacked(attacker, result.Damage + result.Bleeding);
 
             return result;
         }

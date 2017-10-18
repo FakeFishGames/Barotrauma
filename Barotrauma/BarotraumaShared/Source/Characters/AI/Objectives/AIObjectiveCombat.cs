@@ -9,6 +9,10 @@ namespace Barotrauma
     {
         const float CoolDown = 10.0f;
 
+        //the largest amount of damage the enemy has inflicted on this character
+        //(may be higher than enemyStrength if the enemy is e.g. a human using items)
+        public float MaxEnemyDamage;
+
         private Character enemy;
 
         private AIObjectiveFindSafety escapeObjective;
@@ -17,7 +21,7 @@ namespace Barotrauma
 
         private readonly float enemyStrength;
 
-        public AIObjectiveCombat (Character character, Character enemy)
+        public AIObjectiveCombat(Character character, Character enemy)
             : base(character, "")
         {
             this.enemy = enemy;
@@ -88,13 +92,6 @@ namespace Barotrauma
             }
 
             escapeObjective.TryComplete(deltaTime);
-
-            //if (Vector2.Distance(character.SimPosition, enemy.SimPosition) < 3.0f)
-            //{
-            //    character.AIController.SteeringManager.SteeringManual(deltaTime, 
-            //        new Vector2(Math.Sign(character.SimPosition.X - enemy.SimPosition.X), 0.0f));            
-            //    coolDownTimer = CoolDown;
-            //}
         }
 
         public override bool IsCompleted()
@@ -107,7 +104,7 @@ namespace Barotrauma
             //clamp the strength to the health of this character
             //(it doesn't make a difference whether the enemy does 200 or 600 damage, it's one hit kill anyway)
 
-            float enemyDanger = Math.Min(enemyStrength, character.Health) + enemy.Health / 10.0f;
+            float enemyDanger = Math.Min(Math.Max(enemyStrength, MaxEnemyDamage), character.Health) + enemy.Health / 10.0f;
 
             EnemyAIController enemyAI = enemy.AIController as EnemyAIController;
             if (enemyAI != null)
