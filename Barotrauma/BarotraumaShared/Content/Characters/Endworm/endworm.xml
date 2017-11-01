@@ -15,10 +15,10 @@
   
   <ragdoll waveamplitude="100.0" wavelength="1000" speed="2.0" scale ="2.0" flip="false" canentersubmarine="false">
 
-    <collider radius="300"/>
+    <collider radius="300" height="400"/>
     
     <!-- head -->
-    <limb id = "0" radius="300" type="Head" steerforce="3.0">
+    <limb id = "0" radius="250" type="Head" steerforce="3.0">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,478,720,546" depth="0.05"/>
     </limb>
 
@@ -54,12 +54,12 @@
 
     <limb id = "8" width="50" height="320">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="755,552,137,470" depth="0.08" origin="0.5,0.5"/>
-      <attack range="800" duration="0.5" damage="30" stun="5.0" torque="-100" structuredamage="500" damagetype="slash"/>
+      <attack range="1400" damagerange="1300" duration="0.5" damage="30" stun="5.0" force="100" torque="-100" structuredamage="500" damagetype="slash"/>
     </limb>
     
     <limb id = "9" width="50" height="320">
       <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="892,552,137,470" depth="0.08" origin="0.6,0.5"/>
-      <attack range="800" duration="0.5" damage="30" stun="5.0" torque="100" structuredamage="500" damagetype="slash"/>
+      <attack range="1400" damagerange="1300" duration="0.5" damage="30" stun="5.0" force="100" torque="100" structuredamage="500" damagetype="slash"/>
     </limb>
         
 

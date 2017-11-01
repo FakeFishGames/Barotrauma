@@ -9,9 +9,9 @@
     combatstrength="400"
     attackpriorityhumans="100.0"
     attackpriorityrooms="50.0"
-    attackpriorityweaker="50"
+    attackpriorityweaker="45"
     attackprioritystronger="-30"
-    eatpriority="55"
+    eatpriority="40"
     sight="0.5"
     hearing="1.0"/>
 
@@ -34,7 +34,7 @@
     <limb id = "1" width="16" height="103">
       <sprite texture="Content/Characters/Tigerthresher/tigerthresher.png" sourcerect="391,169,28,110" depth="0.025" origin="0.5,0.5"/>
       <damagedsprite texture="Content/Characters/Tigerthresher/damagedtigerthresher.png" sourcerect="391,169,28,110" origin="0.5,0.5"/>
-      <attack range="300" duration="0.5" damage="150" bleedingdamage="10" structuredamage="200" damagetype="slash" force="80" torque="80" targetforce="-50" severlimbsprobability="0.8"/>      
+      <attack range="300" damagerange="150" duration="0.5" damage="150" bleedingdamage="10" structuredamage="200" damagetype="slash" force="80" torque="80" targetforce="-50" severlimbsprobability="0.8"/>      
     </limb>
 
     <!-- body front -->

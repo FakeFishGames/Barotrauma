@@ -471,7 +471,7 @@ namespace Barotrauma
 
             body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
 
-            if (dist < attack.Range * 0.5f)
+            if (dist < attack.DamageRange)
             {
                 if (AttackTimer >= attack.Duration && damageTarget != null)
                 {
