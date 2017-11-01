@@ -33,7 +33,7 @@ namespace Barotrauma
         {
             get
             {
-                if (Entity == null)
+                if (Entity == null || Entity.Removed)
                 {
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);
@@ -49,7 +49,7 @@ namespace Barotrauma
         {
             get
             {
-                if (Entity == null)
+                if (Entity == null || Entity.Removed)
                 {
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);

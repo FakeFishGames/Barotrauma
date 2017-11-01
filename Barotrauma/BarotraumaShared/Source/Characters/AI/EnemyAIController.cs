@@ -533,8 +533,7 @@ namespace Barotrauma
             }
 
             Vector2 attackSimPosition = Character.Submarine == null ? ConvertUnits.ToSimUnits(selectedAiTarget.WorldPosition) : selectedAiTarget.SimPosition;
-
-
+            
             Vector2 limbDiff = attackSimPosition - mouthPos;
             float limbDist = limbDiff.Length();
             if (limbDist < 1.0f)
@@ -577,7 +576,7 @@ namespace Barotrauma
             }
             else
             {
-                steeringManager.SteeringSeek(attackSimPosition + (mouthPos - SimPosition), 3);
+                steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 3);
             }
         }
         
