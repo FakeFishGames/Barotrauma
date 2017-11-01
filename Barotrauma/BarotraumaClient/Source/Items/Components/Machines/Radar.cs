@@ -14,6 +14,15 @@ namespace Barotrauma.Items.Components
 
         private List<RadarBlip> radarBlips;
 
+        private static Color[] blipColorGradient = 
+        {
+            Color.TransparentBlack,
+            new Color(0, 50, 160),
+            new Color(0, 133, 166),
+            new Color(2, 159, 30),
+            new Color(255, 255, 255) 
+        };
+
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
@@ -34,6 +43,7 @@ namespace Barotrauma.Items.Components
                 float pingRadius = displayRadius * pingState;
                 Ping(item.WorldPosition, pingRadius, prevPingRadius, displayScale, range, 2.0f);
                 prevPingRadius = pingRadius;
+                return;
             }
 
             float passivePingRadius = (float)Math.Sin(Timing.TotalTime * 10);
@@ -47,7 +57,7 @@ namespace Barotrauma.Items.Components
                     {
                         Ping(t.WorldPosition, t.SoundRange * passivePingRadius * 0.2f, t.SoundRange * prevPassivePingRadius * 0.2f, displayScale, t.SoundRange, 0.5f);
 
-                        radarBlips.Add(new RadarBlip(t.WorldPosition, 1.0f));
+                        radarBlips.Add(new RadarBlip(t.WorldPosition, 1.0f, 1.0f));
                     }
                 }
             }
@@ -181,6 +191,32 @@ namespace Barotrauma.Items.Components
 
         private void Ping(Vector2 pingSource, float pingRadius, float prevPingRadius, float displayScale, float range, float pingStrength = 1.0f)
         {
+            //inside a hull -> only show the edges of the hull
+            if (item.CurrentHull != null && DetectSubmarineWalls)
+            {
+                CreateBlipsForLine(
+                    new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y), 
+                    new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y), 
+                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f);
+
+                CreateBlipsForLine(
+                    new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
+                    new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
+                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f);
+
+                CreateBlipsForLine(
+                    new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y),
+                    new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
+                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f);
+
+                CreateBlipsForLine(
+                    new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y),
+                    new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
+                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f);
+
+                return;
+            }
+
             foreach (Submarine submarine in Submarine.Loaded)
             {
                 if (item.Submarine == submarine && !DetectSubmarineWalls) continue;
@@ -273,11 +309,11 @@ namespace Barotrauma.Items.Components
 
                     if (pointDist > prevPingRadius && pointDist < pingRadius)
                     {
-                        for (int i = 0; i <= limb.Mass / 100.0f; i++)
-                        {
-                            var blip = new RadarBlip(limb.WorldPosition + Rand.Vector(limb.Mass / 10.0f), MathHelper.Clamp(limb.Mass, 0.1f, pingStrength));
-                            radarBlips.Add(blip);
-                        }
+                        var blip = new RadarBlip(
+                            limb.WorldPosition + Rand.Vector(limb.Mass / 10.0f), 
+                            MathHelper.Clamp(limb.Mass, 0.1f, pingStrength), 
+                            MathHelper.Clamp(limb.Mass * 0.1f, 0.1f, 2.0f));
+                        radarBlips.Add(blip);
                     }
                 }
             }
@@ -311,7 +347,7 @@ namespace Barotrauma.Items.Components
                     int minDist = 200;
                     radarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
 
-                    var blip = new RadarBlip(pos, fadeTimer);
+                    var blip = new RadarBlip(pos, fadeTimer, 1.0f + ((pointDist+z) / displayRadius));
 
                     radarBlips.Add(blip);
                     zStep += 0.5f;
@@ -334,33 +370,19 @@ namespace Barotrauma.Items.Components
         private void DrawBlip(SpriteBatch spriteBatch, RadarBlip blip, Vector2 center, float strength)
         {
             strength = MathHelper.Clamp(strength, 0.0f, 1.0f);
-
-            Color[] colors = new Color[] {
-                Color.TransparentBlack,
-                new Color(0, 50, 160),
-                new Color(0, 133, 166),
-                new Color(2, 159, 30),
-                new Color(255, 255, 255) };
-
-            float scaledT = strength * (colors.Length - 1);
-            Color color = Color.Lerp(colors[(int)scaledT], colors[(int)Math.Min(scaledT + 1, colors.Length - 1)], (scaledT - (int)scaledT));
+            
+            float scaledT = strength * (blipColorGradient.Length - 1);
+            Color color = Color.Lerp(blipColorGradient[(int)scaledT], blipColorGradient[(int)Math.Min(scaledT + 1, blipColorGradient.Length - 1)], (scaledT - (int)scaledT));
 
             Vector2 pos = (blip.Position - item.WorldPosition) * displayScale;
             pos.Y = -pos.Y;
 
-            if (pos.Length() > displayRadius)
+            float posDist = pos.Length();
+            if (posDist > displayRadius)
             {
                 blip.FadeTimer = 0.0f;
                 return;
             }
-
-            float posDist = pos.Length();
-            Vector2 dir = pos / posDist;
-            float distFactor = (posDist / displayRadius);
-
-            Vector2 normal = new Vector2(dir.Y, -dir.X);
-
-            float scale = (strength + 3.0f) * Math.Max(distFactor * 3.0f, 1.0f);
 
             if (radarBlip == null)
             {
@@ -368,19 +390,21 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            Vector2 dir = pos / posDist;
+
+            Vector2 normal = new Vector2(dir.Y, -dir.X);
+            float scale = (strength + 3.0f) * blip.Scale;
+
             radarBlip.Draw(spriteBatch, center + pos, color, radarBlip.Origin, MathUtils.VectorToAngle(pos),
-                new Vector2(scale * 0.3f, scale) * 0.04f, SpriteEffects.None, 0);
+                new Vector2(scale * 0.5f, scale) * 0.04f, SpriteEffects.None, 0);
 
             pos += Rand.Range(0.0f, 1.0f) * dir + Rand.Range(-scale, scale) * normal;
 
-            radarBlip.Draw(spriteBatch, center + pos, color * 0.5f, radarBlip.Origin, MathUtils.VectorToAngle(pos),
-                new Vector2(scale * 0.3f, scale) * 0.08f, SpriteEffects.None, 0);
+            radarBlip.Draw(spriteBatch, center + pos, color * 0.5f, radarBlip.Origin, 0, scale * 0.08f, SpriteEffects.None, 0);
         }
 
         private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, float scale, Vector2 center, float radius)
         {
-            //position += Level.Loaded.Position;
-
             float dist = position.Length();
 
             position *= scale;
@@ -401,7 +425,6 @@ namespace Barotrauma.Items.Components
             if (dir.X < 0.0f) markerPos.X -= GUI.SmallFont.MeasureString(label).X + 10;
 
             string wrappedLabel = ToolBox.WrapText(label, 150, GUI.SmallFont);
-
             wrappedLabel += "\n" + ((int)(dist * Physics.DisplayToRealWorldRatio) + " m");
 
             GUI.DrawString(spriteBatch,
@@ -433,11 +456,13 @@ namespace Barotrauma.Items.Components
     {
         public float FadeTimer;
         public Vector2 Position;
+        public float Scale;
 
-        public RadarBlip(Vector2 pos, float fadeTimer)
+        public RadarBlip(Vector2 pos, float fadeTimer, float scale)
         {
             Position = pos;
             FadeTimer = Math.Max(fadeTimer, 0.0f);
+            Scale = scale;
         }
     }
 }
