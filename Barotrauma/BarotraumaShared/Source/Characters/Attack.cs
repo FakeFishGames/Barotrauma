@@ -32,6 +32,7 @@ namespace Barotrauma
     partial class Attack
     {
         public readonly float Range;
+        public readonly float DamageRange;
         public readonly float Duration;
 
         public readonly DamageType DamageType;
@@ -78,6 +79,7 @@ namespace Barotrauma
         public Attack(float damage, float structureDamage, float bleedingDamage, float range = 0.0f)
         {
             Range = range;
+            DamageRange = range;
             this.damage = damage;
             this.structureDamage = structureDamage;
             this.bleedingDamage = bleedingDamage;
@@ -93,7 +95,7 @@ namespace Barotrauma
             {
                 DamageType = DamageType.None;
             }
-
+            
             damage          = element.GetAttributeFloat("damage", 0.0f);
             structureDamage = element.GetAttributeFloat("structuredamage", 0.0f);
             bleedingDamage  = element.GetAttributeFloat("bleedingdamage", 0.0f);
@@ -106,6 +108,7 @@ namespace Barotrauma
             Torque = element.GetAttributeFloat("torque", 0.0f);
 
             Range = element.GetAttributeFloat("range", 0.0f);
+            DamageRange = element.GetAttributeFloat("damagerange", Range);
             Duration = element.GetAttributeFloat("duration", 0.0f); 
 
             priority = element.GetAttributeFloat("priority", 1.0f);
