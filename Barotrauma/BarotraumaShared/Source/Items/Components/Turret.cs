@@ -26,49 +26,44 @@ namespace Barotrauma.Items.Components
 
         Camera cam;
 
-        [HasDefaultValue("0,0", false)]
-        public string BarrelPos
+        [SerializableProperty("0,0", false)]
+        public Vector2 BarrelPos
         {
             get 
             { 
-                return XMLExtensions.Vector2ToString(barrelPos); 
+                return barrelPos; 
             }
             set 
             { 
-                barrelPos = XMLExtensions.ParseToVector2(value); 
+                barrelPos = value;
             }
         }
 
-        [HasDefaultValue(0.0f, false)]
+        [SerializableProperty(0.0f, false)]
         public float LaunchImpulse
         {
             get { return launchImpulse; }
             set { launchImpulse = value; }
         }
 
-        [HasDefaultValue(5.0f, false)]
+        [SerializableProperty(5.0f, false)]
         public float Reload
         {
             get { return reloadTime; }
             set { reloadTime = value; }
         }
 
-        [HasDefaultValue("0.0,0.0", true), Editable]
-        public string RotationLimits
+        [SerializableProperty("0.0,0.0", true), Editable]
+        public Vector2 RotationLimits
         {
             get
             {
-                Vector2 limits = new Vector2(minRotation, maxRotation);
-                limits.X = MathHelper.ToDegrees(limits.X);
-                limits.Y = MathHelper.ToDegrees(limits.Y);
-
-                return XMLExtensions.Vector2ToString(limits); 
+                return new Vector2(MathHelper.ToDegrees(minRotation), MathHelper.ToDegrees(maxRotation)); 
             }
             set
             {
-                Vector2 vector = XMLExtensions.ParseToVector2(value);
-                minRotation = MathHelper.ToRadians(vector.X);
-                maxRotation = MathHelper.ToRadians(vector.Y);
+                minRotation = MathHelper.ToRadians(value.X);
+                maxRotation = MathHelper.ToRadians(value.Y);
 
                 rotation = (minRotation + maxRotation) / 2;
             }

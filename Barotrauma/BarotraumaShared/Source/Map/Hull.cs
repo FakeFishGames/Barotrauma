@@ -139,7 +139,7 @@ namespace Barotrauma
             }
         }
 
-        [HasDefaultValue(90.0f, true)]
+        [SerializableProperty(90.0f, true)]
         public float Oxygen
         {
             get { return oxygen; }

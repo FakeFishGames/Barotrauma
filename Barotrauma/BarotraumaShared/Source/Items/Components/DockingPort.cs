@@ -47,21 +47,21 @@ namespace Barotrauma.Items.Components
             set { dockingDir = value; }
         }
 
-        [HasDefaultValue("32.0,32.0", false)]
-        public string DistanceTolerance
+        [SerializableProperty("32.0,32.0", false)]
+        public Vector2 DistanceTolerance
         {
-            get { return XMLExtensions.Vector2ToString(distanceTolerance); }
-            set { distanceTolerance = XMLExtensions.ParseToVector2(value); }
+            get { return distanceTolerance; }
+            set { distanceTolerance = value; }
         }
 
-        [HasDefaultValue(32.0f, false)]
+        [SerializableProperty(32.0f, false)]
         public float DockedDistance
         {
             get;
             set;
         }
 
-        [HasDefaultValue(true, false)]
+        [SerializableProperty(true, false)]
         public bool IsHorizontal
         {
             get;

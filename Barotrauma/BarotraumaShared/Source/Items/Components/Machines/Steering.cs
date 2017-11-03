@@ -67,7 +67,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable, HasDefaultValue(0.5f, true)]
+        [Editable, SerializableProperty(0.5f, true)]
         public float NeutralBallastLevel
         {
             get { return neutralBallastLevel; }

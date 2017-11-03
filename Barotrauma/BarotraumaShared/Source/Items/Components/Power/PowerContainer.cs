@@ -32,21 +32,21 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Editable, HasDefaultValue(10.0f, true)]
+        [Editable, SerializableProperty(10.0f, true)]
         public float MaxOutPut
         {
             set { maxOutput = value; }
             get { return maxOutput; }
         }
 
-        [HasDefaultValue(10.0f, true), Editable]
+        [SerializableProperty(10.0f, true), Editable]
         public float Capacity
         {
             get { return capacity; }
             set { capacity = Math.Max(value, 1.0f); }
         }
 
-        [Editable, HasDefaultValue(0.0f, true)]
+        [Editable, SerializableProperty(0.0f, true)]
         public float Charge
         {
             get { return charge; }
@@ -63,7 +63,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [HasDefaultValue(10.0f, true), Editable]
+        [SerializableProperty(10.0f, true), Editable]
         public float RechargeSpeed
         {
             get { return rechargeSpeed; }
@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [HasDefaultValue(10.0f, false), Editable]
+        [SerializableProperty(10.0f, false), Editable]
         public float MaxRechargeSpeed
         {
             get { return maxRechargeSpeed; }

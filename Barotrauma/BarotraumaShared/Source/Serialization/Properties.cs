@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -27,12 +28,12 @@ namespace Barotrauma
 
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class HasDefaultValue : System.Attribute
+    public class SerializableProperty : System.Attribute
     {
         public object defaultValue;
         public bool isSaveable;
 
-        public HasDefaultValue(object defaultValue, bool isSaveable)
+        public SerializableProperty(object defaultValue, bool isSaveable)
         {
             this.defaultValue = defaultValue;
             this.isSaveable = isSaveable;
@@ -41,36 +42,44 @@ namespace Barotrauma
 
     class ObjectProperty
     {
-        readonly PropertyDescriptor property;
-        readonly PropertyInfo propertyInfo;
-        readonly object obj;
-        
+        private readonly PropertyDescriptor propertyDescriptor;
+        private readonly PropertyInfo propertyInfo;
+        private readonly object obj;
+
         public string Name
         {
-            get { return property.Name; }
+            get { return propertyDescriptor.Name; }
         }
 
         public AttributeCollection Attributes
         {
-            get { return property.Attributes; }
+            get { return propertyDescriptor.Attributes; }
+        }
+
+        public Type PropertyType
+        {
+            get
+            {
+                return propertyInfo.PropertyType;
+            }
         }
 
         public ObjectProperty(PropertyDescriptor property, object obj)
         {
-            this.property = property;
+            this.propertyDescriptor = property;
             propertyInfo = property.ComponentType.GetProperty(property.Name);
             this.obj = obj;
         }
-                
+
         public bool TrySetValue(string value)
         {
             if (value == null) return false;
-            
-            if (property.PropertyType == typeof(string))
+
+            if (propertyDescriptor.PropertyType == typeof(string))
             {
                 propertyInfo.SetValue(obj, value, null);
             }
-            else if (property.PropertyType == typeof(float))
+            else if (propertyDescriptor.PropertyType == typeof(float))
             {
                 float floatVal;
                 if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))
@@ -78,11 +87,11 @@ namespace Barotrauma
                     propertyInfo.SetValue(obj, floatVal, null);
                 }
             }
-            else if (property.PropertyType == typeof(bool))
+            else if (propertyDescriptor.PropertyType == typeof(bool))
             {
-                propertyInfo.SetValue(obj, value.ToLowerInvariant() == "true", null);                
+                propertyInfo.SetValue(obj, value.ToLowerInvariant() == "true", null);
             }
-            else if (property.PropertyType == typeof(int))
+            else if (propertyDescriptor.PropertyType == typeof(int))
             {
                 int intVal;
                 if (int.TryParse(value, out intVal))
@@ -90,7 +99,23 @@ namespace Barotrauma
                     propertyInfo.SetValue(obj, intVal, null);
                 }
             }
-            else if (property.PropertyType.IsEnum)
+            else if (propertyDescriptor.PropertyType == typeof(Vector2))
+            {
+                propertyInfo.SetValue(obj, XMLExtensions.ParseToVector2(value));
+            }
+            else if (propertyDescriptor.PropertyType == typeof(Vector3))
+            {
+                propertyInfo.SetValue(obj, XMLExtensions.ParseToVector3(value));
+            }
+            else if (propertyDescriptor.PropertyType == typeof(Vector4))
+            {
+                propertyInfo.SetValue(obj, XMLExtensions.ParseToVector4(value));
+            }
+            else if (propertyDescriptor.PropertyType == typeof(Color))
+            {
+                propertyInfo.SetValue(obj, XMLExtensions.ParseToColor(value));
+            }
+            else if (propertyDescriptor.PropertyType.IsEnum)
             {
                 object enumVal;
                 try
@@ -118,18 +143,36 @@ namespace Barotrauma
         public bool TrySetValue(object value)
         {
             if (value == null) return false;
-
-            if (property.PropertyType != value.GetType())
-            {
-                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
-
-                DebugConsole.ThrowError("(Non-matching type, should be " + property.PropertyType + " instead of " + value.GetType() + ")");
-                return false;
-            }
-
-            if (obj == null || property == null) return false;
+            if (obj == null || propertyDescriptor == null) return false;
             try
             {
+                if (value.GetType() == typeof(string) &&
+                    propertyDescriptor.PropertyType == typeof(Vector2))
+                {
+                    propertyInfo.SetValue(obj, XMLExtensions.ParseToVector2(value.ToString()));
+                }
+                else if (value.GetType() == typeof(string) &&
+                    propertyDescriptor.PropertyType == typeof(Vector3))
+                {
+                    propertyInfo.SetValue(obj, XMLExtensions.ParseToVector3(value.ToString()));
+                }
+                else if (value.GetType() == typeof(string) &&
+                    propertyDescriptor.PropertyType == typeof(Vector4))
+                {
+                    propertyInfo.SetValue(obj, XMLExtensions.ParseToVector4(value.ToString()));
+                }
+                else if (value.GetType() == typeof(string) &&
+                    propertyDescriptor.PropertyType == typeof(Color))
+                {
+                    propertyInfo.SetValue(obj, XMLExtensions.ParseToColor(value.ToString()));
+                }
+                else if (propertyDescriptor.PropertyType != value.GetType())
+                {
+                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
+                    DebugConsole.ThrowError("(Non-matching type, should be " + propertyDescriptor.PropertyType + " instead of " + value.GetType() + ")");
+                    return false;
+                }
+
                 propertyInfo.SetValue(obj, value, null);
             }
             catch
@@ -143,13 +186,13 @@ namespace Barotrauma
         {
             try
             {
-                propertyInfo.SetValue(obj, value, null);                
+                propertyInfo.SetValue(obj, value, null);
             }
             catch
             {
                 return false;
             }
-            
+
             return true;
         }
 
@@ -181,7 +224,7 @@ namespace Barotrauma
 
         public object GetValue()
         {
-            if (obj == null || property == null) return false;
+            if (obj == null || propertyDescriptor == null) return false;
 
             try
             {
@@ -192,12 +235,7 @@ namespace Barotrauma
                 return false;
             }
         }
-
-        public Type GetType()
-        {
-            return propertyInfo.PropertyType;
-        }
-
+        
         public static List<ObjectProperty> GetProperties<T>(IPropertyObject obj)
         {
             List<ObjectProperty> editableProperties = new List<ObjectProperty>();
@@ -210,7 +248,7 @@ namespace Barotrauma
             return editableProperties;
         }
 
-        public static Dictionary<string, ObjectProperty> GetProperties(IPropertyObject obj)        
+        public static Dictionary<string, ObjectProperty> GetProperties(IPropertyObject obj)
         {
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
 
@@ -224,12 +262,17 @@ namespace Barotrauma
             return dictionary;
         }
 
+        /*/// <summary>
+        /// Sets all serializable properties to their default value
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public static Dictionary<string, ObjectProperty> InitProperties(IPropertyObject obj)
         {
-            return InitProperties(obj, null);
-        }
+            return DeserializeProperties(obj, null);
+        }*/
 
-        public static Dictionary<string, ObjectProperty> InitProperties(IPropertyObject obj, XElement element)
+        public static Dictionary<string, ObjectProperty> DeserializeProperties(IPropertyObject obj, XElement element)
         {
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
 
@@ -241,14 +284,14 @@ namespace Barotrauma
                 dictionary.Add(property.Name.ToLowerInvariant(), objProperty);
 
                 //set the value of the property to the default value if there is one
-                foreach (var ini in property.Attributes.OfType<HasDefaultValue>())
+                foreach (var ini in property.Attributes.OfType<SerializableProperty>())
                 {
                     objProperty.TrySetValue(ini.defaultValue);
                     break;
                 }
             }
-            
-            if (element!=null)
+
+            if (element != null)
             {
                 //go through all the attributes in the xml element 
                 //and set the value of the matching property if it is initializable
@@ -256,46 +299,79 @@ namespace Barotrauma
                 {
                     ObjectProperty property = null;
                     if (!dictionary.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out property)) continue;
-                    if (!property.Attributes.OfType<HasDefaultValue>().Any()) continue;
+                    if (!property.Attributes.OfType<SerializableProperty>().Any()) continue;
                     property.TrySetValue(attribute.Value);
-                }            
+                }
             }
 
             return dictionary;
         }
-    
-        public static void SaveProperties(IPropertyObject obj, XElement element, bool saveIfDefault = false)
+
+        public static void SerializeProperties(IPropertyObject obj, XElement element, bool saveIfDefault = false)
         {
-            var saveProperties = GetProperties<HasDefaultValue>(obj);
+            var saveProperties = GetProperties<SerializableProperty>(obj);
             foreach (var property in saveProperties)
             {
                 object value = property.GetValue();
                 if (value == null) continue;
-                
+
                 if (!saveIfDefault)
                 {
                     //only save 
                     //  - if the attribute is saveable and it's different from the default value
                     //  - or can be changed in-game or in the editor
                     bool save = false;
-                    foreach (var attribute in property.Attributes.OfType<HasDefaultValue>())
+                    foreach (var attribute in property.Attributes.OfType<SerializableProperty>())
                     {
-                        if ((attribute.isSaveable && !attribute.defaultValue.Equals(value)) || 
+                        if ((attribute.isSaveable && !attribute.defaultValue.Equals(value)) ||
                             property.Attributes.OfType<Editable>().Any())
                         {
                             save = true;
                             break;
-                        }    
+                        }
                     }
 
                     if (!save) continue;
                 }
 
                 string stringValue;
-                if (value is float)
+                if (value.GetType() == typeof(float))
                 {
-                    //do this to make sure the decimal point isn't converted to a comma or anything like that
+                    //make sure the decimal point isn't converted to a comma or anything else
                     stringValue = ((float)value).ToString("G", CultureInfo.InvariantCulture);
+                }
+                else if (value.GetType() == typeof(Vector2))
+                {
+                    Vector2 vector = (Vector2)value;
+                    stringValue =
+                        vector.X.ToString("G", CultureInfo.InvariantCulture) + "," +
+                        vector.Y.ToString("G", CultureInfo.InvariantCulture);
+                }
+                else if (value.GetType() == typeof(Vector3))
+                {
+                    Vector3 vector = (Vector3)value;
+                    stringValue =
+                        vector.X.ToString("G", CultureInfo.InvariantCulture) + "," +
+                        vector.Y.ToString("G", CultureInfo.InvariantCulture) + "," +
+                        vector.Z.ToString("G", CultureInfo.InvariantCulture);
+                }
+                else if (value.GetType() == typeof(Vector4))
+                {
+                    Vector4 vector = (Vector4)value;
+                    stringValue =
+                        vector.X.ToString("G", CultureInfo.InvariantCulture) + "," +
+                        vector.Y.ToString("G", CultureInfo.InvariantCulture) + "," +
+                        vector.Z.ToString("G", CultureInfo.InvariantCulture) + "," +
+                        vector.W.ToString("G", CultureInfo.InvariantCulture);
+                }
+                else if (value.GetType() == typeof(Color))
+                {
+                    Color color = (Color)value;
+                    stringValue =
+                        (color.R / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
+                        (color.G / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
+                        (color.B / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
+                        (color.A / 255.0f).ToString("G", CultureInfo.InvariantCulture);
                 }
                 else
                 {

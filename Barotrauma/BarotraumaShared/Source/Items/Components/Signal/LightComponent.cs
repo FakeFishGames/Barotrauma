@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         private bool castShadows;
 
-        [Editable, HasDefaultValue(100.0f, true)]
+        [Editable, SerializableProperty(100.0f, true)]
         public float Range
         {
             get { return range; }
@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, HasDefaultValue(true, true)]
+        [Editable, SerializableProperty(true, true)]
         public bool CastShadows
         {
             get { return castShadows; }
@@ -44,7 +44,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, HasDefaultValue(false, true)]
+        [Editable, SerializableProperty(false, true)]
         public bool IsOn
         {
             get { return IsActive; }
@@ -57,7 +57,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [HasDefaultValue(0.0f, false)]
+        [SerializableProperty(0.0f, false)]
         public float Flicker
         {
             get { return flicker; }
@@ -67,19 +67,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, HasDefaultValue("1.0,1.0,1.0,1.0", true)]
-        public string LightColor
+        [InGameEditable, SerializableProperty("1.0,1.0,1.0,1.0", true)]
+        public Color LightColor
         {
-            get { return XMLExtensions.Vector4ToString(lightColor.ToVector4(), "0.00"); }
-            set
-            {
-                Vector4 newColor = XMLExtensions.ParseToVector4(value, false);
-                newColor.X = MathHelper.Clamp(newColor.X, 0.0f, 1.0f);
-                newColor.Y = MathHelper.Clamp(newColor.Y, 0.0f, 1.0f);
-                newColor.Z = MathHelper.Clamp(newColor.Z, 0.0f, 1.0f);
-                newColor.W = MathHelper.Clamp(newColor.W, 0.0f, 1.0f);
-                lightColor = new Color(newColor);
-            }
+            get { return lightColor; }
+            set { lightColor = value; }
         }
 
         public override void Move(Vector2 amount)
@@ -215,7 +207,7 @@ namespace Barotrauma.Items.Components
                     IsActive = (signal != "0");                   
                     break;
                 case "set_color":
-                    LightColor = signal;
+                    LightColor = XMLExtensions.ParseToColor(signal, false);
                     break;
             }
         }

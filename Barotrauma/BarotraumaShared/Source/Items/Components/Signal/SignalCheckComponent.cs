@@ -8,20 +8,20 @@ namespace Barotrauma.Items.Components
 
         private string targetSignal;
 
-        [InGameEditable, HasDefaultValue("1", true)]
+        [InGameEditable, SerializableProperty("1", true)]
         public string Output
         {
             get { return output; }
             set { output = value; }
         }
-        [InGameEditable, HasDefaultValue("0", true)]
+        [InGameEditable, SerializableProperty("0", true)]
         public string FalseOutput
         {
             get { return falseOutput; }
             set { falseOutput = value; }
         }
 
-        [InGameEditable, HasDefaultValue("", true)]
+        [InGameEditable, SerializableProperty("", true)]
         public string TargetSignal
         {
             get { return targetSignal; }

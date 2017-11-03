@@ -289,6 +289,28 @@ namespace Barotrauma
             return vector;
         }
 
+        public static Color ParseToColor(string stringColor, bool errorMessages = true)
+        {
+            string[] strComponents = stringColor.Split(',');
+
+            Color color = Color.White;
+
+            if (strComponents.Length < 3)
+            {
+                if (errorMessages) DebugConsole.ThrowError("Failed to parse the string \"" + stringColor + "\" to Color");
+                return Color.White;
+            }
+
+            float[] components = new float[4] { 1.0f, 1.0f, 1.0f, 1.0f };
+            
+            for (int i = 0; i < 4 && i < strComponents.Length; i++)
+            {
+                float.TryParse(strComponents[i], NumberStyles.Float, CultureInfo.InvariantCulture, out components[i]);
+            }
+
+            return new Color(components[0], components[1], components[2], components[3]);
+        }
+
         public static string Vector4ToString(Vector4 vector, string format = "G")
         {
             return vector.X.ToString(format, CultureInfo.InvariantCulture) + "," +

@@ -20,14 +20,14 @@ namespace Barotrauma.Items.Components
 
         private float phase;
 
-        [InGameEditable, HasDefaultValue(WaveType.Pulse, true)]
+        [InGameEditable, SerializableProperty(WaveType.Pulse, true)]
         public WaveType OutputType
         {
             get;
             set;
         }
 
-        [InGameEditable, HasDefaultValue(1.0f, true)]
+        [InGameEditable, SerializableProperty(1.0f, true)]
         public float Frequency
         {
             get { return frequency; }

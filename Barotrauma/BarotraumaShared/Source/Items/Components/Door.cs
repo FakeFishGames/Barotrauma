@@ -111,7 +111,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [HasDefaultValue("0.0,0.0,0.0,0.0", false)]
+        [SerializableProperty("0.0,0.0,0.0,0.0", false)]
         public string Window
         {
             get { return XMLExtensions.Vector4ToString(new Vector4(window.X, window.Y, window.Width, window.Height)); }
@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
             get { return window; }
         }
 
-        [Editable, HasDefaultValue(false, true)]
+        [Editable, SerializableProperty(false, true)]
         public bool IsOpen
         {
             get { return isOpen; }

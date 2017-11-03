@@ -13,28 +13,28 @@ namespace Barotrauma.Items.Components
 
         private Vector2 barrelPos;
 
-        [HasDefaultValue("0.0,0.0", false)]
+        [SerializableProperty("0.0,0.0", false)]
         public string BarrelPos
         {
             get { return XMLExtensions.Vector2ToString(ConvertUnits.ToDisplayUnits(barrelPos)); }
             set { barrelPos = ConvertUnits.ToSimUnits(XMLExtensions.ParseToVector2(value)); }
         }
 
-        [HasDefaultValue(1.0f, false)]
+        [SerializableProperty(1.0f, false)]
         public float Reload
         {
             get { return reload; }
             set { reload = Math.Max(value, 0.0f); }
         }
 
-        [HasDefaultValue(0.0f, false)]
+        [SerializableProperty(0.0f, false)]
         public float Spread
         {
             get;
             set;
         }
 
-        [HasDefaultValue(0.0f, false)]
+        [SerializableProperty(0.0f, false)]
         public float UnskilledSpread
         {
             get;

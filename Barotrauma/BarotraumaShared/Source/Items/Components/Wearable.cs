@@ -35,22 +35,21 @@ namespace Barotrauma.Items.Components
 
         private Vector2 armorSector;
 
-        [HasDefaultValue(0.0f, false)]
+        [SerializableProperty(0.0f, false)]
         public float ArmorValue
         {
             get { return armorValue; }
             set { armorValue = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        [HasDefaultValue("0.0,360.0", false)]
-        public string ArmorSector
+        [SerializableProperty("0.0,360.0", false)]
+        public Vector2 ArmorSector
         {
-            get { return XMLExtensions.Vector2ToString(armorSector); }
+            get { return armorSector; }
             set 
             { 
-                armorSector = XMLExtensions.ParseToVector2(value);
-                armorSector.X = MathHelper.ToRadians(armorSector.X);
-                armorSector.Y = MathHelper.ToRadians(armorSector.Y);
+                armorSector.X = MathHelper.ToRadians(value.X);
+                armorSector.Y = MathHelper.ToRadians(value.Y);
             }
         }
 

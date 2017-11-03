@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
 
         private Color textColor;
 
-        [HasDefaultValue("", true), Editable(100)]
+        [SerializableProperty("", true), Editable(100)]
         public string Text
         {
             get { return textBlock.Text.Replace("\n", ""); }
@@ -27,18 +27,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, HasDefaultValue("0.0,0.0,0.0,1.0", true)]
-        public string TextColor
+        [Editable, SerializableProperty("0.0,0.0,0.0,1.0", true)]
+        public Color TextColor
         {
-            get { return XMLExtensions.Vector4ToString(textColor.ToVector4()); }
+            get { return textColor; }
             set
             {
-                textColor = new Color(XMLExtensions.ParseToVector4(value));
-                if (textBlock != null) textBlock.TextColor = textColor;
+                if (textBlock != null) textBlock.TextColor = value;
             }
         }
 
-        [Editable, HasDefaultValue(1.0f, true)]
+        [Editable, SerializableProperty(1.0f, true)]
         public float TextScale
         {
             get { return textBlock == null ? 1.0f : textBlock.TextScale; }

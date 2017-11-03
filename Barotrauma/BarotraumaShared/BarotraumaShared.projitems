@@ -1381,7 +1381,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameSession.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\InfoTextManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSettings.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\IPropertyObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\CharacterInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\DockingPort.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Door.cs" />
@@ -1493,10 +1492,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\Physics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\PhysicsBody.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\PlayerInput.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Properties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\GameScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\Screen.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\IPropertyObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\Properties.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\XMLExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\Sprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Timing.cs" />
@@ -1507,6 +1508,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\SaveUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\XMLExtensions.cs" />
   </ItemGroup>
 </Project>
