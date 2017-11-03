@@ -29,49 +29,49 @@ namespace Barotrauma.Items.Components
         //the angle in which the Character holds the item
         protected float holdAngle;
 
-        [HasDefaultValue(false, true)]
+        [SerializableProperty(false, true)]
         public bool Attached
         {
             get { return attached && item.ParentInventory == null; }
             set { attached = value; }
         }
 
-        [HasDefaultValue(false, false)]
+        [SerializableProperty(false, false)]
         public bool ControlPose
         {
             get;
             set;
         }
 
-        [HasDefaultValue(false, false)]
+        [SerializableProperty(false, false)]
         public bool Attachable
         {
             get { return attachable; }
             set { attachable = value; }
         }
 
-        [HasDefaultValue(false, false)]
+        [SerializableProperty(false, false)]
         public bool AttachedByDefault
         {
             get { return attachedByDefault; }
             set { attachedByDefault = value; }
         }
 
-        [HasDefaultValue("0.0,0.0", false)]
-        public string HoldPos
+        [SerializableProperty("0.0,0.0", false)]
+        public Vector2 HoldPos
         {
-            get { return XMLExtensions.Vector2ToString(ConvertUnits.ToDisplayUnits(holdPos)); }
-            set { holdPos = ConvertUnits.ToSimUnits(XMLExtensions.ParseToVector2(value)); }
+            get { return ConvertUnits.ToDisplayUnits(holdPos); }
+            set { holdPos = ConvertUnits.ToSimUnits(value); }
         }
 
-        [HasDefaultValue("0.0,0.0", false)]
-        public string AimPos
+        [SerializableProperty("0.0,0.0", false)]
+        public Vector2 AimPos
         {
-            get { return XMLExtensions.Vector2ToString(ConvertUnits.ToDisplayUnits(aimPos)); }
-            set { aimPos = ConvertUnits.ToSimUnits(XMLExtensions.ParseToVector2(value)); }
+            get { return ConvertUnits.ToDisplayUnits(aimPos); }
+            set { aimPos = ConvertUnits.ToSimUnits(value); }
         }
 
-        [HasDefaultValue(0.0f, false)]
+        [SerializableProperty(0.0f, false)]
         public float HoldAngle
         {
             get { return MathHelper.ToDegrees(holdAngle); }

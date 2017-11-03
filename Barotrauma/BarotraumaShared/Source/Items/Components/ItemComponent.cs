@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
 
         private string msg;
         
-        [HasDefaultValue(0.0f, false)]
+        [SerializableProperty(0.0f, false)]
         public float PickingTime
         {
             get;
@@ -103,21 +103,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [HasDefaultValue(false, false)]
+        [SerializableProperty(false, false)]
         public bool CanBePicked
         {
             get { return canBePicked; }
             set { canBePicked = value; }
         }
 
-        [HasDefaultValue(false, false)]
+        [SerializableProperty(false, false)]
         public bool DrawHudWhenEquipped
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(false, false)]
+        [SerializableProperty(false, false)]
         public bool CanBeSelected
         {
             get { return canBeSelected; }
@@ -136,7 +136,7 @@ namespace Barotrauma.Items.Components
             protected set;
         }
 
-        [HasDefaultValue(false, false)]
+        [SerializableProperty(false, false)]
         public bool DeleteOnUse
         {
             get;
@@ -153,7 +153,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
 
-        [HasDefaultValue("", false)]
+        [SerializableProperty("", false)]
         public string Msg
         {
             get { return msg; }
@@ -205,7 +205,7 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Invalid pick key in " + element + "!", e);
             }
             
-            properties = ObjectProperty.InitProperties(this, element);
+            properties = ObjectProperty.DeserializeProperties(this, element);
             
             foreach (XElement subElement in element.Elements())
             {
@@ -586,7 +586,7 @@ namespace Barotrauma.Items.Components
                 componentElement.Add(newElement);
             }
 
-            ObjectProperty.SaveProperties(this, componentElement);
+            ObjectProperty.SerializeProperties(this, componentElement);
 
             parentElement.Add(componentElement);
             return componentElement;

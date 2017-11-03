@@ -15,7 +15,7 @@ namespace Barotrauma.Items.Components
         
         public Hull hull1;
 
-        [HasDefaultValue(0.0f, true)]
+        [SerializableProperty(0.0f, true)]
         public float FlowPercentage
         {
             get { return flowPercentage; }
@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [HasDefaultValue(80.0f, false)]
+        [SerializableProperty(80.0f, false)]
         public float MaxFlow
         {
             get { return maxFlow; }

@@ -15,7 +15,7 @@ namespace Barotrauma.Items.Components
 
         private Queue<Tuple<string, DateTime>> signalQueue;
         
-        [InGameEditable, HasDefaultValue(1.0f, true)]
+        [InGameEditable, SerializableProperty(1.0f, true)]
         public float Delay
         {
             get { return (float)delay.TotalSeconds; }

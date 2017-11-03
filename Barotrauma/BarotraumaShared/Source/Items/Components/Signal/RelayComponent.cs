@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
         
         private bool isOn;
 
-        [Editable, HasDefaultValue(1000.0f, true)]
+        [Editable, SerializableProperty(1000.0f, true)]
         public float MaxPower
         {
             get { return maxPower; }
@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable, HasDefaultValue(false, true)]
+        [Editable, SerializableProperty(false, true)]
         public bool IsOn
         {
             get

@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
 
         bool throwing;
 
-        [HasDefaultValue(1.0f, false)]
+        [SerializableProperty(1.0f, false)]
         public float ThrowForce
         {
             get { return throwForce; }

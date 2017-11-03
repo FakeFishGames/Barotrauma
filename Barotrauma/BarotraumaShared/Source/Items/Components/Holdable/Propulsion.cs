@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
         
         private UsableIn usableIn;
                 
-        [HasDefaultValue(0.0f, false)]
+        [SerializableProperty(0.0f, false)]
         public float Force
         {
             get { return force; }
@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
         }
 
 #if CLIENT
-        [HasDefaultValue("", false)]
+        [SerializableProperty("", false)]
         public string Particles
         {
             get { return particles; }

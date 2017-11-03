@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
         private ushort[] itemIds;
 
         //how many items can be contained
-        [HasDefaultValue(5, false)]
+        [SerializableProperty(5, false)]
         public int Capacity
         {
             get { return capacity; }
@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
         }
         private int capacity;
 
-        [HasDefaultValue(true, false)]
+        [SerializableProperty(true, false)]
         public bool HideItems
         {
             get { return hideItems; }
@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
         }
         private bool hideItems;
 
-        [HasDefaultValue(false, false)]
+        [SerializableProperty(false, false)]
         public bool DrawInventory
         {
             get { return drawInventory; }
@@ -47,24 +47,24 @@ namespace Barotrauma.Items.Components
         private bool drawInventory;
 
         //the position of the first item in the container
-        [HasDefaultValue("0.0,0.0", false)]
-        public string ItemPos
+        [SerializableProperty("0.0,0.0", false)]
+        public Vector2 ItemPos
         {
-            get { return XMLExtensions.Vector2ToString(itemPos); }
-            set { itemPos = XMLExtensions.ParseToVector2(value); }
+            get { return itemPos; }
+            set { itemPos = value; }
         }
         private Vector2 itemPos;
 
         //item[i].Pos = itemPos + itemInterval*i 
-        [HasDefaultValue("0.0,0.0", false)]
-        public string ItemInterval
+        [SerializableProperty("0.0,0.0", false)]
+        public Vector2 ItemInterval
         {
-            get { return XMLExtensions.Vector2ToString(itemInterval); }
-            set { itemInterval = XMLExtensions.ParseToVector2(value); }
+            get { return itemInterval; }
+            set { itemInterval = value; }
         }
         private Vector2 itemInterval;
 
-        [HasDefaultValue(0.0f, false)]
+        [SerializableProperty(0.0f, false)]
         public float ItemRotation
         {
             get { return MathHelper.ToDegrees(itemRotation); }
@@ -73,19 +73,18 @@ namespace Barotrauma.Items.Components
         private float itemRotation;
 
 
-        [HasDefaultValue("0.5,0.9", false)]
-        public string HudPos
+        [SerializableProperty("0.5,0.9", false)]
+        public Vector2 HudPos
         {
-            get { return XMLExtensions.Vector2ToString(hudPos); }
+            get { return hudPos; }
             set 
             { 
-                hudPos = XMLExtensions.ParseToVector2(value);
-                //inventory.CenterPos = hudPos;
+                hudPos = value;
             }
         }
         private Vector2 hudPos;
 
-        [HasDefaultValue(5, false)]
+        [SerializableProperty(5, false)]
         public int SlotsPerRow
         {
             get { return slotsPerRow; }

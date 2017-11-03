@@ -169,7 +169,7 @@ namespace Barotrauma
         }
 
         protected Color spriteColor;
-        [Editable, HasDefaultValue("1.0,1.0,1.0,1.0", true)]
+        [Editable, SerializableProperty("1.0,1.0,1.0,1.0", true)]
         public string SpriteColor
         {
             get { return XMLExtensions.Vector4ToString(spriteColor.ToVector4()); }
@@ -220,7 +220,7 @@ namespace Barotrauma
             get { return condition; }
         }
         
-        [Editable, HasDefaultValue("", true)]
+        [Editable, SerializableProperty("", true)]
         public string Tags
         {
             get { return string.Join(",",tags); }
@@ -359,7 +359,7 @@ namespace Barotrauma
             XElement element = prefab.ConfigElement;
             if (element == null) return;
             
-            properties = ObjectProperty.InitProperties(this, element);
+            properties = ObjectProperty.DeserializeProperties(this, element);
 
             if (submarine == null || !submarine.Loading) FindHull();
 
@@ -1400,7 +1400,7 @@ namespace Barotrauma
 
             ObjectProperty objectProperty = allProperties[propertyIndex];
 
-            Type type = objectProperty.GetType();
+            Type type = objectProperty.PropertyType;
             if (type == typeof(string))
             {
                 objectProperty.TrySetValue(msg.ReadString());
@@ -1643,7 +1643,7 @@ namespace Barotrauma
 
                     bool shouldBeLoaded = false;
 
-                    foreach (var propertyAttribute in property.Attributes.OfType<HasDefaultValue>())
+                    foreach (var propertyAttribute in property.Attributes.OfType<SerializableProperty>())
                     {
                         if (propertyAttribute.isSaveable)
                         {
@@ -1713,7 +1713,7 @@ namespace Barotrauma
                 element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
             }
 
-            ObjectProperty.SaveProperties(this, element);
+            ObjectProperty.SerializeProperties(this, element);
 
             foreach (ItemComponent ic in components)
             {

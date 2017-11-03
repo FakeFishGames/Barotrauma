@@ -86,7 +86,7 @@ namespace Barotrauma.Networking
 
         private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
         
-        [HasDefaultValue(true, true)]
+        [SerializableProperty(true, true)]
         public bool RandomizeSeed
         {
             get;
@@ -94,21 +94,21 @@ namespace Barotrauma.Networking
         }
 
 
-        [HasDefaultValue(300.0f, true)]
+        [SerializableProperty(300.0f, true)]
         public float RespawnInterval
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(180.0f, true)]
+        [SerializableProperty(180.0f, true)]
         public float MaxTransportTime
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(0.2f, true)]
+        [SerializableProperty(0.2f, true)]
         public float MinRespawnRatio
         {
             get;
@@ -116,42 +116,42 @@ namespace Barotrauma.Networking
         }
 
 
-        [HasDefaultValue(60.0f, true)]
+        [SerializableProperty(60.0f, true)]
         public float AutoRestartInterval
         {
             get;
             set;
         }
 
-        [HasDefaultValue(true, true)]
+        [SerializableProperty(true, true)]
         public bool AllowSpectating
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(true, true)]
+        [SerializableProperty(true, true)]
         public bool EndRoundAtLevelEnd
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(true, true)]
+        [SerializableProperty(true, true)]
         public bool SaveServerLogs
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(true, true)]
+        [SerializableProperty(true, true)]
         public bool AllowFileTransfers
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(800, true)]
+        [SerializableProperty(800, true)]
         private int LinesPerLogFile
         {
             get
@@ -175,7 +175,7 @@ namespace Barotrauma.Networking
             }
         }
         
-        [HasDefaultValue(true, true)]
+        [SerializableProperty(true, true)]
         public bool AllowRespawn
         {
             get;
@@ -203,21 +203,21 @@ namespace Barotrauma.Networking
             get { return banList; }
         }
 
-        [HasDefaultValue(true, true)]
+        [SerializableProperty(true, true)]
         public bool AllowVoteKick
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(0.6f, true)]
+        [SerializableProperty(0.6f, true)]
         public float EndVoteRequiredRatio
         {
             get;
             private set;
         }
 
-        [HasDefaultValue(0.6f, true)]
+        [SerializableProperty(0.6f, true)]
         public float KickVoteRequiredRatio
         {
             get;
@@ -228,7 +228,7 @@ namespace Barotrauma.Networking
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
 
-            ObjectProperty.SaveProperties(this, doc.Root, true);
+            ObjectProperty.SerializeProperties(this, doc.Root, true);
             
             doc.Root.SetAttributeValue("name", name);
             doc.Root.SetAttributeValue("public", isPublic);
@@ -279,7 +279,7 @@ namespace Barotrauma.Networking
                 doc = new XDocument(new XElement("serversettings"));
             }
 
-            ObjectProperties = ObjectProperty.InitProperties(this, doc.Root);
+            ObjectProperties = ObjectProperty.DeserializeProperties(this, doc.Root);
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
 #if CLIENT

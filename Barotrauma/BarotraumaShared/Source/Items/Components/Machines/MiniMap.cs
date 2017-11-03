@@ -16,21 +16,21 @@ namespace Barotrauma.Items.Components
 
         bool hasPower;
 
-        [Editable, HasDefaultValue(false, true)]
+        [Editable, SerializableProperty(false, true)]
         public bool RequireWaterDetectors
         {
             get;
             set;
         }
 
-        [Editable, HasDefaultValue(true, true)]
+        [Editable, SerializableProperty(true, true)]
         public bool RequireOxygenDetectors
         {
             get;
             set;
         }
 
-        [Editable, HasDefaultValue(false, true)]
+        [Editable, SerializableProperty(false, true)]
         public bool ShowHullIntegrity
         {
             get;
