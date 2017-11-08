@@ -26,14 +26,14 @@ namespace Barotrauma.Items.Components
         
         private float displayBorderSize;
                 
-        [SerializableProperty(10000.0f, false)]
+        [Serialize(10000.0f, false)]
         public float Range
         {
             get { return range; }
             set { range = MathHelper.Clamp(value, 0.0f, 100000.0f); }
         }
         
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool DetectSubmarineWalls
         {
             get;

@@ -33,7 +33,7 @@ namespace Barotrauma
             var levelString = element.GetAttributeString("level", "");
             if (levelString.Contains(","))
             {
-                levelRange = XMLExtensions.ParseToVector2(levelString, false);
+                levelRange = XMLExtensions.ParseVector2(levelString, false);
             }
             else
             {

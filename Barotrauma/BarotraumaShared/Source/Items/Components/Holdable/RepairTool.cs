@@ -21,44 +21,44 @@ namespace Barotrauma.Items.Components
 
         private float activeTimer;
 
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float Range
         {
             get { return range; }
             set { range = value; }
         }
 
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float StructureFixAmount
         {
             get; set;
         }
 
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float LimbFixAmount
         {
             get; set;
         }
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float ExtinquishAmount
         {
             get; set;
         }
 
-        [SerializableProperty("", false)]
+        [Serialize("", false)]
         public string Particles
         {
             get { return particles; }
             set { particles = value; }
         }
 
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float ParticleSpeed
         {
             get; set;
         }
 
-        [SerializableProperty("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false)]
         public Vector2 BarrelPos
         {
             get { return barrelPos; }

@@ -29,49 +29,49 @@ namespace Barotrauma.Items.Components
         //the angle in which the Character holds the item
         protected float holdAngle;
 
-        [SerializableProperty(false, true)]
+        [Serialize(false, true)]
         public bool Attached
         {
             get { return attached && item.ParentInventory == null; }
             set { attached = value; }
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool ControlPose
         {
             get;
             set;
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool Attachable
         {
             get { return attachable; }
             set { attachable = value; }
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool AttachedByDefault
         {
             get { return attachedByDefault; }
             set { attachedByDefault = value; }
         }
 
-        [SerializableProperty("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false)]
         public Vector2 HoldPos
         {
             get { return ConvertUnits.ToDisplayUnits(holdPos); }
             set { holdPos = ConvertUnits.ToSimUnits(value); }
         }
 
-        [SerializableProperty("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false)]
         public Vector2 AimPos
         {
             get { return ConvertUnits.ToDisplayUnits(aimPos); }
             set { aimPos = ConvertUnits.ToSimUnits(value); }
         }
 
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float HoldAngle
         {
             get { return MathHelper.ToDegrees(holdAngle); }

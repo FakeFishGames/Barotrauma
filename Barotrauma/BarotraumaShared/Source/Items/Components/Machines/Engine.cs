@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
         //    }
         //}
 
-        [Editable, SerializableProperty(2000.0f, true)]
+        [Editable, Serialize(2000.0f, true)]
         public float MaxForce
         {
             get { return maxForce; }

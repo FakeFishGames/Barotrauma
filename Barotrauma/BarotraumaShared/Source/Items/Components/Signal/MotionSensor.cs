@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
 
         private float updateTimer;
 
-        [InGameEditable, SerializableProperty(0.0f, true)]
+        [InGameEditable, Serialize(0.0f, true)]
         public float Range
         {
             get { return range; }
@@ -27,14 +27,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, SerializableProperty("1", true)]
+        [InGameEditable, Serialize("1", true)]
         public string Output
         {
             get { return output; }
             set { output = value; }
         }
 
-        [InGameEditable, SerializableProperty("", true)]
+        [InGameEditable, Serialize("", true)]
         public string FalseOutput
         {
             get { return falseOutput; }

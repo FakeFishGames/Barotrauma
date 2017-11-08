@@ -23,7 +23,7 @@ namespace Barotrauma
         OnImpact
     }
 
-    partial class Item : MapEntity, IDamageable, IPropertyObject, IServerSerializable, IClientSerializable
+    partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
         const float MaxVel = 64.0f;
 
@@ -64,8 +64,8 @@ namespace Barotrauma
         //a dictionary containing lists of the status effects in all the components of the item
         private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
         
-        public readonly Dictionary<string, ObjectProperty> properties;
-        public Dictionary<string, ObjectProperty> ObjectProperties
+        public readonly Dictionary<string, SerializableProperty> properties;
+        public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get { return properties; }
         }
@@ -169,14 +169,11 @@ namespace Barotrauma
         }
 
         protected Color spriteColor;
-        [Editable, SerializableProperty("1.0,1.0,1.0,1.0", true)]
-        public string SpriteColor
+        [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
+        public Color SpriteColor
         {
-            get { return XMLExtensions.Vector4ToString(spriteColor.ToVector4()); }
-            set
-            {
-                spriteColor = new Color(XMLExtensions.ParseToVector4(value));
-            }
+            get { return spriteColor; }
+            set { spriteColor = value; }
         }
 
         public Color Color
@@ -220,7 +217,7 @@ namespace Barotrauma
             get { return condition; }
         }
         
-        [Editable, SerializableProperty("", true)]
+        [Editable, Serialize("", true)]
         public string Tags
         {
             get { return string.Join(",",tags); }
@@ -313,11 +310,11 @@ namespace Barotrauma
 #endif
         }
 
-        public List<IPropertyObject> AllPropertyObjects
+        public List<ISerializableEntity> AllPropertyObjects
         {
             get
             {
-                List<IPropertyObject> pobjects = new List<IPropertyObject>();
+                List<ISerializableEntity> pobjects = new List<ISerializableEntity>();
                 pobjects.Add(this);
                 foreach (ItemComponent ic in components)
                 {
@@ -359,7 +356,7 @@ namespace Barotrauma
             XElement element = prefab.ConfigElement;
             if (element == null) return;
             
-            properties = ObjectProperty.DeserializeProperties(this, element);
+            properties = SerializableProperty.DeserializeProperties(this, element);
 
             if (submarine == null || !submarine.Loading) FindHull();
 
@@ -457,14 +454,14 @@ namespace Barotrauma
         public override MapEntity Clone()
         {
             Item clone = new Item(rect, prefab, Submarine);
-            foreach (KeyValuePair<string, ObjectProperty> property in properties)
+            foreach (KeyValuePair<string, SerializableProperty> property in properties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                 clone.properties[property.Key].TrySetValue(property.Value.GetValue());
             }
             for (int i = 0; i < components.Count; i++)
             {
-                foreach (KeyValuePair<string, ObjectProperty> property in components[i].properties)
+                foreach (KeyValuePair<string, SerializableProperty> property in components[i].properties)
                 {
                     if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
                     clone.components[i].properties[property.Key].TrySetValue(property.Value.GetValue());
@@ -706,7 +703,7 @@ namespace Barotrauma
                 }
             }
 
-            List<IPropertyObject> targets = new List<IPropertyObject>();
+            List<ISerializableEntity> targets = new List<ISerializableEntity>();
             if (containedItems != null)
             {
                 if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained))
@@ -1235,13 +1232,13 @@ namespace Barotrauma
         }
 
 
-        public List<ObjectProperty> GetProperties<T>()
+        public List<SerializableProperty> GetProperties<T>()
         {
-            List<ObjectProperty> editableProperties = ObjectProperty.GetProperties<T>(this);
+            List<SerializableProperty> editableProperties = SerializableProperty.GetProperties<T>(this);
             
             foreach (ItemComponent ic in components)
             {
-                List<ObjectProperty> componentProperties = ObjectProperty.GetProperties<T>(ic);
+                List<SerializableProperty> componentProperties = SerializableProperty.GetProperties<T>(ic);
                 foreach (var property in componentProperties)
                 {
                     editableProperties.Add(property);
@@ -1355,15 +1352,15 @@ namespace Barotrauma
         private void WritePropertyChange(NetBuffer msg, object[] extraData)
         {
             var allProperties = GetProperties<InGameEditable>();
-            ObjectProperty objectProperty = extraData[1] as ObjectProperty;
-            if (objectProperty != null)
+            SerializableProperty property = extraData[1] as SerializableProperty;
+            if (property != null)
             {
                 if (allProperties.Count > 1)
                 {
-                    msg.WriteRangedInteger(0, allProperties.Count - 1, allProperties.IndexOf(objectProperty));
+                    msg.WriteRangedInteger(0, allProperties.Count - 1, allProperties.IndexOf(property));
                 }
 
-                object value = objectProperty.GetValue();
+                object value = property.GetValue();
                 if (value is string)
                 {
                     msg.Write((string)value);
@@ -1398,24 +1395,24 @@ namespace Barotrauma
                 propertyIndex = msg.ReadRangedInteger(0, allProperties.Count-1);
             }
 
-            ObjectProperty objectProperty = allProperties[propertyIndex];
+            SerializableProperty property = allProperties[propertyIndex];
 
-            Type type = objectProperty.PropertyType;
+            Type type = property.PropertyType;
             if (type == typeof(string))
             {
-                objectProperty.TrySetValue(msg.ReadString());
+                property.TrySetValue(msg.ReadString());
             }
             else if (type == typeof(float))
             {
-                objectProperty.TrySetValue(msg.ReadFloat());
+                property.TrySetValue(msg.ReadFloat());
             }
             else if (type == typeof(int))
             {
-                objectProperty.TrySetValue(msg.ReadInt32());
+                property.TrySetValue(msg.ReadInt32());
             }
             else if (type == typeof(bool))
             {
-                objectProperty.TrySetValue(msg.ReadBoolean());
+                property.TrySetValue(msg.ReadBoolean());
             }
             else
             {
@@ -1424,7 +1421,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, objectProperty });
+                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
             }
         }
 
@@ -1638,12 +1635,12 @@ namespace Barotrauma
 
                 foreach (XAttribute attribute in element.Attributes())
                 {
-                    ObjectProperty property = null;
+                    SerializableProperty property = null;
                     if (!item.properties.TryGetValue(attribute.Name.ToString(), out property)) continue;
 
                     bool shouldBeLoaded = false;
 
-                    foreach (var propertyAttribute in property.Attributes.OfType<SerializableProperty>())
+                    foreach (var propertyAttribute in property.Attributes.OfType<Serialize>())
                     {
                         if (propertyAttribute.isSaveable)
                         {
@@ -1713,7 +1710,7 @@ namespace Barotrauma
                 element.Add(new XAttribute("linked", string.Join(",", linkedToIDs)));
             }
 
-            ObjectProperty.SerializeProperties(this, element);
+            SerializableProperty.SerializeProperties(this, element);
 
             foreach (ItemComponent ic in components)
             {

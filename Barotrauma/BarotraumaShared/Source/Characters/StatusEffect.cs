@@ -209,26 +209,26 @@ namespace Barotrauma
             return true;
         }
 
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, IPropertyObject target)
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
 
             if (targetNames != null && !targetNames.Contains(target.Name)) return;
 
-            List<IPropertyObject> targets = new List<IPropertyObject>();
+            List<ISerializableEntity> targets = new List<ISerializableEntity>();
             targets.Add(target);
 
             Apply(deltaTime, entity, targets);
         }
 
-        public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<IPropertyObject> targets)
+        public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
 
             Apply(deltaTime, entity, targets);
         }
 
-        protected void Apply(float deltaTime, Entity entity, List<IPropertyObject> targets)
+        protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
 #if CLIENT
             if (sound != null)
@@ -259,13 +259,13 @@ namespace Barotrauma
                 }
             }
 
-            foreach (IPropertyObject target in targets)
+            foreach (ISerializableEntity target in targets)
             {
                 for (int i = 0; i < propertyNames.Length; i++)
                 {
-                    ObjectProperty property;
+                    SerializableProperty property;
 
-                    if (!target.ObjectProperties.TryGetValue(propertyNames[i], out property)) continue;
+                    if (!target.SerializableProperties.TryGetValue(propertyNames[i], out property)) continue;
 
                     if (duration > 0.0f)
                     {
@@ -308,7 +308,7 @@ namespace Barotrauma
 #endif
         }
 
-        private IEnumerable<object> ApplyToPropertyOverDuration(float duration, ObjectProperty property, object value)
+        private IEnumerable<object> ApplyToPropertyOverDuration(float duration, SerializableProperty property, object value)
         {
             float timer = duration;
             while (timer > 0.0f)
@@ -323,7 +323,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private void ApplyToProperty(ObjectProperty property, object value, float deltaTime)
+        private void ApplyToProperty(SerializableProperty property, object value, float deltaTime)
         {
             if (disableDeltaTime || setValue) deltaTime = 1.0f;
 

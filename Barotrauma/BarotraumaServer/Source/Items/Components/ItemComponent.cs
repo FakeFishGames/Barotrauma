@@ -2,7 +2,7 @@
 
 namespace Barotrauma.Items.Components
 {
-    partial class ItemComponent : IPropertyObject
+    partial class ItemComponent : ISerializableEntity
     {
         private bool LoadElemProjSpecific(XElement subElement)
         {

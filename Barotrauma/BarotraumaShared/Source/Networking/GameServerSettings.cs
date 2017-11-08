@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
         No = 0, Maybe = 1, Yes = 2
     }
 
-    partial class GameServer : NetworkMember, IPropertyObject
+    partial class GameServer : NetworkMember, ISerializableEntity
     {
         private class SavedClientPermission
         {
@@ -40,7 +40,7 @@ namespace Barotrauma.Networking
         public const string SettingsFile = "serversettings.xml";
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.txt";
 
-        public Dictionary<string, ObjectProperty> ObjectProperties
+        public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
             private set;
@@ -86,7 +86,7 @@ namespace Barotrauma.Networking
 
         private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
         
-        [SerializableProperty(true, true)]
+        [Serialize(true, true)]
         public bool RandomizeSeed
         {
             get;
@@ -94,21 +94,21 @@ namespace Barotrauma.Networking
         }
 
 
-        [SerializableProperty(300.0f, true)]
+        [Serialize(300.0f, true)]
         public float RespawnInterval
         {
             get;
             private set;
         }
 
-        [SerializableProperty(180.0f, true)]
+        [Serialize(180.0f, true)]
         public float MaxTransportTime
         {
             get;
             private set;
         }
 
-        [SerializableProperty(0.2f, true)]
+        [Serialize(0.2f, true)]
         public float MinRespawnRatio
         {
             get;
@@ -116,42 +116,42 @@ namespace Barotrauma.Networking
         }
 
 
-        [SerializableProperty(60.0f, true)]
+        [Serialize(60.0f, true)]
         public float AutoRestartInterval
         {
             get;
             set;
         }
 
-        [SerializableProperty(true, true)]
+        [Serialize(true, true)]
         public bool AllowSpectating
         {
             get;
             private set;
         }
 
-        [SerializableProperty(true, true)]
+        [Serialize(true, true)]
         public bool EndRoundAtLevelEnd
         {
             get;
             private set;
         }
 
-        [SerializableProperty(true, true)]
+        [Serialize(true, true)]
         public bool SaveServerLogs
         {
             get;
             private set;
         }
 
-        [SerializableProperty(true, true)]
+        [Serialize(true, true)]
         public bool AllowFileTransfers
         {
             get;
             private set;
         }
 
-        [SerializableProperty(800, true)]
+        [Serialize(800, true)]
         private int LinesPerLogFile
         {
             get
@@ -175,7 +175,7 @@ namespace Barotrauma.Networking
             }
         }
         
-        [SerializableProperty(true, true)]
+        [Serialize(true, true)]
         public bool AllowRespawn
         {
             get;
@@ -203,21 +203,21 @@ namespace Barotrauma.Networking
             get { return banList; }
         }
 
-        [SerializableProperty(true, true)]
+        [Serialize(true, true)]
         public bool AllowVoteKick
         {
             get;
             private set;
         }
 
-        [SerializableProperty(0.6f, true)]
+        [Serialize(0.6f, true)]
         public float EndVoteRequiredRatio
         {
             get;
             private set;
         }
 
-        [SerializableProperty(0.6f, true)]
+        [Serialize(0.6f, true)]
         public float KickVoteRequiredRatio
         {
             get;
@@ -228,7 +228,7 @@ namespace Barotrauma.Networking
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
 
-            ObjectProperty.SerializeProperties(this, doc.Root, true);
+            SerializableProperty.SerializeProperties(this, doc.Root, true);
             
             doc.Root.SetAttributeValue("name", name);
             doc.Root.SetAttributeValue("public", isPublic);
@@ -279,7 +279,7 @@ namespace Barotrauma.Networking
                 doc = new XDocument(new XElement("serversettings"));
             }
 
-            ObjectProperties = ObjectProperty.DeserializeProperties(this, doc.Root);
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
 
             AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
 #if CLIENT

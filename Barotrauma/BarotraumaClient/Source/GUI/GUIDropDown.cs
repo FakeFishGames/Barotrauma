@@ -72,15 +72,20 @@ namespace Barotrauma
         }
         
         public GUIDropDown(Rectangle rect, string text, string style, GUIComponent parent = null)
+            : this(rect, text, style, Alignment.TopLeft, parent)
+        {
+        }
+
+        public GUIDropDown(Rectangle rect, string text, string style, Alignment alignment, GUIComponent parent = null)
             : base(style)
         {
             this.rect = rect;
 
             if (parent != null) parent.AddChild(this);
 
-            button = new GUIButton(this.rect, text, Color.White, Alignment.TopLeft, Alignment.CenterLeft, "GUIDropDown", null);
+            button = new GUIButton(this.rect, text, Color.White, alignment, Alignment.CenterLeft, "GUIDropDown", null);
             GUI.Style.Apply(button, style, this);
-            
+
             button.OnClicked = OnClicked;
 
             listBox = new GUIListBox(new Rectangle(this.rect.X, this.rect.Bottom, this.rect.Width, 200), style, null);

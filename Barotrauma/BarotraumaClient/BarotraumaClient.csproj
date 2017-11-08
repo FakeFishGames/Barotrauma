@@ -206,6 +206,7 @@
     <Compile Include="Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="Source\Screens\Screen.cs" />
     <Compile Include="Source\Screens\ServerListScreen.cs" />
+    <Compile Include="Source\Serialization\SerializableEntityEditor.cs" />
     <Compile Include="Source\Sounds\OggSound.cs" />
     <Compile Include="Source\Sounds\OggStream.cs" />
     <Compile Include="Source\Sounds\Sound.cs" />
@@ -299,6 +300,7 @@
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="..\BarotraumaShared\BarotraumaShared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

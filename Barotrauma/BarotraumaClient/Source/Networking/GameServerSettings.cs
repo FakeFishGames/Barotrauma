@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    partial class GameServer : NetworkMember, IPropertyObject
+    partial class GameServer : NetworkMember, ISerializableEntity
     {
         private GUIFrame settingsFrame;
         private GUIFrame[] settingsTabs;

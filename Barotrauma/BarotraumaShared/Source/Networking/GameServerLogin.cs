@@ -26,7 +26,7 @@ namespace Barotrauma.Networking
         }
     }
     
-    partial class GameServer : NetworkMember, IPropertyObject
+    partial class GameServer : NetworkMember, ISerializableEntity
     {
         List<UnauthenticatedClient> unauthenticatedClients = new List<UnauthenticatedClient>();
 

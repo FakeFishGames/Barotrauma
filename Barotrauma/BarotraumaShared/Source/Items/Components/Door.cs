@@ -111,13 +111,13 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [SerializableProperty("0.0,0.0,0.0,0.0", false)]
+        [Serialize("0.0,0.0,0.0,0.0", false)]
         public string Window
         {
             get { return XMLExtensions.Vector4ToString(new Vector4(window.X, window.Y, window.Width, window.Height)); }
             set
             {
-                Vector4 vector = XMLExtensions.ParseToVector4(value);
+                Vector4 vector = XMLExtensions.ParseVector4(value);
                 if (vector.Z != 0.0f || vector.W != 0.0f)
                 {
                     window = new Rectangle((int)vector.X, (int)vector.Y, (int)vector.Z, (int)vector.W);
@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
             get { return window; }
         }
 
-        [Editable, SerializableProperty(false, true)]
+        [Editable, Serialize(false, true)]
         public bool IsOpen
         {
             get { return isOpen; }

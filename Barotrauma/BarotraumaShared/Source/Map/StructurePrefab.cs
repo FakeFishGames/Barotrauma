@@ -132,7 +132,7 @@ namespace Barotrauma
             sp.size.Y = element.GetAttributeFloat("height", 0.0f);
             
             string spriteColorStr = element.GetAttributeString("spritecolor", "1.0,1.0,1.0,1.0");
-            sp.SpriteColor = new Color(XMLExtensions.ParseToVector4(spriteColorStr));
+            sp.SpriteColor = new Color(XMLExtensions.ParseVector4(spriteColorStr));
 
             sp.maxHealth = element.GetAttributeFloat("health", 100.0f);
 

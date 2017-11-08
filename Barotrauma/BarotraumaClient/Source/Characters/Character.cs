@@ -11,7 +11,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, IPropertyObject, IClientSerializable, IServerSerializable
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         protected float soundTimer;
         protected float soundInterval;

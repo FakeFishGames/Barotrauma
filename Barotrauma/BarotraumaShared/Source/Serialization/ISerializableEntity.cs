@@ -2,14 +2,14 @@
 
 namespace Barotrauma
 {
-    interface IPropertyObject
+    interface ISerializableEntity
     {
         string Name
         {
             get;
         }
 
-        Dictionary<string, ObjectProperty> ObjectProperties
+        Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
         }

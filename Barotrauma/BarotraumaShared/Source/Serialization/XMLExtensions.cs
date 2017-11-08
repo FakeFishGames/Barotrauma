@@ -192,7 +192,7 @@ namespace Barotrauma
 
             string val = element.Attribute(name).Value;
 
-            return ParseToVector2(val);
+            return ParseVector2(val);
         }
 
         public static Vector3 GetAttributeVector3(this XElement element, string name, Vector3 defaultValue)
@@ -201,7 +201,7 @@ namespace Barotrauma
 
             string val = element.Attribute(name).Value;
 
-            return ParseToVector3(val);
+            return ParseVector3(val);
         }
 
         public static Vector4 GetAttributeVector4(this XElement element, string name, Vector4 defaultValue)
@@ -210,7 +210,7 @@ namespace Barotrauma
 
             string val = element.Attribute(name).Value;
 
-            return ParseToVector4(val);
+            return ParseVector4(val);
         }
 
         public static string ElementInnerText(this XElement el)
@@ -223,8 +223,40 @@ namespace Barotrauma
             return str.ToString();
         }
 
+        public static string Vector2ToString(Vector2 vector)
+        {
+            return vector.X.ToString("G", CultureInfo.InvariantCulture) + "," + vector.Y.ToString("G", CultureInfo.InvariantCulture);
+        }
 
-        public static Vector2 ParseToVector2(string stringVector2, bool errorMessages = true)
+        public static string Vector3ToString(Vector3 vector, string format = "G")
+        {
+            return vector.X.ToString(format, CultureInfo.InvariantCulture) + "," +
+                   vector.Y.ToString(format, CultureInfo.InvariantCulture) + "," +
+                   vector.Z.ToString(format, CultureInfo.InvariantCulture);
+        }
+
+        public static string Vector4ToString(Vector4 vector, string format = "G")
+        {
+            return vector.X.ToString(format, CultureInfo.InvariantCulture) + "," +
+                   vector.Y.ToString(format, CultureInfo.InvariantCulture) + "," +
+                   vector.Z.ToString(format, CultureInfo.InvariantCulture) + "," +
+                   vector.W.ToString(format, CultureInfo.InvariantCulture);
+        }
+
+        public static string ColorToString(Color color)
+        {
+            return (color.R / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
+                    (color.G / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
+                    (color.B / 255.0f).ToString("G", CultureInfo.InvariantCulture) + "," +
+                    (color.A / 255.0f).ToString("G", CultureInfo.InvariantCulture);
+        }
+
+        public static string RectToString(Rectangle rect)
+        {
+            return rect.X + "," + rect.Y + "," + rect.Width + "," + rect.Height;
+        }
+
+        public static Vector2 ParseVector2(string stringVector2, bool errorMessages = true)
         {
             string[] components = stringVector2.Split(',');
 
@@ -237,18 +269,13 @@ namespace Barotrauma
                 return vector;
             }
 
-            Single.TryParse(components[0], NumberStyles.Any, CultureInfo.InvariantCulture, out vector.X);
-            Single.TryParse(components[1], NumberStyles.Any, CultureInfo.InvariantCulture, out vector.Y);
+            float.TryParse(components[0], NumberStyles.Any, CultureInfo.InvariantCulture, out vector.X);
+            float.TryParse(components[1], NumberStyles.Any, CultureInfo.InvariantCulture, out vector.Y);
 
             return vector;
         }
 
-        public static string Vector2ToString(Vector2 vector)
-        {
-            return vector.X.ToString("G", CultureInfo.InvariantCulture) + "," + vector.Y.ToString("G", CultureInfo.InvariantCulture);
-        }
-
-        public static Vector3 ParseToVector3(string stringVector3, bool errorMessages = true)
+        public static Vector3 ParseVector3(string stringVector3, bool errorMessages = true)
         {
             string[] components = stringVector3.Split(',');
 
@@ -268,7 +295,7 @@ namespace Barotrauma
             return vector;
         }
 
-        public static Vector4 ParseToVector4(string stringVector4, bool errorMessages = true)
+        public static Vector4 ParseVector4(string stringVector4, bool errorMessages = true)
         {
             string[] components = stringVector4.Split(',');
 
@@ -289,7 +316,7 @@ namespace Barotrauma
             return vector;
         }
 
-        public static Color ParseToColor(string stringColor, bool errorMessages = true)
+        public static Color ParseColor(string stringColor, bool errorMessages = true)
         {
             string[] strComponents = stringColor.Split(',');
 
@@ -311,15 +338,29 @@ namespace Barotrauma
             return new Color(components[0], components[1], components[2], components[3]);
         }
 
-        public static string Vector4ToString(Vector4 vector, string format = "G")
+        public static Color ParseRect(string stringColor, bool errorMessages = true)
         {
-            return vector.X.ToString(format, CultureInfo.InvariantCulture) + "," +
-                   vector.Y.ToString(format, CultureInfo.InvariantCulture) + "," +
-                   vector.Z.ToString(format, CultureInfo.InvariantCulture) + "," +
-                   vector.W.ToString(format, CultureInfo.InvariantCulture);
+            string[] strComponents = stringColor.Split(',');
+
+            Color color = Color.White;
+
+            if (strComponents.Length < 3)
+            {
+                if (errorMessages) DebugConsole.ThrowError("Failed to parse the string \"" + stringColor + "\" to Color");
+                return Color.White;
+            }
+
+            float[] components = new float[4] { 1.0f, 1.0f, 1.0f, 1.0f };
+
+            for (int i = 0; i < 4 && i < strComponents.Length; i++)
+            {
+                float.TryParse(strComponents[i], NumberStyles.Float, CultureInfo.InvariantCulture, out components[i]);
+            }
+
+            return new Color(components[0], components[1], components[2], components[3]);
         }
 
-        public static float[] ParseArrayToFloat(string[] stringArray)
+        public static float[] ParseFloatArray(string[] stringArray)
         {
             if (stringArray == null || stringArray.Length == 0) return null;
 

@@ -14,14 +14,14 @@ namespace Barotrauma.Items.Components
 
         private int channel;
 
-        [SerializableProperty(20000.0f, false)]
+        [Serialize(20000.0f, false)]
         public float Range
         {
             get { return range; }
             set { range = Math.Max(value, 0.0f); }
         }
 
-        [InGameEditable, SerializableProperty(1, true)]
+        [InGameEditable, Serialize(1, true)]
         public int Channel
         {
             get { return channel; }
@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, SerializableProperty(false, false)]
+        [Editable, Serialize(false, false)]
         public bool LinkToChat
         {
             get;

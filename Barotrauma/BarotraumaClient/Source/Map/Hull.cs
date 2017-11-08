@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class Hull : MapEntity, IPropertyObject, IServerSerializable
+    partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
     {
         public const int MaxDecalsPerHull = 10;
 

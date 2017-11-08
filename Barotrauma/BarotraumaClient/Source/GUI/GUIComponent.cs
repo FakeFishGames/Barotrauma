@@ -59,7 +59,7 @@ namespace Barotrauma
         public static GUIComponent UpdateMouseOn()
         {
             MouseOn = null;
-            for (int i=ComponentsToUpdate.Count-1;i>=0;i--)
+            for (int i = ComponentsToUpdate.Count - 1; i >= 0; i--)
             {
                 GUIComponent c = ComponentsToUpdate[i];
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
@@ -149,7 +149,9 @@ namespace Barotrauma
                 rect = value;
 
                 if (prevX == rect.X && prevY == rect.Y && rect.Width == prevWidth && rect.Height == prevHeight) return;
-                
+
+                //TODO: fix this (or replace with something better in the new GUI system)
+                //simply expanding the rects by the same amount as their parent only works correctly in some special cases
                 foreach (GUIComponent child in children)
                 {
                     child.Rect = new Rectangle(
@@ -166,9 +168,7 @@ namespace Barotrauma
             get { return CanBeFocused ? rect : Rectangle.Empty; }
         }
 
-        public Dictionary<GUIComponent.ComponentState, List<UISprite>> sprites;
-        //public Alignment SpriteAlignment { get; set; }
-        //public bool RepeatSpriteX, RepeatSpriteY;
+        public Dictionary<ComponentState, List<UISprite>> sprites;
 
         public virtual Color OutlineColor { get; set; }
 
@@ -271,15 +271,44 @@ namespace Barotrauma
             return false;
         }
 
+        protected virtual void SetAlpha(float a)
+        {
+            color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
+        }
+
         public virtual void Flash(Color? color = null)
         {
             flashTimer = FlashDuration;
             flashColor = (color == null) ? Color.Red * 0.8f : (Color)color;
+        }
 
-            //foreach (GUIComponent child in children)
-            //{
-            //    child.Flash();
-            //}
+        public void FadeOut(float duration, bool removeAfter)
+        {
+            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter));
+        }
+
+        private IEnumerable<object> LerpAlpha(float to, float duration, bool removeAfter)
+        {
+            float t = 0.0f;
+            float startA = color.A;
+
+            while (t < duration)
+            {
+                t += CoroutineManager.DeltaTime;
+
+                SetAlpha(MathHelper.Lerp(startA, to, t / duration));
+
+                yield return CoroutineStatus.Running;
+            }
+
+            SetAlpha(to);
+
+            if (removeAfter && parent != null)
+            {
+                parent.RemoveChild(this);
+            }
+
+            yield return CoroutineStatus.Success;
         }
 
         public virtual void Draw(SpriteBatch spriteBatch) 
@@ -431,13 +460,34 @@ namespace Barotrauma
             }
         }
 
+        public void SetDimensions(Point size, bool expandChildren = false)
+        {
+            Point expandAmount = size - rect.Size;
+
+            rect = new Rectangle(rect.X, rect.Y, size.X, size.Y);
+
+            if (expandChildren)
+            {
+                //TODO: fix this (or replace with something better in the new GUI system)
+                //simply expanding the rects by the same amount as their parent only works correctly in some special cases
+                foreach (GUIComponent child in children)
+                {
+                    child.Rect = new Rectangle(
+                        child.rect.X,
+                        child.rect.Y,
+                        child.rect.Width + expandAmount.X,
+                        child.rect.Height + expandAmount.Y);
+                }
+            }
+        }
+
         protected virtual void UpdateDimensions(GUIComponent parent = null)
         {
-            Rectangle parentRect = (parent==null) ? new Rectangle(0,0,GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
+            Rectangle parentRect = (parent == null) ? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight) : parent.rect;
 
             Vector4 padding = (parent == null) ? Vector4.Zero : parent.padding;
 
-            if (rect.Width == 0) rect.Width = parentRect.Width - rect.X 
+            if (rect.Width == 0) rect.Width = parentRect.Width - rect.X
                 - (int)padding.X - (int)padding.Z;
 
             if (rect.Height == 0) rect.Height = parentRect.Height - rect.Y
@@ -445,7 +495,7 @@ namespace Barotrauma
 
             if (alignment.HasFlag(Alignment.CenterX))
             {
-                rect.X += parentRect.X + (int)parentRect.Width/2 - (int)rect.Width/2;
+                rect.X += parentRect.X + (int)parentRect.Width / 2 - (int)rect.Width / 2;
             }
             else if (alignment.HasFlag(Alignment.Right))
             {

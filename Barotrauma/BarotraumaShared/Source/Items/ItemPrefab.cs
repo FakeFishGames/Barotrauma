@@ -289,7 +289,7 @@ namespace Barotrauma
             
             
             string spriteColorStr = element.GetAttributeString("spritecolor", "1.0,1.0,1.0,1.0");
-            SpriteColor = new Color(XMLExtensions.ParseToVector4(spriteColorStr));
+            SpriteColor = new Color(XMLExtensions.ParseVector4(spriteColorStr));
 
             price = element.GetAttributeInt("price", 0);
             

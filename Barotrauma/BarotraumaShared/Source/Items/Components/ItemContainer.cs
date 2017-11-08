@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
         private ushort[] itemIds;
 
         //how many items can be contained
-        [SerializableProperty(5, false)]
+        [Serialize(5, false)]
         public int Capacity
         {
             get { return capacity; }
@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
         }
         private int capacity;
 
-        [SerializableProperty(true, false)]
+        [Serialize(true, false)]
         public bool HideItems
         {
             get { return hideItems; }
@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
         }
         private bool hideItems;
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool DrawInventory
         {
             get { return drawInventory; }
@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
         private bool drawInventory;
 
         //the position of the first item in the container
-        [SerializableProperty("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false)]
         public Vector2 ItemPos
         {
             get { return itemPos; }
@@ -56,7 +56,7 @@ namespace Barotrauma.Items.Components
         private Vector2 itemPos;
 
         //item[i].Pos = itemPos + itemInterval*i 
-        [SerializableProperty("0.0,0.0", false)]
+        [Serialize("0.0,0.0", false)]
         public Vector2 ItemInterval
         {
             get { return itemInterval; }
@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
         }
         private Vector2 itemInterval;
 
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float ItemRotation
         {
             get { return MathHelper.ToDegrees(itemRotation); }
@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
         private float itemRotation;
 
 
-        [SerializableProperty("0.5,0.9", false)]
+        [Serialize("0.5,0.9", false)]
         public Vector2 HudPos
         {
             get { return hudPos; }
@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
         }
         private Vector2 hudPos;
 
-        [SerializableProperty(5, false)]
+        [Serialize(5, false)]
         public int SlotsPerRow
         {
             get { return slotsPerRow; }

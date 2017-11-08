@@ -23,35 +23,35 @@ namespace Barotrauma.Items.Components
 
         public Character User;
 
-        [SerializableProperty(10.0f, false)]
+        [Serialize(10.0f, false)]
         public float LaunchImpulse
         {
             get { return launchImpulse; }
             set { launchImpulse = value; }
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool CharacterUsable
         {
             get { return characterUsable; }
             set { characterUsable = value; }
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool DoesStick
         {
             get { return doesStick; }
             set { doesStick = value; }
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool Hitscan
         {
             get;
             set;
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool RemoveOnHit
         {
             get;
