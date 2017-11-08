@@ -35,14 +35,14 @@ namespace Barotrauma.Items.Components
 
         private Vector2 armorSector;
 
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float ArmorValue
         {
             get { return armorValue; }
             set { armorValue = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        [SerializableProperty("0.0,360.0", false)]
+        [Serialize("0.0,360.0", false)]
         public Vector2 ArmorSector
         {
             get { return armorSector; }

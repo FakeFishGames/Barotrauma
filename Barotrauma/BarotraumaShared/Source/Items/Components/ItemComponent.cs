@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
     /// <summary>
     /// The base class for components holding the different functionalities of the item
     /// </summary>
-    partial class ItemComponent : IPropertyObject
+    partial class ItemComponent : ISerializableEntity
     {
         protected Item item;
 
@@ -47,15 +47,15 @@ namespace Barotrauma.Items.Components
 
         private string msg;
         
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float PickingTime
         {
             get;
             private set;
         }
 
-        public readonly Dictionary<string, ObjectProperty> properties;
-        public Dictionary<string, ObjectProperty> ObjectProperties
+        public readonly Dictionary<string, SerializableProperty> properties;
+        public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get { return properties; }
         }
@@ -103,21 +103,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool CanBePicked
         {
             get { return canBePicked; }
             set { canBePicked = value; }
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool DrawHudWhenEquipped
         {
             get;
             private set;
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool CanBeSelected
         {
             get { return canBeSelected; }
@@ -136,7 +136,7 @@ namespace Barotrauma.Items.Components
             protected set;
         }
 
-        [SerializableProperty(false, false)]
+        [Serialize(false, false)]
         public bool DeleteOnUse
         {
             get;
@@ -153,7 +153,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
 
-        [SerializableProperty("", false)]
+        [Serialize("", false)]
         public string Msg
         {
             get { return msg; }
@@ -164,7 +164,7 @@ namespace Barotrauma.Items.Components
         {
             this.item = item;
 
-            properties = ObjectProperty.GetProperties(this);
+            properties = SerializableProperty.GetProperties(this);
 
             //canBePicked = ToolBox.GetAttributeBool(element, "canbepicked", false);
             //canBeSelected = ToolBox.GetAttributeBool(element, "canbeselected", false);
@@ -205,7 +205,7 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Invalid pick key in " + element + "!", e);
             }
             
-            properties = ObjectProperty.DeserializeProperties(this, element);
+            properties = SerializableProperty.DeserializeProperties(this, element);
             
             foreach (XElement subElement in element.Elements())
             {
@@ -477,7 +477,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, List<IPropertyObject> targets, float deltaTime)
+        public void ApplyStatusEffects(ActionType type, List<ISerializableEntity> targets, float deltaTime)
         {
             if (statusEffectLists == null) return;
 
@@ -496,7 +496,7 @@ namespace Barotrauma.Items.Components
 
             foreach (XAttribute attribute in componentElement.Attributes())
             {
-                ObjectProperty property = null;
+                SerializableProperty property = null;
                 if (!properties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out property)) continue;
                 
                 property.TrySetValue(attribute.Value);
@@ -586,7 +586,7 @@ namespace Barotrauma.Items.Components
                 componentElement.Add(newElement);
             }
 
-            ObjectProperty.SerializeProperties(this, componentElement);
+            SerializableProperty.SerializeProperties(this, componentElement);
 
             parentElement.Add(componentElement);
             return componentElement;

@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    partial class Item : MapEntity, IDamageable, IPropertyObject, IServerSerializable, IClientSerializable
+    partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
         public override Sprite Sprite
         {
@@ -145,12 +145,12 @@ namespace Barotrauma
 
         public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
         {
-            if (editingHUD != null) editingHUD.Draw(spriteBatch);
+            if (editingHUD != null && editingHUD.UserData == this) editingHUD.Draw(spriteBatch);
         }
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            List<ObjectProperty> editableProperties = inGame ? GetProperties<InGameEditable>() : GetProperties<Editable>();
+            /*List<SerializableProperty> editableProperties = inGame ? GetProperties<InGameEditable>() : GetProperties<Editable>();
 
             int requiredItemCount = 0;
             if (!inGame)
@@ -159,27 +159,29 @@ namespace Barotrauma
                 {
                     requiredItemCount += ic.requiredItems.Count;
                 }
-            }
+            }*/
 
             int width = 450;
-            int height = 80 + requiredItemCount * 20;
+            int height = 150;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
-            foreach (var objectProperty in editableProperties)
+            /*foreach (var objectProperty in editableProperties)
             {
                 var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault();
                 if (editable != null) height += (int)(Math.Ceiling(editable.MaxLength / 40.0f) * 18.0f) + 5;
-            }
+            }*/
 
-            editingHUD = new GUIFrame(new Rectangle(x, y, width, height), "");
-            editingHUD.Padding = new Vector4(10, 10, 0, 0);
+            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
+            //editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), prefab.Name, "",
-                Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);
+            /*new GUITextBlock(new Rectangle(0, 0, 0, 20), prefab.Name, "",
+                Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);*/
 
-            y += 25;
+            new SerializableEntityEditor(this, inGame, editingHUD);
 
-            if (!inGame)
+            //y += 25;
+
+            /*if (!inGame)
             {
                 if (prefab.IsLinkable)
                 {
@@ -198,7 +200,7 @@ namespace Barotrauma
                         PropertyDescriptor property = properties.Find("JoinedNames", false);
 
                         namesBox.Text = relatedItem.JoinedNames;
-                        namesBox.UserData = new ObjectProperty(property, relatedItem);
+                        namesBox.UserData = new SerializableProperty(property, relatedItem);
                         namesBox.OnEnterPressed = EnterProperty;
                         namesBox.OnTextChanged = PropertyChanged;
 
@@ -206,9 +208,15 @@ namespace Barotrauma
                     }
                 }
                 if (requiredItemCount > 0) y += 10;
+            }*/
+
+            foreach (ItemComponent ic in components)
+            {
+                if (SerializableProperty.GetProperties<Editable>(ic).Count == 0) continue;
+                new SerializableEntityEditor(ic, inGame, editingHUD);
             }
 
-            foreach (var objectProperty in editableProperties)
+            /*foreach (var objectProperty in editableProperties)
             {
                 int boxHeight = 18;
                 var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault();
@@ -272,8 +280,7 @@ namespace Barotrauma
 
                 }
                 y = y + boxHeight + 5;
-
-            }
+            }*/
             return editingHUD;
         }
 
@@ -346,10 +353,10 @@ namespace Barotrauma
 
         private bool EnterProperty(GUITickBox tickBox)
         {
-            var objectProperty = tickBox.UserData as ObjectProperty;
-            if (objectProperty == null) return false;
+            var property = tickBox.UserData as SerializableProperty;
+            if (property == null) return false;
 
-            objectProperty.TrySetValue(tickBox.Selected);
+            property.TrySetValue(tickBox.Selected);
 
             return true;
         }
@@ -358,24 +365,24 @@ namespace Barotrauma
         {
             textBox.Color = Color.DarkGreen;
 
-            var objectProperty = textBox.UserData as ObjectProperty;
-            if (objectProperty == null) return false;
+            var property = textBox.UserData as SerializableProperty;
+            if (property == null) return false;
 
-            object prevValue = objectProperty.GetValue();
+            object prevValue = property.GetValue();
 
             textBox.Deselect();
 
-            if (objectProperty.TrySetValue(text))
+            if (property.TrySetValue(text))
             {
                 textBox.Text = text;
 
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, objectProperty });
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
                 }
                 else if (GameMain.Client != null)
                 {
-                    GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, objectProperty });
+                    GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
                 }
 
                 return true;

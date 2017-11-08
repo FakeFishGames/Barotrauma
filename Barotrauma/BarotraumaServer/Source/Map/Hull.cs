@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    partial class Hull : MapEntity, IPropertyObject, IServerSerializable
+    partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
     {
         public override bool IsMouseOn(Vector2 position)
         {

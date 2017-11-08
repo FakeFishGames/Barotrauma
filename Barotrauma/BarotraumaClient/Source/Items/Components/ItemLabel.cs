@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
 
         private Color textColor;
 
-        [SerializableProperty("", true), Editable(100)]
+        [Serialize("", true), Editable(100)]
         public string Text
         {
             get { return textBlock.Text.Replace("\n", ""); }
@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, SerializableProperty("0.0,0.0,0.0,1.0", true)]
+        [Editable, Serialize("0.0,0.0,0.0,1.0", true)]
         public Color TextColor
         {
             get { return textColor; }
@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, SerializableProperty(1.0f, true)]
+        [Editable, Serialize(1.0f, true)]
         public float TextScale
         {
             get { return textBlock == null ? 1.0f : textBlock.TextScale; }

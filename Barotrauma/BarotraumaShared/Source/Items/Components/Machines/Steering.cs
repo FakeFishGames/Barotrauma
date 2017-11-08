@@ -67,7 +67,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable, SerializableProperty(0.5f, true)]
+        [Editable, Serialize(0.5f, true)]
         public float NeutralBallastLevel
         {
             get { return neutralBallastLevel; }
@@ -336,7 +336,7 @@ namespace Barotrauma.Items.Components
         {
             if (connection.Name == "velocity_in")
             {
-                currVelocity = XMLExtensions.ParseToVector2(signal, false);
+                currVelocity = XMLExtensions.ParseVector2(signal, false);
             }
             else
             {

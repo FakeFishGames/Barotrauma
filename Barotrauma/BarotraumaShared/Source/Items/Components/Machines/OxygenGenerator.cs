@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Editable, SerializableProperty(100.0f, true)]
+        [Editable, Serialize(100.0f, true)]
         public float GeneratedAmount
         {
             get { return generatedAmount; }

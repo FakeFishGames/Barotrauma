@@ -18,14 +18,14 @@ namespace Barotrauma.Items.Components
         //the maximum amount of power the item can draw from connected items
         protected float powerConsumption;
 
-        [Editable, SerializableProperty(0.5f, true)]
+        [Editable, Serialize(0.5f, true)]
         public float MinVoltage
         {
             get { return minVoltage; }
             set { minVoltage = value; }
         }
 
-        [Editable, SerializableProperty(0.0f, true)]
+        [Editable, Serialize(0.0f, true)]
         public float PowerConsumption
         {
             get { return powerConsumption; }
@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        [SerializableProperty(false,true)]
+        [Serialize(false,true)]
         public override bool IsActive
         {
             get { return base.IsActive; }
@@ -44,14 +44,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [SerializableProperty(0.0f, true)]
+        [Serialize(0.0f, true)]
         public float CurrPowerConsumption
         {
             get {return currPowerConsumption; }
             set { currPowerConsumption = value; }
         }
 
-        [SerializableProperty(0.0f, true)]
+        [Serialize(0.0f, true)]
         public float Voltage
         {
             get { return voltage; }

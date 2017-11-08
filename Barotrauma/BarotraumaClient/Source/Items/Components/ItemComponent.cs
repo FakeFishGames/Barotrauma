@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    partial class ItemComponent : IPropertyObject
+    partial class ItemComponent : ISerializableEntity
     {
         private Dictionary<ActionType, List<ItemSound>> sounds;
 
@@ -109,13 +109,13 @@ namespace Barotrauma.Items.Components
             if (sound == null) return 0.0f;
             if (sound.VolumeProperty == "") return 1.0f;
 
-            ObjectProperty op = null;
-            if (properties.TryGetValue(sound.VolumeProperty.ToLowerInvariant(), out op))
+            SerializableProperty property = null;
+            if (properties.TryGetValue(sound.VolumeProperty.ToLowerInvariant(), out property))
             {
                 float newVolume = 0.0f;
                 try
                 {
-                    newVolume = (float)op.GetValue();
+                    newVolume = (float)property.GetValue();
                 }
                 catch
                 {
@@ -128,12 +128,7 @@ namespace Barotrauma.Items.Components
 
             return 0.0f;
         }
-
-        //public virtual void Draw(SpriteBatch spriteBatch, bool editing = false) 
-        //{
-        //    item.drawableComponents = Array.FindAll(item.drawableComponents, i => i != this);
-        //}
-
+        
         public virtual void DrawHUD(SpriteBatch spriteBatch, Character character) { }
 
         public virtual void AddToGUIUpdateList() { }

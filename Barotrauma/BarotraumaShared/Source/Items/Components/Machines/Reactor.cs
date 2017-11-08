@@ -54,7 +54,7 @@ namespace Barotrauma.Items.Components
         private float? nextServerLogWriteTime;
         private float lastServerLogWriteTime;
 
-        [Editable, SerializableProperty(9500.0f, true)]
+        [Editable, Serialize(9500.0f, true)]
         public float MeltDownTemp
         {
             get { return meltDownTemp; }
@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, SerializableProperty(9000.0f, true)]
+        [Editable, Serialize(9000.0f, true)]
         public float FireTemp
         {
             get { return fireTemp; }
@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, SerializableProperty(1.0f, true)]
+        [Editable, Serialize(1.0f, true)]
         public float PowerPerTemp
         {
             get { return powerPerTemp; }
@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [SerializableProperty(0.0f, true)]
+        [Serialize(0.0f, true)]
         public float FissionRate
         {
             get { return fissionRate; }
@@ -95,7 +95,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [SerializableProperty(0.0f, true)]
+        [Serialize(0.0f, true)]
         public float CoolingRate
         {
             get { return coolingRate; }
@@ -106,7 +106,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [SerializableProperty(0.0f, true)]
+        [Serialize(0.0f, true)]
         public float Temperature
         {
             get { return temperature; }
@@ -122,7 +122,7 @@ namespace Barotrauma.Items.Components
             return (temperature > 0.0f);
         }
 
-        [SerializableProperty(false, true)]
+        [Serialize(false, true)]
         public bool AutoTemp
         {
             get { return autoTemp; }
@@ -139,7 +139,7 @@ namespace Barotrauma.Items.Components
 
         public float AvailableFuel { get; set; }
 
-        [SerializableProperty(500.0f, true)]
+        [Serialize(500.0f, true)]
         public float ShutDownTemp
         {
             get { return shutDownTemp; }

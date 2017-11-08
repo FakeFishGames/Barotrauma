@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, IPropertyObject, IClientSerializable, IServerSerializable
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         //the Character that the player is currently controlling
         private const Character controlled = null;

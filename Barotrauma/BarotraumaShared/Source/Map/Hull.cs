@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class Hull : MapEntity, IPropertyObject, IServerSerializable
+    partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
     {
         const float NetworkUpdateInterval = 0.5f;
 
@@ -40,8 +40,8 @@ namespace Barotrauma
         //how much excess water the room can contain  (= more than the volume of the room)
         public const float MaxCompress = 10000f;
         
-        public readonly Dictionary<string, ObjectProperty> properties;
-        public Dictionary<string, ObjectProperty> ObjectProperties
+        public readonly Dictionary<string, SerializableProperty> properties;
+        public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get { return properties; }
         }
@@ -139,7 +139,7 @@ namespace Barotrauma
             }
         }
 
-        [SerializableProperty(90.0f, true)]
+        [Serialize(90.0f, true)]
         public float Oxygen
         {
             get { return oxygen; }
@@ -197,7 +197,7 @@ namespace Barotrauma
 
             fireSources = new List<FireSource>();
 
-            properties = ObjectProperty.GetProperties(this);
+            properties = SerializableProperty.GetProperties(this);
 
             int arraySize = (rectangle.Width / WaveWidth + 1);
             waveY = new float[arraySize];

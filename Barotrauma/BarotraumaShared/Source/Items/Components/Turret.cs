@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
 
         Camera cam;
 
-        [SerializableProperty("0,0", false)]
+        [Serialize("0,0", false)]
         public Vector2 BarrelPos
         {
             get 
@@ -39,21 +39,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float LaunchImpulse
         {
             get { return launchImpulse; }
             set { launchImpulse = value; }
         }
 
-        [SerializableProperty(5.0f, false)]
+        [Serialize(5.0f, false)]
         public float Reload
         {
             get { return reloadTime; }
             set { reloadTime = value; }
         }
 
-        [SerializableProperty("0.0,0.0", true), Editable]
+        [Serialize("0.0,0.0", true), Editable]
         public Vector2 RotationLimits
         {
             get
@@ -350,7 +350,7 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "position_in":
-                    Vector2 receivedPos = XMLExtensions.ParseToVector2(signal, false);
+                    Vector2 receivedPos = XMLExtensions.ParseVector2(signal, false);
 
                     Vector2 centerPos = new Vector2(item.WorldRect.X + barrelPos.X, item.WorldRect.Y - barrelPos.Y);
 

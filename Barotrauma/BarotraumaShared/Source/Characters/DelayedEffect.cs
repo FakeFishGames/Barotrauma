@@ -13,7 +13,7 @@ namespace Barotrauma
 
         private Entity entity;
 
-        private List<IPropertyObject> targets;
+        private List<ISerializableEntity> targets;
         
         public float StartTimer
         {
@@ -26,7 +26,7 @@ namespace Barotrauma
             delay = element.GetAttributeFloat("delay", 1.0f);
         }
 
-        public override void Apply(ActionType type, float deltaTime, Entity entity, List<IPropertyObject> targets)
+        public override void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
             if (this.type != type) return;
             

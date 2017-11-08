@@ -24,14 +24,14 @@ namespace Barotrauma.Items.Components
 
         private float reloadTimer;
 
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float Range
         {
             get { return ConvertUnits.ToDisplayUnits(range); }
             set { range = ConvertUnits.ToSimUnits(value); }
         }
 
-        [SerializableProperty(0.5f, false)]
+        [Serialize(0.5f, false)]
         public float Reload
         {
             get { return reload; }

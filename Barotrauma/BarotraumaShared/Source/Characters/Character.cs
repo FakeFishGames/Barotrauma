@@ -10,7 +10,7 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    partial class Character : Entity, IDamageable, IPropertyObject, IClientSerializable, IServerSerializable
+    partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
         
@@ -61,8 +61,8 @@ namespace Barotrauma
 
         protected float lastRecvPositionUpdateTime;
 
-        public readonly Dictionary<string, ObjectProperty> Properties;
-        public Dictionary<string, ObjectProperty> ObjectProperties
+        public readonly Dictionary<string, SerializableProperty> Properties;
+        public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get { return Properties; }
         }
@@ -545,7 +545,7 @@ namespace Barotrauma
 
             lowPassMultiplier = 1.0f;
 
-            Properties = ObjectProperty.GetProperties(this);
+            Properties = SerializableProperty.GetProperties(this);
 
             Info = characterInfo;
             if (file == humanConfigFile && characterInfo == null)

@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         private bool castShadows;
 
-        [Editable, SerializableProperty(100.0f, true)]
+        [Editable, Serialize(100.0f, true)]
         public float Range
         {
             get { return range; }
@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, SerializableProperty(true, true)]
+        [Editable, Serialize(true, true)]
         public bool CastShadows
         {
             get { return castShadows; }
@@ -44,7 +44,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, SerializableProperty(false, true)]
+        [Editable, Serialize(false, true)]
         public bool IsOn
         {
             get { return IsActive; }
@@ -57,7 +57,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [SerializableProperty(0.0f, false)]
+        [Serialize(0.0f, false)]
         public float Flicker
         {
             get { return flicker; }
@@ -67,7 +67,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, SerializableProperty("1.0,1.0,1.0,1.0", true)]
+        [InGameEditable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color LightColor
         {
             get { return lightColor; }
@@ -207,7 +207,7 @@ namespace Barotrauma.Items.Components
                     IsActive = (signal != "0");                   
                     break;
                 case "set_color":
-                    LightColor = XMLExtensions.ParseToColor(signal, false);
+                    LightColor = XMLExtensions.ParseColor(signal, false);
                     break;
             }
         }

@@ -16,14 +16,14 @@ namespace Barotrauma.Items.Components
 
         private Regex regex;
 
-        [InGameEditable, SerializableProperty("1", true)]
+        [InGameEditable, Serialize("1", true)]
         public string Output
         {
             get { return output; }
             set { output = value; }
         }
 
-        [InGameEditable, SerializableProperty("", true)]
+        [InGameEditable, Serialize("", true)]
         public string Expression
         {
             get { return expression; }
