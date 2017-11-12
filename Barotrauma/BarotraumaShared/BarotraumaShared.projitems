@@ -1495,8 +1495,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\GameScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\NetLobbyScreen.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Screens\Screen.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\IPropertyObject.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\Properties.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\ISerializableEntity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\SerializableProperty.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Serialization\XMLExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\Sprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />

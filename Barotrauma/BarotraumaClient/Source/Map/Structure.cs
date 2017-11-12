@@ -17,7 +17,7 @@ namespace Barotrauma
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
         private List<ConvexHull> convexHulls;
-
+        
         private void GenerateConvexHull()
         {
             // If not null and not empty , remove the hulls from the system
@@ -66,6 +66,37 @@ namespace Barotrauma
             mergedSections.Clear();
         }
 
+        public override void UpdateEditing(Camera cam)
+        {
+            if (editingHUD == null || editingHUD.UserData as Structure != this)
+            {
+                editingHUD = CreateEditingHUD(Screen.Selected != GameMain.EditMapScreen);
+            }
+
+            editingHUD.Update((float)Timing.Step);
+        }
+
+        private GUIComponent CreateEditingHUD(bool inGame = false)
+        {
+            int width = 450;
+            int height = 150;
+            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
+
+            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
+            editingHUD.UserData = this;
+            
+            new SerializableEntityEditor(this, inGame, editingHUD, true);
+            
+            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
+
+            return editingHUD;
+        }
+
+        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        {
+            if (editingHUD != null && editingHUD.UserData == this) editingHUD.Draw(spriteBatch);
+        }
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (prefab.sprite == null) return;
@@ -82,7 +113,7 @@ namespace Barotrauma
         {
             if (prefab.sprite == null) return;
 
-            Color color = (isHighlighted) ? Color.Orange : Color.White;
+            Color color = (isHighlighted) ? Color.Orange : spriteColor;
             if (IsSelected && editing)
             {
                 color = Color.Red;

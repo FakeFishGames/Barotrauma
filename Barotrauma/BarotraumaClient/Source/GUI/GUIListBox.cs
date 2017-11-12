@@ -180,6 +180,12 @@ namespace Barotrauma
             }
         }
 
+        public override void SetDimensions(Point size, bool expandChildren = false)
+        {
+            base.SetDimensions(size, expandChildren);
+            frame.SetDimensions(size, expandChildren);
+        }
+
         private void UpdateChildrenRect(float deltaTime)
         {
             int x = rect.X, y = rect.Y;
@@ -329,7 +335,7 @@ namespace Barotrauma
 
         public void UpdateScrollBarSize()
         {
-            totalSize = 0;
+            totalSize = (int)(padding.Y + padding.W);
             foreach (GUIComponent child in children)
             {
                 if (child == frame) continue;

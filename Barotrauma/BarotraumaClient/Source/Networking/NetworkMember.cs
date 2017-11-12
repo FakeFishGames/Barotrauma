@@ -182,10 +182,14 @@ namespace Barotrauma.Networking
                 };
                 
                 new GUITextBlock(new Rectangle(0, 0, 30, 20), "Days:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-                durationInputDays = new GUINumberInput(new Rectangle(40, 0, 50, 20), "", 0, 1000, durationContainer);
+                durationInputDays = new GUINumberInput(new Rectangle(40, 0, 50, 20), "", GUINumberInput.NumberType.Int, durationContainer);
+                durationInputDays.MinValueInt = 0;
+                durationInputDays.MaxValueFloat = 1000;
 
                 new GUITextBlock(new Rectangle(100, 0, 30, 20), "Hours:", "", Alignment.TopLeft, Alignment.CenterLeft, durationContainer);
-                durationInputHours = new GUINumberInput(new Rectangle(150, 0, 50, 20), "", 0, 24, durationContainer);
+                durationInputHours = new GUINumberInput(new Rectangle(150, 0, 50, 20), "", GUINumberInput.NumberType.Int, durationContainer);
+                durationInputDays.MinValueInt = 0;
+                durationInputDays.MaxValueFloat = 24;
             }
 
             banReasonPrompt.Buttons[0].OnClicked += (btn, userData) =>
@@ -194,7 +198,7 @@ namespace Barotrauma.Networking
                 {
                     if (!permaBanTickBox.Selected)
                     {
-                        TimeSpan banDuration = new TimeSpan(durationInputDays.Value, durationInputHours.Value, 0, 0);
+                        TimeSpan banDuration = new TimeSpan(durationInputDays.IntValue, durationInputHours.IntValue, 0, 0);
                         BanPlayer(clientName, banReasonBox.Text, ban, banDuration);
                     }
                     else

@@ -72,10 +72,16 @@ namespace Barotrauma
                     child.Rect = new Rectangle(child.Rect.X + value.X - rect.X, child.Rect.Y + value.Y - rect.Y, child.Rect.Width, child.Rect.Height);
                 }
 
+                Point moveAmount = value.Location - rect.Location;
+
                 rect = value;
                 if (value.Width != rect.Width || value.Height != rect.Height)
                 {
                     SetTextPos();
+                }
+                else if (moveAmount != Point.Zero)
+                {
+                    caretPos += moveAmount.ToVector2();
                 }
             }
         }
@@ -240,7 +246,6 @@ namespace Barotrauma
             {
                 caretPos = new Vector2(rect.X + size.X, rect.Y) + textPos - origin;
             }
-
         }
 
         private Vector2 MeasureText(string text) 
@@ -255,6 +260,12 @@ namespace Barotrauma
             }
 
             return size;
+        }
+
+        protected override void SetAlpha(float a)
+        {
+            base.SetAlpha(a);
+            textColor = new Color(textColor.R, textColor.G, textColor.B, a);
         }
 
         public override void Draw(SpriteBatch spriteBatch)

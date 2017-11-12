@@ -163,7 +163,7 @@ namespace Barotrauma
 
             int width = 450;
             int height = 150;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
+            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
             /*foreach (var objectProperty in editableProperties)
             {
                 var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault();
@@ -171,13 +171,12 @@ namespace Barotrauma
             }*/
 
             editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
-            //editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
 
             /*new GUITextBlock(new Rectangle(0, 0, 0, 20), prefab.Name, "",
                 Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);*/
 
-            new SerializableEntityEditor(this, inGame, editingHUD);
+            new SerializableEntityEditor(this, inGame, editingHUD, true);
 
             //y += 25;
 
@@ -213,9 +212,9 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 if (SerializableProperty.GetProperties<Editable>(ic).Count == 0) continue;
-                new SerializableEntityEditor(ic, inGame, editingHUD);
+                new SerializableEntityEditor(ic, inGame, editingHUD, false);
             }
-
+            
             /*foreach (var objectProperty in editableProperties)
             {
                 int boxHeight = 18;
@@ -281,6 +280,10 @@ namespace Barotrauma
                 }
                 y = y + boxHeight + 5;
             }*/
+
+
+            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
+
             return editingHUD;
         }
 
