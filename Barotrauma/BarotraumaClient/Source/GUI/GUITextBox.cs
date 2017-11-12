@@ -11,6 +11,7 @@ namespace Barotrauma
     class GUITextBox : GUIComponent, IKeyboardSubscriber
     {        
         public event TextBoxEvent OnSelected;
+        public event TextBoxEvent OnDeselected;
 
         bool caretVisible;
         float caretTimer;
@@ -204,6 +205,8 @@ namespace Barotrauma
         {
             Selected = false;
             if (keyboardDispatcher.Subscriber == this) keyboardDispatcher.Subscriber = null;
+
+            OnDeselected?.Invoke(this, Keys.None);
         }
 
         public override void Flash(Color? color = null)
@@ -222,19 +225,17 @@ namespace Barotrauma
             if (rect.Contains(PlayerInput.MousePosition) && Enabled &&
                 (MouseOn == null || MouseOn == this || IsParentOf(MouseOn) || MouseOn.IsParentOf(this)))
             {
-
                 state = ComponentState.Hover;
                 if (PlayerInput.LeftButtonClicked())
                 {
                     Select();
-                    if (OnSelected != null) OnSelected(this, Keys.None);
+                    OnSelected?.Invoke(this, Keys.None);
                 }
             }
             else
             {
                 state = ComponentState.None;
             }
-
             
             if (CaretEnabled)
             {
@@ -250,7 +251,7 @@ namespace Barotrauma
                 {
                     string input = Text;
                     Text = "";
-                    OnEnterPressed(this, input);                    
+                    OnEnterPressed(this, input);
                 }
 #if LINUX
                 else if (PlayerInput.KeyHit(Keys.Back) && Text.Length>0)
@@ -258,7 +259,10 @@ namespace Barotrauma
                     Text = Text.Substring(0, Text.Length-1);
                 }
 #endif
-
+            }
+            else if (Selected)
+            {
+                Deselect();
             }
 
             textBlock.State = state;

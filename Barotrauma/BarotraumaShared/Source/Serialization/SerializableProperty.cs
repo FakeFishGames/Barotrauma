@@ -18,6 +18,8 @@ namespace Barotrauma
         public int? MinValueInt, MaxValueInt;
         public float? MinValueFloat, MaxValueFloat;
 
+        public string ToolTip;
+
         public Editable(int maxLength = 20)
         {
             MaxLength = maxLength;

@@ -159,7 +159,12 @@ namespace Barotrauma
                         child.rect.Y + (rect.Y - prevY),
                         Math.Max(child.rect.Width + (rect.Width - prevWidth),0),
                         Math.Max(child.rect.Height + (rect.Height - prevHeight),0));
-                }                
+                }    
+                
+                if (parent != null && parent is GUIListBox)
+                {
+                    ((GUIListBox)parent).UpdateScrollBarSize();
+                }            
             }
         }
         
@@ -385,18 +390,9 @@ namespace Barotrauma
                         {
                             spriteBatch.Draw(uiSprite.Sprite.Texture, rect, uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f));
                         }
-
-
                     }
                 }
             }
-
-            //Color newColor = color;
-            //if (state == ComponentState.Selected)   newColor = selectedColor;
-            //if (state == ComponentState.Hover)      newColor = hoverColor;
-
-            //GUI.DrawRectangle(spriteBatch, rect, newColor*alpha, true);
-            //DrawChildren(spriteBatch);
         }
 
         public  void DrawToolTip(SpriteBatch spriteBatch)
@@ -460,7 +456,7 @@ namespace Barotrauma
             }
         }
 
-        public void SetDimensions(Point size, bool expandChildren = false)
+        public virtual void SetDimensions(Point size, bool expandChildren = false)
         {
             Point expandAmount = size - rect.Size;
 

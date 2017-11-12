@@ -267,18 +267,20 @@ namespace Barotrauma.Networking
 
                 int cargoVal = 0;
                 extraCargo.TryGetValue(pf.Name, out cargoVal);
-                var amountInput = new GUINumberInput(new Rectangle(160, 0, 50, 20), "", 0, 100, textBlock);
-                amountInput.Value = cargoVal;
+                var amountInput = new GUINumberInput(new Rectangle(160, 0, 50, 20), "", GUINumberInput.NumberType.Int, textBlock);
+                amountInput.MinValueInt = 0;
+                amountInput.MaxValueInt = 100;
+                amountInput.IntValue = cargoVal;
 
-                amountInput.OnValueChanged += (numberInput, value) =>
+                amountInput.OnValueChanged += (numberInput) =>
                 {
                     if (extraCargo.ContainsKey(pf.Name))
                     {
-                        extraCargo[pf.Name] = value;
+                        extraCargo[pf.Name] = numberInput.IntValue;
                     }
                     else
                     {
-                        extraCargo.Add(pf.Name, value);
+                        extraCargo.Add(pf.Name, numberInput.IntValue);
                     }
                 };                
             }

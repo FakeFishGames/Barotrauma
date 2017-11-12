@@ -40,25 +40,26 @@ namespace Barotrauma
         }
     }
 
-    partial class Structure : MapEntity, IDamageable, IServerSerializable
+    partial class Structure : MapEntity, IDamageable, IServerSerializable, ISerializableEntity
     {
         public static int wallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
 
-        StructurePrefab prefab;
+        private StructurePrefab prefab;
 
         //farseer physics bodies, separated by gaps
-        List<Body> bodies;
+        private List<Body> bodies;
+
+        private bool isHorizontal;
+
+        private SpriteEffects SpriteEffects = SpriteEffects.None;
 
         //sections of the wall that are supposed to be rendered
-        public WallSection[] sections {
+        public WallSection[] sections
+        {
             get;
             private set;
         }
-
-        bool isHorizontal;
-
-        public SpriteEffects SpriteEffects = SpriteEffects.None;
 
         public bool resizeHorizontal
         {
@@ -147,6 +148,14 @@ namespace Barotrauma
             get { return prefab.tags; }
         }
 
+        protected Color spriteColor;
+        [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
+        public Color SpriteColor
+        {
+            get { return spriteColor; }
+            set { spriteColor = value; }
+        }
+
         public override Rectangle Rect
         {
             get
@@ -175,7 +184,13 @@ namespace Barotrauma
                 
             }
         }
-                
+
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        }
+
         public override void Move(Vector2 amount)
         {
             base.Move(amount);
@@ -213,11 +228,15 @@ namespace Barotrauma
 
             rect = rectangle;
             prefab = sp;
-            
-            isHorizontal = (rect.Width>rect.Height);
+
+            spriteColor = prefab.SpriteColor;
+
+            isHorizontal = (rect.Width > rect.Height);
 
             StairDirection = prefab.StairDirection;
-            
+
+            SerializableProperties = SerializableProperty.GetProperties(this);
+
             if (prefab.HasBody)
             {
                 bodies = new List<Body>();
@@ -230,11 +249,8 @@ namespace Barotrauma
                 newBody.BodyType = BodyType.Static;
                 newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
                 newBody.Friction = 0.5f;
-
                 newBody.OnCollision += OnWallCollision;
-
                 newBody.UserData = this;
-
                 newBody.CollisionCategories = (prefab.IsPlatform) ? Physics.CollisionPlatform : Physics.CollisionWall;
 
                 bodies.Add(newBody);
@@ -854,6 +870,8 @@ namespace Barotrauma
                         break;
                 }
             }
+
+            SerializableProperty.DeserializeProperties(s, element);
         }
 
         public override XElement Save(XElement parentElement)
@@ -883,6 +901,8 @@ namespace Barotrauma
 
                 element.Add(sectionElement);
             }
+
+            SerializableProperty.SerializeProperties(this, element);
 
             parentElement.Add(element);
 

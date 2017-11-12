@@ -271,4 +271,15 @@
     <Sprite texture="Content/UI/UI_Atlas.png" size="0.0, 0.0" sourcerect ="32, 541, 420, 220" slice="87,576,430,687"/>
   </ItemUI>
 
+  <SerializableEntityEditor
+    padding="10.0, 0.0, 0.0, 10.0"
+    color="1.0,1.0,1.0,1.0"
+    hovercolor="1.0,1.0,1.0,1.0"
+    selectedcolor="1.0,1.0,1.0,1.0"  
+    textcolor="0.0, 0.0, 0.0, 1.0">
+
+    <Sprite texture="Content/UI/UI_Atlas.png" state="None" size="0.0, 0.0" sourcerect ="471, 665, 265, 156"/>
+    <Sprite texture="Content/UI/UI_Atlas.png" state="Hover" size="0.0, 0.0" sourcerect ="471, 665, 265, 156"/>
+  </SerializableEntityEditor>
+
 </style>

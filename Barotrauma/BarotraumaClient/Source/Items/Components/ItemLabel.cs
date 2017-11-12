@@ -34,6 +34,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (textBlock != null) textBlock.TextColor = value;
+                textColor = value;
             }
         }
 
