@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 
 namespace Barotrauma
@@ -150,138 +149,54 @@ namespace Barotrauma
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            /*List<SerializableProperty> editableProperties = inGame ? GetProperties<InGameEditable>() : GetProperties<Editable>();
-
-            int requiredItemCount = 0;
-            if (!inGame)
-            {
-                foreach (ItemComponent ic in components)
-                {
-                    requiredItemCount += ic.requiredItems.Count;
-                }
-            }*/
-
             int width = 450;
             int height = 150;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
-            /*foreach (var objectProperty in editableProperties)
-            {
-                var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault();
-                if (editable != null) height += (int)(Math.Ceiling(editable.MaxLength / 40.0f) * 18.0f) + 5;
-            }*/
 
             editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
+            ((GUIListBox)editingHUD).Spacing = 5;
             editingHUD.UserData = this;
-
-            /*new GUITextBlock(new Rectangle(0, 0, 0, 20), prefab.Name, "",
-                Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);*/
-
-            new SerializableEntityEditor(this, inGame, editingHUD, true);
-
-            //y += 25;
-
-            /*if (!inGame)
+            
+            var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
+            
+            if (!inGame && prefab.IsLinkable)
             {
-                if (prefab.IsLinkable)
-                {
-                    new GUITextBlock(new Rectangle(0, 5, 0, 20), "Hold space to link to another item",
-                        "", Alignment.TopRight, Alignment.TopRight, editingHUD).Font = GUI.SmallFont;
-                }
-                foreach (ItemComponent ic in components)
-                {
-                    foreach (RelatedItem relatedItem in ic.requiredItems)
-                    {
-                        new GUITextBlock(new Rectangle(0, y, 100, 15), ic.Name + ": " + relatedItem.Type.ToString() + " required", "", Alignment.TopLeft, Alignment.CenterLeft, editingHUD, false, GUI.SmallFont);
-                        GUITextBox namesBox = new GUITextBox(new Rectangle(-10, y, 160, 15), Alignment.Right, "", editingHUD);
-                        namesBox.Font = GUI.SmallFont;
-
-                        PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(relatedItem);
-                        PropertyDescriptor property = properties.Find("JoinedNames", false);
-
-                        namesBox.Text = relatedItem.JoinedNames;
-                        namesBox.UserData = new SerializableProperty(property, relatedItem);
-                        namesBox.OnEnterPressed = EnterProperty;
-                        namesBox.OnTextChanged = PropertyChanged;
-
-                        y += 20;
-                    }
-                }
-                if (requiredItemCount > 0) y += 10;
-            }*/
+                itemEditor.AddCustomContent(new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", "", null, GUI.SmallFont), 1);
+            }            
 
             foreach (ItemComponent ic in components)
             {
-                if (SerializableProperty.GetProperties<Editable>(ic).Count == 0) continue;
-                new SerializableEntityEditor(ic, inGame, editingHUD, false);
-            }
-            
-            /*foreach (var objectProperty in editableProperties)
-            {
-                int boxHeight = 18;
-                var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault();
-                if (editable != null) boxHeight = (int)(Math.Ceiling(editable.MaxLength / 40.0f) * 18.0f);
+                var componentEditor = new SerializableEntityEditor(ic, inGame, editingHUD, !inGame);
 
-                object value = objectProperty.GetValue();
+                if (inGame) continue;
 
-                if (value is bool)
+                foreach (RelatedItem relatedItem in ic.requiredItems)
                 {
-                    GUITickBox propertyTickBox = new GUITickBox(new Rectangle(10, y, 18, boxHeight), objectProperty.Name,
-                        Alignment.Left, editingHUD);
-                    propertyTickBox.Font = GUI.SmallFont;
+                    var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), relatedItem.Type.ToString() + " required", "", Alignment.TopLeft, Alignment.CenterLeft, null, false, GUI.SmallFont);
+                    textBlock.Padding = Vector4.Zero;
+                    componentEditor.AddCustomContent(textBlock, 1);
 
-                    propertyTickBox.Selected = (bool)value;
+                    GUITextBox namesBox = new GUITextBox(new Rectangle(0, 0, 180, 20), Alignment.Right, "", textBlock);
+                    namesBox.Font = GUI.SmallFont;
+                    namesBox.Text = relatedItem.JoinedNames;
 
-                    propertyTickBox.UserData = objectProperty;
-                    propertyTickBox.OnSelected = EnterProperty;
-                }
-                else if (value.GetType().IsEnum)
-                {
-                    new GUITextBlock(new Rectangle(0, y, 100, 18), objectProperty.Name, "", Alignment.TopLeft, Alignment.Left, editingHUD, false, GUI.SmallFont);
-                    GUIDropDown enumDropDown = new GUIDropDown(new Rectangle(180, y, 250, boxHeight), "", "", editingHUD);
-                    foreach (object enumValue in Enum.GetValues(value.GetType()))
+                    namesBox.OnDeselected += (textBox, key) =>
                     {
-                        var enumTextBlock = new GUITextBlock(new Rectangle(0, 0, 200, 25), enumValue.ToString(), "", enumDropDown);
-                        enumTextBlock.UserData = enumValue;
-                    }
+                        relatedItem.JoinedNames = textBox.Text;
+                        textBox.Text = relatedItem.JoinedNames;
+                    };
 
-                    enumDropDown.OnSelected += (selected, val) =>
+                    namesBox.OnEnterPressed += (textBox, text) =>
                     {
-                        objectProperty.TrySetValue(val);
+                        relatedItem.JoinedNames = text;
+                        textBox.Text = relatedItem.JoinedNames;
                         return true;
                     };
 
-                    enumDropDown.SelectItem(value);
+                    y += 20;
                 }
-                else
-                {
-                    new GUITextBlock(new Rectangle(0, y, 100, 18), objectProperty.Name, "", Alignment.TopLeft, Alignment.Left, editingHUD, false, GUI.SmallFont);
-
-                    GUITextBox propertyBox = new GUITextBox(new Rectangle(180, y, 250, boxHeight), "", editingHUD);
-                    propertyBox.Font = GUI.SmallFont;
-                    if (boxHeight > 18) propertyBox.Wrap = true;
-
-                    if (value != null)
-                    {
-                        if (value is float)
-                        {
-                            propertyBox.Text = ((float)value).ToString("G", System.Globalization.CultureInfo.InvariantCulture);
-                        }
-                        else
-                        {
-
-                            propertyBox.Text = value.ToString();
-                        }
-                    }
-
-                    propertyBox.UserData = objectProperty;
-                    propertyBox.OnEnterPressed = EnterProperty;
-                    propertyBox.OnTextChanged = PropertyChanged;
-
-                }
-                y = y + boxHeight + 5;
-            }*/
-
-
+            }
+            
             editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
 
             return editingHUD;

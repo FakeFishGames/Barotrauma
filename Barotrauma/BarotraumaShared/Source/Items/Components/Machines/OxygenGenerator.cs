@@ -8,28 +8,23 @@ namespace Barotrauma.Items.Components
 {
     class OxygenGenerator : Powered
     {
-        float powerDownTimer;
+        private float powerDownTimer;
 
-        bool running;
+        private bool running;
 
         private float generatedAmount;
 
-        List<Vent> ventList;
+        private List<Vent> ventList;
 
         private float totalHullVolume;
-
-        public bool IsRunning()
-        {
-            return (running && item.Condition>0.0f);
-        }
-
+        
         public float CurrFlow
         {
             get;
             private set;
         }
 
-        [Editable, Serialize(100.0f, true)]
+        [Editable(ToolTip = "How much oxygen the machine generates when operating at full power."), Serialize(100.0f, true)]
         public float GeneratedAmount
         {
             get { return generatedAmount; }
@@ -40,8 +35,6 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-
-            //item.linkedTo.CollectionChanged += delegate { GetVents(); };
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -66,7 +59,7 @@ namespace Barotrauma.Items.Components
 
             running = true;
 
-            CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount*100.0f;
+            CurrFlow = Math.Min(voltage, 1.0f) * generatedAmount * 100.0f;
             //item.CurrentHull.Oxygen += CurrFlow * deltaTime;
 
             UpdateVents(CurrFlow);

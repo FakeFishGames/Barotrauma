@@ -15,8 +15,8 @@ namespace Barotrauma
     {
         public int MaxLength;
 
-        public int? MinValueInt, MaxValueInt;
-        public float? MinValueFloat, MaxValueFloat;
+        public int MinValueInt = int.MinValue, MaxValueInt = int.MaxValue;
+        public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
 
         public string ToolTip;
 
@@ -25,13 +25,13 @@ namespace Barotrauma
             MaxLength = maxLength;
         }
 
-        public Editable(int? minValue, int? maxValue)
+        public Editable(int minValue, int maxValue)
         {
             MinValueInt = minValue;
             MaxValueInt = maxValue;
         }
 
-        public Editable(float? minValue, float? maxValue)
+        public Editable(float minValue, float maxValue)
         {
             MinValueFloat = minValue;
             MaxValueFloat = maxValue;

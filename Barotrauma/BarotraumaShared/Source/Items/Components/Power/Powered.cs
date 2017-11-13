@@ -18,14 +18,16 @@ namespace Barotrauma.Items.Components
         //the maximum amount of power the item can draw from connected items
         protected float powerConsumption;
 
-        [Editable, Serialize(0.5f, true)]
+        [Serialize(0.5f, true), Editable(ToolTip = "The minimum voltage required for the device to function. "+
+            "The voltage is calculated as power / powerconsumption, meaning that a device "+
+            "with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.")]
         public float MinVoltage
         {
             get { return minVoltage; }
             set { minVoltage = value; }
         }
 
-        [Editable, Serialize(0.0f, true)]
+        [Editable(ToolTip = "How much power the device draws (or attempts to draw) from the electrical grid."), Serialize(0.0f, true)]
         public float PowerConsumption
         {
             get { return powerConsumption; }
@@ -33,12 +35,12 @@ namespace Barotrauma.Items.Components
         }
 
 
-        [Serialize(false,true)]
+        [Serialize(false, true)]
         public override bool IsActive
         {
             get { return base.IsActive; }
-            set 
-            { 
+            set
+            {
                 base.IsActive = value;
                 if (!value) currPowerConsumption = 0.0f;
             }

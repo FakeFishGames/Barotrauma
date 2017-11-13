@@ -112,24 +112,12 @@ namespace Barotrauma.Items.Components
         }
         
         [Serialize("0.0,0.0,0.0,0.0", false)]
-        public string Window
-        {
-            get { return XMLExtensions.Vector4ToString(new Vector4(window.X, window.Y, window.Width, window.Height)); }
-            set
-            {
-                Vector4 vector = XMLExtensions.ParseVector4(value);
-                if (vector.Z != 0.0f || vector.W != 0.0f)
-                {
-                    window = new Rectangle((int)vector.X, (int)vector.Y, (int)vector.Z, (int)vector.W);
-                }
-            }
-        }
-
-        public Rectangle WindowRect
+        public Rectangle Window
         {
             get { return window; }
+            set { window = value; }
         }
-
+        
         [Editable, Serialize(false, true)]
         public bool IsOpen
         {

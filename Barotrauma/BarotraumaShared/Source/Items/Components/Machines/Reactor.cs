@@ -54,7 +54,7 @@ namespace Barotrauma.Items.Components
         private float? nextServerLogWriteTime;
         private float lastServerLogWriteTime;
 
-        [Editable, Serialize(9500.0f, true)]
+        [Editable(ToolTip = "The temperature at which the reactor melts down."), Serialize(9500.0f, true)]
         public float MeltDownTemp
         {
             get { return meltDownTemp; }
@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(9000.0f, true)]
+        [Editable(ToolTip = "The temperature at which the reactor catches fire."), Serialize(9000.0f, true)]
         public float FireTemp
         {
             get { return fireTemp; }
@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(1.0f, true)]
+        [Editable(0.0f, float.MaxValue, ToolTip = "How much power (kW) the reactor generates relative to it's operating temperature (kW per one degree Celsius)."), Serialize(1.0f, true)]
         public float PowerPerTemp
         {
             get { return powerPerTemp; }
