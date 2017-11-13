@@ -67,7 +67,8 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable, Serialize(0.5f, true)]
+        [Editable(0.0f, 1.0f, ToolTip = "How full the ballast tanks should be when the submarine is not being steered upwards/downwards."
+            +" Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine."), Serialize(0.5f, true)]
         public float NeutralBallastLevel
         {
             get { return neutralBallastLevel; }

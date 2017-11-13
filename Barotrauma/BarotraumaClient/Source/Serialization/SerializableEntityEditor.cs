@@ -11,7 +11,7 @@ namespace Barotrauma
     {
 
         private static readonly string[] vectorComponentLabels = { "X", "Y", "Z", "W" };
-        private static readonly string[] rectComponentLabels = { "X", "Y", "Width", "Height" };
+        private static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
         private static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
 
         //private GUIComponent editingHUD;
@@ -22,35 +22,15 @@ namespace Barotrauma
                 SerializableProperty.GetProperties<InGameEditable>(entity) : 
                 SerializableProperty.GetProperties<Editable>(entity);
             
-            if (parent != null)
-                parent.AddChild(this);
-
-            /*int requiredItemCount = 0;
-            if (!inGame)
-            {
-                foreach (ItemComponent ic in components)
-                {
-                    requiredItemCount += ic.requiredItems.Count;
-                }
-            }
+            if (parent != null) parent.AddChild(this);
             
-            foreach (var objectProperty in editableProperties)
-            {
-                var editable = objectProperty.Attributes.OfType<Editable>().FirstOrDefault();
-                if (editable != null) height += (int)(Math.Ceiling(editable.MaxLength / 40.0f) * 18.0f) + 5;
-            }
-
-            editingHUD = new GUIFrame(new Rectangle(0, 0, 0, 0), null, parent);
-            editingHUD.Padding = new Vector4(10, 0, 0, 10);
-            editingHUD.UserData = this;*/
-
             if (showName)
             {
                 new GUITextBlock(new Rectangle(0, 0, 100, 20), entity.Name, "",
                     Alignment.TopLeft, Alignment.TopLeft, this, false, GUI.Font);
             }
 
-            int y = 30, padding = 10;
+            int y = showName ? 30 : 10, padding = 10;
             foreach (var property in editableProperties)
             {
                 //int boxHeight = 18;
@@ -96,6 +76,10 @@ namespace Barotrauma
                 {
                     propertyField = CreateColorField(entity, property, (Color)value, y, this);
                 }
+                else if (value is Rectangle)
+                {
+                    propertyField = CreateRectangleField(entity, property, (Rectangle)value, y, this);
+                }
 
                 if (propertyField != null)
                 {
@@ -103,6 +87,26 @@ namespace Barotrauma
                 }
             }
 
+            SetDimensions(new Point(Rect.Width, children.Last().Rect.Bottom - Rect.Y + 10), false);
+        }
+
+        public void AddCustomContent(GUIComponent component, int childIndex)
+        {
+            childIndex = MathHelper.Clamp(childIndex, 0, children.Count);
+
+            AddChild(component);
+            children.Remove(component);
+            children.Insert(childIndex, component);
+
+            if (childIndex > 0 )
+            {
+                component.Rect = new Rectangle(component.Rect.X, children[childIndex - 1].Rect.Bottom, component.Rect.Width, component.Rect.Height);
+            }
+
+            for (int i = childIndex + 1; i < children.Count; i++)
+            {
+                children[i].Rect = new Rectangle(children[i].Rect.X, children[i].Rect.Y + component.Rect.Height, children[i].Rect.Width, children[i].Rect.Height);
+            }
             SetDimensions(new Point(Rect.Width, children.Last().Rect.Bottom - Rect.Y + 10), false);
         }
 
@@ -134,7 +138,7 @@ namespace Barotrauma
 
         private GUIComponent CreateIntField(ISerializableEntity entity, SerializableProperty property, int value, int yPos, GUIComponent parent)
         {
-            var label = new GUITextBlock(new Rectangle(0, yPos, 100, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
+            var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
             label.ToolTip = property.GetAttribute<Editable>().ToolTip;
             GUINumberInput numberInput = new GUINumberInput(new Rectangle(180, yPos, 0, 18), "", GUINumberInput.NumberType.Int, Alignment.Left, parent);
             numberInput.ToolTip = property.GetAttribute<Editable>().ToolTip;
@@ -159,7 +163,7 @@ namespace Barotrauma
 
         private GUIComponent CreateFloatField(ISerializableEntity entity, SerializableProperty property, float value, int yPos, GUIComponent parent)
         {
-            var label = new GUITextBlock(new Rectangle(0, yPos, 100, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
+            var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
             label.ToolTip = property.GetAttribute<Editable>().ToolTip;
             GUINumberInput numberInput = new GUINumberInput(new Rectangle(180, yPos, 0, 18), "", GUINumberInput.NumberType.Float, Alignment.Left, parent);
             numberInput.ToolTip = property.GetAttribute<Editable>().ToolTip;
@@ -184,7 +188,7 @@ namespace Barotrauma
 
         private GUIComponent CreateEnumField(ISerializableEntity entity, SerializableProperty property, object value, int yPos, GUIComponent parent)
         {
-            var label = new GUITextBlock(new Rectangle(0, yPos, 100, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
+            var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
             label.ToolTip = property.GetAttribute<Editable>().ToolTip;
             GUIDropDown enumDropDown = new GUIDropDown(new Rectangle(180, yPos, 0, 18), "", "", Alignment.TopLeft, parent);
             enumDropDown.ToolTip = property.GetAttribute<Editable>().ToolTip;
@@ -215,7 +219,7 @@ namespace Barotrauma
             var editable = property.GetAttribute<Editable>();
             boxHeight = (int)(Math.Ceiling(editable.MaxLength / 40.0f) * boxHeight);
 
-            var label = new GUITextBlock(new Rectangle(0, yPos, 100, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
+            var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
             label.ToolTip = property.GetAttribute<Editable>().ToolTip;
             GUITextBox propertyBox = new GUITextBox(new Rectangle(0, yPos, 250, boxHeight), Alignment.Right, "", parent);
             propertyBox.ToolTip = editable.ToolTip;
@@ -236,7 +240,7 @@ namespace Barotrauma
         
         private GUIComponent CreateVector2Field(ISerializableEntity entity, SerializableProperty property, Vector2 value, int yPos, GUIComponent parent)
         {
-            var label = new GUITextBlock(new Rectangle(0, yPos, 100, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
+            var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
             label.ToolTip = property.GetAttribute<Editable>().ToolTip;
 
             for (int i = 0; i < 2; i++)
@@ -244,6 +248,11 @@ namespace Barotrauma
                 new GUITextBlock(new Rectangle(140 + i * 70, yPos, 100, 18), vectorComponentLabels[i], "", Alignment.TopLeft, Alignment.CenterLeft, parent, false, GUI.SmallFont);
                 GUINumberInput numberInput = new GUINumberInput(new Rectangle(160 + i * 70, yPos, 45, 18), "", GUINumberInput.NumberType.Float, Alignment.Left, parent);
                 numberInput.Font = GUI.SmallFont;
+
+                if (i == 0)
+                    numberInput.FloatValue = value.X;
+                else
+                    numberInput.FloatValue = value.Y;
 
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
@@ -266,13 +275,20 @@ namespace Barotrauma
 
         private GUIComponent CreateVector3Field(ISerializableEntity entity, SerializableProperty property, Vector3 value, int yPos, GUIComponent parent)
         {
-            var label = new GUITextBlock(new Rectangle(0, yPos, 100, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
+            var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
             label.ToolTip = property.GetAttribute<Editable>().ToolTip;
             for (int i = 0; i < 3; i++)
             {
                 new GUITextBlock(new Rectangle(140 + i * 70, yPos, 100, 18), vectorComponentLabels[i], "", Alignment.TopLeft, Alignment.CenterLeft, parent, false, GUI.SmallFont);
                 GUINumberInput numberInput = new GUINumberInput(new Rectangle(160 + i * 70, yPos, 45, 18), "", GUINumberInput.NumberType.Float, Alignment.Left, parent);
                 numberInput.Font = GUI.SmallFont;
+
+                if (i == 0)
+                    numberInput.FloatValue = value.X;
+                else if (i == 1)
+                    numberInput.FloatValue = value.Y;
+                else if (i == 2)
+                    numberInput.FloatValue = value.Z;
 
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
@@ -297,13 +313,22 @@ namespace Barotrauma
 
         private GUIComponent CreateVector4Field(ISerializableEntity entity, SerializableProperty property, Vector4 value, int yPos, GUIComponent parent)
         {
-            var label = new GUITextBlock(new Rectangle(0, yPos, 100, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
+            var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
             label.ToolTip = property.GetAttribute<Editable>().ToolTip;
             for (int i = 0; i < 4; i++)
             {
                 new GUITextBlock(new Rectangle(140 + i * 70, yPos, 100, 18), vectorComponentLabels[i], "", Alignment.TopLeft, Alignment.CenterLeft, parent, false, GUI.SmallFont);
                 GUINumberInput numberInput = new GUINumberInput(new Rectangle(160 + i * 70, yPos, 45, 18), "", GUINumberInput.NumberType.Float, Alignment.Left, parent);
                 numberInput.Font = GUI.SmallFont;
+
+                if (i == 0)
+                    numberInput.FloatValue = value.X;
+                else if (i == 1)
+                    numberInput.FloatValue = value.Y;
+                else if (i == 2)
+                    numberInput.FloatValue = value.Z;
+                else
+                    numberInput.FloatValue = value.W;
 
                 int comp = i;
                 numberInput.OnValueChanged += (numInput) =>
@@ -330,7 +355,7 @@ namespace Barotrauma
 
         private GUIComponent CreateColorField(ISerializableEntity entity, SerializableProperty property, Color value, int yPos, GUIComponent parent)
         {
-            var label = new GUITextBlock(new Rectangle(0, yPos, 100, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
+            var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
             label.ToolTip = property.GetAttribute<Editable>().ToolTip;
 
             var colorBoxBack = new GUIFrame(new Rectangle(110 - 1, yPos - 1, 25 + 2, 18 + 2), Color.Black, Alignment.TopLeft, null, parent);
@@ -371,6 +396,48 @@ namespace Barotrauma
                     {
                         TrySendNetworkUpdate(entity, property);
                         colorBox.Color = newVal;
+                    }
+                };
+            }
+
+            return label;
+        }
+
+        private GUIComponent CreateRectangleField(ISerializableEntity entity, SerializableProperty property, Rectangle value, int yPos, GUIComponent parent)
+        {
+            var label = new GUITextBlock(new Rectangle(0, yPos, 0, 18), property.Name, "", Alignment.TopLeft, Alignment.Left, parent, false, GUI.SmallFont);
+            label.ToolTip = property.GetAttribute<Editable>().ToolTip;
+            for (int i = 0; i < 4; i++)
+            {
+                new GUITextBlock(new Rectangle(140 + i * 70, yPos, 100, 18), rectComponentLabels[i], "", Alignment.TopLeft, Alignment.CenterLeft, parent, false, GUI.SmallFont);
+                GUINumberInput numberInput = new GUINumberInput(new Rectangle(160 + i * 70, yPos, 45, 18), "", GUINumberInput.NumberType.Int, Alignment.Left, parent);
+                numberInput.Font = GUI.SmallFont;
+
+                if (i == 0)
+                    numberInput.IntValue = value.X;
+                else if (i == 1)
+                    numberInput.IntValue = value.Y;
+                else if (i == 2)
+                    numberInput.IntValue = value.Width;
+                else
+                    numberInput.IntValue = value.Height;
+
+                int comp = i;
+                numberInput.OnValueChanged += (numInput) =>
+                {
+                    Rectangle newVal = (Rectangle)property.GetValue();
+                    if (comp == 0)
+                        newVal.X = numInput.IntValue;
+                    else if (comp == 1)
+                        newVal.Y = numInput.IntValue;
+                    else if (comp == 2)
+                        newVal.Width = numInput.IntValue;
+                    else
+                        newVal.Height = numInput.IntValue;
+
+                    if (property.TrySetValue(newVal))
+                    {
+                        TrySendNetworkUpdate(entity, property);
                     }
                 };
             }

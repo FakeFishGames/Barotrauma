@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         private bool castShadows;
 
-        [Editable, Serialize(100.0f, true)]
+        [Editable(0.0f, 2048.0f), Serialize(100.0f, true)]
         public float Range
         {
             get { return range; }
@@ -31,7 +31,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(true, true)]
+        [Editable(ToolTip = "Should structures cast shadows when light from this light source hits them. "+
+            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range."), Serialize(true, true)]
         public bool CastShadows
         {
             get { return castShadows; }

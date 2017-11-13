@@ -338,26 +338,22 @@ namespace Barotrauma
             return new Color(components[0], components[1], components[2], components[3]);
         }
 
-        public static Color ParseRect(string stringColor, bool errorMessages = true)
+        public static Rectangle ParseRect(string stringColor, bool errorMessages = true)
         {
             string[] strComponents = stringColor.Split(',');
-
-            Color color = Color.White;
-
             if (strComponents.Length < 3)
             {
                 if (errorMessages) DebugConsole.ThrowError("Failed to parse the string \"" + stringColor + "\" to Color");
-                return Color.White;
+                return new Rectangle(0, 0, 0, 0);
             }
 
-            float[] components = new float[4] { 1.0f, 1.0f, 1.0f, 1.0f };
-
+            int[] components = new int[4] { 0, 0, 0, 0 };
             for (int i = 0; i < 4 && i < strComponents.Length; i++)
             {
-                float.TryParse(strComponents[i], NumberStyles.Float, CultureInfo.InvariantCulture, out components[i]);
+                int.TryParse(strComponents[i], out components[i]);
             }
 
-            return new Color(components[0], components[1], components[2], components[3]);
+            return new Rectangle(components[0], components[1], components[2], components[3]);
         }
 
         public static float[] ParseFloatArray(string[] stringArray)

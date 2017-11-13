@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(1.0f, true)]
+        [Editable(0.0f, 10.0f), Serialize(1.0f, true)]
         public float TextScale
         {
             get { return textBlock == null ? 1.0f : textBlock.TextScale; }

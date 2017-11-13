@@ -12,18 +12,9 @@ namespace Barotrauma.Items.Components
         private float targetForce;
 
         private float maxForce;
-
-        //[Editable, HasDefaultValue(1.0f, true)]
-        //public float PowerPerForce
-        //{
-        //    get { return powerPerForce; }
-        //    set
-        //    {
-        //        powerPerForce = Math.Max(0.0f, value);
-        //    }
-        //}
-
-        [Editable, Serialize(2000.0f, true)]
+        
+        [Editable(0.0f, 10000000.0f, ToolTip = "The amount of force exerted on the submarine when the engine is operating at full power."), 
+        Serialize(2000.0f, true)]
         public float MaxForce
         {
             get { return maxForce; }

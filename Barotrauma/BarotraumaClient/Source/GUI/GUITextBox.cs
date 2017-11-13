@@ -120,7 +120,10 @@ namespace Barotrauma
             {
                 base.Rect = value;
 
-                textBlock.Rect = value;
+                if (textBlock != null)
+                {
+                    textBlock.Rect = value;
+                }
             }
         }
         

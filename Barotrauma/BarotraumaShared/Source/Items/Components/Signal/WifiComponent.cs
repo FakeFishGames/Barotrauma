@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, false)]
+        [Editable(ToolTip = "If enabled, any signals received by the item are displayed as chat messages in the chatbox of the player holding the item."), Serialize(false, false)]
         public bool LinkToChat
         {
             get;
@@ -49,20 +49,7 @@ namespace Barotrauma.Items.Components
         {
             return HasRequiredContainedItems(true);
         }
-
-        /*public void Transmit(string signal)
-        {
-            if (!CanTransmit()) return;
-
-            var receivers = GetReceiversInRange();
-            foreach (WifiComponent w in receivers)
-            {
-                var connections = w.item.Connections;
-
-                w.ReceiveSignal(1, signal, connections == null ? null : connections.Find(c => c.Name == "signal_in"), item, null);
-            }
-        }*/
-
+        
         private List<WifiComponent> GetReceiversInRange()
         {
             return list.FindAll(w => w != this && w.CanReceive(this));

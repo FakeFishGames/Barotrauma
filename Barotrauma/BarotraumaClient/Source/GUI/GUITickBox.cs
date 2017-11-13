@@ -51,7 +51,7 @@ namespace Barotrauma
                 base.Rect = value;
 
                 box.Rect = new Rectangle(value.X,value.Y,box.Rect.Width,box.Rect.Height);
-                text.Rect = new Rectangle(box.Rect.Right + 10, box.Rect.Y + 2, 20, box.Rect.Height);
+                text.Rect = new Rectangle(box.Rect.Right, box.Rect.Y + 2, 20, box.Rect.Height);
             }
         }
 
