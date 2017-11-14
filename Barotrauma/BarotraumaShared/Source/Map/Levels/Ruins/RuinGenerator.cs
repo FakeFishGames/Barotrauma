@@ -389,12 +389,11 @@ namespace Barotrauma.RuinGeneration
                         prop.Prefab as StructurePrefab, null).MoveWithLevel = true;
                 }
             }
-
-
+            
             //generate doors & sensors that close them -------------------------------------------------------------
 
-            var sensorPrefab = ItemPrefab.list.Find(ip => ip.Name == "Alien Motion Sensor") as ItemPrefab;
-            var wirePrefab = ItemPrefab.list.Find(ip => ip.Name == "Wire") as ItemPrefab;           
+            var sensorPrefab = MapEntityPrefab.Find("Alien Motion Sensor") as ItemPrefab;
+            var wirePrefab = MapEntityPrefab.Find("Wire") as ItemPrefab;           
 
             foreach (Corridor corridor in corridors)
             {

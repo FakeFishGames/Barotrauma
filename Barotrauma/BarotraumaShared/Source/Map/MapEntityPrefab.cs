@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Barotrauma
@@ -188,6 +189,43 @@ namespace Barotrauma
             else
             {
                 return false;
+            }
+        }
+
+        public static MapEntityPrefab Find(string name, bool caseSensitive = false)
+        {
+            if (caseSensitive)
+            {
+                foreach (MapEntityPrefab prefab in list)
+                {
+                    if (prefab.name == name || (prefab.Aliases != null && prefab.Aliases.Contains(name))) return prefab;
+                }
+            }
+            else
+            {
+                name = name.ToLowerInvariant();
+                foreach (MapEntityPrefab prefab in list)
+                {
+                    if (prefab.name.ToLowerInvariant() == name || (prefab.Aliases != null && prefab.Aliases.Any(a => a.ToLowerInvariant() == name))) return prefab;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Check if the name or any of the aliases of this prefab match the given name.
+        /// </summary>
+        public bool NameMatches(string name, bool caseSensitive = false)
+        {
+            if (caseSensitive)
+            {
+                return this.name == name || (Aliases != null && Aliases.Any(a => a == name));
+            }
+            else
+            {
+                name = name.ToLowerInvariant();
+                return this.name.ToLowerInvariant() == name || (Aliases != null && Aliases.Any(a => a.ToLowerInvariant() == name));
             }
         }
 

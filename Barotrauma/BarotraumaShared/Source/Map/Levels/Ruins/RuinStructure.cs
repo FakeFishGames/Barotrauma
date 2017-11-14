@@ -27,26 +27,26 @@ namespace Barotrauma.RuinGeneration
 
         private RuinStructure(XElement element)
         {
-            string prefab = element.GetAttributeString("prefab", "").ToLowerInvariant();
-            Prefab = MapEntityPrefab.list.Find(s => s.Name.ToLowerInvariant() == prefab);
+            string name = element.GetAttributeString("prefab", "");
+            Prefab = MapEntityPrefab.Find(name);
 
             if (Prefab == null)
             {
-                DebugConsole.ThrowError("Loading ruin structure failed - structure prefab \""+prefab+" not found");
+                DebugConsole.ThrowError("Loading ruin structure failed - structure prefab \"" + name + " not found");
                 return;
             }
 
-            string alignmentStr = element.GetAttributeString("alignment","Bottom");
+            string alignmentStr = element.GetAttributeString("alignment", "Bottom");
             if (!Enum.TryParse<Alignment>(alignmentStr, true, out Alignment))
             {
-                DebugConsole.ThrowError("Error in ruin structure \""+prefab+"\" - "+alignmentStr+" is not a valid alignment");
+                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + alignmentStr + " is not a valid alignment");
             }
-            
 
-            string typeStr = element.GetAttributeString("type","");
-            if (!Enum.TryParse<RuinStructureType>(typeStr,true, out Type))
+
+            string typeStr = element.GetAttributeString("type", "");
+            if (!Enum.TryParse<RuinStructureType>(typeStr, true, out Type))
             {
-                DebugConsole.ThrowError("Error in ruin structure \"" + prefab + "\" - " + typeStr + " is not a valid type");
+                DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + typeStr + " is not a valid type");
                 return;
             }
 

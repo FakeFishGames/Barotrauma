@@ -98,7 +98,7 @@ namespace Barotrauma
         {
             string itemName = itemElement.GetAttributeString("name", "");
               
-            ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
+            ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
             if (itemPrefab == null)
             {
                 DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemName + "\". Matching item prefab not found.");
@@ -124,7 +124,7 @@ namespace Barotrauma
                 character.Inventory.TryPutItem(item, null, item.AllowedSlots);
             }
 
-            if (item.Prefab.Name == "ID Card" && spawnPoint != null)
+            if (item.Prefab.NameMatches("ID Card") && spawnPoint != null)
             {
                 foreach (string s in spawnPoint.IdCardTags)
                 {

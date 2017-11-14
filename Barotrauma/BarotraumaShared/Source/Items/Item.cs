@@ -1488,11 +1488,8 @@ namespace Barotrauma
             if (!spawn) return null;
 
             //----------------------------------------
-
-            var prefab = MapEntityPrefab.list.Find(me => me.Name == itemName);
-            if (prefab == null) return null;
-
-            var itemPrefab = prefab as ItemPrefab;
+            
+            var itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
             if (itemPrefab == null) return null;
 
             Inventory inventory = null;
@@ -1592,68 +1589,64 @@ namespace Barotrauma
 
         public static void Load(XElement element, Submarine submarine)
         {
-            Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
-
             string name = element.Attribute("name").Value;
 
-            foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+            ItemPrefab prefab = MapEntityPrefab.Find(name) as ItemPrefab;
+            if (prefab == null)
             {
-                ItemPrefab ip = ep as ItemPrefab;
-                if (ip == null) continue;
+                DebugConsole.ThrowError("Error loading item - item prefab \"" + name + "\" not found.");
+                return;
+            }
 
-                if (ip.Name != name && (ip.Aliases == null || !ip.Aliases.Contains(name))) continue;
+            Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
+            if (rect.Width == 0 && rect.Height == 0)
+            {
+                rect.Width = (int)prefab.Size.X;
+                rect.Height = (int)prefab.Size.Y;
+            }
 
-                if (rect.Width == 0 && rect.Height == 0)
+            Item item = new Item(rect, prefab, submarine);
+            item.Submarine = submarine;
+            item.ID = (ushort)int.Parse(element.Attribute("ID").Value);
+
+            item.linkedToID = new List<ushort>();
+
+            foreach (XAttribute attribute in element.Attributes())
+            {
+                SerializableProperty property = null;
+                if (!item.properties.TryGetValue(attribute.Name.ToString(), out property)) continue;
+
+                bool shouldBeLoaded = false;
+
+                foreach (var propertyAttribute in property.Attributes.OfType<Serialize>())
                 {
-                    rect.Width = (int)ip.Size.X;
-                    rect.Height = (int)ip.Size.Y;
-                }
-
-                Item item = new Item(rect, ip, submarine);
-                item.Submarine = submarine;
-                item.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-                                
-                item.linkedToID = new List<ushort>();
-
-                foreach (XAttribute attribute in element.Attributes())
-                {
-                    SerializableProperty property = null;
-                    if (!item.properties.TryGetValue(attribute.Name.ToString(), out property)) continue;
-
-                    bool shouldBeLoaded = false;
-
-                    foreach (var propertyAttribute in property.Attributes.OfType<Serialize>())
+                    if (propertyAttribute.isSaveable)
                     {
-                        if (propertyAttribute.isSaveable)
-                        {
-                            shouldBeLoaded = true;
-                            break;
-                        }
-                    }
-                    
-                    if (shouldBeLoaded) property.TrySetValue(attribute.Value);
-                }
-
-                string linkedToString = element.GetAttributeString("linked", "");
-                if (linkedToString!="")
-                {
-                    string[] linkedToIds = linkedToString.Split(',');
-                    for (int i = 0; i<linkedToIds.Length;i++)
-                    {
-                        item.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
+                        shouldBeLoaded = true;
+                        break;
                     }
                 }
 
-                foreach (XElement subElement in element.Elements())
+                if (shouldBeLoaded) property.TrySetValue(attribute.Value);
+            }
+
+            string linkedToString = element.GetAttributeString("linked", "");
+            if (linkedToString != "")
+            {
+                string[] linkedToIds = linkedToString.Split(',');
+                for (int i = 0; i < linkedToIds.Length; i++)
                 {
-                    ItemComponent component = item.components.Find(x => x.Name == subElement.Name.ToString());
-
-                    if (component == null) continue;
-
-                    component.Load(subElement);
+                    item.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
                 }
-                
-                break;
+            }
+
+            foreach (XElement subElement in element.Elements())
+            {
+                ItemComponent component = item.components.Find(x => x.Name == subElement.Name.ToString());
+
+                if (component == null) continue;
+
+                component.Load(subElement);
             }
         }
 
