@@ -87,6 +87,14 @@ namespace Barotrauma
             get { return price; }
         }
 
+        //If a matching prefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias.
+        //(allows changing names while keeping backwards compatibility with older sub files)
+        public string[] Aliases
+        {
+            get;
+            protected set;
+        }
+
         public static void Init()
         {
             MapEntityPrefab ep = new MapEntityPrefab();
@@ -114,12 +122,6 @@ namespace Barotrauma
             ep.name = "Spawnpoint";
             ep.constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) });
             list.Add(ep);
-            
-            //ep = new MapEntityPrefab();
-            //ep.name = "Linked Submarine";
-            //ep.Category = 0;
-            //list.Add(ep);
-
         }
 
         public MapEntityPrefab()

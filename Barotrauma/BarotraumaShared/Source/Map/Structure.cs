@@ -839,7 +839,7 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.list)
             {
-                if (ep.Name == name)
+                if (ep.Name == name || (ep.Aliases != null && ep.Aliases.Contains(name)))
                 {
                     s = new Structure(rect, (StructurePrefab)ep, submarine);
                     s.Submarine = submarine;

@@ -60,14 +60,6 @@ namespace Barotrauma
 
         private bool canSpriteFlipX;
 
-        //if a matching itemprefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias
-        //(allows changing item names while keeping backwards compatibility with older sub files)
-        public string[] Aliases
-        {
-            get;
-            private set;
-        }
-
         public List<DeconstructItem> DeconstructItems
         {
             get;
@@ -266,7 +258,6 @@ namespace Barotrauma
 
             CanUseOnSelf        = element.GetAttributeBool("canuseonself", false);
             
-
             Health              = element.GetAttributeFloat("health", 100.0f);
             Indestructible      = element.GetAttributeBool("indestructible", false);
             FireProof           = element.GetAttributeBool("fireproof", false);

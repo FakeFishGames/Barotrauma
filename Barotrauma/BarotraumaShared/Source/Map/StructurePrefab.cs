@@ -8,8 +8,6 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
-        //public static List<StructurePrefab> list = new List<StructurePrefab>();
-
         //does the structure have a physics body
         private bool hasBody;
 
@@ -126,6 +124,12 @@ namespace Barotrauma
             sp.Category = category;
 
             sp.Description = element.GetAttributeString("description", "");
+            
+            string aliases = element.GetAttributeString("aliases", "");
+            if (!string.IsNullOrWhiteSpace(aliases))
+            {
+                sp.Aliases = aliases.Split(',');
+            }
 
             sp.size = Vector2.Zero;
             sp.size.X = element.GetAttributeFloat("width", 0.0f);
