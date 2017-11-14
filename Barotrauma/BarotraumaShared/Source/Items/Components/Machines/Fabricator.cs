@@ -22,10 +22,10 @@ namespace Barotrauma.Items.Components
         {
             string name = element.GetAttributeString("name", "");
 
-            TargetItem = ItemPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == name.ToLowerInvariant()) as ItemPrefab;
+            TargetItem = MapEntityPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == name.ToLowerInvariant()) as ItemPrefab;
+            
             if (TargetItem == null)
             {
-                DebugConsole.ThrowError("Error in fabricable item "+name+"! Item \"" + element.Name + "\" not found.");
                 return;
             }
 
@@ -95,10 +95,17 @@ namespace Barotrauma.Items.Components
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString() != "fabricableitem") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "fabricableitem") continue;
 
                 FabricableItem fabricableItem = new FabricableItem(subElement);
-                if (fabricableItem.TargetItem != null) fabricableItems.Add(fabricableItem);                
+                if (fabricableItem.TargetItem == null)
+                {
+                    DebugConsole.ThrowError("Error in item " + item.Name + "! Fabricable item \"" + subElement.GetAttributeString("name", "") + "\" not found.");
+                }
+                else
+                {
+                    fabricableItems.Add(fabricableItem);
+                }             
             }
 
             InitProjSpecific();
