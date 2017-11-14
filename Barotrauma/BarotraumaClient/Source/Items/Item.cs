@@ -154,8 +154,9 @@ namespace Barotrauma
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
 
             editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
-            ((GUIListBox)editingHUD).Spacing = 5;
             editingHUD.UserData = this;
+            GUIListBox listBox = (GUIListBox)editingHUD;
+            listBox.Spacing = 5;
             
             var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
             
@@ -166,6 +167,18 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in components)
             {
+                if (ic.requiredItems.Count == 0)
+                {
+                    if (inGame)
+                    {
+                        if (SerializableProperty.GetProperties<InGameEditable>(ic).Count == 0) continue;
+                    }
+                    else
+                    {
+                        if (SerializableProperty.GetProperties<Editable>(ic).Count == 0) continue;
+                    }
+                }
+
                 var componentEditor = new SerializableEntityEditor(ic, inGame, editingHUD, !inGame);
 
                 if (inGame) continue;
@@ -173,7 +186,7 @@ namespace Barotrauma
                 foreach (RelatedItem relatedItem in ic.requiredItems)
                 {
                     var textBlock = new GUITextBlock(new Rectangle(0, 0, 0, 20), relatedItem.Type.ToString() + " required", "", Alignment.TopLeft, Alignment.CenterLeft, null, false, GUI.SmallFont);
-                    textBlock.Padding = Vector4.Zero;
+                    textBlock.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
                     componentEditor.AddCustomContent(textBlock, 1);
 
                     GUITextBox namesBox = new GUITextBox(new Rectangle(0, 0, 180, 20), Alignment.Right, "", textBlock);
@@ -196,8 +209,10 @@ namespace Barotrauma
                     y += 20;
                 }
             }
-            
-            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
+
+            int contentHeight = (int)(editingHUD.children.Sum(c => c.Rect.Height) + (listBox.children.Count - 1) * listBox.Spacing + listBox.Padding.Y + listBox.Padding.W);
+
+            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(contentHeight, 50, editingHUD.Rect.Height)));
 
             return editingHUD;
         }

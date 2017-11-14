@@ -87,7 +87,14 @@ namespace Barotrauma
                 }
             }
 
-            SetDimensions(new Point(Rect.Width, children.Last().Rect.Bottom - Rect.Y + 10), false);
+            if (children.Count > 0)
+            {
+                SetDimensions(new Point(Rect.Width, children.Last().Rect.Bottom - Rect.Y + 10), false);
+            }
+            else
+            {
+                SetDimensions(new Point(Rect.Width, 0), false);
+            }
         }
 
         public void AddCustomContent(GUIComponent component, int childIndex)
@@ -228,7 +235,7 @@ namespace Barotrauma
             propertyBox.Text = value;
             propertyBox.OnEnterPressed = (textBox, text) =>
             {
-                if (property.TrySetValue(value))
+                if (property.TrySetValue(text))
                 {
                     TrySendNetworkUpdate(entity, property);
                 }

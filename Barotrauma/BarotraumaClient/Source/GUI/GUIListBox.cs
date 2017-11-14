@@ -184,6 +184,17 @@ namespace Barotrauma
         {
             base.SetDimensions(size, expandChildren);
             frame.SetDimensions(size, expandChildren);
+
+            if (scrollBar.IsHorizontal)
+            {
+                scrollBar.Rect = new Rectangle(this.rect.X, this.rect.Bottom - 20, this.rect.Width, 20);
+            }
+            else
+            {
+                scrollBar.Rect = new Rectangle(this.rect.Right - 20, this.rect.Y, 20, this.rect.Height);
+            }
+
+            UpdateScrollBarSize();
         }
 
         private void UpdateChildrenRect(float deltaTime)
@@ -340,8 +351,9 @@ namespace Barotrauma
             {
                 if (child == frame) continue;
                 totalSize += (scrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
-                totalSize += spacing;
             }
+
+            totalSize += (children.Count - 1) * spacing;
 
             scrollBar.BarSize = scrollBar.IsHorizontal ?
                 Math.Max(Math.Min((float)rect.Width / (float)totalSize, 1.0f), 5.0f / rect.Width) :
