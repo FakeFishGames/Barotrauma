@@ -824,14 +824,7 @@ namespace Barotrauma
         
         public static void Load(XElement element, Submarine submarine)
         {
-            string rectString = element.GetAttributeString("rect", "0,0,0,0");
-            string[] rectValues = rectString.Split(',');
-
-            Rectangle rect = new Rectangle(
-                int.Parse(rectValues[0]),
-                int.Parse(rectValues[1]),
-                int.Parse(rectValues[2]),
-                int.Parse(rectValues[3]));
+            Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
 
             string name = element.Attribute("name").Value;
             

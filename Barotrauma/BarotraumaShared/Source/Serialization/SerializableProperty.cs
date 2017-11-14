@@ -176,7 +176,7 @@ namespace Barotrauma
                     propertyInfo.SetValue(obj, XMLExtensions.ParseColor(value));
                     break;
                 case "rectangle":
-                    propertyInfo.SetValue(obj, XMLExtensions.ParseRect(value));
+                    propertyInfo.SetValue(obj, XMLExtensions.ParseRect(value, true));
                     break;
             }
 

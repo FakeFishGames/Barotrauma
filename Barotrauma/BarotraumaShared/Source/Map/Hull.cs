@@ -708,20 +708,13 @@ namespace Barotrauma
         public static void Load(XElement element, Submarine submarine)
         {
             Rectangle rect = Rectangle.Empty;
-
             if (element.Attribute("rect") != null)
             {
-                string rectString = element.GetAttributeString("rect", "0,0,0,0");
-                string[] rectValues = rectString.Split(',');
-
-                rect = new Rectangle(
-                    int.Parse(rectValues[0]),
-                    int.Parse(rectValues[1]),
-                    int.Parse(rectValues[2]),
-                    int.Parse(rectValues[3]));
+                rect = element.GetAttributeRect("rect", Rectangle.Empty);
             }
             else
             {
+                //backwards compatibility
                 rect = new Rectangle(
                     int.Parse(element.Attribute("x").Value),
                     int.Parse(element.Attribute("y").Value),
