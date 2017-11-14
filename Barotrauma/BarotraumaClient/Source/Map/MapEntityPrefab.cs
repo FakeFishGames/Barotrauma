@@ -22,8 +22,8 @@ namespace Barotrauma
             {
                 Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
-                if (resizeHorizontal) placeSize.X = position.X - placePosition.X;
-                if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
+                if (ResizeHorizontal) placeSize.X = position.X - placePosition.X;
+                if (ResizeVertical) placeSize.Y = placePosition.Y - position.Y;
 
                 Rectangle newRect = Submarine.AbsRect(placePosition, placeSize);
                 newRect.Width = (int)Math.Max(newRect.Width, Submarine.GridSize.X);

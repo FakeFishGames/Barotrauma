@@ -26,8 +26,8 @@ namespace Barotrauma
             else
             {
                 Vector2 placeSize = size;
-                if (resizeHorizontal) placeSize.X = position.X - placePosition.X;
-                if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
+                if (ResizeHorizontal) placeSize.X = position.X - placePosition.X;
+                if (ResizeVertical) placeSize.Y = placePosition.Y - position.Y;
 
                 newRect = Submarine.AbsRect(placePosition, placeSize);
             }

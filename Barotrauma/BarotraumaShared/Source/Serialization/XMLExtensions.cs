@@ -164,7 +164,6 @@ namespace Barotrauma
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)
         {
             if (element?.Attribute(name) == null) return defaultValue;
-
             return element.Attribute(name).GetAttributeBool(defaultValue);
         }
 
@@ -189,37 +188,31 @@ namespace Barotrauma
         public static Vector2 GetAttributeVector2(this XElement element, string name, Vector2 defaultValue)
         {
             if (element?.Attribute(name) == null) return defaultValue;
-
-            string val = element.Attribute(name).Value;
-
-            return ParseVector2(val);
+            return ParseVector2(element.Attribute(name).Value);
         }
 
         public static Vector3 GetAttributeVector3(this XElement element, string name, Vector3 defaultValue)
         {
             if (element == null || element.Attribute(name) == null) return defaultValue;
-
-            string val = element.Attribute(name).Value;
-
-            return ParseVector3(val);
+            return ParseVector3(element.Attribute(name).Value);
         }
 
         public static Vector4 GetAttributeVector4(this XElement element, string name, Vector4 defaultValue)
         {
             if (element == null || element.Attribute(name) == null) return defaultValue;
+            return ParseVector4(element.Attribute(name).Value);
+        }
 
-            string val = element.Attribute(name).Value;
-
-            return ParseVector4(val);
+        public static Color GetAttributeColor(this XElement element, string name, Color defaultValue)
+        {
+            if (element == null || element.Attribute(name) == null) return defaultValue;
+            return ParseColor(element.Attribute(name).Value);
         }
 
         public static Rectangle GetAttributeRect(this XElement element, string name, Rectangle defaultValue)
         {
             if (element == null || element.Attribute(name) == null) return defaultValue;
-
-            string val = element.Attribute(name).Value;
-
-            return ParseRect(val, false);
+            return ParseRect(element.Attribute(name).Value, false);
         }
 
         public static string ElementInnerText(this XElement el)

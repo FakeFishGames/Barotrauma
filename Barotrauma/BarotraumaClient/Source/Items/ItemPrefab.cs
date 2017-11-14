@@ -16,7 +16,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (!resizeHorizontal && !resizeVertical)
+            if (!ResizeHorizontal && !ResizeVertical)
             {
                 sprite.Draw(spriteBatch, new Vector2(position.X + sprite.size.X / 2.0f, -position.Y + sprite.size.Y / 2.0f), SpriteColor);
             }
@@ -30,9 +30,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (resizeHorizontal)
+                    if (ResizeHorizontal)
                         placeSize.X = Math.Max(position.X - placePosition.X, size.X);
-                    if (resizeVertical)
+                    if (ResizeVertical)
                         placeSize.Y = Math.Max(placePosition.Y - position.Y, size.Y);
 
                     position = placePosition;

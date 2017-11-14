@@ -74,7 +74,7 @@ namespace Barotrauma
                 {        
                     StructurePrefab sp = Load(el);
                     
-                    list.Add(sp);
+                    List.Add(sp);
                 }
             }
         }
@@ -84,8 +84,8 @@ namespace Barotrauma
             StructurePrefab sp = new StructurePrefab();
             sp.name = element.Name.ToString();
             
-            sp.tags = new List<string>();
-            sp.tags.AddRange(element.GetAttributeString("tags", "").Split(','));
+            sp.Tags = new List<string>();
+            sp.Tags.AddRange(element.GetAttributeString("tags", "").Split(','));
 
             foreach (XElement subElement in element.Elements())
             {
@@ -140,8 +140,8 @@ namespace Barotrauma
 
             sp.maxHealth = element.GetAttributeFloat("health", 100.0f);
 
-            sp.resizeHorizontal = element.GetAttributeBool("resizehorizontal", false);
-            sp.resizeVertical = element.GetAttributeBool("resizevertical", false);
+            sp.ResizeHorizontal = element.GetAttributeBool("resizehorizontal", false);
+            sp.ResizeVertical = element.GetAttributeBool("resizevertical", false);
             
             sp.isPlatform = element.GetAttributeBool("platform", false);
             sp.stairDirection = (Direction)Enum.Parse(typeof(Direction), element.GetAttributeString("stairdirection", "None"), true);
@@ -169,15 +169,15 @@ namespace Barotrauma
             else
             {
                 Vector2 placeSize = size;
-                if (resizeHorizontal) placeSize.X = position.X - placePosition.X;
-                if (resizeVertical) placeSize.Y = placePosition.Y - position.Y;
+                if (ResizeHorizontal) placeSize.X = position.X - placePosition.X;
+                if (ResizeVertical) placeSize.Y = placePosition.Y - position.Y;
 
                 newRect = Submarine.AbsRect(placePosition, placeSize);
 
                 if (PlayerInput.LeftButtonReleased())
                 {
                     //don't allow resizing width/height to zero
-                   if ((!resizeHorizontal || placeSize.X != 0.0f) && (!resizeVertical || placeSize.Y != 0.0f))
+                   if ((!ResizeHorizontal || placeSize.X != 0.0f) && (!ResizeVertical || placeSize.Y != 0.0f))
                     {
                         newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
 

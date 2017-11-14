@@ -307,7 +307,7 @@ namespace Barotrauma
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (ItemPrefab ip in CargoManager.PurchasedItems)
             {
-                msg.Write((UInt16)MapEntityPrefab.list.IndexOf(ip));
+                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(ip));
             }
         }
         
@@ -329,7 +329,7 @@ namespace Barotrauma
             for (int i = 0; i<purchasedItemCount; i++)
             {
                 UInt16 itemPrefabIndex = msg.ReadUInt16();
-                purchasedItems.Add(MapEntityPrefab.list[itemPrefabIndex] as ItemPrefab);
+                purchasedItems.Add(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab);
             }
 
             MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
@@ -384,7 +384,7 @@ namespace Barotrauma
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (ItemPrefab ip in CargoManager.PurchasedItems)
             {
-                msg.Write((UInt16)MapEntityPrefab.list.IndexOf(ip));
+                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(ip));
             }
         }
 
@@ -397,7 +397,7 @@ namespace Barotrauma
             for (int i = 0; i < purchasedItemCount; i++)
             {
                 UInt16 itemPrefabIndex = msg.ReadUInt16();
-                purchasedItems.Add(MapEntityPrefab.list[itemPrefabIndex] as ItemPrefab);
+                purchasedItems.Add(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab);
             }
 
             if (!sender.HasPermission(ClientPermissions.ManageCampaign))

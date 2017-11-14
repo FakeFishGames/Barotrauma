@@ -1295,7 +1295,7 @@ namespace Barotrauma.Networking
 
                 foreach (string s in extraCargo.Keys)
                 {
-                    ItemPrefab itemPrefab = MapEntityPrefab.list.Find(ip => ip.Name == s) as ItemPrefab;
+                    ItemPrefab itemPrefab = MapEntityPrefab.Find(s) as ItemPrefab;
                     if (itemPrefab == null) continue;
 
                     for (int i = 0; i < extraCargo[s]; i++)

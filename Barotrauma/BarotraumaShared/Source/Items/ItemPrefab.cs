@@ -146,7 +146,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (!resizeHorizontal && !resizeVertical)
+            if (!ResizeHorizontal && !ResizeVertical)
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
@@ -172,9 +172,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (resizeHorizontal)
+                    if (ResizeHorizontal)
                         placeSize.X = Math.Max(position.X - placePosition.X, size.X);
-                    if (resizeVertical)
+                    if (ResizeVertical)
                         placeSize.Y = Math.Max(placePosition.Y - position.Y, size.Y);
 
                     if (PlayerInput.LeftButtonReleased())
@@ -237,9 +237,9 @@ namespace Barotrauma
             ConfigElement = element;
 
             name = element.GetAttributeString("name", "");
-            if (name == "") DebugConsole.ThrowError("Unnamed item in "+filePath+"!");
+            if (name == "") DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
 
-            DebugConsole.Log("    "+name);
+            DebugConsole.Log("    " + name);
 
             Description = element.GetAttributeString("description", "");
 
@@ -249,8 +249,8 @@ namespace Barotrauma
 
             isLinkable          = element.GetAttributeBool("linkable", false);
 
-            resizeHorizontal    = element.GetAttributeBool("resizehorizontal", false);
-            resizeVertical      = element.GetAttributeBool("resizevertical", false);
+            ResizeHorizontal    = element.GetAttributeBool("resizehorizontal", false);
+            ResizeVertical      = element.GetAttributeBool("resizevertical", false);
 
             focusOnSelected     = element.GetAttributeBool("focusonselected", false);
 
@@ -277,10 +277,8 @@ namespace Barotrauma
             }
 
             Category = category;
-            
-            
-            string spriteColorStr = element.GetAttributeString("spritecolor", "1.0,1.0,1.0,1.0");
-            SpriteColor = new Color(XMLExtensions.ParseVector4(spriteColorStr));
+
+            SpriteColor = element.GetAttributeColor("spritecolor", Color.White);
 
             price = element.GetAttributeInt("price", 0);
             
@@ -289,8 +287,8 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             DeconstructTime     = 1.0f;
 
-            tags = new List<string>();
-            tags.AddRange(element.GetAttributeString("tags", "").Split(','));
+            Tags = new List<string>();
+            Tags.AddRange(element.GetAttributeString("tags", "").Split(','));
 
             foreach (XElement subElement in element.Elements())
             {
@@ -337,7 +335,7 @@ namespace Barotrauma
                 }
             }
 
-            list.Add(this);
+            List.Add(this);
         }
     }
 }

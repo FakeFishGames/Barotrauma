@@ -210,7 +210,7 @@ namespace Barotrauma
                 itemList.OnSelected = SelectPrefab;
                 itemList.CheckSelected = MapEntityPrefab.GetSelected;
 
-                foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+                foreach (MapEntityPrefab ep in MapEntityPrefab.List)
                 {
                     if (!ep.Category.HasFlag(category)) continue;
                     
@@ -756,7 +756,7 @@ namespace Barotrauma
             GUIListBox listBox = new GUIListBox(Rectangle.Empty, "", frame);
             listBox.OnSelected = SelectWire;
             
-            foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+            foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
                 var itemPrefab = ep as ItemPrefab;
                 if (itemPrefab == null || itemPrefab.Name == null) continue;

@@ -218,7 +218,7 @@ namespace Barotrauma.Items.Components
                     int nextSectionLength = targetStructure.SectionLength(sectionIndex + i);
                     if ((sectionIndex == 1 && i == -1) ||
                         (sectionIndex == targetStructure.SectionCount - 2 && i == 1) ||
-                        (nextSectionLength > 0 && nextSectionLength < Structure.wallSectionSize * 0.3f))
+                        (nextSectionLength > 0 && nextSectionLength < Structure.WallSectionSize * 0.3f))
                     {
                         //targetStructure.HighLightSection(sectionIndex + i);
                         targetStructure.AddDamage(sectionIndex + i, -StructureFixAmount * degreeOfSuccess);
