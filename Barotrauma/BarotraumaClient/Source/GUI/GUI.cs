@@ -548,16 +548,28 @@ namespace Barotrauma
 
         public static void AddMessage(string message, Color color, float lifeTime = 3.0f, bool playSound = true)
         {
-            if (messages.Count>0 && messages[messages.Count-1].Text == message)
+            if (messages.Count > 0 && messages[messages.Count - 1].Text == message)
             {
                 messages[messages.Count - 1].LifeTime = lifeTime;
                 return;
             }
 
-            Vector2 currPos = new Vector2(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight * 0.7f);
-            currPos.Y += messages.Count * 30;
+            Vector2 pos = new Vector2(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight * 0.7f);
+            pos.Y += messages.FindAll(m => m.Centered).Count * 30;
 
-            messages.Add(new GUIMessage(message, color, currPos, lifeTime));
+            messages.Add(new GUIMessage(message, color, pos, lifeTime, Alignment.Center, true));
+            if (playSound) PlayUISound(GUISoundType.Message);
+        }
+
+        public static void AddMessage(string message, Vector2 position, Alignment alignment, Color color, float lifeTime = 3.0f, bool playSound = true)
+        {
+            if (messages.Count > 0 && messages[messages.Count - 1].Text == message)
+            {
+                messages[messages.Count - 1].LifeTime = lifeTime;
+                return;
+            }
+
+            messages.Add(new GUIMessage(message, color, position, lifeTime, alignment, false));
             if (playSound) PlayUISound(GUISoundType.Message);
         }
 
@@ -587,23 +599,24 @@ namespace Barotrauma
                     alpha -= 1.0f - msg.LifeTime;
                 }
 
-                msg.Pos = MathUtils.SmoothStep(msg.Pos, currPos, deltaTime*20.0f);
+                if (msg.Centered)
+                {
+                    msg.Pos = MathUtils.SmoothStep(msg.Pos, currPos, deltaTime * 20.0f);
+                    currPos.Y += 30.0f;
+                }
 
                 Font.DrawString(spriteBatch, msg.Text,
                     new Vector2((int)msg.Pos.X - 1, (int)msg.Pos.Y - 1),
-                    Color.Black * alpha*0.5f, 0.0f,
-                    new Vector2((int)(0.5f * msg.Size.X), (int)(0.5f * msg.Size.Y)), 1.0f, SpriteEffects.None, 0.0f);
+                    Color.Black * alpha * 0.5f, 0.0f,
+                    msg.Origin, 1.0f, SpriteEffects.None, 0.0f);
 
                 Font.DrawString(spriteBatch, msg.Text,
-                    new Vector2((int)msg.Pos.X, (int)msg.Pos.Y), 
+                    new Vector2((int)msg.Pos.X, (int)msg.Pos.Y),
                     msg.Color * alpha, 0.0f,
-                    new Vector2((int)(0.5f * msg.Size.X), (int)(0.5f * msg.Size.Y)), 1.0f, SpriteEffects.None, 0.0f);
+                    msg.Origin, 1.0f, SpriteEffects.None, 0.0f);
 
 
-
-                currPos.Y += 30.0f;
-
-                messages[0].LifeTime -= deltaTime/i;
+                messages[0].LifeTime -= deltaTime / i;
 
                 i++;
             }

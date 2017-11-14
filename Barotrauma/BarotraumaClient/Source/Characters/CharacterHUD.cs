@@ -16,7 +16,9 @@ namespace Barotrauma
 
         private static GUIButton suicideButton;
 
-        private static GUIProgressBar drowningBar, healthBar;
+        private static GUIProgressBar oxygenBar, healthBar;
+
+        private static bool oxyMsgShown, pressureMsgShown; 
 
         public static float damageOverlayTimer { get; private set; }
 
@@ -61,10 +63,10 @@ namespace Barotrauma
 
         public static void Update(float deltaTime, Character character)
         {
-            if (drowningBar != null)
+            if (oxygenBar != null)
             {
-                drowningBar.Update(deltaTime);
-                if (character.Oxygen < 10.0f) drowningBar.Flash();
+                oxygenBar.Update(deltaTime);
+                if (character.Oxygen < 10.0f) oxygenBar.Flash();
             }
             if (healthBar != null) healthBar.Update(deltaTime);
 
@@ -76,7 +78,6 @@ namespace Barotrauma
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-
                 if (character.Inventory != null)
                 {
                     if (!character.LockHands && character.Stun >= -0.1f)
@@ -290,21 +291,26 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, new Vector2(30, GameMain.GraphicsHeight - 260), "Stun: "+character.Stun, Color.White);
             }
 
-            if (drowningBar == null)
+            if (oxygenBar == null)
             {
                 int width = 100, height = 20;
 
-                drowningBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 200, width, height), Color.Blue, "", 1.0f, Alignment.TopLeft);
-                new GUIImage(new Rectangle(-27, -7, 20, 20), new Rectangle(17, 0, 20, 24), statusIcons, Alignment.TopLeft, drowningBar);
+                oxygenBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 200, width, height), Color.Blue, "", 1.0f, Alignment.TopLeft);
+                new GUIImage(new Rectangle(-27, -7, 20, 20), new Rectangle(17, 0, 20, 24), statusIcons, Alignment.TopLeft, oxygenBar);
 
                 healthBar = new GUIProgressBar(new Rectangle(30, GameMain.GraphicsHeight - 230, width, height), Color.Red, "", 1.0f, Alignment.TopLeft);
                 new GUIImage(new Rectangle(-26, -7, 20, 20), new Rectangle(0, 0, 13, 24), statusIcons, Alignment.TopLeft, healthBar);
             }
 
-            drowningBar.BarSize = character.Oxygen / 100.0f;
-            if (drowningBar.BarSize < 0.99f)
+            oxygenBar.BarSize = character.Oxygen / 100.0f;
+            if (oxygenBar.BarSize < 0.99f)
             {
-                drowningBar.Draw(spriteBatch);
+                oxygenBar.Draw(spriteBatch);
+                if (!oxyMsgShown)
+                {
+                    GUI.AddMessage(InfoTextManager.GetInfoText("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Y), Alignment.Left, Color.White, 5.0f);
+                    oxyMsgShown = true;
+                }
             }
 
             healthBar.BarSize = character.Health / character.MaxHealth;
@@ -322,17 +328,24 @@ namespace Barotrauma
             }
 
             float pressureFactor = (character.AnimController.CurrentHull == null) ?
-                100.0f : Math.Min(character.AnimController.CurrentHull.LethalPressure,100.0f);
+                100.0f : Math.Min(character.AnimController.CurrentHull.LethalPressure, 100.0f);
             if (character.PressureProtection > 0.0f) pressureFactor = 0.0f;
 
-            if (pressureFactor>0.0f)
+            if (pressureFactor > 0.0f)
             {
                 float indicatorAlpha = ((float)Math.Sin(character.PressureTimer * 0.1f) + 1.0f) * 0.5f;
+                indicatorAlpha = MathHelper.Clamp(indicatorAlpha, 0.1f, pressureFactor / 100.0f);
 
-                indicatorAlpha = MathHelper.Clamp(indicatorAlpha, 0.1f, pressureFactor/100.0f);
+                if (indicatorAlpha > 0.1f)
+                {
+                    if (!pressureMsgShown)
+                    {
+                        GUI.AddMessage(InfoTextManager.GetInfoText("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 60.0f), Alignment.Left, Color.White, 5.0f);
+                        pressureMsgShown = true;
+                    }
+                }
 
-                spriteBatch.Draw(statusIcons.Texture, new Vector2(10.0f, healthBar.Rect.Y - 60.0f), new Rectangle(0, 24, 24, 25), Color.White * indicatorAlpha);
-            
+                spriteBatch.Draw(statusIcons.Texture, new Vector2(10.0f, healthBar.Rect.Y - 60.0f), new Rectangle(0, 24, 24, 25), Color.White * indicatorAlpha);            
             }
         }
     }

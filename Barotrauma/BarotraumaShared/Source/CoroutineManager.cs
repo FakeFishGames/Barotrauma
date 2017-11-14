@@ -37,6 +37,26 @@ namespace Barotrauma
             return handle;
         }
 
+        public static void InvokeAfter(Action action, float delay)
+        {
+            StartCoroutine(DoInvokeAfter(action, delay));
+        }
+
+        private static IEnumerable<object> DoInvokeAfter(Action action, float delay)
+        {
+            if (action == null)
+            {
+                yield return CoroutineStatus.Failure;
+            }
+
+            yield return new WaitForSeconds(delay);
+
+            action();
+
+            yield return CoroutineStatus.Success;
+        }
+
+
         public static bool IsCoroutineRunning(string name)
         {
             return Coroutines.Any(c => c.Name == name);
