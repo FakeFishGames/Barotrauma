@@ -338,8 +338,8 @@ namespace Barotrauma
 
             return dictionary;
         }
-
-        public static Dictionary<string, SerializableProperty> DeserializeProperties(ISerializableEntity obj, XElement element)
+        
+        public static Dictionary<string, SerializableProperty> DeserializeProperties(object obj, XElement element)
         {
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
 

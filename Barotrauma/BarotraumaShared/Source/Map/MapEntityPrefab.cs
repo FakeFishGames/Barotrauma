@@ -17,15 +17,7 @@ namespace Barotrauma
         public readonly static List<MapEntityPrefab> List = new List<MapEntityPrefab>();
 
         protected string name;
-
-        public List<string> Tags
-        {
-            get;
-            protected set;
-        }
-
-        protected bool isLinkable;
-
+        
         public Sprite sprite;
 
         //the position where the structure is being placed (needed when stretching the structure)
@@ -34,17 +26,25 @@ namespace Barotrauma
         protected ConstructorInfo constructor;
 
         //is it possible to stretch the entity horizontally/vertically
+        [Serialize(false, false)]
         public bool ResizeHorizontal { get; protected set; }
+        [Serialize(false, false)]
         public bool ResizeVertical { get; protected set; }
 
         //which prefab has been selected for placing
         protected static MapEntityPrefab selected;
 
-        protected int price;
+        private int price;
 
         public string Name
         {
             get { return name; }
+        }
+
+        public List<string> Tags
+        {
+            get;
+            protected set;
         }
 
         public static MapEntityPrefab Selected
@@ -53,16 +53,18 @@ namespace Barotrauma
             set { selected = value; }
         }
 
-
+        [Serialize("", false)]
         public string Description
         {
             get;
             protected set;
         }
 
+        [Serialize(false, false)]
         public virtual bool IsLinkable
         {
-            get { return isLinkable; }
+            get;
+            private set;
         }
         
         public MapEntityCategory Category
@@ -71,15 +73,18 @@ namespace Barotrauma
             protected set;
         }
 
+        [Serialize("1.0,1.0,1.0,1.0", false)]
         public Color SpriteColor
         {
             get;
             protected set;
         }
 
+        [Serialize(0, false)]
         public int Price
         {
             get { return price; }
+            protected set { price = Math.Max(value, 0); }
         }
 
         //If a matching prefab is not found when loading a sub, the game will attempt to find a prefab with a matching alias.

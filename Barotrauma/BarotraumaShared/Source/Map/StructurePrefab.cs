@@ -8,13 +8,6 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
-        //does the structure have a physics body
-        private bool hasBody;
-
-        private bool castShadow;
-
-        private bool isPlatform;
-        private Direction stairDirection;
         private bool canSpriteFlipX;
 
         private float maxHealth;
@@ -22,29 +15,40 @@ namespace Barotrauma
         //default size
         private Vector2 size;
         
-        public bool HasBody
+        //does the structure have a physics body
+        [Serialize(false, false)]
+        public bool Body
         {
-            get { return hasBody; }
+            get;
+            private set;
         }
 
-        public bool IsPlatform
+        [Serialize(false, false)]
+        public bool Platform
         {
-            get { return isPlatform; }
+            get;
+            private set;
         }
 
+        [Serialize(100.0f, false)]
         public float MaxHealth
         {
             get { return maxHealth; }
+            set { maxHealth = Math.Max(value, 0.0f); }
         }
 
+        [Serialize(false, false)]
         public bool CastShadow
         {
-            get { return castShadow; }
+            get;
+            private set;
         }
 
+        [Serialize(Direction.None, false)]
         public Direction StairDirection
         {
-            get { return stairDirection; }
+            get;
+            private set;
         }
 
         public bool CanSpriteFlipX
@@ -52,9 +56,11 @@ namespace Barotrauma
             get { return canSpriteFlipX; }
         }
 
+        [Serialize("0,0", true)]
         public Vector2 Size
         {
             get { return size; }
+            private set { size = value; }
         }
 
         public Sprite BackgroundSprite
@@ -115,41 +121,28 @@ namespace Barotrauma
             }
 
             MapEntityCategory category;
-
             if (!Enum.TryParse(element.GetAttributeString("category", "Structure"), true, out category))
             {
                 category = MapEntityCategory.Structure;
             }
-
             sp.Category = category;
 
-            sp.Description = element.GetAttributeString("description", "");
-            
             string aliases = element.GetAttributeString("aliases", "");
             if (!string.IsNullOrWhiteSpace(aliases))
             {
                 sp.Aliases = aliases.Split(',');
             }
-
-            sp.size = Vector2.Zero;
-            sp.size.X = element.GetAttributeFloat("width", 0.0f);
-            sp.size.Y = element.GetAttributeFloat("height", 0.0f);
             
-            string spriteColorStr = element.GetAttributeString("spritecolor", "1.0,1.0,1.0,1.0");
-            sp.SpriteColor = new Color(XMLExtensions.ParseVector4(spriteColorStr));
+            SerializableProperty.DeserializeProperties(sp, element);
 
-            sp.maxHealth = element.GetAttributeFloat("health", 100.0f);
+            //backwards compatibility
+            if (element.Attribute("size") == null)
+            {
+                sp.size = Vector2.Zero;
+                sp.size.X = element.GetAttributeFloat("width", 0.0f);
+                sp.size.Y = element.GetAttributeFloat("height", 0.0f);
+            }
 
-            sp.ResizeHorizontal = element.GetAttributeBool("resizehorizontal", false);
-            sp.ResizeVertical = element.GetAttributeBool("resizevertical", false);
-            
-            sp.isPlatform = element.GetAttributeBool("platform", false);
-            sp.stairDirection = (Direction)Enum.Parse(typeof(Direction), element.GetAttributeString("stairdirection", "None"), true);
-
-            sp.castShadow = element.GetAttributeBool("castshadow", false); 
-            
-            sp.hasBody = element.GetAttributeBool("body", false); 
-            
             return sp;
         }
 

@@ -70,7 +70,7 @@ namespace Barotrauma
 
         public bool IsPlatform
         {
-            get { return prefab.IsPlatform; }
+            get { return prefab.Platform; }
         }
 
         public Direction StairDirection
@@ -86,7 +86,7 @@ namespace Barotrauma
 
         public bool HasBody
         {
-            get { return prefab.HasBody; }
+            get { return prefab.Body; }
         }
 
         public bool CastShadow
@@ -129,7 +129,7 @@ namespace Barotrauma
         {
             get
             {
-                return prefab.HasBody;
+                return prefab.Body;
             }
         }
 
@@ -156,7 +156,7 @@ namespace Barotrauma
             {
                 Rectangle oldRect = Rect;
                 base.Rect = value;
-                if (prefab.HasBody) CreateSections();
+                if (prefab.Body) CreateSections();
                 else
                 {
                     foreach (WallSection sec in sections)
@@ -227,7 +227,7 @@ namespace Barotrauma
 
             SerializableProperties = SerializableProperty.GetProperties(this);
 
-            if (prefab.HasBody)
+            if (prefab.Body)
             {
                 bodies = new List<Body>();
                 //gaps = new List<Gap>();
@@ -241,7 +241,7 @@ namespace Barotrauma
                 newBody.Friction = 0.5f;
                 newBody.OnCollision += OnWallCollision;
                 newBody.UserData = this;
-                newBody.CollisionCategories = (prefab.IsPlatform) ? Physics.CollisionPlatform : Physics.CollisionWall;
+                newBody.CollisionCategories = (prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
 
                 bodies.Add(newBody);
 
@@ -480,7 +480,7 @@ namespace Barotrauma
 
         private bool OnWallCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            if (prefab.IsPlatform)
+            if (prefab.Platform)
             {
                 Limb limb;
                 if ((limb = f2.Body.UserData as Limb) != null)
@@ -495,7 +495,7 @@ namespace Barotrauma
                 if (character.DisableImpactDamageTimer > 0.0f || ((Limb)f2.Body.UserData).Mass < 100.0f) return true;
             }
             
-            if (!prefab.IsPlatform && prefab.StairDirection == Direction.None)
+            if (!prefab.Platform && prefab.StairDirection == Direction.None)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(f2.Body.Position);
 
@@ -557,7 +557,7 @@ namespace Barotrauma
 
         public void AddDamage(int sectionIndex, float damage)
         {
-            if (!prefab.HasBody || prefab.IsPlatform) return;
+            if (!prefab.Body || prefab.Platform) return;
 
             if (sectionIndex < 0 || sectionIndex > sections.Length - 1) return;
 
@@ -625,7 +625,7 @@ namespace Barotrauma
         public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f);
-            if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
+            if (!prefab.Body || prefab.Platform) return new AttackResult(0.0f, 0.0f);
 
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
@@ -653,7 +653,7 @@ namespace Barotrauma
         private void SetDamage(int sectionIndex, float damage)
         {
             if (Submarine != null && Submarine.GodMode) return;
-            if (!prefab.HasBody) return;
+            if (!prefab.Body) return;
 
             if (!MathUtils.IsValid(damage)) return;
 
