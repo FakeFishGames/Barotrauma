@@ -1591,29 +1591,11 @@ namespace Barotrauma
         }
 
         public static void Load(XElement element, Submarine submarine)
-        {          
-            string rectString = element.GetAttributeString("rect", "0,0,0,0");
-            string[] rectValues = rectString.Split(',');
-            Rectangle rect = Rectangle.Empty;
-            if (rectValues.Length==4)
-            {
-                rect = new Rectangle(
-                    int.Parse(rectValues[0]),
-                    int.Parse(rectValues[1]),
-                    int.Parse(rectValues[2]),
-                    int.Parse(rectValues[3]));
-            } 
-            else
-            {
-                rect = new Rectangle(
-                    int.Parse(rectValues[0]),
-                    int.Parse(rectValues[1]),
-                    0, 0);
-            }
-
+        {
+            Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
 
             string name = element.Attribute("name").Value;
-            
+
             foreach (MapEntityPrefab ep in MapEntityPrefab.list)
             {
                 ItemPrefab ip = ep as ItemPrefab;
@@ -1621,7 +1603,7 @@ namespace Barotrauma
 
                 if (ip.Name != name && (ip.Aliases == null || !ip.Aliases.Contains(name))) continue;
 
-                if (rect.Width==0 && rect.Height==0)
+                if (rect.Width == 0 && rect.Height == 0)
                 {
                     rect.Width = (int)ip.Size.X;
                     rect.Height = (int)ip.Size.Y;

@@ -213,6 +213,15 @@ namespace Barotrauma
             return ParseVector4(val);
         }
 
+        public static Rectangle GetAttributeRect(this XElement element, string name, Rectangle defaultValue)
+        {
+            if (element == null || element.Attribute(name) == null) return defaultValue;
+
+            string val = element.Attribute(name).Value;
+
+            return ParseRect(val, false);
+        }
+
         public static string ElementInnerText(this XElement el)
         {
             StringBuilder str = new StringBuilder();
@@ -337,13 +346,13 @@ namespace Barotrauma
 
             return new Color(components[0], components[1], components[2], components[3]);
         }
-
-        public static Rectangle ParseRect(string stringColor, bool errorMessages = true)
+        
+        public static Rectangle ParseRect(string stringRect, bool requireSize, bool errorMessages = true)
         {
-            string[] strComponents = stringColor.Split(',');
-            if (strComponents.Length < 3)
+            string[] strComponents = stringRect.Split(',');
+            if ((strComponents.Length < 3 && requireSize) || strComponents.Length < 2)
             {
-                if (errorMessages) DebugConsole.ThrowError("Failed to parse the string \"" + stringColor + "\" to Color");
+                if (errorMessages) DebugConsole.ThrowError("Failed to parse the string \"" + stringRect + "\" to Rectangle");
                 return new Rectangle(0, 0, 0, 0);
             }
 
