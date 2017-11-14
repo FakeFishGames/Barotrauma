@@ -448,19 +448,10 @@ namespace Barotrauma
             GraphicsWidth = mode.Width;
             GraphicsHeight = mode.Height;
 
-
-            //GameMain.Graphics.PreferredBackBufferWidth = GraphicsWidth;
-            //GameMain.Graphics.PreferredBackBufferHeight = GraphicsHeight;
-            //GameMain.Graphics.ApplyChanges();
-
-            //CoroutineManager.StartCoroutine(GameMain.Instance.Load());
-
             UnsavedSettings = true;
 
             return true;
         }
-
-
 
         private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox)
         {
@@ -483,7 +474,7 @@ namespace Barotrauma
                 keyMapping[keyIndex] = new KeyOrMouse(0);
                 keyBox.Text = "Mouse1";
             }
-            else if (PlayerInput.LeftButtonClicked())
+            else if (PlayerInput.RightButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(1);
                 keyBox.Text = "Mouse2";
