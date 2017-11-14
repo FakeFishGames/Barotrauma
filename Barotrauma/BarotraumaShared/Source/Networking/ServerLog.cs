@@ -136,14 +136,16 @@ namespace Barotrauma.Networking
                 }                
             }
 
-            string fileName = serverName+"_"+DateTime.Now.ToShortDateString()+"_"+DateTime.Now.ToShortTimeString()+".txt";
+            string fileName = serverName + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
 
-            fileName = fileName.Replace(":", "");
-            fileName = fileName.Replace("../", "");
-            fileName = fileName.Replace("/", "");
+            var invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                fileName = fileName.Replace(invalidChar.ToString(), "");
+            }
 
             string filePath = Path.Combine(SavePath, fileName);
-            
+
             try
             {
                 File.WriteAllLines(filePath, lines.Select(l => l.Text));
