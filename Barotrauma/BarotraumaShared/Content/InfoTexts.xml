@@ -5,6 +5,9 @@
   <return>[sub] has returned to [location].</return>
   <gameover>The ocean has claimed [sub] and its crew.</gameover>
 
+  <OxygenBarInfo>Running out of oxygen!</OxygenBarInfo>
+  <PressureInfo>Water pressure increasing!</PressureInfo>
+  
   <CauseOfDeath.Damage>Succumbed to their injuries</CauseOfDeath.Damage>
   <CauseOfDeath.Bloodloss>Bled out</CauseOfDeath.Bloodloss>
   <CauseOfDeath.Drowning>Drowned</CauseOfDeath.Drowning>

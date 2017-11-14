@@ -230,7 +230,7 @@
     
     descriptionneutral="A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2]."
     description1="A renegade vessel has been detected at the outskirts of [location2]. Treason against the Europa Coalition is punishable by death - eliminate the renegades and return to [location1]!"
-    description2="You're a member of a renegade group opposing the Europa Coalition. According to your informants at [location1], a Coalition ship has just been dispatched on a mission to take down your vessel. Eliminate their crew and return to [location2]."    
+    description2="You're a member of a renegade group opposing the Europa Coalition. According to your informants at [location1], a Coalition vessel has just been dispatched on a mission to take down your boat. Eliminate their crew and return to [location2]."    
     
     teamname1="Coalition"
     teamname2="Renegade"
