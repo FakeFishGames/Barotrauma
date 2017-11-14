@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
         {
             string name = element.GetAttributeString("name", "");
 
-            TargetItem = MapEntityPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == name.ToLowerInvariant()) as ItemPrefab;
+            TargetItem = MapEntityPrefab.Find(name) as ItemPrefab;
             
             if (TargetItem == null)
             {
@@ -30,9 +30,7 @@ namespace Barotrauma.Items.Components
             }
 
             RequiredSkills = new List<Skill>();
-
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
-
             RequiredItems = new List<Tuple<ItemPrefab, int>>();
             
             string[] requiredItemNames = element.GetAttributeString("requireditems", "").Split(',');
@@ -40,25 +38,22 @@ namespace Barotrauma.Items.Components
             {
                 if (string.IsNullOrWhiteSpace(requiredItemName)) continue;
 
-                ItemPrefab requiredItem = ItemPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == requiredItemName.Trim().ToLowerInvariant()) as ItemPrefab;
+                ItemPrefab requiredItem = MapEntityPrefab.Find(requiredItemName.Trim()) as ItemPrefab;
                 if (requiredItem == null)
                 {
                     DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item \"" + requiredItemName + "\" not found.");
-
                     continue;
                 }
 
                 var existing = RequiredItems.Find(r => r.Item1 == requiredItem);
-
                 if (existing == null)
                 {
-
                     RequiredItems.Add(new Tuple<ItemPrefab, int>(requiredItem, 1));
                 }
                 else
                 {
                     RequiredItems.Remove(existing);
-                    RequiredItems.Add(new Tuple<ItemPrefab, int>(requiredItem, existing.Item2+1));
+                    RequiredItems.Add(new Tuple<ItemPrefab, int>(requiredItem, existing.Item2 + 1));
                 }
             }
 

@@ -213,7 +213,7 @@ namespace Barotrauma
 
                 string itemName = string.Join(" ", args.Take(args.Length - extraParams)).ToLowerInvariant();
 
-                var itemPrefab = MapEntityPrefab.list.Find(ip => ip.Name.ToLowerInvariant() == itemName) as ItemPrefab;
+                var itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
                 if (itemPrefab == null)
                 {
                     ThrowError("Item \"" + itemName + "\" not found!");

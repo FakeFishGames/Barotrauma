@@ -718,13 +718,8 @@ namespace Barotrauma
             if (wiringMode)
             {
                 CreateDummyCharacter();
-
-                var screwdriverPrefab = ItemPrefab.list.Find(ip => ip.Name == "Screwdriver") as ItemPrefab;
-
-                var item = new Item(screwdriverPrefab, Vector2.Zero, null);
-
+                var item = new Item(MapEntityPrefab.Find("Screwdriver") as ItemPrefab, Vector2.Zero, null);
                 dummyCharacter.Inventory.TryPutItem(item, null, new List<InvSlotType>() { InvSlotType.RightHand });
-
                 wiringToolPanel = CreateWiringPanel();
             }
             else
@@ -760,11 +755,12 @@ namespace Barotrauma
 
             GUIListBox listBox = new GUIListBox(Rectangle.Empty, "", frame);
             listBox.OnSelected = SelectWire;
-
+            
             foreach (MapEntityPrefab ep in MapEntityPrefab.list)
             {
                 var itemPrefab = ep as ItemPrefab;
-                if (itemPrefab == null || itemPrefab.Name == null || !itemPrefab.Name.Contains("Wire")) continue;
+                if (itemPrefab == null || itemPrefab.Name == null) continue;
+                if (!itemPrefab.Name.Contains("Wire") && (itemPrefab.Aliases == null || !itemPrefab.Aliases.Any(a => a.Contains("Wire")))) continue;
 
                 GUIFrame imgFrame = new GUIFrame(new Rectangle(0, 0, (int)itemPrefab.sprite.size.X, (int)itemPrefab.sprite.size.Y), null, listBox);
                 imgFrame.UserData = itemPrefab;

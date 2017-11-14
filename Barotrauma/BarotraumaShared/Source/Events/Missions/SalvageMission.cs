@@ -28,19 +28,19 @@ namespace Barotrauma
         {
             string itemName = element.GetAttributeString("itemname", "");
 
-            itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
-            
+            itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+            if (itemPrefab == null)
+            {
+                DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name " + itemName);
+                return;
+            }
+
             string spawnPositionTypeStr = element.GetAttributeString("spawntype", "");
 
             if (string.IsNullOrWhiteSpace(spawnPositionTypeStr) ||
                 !Enum.TryParse<Level.PositionType>(spawnPositionTypeStr, true, out spawnPositionType))
             {
                 spawnPositionType = Level.PositionType.Cave | Level.PositionType.Ruin;
-            }
-
-            if (itemPrefab == null)
-            {
-                DebugConsole.ThrowError("Error in SalvageMission: couldn't find an item prefab with the name "+itemName);
             }
         }
 

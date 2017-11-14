@@ -824,28 +824,19 @@ namespace Barotrauma
         
         public static void Load(XElement element, Submarine submarine)
         {
-            Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
-
             string name = element.Attribute("name").Value;
-            
-            Structure s = null;
 
-            foreach (MapEntityPrefab ep in MapEntityPrefab.list)
+            StructurePrefab prefab = MapEntityPrefab.Find(name) as StructurePrefab;
+            if (prefab == null)
             {
-                if (ep.Name == name || (ep.Aliases != null && ep.Aliases.Contains(name)))
-                {
-                    s = new Structure(rect, (StructurePrefab)ep, submarine);
-                    s.Submarine = submarine;
-                    s.ID = (ushort)int.Parse(element.Attribute("ID").Value);
-                    break;
-                }
-            }
-
-            if (s == null)
-            {
-                DebugConsole.ThrowError("Structure prefab " + name + " not found.");
+                DebugConsole.ThrowError("Error loading structure - structure prefab " + name + " not found.");
                 return;
             }
+
+            Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
+            Structure s = new Structure(rect, prefab, submarine);
+            s.Submarine = submarine;
+            s.ID = (ushort)int.Parse(element.Attribute("ID").Value);
             
             foreach (XElement subElement in element.Elements())
             {

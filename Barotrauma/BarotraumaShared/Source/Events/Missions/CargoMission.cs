@@ -43,15 +43,15 @@ namespace Barotrauma
         {
             string itemName = element.GetAttributeString("name", "");
 
-            ItemPrefab itemPrefab = ItemPrefab.list.Find(ip => ip.Name == itemName) as ItemPrefab;
-            if (itemPrefab==null)
+            ItemPrefab itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+            if (itemPrefab == null)
             {
-                DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab \""+element.Name.ToString()+"\" not found");
+                DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab \"" + element.Name.ToString() + "\" not found");
                 return;
             }
 
             WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub, true);
-            if (cargoSpawnPos==null)
+            if (cargoSpawnPos == null)
             {
                 DebugConsole.ThrowError("Couldn't spawn items for cargo mission, cargo spawnpoint not found");
                 return;
