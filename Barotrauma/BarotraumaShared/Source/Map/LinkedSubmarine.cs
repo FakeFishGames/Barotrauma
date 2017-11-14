@@ -105,7 +105,7 @@ namespace Barotrauma
             List<Vector2> points = new List<Vector2>();
 
             var wallPrefabs =
-                MapEntityPrefab.list.FindAll(mp => (mp is StructurePrefab) && ((StructurePrefab)mp).HasBody);
+                MapEntityPrefab.List.FindAll(mp => (mp is StructurePrefab) && ((StructurePrefab)mp).HasBody);
 
             foreach (XElement element in rootElement.Elements())
             {

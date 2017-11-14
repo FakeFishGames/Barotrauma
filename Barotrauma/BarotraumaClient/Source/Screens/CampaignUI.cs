@@ -94,7 +94,7 @@ namespace Barotrauma
 
             List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
             //don't show categories with no buyable items
-            itemCategories.RemoveAll(c => !MapEntityPrefab.list.Any(ep => ep.Price > 0.0f && ep.Category.HasFlag(c)));
+            itemCategories.RemoveAll(c => !MapEntityPrefab.List.Any(ep => ep.Price > 0.0f && ep.Category.HasFlag(c)));
 
             int buttonWidth = Math.Min(sellColumnWidth / itemCategories.Count, 100);
             foreach (MapEntityCategory category in itemCategories)
@@ -311,7 +311,7 @@ namespace Barotrauma
             storeItemList.ClearChildren();
 
             MapEntityCategory category = (MapEntityCategory)selection;
-            var items = MapEntityPrefab.list.FindAll(ep => ep.Price > 0.0f && ep.Category.HasFlag(category));
+            var items = MapEntityPrefab.List.FindAll(ep => ep.Price > 0.0f && ep.Category.HasFlag(category));
 
             int width = storeItemList.Rect.Width;
 

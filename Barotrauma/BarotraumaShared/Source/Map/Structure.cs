@@ -42,7 +42,7 @@ namespace Barotrauma
 
     partial class Structure : MapEntity, IDamageable, IServerSerializable, ISerializableEntity
     {
-        public static int wallSectionSize = 96;
+        public const int WallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
 
         private StructurePrefab prefab;
@@ -54,24 +54,14 @@ namespace Barotrauma
 
         private SpriteEffects SpriteEffects = SpriteEffects.None;
 
+        private bool flippedX;
+
         //sections of the wall that are supposed to be rendered
         public WallSection[] sections
         {
             get;
             private set;
-        }
-
-        public bool resizeHorizontal
-        {
-            get { return prefab.resizeHorizontal; }
-        }
-
-        public bool resizeVertical
-        {
-            get { return prefab.resizeVertical; }
-        }
-
-        private bool flippedX;
+        }        
 
         public override Sprite Sprite
         {
@@ -145,7 +135,7 @@ namespace Barotrauma
 
         public List<string> Tags
         {
-            get { return prefab.tags; }
+            get { return prefab.Tags; }
         }
 
         protected Color spriteColor;
@@ -334,15 +324,15 @@ namespace Barotrauma
             {
                 if (isHorizontal)
                 {
-                    xsections = (int)Math.Ceiling((float)rect.Width / wallSectionSize);
+                    xsections = (int)Math.Ceiling((float)rect.Width / WallSectionSize);
                     sections = new WallSection[xsections];
-                    width = (int)wallSectionSize;
+                    width = (int)WallSectionSize;
                 }
                 else
                 {
-                    ysections = (int)Math.Ceiling((float)rect.Height / wallSectionSize);
+                    ysections = (int)Math.Ceiling((float)rect.Height / WallSectionSize);
                     sections = new WallSection[ysections];
-                    height = (int)wallSectionSize;
+                    height = (int)WallSectionSize;
                 }
             }
 
@@ -599,14 +589,14 @@ namespace Barotrauma
 
             //if the sub has been flipped horizontally, the first section may be smaller than wallSectionSize
             //and we need to adjust the position accordingly
-            if (sections[0].rect.Width < wallSectionSize)
+            if (sections[0].rect.Width < WallSectionSize)
             {
-                displayPos.X += wallSectionSize - sections[0].rect.Width;
+                displayPos.X += WallSectionSize - sections[0].rect.Width;
             }
 
             int index = (isHorizontal) ?
-                (int)Math.Floor((displayPos.X - rect.X) / wallSectionSize) :
-                (int)Math.Floor((rect.Y - displayPos.Y) / wallSectionSize);
+                (int)Math.Floor((displayPos.X - rect.X) / WallSectionSize) :
+                (int)Math.Floor((rect.Y - displayPos.Y) / WallSectionSize);
 
             if (index < 0 || index > sections.Length - 1) return -1;
             return index;
