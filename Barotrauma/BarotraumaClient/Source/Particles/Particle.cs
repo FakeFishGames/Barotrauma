@@ -105,10 +105,10 @@ namespace Barotrauma.Particles
                 velocity += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
             }
 
-            this.rotation = rotation + Rand.Range(prefab.StartRotationMin, prefab.StartRotationMax);    
+            this.rotation = rotation + Rand.Range(prefab.StartRotationMinRad, prefab.StartRotationMaxRad);    
             prevRotation = rotation;
 
-            angularVelocity = prefab.AngularVelocityMin + (prefab.AngularVelocityMax - prefab.AngularVelocityMin) * Rand.Range(0.0f, 1.0f);
+            angularVelocity = Rand.Range(prefab.AngularVelocityMinRad, prefab.AngularVelocityMaxRad);
 
             totalLifeTime = prefab.LifeTime;
             lifeTime = prefab.LifeTime;
@@ -120,7 +120,7 @@ namespace Barotrauma.Particles
             color = new Color(prefab.StartColor, 1.0f);
             alpha = prefab.StartAlpha;
             
-            velocityChange = prefab.VelocityChange;
+            velocityChange = prefab.VelocityChangeDisplay;
 
             OnChangeHull = null;
 

@@ -13,47 +13,158 @@ namespace Barotrauma.Particles
 
         public readonly List<Sprite> Sprites;
 
-        public readonly float AnimDuration;
-        public readonly bool LoopAnim;
+        //movement -----------------------------------------
 
-        public readonly float AngularVelocityMin, AngularVelocityMax;
+        private float angularVelocityMin;
+        public float AngularVelocityMinRad { get; private set; }
 
-        public readonly float StartRotationMin, StartRotationMax;
+        [Serialize(0.0f, false)]
+        public float AngularVelocityMin
+        {
+            get { return angularVelocityMin; }
+            private set
+            {
+                angularVelocityMin = value;
+                AngularVelocityMinRad = MathHelper.ToRadians(value);
+            }
+        }
 
-        public readonly Vector2 StartSizeMin, StartSizeMax;
-        public readonly Vector2 SizeChangeMin, SizeChangeMax;
+        private float angularVelocityMax;
+        public float AngularVelocityMaxRad { get; private set; }
 
-        public readonly float Drag, WaterDrag;
+        [Serialize(0.0f, false)]
+        public float AngularVelocityMax
+        {
+            get { return angularVelocityMax; }
+            private set
+            {
+                angularVelocityMax = value;
+                AngularVelocityMaxRad = MathHelper.ToRadians(value);
+            }
+        }
 
-        public readonly Color StartColor;
-        public readonly float StartAlpha;
+        private float startRotationMin;
+        public float StartRotationMinRad { get; private set; }
 
-        public readonly Vector4 ColorChange;
-              
-        public readonly float LifeTime;
+        [Serialize(0.0f, false)]
+        public float StartRotationMin
+        {
+            get { return startRotationMin; }
+            private set
+            {
+                startRotationMin = value;
+                StartRotationMinRad = MathHelper.ToRadians(value);
+            }
+        }
 
-        public readonly float GrowTime;
+        private float startRotationMax;
+        public float StartRotationMaxRad { get; private set; }
 
-        public readonly float CollisionRadius;
-        public readonly bool DeleteOnCollision;
-        public readonly bool CollidesWithWalls;
+        [Serialize(0.0f, false)]
+        public float StartRotationMax
+        {
+            get { return startRotationMax; }
+            private set
+            {
+                startRotationMax = value;
+                StartRotationMaxRad = MathHelper.ToRadians(value);
+            }
+        }
 
-        public readonly float Friction;
-        public readonly float Restitution;
+        [Serialize(false, false)]
+        public bool RotateToDirection { get; private set; }
 
-        public readonly Vector2 VelocityChange;
+        [Serialize(0.0f, false)]
+        public float Drag { get; private set; }
 
-        public readonly DrawTargetType DrawTarget;
+        [Serialize(0.0f, false)]
+        public float WaterDrag { get; private set; }
 
-        public readonly ParticleBlendState BlendState;
+        private Vector2 velocityChange;
+        public Vector2 VelocityChangeDisplay { get; private set; }
 
-        public readonly bool RotateToDirection;
+        [Serialize("0.0,0.0", false)]
+        public Vector2 VelocityChange
+        {
+            get { return velocityChange; }
+            private set
+            {
+                velocityChange = value;
+                VelocityChangeDisplay = ConvertUnits.ToDisplayUnits(value);
+            }
+        }
+
+        [Serialize(0.0f, false)]
+        public float CollisionRadius { get; private set; }
+
+        [Serialize(false, false)]
+        public bool DeleteOnCollision { get; private set; }
+
+        [Serialize(false, false)]
+        public bool CollidesWithWalls { get; private set; }
+
+        [Serialize(0.5f, false)]
+        public float Friction { get; private set; }
+
+        [Serialize(0.5f, false)]
+        public float Restitution { get; private set; }
+
+        //size -----------------------------------------
+
+        [Serialize("1.0,1.0", false)]
+        public Vector2 StartSizeMin { get; private set; }
+
+        [Serialize("1.0,1.0", false)]
+        public Vector2 StartSizeMax { get; private set; }
+
+        [Serialize("0.0,0.0", false)]
+        public Vector2 SizeChangeMin { get; private set; }
+
+        [Serialize("0.0,0.0", false)]
+        public Vector2 SizeChangeMax { get; private set; }
+
+        [Serialize(0.0f, false)]
+        public float GrowTime { get; private set; }
+
+        //rendering -----------------------------------------
+
+        [Serialize("1.0,1.0,1.0,1.0", false)]
+        public Color StartColor { get; private set; }
+
+        [Serialize(1.0f, false)]
+        public float StartAlpha { get; private set; }
+
+        [Serialize("0.0,0.0,0.0,0.0", false)]
+        public Vector4 ColorChange { get; private set; }
+
+        [Serialize(DrawTargetType.Air, false)]
+        public DrawTargetType DrawTarget { get; private set; }
+
+        [Serialize(ParticleBlendState.AlphaBlend, false)]
+        public ParticleBlendState BlendState { get; private set; }
+        
+        //animation -----------------------------------------
+
+        [Serialize(1.0f, false)]
+        public float AnimDuration { get; private set; }
+
+        [Serialize(true, false)]
+        public bool LoopAnim { get; private set; }
+
+        //misc -----------------------------------------
+
+        [Serialize(5.0f, false)]
+        public float LifeTime { get; private set; }
+
+        //----------------------------------------------------
 
         public ParticlePrefab(XElement element)
         {
             Name = element.Name.ToString();
 
             Sprites = new List<Sprite>();
+
+            SerializableProperty.DeserializeProperties(this, element);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -69,121 +180,37 @@ namespace Barotrauma.Particles
                 }
             }
 
-            AnimDuration = element.GetAttributeFloat("animduration", 1.0f);
-            LoopAnim = element.GetAttributeBool("loopanim", true);
-
-            if (element.Attribute("angularvelocity") == null)
-            {
-                AngularVelocityMin = element.GetAttributeFloat("angularvelocitymin", 0.0f);
-                AngularVelocityMax = element.GetAttributeFloat("angularvelocitymax", 0.0f);
-            }
-            else
+            if (element.Attribute("angularvelocity") != null)
             {
                 AngularVelocityMin = element.GetAttributeFloat("angularvelocity", 0.0f);
                 AngularVelocityMax = AngularVelocityMin;
             }
 
-            AngularVelocityMin = MathHelper.ToRadians(AngularVelocityMin);
-            AngularVelocityMax = MathHelper.ToRadians(AngularVelocityMax);
-
-            if (element.Attribute("startsize") == null)
-            {
-                StartSizeMin = element.GetAttributeVector2("startsizemin", Vector2.One);
-                StartSizeMax = element.GetAttributeVector2("startsizemax", Vector2.One);
-            }
-            else
+            if (element.Attribute("startsize") != null)
             {
                 StartSizeMin = element.GetAttributeVector2("startsize", Vector2.One);
                 StartSizeMax = StartSizeMin;
             }
 
-            if (element.Attribute("sizechange") == null)
-            {
-                SizeChangeMin = element.GetAttributeVector2("sizechangemin", Vector2.Zero);
-                SizeChangeMax = element.GetAttributeVector2("sizechangemax", Vector2.Zero);
-            }
-            else
+            if (element.Attribute("sizechange") != null)
             {
                 SizeChangeMin = element.GetAttributeVector2("sizechange", Vector2.Zero);
                 SizeChangeMax = SizeChangeMin;
             }
 
-            Drag = element.GetAttributeFloat("drag", 0.0f);
-            WaterDrag = element.GetAttributeFloat("waterdrag", 0.0f);
-            
-            Friction = element.GetAttributeFloat("friction", 0.5f);
-            Restitution = element.GetAttributeFloat("restitution", 0.5f);
-
-            switch (element.GetAttributeString("blendstate", "alphablend"))
-            {
-                case "alpha":
-                case "alphablend":
-                    BlendState = ParticleBlendState.AlphaBlend;
-                    break;
-                case "add":
-                case "additive":
-                    BlendState = ParticleBlendState.Additive;
-                    break;
-                case "distort":
-                case "distortion":
-                    BlendState = ParticleBlendState.Distortion;
-                    break;
-            }
-
-            GrowTime = element.GetAttributeFloat("growtime", 0.0f);
-
-            if (element.Attribute("startrotation") == null)
-            {
-                StartRotationMin = element.GetAttributeFloat("startrotationmin", 0.0f);
-                StartRotationMax = element.GetAttributeFloat("startrotationmax", 0.0f);
-            }
-            else
+            if (element.Attribute("startrotation") != null)
             {
                 StartRotationMin = element.GetAttributeFloat("startrotation", 0.0f);
                 StartRotationMax = StartRotationMin;
             }
-
-            StartRotationMin = MathHelper.ToRadians(StartRotationMin);
-            StartRotationMax = MathHelper.ToRadians(StartRotationMax);
-
-            StartColor = new Color(element.GetAttributeVector4("startcolor", Vector4.One));
-            StartAlpha = element.GetAttributeFloat("startalpha", 1.0f);
-
-            DeleteOnCollision = element.GetAttributeBool("deleteoncollision", false);
-            CollidesWithWalls = element.GetAttributeBool("collideswithwalls", false);
-
-            CollisionRadius = element.GetAttributeFloat("collisionradius",
-                Sprites.Count > 0 ? 1 : Sprites[0].SourceRect.Width / 2.0f);
-
-            ColorChange = element.GetAttributeVector4("colorchange", Vector4.Zero);
-
-            LifeTime = element.GetAttributeFloat("lifetime", 5.0f);
-
-            VelocityChange = element.GetAttributeVector2("velocitychange", Vector2.Zero);
-            VelocityChange = ConvertUnits.ToDisplayUnits(VelocityChange);
-
-            RotateToDirection = element.GetAttributeBool("rotatetodirection", false);
-
-            switch (element.GetAttributeString("drawtarget", "air").ToLowerInvariant())
-            {
-                case "air":
-                default:
-                    DrawTarget = DrawTargetType.Air;
-                    break;
-                case "water":
-                    DrawTarget = DrawTargetType.Water;
-                    break;
-                case "both":
-                    DrawTarget = DrawTargetType.Both;
-                    break;
-                
-            }
+            
+            if (CollisionRadius <= 0.0f) CollisionRadius = Sprites.Count > 0 ? 1 : Sprites[0].SourceRect.Width / 2.0f;
         }
 
         public Vector2 CalculateEndPosition(Vector2 startPosition, Vector2 velocity)
         {
             //endPos = x + vt + 1/2 * at^2
-            return startPosition + velocity * LifeTime + 0.5f * VelocityChange * LifeTime * LifeTime;
+            return startPosition + velocity * LifeTime + 0.5f * VelocityChangeDisplay * LifeTime * LifeTime;
         }
     }
 }
