@@ -5,20 +5,27 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {
-    class ParticlePrefab
+    class ParticlePrefab : ISerializableEntity
     {
         public enum DrawTargetType { Air = 1, Water = 2, Both = 3 }
 
-        public readonly string Name;
-
         public readonly List<Sprite> Sprites;
+
+        public string Name
+        {
+            get;
+            private set;
+        }
+                
+        [Editable(0.0f, float.MaxValue, ToolTip = "How many seconds the particle remains alive."), Serialize(5.0f, false)]
+        public float LifeTime { get; private set; }
 
         //movement -----------------------------------------
 
         private float angularVelocityMin;
         public float AngularVelocityMinRad { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false)]
         public float AngularVelocityMin
         {
             get { return angularVelocityMin; }
@@ -32,7 +39,7 @@ namespace Barotrauma.Particles
         private float angularVelocityMax;
         public float AngularVelocityMaxRad { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false)]
         public float AngularVelocityMax
         {
             get { return angularVelocityMax; }
@@ -46,7 +53,7 @@ namespace Barotrauma.Particles
         private float startRotationMin;
         public float StartRotationMinRad { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Editable(ToolTip = "The minimum initial rotation of the particle (in degrees)."), Serialize(0.0f, false)]
         public float StartRotationMin
         {
             get { return startRotationMin; }
@@ -60,7 +67,7 @@ namespace Barotrauma.Particles
         private float startRotationMax;
         public float StartRotationMaxRad { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Editable(ToolTip = "The maximum initial rotation of the particle (in degrees)."), Serialize(0.0f, false)]
         public float StartRotationMax
         {
             get { return startRotationMax; }
@@ -71,19 +78,19 @@ namespace Barotrauma.Particles
             }
         }
 
-        [Serialize(false, false)]
+        [Editable(ToolTip = "Should the particle face the direction it's moving towards."), Serialize(false, false)]
         public bool RotateToDirection { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Editable(ToolTip = "Drag applied to the particle when it's moving through air."), Serialize(0.0f, false)]
         public float Drag { get; private set; }
 
-        [Serialize(0.0f, false)]
+        [Editable(ToolTip = "Drag applied to the particle when it's moving through water."), Serialize(0.0f, false)]
         public float WaterDrag { get; private set; }
 
         private Vector2 velocityChange;
         public Vector2 VelocityChangeDisplay { get; private set; }
 
-        [Serialize("0.0,0.0", false)]
+        [Editable(ToolTip = "How much the velocity of the particle changes per second."), Serialize("0.0,0.0", false)]
         public Vector2 VelocityChange
         {
             get { return velocityChange; }
@@ -94,67 +101,74 @@ namespace Barotrauma.Particles
             }
         }
 
-        [Serialize(0.0f, false)]
+        [Editable(0.0f, 10000.0f, ToolTip = "Drag applied to the particle when it's moving through water."), Serialize(0.0f, false)]
         public float CollisionRadius { get; private set; }
 
-        [Serialize(false, false)]
-        public bool DeleteOnCollision { get; private set; }
-
-        [Serialize(false, false)]
+        [Editable(ToolTip = "Does the particle collide with the walls of the submarine and the level."), Serialize(false, false)]
         public bool CollidesWithWalls { get; private set; }
 
-        [Serialize(0.5f, false)]
+        [Editable(ToolTip = "Does the particle disappear when it collides with something."), Serialize(false, false)]
+        public bool DeleteOnCollision { get; private set; }
+
+        [Editable(0.0f, 1.0f, ToolTip = "The friction coefficient of the particle, i.e. how much it slows down when it's sliding against a surface."), Serialize(0.5f, false)]
         public float Friction { get; private set; }
 
+        [Editable(0.0f, 1.0f, ToolTip = "How much of the particle's velocity is conserved when it collides with something, i.e. the \"bounciness\" of the particle. (1.0 = the particle stops completely).")]
         [Serialize(0.5f, false)]
         public float Restitution { get; private set; }
 
         //size -----------------------------------------
 
-        [Serialize("1.0,1.0", false)]
+        [Editable(ToolTip = "The minimum initial size of the particle."), Serialize("1.0,1.0", false)]
         public Vector2 StartSizeMin { get; private set; }
 
-        [Serialize("1.0,1.0", false)]
+        [Editable(ToolTip = "The maximum initial size of the particle."), Serialize("1.0,1.0", false)]
         public Vector2 StartSizeMax { get; private set; }
 
+        [Editable(ToolTip = "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
         [Serialize("0.0,0.0", false)]
         public Vector2 SizeChangeMin { get; private set; }
 
+        [Editable(ToolTip = "How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.")]
         [Serialize("0.0,0.0", false)]
         public Vector2 SizeChangeMax { get; private set; }
 
+        [Editable(ToolTip = "How many seconds it takes for the particle to grow to it's initial size.")]
         [Serialize(0.0f, false)]
         public float GrowTime { get; private set; }
 
         //rendering -----------------------------------------
 
-        [Serialize("1.0,1.0,1.0,1.0", false)]
+        [Editable(ToolTip = "The initial color of the particle"), Serialize("1.0,1.0,1.0,1.0", false)]
         public Color StartColor { get; private set; }
 
-        [Serialize(1.0f, false)]
+        [Editable(ToolTip = "The initial alpha value of the particle"), Serialize(1.0f, false)]
         public float StartAlpha { get; private set; }
 
-        [Serialize("0.0,0.0,0.0,0.0", false)]
+        [Editable(ToolTip = "How much the color of the particle changes per second."), Serialize("0.0,0.0,0.0,0.0", false)]
         public Vector4 ColorChange { get; private set; }
 
-        [Serialize(DrawTargetType.Air, false)]
+        [Editable(ToolTip = "Should the particle be rendered in air, water or both."), Serialize(DrawTargetType.Air, false)]
         public DrawTargetType DrawTarget { get; private set; }
 
-        [Serialize(ParticleBlendState.AlphaBlend, false)]
+        [Editable(ToolTip = "The type of blending to use when rendering the particle."), Serialize(ParticleBlendState.AlphaBlend, false)]
         public ParticleBlendState BlendState { get; private set; }
         
         //animation -----------------------------------------
 
-        [Serialize(1.0f, false)]
+        [Editable(0.0f, float.MaxValue, ToolTip = "The duration of the particle's animation cycle (if it's animated)."), Serialize(1.0f, false)]
         public float AnimDuration { get; private set; }
 
-        [Serialize(true, false)]
+        [Editable(ToolTip = "Should the sprite animation be looped, or stay at the last frame when the animation finishes."), Serialize(true, false)]
         public bool LoopAnim { get; private set; }
 
-        //misc -----------------------------------------
+        //----------------------------------------------------
 
-        [Serialize(5.0f, false)]
-        public float LifeTime { get; private set; }
+        public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            private set;
+        }
 
         //----------------------------------------------------
 
@@ -164,7 +178,7 @@ namespace Barotrauma.Particles
 
             Sprites = new List<Sprite>();
 
-            SerializableProperty.DeserializeProperties(this, element);
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
             foreach (XElement subElement in element.Elements())
             {

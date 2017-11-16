@@ -95,6 +95,11 @@ namespace Barotrauma
             {
                 SetDimensions(new Point(Rect.Width, 0), false);
             }
+
+            if (parent is GUIListBox)
+            {
+                ((GUIListBox)parent).UpdateScrollBarSize();
+            }
         }
 
         public void AddCustomContent(GUIComponent component, int childIndex)

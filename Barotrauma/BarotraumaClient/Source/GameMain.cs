@@ -29,6 +29,7 @@ namespace Barotrauma
 
         public static EditMapScreen         EditMapScreen;
         public static EditCharacterScreen   EditCharacterScreen;
+        public static ParticleEditorScreen  ParticleEditorScreen;
 
         public static Lights.LightManager LightManager;
         
@@ -279,13 +280,14 @@ namespace Barotrauma
             TitleScreen.LoadState = 90.0f;
         yield return CoroutineStatus.Running;
 
-            MainMenuScreen      =   new MainMenuScreen(this); 
-            LobbyScreen         =   new LobbyScreen();
+            MainMenuScreen          =   new MainMenuScreen(this); 
+            LobbyScreen             =   new LobbyScreen();
             
-            ServerListScreen    =   new ServerListScreen();
+            ServerListScreen        =   new ServerListScreen();
 
-            EditMapScreen       =   new EditMapScreen();
-            EditCharacterScreen =   new EditCharacterScreen();
+            EditMapScreen           =   new EditMapScreen();
+            EditCharacterScreen     =   new EditCharacterScreen();
+            ParticleEditorScreen    =   new ParticleEditorScreen();
 
         yield return CoroutineStatus.Running;
 
