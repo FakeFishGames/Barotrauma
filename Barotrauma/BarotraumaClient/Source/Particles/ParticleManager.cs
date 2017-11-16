@@ -22,7 +22,7 @@ namespace Barotrauma.Particles
 
         private Dictionary<string, ParticlePrefab> prefabs;
 
-        Camera cam;
+        private Camera cam;
         
         public ParticleManager(string configFile, Camera cam)
         {
@@ -30,7 +30,12 @@ namespace Barotrauma.Particles
 
             particles = new Particle[MaxParticles];
 
-            XDocument doc = XMLExtensions.TryLoadXml(configFile);
+            LoadPrefabs(configFile);
+        }
+
+        public void LoadPrefabs(string file)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;
 
             prefabs = new Dictionary<string, ParticlePrefab>();
@@ -39,7 +44,7 @@ namespace Barotrauma.Particles
             {
                 if (prefabs.ContainsKey(element.Name.ToString()))
                 {
-                    DebugConsole.ThrowError("Error in " + configFile + "! Each particle prefab must have a unique name.");
+                    DebugConsole.ThrowError("Error in " + file + "! Each particle prefab must have a unique name.");
                     continue;
                 }
                 prefabs.Add(element.Name.ToString(), new ParticlePrefab(element));
