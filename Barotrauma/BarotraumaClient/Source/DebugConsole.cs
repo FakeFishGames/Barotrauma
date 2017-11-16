@@ -225,12 +225,17 @@ namespace Barotrauma
                 }
                 GameMain.EditMapScreen.Select();
             }));
-
+            
             commands.Add(new Command("editcharacter", "", (string[] args) =>
             {
                 GameMain.EditCharacterScreen.Select();
-
             }));
+
+            commands.Add(new Command("editparticles", "", (string[] args) =>
+            {
+                GameMain.ParticleEditorScreen.Select();
+            }));
+
 
             commands.Add(new Command("control|controlcharacter", "control [character name]: Start controlling the specified character.", (string[] args) =>
             {
