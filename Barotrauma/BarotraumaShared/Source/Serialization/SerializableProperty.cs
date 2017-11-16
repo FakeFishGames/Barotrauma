@@ -123,7 +123,7 @@ namespace Barotrauma
                     object enumVal;
                     try
                     {
-                        enumVal = Enum.Parse(propertyInfo.PropertyType, value);
+                        enumVal = Enum.Parse(propertyInfo.PropertyType, value, true);
                     }
                     catch (Exception e)
                     {
@@ -197,7 +197,7 @@ namespace Barotrauma
                         object enumVal;
                         try
                         {
-                            enumVal = Enum.Parse(propertyInfo.PropertyType, value.ToString());
+                            enumVal = Enum.Parse(propertyInfo.PropertyType, value.ToString(), true);
                         }
                         catch (Exception e)
                         {
