@@ -1,11 +1,56 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Barotrauma.Particles;
+using System;
+using System.Collections.Generic;
+using System.Xml.Linq;
+using System.Windows;
+using System.Xml;
+using System.Text;
 
 namespace Barotrauma
 {
     class ParticleEditorScreen : Screen
     {
+        class Emitter : ISerializableEntity
+        {
+            public float EmitTimer;
+            
+            [Editable(), Serialize("0.0,0.0", false)]
+            public Vector2 AngleRange { get; private set; }
+            
+            [Editable(), Serialize("0.0,0.0", false)]
+            public Vector2 VelocityRange { get; private set; }
+
+            [Editable(), Serialize("1.0,1.0", false)]
+            public Vector2 ScaleRange { get; private set; }
+
+            [Editable(), Serialize(0, false)]
+            public int ParticleAmount { get; private set; }
+            [Editable(), Serialize(0.0f, false)]
+            public float ParticlesPerSecond { get; private set; }
+
+            public string Name
+            {
+                get
+                {
+                    return "Emitter";
+                }
+            }
+
+            public Dictionary<string, SerializableProperty> SerializableProperties
+            {
+                get;
+                private set;
+            }
+
+            public Emitter()
+            {
+                SerializableProperties = SerializableProperty.GetProperties(this);
+            }
+        }
+
+        private GUIComponent guiRoot;
         private GUIComponent rightPanel, leftPanel;
 
         private GUIListBox prefabList;
@@ -13,6 +58,8 @@ namespace Barotrauma
         private ParticlePrefab selectedPrefab;
 
         private SerializableEntityEditor particlePrefabEditor;
+
+        private Emitter emitter;
 
         private Camera cam;
 
@@ -28,13 +75,25 @@ namespace Barotrauma
         {
             cam = new Camera();
 
-            leftPanel = new GUIFrame(new Rectangle(0, 0, 150, GameMain.GraphicsHeight), "GUIFrameLeft");
+            guiRoot = new GUIFrame(Rectangle.Empty, null, null);
+            
+            leftPanel = new GUIFrame(new Rectangle(0, 0, 150, GameMain.GraphicsHeight), "GUIFrameLeft", guiRoot);
             leftPanel.Padding = new Vector4(10.0f, 20.0f, 10.0f, 20.0f);
 
-            rightPanel = new GUIFrame(new Rectangle(0, 0, 450, GameMain.GraphicsHeight), null, Alignment.Right, "GUIFrameRight");
+            rightPanel = new GUIFrame(new Rectangle(0, 0, 450, GameMain.GraphicsHeight), null, Alignment.Right, "GUIFrameRight", guiRoot);
             rightPanel.Padding = new Vector4(10.0f, 20.0f, 0.0f, 20.0f);
 
-            var listBox = new GUIListBox(new Rectangle(0,0,0,0), "", rightPanel);
+            var serializeToClipBoardButton = new GUIButton(new Rectangle(leftPanel.Rect.Right + 20, 10, 150, 20), "Copy to clipboard", "", guiRoot);
+            serializeToClipBoardButton.OnClicked += (btn, obj) =>
+            {
+                SerializeToClipboard(selectedPrefab);
+                return true;
+            };
+            
+            emitter = new Emitter();
+            var emitterEditor = new SerializableEntityEditor(emitter, false, rightPanel, true);
+
+            var listBox = new GUIListBox(new Rectangle(0, emitterEditor.Rect.Height + 20, 0, 0), "", rightPanel);
 
             prefabList = new GUIListBox(new Rectangle(0, 50, 0, 0), "", leftPanel);
             prefabList.OnSelected += (GUIComponent component, object obj) =>
@@ -60,26 +119,75 @@ namespace Barotrauma
             foreach (ParticlePrefab particlePrefab in particlePrefabs)
             {
                 var prefabText = new GUITextBlock(new Rectangle(0, 0, 0, 20), particlePrefab.Name, "", prefabList);
+                prefabText.Padding = Vector4.Zero;
                 prefabText.UserData = particlePrefab;
             }
         }
 
         public override void AddToGUIUpdateList()
         {
-            leftPanel.AddToGUIUpdateList();
-            rightPanel.AddToGUIUpdateList();
+            guiRoot.AddToGUIUpdateList();
+        }
+
+        private void Emit(Vector2 position)
+        {
+            float angle = MathHelper.ToRadians(Rand.Range(emitter.AngleRange.X, emitter.AngleRange.Y));
+            Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(emitter.VelocityRange.X, emitter.VelocityRange.Y);
+
+            var particle = GameMain.ParticleManager.CreateParticle(selectedPrefab, position, velocity, 0.0f);
+
+            if (particle != null)
+            {
+                particle.Size *= Rand.Range(emitter.ScaleRange.X, emitter.ScaleRange.Y);
+            }
+        }
+
+        private void SerializeToClipboard(ParticlePrefab prefab)
+        {
+            if (prefab == null) return;
+
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.OmitXmlDeclaration = true;
+            settings.NewLineOnAttributes = true;
+
+            XElement element = new XElement(prefab.Name);
+            SerializableProperty.SerializeProperties(prefab, element, true);
+
+            StringBuilder sb = new StringBuilder();
+            using (var writer = XmlWriter.Create(sb, settings))
+            {
+                element.WriteTo(writer);
+                writer.Flush();
+            }
+
+            Clipboard.SetText(sb.ToString());
         }
 
         public override void Update(double deltaTime)
         {
-            cam.MoveCamera((float)deltaTime);
+            cam.MoveCamera((float)deltaTime, true, GUIComponent.MouseOn == null);
 
-            leftPanel.Update((float)deltaTime);
-            rightPanel.Update((float)deltaTime);
+            guiRoot.Update((float)deltaTime);
 
             if (selectedPrefab != null)
             {
-                GameMain.ParticleManager.CreateParticle(selectedPrefab, cam.WorldViewCenter, Vector2.UnitY * 100.0f);
+                emitter.EmitTimer += (float)deltaTime;
+
+                if (emitter.ParticlesPerSecond > 0)
+                {
+                    float emitInterval = 1.0f / emitter.ParticlesPerSecond;
+                    while (emitter.EmitTimer > emitInterval)
+                    {
+                        Emit(Vector2.Zero);
+                        emitter.EmitTimer -= emitInterval;
+                    }
+                }
+
+                for (int i = 0; i < emitter.ParticleAmount; i++)
+                {
+                    Emit(Vector2.Zero);
+                }
             }
 
             GameMain.ParticleManager.Update((float)deltaTime);
@@ -118,8 +226,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            leftPanel.Draw(spriteBatch);
-            rightPanel.Draw(spriteBatch);
+            guiRoot.Draw(spriteBatch);
 
             GUI.Draw((float)deltaTime, spriteBatch, cam);
 

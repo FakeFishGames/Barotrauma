@@ -113,6 +113,12 @@ namespace Barotrauma
             if (inputType == NumberType.Int)
             {
                 textBox.Text = "0";
+                textBox.OnEnterPressed += (txtBox, txt) =>
+                {
+                    textBox.Text = IntValue.ToString();
+                    textBox.Deselect();
+                    return true;
+                };
                 textBox.OnDeselected += (txtBox, key) =>
                 {
                     textBox.Text = IntValue.ToString();
@@ -125,9 +131,13 @@ namespace Barotrauma
                 {
                     textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
                 };
+                textBox.OnEnterPressed += (txtBox, txt) =>
+                {
+                    textBox.Text = FloatValue.ToString("G", CultureInfo.InvariantCulture);
+                    textBox.Deselect();
+                    return true;
+                };
             }
-
-
 
             InputType = inputType;
         }
