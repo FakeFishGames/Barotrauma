@@ -986,7 +986,7 @@ namespace Barotrauma
                         Wire.UpdateEditing(wires);
                     }
 
-                    if (dummyCharacter.SelectedConstruction==null)
+                    if (dummyCharacter.SelectedConstruction==null || dummyCharacter.SelectedConstruction.GetComponent<Pickable>() != null)
                     {
                         Vector2 mouseSimPos = FarseerPhysics.ConvertUnits.ToSimUnits(dummyCharacter.CursorPosition);
                         foreach (Limb limb in dummyCharacter.AnimController.Limbs)
@@ -1050,7 +1050,7 @@ namespace Barotrauma
             {
                 dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false);
 
-                foreach (Item item in dummyCharacter.SelectedItems)
+                foreach (Item item in dummyCharacter.Inventory.Items)
                 {
                     if (item == null) continue;
 
