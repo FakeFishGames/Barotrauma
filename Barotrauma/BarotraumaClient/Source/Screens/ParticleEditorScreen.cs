@@ -83,13 +83,20 @@ namespace Barotrauma
             rightPanel = new GUIFrame(new Rectangle(0, 0, 450, GameMain.GraphicsHeight), null, Alignment.Right, "GUIFrameRight", guiRoot);
             rightPanel.Padding = new Vector4(10.0f, 20.0f, 0.0f, 20.0f);
 
+            var saveAllButton = new GUIButton(new Rectangle(leftPanel.Rect.Right + 20, 10, 150, 20), "Save all", "", guiRoot);
+            saveAllButton.OnClicked += (btn, obj) =>
+            {
+                SerializeAll();
+                return true;
+            };
+
             var serializeToClipBoardButton = new GUIButton(new Rectangle(leftPanel.Rect.Right + 20, 10, 150, 20), "Copy to clipboard", "", guiRoot);
             serializeToClipBoardButton.OnClicked += (btn, obj) =>
             {
                 SerializeToClipboard(selectedPrefab);
                 return true;
             };
-            
+
             emitter = new Emitter();
             var emitterEditor = new SerializableEntityEditor(emitter, false, rightPanel, true);
 
@@ -139,6 +146,34 @@ namespace Barotrauma
             if (particle != null)
             {
                 particle.Size *= Rand.Range(emitter.ScaleRange.X, emitter.ScaleRange.Y);
+            }
+        }
+
+        private void SerializeAll()
+        {            
+            XDocument doc = XMLExtensions.TryLoadXml(GameMain.ParticleManager.ConfigFile);
+            if (doc == null || doc.Root == null) return;
+
+            var prefabList = GameMain.ParticleManager.GetPrefabList();
+            foreach (ParticlePrefab prefab in prefabList)
+            {
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    if (element.Name.ToString().ToLowerInvariant() != prefab.Name.ToLowerInvariant()) continue;
+
+                    SerializableProperty.SerializeProperties(prefab, element, true);
+                }
+            }
+
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.OmitXmlDeclaration = true;
+            settings.NewLineOnAttributes = true;
+
+            using (var writer = XmlWriter.Create(GameMain.ParticleManager.ConfigFile, settings))
+            {
+                doc.WriteTo(writer);
+                writer.Flush();
             }
         }
 

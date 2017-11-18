@@ -443,8 +443,8 @@ namespace Barotrauma
                             break;
                     }
                 }
-
-                element.Add(new XAttribute(property.Name.ToLowerInvariant(), stringValue));
+                
+                element.SetAttributeValue(property.Name.ToLowerInvariant(), stringValue);
             }
         }
     }
