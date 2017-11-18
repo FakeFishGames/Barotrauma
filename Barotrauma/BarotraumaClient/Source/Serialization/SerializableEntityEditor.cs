@@ -243,6 +243,8 @@ namespace Barotrauma
                 if (property.TrySetValue(text))
                 {
                     TrySendNetworkUpdate(entity, property);
+                    textBox.Text = (string)property.GetValue();
+                    textBox.Deselect();
                 }
                 return true;
             };
