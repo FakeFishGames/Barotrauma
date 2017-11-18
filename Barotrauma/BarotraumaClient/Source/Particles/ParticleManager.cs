@@ -14,6 +14,7 @@ namespace Barotrauma.Particles
 
     class ParticleManager
     {
+        public readonly string ConfigFile;
         public static int particleCount;
 
         private const int MaxOutOfViewDist = 500;
@@ -27,6 +28,7 @@ namespace Barotrauma.Particles
         
         public ParticleManager(string configFile, Camera cam)
         {
+            ConfigFile = configFile;
             this.cam = cam;
 
             particles = new Particle[MaxParticles];
