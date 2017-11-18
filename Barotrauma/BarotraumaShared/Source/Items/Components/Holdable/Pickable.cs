@@ -107,7 +107,7 @@ namespace Barotrauma.Items.Components
             var rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
 
             pickTimer = 0.0f;
-            while (pickTimer < requiredTime && Screen.Selected != GameMain.EditMapScreen)
+            while (pickTimer < requiredTime && Screen.Selected != GameMain.SubEditorScreen)
             {
                 if (picker.IsKeyDown(InputType.Aim) || !picker.CanInteractWith(item))
                 {

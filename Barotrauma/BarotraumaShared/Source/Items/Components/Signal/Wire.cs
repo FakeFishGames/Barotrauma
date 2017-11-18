@@ -214,7 +214,7 @@ namespace Barotrauma.Items.Components
             if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
             if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
 
-            if ((item.Submarine != sub || sub == null) && Screen.Selected != GameMain.EditMapScreen)
+            if ((item.Submarine != sub || sub == null) && Screen.Selected != GameMain.SubEditorScreen)
             {
                 ClearConnections();
                 return;
@@ -339,7 +339,7 @@ namespace Barotrauma.Items.Components
 
         private Vector2 RoundNode(Vector2 position, Hull hull)
         {
-            if (Screen.Selected == GameMain.EditMapScreen)
+            if (Screen.Selected == GameMain.SubEditorScreen)
             {
                 position.X = MathUtils.Round(position.X, Submarine.GridSize.X / 2.0f);
                 position.Y = MathUtils.Round(position.Y, Submarine.GridSize.Y / 2.0f);

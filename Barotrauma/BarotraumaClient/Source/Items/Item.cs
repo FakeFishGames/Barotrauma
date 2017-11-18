@@ -118,12 +118,12 @@ namespace Barotrauma
         {
             if (editingHUD == null || editingHUD.UserData as Item != this)
             {
-                editingHUD = CreateEditingHUD(Screen.Selected != GameMain.EditMapScreen);
+                editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
 
             editingHUD.Update((float)Timing.Step);
 
-            if (Screen.Selected != GameMain.EditMapScreen) return;
+            if (Screen.Selected != GameMain.SubEditorScreen) return;
 
             if (!prefab.IsLinkable) return;
 
@@ -257,7 +257,7 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            if (Screen.Selected is EditMapScreen)
+            if (Screen.Selected is SubEditorScreen)
             {
                 if (editingHUD != null) editingHUD.AddToGUIUpdateList();
             }

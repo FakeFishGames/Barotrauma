@@ -65,7 +65,7 @@ namespace Barotrauma
 
             button = new GUIButton(new Rectangle(50, y + 260, 200, 30), "Submarine Editor", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
-            button.OnClicked = (GUIButton btn, object userdata) => { GameMain.EditMapScreen.Select(); return true; };
+            button.OnClicked = (GUIButton btn, object userdata) => { GameMain.SubEditorScreen.Select(); return true; };
 
             button = new GUIButton(new Rectangle(50, y + 320, 200, 30), "Settings", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;

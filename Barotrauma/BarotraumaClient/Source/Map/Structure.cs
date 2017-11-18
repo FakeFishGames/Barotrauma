@@ -70,7 +70,7 @@ namespace Barotrauma
         {
             if (editingHUD == null || editingHUD.UserData as Structure != this)
             {
-                editingHUD = CreateEditingHUD(Screen.Selected != GameMain.EditMapScreen);
+                editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
             }
 
             editingHUD.Update((float)Timing.Step);

@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace Barotrauma
 {
-    class EditMapScreen : Screen
+    class SubEditorScreen : Screen
     {
         private Camera cam;
 
@@ -117,7 +117,7 @@ namespace Barotrauma
         }
 
 
-        public EditMapScreen()
+        public SubEditorScreen()
         {
             cam = new Camera(); 
             //cam.Translate(new Vector2(-10.0f, 50.0f));

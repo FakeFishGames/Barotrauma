@@ -1052,7 +1052,7 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 bool pickHit = false, selectHit = false;
-                if (Screen.Selected == GameMain.EditMapScreen)
+                if (Screen.Selected == GameMain.SubEditorScreen)
                 {
                     pickHit = picker.IsKeyHit(InputType.Select);
                     selectHit = picker.IsKeyHit(InputType.Select);
@@ -1083,7 +1083,7 @@ namespace Barotrauma
 
                 if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
 
-                bool showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.EditMapScreen;
+                bool showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
                 if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, showUiMsg)) continue;
                 if ((ic.CanBePicked && pickHit && ic.Pick(picker)) ||
                     (ic.CanBeSelected && selectHit && ic.Select(picker)))
@@ -1115,7 +1115,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            if (!hasRequiredSkills && Character.Controlled == picker && Screen.Selected != GameMain.EditMapScreen)
+            if (!hasRequiredSkills && Character.Controlled == picker && Screen.Selected != GameMain.SubEditorScreen)
             {
                 GUI.AddMessage("Your skills may be insufficient to use the item!", Color.Red, 5.0f);
                 if (requiredSkill != null)

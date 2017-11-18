@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
                     0.3f);
             }
 
-            if (!editing || !GameMain.EditMapScreen.WiringMode) return;
+            if (!editing || !GameMain.SubEditorScreen.WiringMode) return;
 
             for (int i = 0; i < nodes.Count; i++)
             {
@@ -127,7 +127,7 @@ namespace Barotrauma.Items.Components
                     if (draggingWire.connections[0] != null && draggingWire.connections[0].Item.Submarine != null) sub = draggingWire.connections[0].Item.Submarine;
                     if (draggingWire.connections[1] != null && draggingWire.connections[1].Item.Submarine != null) sub = draggingWire.connections[1].Item.Submarine;
 
-                    Vector2 nodeWorldPos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - sub.HiddenSubPosition - sub.Position;// Nodes[(int)selectedNodeIndex];
+                    Vector2 nodeWorldPos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - sub.HiddenSubPosition - sub.Position;// Nodes[(int)selectedNodeIndex];
 
                     nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X / 2.0f);
                     nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y / 2.0f);
@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
 
                 if (selectedWire != null)
                 {
-                    Vector2 mousePos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                    Vector2 mousePos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
                     if (selectedWire.item.Submarine != null) mousePos -= (selectedWire.item.Submarine.Position + selectedWire.item.Submarine.HiddenSubPosition);
 
                     //left click while holding ctrl -> check if the cursor is on a wire section, 
@@ -199,7 +199,7 @@ namespace Barotrauma.Items.Components
             float closestDist = 0.0f;
             foreach (Wire w in wires)
             {
-                Vector2 mousePos = GameMain.EditMapScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                Vector2 mousePos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
                 if (w.item.Submarine != null) mousePos -= (w.item.Submarine.Position + w.item.Submarine.HiddenSubPosition);
 
                 float dist = 0.0f;

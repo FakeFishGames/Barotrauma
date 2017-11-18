@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class EditCharacterScreen : Screen
+    class CharacterEditorScreen : Screen
     {
         Camera cam;
 

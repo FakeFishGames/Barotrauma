@@ -167,7 +167,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (back && Screen.Selected != GameMain.EditMapScreen)
+            if (back && Screen.Selected != GameMain.SubEditorScreen)
             {
                 DrawDecals(spriteBatch);
                 return;
