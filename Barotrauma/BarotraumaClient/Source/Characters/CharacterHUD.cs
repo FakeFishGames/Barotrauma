@@ -222,7 +222,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Screen.Selected == GameMain.EditMapScreen) return;
+            if (Screen.Selected == GameMain.SubEditorScreen) return;
 
             if (character.IsUnconscious || (character.Oxygen < 80.0f && !character.IsDead))
             {

@@ -131,7 +131,7 @@ namespace Barotrauma
 
             LinkedSubmarine linkedSub = null;
 
-            if (Screen.Selected == GameMain.EditMapScreen)
+            if (Screen.Selected == GameMain.SubEditorScreen)
             {
                 //string filePath = ToolBox.GetAttributeString(element, "filepath", "");
                 

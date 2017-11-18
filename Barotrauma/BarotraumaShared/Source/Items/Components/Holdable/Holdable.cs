@@ -109,7 +109,7 @@ namespace Barotrauma.Items.Components
                     }
                     else //the submarine is not being loaded, which means we're either in the sub editor or the item has been spawned mid-round
                     {
-                        if (Screen.Selected == GameMain.EditMapScreen)
+                        if (Screen.Selected == GameMain.SubEditorScreen)
                         {
                             //in the sub editor, attach
                             AttachToWall();

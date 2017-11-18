@@ -20,7 +20,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Press \"Structure\" at the left side of the screen to start placing some walls.");
 
-            while (GameMain.EditMapScreen.SelectedTab != (int)MapEntityCategory.Structure)
+            while (GameMain.SubEditorScreen.SelectedTab != (int)MapEntityCategory.Structure)
             {
                 yield return CoroutineStatus.Running;
             }

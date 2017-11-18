@@ -163,7 +163,7 @@ namespace Barotrauma
 
                     msgBox.Buttons[0].OnClicked += (btn, obj) =>
                     {
-                        GameMain.EditMapScreen.Cam.Position = e.WorldPosition;
+                        GameMain.SubEditorScreen.Cam.Position = e.WorldPosition;
                         return true;
                     };
                     msgBox.Buttons[0].OnClicked += msgBox.Close;

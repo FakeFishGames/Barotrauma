@@ -43,10 +43,9 @@ namespace Barotrauma
 
         public static readonly Screen ServerListScreen = UnimplementedScreen.Instance;
 
-        public static readonly Screen EditMapScreen = UnimplementedScreen.Instance;
-        public static readonly Screen EditCharacterScreen = UnimplementedScreen.Instance;
-
-        //
+        public static readonly Screen SubEditorScreen = UnimplementedScreen.Instance;
+        public static readonly Screen CharacterEditorScreen = UnimplementedScreen.Instance;
+        
         public static bool ShouldRun = true;
 
         public static ContentPackage SelectedPackage

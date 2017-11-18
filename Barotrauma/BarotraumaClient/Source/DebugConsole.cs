@@ -223,12 +223,12 @@ namespace Barotrauma
                 {
                     Submarine.Load(string.Join(" ", args), true);
                 }
-                GameMain.EditMapScreen.Select();
+                GameMain.SubEditorScreen.Select();
             }));
             
             commands.Add(new Command("editcharacter", "", (string[] args) =>
             {
-                GameMain.EditCharacterScreen.Select();
+                GameMain.CharacterEditorScreen.Select();
             }));
 
             commands.Add(new Command("editparticles", "", (string[] args) =>
@@ -280,9 +280,9 @@ namespace Barotrauma
             {
                 if (args.Length < 1) return;
 
-                if (GameMain.EditMapScreen.CharacterMode)
+                if (GameMain.SubEditorScreen.CharacterMode)
                 {
-                    GameMain.EditMapScreen.ToggleCharacterMode();
+                    GameMain.SubEditorScreen.ToggleCharacterMode();
                 }
 
                 string fileName = string.Join(" ", args);

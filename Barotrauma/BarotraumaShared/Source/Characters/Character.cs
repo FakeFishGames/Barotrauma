@@ -1072,7 +1072,7 @@ namespace Barotrauma
 
             if (distanceToItem > item.InteractDistance && item.InteractDistance > 0.0f) return false;
 
-            if (!item.Prefab.InteractThroughWalls && Screen.Selected != GameMain.EditMapScreen && !insideTrigger)
+            if (!item.Prefab.InteractThroughWalls && Screen.Selected != GameMain.SubEditorScreen && !insideTrigger)
             {
                 Vector2 itemPosition = item.SimPosition;
                 if (Submarine == null && item.Submarine != null)
@@ -1253,7 +1253,7 @@ namespace Barotrauma
                 return;
             }
             if ((!isLocalPlayer && IsKeyHit(InputType.Select) && GameMain.Server == null) || 
-                (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.EditMapScreen)))
+                (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)))
             {
                 focusedCharacter = FindCharacterAtPosition(mouseSimPos);
                 focusedItem = FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.5f : 0.25f);

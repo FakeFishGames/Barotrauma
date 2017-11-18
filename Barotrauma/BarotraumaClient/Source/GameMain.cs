@@ -27,8 +27,8 @@ namespace Barotrauma
         public static NetLobbyScreen        NetLobbyScreen;
         public static ServerListScreen      ServerListScreen;
 
-        public static EditMapScreen         EditMapScreen;
-        public static EditCharacterScreen   EditCharacterScreen;
+        public static SubEditorScreen         SubEditorScreen;
+        public static CharacterEditorScreen   CharacterEditorScreen;
         public static ParticleEditorScreen  ParticleEditorScreen;
 
         public static Lights.LightManager LightManager;
@@ -285,8 +285,8 @@ namespace Barotrauma
             
             ServerListScreen        =   new ServerListScreen();
 
-            EditMapScreen           =   new EditMapScreen();
-            EditCharacterScreen     =   new EditCharacterScreen();
+            SubEditorScreen         =   new SubEditorScreen();
+            CharacterEditorScreen   =   new CharacterEditorScreen();
             ParticleEditorScreen    =   new ParticleEditorScreen();
 
         yield return CoroutineStatus.Running;
