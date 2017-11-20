@@ -4,13 +4,25 @@ using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
     class ServerListScreen : Screen
     {
+        struct ServerInfo
+        {
+            public string IP;
+            public string Port;
+            public string ServerName;
+            public bool GameStarted;
+            public int PlayerCount;
+            public int MaxPlayers;
+            public bool HasPassword;           
+        }
+
         //how often the client is allowed to refresh servers
-        private TimeSpan AllowedRefreshInterval = new TimeSpan(0,0,3);
+        private TimeSpan AllowedRefreshInterval = new TimeSpan(0, 0, 3);
 
         private GUIFrame menu;
 
@@ -20,11 +32,16 @@ namespace Barotrauma
 
         private GUITextBox clientNameBox, ipBox;
 
-        //private RestRequestAsyncHandle restRequestHandle;
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
 
         private int[] columnX;
+
+        //filters
+        private GUITextBox searchBox;
+        private GUITickBox filterPassword;
+        private GUITickBox filterFull;
+        private GUITickBox filterEmpty;
 
         //a timer for 
         private DateTime refreshDisableTimer;
@@ -48,9 +65,9 @@ namespace Barotrauma
             new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", "", menu);
             ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), "", menu);
 
-            int middleX = (int)(width * 0.4f);
+            int middleX = (int)(width * 0.35f);
 
-            serverList = new GUIListBox(new Rectangle(middleX,60,0,height-160), "", menu);
+            serverList = new GUIListBox(new Rectangle(middleX, 60, 0, height - 160), "", menu);
             serverList.OnSelected = SelectServer;
 
             float[] columnRelativeX = new float[] { 0.15f, 0.5f, 0.15f, 0.2f };
@@ -75,6 +92,22 @@ namespace Barotrauma
             joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join", Alignment.BottomRight, "", menu);
             joinButton.OnClicked = JoinServer;
 
+            //--------------------------------------------------------
+
+            int y = 180;
+
+            new GUITextBlock(new Rectangle(0, y, 0, 30), "Filter servers:", "", menu);
+            searchBox = new GUITextBox(new Rectangle(0, y + 30, 200, 30), "", menu);
+            searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
+            filterPassword = new GUITickBox(new Rectangle(0, y + 60, 30, 30), "No password required", Alignment.TopLeft, menu);
+            filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
+            filterFull = new GUITickBox(new Rectangle(0, y + 90, 30, 30), "Hide full servers", Alignment.TopLeft, menu);
+            filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
+            filterEmpty = new GUITickBox(new Rectangle(0, y + 120, 30, 30), "Hide empty servers", Alignment.TopLeft, menu);
+            filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
+
+            //--------------------------------------------------------
+
             GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, "", menu);
             button.OnClicked = GameMain.MainMenuScreen.SelectTab;
             button.SelectedColor = button.Color;
@@ -85,17 +118,43 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-
-
             RefreshServers(null, null);
+        }
+
+        private void FilterServers()
+        {
+            serverList.RemoveChild(serverList.FindChild("noresults"));
+
+            foreach (GUIComponent child in serverList.children)
+            {
+                ServerInfo serverInfo = (ServerInfo)child.UserData;
+
+                child.Visible =
+                    serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
+                    (!filterPassword.Selected || !serverInfo.HasPassword) &&
+                    (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
+                    (!filterEmpty.Selected || serverInfo.PlayerCount > 0);
+            }
+
+            if (serverList.children.All(c => !c.Visible))
+            {
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), "No matching servers found.", "", serverList).UserData = "noresults";
+            }
         }
 
         private bool SelectServer(GUIComponent component, object obj)
         {
-            string ip = obj as string;
-            if (string.IsNullOrWhiteSpace(ip)) return false;
+            ServerInfo serverInfo;
+            try
+            {
+                serverInfo = (ServerInfo)obj;
+            }
+            catch (InvalidCastException)
+            {
+                return false;
+            }
 
-            ipBox.Text = ip;
+            ipBox.Text = serverInfo.IP + ":" + serverInfo.Port;
 
             return true;
         }
@@ -119,8 +178,7 @@ namespace Barotrauma
             {
                 yield return new WaitForSeconds((float)(refreshDisableTimer - DateTime.Now).TotalSeconds);
             }
-
-            //CoroutineManager.StartCoroutine(UpdateServerList());
+            
             CoroutineManager.StartCoroutine(SendMasterServerRequest());
 
             waitingForRefresh = false;
@@ -134,8 +192,6 @@ namespace Barotrauma
         {
             serverList.ClearChildren();
             
-            //string masterServerData = GetMasterServerData();
-
             if (string.IsNullOrWhiteSpace(masterServerData))
             {
                 new GUITextBlock(new Rectangle(0, 0, 0, 20), "Couldn't find any servers", "", serverList);
@@ -151,42 +207,51 @@ namespace Barotrauma
 
             string[] lines = masterServerData.Split('\n');
 
-            for (int i = 0; i<lines.Length; i++)
+            for (int i = 0; i < lines.Length; i++)
             {
                 string[] arguments = lines[i].Split('|');
                 if (arguments.Length < 3) continue;
 
-                string IP = arguments[0];
+                string ip = arguments[0];
                 string port = arguments[1];
                 string serverName = arguments[2];
-                string gameStarted = (arguments.Length > 3) ? arguments[3] : "";
+                bool gameStarted = arguments.Length > 3 && arguments[3] == "1";
                 string currPlayersStr = (arguments.Length > 4) ? arguments[4] : "";
-                string maxPlayersStr = (arguments.Length > 5) ? arguments[5] : "";
-
-
-                string hasPassWordStr = (arguments.Length > 6) ? arguments[6] : "";
-
-                var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 30), (i % 2 == 0) ? Color.Transparent : Color.White * 0.2f, "ListBoxElement", serverList);
-                serverFrame.UserData = IP + ":" + port;
-
-                var passwordBox = new GUITickBox(new Rectangle(columnX[0] / 2, 0, 20, 20), "", Alignment.CenterLeft, serverFrame);
-                passwordBox.Selected = hasPassWordStr == "1";
-                passwordBox.Enabled = false;
-                passwordBox.UserData = "password";
-
-                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
+                string maxPlayersStr = (arguments.Length > 5) ? arguments[5] : "";                
+                bool hasPassWord = arguments.Length > 6 && arguments[6] == "1";
 
                 int playerCount = 0, maxPlayers = 1;
                 int.TryParse(currPlayersStr, out playerCount);
                 int.TryParse(maxPlayersStr, out maxPlayers);
 
+                var serverInfo = new ServerInfo()
+                {
+                    IP = ip,
+                    Port = port,
+                    ServerName = serverName,
+                    GameStarted = gameStarted,
+                    PlayerCount = playerCount,
+                    MaxPlayers = maxPlayers,
+                    HasPassword = hasPassWord
+                };
+
+                var serverFrame = new GUIFrame(new Rectangle(0, 0, 0, 30), (i % 2 == 0) ? Color.Transparent : Color.White * 0.2f, "ListBoxElement", serverList);
+                serverFrame.UserData = serverInfo;
+
+                var passwordBox = new GUITickBox(new Rectangle(columnX[0] / 2, 0, 20, 20), "", Alignment.CenterLeft, serverFrame);
+                passwordBox.Selected = hasPassWord;
+                passwordBox.Enabled = false;
+                passwordBox.UserData = "password";
+
+                new GUITextBlock(new Rectangle(columnX[0], 0, 0, 0), serverName, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
                 new GUITextBlock(new Rectangle(columnX[1], 0, 0, 0), playerCount + "/" + maxPlayers, "", Alignment.TopLeft, Alignment.CenterLeft, serverFrame);
 
-                var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2])/ 2, 0, 20, 20), "", Alignment.CenterRight, serverFrame);
-                gameStartedBox.Selected = gameStarted == "1";
+                var gameStartedBox = new GUITickBox(new Rectangle(columnX[2] + (columnX[3] - columnX[2]) / 2, 0, 20, 20), "", Alignment.CenterRight, serverFrame);
+                gameStartedBox.Selected = gameStarted;
                 gameStartedBox.Enabled = false;
-            
             }
+
+            FilterServers();
         }
 
         private IEnumerable<object> SendMasterServerRequest()
@@ -202,7 +267,6 @@ namespace Barotrauma
             }
 
             if (client == null) yield return CoroutineStatus.Success;
-
 
             var request = new RestRequest("masterserver2.php", Method.GET);
             request.AddParameter("gamename", "barotrauma");
@@ -333,11 +397,7 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            //GameMain.TitleScreen.Update();
-
             menu.Update((float)deltaTime);
-
-            //GUI.Update((float)deltaTime);
         }
     }
 }

@@ -389,10 +389,10 @@ namespace Barotrauma
 
         public override void RemoveChild(GUIComponent child)
         {
+            if (child == null) return;
+
             base.RemoveChild(child);
-
             if (selected.Contains(child)) selected.Remove(child);
-
             UpdateScrollBarSize();
         }
         
