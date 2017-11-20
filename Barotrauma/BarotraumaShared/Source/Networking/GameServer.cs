@@ -1189,6 +1189,9 @@ namespace Barotrauma.Networking
 
             if (campaign != null)
             {
+#if CLIENT
+                if (GameMain.GameSession?.CrewManager != null) GameMain.GameSession.CrewManager.Reset();
+#endif
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, teamCount > 1);
             }
             else
@@ -1258,7 +1261,7 @@ namespace Barotrauma.Networking
                     teamClients[i].Character = spawnedCharacter;
 
 #if CLIENT
-                    GameMain.GameSession.CrewManager.characters.Add(spawnedCharacter);
+                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
 #endif
                 }
 
@@ -1271,7 +1274,7 @@ namespace Barotrauma.Networking
 
                     Character.Controlled = myCharacter;
 
-                    GameMain.GameSession.CrewManager.characters.Add(myCharacter);
+                    GameMain.GameSession.CrewManager.AddCharacter(myCharacter);
                 }
 #endif
             }

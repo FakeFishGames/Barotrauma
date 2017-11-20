@@ -186,6 +186,9 @@ namespace Barotrauma
             if (GameMain.Client != null)
             {
                 GameMain.GameSession.EndRound("");
+#if CLIENT
+                GameMain.GameSession.CrewManager.EndRound();
+#endif
                 return;                
             }
             
@@ -220,6 +223,10 @@ namespace Barotrauma
                     if (item != null) item.Remove();
                 }
             }
+
+#if CLIENT
+            GameMain.GameSession.CrewManager.EndRound();
+#endif
 
             if (success)
             {

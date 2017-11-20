@@ -198,8 +198,8 @@
     <Compile Include="Source\Screens\BlurEffect.cs" />
     <Compile Include="Source\Screens\CampaignSetupUI.cs" />
     <Compile Include="Source\Screens\CampaignUI.cs" />
-    <Compile Include="Source\Screens\EditCharacterScreen.cs" />
-    <Compile Include="Source\Screens\EditMapScreen.cs" />
+    <Compile Include="Source\Screens\CharacterEditorScreen.cs" />
+    <Compile Include="Source\Screens\SubEditorScreen.cs" />
     <Compile Include="Source\Screens\GameScreen.cs" />
     <Compile Include="Source\Screens\LobbyScreen.cs" />
     <Compile Include="Source\Screens\MainMenuScreen.cs" />

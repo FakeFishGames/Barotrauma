@@ -148,7 +148,7 @@ namespace Barotrauma
                 frame.RemoveChild(child);
             }
 
-            List<Character> aliveCharacters = crewManager.characters.FindAll(c => !c.IsDead && c.AIController is HumanAIController);
+            List<Character> aliveCharacters = crewManager.GetCharacters().FindAll(c => !c.IsDead && c.AIController is HumanAIController);
 
             characterFrameBottom = 0;
 

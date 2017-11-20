@@ -192,9 +192,9 @@ namespace Barotrauma
             if (controlled == this) controlled = null;
 
             if (GameMain.GameSession?.CrewManager != null &&
-                GameMain.GameSession.CrewManager.characters.Contains(this))
+                GameMain.GameSession.CrewManager.GetCharacters().Contains(this))
             {
-                GameMain.GameSession.CrewManager.characters.Remove(this);
+                GameMain.GameSession.CrewManager.RemoveCharacter(this);
             }
 
             if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;

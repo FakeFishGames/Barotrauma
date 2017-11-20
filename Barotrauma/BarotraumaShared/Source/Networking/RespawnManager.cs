@@ -481,10 +481,10 @@ namespace Barotrauma.Networking
                 if (scooterPrefab != null && batteryPrefab != null)
                 {
                     var scooter     = new Item(scooterPrefab, pos, respawnShuttle);
-                    Entity.Spawner.CreateNetworkEvent(scooter, false);
+                    Spawner.CreateNetworkEvent(scooter, false);
 
                     var battery     = new Item(batteryPrefab, pos, respawnShuttle);
-                    Entity.Spawner.CreateNetworkEvent(battery, false);
+                    Spawner.CreateNetworkEvent(battery, false);
 
                     scooter.Combine(battery);
                 }
@@ -502,7 +502,7 @@ namespace Barotrauma.Networking
                     }                    
                 }
 #if CLIENT
-                GameMain.GameSession.CrewManager.characters.Add(character);
+                GameMain.GameSession.CrewManager.AddCharacter(character);
 #endif
             }
             

@@ -77,7 +77,7 @@ namespace Barotrauma
             switch (selectedTab)
             {
                 case InfoFrameTab.Crew:
-                    CrewManager.CreateCrewFrame(CrewManager.characters, infoFrame.children[0] as GUIFrame);
+                    CrewManager.CreateCrewFrame(CrewManager.GetCharacters(), infoFrame.children[0] as GUIFrame);
                     break;
                 case InfoFrameTab.Mission:
                     CreateMissionInfo(infoFrame.children[0] as GUIFrame);

@@ -291,7 +291,7 @@ namespace Barotrauma
 
                 if (configPath == Character.HumanConfigFile)
                 {
-                    GameMain.GameSession.CrewManager.characters.Add(character);
+                    GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
             }
 
