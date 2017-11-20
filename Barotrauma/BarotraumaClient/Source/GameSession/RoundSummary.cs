@@ -26,7 +26,7 @@ namespace Barotrauma
         {
             bool singleplayer = GameMain.NetworkMember == null;
 
-            bool gameOver = gameSession.CrewManager.characters.All(c => c.IsDead);
+            bool gameOver = gameSession.CrewManager.GetCharacters().All(c => c.IsDead);
             bool progress = Submarine.MainSub.AtEndPosition;
             
             GUIFrame frame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.8f, null);
@@ -59,7 +59,7 @@ namespace Barotrauma
             GUIListBox listBox = new GUIListBox(new Rectangle(0,y,0,90), null, Alignment.TopLeft, "", innerFrame, true);
 
             int x = 0;
-            foreach (CharacterInfo characterInfo in gameSession.CrewManager.CharacterInfos)
+            foreach (CharacterInfo characterInfo in gameSession.CrewManager.GetCharacterInfos())
             {
                 if (GameMain.GameSession.Mission is CombatMission &&
                     characterInfo.TeamID != GameMain.GameSession.CrewManager.WinningTeam)

@@ -48,7 +48,7 @@ namespace Barotrauma
                         break;
                 }
                 
-                CrewManager.CharacterInfos.Add(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
+                CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
             }
         }
               
@@ -74,7 +74,7 @@ namespace Barotrauma
             if (Money < characterInfo.Salary) return false;
 
             hireManager.availableCharacters.Remove(characterInfo);
-            CrewManager.CharacterInfos.Add(characterInfo);
+            CrewManager.AddCharacterInfo(characterInfo);
             Money -= characterInfo.Salary;
 
             return true;
@@ -155,7 +155,7 @@ namespace Barotrauma
 
             if (!crewDead)
             {
-                if (!CrewManager.characters.Any(c => !c.IsDead)) crewDead = true;                
+                if (!CrewManager.GetCharacters().Any(c => !c.IsDead)) crewDead = true;                
             }
             else
             {
@@ -169,7 +169,7 @@ namespace Barotrauma
         {
             isRunning = false;
 
-            bool success = CrewManager.characters.Any(c => !c.IsDead);
+            bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
 
             if (success)
             {
@@ -290,7 +290,7 @@ namespace Barotrauma
 
             var cinematic = new TransitionCinematic(leavingSubs, GameMain.GameScreen.Cam, 5.0f);
 
-            SoundPlayer.OverrideMusicType = CrewManager.characters.Any(c => !c.IsDead) ? "endround" : "crewdead";
+            SoundPlayer.OverrideMusicType = CrewManager.GetCharacters().Any(c => !c.IsDead) ? "endround" : "crewdead";
 
             CoroutineManager.StartCoroutine(EndCinematic(cinematic), "EndCinematic");
 

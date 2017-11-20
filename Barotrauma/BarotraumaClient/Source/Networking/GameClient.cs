@@ -718,6 +718,7 @@ namespace Barotrauma.Networking
             }
             else
             {
+                if (GameMain.GameSession?.CrewManager != null) GameMain.GameSession.CrewManager.Reset();
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, false);
             }
             

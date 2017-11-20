@@ -181,7 +181,7 @@ namespace Barotrauma
         public void UpdateCharacterLists()
         {
             characterList.ClearChildren();
-            foreach (CharacterInfo c in GameMain.GameSession.CrewManager.CharacterInfos)
+            foreach (CharacterInfo c in GameMain.GameSession.CrewManager.GetCharacterInfos())
             {
                 c.CreateCharacterFrame(characterList, c.Name + " (" + c.Job.Name + ") ", c);
             }

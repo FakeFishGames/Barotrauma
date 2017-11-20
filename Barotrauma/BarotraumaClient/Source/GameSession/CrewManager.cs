@@ -9,8 +9,8 @@ namespace Barotrauma
 {
     class CrewManager
     {
-        public List<Character> characters;
-        public List<CharacterInfo> CharacterInfos;
+        private List<CharacterInfo> characterInfos;
+        private List<Character> characters;
 
         public int WinningTeam = 1;
         
@@ -27,7 +27,7 @@ namespace Barotrauma
         public CrewManager()
         {
             characters = new List<Character>();
-            CharacterInfos = new List<CharacterInfo>();
+            characterInfos = new List<CharacterInfo>();
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
             guiFrame.Padding = Vector4.One * 5.0f;
@@ -50,8 +50,18 @@ namespace Barotrauma
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "character") continue;
 
-                CharacterInfos.Add(new CharacterInfo(subElement));
+                characterInfos.Add(new CharacterInfo(subElement));
             }
+        }
+
+        public List<Character> GetCharacters()
+        {
+            return characters;
+        }
+
+        public List<CharacterInfo> GetCharacterInfos()
+        {
+            return characterInfos;
         }
 
         public bool SelectCharacter(GUIComponent component, object selection)
@@ -108,28 +118,44 @@ namespace Barotrauma
         public void AddCharacter(Character character)
         {
             characters.Add(character);
-            if (!CharacterInfos.Contains(character.Info))
+            if (!characterInfos.Contains(character.Info))
             {
-                CharacterInfos.Add(character.Info);
+                characterInfos.Add(character.Info);
             }
 
             if (character is AICharacter)
             {
                 commander.UpdateCharacters();
+
+                character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
+
+                GUIFrame orderFrame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, "ListBoxElement", orderListBox);
+                orderFrame.UserData = character;
+
+                var ai = character.AIController as HumanAIController;
+                if (ai == null)
+                {
+                    DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
+                    return;
+                }
+                SetCharacterOrder(character, ai.CurrentOrder);
             }
+        }
 
-            character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
+        public void RemoveCharacter(Character character)
+        {
+            characters.Remove(character);
+        }
 
-            GUIFrame orderFrame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, "ListBoxElement", orderListBox);
-            orderFrame.UserData = character;
-
-            var ai = character.AIController as HumanAIController;
-            if (ai == null)
+        public void AddCharacterInfo(CharacterInfo characterInfo)
+        {
+            if (characterInfos.Contains(characterInfo))
             {
-                DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
+                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" +Environment.StackTrace);
                 return;
             }
-            SetCharacterOrder(character, ai.CurrentOrder);
+
+            characterInfos.Add(characterInfo);
         }
 
         public void AddToGUIUpdateList()
@@ -180,11 +206,7 @@ namespace Barotrauma
             if (killedCharacter is AICharacter)
             {
                 commander.UpdateCharacters();
-            }
-            //if (characters.Find(c => !c.IsDead)==null)
-            //{
-            //    Game1.GameSession.EndShift(null, null);
-            //}            
+            }          
         }
 
         public void CreateCrewFrame(List<Character> crew, GUIFrame crewFrame)
@@ -231,8 +253,6 @@ namespace Barotrauma
 
                 y += crewList.Rect.Height + 30;
             }
-
-
         }
 
         protected virtual bool SelectCrewCharacter(Character character, GUIComponent crewList)
@@ -254,35 +274,28 @@ namespace Barotrauma
 
             return true;
         }
-
-        //private bool ToggleCrewFrame(GUIButton button, object obj)
-        //{
-        //    if (crewFrame == null) CreateCrewFrame(characters);
-
-        //    crewFrameOpen = !crewFrameOpen;
-        //    return true;
-        //}
+        
 
         public void StartRound()
         {
             listBox.ClearChildren();
             characters.Clear();
 
-            WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(CharacterInfos, Submarine.MainSub, false);
+            WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub, false);
 
             for (int i = 0; i < waypoints.Length; i++)
             {
                 Character character;
 
-                if (CharacterInfos[i].HullID != null)
+                if (characterInfos[i].HullID != null)
                 {
-                    var hull = Entity.FindEntityByID((ushort)CharacterInfos[i].HullID) as Hull;
+                    var hull = Entity.FindEntityByID((ushort)characterInfos[i].HullID) as Hull;
                     if (hull == null) continue;
-                    character = Character.Create(CharacterInfos[i], hull.WorldPosition);
+                    character = Character.Create(characterInfos[i], hull.WorldPosition);
                 }
                 else
                 {
-                    character = Character.Create(CharacterInfos[i], waypoints[i].WorldPosition);
+                    character = Character.Create(characterInfos[i], waypoints[i].WorldPosition);
                     Character.Controlled = character;
 
                     if (character.Info != null && !character.Info.StartItemsGiven)
@@ -308,14 +321,22 @@ namespace Barotrauma
                     continue;
                 }
 
-                CharacterInfos.Remove(c.Info);
+                characterInfos.Remove(c.Info);
             }
 
             //remove characterinfos whose character doesn't exist anymore
             //(i.e. character was removed during the round)
-            CharacterInfos.RemoveAll(c => c.Character == null);
+            characterInfos.RemoveAll(c => c.Character == null);
             
             characters.Clear();
+            listBox.ClearChildren();
+            orderListBox.ClearChildren();
+        }
+
+        public void Reset()
+        {
+            characters.Clear();
+            characterInfos.Clear();
             listBox.ClearChildren();
             orderListBox.ClearChildren();
         }
@@ -336,7 +357,7 @@ namespace Barotrauma
         {
             XElement element = new XElement("crew");
 
-            foreach (CharacterInfo ci in CharacterInfos)
+            foreach (CharacterInfo ci in characterInfos)
             {
                 ci.Save(element);
             }
