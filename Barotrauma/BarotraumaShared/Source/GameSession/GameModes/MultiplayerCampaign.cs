@@ -356,7 +356,7 @@ namespace Barotrauma
             //server has a newer save file
             if (NetIdUtils.IdMoreRecent(saveID, campaign.PendingSaveID))
             {
-                //stop any active campaign save transfers, they're outdated now
+                /*//stop any active campaign save transfers, they're outdated now
                 List<FileReceiver.FileTransferIn> saveTransfers = 
                     GameMain.Client.FileReceiver.ActiveTransfers.FindAll(t => t.FileType == FileTransferType.CampaignSave);
 
@@ -365,7 +365,7 @@ namespace Barotrauma
                     GameMain.Client.FileReceiver.StopTransfer(transfer);                    
                 }
 
-                GameMain.Client.RequestFile(FileTransferType.CampaignSave, null, null);
+                GameMain.Client.RequestFile(FileTransferType.CampaignSave, null, null);*/
                 campaign.PendingSaveID = saveID;
             }
             //we've got the latest save file

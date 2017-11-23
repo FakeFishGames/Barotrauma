@@ -156,6 +156,7 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to initiate file transfer", e);
+                return null;
             }
 
             OnStarted(transfer);

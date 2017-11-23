@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -84,12 +85,15 @@ namespace Barotrauma.Networking
                 FileName = Path.GetFileName(FilePath);
                 FileType = fileType;
 
-                Connection = connection;
-                
-                WriteStream = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
-                TimeStarted = Environment.TickCount;
+                Connection = connection;               
 
                 Status = FileTransferStatus.NotStarted;
+            }
+
+            public void OpenStream()
+            {
+                WriteStream = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                TimeStarted = Environment.TickCount;
             }
 
             public void ReadBytes(NetIncomingMessage inc)
@@ -100,17 +104,17 @@ namespace Barotrauma.Networking
 
                 int passed = Environment.TickCount - TimeStarted;
                 float psec = passed / 1000.0f;
-                
+
                 if (GameSettings.VerboseLogging)
                 {
-                    DebugConsole.Log("Received "+all.Length+" bytes of the file "+FileName+" ("+Received+"/"+FileSize+" received)");
+                    DebugConsole.Log("Received " + all.Length + " bytes of the file " + FileName + " (" + Received + "/" + FileSize + " received)");
                 }
 
                 BytesPerSecond = Received / psec;
 
                 Status = Received >= FileSize ? FileTransferStatus.Finished : FileTransferStatus.Receiving;
             }
-            
+
             private bool disposed = false;
             protected virtual void Dispose(bool disposing)
             {
@@ -137,8 +141,9 @@ namespace Barotrauma.Networking
 
         const int MaxFileSize = 1000000;
         
-        public delegate void OnFinishedDelegate(FileTransferIn fileStreamReceiver);
-        public OnFinishedDelegate OnFinished;
+        public delegate void TransferInDelegate(FileTransferIn fileStreamReceiver);
+        public TransferInDelegate OnFinished;
+        public TransferInDelegate OnTransferFailed;
 
         private List<FileTransferIn> activeTransfers;
 
@@ -223,10 +228,24 @@ namespace Barotrauma.Networking
                         }
                     }
 
-                    var newTransfer = new FileTransferIn(inc.SenderConnection, Path.Combine(downloadFolder, fileName), (FileTransferType)fileType);
+                    FileTransferIn newTransfer = new FileTransferIn(inc.SenderConnection, Path.Combine(downloadFolder, fileName), (FileTransferType)fileType);
                     newTransfer.SequenceChannel = inc.SequenceChannel;
                     newTransfer.Status = FileTransferStatus.Receiving;
                     newTransfer.FileSize = fileSize;
+
+                    try
+                    {
+                        newTransfer.OpenStream();
+                    }
+                    catch (IOException e)
+                    {
+                        GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
+                        DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}", Color.Red);
+
+                        newTransfer.Status = FileTransferStatus.Error;
+                        OnTransferFailed(newTransfer);
+                        return;
+                    }
 
                     activeTransfers.Add(newTransfer);
 
@@ -240,7 +259,7 @@ namespace Barotrauma.Networking
                         return;
                     }
 
-                    if (activeTransfer.Received + (ulong)(inc.LengthBytes-inc.PositionInBytes) > activeTransfer.FileSize)
+                    if (activeTransfer.Received + (ulong)(inc.LengthBytes - inc.PositionInBytes) > activeTransfer.FileSize)
                     {
                         GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
                         DebugConsole.ThrowError("File transfer error: Received more data than expected");
@@ -256,7 +275,7 @@ namespace Barotrauma.Networking
                     catch (Exception e)
                     {
                         GameMain.Client.CancelFileTransfer(inc.SequenceChannel);
-                        DebugConsole.ThrowError("File transfer error: "+e.Message);
+                        DebugConsole.ThrowError("File transfer error: " + e.Message);
                         activeTransfer.Status = FileTransferStatus.Error;
                         StopTransfer(activeTransfer, true);
                         return;
