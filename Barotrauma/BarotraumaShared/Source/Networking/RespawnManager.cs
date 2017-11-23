@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
         private List<Client> GetClientsToRespawn()
         {
             return networkMember.ConnectedClients.FindAll(c => 
-                c.inGame && 
+                c.InGame && 
                 (!c.SpectateOnly || !((GameServer)networkMember).AllowSpectating) && 
                 (c.Character == null || c.Character.IsDead));
         }
@@ -408,10 +408,10 @@ namespace Barotrauma.Networking
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
                 c.TeamID = 1;
-                if (c.characterInfo == null) c.characterInfo = new CharacterInfo(Character.HumanConfigFile, c.name);
+                if (c.CharacterInfo == null) c.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, c.Name);
             }
 
-            List<CharacterInfo> characterInfos = clients.Select(c => c.characterInfo).ToList();
+            List<CharacterInfo> characterInfos = clients.Select(c => c.CharacterInfo).ToList();
             if (server.Character != null && server.Character.IsDead)
             {
                 characterInfos.Add(server.CharacterInfo);
@@ -420,7 +420,7 @@ namespace Barotrauma.Networking
             server.AssignJobs(clients, server.Character != null && server.Character.IsDead);
             foreach (Client c in clients)
             {
-                c.characterInfo.Job = new Job(c.assignedJob);
+                c.CharacterInfo.Job = new Job(c.AssignedJob);
             }
 
             //the spawnpoints where the characters will spawn
@@ -460,7 +460,7 @@ namespace Barotrauma.Networking
                 {
 #endif
                     clients[i].Character = character;
-                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
+                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.RemoteEndPoint?.Address, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
 
 #if CLIENT
                 }

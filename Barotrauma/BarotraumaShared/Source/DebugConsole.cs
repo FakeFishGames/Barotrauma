@@ -96,7 +96,7 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    NewMessage("- " + c.ID.ToString() + ": " + c.name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
             }));
@@ -304,9 +304,9 @@ namespace Barotrauma
                     return;
                 }
 
-                ShowQuestionPrompt("Reason for kicking \"" + client.name + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for kicking \"" + client.Name + "\"?", (reason) =>
                 {
-                    GameMain.Server.KickPlayer(client.name, reason);                    
+                    GameMain.Server.KickPlayer(client.Name, reason);                    
                 });
             }));
 
@@ -349,7 +349,7 @@ namespace Barotrauma
                     return;
                 }
 
-                ShowQuestionPrompt("Reason for banning \"" + client.name + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for banning \"" + client.Name + "\"?", (reason) =>
                 {
                     ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
                     {
@@ -365,7 +365,7 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        GameMain.Server.BanPlayer(client.name, reason, false, banDuration);
+                        GameMain.Server.BanPlayer(client.Name, reason, false, banDuration);
                     });
                 });
             }));
@@ -625,7 +625,7 @@ namespace Barotrauma
 
                 string clientName = String.Join(" ", argsLeft);
 
-                var client = GameMain.Server.ConnectedClients.Find(c => c.name == clientName);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Name == clientName);
                 if (client == null)
                 {
                     ThrowError("Client \"" + clientName + "\" not found.");

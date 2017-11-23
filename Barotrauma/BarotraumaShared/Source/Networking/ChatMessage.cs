@@ -135,26 +135,26 @@ namespace Barotrauma.Networking
             string txt = msg.ReadString();
             if (txt == null) txt = "";
 
-            if (!NetIdUtils.IdMoreRecent(ID, c.lastSentChatMsgID)) return;
+            if (!NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) return;
 
-            c.lastSentChatMsgID = ID;
+            c.LastSentChatMsgID = ID;
 
             if (txt.Length > MaxLength)
             {
                 txt = txt.Substring(0, MaxLength);
             }
 
-            c.lastSentChatMessages.Add(txt);
-            if (c.lastSentChatMessages.Count > 10)
+            c.LastSentChatMessages.Add(txt);
+            if (c.LastSentChatMessages.Count > 10)
             {
-                c.lastSentChatMessages.RemoveRange(0, c.lastSentChatMessages.Count-10);
+                c.LastSentChatMessages.RemoveRange(0, c.LastSentChatMessages.Count-10);
             }
             
             float similarity = 0.0f;
-            for (int i = 0; i < c.lastSentChatMessages.Count; i++)
+            for (int i = 0; i < c.LastSentChatMessages.Count; i++)
             {
-                float closeFactor = 1.0f / (c.lastSentChatMessages.Count - i);
-                int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.lastSentChatMessages[i]);
+                float closeFactor = 1.0f / (c.LastSentChatMessages.Count - i);
+                int levenshteinDist = ToolBox.LevenshteinDistance(txt, c.LastSentChatMessages[i]);
                 similarity += Math.Max((txt.Length - levenshteinDist) / (float)txt.Length * closeFactor, 0.0f);
             }
 
@@ -205,7 +205,7 @@ namespace Barotrauma.Networking
                             1 + //(byte)Type
                             Encoding.UTF8.GetBytes(Text).Length + 2;
 
-            if (Sender != null && c.inGame)
+            if (Sender != null && c.InGame)
             {
                 length += 2; //sender ID (UInt16)
             }
@@ -224,8 +224,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)Type);
             msg.Write(Text);
 
-            msg.Write(Sender != null && c.inGame);
-            if (Sender != null && c.inGame)
+            msg.Write(Sender != null && c.InGame);
+            if (Sender != null && c.InGame)
             {
                 msg.Write(Sender.ID);
             }
