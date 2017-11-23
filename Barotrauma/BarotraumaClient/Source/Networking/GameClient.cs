@@ -91,6 +91,7 @@ namespace Barotrauma.Networking
 
             fileReceiver = new FileReceiver();
             fileReceiver.OnFinished += OnFileReceived;
+            fileReceiver.OnTransferFailed += OnTransferFailed;
             
             characterInfo = new CharacterInfo(Character.HumanConfigFile, name,Gender.None,null);
             characterInfo.Job = null;
@@ -765,7 +766,7 @@ namespace Barotrauma.Networking
             myCharacter = null;
             foreach (Client c in otherClients)
             {
-                c.inGame = false;
+                c.InGame = false;
                 c.Character = null;
             }
             yield return CoroutineStatus.Success;
@@ -908,7 +909,7 @@ namespace Barotrauma.Networking
                                     }
 
                                     ConnectedClients.Add(newClient);
-                                    GameMain.NetLobbyScreen.AddPlayer(newClient.name);
+                                    GameMain.NetLobbyScreen.AddPlayer(newClient.Name);
                                 }
 
                                 Voting.AllowSubVoting = allowSubVoting;
@@ -1139,6 +1140,14 @@ namespace Barotrauma.Networking
 
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
                     break;
+            }
+        }
+
+        private void OnTransferFailed(FileReceiver.FileTransferIn transfer)
+        {
+            if (transfer.FileType == FileTransferType.CampaignSave)
+            {
+                GameMain.Client.RequestFile(FileTransferType.CampaignSave, null, null);
             }
         }
 

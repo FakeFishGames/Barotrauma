@@ -26,35 +26,36 @@ namespace Barotrauma.Networking
 
     class Client
     {
-        public string name;
+        public string Name;
         public byte ID;
 
         public byte TeamID = 0;
 
         public Character Character;
-        public CharacterInfo characterInfo;
+        public CharacterInfo CharacterInfo;
         public NetConnection Connection { get; set; }
-        public bool inGame;
-        public UInt16 lastRecvGeneralUpdate = 0;
+        public bool InGame;
         
-        public UInt16 lastSentChatMsgID = 0; //last msg this client said
-        public UInt16 lastRecvChatMsgID = 0; //last msg this client knows about
+        public UInt16 LastRecvGeneralUpdate = 0;
+        
+        public UInt16 LastSentChatMsgID = 0; //last msg this client said
+        public UInt16 LastRecvChatMsgID = 0; //last msg this client knows about
 
-        public UInt16 lastSentEntityEventID = 0;
-        public UInt16 lastRecvEntityEventID = 0;
+        public UInt16 LastSentEntityEventID = 0;
+        public UInt16 LastRecvEntityEventID = 0;
 
-        public UInt16 lastRecvCampaignUpdate = 0;
-        public UInt16 lastRecvCampaignSave = 0;
-
-        public List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
-        public UInt16 lastChatMsgQueueID;
+        public UInt16 LastRecvCampaignUpdate = 0;
+        public UInt16 LastRecvCampaignSave = 0;
+        
+        public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
+        public UInt16 LastChatMsgQueueID;
 
         //latest chat messages sent by this client
-        public List<string> lastSentChatMessages = new List<string>(); 
+        public readonly List<string> LastSentChatMessages = new List<string>(); 
         public float ChatSpamSpeed;
         public float ChatSpamTimer;
         public int ChatSpamCount;
-
+        
         public double MidRoundSyncTimeOut;
 
         public bool NeedsMidRoundSync;
@@ -66,36 +67,31 @@ namespace Barotrauma.Networking
 
         //when was a specific entity event last sent to the client
         //  key = event id, value = NetTime.Now when sending
-        public Dictionary<UInt16, float> entityEventLastSent;
-        
-        private Queue<Entity> pendingPositionUpdates = new Queue<Entity>();
+        public readonly Dictionary<UInt16, float> EntityEventLastSent = new Dictionary<UInt16, float>();
 
+        public readonly Queue<Entity> PendingPositionUpdates = new Queue<Entity>();
+        
         public bool ReadyToStart;
 
-        private object[] votes;
-
-        public List<JobPrefab> jobPreferences;
-        public JobPrefab assignedJob;
+        public List<JobPrefab> JobPreferences;
+        public JobPrefab AssignedJob;
         
-        public float deleteDisconnectedTimer;
+        public float DeleteDisconnectedTimer;
 
         public ClientPermissions Permissions = ClientPermissions.None;
 
         public bool SpectateOnly;
+                
+        private object[] votes;
 
-        public Queue<Entity> PendingPositionUpdates
-        {
-            get { return pendingPositionUpdates; }
-        }
-        
         public void InitClientSync()
         {
-            lastSentChatMsgID = 0;
-            lastRecvChatMsgID = ChatMessage.LastID;
+            LastSentChatMsgID = 0;
+            LastRecvChatMsgID = ChatMessage.LastID;
 
-            lastRecvGeneralUpdate = 0;
+            LastRecvGeneralUpdate = 0;
             
-            lastRecvEntityEventID = 0;
+            LastRecvEntityEventID = 0;
 
             UnreceivedEntityEventCount = 0;
             NeedsMidRoundSync = false;
@@ -114,16 +110,14 @@ namespace Barotrauma.Networking
 
         public Client(string name, byte ID)
         {
-            this.name = name;
+            this.Name = name;
             this.ID = ID;
 
             kickVoters = new List<Client>();
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
-            jobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
-
-            entityEventLastSent = new Dictionary<UInt16, float>();
+            JobPreferences = new List<JobPrefab>(JobPrefab.List.GetRange(0, Math.Min(JobPrefab.List.Count, 3)));
         }
 
         public static bool IsValidName(string name)

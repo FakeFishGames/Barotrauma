@@ -82,7 +82,7 @@ namespace Barotrauma.Networking
             //keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
             events.RemoveAll(e => NetIdUtils.IdMoreRecent(lastSentToAll, e.ID));
 
-            if (server.ConnectedClients.Count(c => c.inGame) == 0 && events.Count > 1)
+            if (server.ConnectedClients.Count(c => c.InGame) == 0 && events.Count > 1)
             {
                 events.RemoveRange(0, events.Count - 1);
             }
@@ -144,21 +144,21 @@ namespace Barotrauma.Networking
                 bufferedEvent.IsProcessed = true;
             }
             
-            var inGameClients = clients.FindAll(c => c.inGame && !c.NeedsMidRoundSync);
+            var inGameClients = clients.FindAll(c => c.InGame && !c.NeedsMidRoundSync);
             if (inGameClients.Count > 0)
             {
-                lastSentToAll = inGameClients[0].lastRecvEntityEventID;
-                inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.lastRecvEntityEventID)) lastSentToAll = c.lastRecvEntityEventID; });
+                lastSentToAll = inGameClients[0].LastRecvEntityEventID;
+                inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.LastRecvEntityEventID)) lastSentToAll = c.LastRecvEntityEventID; });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
                 if (firstEventToResend != null && (Timing.TotalTime - firstEventToResend.CreateTime) > 10.0f)
                 {
                     //it's been 10 seconds since this event was created
                     //kick everyone that hasn't received it yet, this is way too old
-                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.lastRecvEntityEventID));
+                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID));
                     toKick.ForEach(c =>
                     {
-                        DebugConsole.NewMessage(c.name + " was kicked due to excessive desync (expected old event " + c.lastRecvEntityEventID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
+                        DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + c.LastRecvEntityEventID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
                         server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
                     }
                     );
@@ -168,17 +168,17 @@ namespace Barotrauma.Networking
                 {
                     //the client is waiting for an event that we don't have anymore
                     //(the ID they're expecting is smaller than the ID of the first event in our list)
-                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent(events[0].ID, (UInt16)(c.lastRecvEntityEventID + 1)));
+                    List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent(events[0].ID, (UInt16)(c.LastRecvEntityEventID + 1)));
                     toKick.ForEach(c =>
                     {
-                        DebugConsole.NewMessage(c.name + " was kicked due to excessive desync (expected " + c.lastRecvEntityEventID.ToString() + ", last available is " + events[0].ID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
+                        DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected " + c.LastRecvEntityEventID.ToString() + ", last available is " + events[0].ID.ToString() + ")", Microsoft.Xna.Framework.Color.Red);
                         server.DisconnectClient(c, "", "You have been disconnected because of excessive desync");
                     }
                     );
                 }
             }
             
-            var timedOutClients = clients.FindAll(c => c.inGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
+            var timedOutClients = clients.FindAll(c => c.InGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
             timedOutClients.ForEach(c => GameMain.Server.DisconnectClient(c, "", "You have been disconnected because syncing your client with the server took too long."));
             
             bufferedEvents.RemoveAll(b => b.IsProcessed);           
@@ -225,7 +225,7 @@ namespace Barotrauma.Networking
             foreach (NetEntityEvent entityEvent in eventsToSync)
             {
                 (entityEvent as ServerEntityEvent).Sent = true;
-                client.entityEventLastSent[entityEvent.ID] = (float)NetTime.Now;
+                client.EntityEventLastSent[entityEvent.ID] = (float)NetTime.Now;
             }
 
             if (client.NeedsMidRoundSync)
@@ -265,7 +265,7 @@ namespace Barotrauma.Networking
             //find the index of the first event the client hasn't received
             int startIndex = eventList.Count;
             while (startIndex > 0 &&
-                NetIdUtils.IdMoreRecent(eventList[startIndex - 1].ID,client.lastRecvEntityEventID))
+                NetIdUtils.IdMoreRecent(eventList[startIndex - 1].ID,client.LastRecvEntityEventID))
             {
                 startIndex--;
             }
@@ -274,7 +274,7 @@ namespace Barotrauma.Networking
             {
                 //find the first event that hasn't been sent in 1.5 * roundtriptime or at all
                 float lastSent = 0;
-                client.entityEventLastSent.TryGetValue(eventList[i].ID, out lastSent);
+                client.EntityEventLastSent.TryGetValue(eventList[i].ID, out lastSent);
 
                 if (lastSent > NetTime.Now - client.Connection.AverageRoundtripTime * 1.5f)
                 {
@@ -326,7 +326,7 @@ namespace Barotrauma.Networking
                 if (entityID == 0)
                 {
                     msg.ReadPadBits();
-                    sender.lastSentEntityEventID++;
+                    sender.LastSentEntityEventID++;
                     continue;
                 }
 
@@ -335,11 +335,11 @@ namespace Barotrauma.Networking
                 IClientSerializable entity = Entity.FindEntityByID(entityID) as IClientSerializable;
 
                 //skip the event if we've already received it or if the entity isn't found
-                if (thisEventID != (UInt16)(sender.lastSentEntityEventID + 1) || entity == null)
+                if (thisEventID != (UInt16)(sender.LastSentEntityEventID + 1) || entity == null)
                 {
                     if (GameSettings.VerboseLogging)
                     {
-                        if (thisEventID != (UInt16) (sender.lastSentEntityEventID + 1))
+                        if (thisEventID != (UInt16) (sender.LastSentEntityEventID + 1))
                         {
                             DebugConsole.NewMessage("received msg " + thisEventID, Microsoft.Xna.Framework.Color.Red);
                         }
@@ -365,7 +365,7 @@ namespace Barotrauma.Networking
                     buffer.Write(msg.ReadBytes(msgLength - 2));
                     BufferEvent(new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer));
 
-                    sender.lastSentEntityEventID++;
+                    sender.LastSentEntityEventID++;
                 }
                 msg.ReadPadBits();
             }
@@ -400,9 +400,9 @@ namespace Barotrauma.Networking
 
             foreach (Client c in server.ConnectedClients)
             {
-                c.entityEventLastSent.Clear();
-                c.lastRecvEntityEventID = 0;
-                c.lastSentEntityEventID = 0;
+                c.EntityEventLastSent.Clear();
+                c.LastRecvEntityEventID = 0;
+                c.LastSentEntityEventID = 0;
             }
         }
     }

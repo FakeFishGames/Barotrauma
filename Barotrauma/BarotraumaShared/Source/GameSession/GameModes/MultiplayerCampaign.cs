@@ -195,7 +195,7 @@ namespace Barotrauma
             lastUpdateID++;
 
             bool success = 
-                GameMain.Server.ConnectedClients.Any(c => c.inGame && c.Character != null && !c.Character.IsDead) ||
+                GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead) ||
                 (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
 
             /*if (success)
@@ -409,7 +409,7 @@ namespace Barotrauma
 
             if (!sender.HasPermission(ClientPermissions.ManageCampaign))
             {
-                DebugConsole.ThrowError("Client \""+sender.name+"\" does not have a permission to manage the campaign");
+                DebugConsole.ThrowError("Client \""+sender.Name+"\" does not have a permission to manage the campaign");
                 return;
             }
 

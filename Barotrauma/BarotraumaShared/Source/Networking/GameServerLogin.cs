@@ -179,7 +179,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", Color.Red);
                 return;
             }
-            Client nameTaken = ConnectedClients.Find(c => c.name.ToLower() == clName.ToLower());
+            Client nameTaken = ConnectedClients.Find(c => c.Name.ToLower() == clName.ToLower());
             if (nameTaken != null)
             {
                 if (nameTaken.Connection.RemoteEndPoint.Address.ToString() == inc.SenderEndPoint.Address.ToString())
@@ -211,7 +211,7 @@ namespace Barotrauma.Networking
             ConnectedClients.Add(newClient);
 
 #if CLIENT
-            GameMain.NetLobbyScreen.AddPlayer(newClient.name);
+            GameMain.NetLobbyScreen.AddPlayer(newClient.Name);
 #endif
             GameMain.Server.SendChatMessage(clName + " has joined the server.", ChatMessageType.Server, null);
 

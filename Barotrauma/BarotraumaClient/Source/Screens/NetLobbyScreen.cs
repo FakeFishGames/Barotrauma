@@ -866,7 +866,7 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                var selectedClient = GameMain.Server.ConnectedClients.Find(c => c.name == component.UserData.ToString());
+                var selectedClient = GameMain.Server.ConnectedClients.Find(c => c.Name == component.UserData.ToString());
 
                 new GUITextBlock(new Rectangle(0, 25, 150, 15), selectedClient.Connection.RemoteEndPoint.Address.ToString(), "", playerFrameInner);
 
