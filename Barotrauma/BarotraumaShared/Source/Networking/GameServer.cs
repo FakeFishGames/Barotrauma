@@ -601,7 +601,11 @@ namespace Barotrauma.Networking
                         c.lastRecvGeneralUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.lastRecvGeneralUpdate, GameMain.NetLobbyScreen.LastUpdateID);
                         c.lastRecvChatMsgID     = NetIdUtils.Clamp(inc.ReadUInt16(), c.lastRecvChatMsgID, c.lastChatMsgQueueID);
 
-                        c.lastRecvCampaignUpdate    = inc.ReadUInt16();
+                        c.lastRecvCampaignSave      = inc.ReadUInt16();
+                        if (c.lastRecvCampaignSave > 0)
+                        {
+                            c.lastRecvCampaignUpdate    = inc.ReadUInt16();
+                        }
                         break;
                     case ClientNetObject.CHAT_MESSAGE:
                         ChatMessage.ServerRead(inc, c);
@@ -816,6 +820,15 @@ namespace Barotrauma.Networking
                 }
 
                 ClientWriteLobby(c);
+
+                MultiplayerCampaign campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
+                if (campaign != null && NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.lastRecvCampaignSave))
+                { 
+                    if (!fileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
+                    {
+                        fileSender.StartTransfer(c.Connection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
+                    }
+                }
             }
         }
 
@@ -1976,9 +1989,9 @@ namespace Barotrauma.Networking
                 gender = Gender.Male;
                 headSpriteId = 0;
 
-                DebugConsole.Log("Received invalid characterinfo from \"" +sender.name+"\"! { "+e.Message+" }");
+                DebugConsole.Log("Received invalid characterinfo from \"" + sender.name + "\"! { " + e.Message + " }");
             }
-            
+
             List<JobPrefab> jobPreferences = new List<JobPrefab>();
             int count = message.ReadByte();
             for (int i = 0; i < Math.Min(count, 3); i++)

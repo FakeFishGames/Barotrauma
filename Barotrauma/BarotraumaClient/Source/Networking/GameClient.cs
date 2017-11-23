@@ -990,7 +990,15 @@ namespace Barotrauma.Networking
             outmsg.Write(ChatMessage.LastID);
 
             var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
-            outmsg.Write(campaign == null ? 0 : campaign.LastUpdateID);
+            if (campaign == null || campaign.LastSaveID == 0)
+            {
+                outmsg.Write((UInt16)0);
+            }
+            else
+            {
+                outmsg.Write(campaign.LastSaveID);
+                outmsg.Write(campaign.LastUpdateID);
+            }
 
             chatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, lastSentChatMsgID));
             for (int i = 0; i < chatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
@@ -1090,10 +1098,10 @@ namespace Barotrauma.Networking
 
         private void OnFileReceived(FileReceiver.FileTransferIn transfer)
         {
-            new GUIMessageBox("Download finished", "File \"" + transfer.FileName + "\" was downloaded succesfully.");
             switch (transfer.FileType)
             {
                 case FileTransferType.Submarine:
+                    new GUIMessageBox("Download finished", "File \"" + transfer.FileName + "\" was downloaded succesfully.");
                     var newSub = new Submarine(transfer.FilePath);
                     Submarine.SavedSubmarines.RemoveAll(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash);
                     Submarine.SavedSubmarines.Add(newSub);
