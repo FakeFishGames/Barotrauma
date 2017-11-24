@@ -28,25 +28,30 @@ namespace Barotrauma
         {
             base.Update(deltaTime, cam);
 
-            if (!Enabled || IsRemotePlayer) return;
+            if (!Enabled) return;
+
+            if (!IsRemotePlayer)
+            {
+                float dist = Vector2.DistanceSquared(cam.WorldViewCenter, WorldPosition);
+                if (dist > 8000.0f * 8000.0f)
+                {
+                    AnimController.SimplePhysicsEnabled = true;
+                }
+                else if (dist < 7000.0f * 7000.0f)
+                {
+                    AnimController.SimplePhysicsEnabled = false;
+                }
+            }
             
-            float dist = Vector2.DistanceSquared(cam.WorldViewCenter, WorldPosition);
-            if (dist > 8000.0f * 8000.0f)
-            {
-                AnimController.SimplePhysicsEnabled = true;
-            }
-            else if (dist < 7000.0f * 7000.0f)
-            {
-                AnimController.SimplePhysicsEnabled = false;
-            }
-
             if (IsDead || Health <= 0.0f || IsUnconscious || Stun > 0.0f) return;
-
             if (Controlled == this || !aiController.Enabled) return;
             
             SoundUpdate(deltaTime);
 
-            aiController.Update(deltaTime);
+            if (!IsRemotePlayer)
+            {
+                aiController.Update(deltaTime);
+            }
         }
         partial void SoundUpdate(float deltaTime);
 
@@ -54,7 +59,7 @@ namespace Barotrauma
         {
             base.AddDamage(causeOfDeath, amount, attacker);
 
-            if (attacker!=null) aiController.OnAttacked(attacker, amount);
+            if (attacker != null) aiController.OnAttacked(attacker, amount);
         }
 
         public override AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
