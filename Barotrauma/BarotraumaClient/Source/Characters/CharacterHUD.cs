@@ -18,7 +18,8 @@ namespace Barotrauma
 
         private static GUIProgressBar oxygenBar, healthBar;
 
-        private static bool oxyMsgShown, pressureMsgShown; 
+        private static bool oxyMsgShown, pressureMsgShown;
+        private static float pressureMsgTimer;
 
         public static float damageOverlayTimer { get; private set; }
 
@@ -63,6 +64,22 @@ namespace Barotrauma
 
         public static void Update(float deltaTime, Character character)
         {
+            if (!pressureMsgShown)
+            {
+                float pressureFactor = (character.AnimController.CurrentHull == null) ?
+                    100.0f : Math.Min(character.AnimController.CurrentHull.LethalPressure, 100.0f);
+                if (character.PressureProtection > 0.0f) pressureFactor = 0.0f;
+
+                if (pressureFactor > 0.0f)
+                {
+                    pressureMsgTimer += deltaTime;
+                }
+                else
+                {
+                    pressureMsgTimer = 0.0f;
+                }
+            }
+
             if (oxygenBar != null)
             {
                 oxygenBar.Update(deltaTime);
@@ -335,14 +352,11 @@ namespace Barotrauma
             {
                 float indicatorAlpha = ((float)Math.Sin(character.PressureTimer * 0.1f) + 1.0f) * 0.5f;
                 indicatorAlpha = MathHelper.Clamp(indicatorAlpha, 0.1f, pressureFactor / 100.0f);
-
-                if (indicatorAlpha > 0.1f)
+                
+                if (pressureMsgTimer > 0.5f && !pressureMsgShown)
                 {
-                    if (!pressureMsgShown)
-                    {
-                        GUI.AddMessage(InfoTextManager.GetInfoText("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 60.0f), Alignment.Left, Color.White, 5.0f);
-                        pressureMsgShown = true;
-                    }
+                    GUI.AddMessage(InfoTextManager.GetInfoText("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 60.0f), Alignment.Left, Color.White, 5.0f);
+                    pressureMsgShown = true;                    
                 }
 
                 spriteBatch.Draw(statusIcons.Texture, new Vector2(10.0f, healthBar.Rect.Y - 60.0f), new Rectangle(0, 24, 24, 25), Color.White * indicatorAlpha);            
