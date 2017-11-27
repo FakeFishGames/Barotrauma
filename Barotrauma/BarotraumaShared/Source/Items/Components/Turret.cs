@@ -87,6 +87,25 @@ namespace Barotrauma.Items.Components
                     barrelSpritePath,
                     element.GetAttributeVector2("origin", Vector2.Zero));
             }
+
+#if CLIENT
+            foreach (XElement subElement in element.Elements())
+            {
+                string texturePath = subElement.GetAttributeString("texture", "");
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "crosshair":
+                        crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        break;
+                    case "disabledcrosshair":
+                        disabledCrossHairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        break;
+                }
+            }
+
+            int barWidth = 200;
+            powerIndicator = new GUIProgressBar(new Rectangle(GameMain.GraphicsWidth / 2 - barWidth / 2, 20, barWidth, 30                ), Color.White, 0.0f);
+#endif
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -296,6 +315,19 @@ namespace Barotrauma.Items.Components
             return availablePower;
         }
 
+        private void GetAvailablePower(out float availableCharge, out float availableCapacity)
+        {
+            var batteries = item.GetConnectedComponents<PowerContainer>();
+
+            availableCharge = 0.0f;
+            availableCapacity = 0.0f;
+            foreach (PowerContainer battery in batteries)
+            {
+                availableCharge += battery.Charge;
+                availableCapacity += battery.Capacity;
+            }
+        }
+
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
@@ -303,7 +335,7 @@ namespace Barotrauma.Items.Components
             if (barrelSprite != null) barrelSprite.Remove();
         }
 
-        private List<Projectile> GetLoadedProjectiles(bool returnFirst = false)
+        private List<Projectile> GetLoadedProjectiles(bool returnFirst = false, bool returnNull = false)
         {
             List<Projectile> projectiles = new List<Projectile>();
 
@@ -312,16 +344,27 @@ namespace Barotrauma.Items.Components
                 var projectileContainer = e as Item;
                 if (projectileContainer == null) continue;
 
-                var containedItems = projectileContainer.ContainedItems;
-                if (containedItems == null) continue;
-
-                for (int i = 0; i < containedItems.Length; i++)
+                if (returnNull)
                 {
-                    var projectileComponent = containedItems[i].GetComponent<Projectile>();
-                    if (projectileComponent != null)
+                    var itemContainer = projectileContainer.GetComponent<ItemContainer>();
+                    for (int i = 0; i < itemContainer.Inventory.Items.Length; i++)
                     {
-                        projectiles.Add(projectileComponent);
-                        if (returnFirst) return projectiles;
+                        projectiles.Add(itemContainer.Inventory.Items[i]?.GetComponent<Projectile>());                        
+                    }
+                }
+                else
+                {
+                    var containedItems = projectileContainer.ContainedItems;
+                    if (containedItems == null) continue;
+
+                    for (int i = 0; i < containedItems.Length; i++)
+                    {
+                        var projectileComponent = containedItems[i].GetComponent<Projectile>();
+                        if (projectileComponent != null)
+                        {
+                            projectiles.Add(projectileComponent);
+                            if (returnFirst) return projectiles;
+                        }
                     }
                 }
             }

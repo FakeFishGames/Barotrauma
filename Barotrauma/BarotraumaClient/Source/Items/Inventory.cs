@@ -362,7 +362,7 @@ namespace Barotrauma
             }
         }
 
-        protected void DrawSlot(SpriteBatch spriteBatch, InventorySlot slot, Item item, bool drawItem = true)
+        public static void DrawSlot(SpriteBatch spriteBatch, InventorySlot slot, Item item, bool drawItem = true)
         {
             Rectangle rect = slot.Rect;
 
