@@ -70,6 +70,7 @@
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
+    <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreature.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreatureManager.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreaturePrefab.cs" />

@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    class Controller : ItemComponent
+    partial class Controller : ItemComponent
     {
         //where the limbs of the user should be positioned when using the controller
         private List<LimbPos> limbPositions;
@@ -167,26 +167,9 @@ namespace Barotrauma.Items.Components
                 character = null;
                 return;
             }
+            if (character == null) return;     
 
-            Entity focusTarget = null;
-
-            if (character == null) return;
-            
-
-            foreach (Connection c in item.Connections)
-            {
-                if (c.Name != "position_out") continue;
-
-                foreach (Connection c2 in c.Recipients)
-                {
-                    if (c2 == null || c2.Item == null || !c2.Item.Prefab.FocusOnSelected) continue;
-
-                    focusTarget = c2.Item;
-
-                    break;
-                }
-            }
-
+            Entity focusTarget = GetFocusTarget();
             if (focusTarget == null)
             {
                 item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
@@ -208,6 +191,22 @@ namespace Barotrauma.Items.Components
             {
                 item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
             }
+        }
+
+        private Item GetFocusTarget()
+        {
+            foreach (Connection c in item.Connections)
+            {
+                if (c.Name != "position_out") continue;
+
+                foreach (Connection c2 in c.Recipients)
+                {
+                    if (c2 == null || c2.Item == null || !c2.Item.Prefab.FocusOnSelected) continue;
+                    return c2.Item;
+                }
+            }
+
+            return null;
         }
 
         public override bool Pick(Character picker)
