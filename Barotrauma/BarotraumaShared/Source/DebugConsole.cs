@@ -4,6 +4,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Barotrauma
@@ -181,10 +182,24 @@ namespace Barotrauma
                 }
                 else
                 {
-                    spawnedCharacter = Character.Create(
-                        "Content/Characters/"
+                    List<string> characterFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
+
+                    foreach (string characterFile in characterFiles)
+                    {
+                        if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == args[0].ToLowerInvariant())
+                        {
+                            Character.Create(characterFile, spawnPosition);
+                            return;
+                        }
+                    }
+
+                    ThrowError("No character matching the name \"" + args[0] + "\" found in the selected content package.");
+
+                    //attempt to open the config from the default path (the file may still be present even if it isn't included in the content package)
+                    string configPath = "Content/Characters/"
                         + args[0].First().ToString().ToUpper() + args[0].Substring(1)
-                        + "/" + args[0].ToLower() + ".xml", spawnPosition);
+                        + "/" + args[0].ToLower() + ".xml";
+                    Character.Create(configPath, spawnPosition);
                 }
             }));
 
