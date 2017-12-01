@@ -63,12 +63,12 @@ namespace Barotrauma
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
 
-            Config = new GameSettings("serverconfig.xml");
+            Config = new GameSettings("config.xml");
             if (Config.WasGameUpdated)
             {
                 UpdaterUtil.CleanOldFiles();
                 Config.WasGameUpdated = false;
-                Config.Save("serverconfig.xml");
+                Config.Save("config.xml");
             }
 
             GameScreen = new GameScreen();
@@ -131,19 +131,25 @@ namespace Barotrauma
             Init();
             StartServer();
 
+            Timing.Accumulator = 0.0;
+
             DateTime prevTime = DateTime.Now;
 
             while (ShouldRun)
             {
+                Timing.Accumulator += ((float)(DateTime.Now.Subtract(prevTime).Milliseconds) / 1000.0)/Timing.Step;
                 prevTime = DateTime.Now;
+                while (Timing.Accumulator>0.0)
+                {
+                    DebugConsole.Update();
+                    if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
+                    Server.Update((float)Timing.Step);
+                    CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
 
-                DebugConsole.Update();
-                if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
-                Server.Update((float)Timing.Step);
-                CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
-                
+                    Timing.Accumulator -= 1.0;
+                }
                 int frameTime = DateTime.Now.Subtract(prevTime).Milliseconds;
-                Thread.Sleep(Math.Max((int)(Timing.Step * 1000.0) - frameTime,0));
+                Thread.Sleep(Math.Max((int)(Timing.Step * 1000.0) - frameTime/2,0));
             }
 
             CloseServer();

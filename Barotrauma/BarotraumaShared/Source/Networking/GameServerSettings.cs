@@ -61,21 +61,7 @@ namespace Barotrauma.Networking
         private BanList banList;
 
         private string password;
-
-        private string adminAuthPass = "";
-        public string AdminAuthPass
-        {
-            set
-            {
-                DebugConsole.NewMessage("Admin auth pass changed!",Color.Yellow);
-                adminAuthPass = "";
-                if (value.Length > 0)
-                {
-                    adminAuthPass = Encoding.UTF8.GetString(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(value)));
-                }
-            }
-        }
-
+        
         public float AutoRestartTimer;
         
         private bool autoRestart;
