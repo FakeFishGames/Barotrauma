@@ -733,7 +733,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\waterbump.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.6.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.7.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Icon.ico" />
@@ -741,9 +741,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)README.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)serverconfig.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)serversettings.xml">
