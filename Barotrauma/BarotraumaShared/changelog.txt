@@ -1,4 +1,84 @@
 ---------------------------------------------------------------------------------------------------------
+v0.7.0.0
+---------------------------------------------------------------------------------------------------------
+
+- Multiplayer campaign mode!
+
+Level changes:
+	- Added ocean floors and hydrothermal vents.
+	- The commonness of scripted events (monster & artifact spawns) varies between different level types -
+	some monsters and artifacts now only spawn in specific types of levels.
+	- Bunch of new level types.
+	- Level wall color can be changed in level generation parameters.
+	- Small caves/tunnels are more common now, and groups of monsters can spawn inside them.
+	- Added salvage mission variants where the artifact is spawned inside a cave.
+
+Submarine editor:
+	- Entities can be nudged with arrow keys.
+	- Structure sprite colors can be changed.
+
+Particles:
+	- Particles that are outside the sub don't get rendered inside the sub even if they're overlapping with it.
+	- The emission rate of particle emitters can be set as particles per second (instead of particles per frame).
+	- Minor particle optimizations.
+
+Bugfixes:
+	- Fixed the "DXGI_ERROR_DEVICE_REMOVED" crashes on specific GPUs when the loading reaches 80%.
+	- Fixed crashes when projectiles stuck to items on dedicated server.
+	- Fixed a bunch of bugs that caused crashes when a character was removed mid-round (for example when 
+	a character turns into a husk).
+	- Fixed a bug that occasionally caused swimming creatures to flip around constantly.
+	- Fixed a bug that caused creatures to be able to sever limb joints that shouldn't be possible to sever,
+	causing issues when attempting to sync the positions of the dead bodies.
+	- Fixed vote count texts persisting in the server lobby after the host disables voting.
+	- Fixed newly joined clients not receiving the latest voting status until someone votes for something.
+	- Fixed vote count texts not being updated after a client disconnects and their vote is removed.
+	- Fixed errors when attempting to save server logs with illegal characters in the server name.
+	- Fixed AI characters becoming invincible when far enough from the main submarine in multiplayer.
+	- Fixed AI characters never making any sounds in multiplayer.
+	- Fixed inability to rebind keys to Mouse2 via the settings menu.
+	- Fixed destroyed doors being impossible to repair.
+	- Fixed creatures seeking towards an incorrect position when trying to eat something (causing larger 
+	creatures like threshers and coelanths to swim around the target without ever reaching it).
+
+Items:
+	- Added battery recharge docks.
+	- Added revolvers (the captain always spawns with one).
+	- Added oscillators (a signal item that sends out a periodic pulse, a sine wave or a square wave).
+	- Added "state_out" connections to relay components.
+	- Added sprites for destroyed doors/hatches.
+	- Added a HUD that shows the charge of the supercapacitors and the amount of shells left when using
+	a railgun.
+	- Inventory slots are be highlighted even if the cursor is within the empty space between them. Now 
+	items can't be accidentally dropped by releasing the mouse button between the slots.
+	- Sounds for picking up and dropping items.
+	- Medical scanner displays husk infections.
+	- New C4, detonator and grenade sprites.
+	- Optimizations and minor visual changes to the sonar display.
+	- Support for hitscan projectiles.
+	- Fixed ranged weapons launching projectiles with an incorrect rotation.
+	- The spread of ranged weapons can be adjusted (separate values for normal spread and spread when 
+	the item is being used by a character with an inadequate skill level).
+	- Heavier harpoon gun recoil and impulse when the spear hits something.
+
+- Improved item editing UI:
+	- Number input fields for numeric values.
+	- Separate number input fields for the components of vector values (instead of one text input box)
+	- Color input fields display a preview of the currently selected color.
+	- Enum fields are displayed as dropdown menus.
+
+Misc:
+	- Flowing water pushes characters around much more heavily.
+	- Warning texts when water pressure is increasing to dangerous levels and when running out of oxygen.
+	- Made the damage range of limb attacks configurable (instead of having it always be half of the distance 
+	at which the attack activates) and tweaked the damage ranges of all the creature attacks.
+	- Option to filter the server list based on a bunch of criteria.
+	- Added a radio chat hotkey.
+	- Clients can be given a permission the select the submarine or the game mode.
+	- Option for clients to spactate the game without respawning (assuming the server allows spectating).
+	- The range and volume of sounds emitted by StatusEffects can be changed and the sounds can be looped.
+
+---------------------------------------------------------------------------------------------------------
 v0.6.1.4
 ---------------------------------------------------------------------------------------------------------
 
