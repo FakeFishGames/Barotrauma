@@ -72,9 +72,7 @@ namespace Barotrauma.Networking
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
-
-            AdminAuthPass = "";
-
+            
             this.name = name;
             this.isPublic = isPublic;
             this.maxPlayers = maxPlayers;

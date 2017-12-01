@@ -91,7 +91,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("clientlist", "clientlist: List all the clients connected to the server.", (string[] args) => 
+            commands.Add(new Command("clientlist", "clientlist: List all the clients connected to the server.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 NewMessage("***************", Color.Cyan);
@@ -264,34 +264,148 @@ namespace Barotrauma
                 NewMessage("Crew AI enabled", Color.White);
             }));
 
-            commands.Add(new Command("autorestartinterval", "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one.", (string[] args) =>
+            commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                bool enabled = GameMain.Server.AutoRestart;
+                if (args.Length > 0)
+                {
+                    bool.TryParse(args[0], out enabled);
+                }
+                else
+                {
+                    enabled = !enabled;
+                }
+                if (enabled != GameMain.Server.AutoRestart)
+                {
+                    if (GameMain.Server.AutoRestartInterval <= 0) GameMain.Server.AutoRestartInterval = 10;
+                    GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
+                    GameMain.Server.AutoRestart = enabled;
+#if CLIENT
+                    GameMain.NetLobbyScreen.SetAutoRestart(enabled, GameMain.Server.AutoRestartTimer);
+#endif
+                    GameMain.NetLobbyScreen.LastUpdateID++;
+                }
+                NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
+            }));
+            
+            commands.Add(new Command("autorestartinterval", "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 if (args.Length > 0)
                 {
                     int parsedInt = 0;
-                    if (int.TryParse(args[0], out parsedInt) && parsedInt >= 0)
+                    if (int.TryParse(args[0], out parsedInt))
                     {
-                        GameMain.Server.AutoRestartInterval = parsedInt;
-                        NewMessage("Autorestart interval set to " + GameMain.Server.AutoRestartInterval + " seconds.", Color.White);
+                        if (parsedInt >= 0)
+                        {
+                            GameMain.Server.AutoRestart = true;
+                            GameMain.Server.AutoRestartInterval = parsedInt;
+                            if (GameMain.Server.AutoRestartTimer >= GameMain.Server.AutoRestartInterval) GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
+                            NewMessage("Autorestart interval set to " + GameMain.Server.AutoRestartInterval + " seconds.", Color.White);
+                        }
+                        else
+                        {
+                            GameMain.Server.AutoRestart = false;
+                            NewMessage("Autorestart disabled.", Color.White);
+                        }
+#if CLIENT
+                        GameMain.NetLobbyScreen.SetAutoRestart(GameMain.Server.AutoRestart, GameMain.Server.AutoRestartTimer);
+#endif
+                        GameMain.NetLobbyScreen.LastUpdateID++;
                     }
                 }
             }));
-
-
+            
             commands.Add(new Command("autorestarttimer", "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 if (args.Length > 0)
                 {
                     int parsedInt = 0;
-                    if (int.TryParse(args[0], out parsedInt) && parsedInt >= 0)
+                    if (int.TryParse(args[0], out parsedInt))
                     {
-                        GameMain.Server.AutoRestartTimer = parsedInt;
+                        if (parsedInt >= 0)
+                        {
+                            GameMain.Server.AutoRestart = true;
+                            GameMain.Server.AutoRestartTimer = parsedInt;
+                            if (GameMain.Server.AutoRestartInterval <= GameMain.Server.AutoRestartTimer) GameMain.Server.AutoRestartInterval = GameMain.Server.AutoRestartTimer;
+                            GameMain.NetLobbyScreen.LastUpdateID++;
+                            NewMessage("Autorestart timer set to " + GameMain.Server.AutoRestartTimer + " seconds.", Color.White);
+                        }
+                        else
+                        {
+                            GameMain.Server.AutoRestart = false;
+                            NewMessage("Autorestart disabled.", Color.White);
+                        }
+#if CLIENT
+                        GameMain.NetLobbyScreen.SetAutoRestart(GameMain.Server.AutoRestart, GameMain.Server.AutoRestartTimer);
+#endif
                         GameMain.NetLobbyScreen.LastUpdateID++;
-                        NewMessage("Autorestart timer set to " + GameMain.Server.AutoRestartTimer + " seconds.", Color.White);
                     }
                 }
+            }));
+            
+            commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+                
+                ShowQuestionPrompt("Permission to grant to \"" + client.Name + "\"?", (perm) =>
+                {
+                    ClientPermissions permission = ClientPermissions.None;
+                    if (perm.ToLower() == "all")
+                    {
+                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban | ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign;
+                    }
+                    else
+                    {
+                        Enum.TryParse<ClientPermissions>(perm, out permission);
+                    }
+                    client.SetPermissions(client.Permissions | permission);
+                    GameMain.Server.UpdateClientPermissions(client);
+                    DebugConsole.NewMessage("Granted "+perm+" permissions to "+client.Name+".",Color.White);
+                });
+            }));
+
+            commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                if (args.Length < 1) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    ThrowError("Client id \"" + id + "\" not found.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Permission to revoke from \"" + client.Name + "\"?", (perm) =>
+                {
+                    ClientPermissions permission = ClientPermissions.None;
+                    if (perm.ToLower() == "all")
+                    {
+                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban | ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign;
+                    }
+                    else
+                    {
+                        Enum.TryParse<ClientPermissions>(perm, out permission);
+                    }
+                    client.SetPermissions(client.Permissions & ~permission);
+                    GameMain.Server.UpdateClientPermissions(client);
+                    DebugConsole.NewMessage("Revoked " + perm + " permissions from " + client.Name + ".", Color.White);
+                });
             }));
 
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
