@@ -16,3 +16,4 @@ bld/
 #performance reports & sessions
 *.vsp
 *.psess
+.vs/
