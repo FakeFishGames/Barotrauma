@@ -125,6 +125,7 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(x, y, 20, 20), "Content package", "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
             var contentPackageDD = new GUIDropDown(new Rectangle(x, y + 20, 200, 20), "", "", settingsFrame);
+            contentPackageDD.OnSelected = SelectContentPackage;
 
             foreach (ContentPackage contentPackage in ContentPackage.list)
             {
@@ -179,6 +180,13 @@ namespace Barotrauma
 
             UnsavedSettings = true;
 
+            return true;
+        }
+
+        private bool SelectContentPackage(GUIComponent select,object userData)
+        {
+            GameMain.Config.SelectedContentPackage = (ContentPackage)userData;
+            UnsavedSettings = true;
             return true;
         }
 
