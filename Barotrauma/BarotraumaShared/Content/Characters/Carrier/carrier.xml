@@ -24,7 +24,7 @@
     <collider radius ="230"/>
     
     <!-- head -->
-    <limb id = "0" width="300" height="673" type="Head" steerforce="1.0" flip="true"">
+    <limb id = "0" width="300" height="673" type="Head" steerforce="1.0" flip="true">
       <sprite texture="Content/Characters/Carrier/carrier.png" sourcerect="0,0,393,778" depth="0.02" origin ="0.5,0.45"/>
 
       <lightsource range="400.0" color="0.7,0.8,1.0,1.0">
