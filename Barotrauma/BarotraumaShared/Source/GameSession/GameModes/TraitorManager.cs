@@ -60,7 +60,7 @@ namespace Barotrauma
             }
             else if (server.Character == traitorCharacter)
             {
-                CreateStartPopUp(traitorCharacter.Name);
+                CreateStartPopUp(targetCharacter.Name);
                 return;
             }
 #endif
