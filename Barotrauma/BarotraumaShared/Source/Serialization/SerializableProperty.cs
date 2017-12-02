@@ -255,7 +255,7 @@ namespace Barotrauma
                                 propertyInfo.SetValue(obj, XMLExtensions.ParseColor((string)value));
                                 return true;
                             case "rectangle":
-                                propertyInfo.SetValue(obj, XMLExtensions.ParseColor((string)value));
+                                propertyInfo.SetValue(obj, XMLExtensions.ParseRect((string)value, false));
                                 return true;
                             default:
                                 DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
