@@ -84,7 +84,7 @@ namespace Barotrauma
             }
         }
         
-        public virtual bool IsLinkable
+        public virtual bool Linkable
         {
             get { return false; }
         }
