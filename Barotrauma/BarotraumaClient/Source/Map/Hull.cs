@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -56,7 +57,38 @@ namespace Barotrauma
 
             return decal;
         }
-        
+
+        public override void UpdateEditing(Camera cam)
+        {
+            if (!PlayerInput.KeyDown(Keys.Space)) return;
+            bool lClick = PlayerInput.LeftButtonClicked();
+            bool rClick = PlayerInput.RightButtonClicked();
+            if (!lClick && !rClick) return;
+
+            Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+
+            if (lClick)
+            {
+                foreach (MapEntity entity in mapEntityList)
+                {
+                    if (entity == this || !entity.IsHighlighted) continue;
+                    if (!entity.IsMouseOn(position)) continue;
+                    
+                    if (entity.IsLinkable && entity.linkedTo != null) entity.linkedTo.Add(this);
+                }
+            }
+            else
+            {
+                foreach (MapEntity entity in mapEntityList)
+                {
+                    if (entity == this || !entity.IsHighlighted) continue;
+                    if (!entity.IsMouseOn(position)) continue;
+                    
+                    if (entity.linkedTo != null && entity.linkedTo.Contains(this)) entity.linkedTo.Remove(this);
+                }
+            }
+        }
+
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
             if (EditWater)

@@ -59,12 +59,18 @@ namespace Barotrauma
             get;
             protected set;
         }
-
+        
         [Serialize(false, false)]
-        public virtual bool IsLinkable
+        public bool Linkable //TODO: make this property's name consistent
         {
             get;
             private set;
+        }
+
+        public virtual bool IsLinkable
+        {
+            get { return Linkable; }
+            private set { Linkable = value; }
         }
         
         public MapEntityCategory Category
