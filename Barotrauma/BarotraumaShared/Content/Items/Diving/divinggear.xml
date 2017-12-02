@@ -63,8 +63,7 @@
   <Item
     name="Diving Suit"
     category="Equipment"
-    tags="diving"
-    
+    tags="diving"    
     price="200"
     fireproof="true"
     description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
@@ -73,7 +72,7 @@
 
     <Body width="37" height="113" density="15"/>
 
-    <Wearable slots="Head+Torso+Legs" armorvalue="10.0">
+    <Wearable slots="Head+Torso+Legs">
       <sprite texture="DivingSuit.png" limb="Head" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
 
       <sprite texture="DivingSuit.png" limb="Torso" sourcerect="42,0,42,97" origin="0.5,0.55" depthlimb="Head" hidelimb="true"/>
@@ -141,7 +140,6 @@
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0"/>
       </LightComponent>
     </Propulsion>
-
 
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Battery Cell"/>

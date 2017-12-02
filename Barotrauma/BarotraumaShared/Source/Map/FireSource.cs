@@ -205,8 +205,6 @@ namespace Barotrauma
                 float dmg = (float)Math.Sqrt(size.X) * deltaTime / c.AnimController.Limbs.Length;
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (limb.WearingItems.Find(w => w != null && w.WearableComponent.Item.FireProof) != null) continue;
-                    limb.Burnt += dmg * 10.0f;
                     c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
                 }
             }

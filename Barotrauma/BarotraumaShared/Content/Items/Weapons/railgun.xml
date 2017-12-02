@@ -72,8 +72,7 @@
   
   <Item
     name="Railgun Shell"
-    category="Misc"
-    
+    category="Misc"    
     price="200">
 
     <Deconstruct time="10">
@@ -103,8 +102,7 @@
 
   <Item
     name="Nuclear Shell"
-    category="Misc"
-    
+    category="Misc"    
     price="500">
 
     <Deconstruct time="10">

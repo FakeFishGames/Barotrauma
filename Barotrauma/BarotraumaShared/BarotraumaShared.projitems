@@ -1356,6 +1356,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HuskInfection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />
