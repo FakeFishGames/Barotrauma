@@ -72,35 +72,51 @@ namespace Barotrauma
 
             string endMessage = "";
 
-            if (targetCharacter.IsDead && !traitorCharacter.IsDead)
+            endMessage = traitorCharacter.Name + " was a traitor! ";
+            endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
+            endMessage += " task was to assassinate " + targetCharacter.Name;
+
+            if (targetCharacter.IsDead) //Partial or complete mission success
             {
-                endMessage = traitorCharacter.Name + " was a traitor! ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + targetCharacter.Name + ". The task was successful.";
+                endMessage += ". The task was successful";
+                if (traitorCharacter.IsDead)
+                {
+                    endMessage += ", but luckily the bastard didn't make it out alive either.";
+                }
+                else if (traitorCharacter.LockHands)
+                {
+                    endMessage += ", but ";
+                    endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
+                    endMessage += " was successfuly detained.";
+                }
+                else
+                    endMessage += ".";
             }
-            else if (targetCharacter.IsDead && traitorCharacter.IsDead)
+            else //Partial or complete failure
             {
-                endMessage = traitorCharacter.Name + " was a traitor! ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + targetCharacter.Name + ". The task was successful, but luckily the bastard didn't make it out alive either.";
-            }
-            else if (traitorCharacter.IsDead)
-            {
-                endMessage = traitorCharacter.Name + " was a traitor! ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + targetCharacter.Name + ", but ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
-                endMessage += " got " + ((traitorCharacter.Info.Gender == Gender.Male) ? "himself" : "herself");
-                endMessage += " killed before completing it.";
-            }
-            else
-            {
-                endMessage = traitorCharacter.Name + " was a traitor! ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + targetCharacter.Name + ". ";
-                endMessage += (Submarine.MainSub.AtEndPosition) ?
-                    "The task was unsuccessful - the submarine has reached its destination." : 
-                    "The task was unsuccessful.";
+                if (traitorCharacter.IsDead)
+                {
+                    endMessage += ", but ";
+                    endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
+                    endMessage += " got " + ((traitorCharacter.Info.Gender == Gender.Male) ? "himself" : "herself");
+                    endMessage += " killed before completing it.";
+                }
+                else
+                {
+                    endMessage += ". The task was unsuccessful";
+                    if (traitorCharacter.LockHands)
+                    {
+                        endMessage += " - ";
+                        endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
+                        endMessage += " was successfuly detained";
+                    }
+                    if (Submarine.MainSub.AtEndPosition)
+                    {
+                        endMessage += (traitorCharacter.LockHands ? " and " : " - ");
+                        endMessage += "the submarine has reached its destination";
+                    }
+                    endMessage += ".";
+                }
             }
 
             return endMessage;          
