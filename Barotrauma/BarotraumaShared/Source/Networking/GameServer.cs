@@ -1862,11 +1862,6 @@ namespace Barotrauma.Networking
 
         private void FileTransferChanged(FileSender.FileTransferOut transfer)
         {
-            if (connectedClients.Any(c=> c.Connection == null))
-            {
-                int sdfgsdfg = 1;
-            }
-
             Client recipient = connectedClients.Find(c => c.Connection == transfer.Connection);
 #if CLIENT
             UpdateFileTransferIndicator(recipient);
