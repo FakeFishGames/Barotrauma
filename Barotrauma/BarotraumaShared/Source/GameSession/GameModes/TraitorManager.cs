@@ -3,120 +3,149 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
+    partial class Traitor
+    {
+        public Character Character;
+        public Character TargetCharacter;
+
+        public Traitor(Character character, Character targetCharacter)
+        {
+            Character = character; TargetCharacter = targetCharacter;
+        }
+    }
+
     partial class TraitorManager
     {
-        public Character TraitorCharacter
+        public List<Traitor> TraitorList
         {
-            get { return traitorCharacter; }
+            get { return traitorList; }
         }
 
-        public Character TargetCharacter
+        private List<Traitor> traitorList;
+
+        public TraitorManager(GameServer server, int TraitorCount)
         {
-            get { return targetCharacter; }
+            if(TraitorCount < 1) //what why how
+            {
+                TraitorCount = 1;
+                DebugConsole.ThrowError("Traitor Manager: TraitorCount somehow ended up less than 1, setting it to 1.");
+            }
+            Start(server, TraitorCount);
         }
 
-        private Character traitorCharacter, targetCharacter;
-        
-        public TraitorManager(GameServer server)
-        {
-            Start(server);
-        }
-
-        private void Start(GameServer server)
+        private void Start(GameServer server, int TraitorCount)
         {
             if (server == null) return;
 
-            List<Character> characters = new List<Character>();
+            List<Character> characters = new List<Character>(); //ANYONE can be a target.
+            List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
             foreach (Client client in server.ConnectedClients)
             {
                 if (client.Character != null)
+                {
                     characters.Add(client.Character);
+                    traitorCandidates.Add(client.Character);
+                }
             }
-
-            if (server.Character!= null) characters.Add(server.Character);
+            
+            if (server.Character!= null) characters.Add(server.Character); //Add host character
 
             if (characters.Count < 2)
             {
-                traitorCharacter = null;
-                targetCharacter = null;
                 return;
             }
 
-            int traitorIndex = Rand.Range(0, characters.Count);
-
-            int targetIndex = Rand.Range(0, characters.Count);
-            while (targetIndex == traitorIndex)
+            traitorList = new List<Traitor>();
+            while (TraitorCount-- >= 0)
             {
-                targetIndex = Rand.Range(0, characters.Count);
-            }
+                if (traitorCandidates.Count <= 0)
+                    break;
 
-            traitorCharacter = characters[traitorIndex];
-            targetCharacter = characters[targetIndex];
+                int traitorIndex = Rand.Int(traitorCandidates.Count);
+                var traitorCharacter = traitorCandidates[traitorIndex];
+                traitorCandidates.Remove(traitorCharacter);
+
+                int targetIndex = Rand.Int(characters.Count);
+                while (characters[targetIndex] == traitorCharacter) //Cannot target self
+                {
+                    targetIndex = Rand.Int(characters.Count);
+                }
+                var targetCharacter = characters[targetIndex];
+
+                //Add them to the list
+                traitorList.Add(new Traitor(traitorCharacter, targetCharacter));
 
 #if CLIENT
-            if (server.Character == null)
-            {
-                new GUIMessageBox("New traitor", traitorCharacter.Name + " is the traitor and the target is " + targetCharacter.Name+".");
-            }
-            else if (server.Character == traitorCharacter)
-            {
-                CreateStartPopUp(targetCharacter.Name);
-                return;
-            }
+                if (server.Character == null)
+                {
+                    new GUIMessageBox("New traitor", traitorCharacter.Name + " is the traitor and the target is " + targetCharacter.Name+".");
+                }
+                else if (server.Character == traitorCharacter)
+                {
+                    CreateStartPopUp(targetCharacter.Name);
+                    return;
+                }
 #endif
+            }
         }
 
         public string GetEndMessage()
         {
-            if (GameMain.Server == null || traitorCharacter == null || targetCharacter == null) return "";
+            if (GameMain.Server == null || traitorList.Count <= 0) return "";
 
             string endMessage = "";
 
-            endMessage = traitorCharacter.Name + " was a traitor! ";
-            endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-            endMessage += " task was to assassinate " + targetCharacter.Name;
+            foreach (Traitor traitor in traitorList)
+            {
+                Character traitorCharacter = traitor.Character;
+                Character targetCharacter = traitor.TargetCharacter;
+                endMessage += traitorCharacter.Name + " was a traitor! ";
+                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
+                endMessage += " task was to assassinate " + targetCharacter.Name;
 
-            if (targetCharacter.IsDead) //Partial or complete mission success
-            {
-                endMessage += ". The task was successful";
-                if (traitorCharacter.IsDead)
+                if (targetCharacter.IsDead) //Partial or complete mission success
                 {
-                    endMessage += ", but luckily the bastard didn't make it out alive either.";
-                }
-                else if (traitorCharacter.LockHands)
-                {
-                    endMessage += ", but ";
-                    endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
-                    endMessage += " was successfuly detained.";
-                }
-                else
-                    endMessage += ".";
-            }
-            else //Partial or complete failure
-            {
-                if (traitorCharacter.IsDead)
-                {
-                    endMessage += ", but ";
-                    endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
-                    endMessage += " got " + ((traitorCharacter.Info.Gender == Gender.Male) ? "himself" : "herself");
-                    endMessage += " killed before completing it.";
-                }
-                else
-                {
-                    endMessage += ". The task was unsuccessful";
-                    if (traitorCharacter.LockHands)
+                    endMessage += ". The task was successful";
+                    if (traitorCharacter.IsDead)
                     {
-                        endMessage += " - ";
+                        endMessage += ", but luckily the bastard didn't make it out alive either.";
+                    }
+                    else if (traitorCharacter.LockHands)
+                    {
+                        endMessage += ", but ";
                         endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
-                        endMessage += " was successfuly detained";
+                        endMessage += " was successfuly detained.";
                     }
-                    if (Submarine.MainSub.AtEndPosition)
-                    {
-                        endMessage += (traitorCharacter.LockHands ? " and " : " - ");
-                        endMessage += "the submarine has reached its destination";
-                    }
-                    endMessage += ".";
+                    else
+                        endMessage += ".";
                 }
+                else //Partial or complete failure
+                {
+                    if (traitorCharacter.IsDead)
+                    {
+                        endMessage += ", but ";
+                        endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
+                        endMessage += " got " + ((traitorCharacter.Info.Gender == Gender.Male) ? "himself" : "herself");
+                        endMessage += " killed before completing it.";
+                    }
+                    else
+                    {
+                        endMessage += ". The task was unsuccessful";
+                        if (traitorCharacter.LockHands)
+                        {
+                            endMessage += " - ";
+                            endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
+                            endMessage += " was successfuly detained";
+                        }
+                        if (Submarine.MainSub.AtEndPosition)
+                        {
+                            endMessage += (traitorCharacter.LockHands ? " and " : " - ");
+                            endMessage += "the submarine has reached its destination";
+                        }
+                        endMessage += ".";
+                    }
+                }
+                endMessage += "\n";
             }
 
             return endMessage;          
