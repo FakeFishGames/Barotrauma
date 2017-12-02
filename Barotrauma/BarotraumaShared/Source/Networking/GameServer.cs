@@ -1323,11 +1323,22 @@ namespace Barotrauma.Networking
             if (TraitorsEnabled == YesNoMaybe.Yes ||
                 (TraitorsEnabled == YesNoMaybe.Maybe && Rand.Range(0.0f, 1.0f) < 0.5f))
             {
-                TraitorManager = new TraitorManager(this);
-
-                if (TraitorManager.TraitorCharacter!=null && TraitorManager.TargetCharacter != null)
+                List<Character> characters = new List<Character>();
+                foreach (Client client in ConnectedClients)
                 {
-                    Log(TraitorManager.TraitorCharacter.Name + " is the traitor and the target is " + TraitorManager.TargetCharacter.Name, ServerLog.MessageType.ServerMessage);
+                    if (client.Character != null)
+                        characters.Add(client.Character);
+                }
+                var max = (int)Math.Round(characters.Count * 0.2f, 1);
+                var traitorCount = Math.Max(1, TraitorsEnabled == YesNoMaybe.Maybe ? Rand.Int(max) + 1 : max);
+                TraitorManager = new TraitorManager(this, traitorCount);
+
+                if (TraitorManager.TraitorList.Count > 0)
+                {
+                    for (int i = 0; i < TraitorManager.TraitorList.Count; i++)
+                    {
+                        Log(TraitorManager.TraitorList[i].Character.Name + " is the traitor and the target is " + TraitorManager.TraitorList[i].TargetCharacter.Name, ServerLog.MessageType.ServerMessage);
+                    }
                 }
             }
 
@@ -1386,13 +1397,13 @@ namespace Barotrauma.Networking
             msg.Write(AllowRespawn && missionAllowRespawn);
             msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
-            if (TraitorManager != null &&
-                TraitorManager.TraitorCharacter != null &&
-                TraitorManager.TargetCharacter != null &&
-                TraitorManager.TraitorCharacter == client.Character)
+            Traitor traitor = null;
+            if (TraitorManager != null && TraitorManager.TraitorList.Count > 0)
+                traitor = TraitorManager.TraitorList.Find(t => t.Character == client.Character);
+            if (traitor != null)
             {
                 msg.Write(true);
-                msg.Write(TraitorManager.TargetCharacter.Name);
+                msg.Write(traitor.TargetCharacter.Name);
             }
             else
             {
