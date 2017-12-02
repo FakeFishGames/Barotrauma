@@ -1,4 +1,27 @@
 ---------------------------------------------------------------------------------------------------------
+v0.7.0.1
+---------------------------------------------------------------------------------------------------------
+
+- Added console commands for modifying client permissions.
+- Fixed content package setting not being saved in the settings menu.
+- Item pickup sounds are only played when the controlled character picks up an item.
+- Removed serverconfig.xml (the dedicated server now uses the same config file as the normal game).
+- Updated the vanilla content package to version 0.7.
+- Fixed entity linking in the submarine editor.
+- Fixed railgun HUD crashing the game if the railgun is linked to an item that does not have an 
+ItemContainer component (i.e. any item that can't contain other items).
+- Fixed exceptions when the player dies in the tutorial.
+- Fixed the start popup saying the host is the target if the host has been selected as the traitor.
+- Fixed crashes when attempting to use a railgun controller that's not connected to anything.
+- Fixed autorestart counter overlapping with the campaign map in the server lobby screen.
+- Fixed characters receiving damage almost exclusively to their feet when wearing a diving suit.
+- Armoring reduces damage by a certain percentage, not a fixed value. Now armor doesn't make characters
+invulnerable to small amounts of damage.
+- The effectiveness of different types of armor depends on the type of damage. For example, diving suits
+provide fairly good protection against burn and slash damage, but aren't as affective against blunt damage.
+- Fixed light sources attached to limbs not rotating with the limbs.
+
+---------------------------------------------------------------------------------------------------------
 v0.7.0.0
 ---------------------------------------------------------------------------------------------------------
 
