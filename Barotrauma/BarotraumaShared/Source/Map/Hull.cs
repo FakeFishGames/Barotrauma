@@ -106,7 +106,7 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsLinkable
+        public override bool Linkable
         {
             get { return true; }
         }

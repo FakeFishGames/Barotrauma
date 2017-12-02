@@ -74,7 +74,7 @@ namespace Barotrauma
                     if (entity == this || !entity.IsHighlighted) continue;
                     if (!entity.IsMouseOn(position)) continue;
                     
-                    if (entity.IsLinkable && entity.linkedTo != null) entity.linkedTo.Add(this);
+                    if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
                 }
             }
             else

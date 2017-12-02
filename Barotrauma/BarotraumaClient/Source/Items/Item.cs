@@ -125,7 +125,7 @@ namespace Barotrauma
 
             if (Screen.Selected != GameMain.SubEditorScreen) return;
 
-            if (!prefab.IsLinkable) return;
+            if (!Linkable) return;
 
             if (!PlayerInput.KeyDown(Keys.Space)) return;
             bool lClick = PlayerInput.LeftButtonClicked();
@@ -143,7 +143,7 @@ namespace Barotrauma
                     if (!entity.IsMouseOn(position)) continue;
 
                     linkedTo.Add(entity);
-                    if (entity.IsLinkable && entity.linkedTo != null) entity.linkedTo.Add(this);
+                    if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
                 }
             }
             else
@@ -178,7 +178,7 @@ namespace Barotrauma
             
             var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
             
-            if (!inGame && prefab.IsLinkable)
+            if (!inGame && Linkable)
             {
                 itemEditor.AddCustomContent(new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", "", null, GUI.SmallFont), 1);
             }            

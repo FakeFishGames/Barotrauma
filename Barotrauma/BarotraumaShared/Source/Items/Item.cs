@@ -296,9 +296,9 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsLinkable
+        public override bool Linkable
         {
-            get { return prefab.IsLinkable; }
+            get { return prefab.Linkable; }
         }
 
         public override string ToString()
