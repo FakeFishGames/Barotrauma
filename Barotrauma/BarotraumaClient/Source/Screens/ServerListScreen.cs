@@ -124,9 +124,10 @@ namespace Barotrauma
         private void FilterServers()
         {
             serverList.RemoveChild(serverList.FindChild("noresults"));
-
+            
             foreach (GUIComponent child in serverList.children)
             {
+                if (!(child.UserData is ServerInfo)) continue;
                 ServerInfo serverInfo = (ServerInfo)child.UserData;
 
                 child.Visible =
