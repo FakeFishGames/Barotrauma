@@ -60,7 +60,8 @@
     name="Revolver Round"
     category="Equipment"
     interactthroughwalls="true"
-    price="10">
+    price="10"
+    tags="smallitem">
 
     <Sprite texture="weapons.png" sourcerect="52,99,8,3" depth="0.55"/>
 
