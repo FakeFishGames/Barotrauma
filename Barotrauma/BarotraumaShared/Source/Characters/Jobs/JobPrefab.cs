@@ -47,6 +47,13 @@ namespace Barotrauma
             private set;
         }
 
+        //NilMod ReqNumber
+        public int ReqNumber
+        {
+            get;
+            private set;
+        }
+
         public float Commonness
         {
             get;
@@ -61,6 +68,9 @@ namespace Barotrauma
 
             MinNumber = ToolBox.GetAttributeInt(element, "minnumber", 0);
             MaxNumber = ToolBox.GetAttributeInt(element, "maxnumber", 10);
+
+            //NilMod Required players for job code
+            ReqNumber = ToolBox.GetAttributeInt(element, "reqnumber", 0);
 
             Commonness = ToolBox.GetAttributeInt(element, "commonness", 10);
 

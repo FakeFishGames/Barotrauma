@@ -149,7 +149,11 @@ namespace Barotrauma
                 {
                     state = AIState.None;
                 }
-                else if ((selectedAiTarget.Entity is Character) && ((Character)selectedAiTarget.Entity).IsDead)
+                //Nilmod Updated eating target code
+                else if (((selectedAiTarget.Entity is Character) && ((Character)selectedAiTarget.Entity).IsDead)
+                    | ((selectedAiTarget.Entity is Character) && ((Character)selectedAiTarget.Entity).IsRemotePlayer == true
+                    && ((Character)selectedAiTarget.Entity).Health <= (((Character)selectedAiTarget.Entity).MinHealth + (((Character)selectedAiTarget.Entity).MaxHealth / 10f))
+                    && GameMain.NilMod.CreatureEatDyingPlayers == true))
                 {
                     if (state != AIState.Eat)
                     {
@@ -157,6 +161,7 @@ namespace Barotrauma
                         state = AIState.Eat;
                     }
                 }
+
                 else
                 {
                     state = (targetValue < 0.0f || Character.Health < fleeHealthThreshold) ? AIState.Escape : AIState.Attack;
@@ -267,6 +272,12 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
+            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
+            {
+                state = AIState.None;
+                return;
+            }
+
             SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
             SteeringManager.SteeringWander(1.0f);
             SteeringManager.SteeringAvoid(deltaTime, 2f);
@@ -540,10 +551,23 @@ namespace Barotrauma
                 steeringManager.SteeringManual(deltaTime, limbDiff * pullStrength);
                 mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength);
 
+                //GameMain.NilMod.CreatureHealthGainEatingPercent;
+
                 if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
                 {
+                    //Kill living players that control the character if being actively consumed.
+                    //Before this point is reached a fish could be prevented with stun from severing limbs and thus still save a player.
+                    if (!targetCharacter.IsDead && targetCharacter.IsRemotePlayer)
+                    {
+                        targetCharacter.Kill(CauseOfDeath.Damage, true);
+                    }
+
                     //apply damage to the target character to get some blood particles flying 
-                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), 10.0f, false);
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
+                    //Lets make this extra bloody, perhaps a client will sync it.
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
+
 
                     //keep severing joints until there is only one limb left
                     LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered);
@@ -557,6 +581,7 @@ namespace Barotrauma
                     else //sever a random joint
                     {
                         targetCharacter.AnimController.SeverLimbJoint(nonSeveredJoints[Rand.Int(nonSeveredJoints.Length)]);
+                        if(GameMain.Server != null) GameMain.Server.CreateEntityEvent(targetCharacter, new object[] { Barotrauma.Networking.NetEntityEvent.Type.Status });
                     }
                 }
             }
@@ -611,9 +636,18 @@ namespace Barotrauma
                         if (eatDeadPriority == 0.0f) continue;
                         valueModifier = eatDeadPriority;
                     }
+                    //Nilmod consume dying players code
+                    else if (targetCharacter.IsRemotePlayer == true && targetCharacter.Health <= (targetCharacter.MinHealth + (targetCharacter.MaxHealth / 10f)) && GameMain.NilMod.CreatureEatDyingPlayers == true)
+                    {
+                        if (eatDeadPriority == 0.0f) continue;
+                        valueModifier = eatDeadPriority;
+                    }
                     else if (targetCharacter.SpeciesName == "human")
                     {
                         if (attackHumans == 0.0f) continue;
+                        //Nilmod Character Changes - They'd in theory be dead now here so lets just invalidate the target if their say, anti death code.
+                        //Otherwise feel free to Pummel the shit out of them until they stop regaining enough health
+                        if(targetCharacter.Health <= (targetCharacter.MinHealth + (targetCharacter.MaxHealth / 20f))) continue;
                         valueModifier = attackHumans;
                     }
                     else

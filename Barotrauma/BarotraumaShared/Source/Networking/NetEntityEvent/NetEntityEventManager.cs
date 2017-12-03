@@ -7,7 +7,7 @@ namespace Barotrauma.Networking
     abstract class NetEntityEventManager
     {
         public const int MaxEventBufferLength = 1024;
-        public const int MaxEventsPerWrite = 64;
+        public const int MaxEventsPerWrite = 128;
         
         /// <summary>
         /// Write the events to the outgoing message. The recipient parameter is only needed for ServerEntityEventManager

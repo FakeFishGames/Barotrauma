@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<NilModHelpData>
+  <DefaultHelpTopic>
+    <Line Text="Please Type 'help;index' for this servers full list of help topics! - you can use help;index 0-15 to get started."/>
+  </DefaultHelpTopic>
+  <!--Define a topic in here-->
+  <HelpTopics>
+    <Topic Name="Index">
+      <Line Text="This is the index for The topics, type help;index 0 to help;index 11 for the topics you can type in help; - each topic has its own pages! Good Luck."/>
+      <Line Text="Basics: Radios, Inventory, Armour, Access, Teamwork, Creatures"/>
+      <Line Text="Electricals: Power Reactor, Power Junction, Power Battery, Power Voltage, submarine setup"/>
+      <Line Text="Survival: Health, Oxygen, Bleeding, Pressure, Medical, Stun, Husks, Infection"/>
+      <Line Text="Maitenance: Doors, hull breach, broken objects"/>
+      <Line Text="Advanced: Crafting, Rewiring, Railguns, submarine stealth"/>
+      <Line Text="Missions: Salvage, Monster, Cargo, Combat, Traitors"/>
+      <Line Text="Jobs: Captain, Engineer, Mechanic, Security, Doctor, Assistant"/>
+      <Line Text="Artifacts: Skyholder Artifact, Nasonov Artifact, Thermal Artifact, Faraday Artifact"/>
+      <Line Text="Medicals: Bandage, Medical Syringe, Corrigodone, Fibrinozine, Erythrozine, Auxiliorizine"/>
+      <Line Text="Medicals: Calyxanide, Velonaceps Calyx Eggs, Hyperzine, Liquid Oxygenite"/>
+      <Line Text="Weapons: Stun Baton, Stun Grenade, Incendium Grenade, Harpoon, Spear, Uranium Powder, Morbusine"/>
+    </Topic>
+    <!--Basics-->
+    <Topic Name="radios">
+      <Line Text="Page 0/2 - Radios are a crewmembers basic way to communicate, Hit the tab key then R; (SEMICOLON) then your words to use the yellow chat!"/>
+      <Line Text="Page 1/2 - Without a radio, you can only talk a few meters, noticible by others with letters replaced by ---."/>
+      <Line Text="Page 2/2 - The distance effect still applies to radios however, but drops off around a 150 - 200 meter range."/>
+    </Topic>
+    <Topic Name="Inventory">
+      <Line Text="Page 0/0 - Not yet written."/>
+    </Topic>
+    <Topic Name="Armour">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Access">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Teamwork">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Creatures">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <!--Electricals-->
+    <Topic Name="Power Reactor">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Power Junction">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Power Battery">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Power Voltage">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Submarine Setup">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <!--Survival-->
+    <Topic Name="Health">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Oxygen">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Bleeding">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Medical">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Stun">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Husks">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Infection">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <!--Maitenance-->
+    <Topic Name="Doors">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Pressure">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="hull breach">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="broken objects">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <!--Advanced-->
+    <Topic Name="Crafting">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Rewiring">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Railguns">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="submarine stealth">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <!--Missions-->
+    <Topic Name="Salvage">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Monster">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Cargo">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Combat">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Traitors">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <!--Jobs-->
+    <Topic Name="Captain">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Engineer">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Mechanic">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Security">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Doctor">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Assistant">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <!--Artifacts-->
+    <Topic Name="Skyholder Artifact">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Nasonov Artifact">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Thermal Artifact">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Faraday Artifact">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <!--Medicals-->
+    <Topic Name="Bandage">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Medical Syringe">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Corrigodone">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Fibrinozine">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Erythrozine">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Auxiliorizine">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Calyxanide">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Velonaceps Calyx Eggs">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Hyperzine">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Liquid Oxygenite">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <!--Weapons-->
+    <Topic Name="Stun Baton">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Stun Grenade">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Incendium Grenade">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Harpoon">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Spear">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Uranium Powder">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Morbusine">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Explosives">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Handcuffs">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Chloral Hydrate">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Bike Horn">
+      <Line Text="Not yet written."/>
+    </Topic>
+    <Topic Name="Body Armour">
+      <Line Text="Not yet written."/>
+    </Topic>
+  </HelpTopics>
+</NilModHelpData>

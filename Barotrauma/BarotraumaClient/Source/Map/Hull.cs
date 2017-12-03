@@ -188,6 +188,37 @@ namespace Barotrauma
                     0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
 
+            if ((Character.Controlled == null && GameMain.NilMod.ShowRoomInfo) || GameMain.DebugDraw)
+            {
+                drawRect =
+                Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+
+                if (rect.Width >= 640 && rect.Height >= 200)
+                {
+                    GUI.SmallFont.DrawString(spriteBatch, "PRESS: " + ((int)pressure - rect.Y).ToString() +
+                    " - OXY: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 45, -drawRect.Y + 35), Color.White, 0f, new Vector2(0, 0), 2.0f, SpriteEffects.None, 0f);
+                    if(GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 45, -drawRect.Y + 60), Color.White, 0f, new Vector2(0, 0), 2.0f, SpriteEffects.None, 0f);
+                }
+                else if (rect.Width >= 320 && rect.Height >= 160)
+                {
+                    GUI.SmallFont.DrawString(spriteBatch, "PRESS: " + ((int)pressure - rect.Y).ToString() +
+                    " - OXY: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 45, -drawRect.Y + 35), Color.White, 0f, new Vector2(0, 0), 1.5f, SpriteEffects.None, 0f);
+                    if (GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 45, -drawRect.Y + 60), Color.White, 0f, new Vector2(0, 0), 1.5f, SpriteEffects.None, 0f);
+                }
+                else if (rect.Width >= 160 && rect.Height >= 120)
+                {
+                    GUI.SmallFont.DrawString(spriteBatch, "PRESS: " + ((int)pressure - rect.Y).ToString() +
+                    " - OXY: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 40, -drawRect.Y + 30), Color.White, 0f, new Vector2(0, 0), 1.0f, SpriteEffects.None, 0f);
+                    if (GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 45, -drawRect.Y + 40), Color.White, 0f, new Vector2(0, 0), 1.0f, SpriteEffects.None, 0f);
+                }
+                else if (rect.Width >= 100 && rect.Height >= 60)
+                {
+                    GUI.SmallFont.DrawString(spriteBatch, "PRESS: " + ((int)pressure - rect.Y).ToString() +
+                    " - OXY: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 40, -drawRect.Y + 25), Color.White, 0f, new Vector2(0, 0), 0.50f, SpriteEffects.None, 0f);
+                    if (GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 40, -drawRect.Y + 35), Color.White, 0f, new Vector2(0, 0), 0.50f, SpriteEffects.None, 0f);
+                }
+            }
+
             if (!ShowHulls && !GameMain.DebugDraw) return;
 
             if (!editing && !GameMain.DebugDraw) return;
@@ -208,10 +239,6 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                GUI.SmallFont.DrawString(spriteBatch, "Pressure: " + ((int)pressure - rect.Y).ToString() +
-                    " - Oxygen: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 5, -drawRect.Y + 5), Color.White);
-                GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
-
                 foreach (FireSource fs in fireSources)
                 {
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.WorldPosition.X, (int)-fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y), Color.Orange, false);

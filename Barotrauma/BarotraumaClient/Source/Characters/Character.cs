@@ -16,6 +16,8 @@ namespace Barotrauma
         protected float soundTimer;
         protected float soundInterval;
 
+        protected Vector2 LastHealthStatusVector;
+
         private List<CharacterSound> sounds;
 
         //the Character that the player is currently controlling
@@ -36,7 +38,7 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         private Dictionary<object, HUDProgressBar> hudProgressBars;
 
         public Dictionary<object, HUDProgressBar> HUDProgressBars
@@ -103,12 +105,71 @@ namespace Barotrauma
 
                 if (IsHumanoid)
                 {
-                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
+                    if(!(SpeciesName.ToLowerInvariant() == "human") && GameMain.NilMod.UseCreatureZoomBoost)
+                    {
+                        cam.ZoomModifier = -0.10f;
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp((300.0f * GameMain.NilMod.CreatureZoomMultiplier),300f,500f), deltaTime);
+                    }
+                    else
+                    {
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
+                    }
+                    
+                    
                 }
                 else
                 {
-                    //increased visibility range when controlling large a non-humanoid
-                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp(Mass, 250.0f, 800.0f), deltaTime);
+                    float tempmass = Mass;
+                    if (GameMain.NilMod.UseCreatureZoomBoost)
+                    {
+                        //increased visibility range when controlling large a non-humanoid
+                        if ((tempmass) >= 1000)
+                        {
+                            tempmass = 1200f;
+                            cam.ZoomModifier = -1f;
+                        }
+                        else if ((tempmass) >= 800)
+                        {
+                            tempmass = 1000f;
+                            cam.ZoomModifier = -1f;
+                        }
+                        else if ((tempmass) >= 600)
+                        {
+                            tempmass = 800f;
+                            cam.ZoomModifier = -1f;
+                        }
+                        else if ((tempmass) >= 400)
+                        {
+                            tempmass = 600f;
+                            cam.ZoomModifier = -0.5f;
+                        }
+                        else if ((tempmass) >= 300)
+                        {
+                            tempmass = 500f;
+                            cam.ZoomModifier = -0.4f;
+                        }
+                        else if ((tempmass) >= 200)
+                        {
+                            tempmass = 450f;
+                            cam.ZoomModifier = -0.3f;
+                        }
+                        else if ((tempmass) >= 150)
+                        {
+                            tempmass = 400f;
+                            cam.ZoomModifier = -0.3f;
+                        }
+                        else if ((tempmass) >= 100)
+                        {
+                            tempmass = 350f;
+                            cam.ZoomModifier = -0.3f;
+                        }
+                        else if ((tempmass) >= 0)
+                        {
+                            tempmass = 300f;
+                            cam.ZoomModifier = -0.3f;
+                        }
+                    }
+                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp((tempmass * GameMain.NilMod.CreatureZoomMultiplier), 250.0f, 1600.0f), deltaTime);
                 }
             }
 
@@ -139,11 +200,11 @@ namespace Barotrauma
             DisableControls = false;
         }
 
-        partial void UpdateControlled(float deltaTime,Camera cam)
+        partial void UpdateControlled(float deltaTime, Camera cam)
         {
             if (controlled != this) return;
-            
-            ControlLocalPlayer(deltaTime, cam);            
+
+            ControlLocalPlayer(deltaTime, cam);
 
             Lights.LightManager.ViewTarget = this;
             CharacterHUD.Update(deltaTime, this);
@@ -217,7 +278,7 @@ namespace Barotrauma
                 CharacterHUD.AddToGUIUpdateList(this);
             }
         }
-        
+
         public void Draw(SpriteBatch spriteBatch)
         {
             if (!Enabled) return;
@@ -282,7 +343,7 @@ namespace Barotrauma
             closestItemPos.Y = -closestItemPos.Y;
             GUI.DrawLine(spriteBatch, closestItemPos - new Vector2(0, 5), closestItemPos + new Vector2(0, 5), Color.Lime, 0, 10);*/
 
-            if (this == controlled || GUI.DisableHUD) return;
+            if (GUI.DisableHUD) return;
 
             Vector2 pos = DrawPosition;
             pos.Y = -pos.Y;
@@ -294,16 +355,36 @@ namespace Barotrauma
                     Math.Min((float)speechBubbleTimer, 1.0f));
             }
 
-            if (this == controlled) return;
+            //if (this == controlled) return;
 
-            if (info != null)
+            if (info != null && !(this == controlled))
             {
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 90.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
+                if (IsDead)
+                {
+                    nameColor = Color.DarkGray;
+                }
+                if(HuskInfectionState >= 0.5f)
+                {
+                    nameColor = new Color(255, 100, 255, 255);
+                }
+
+                if(Character.Controlled == null)
+                {
+                    if (TeamID == 0) nameColor = Color.White;
+                    else if (TeamID == 1) nameColor = Color.LightBlue;
+                    else if (TeamID == 2) nameColor = Color.Red;
+                }
+                
 
                 if (Character.Controlled != null && TeamID != Character.Controlled.TeamID)
                 {
                     nameColor = Color.Red;
+                    if (IsDead)
+                    {
+                        nameColor = Color.DarkRed;
+                    }
                 }
                 GUI.Font.DrawString(spriteBatch, Info.Name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
                 GUI.Font.DrawString(spriteBatch, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
@@ -315,12 +396,163 @@ namespace Barotrauma
             }
 
             if (isDead) return;
-
-            if (health < maxHealth * 0.98f)
+            
+            if (GameMain.NilMod.UseUpdatedCharHUD)
             {
-                Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
+                if ((health < maxHealth * 0.98f) || oxygen < 95f || bleeding >= 0.05f || (((AnimController.CurrentHull == null) ?
+                    100.0f : Math.Min(AnimController.CurrentHull.LethalPressure, 100.0f)) > 10f && NeedsAir && PressureProtection == 0f) || HuskInfectionState > 0f || Stun > 0f)
+                {
+                    //Basic Colour
+                    Color baseoutlinecolour;
+                    //Basic Flash Colour if fine
+                    Color FlashColour;
+                    //Final Calculated outline colour
+                    Color outLineColour;
 
-                GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
+                    //Negative Colours
+                    Color NegativeLow = new Color(145, 145, 145, 160);
+                    Color NegativeHigh = new Color(25, 25, 25, 220);
+
+                    //Health Colours
+                    Color HealthPositiveHigh = new Color(0, 255, 0, 15);
+                    Color HealthPositiveLow = new Color(255, 0, 0, 60);
+                    //Oxygen Colours
+                    Color OxygenPositiveHigh = new Color(0, 255, 255, 15);
+                    Color OxygenPositiveLow = new Color(0, 0, 200, 60);
+                    //Stun Colours
+                    Color StunPositiveHigh = new Color(235, 135, 45, 100);
+                    Color StunPositiveLow = new Color(204, 119, 34, 30);
+                    //Bleeding Colours
+                    Color BleedPositiveHigh = new Color(255, 50, 50, 100);
+                    Color BleedPositiveLow = new Color(150, 50, 50, 15);
+                    //Pressure Colours
+                    Color PressurePositiveHigh = new Color(255, 255, 0, 100);
+                    Color PressurePositiveLow = new Color(125, 125, 0, 15);
+
+                    //Husk Colours
+                    Color HuskPositiveHigh = new Color(255, 100, 255, 150);
+                    Color HuskPositiveLow = new Color(125, 30, 125, 15);
+
+                    float pressureFactor = (AnimController.CurrentHull == null) ?
+                    100.0f : Math.Min(AnimController.CurrentHull.LethalPressure, 100.0f);
+                    if (PressureProtection > 0.0f && (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthOutsideHull || (WorldPosition.Y > GameMain.NilMod.PlayerCrushDepthInHull && CurrentHull != null))) pressureFactor = 0.0f;
+
+                    if (IsRemotePlayer || this == Character.Controlled || AIController is HumanAIController)
+                    {
+                        //A players basic flash if ok
+                        baseoutlinecolour = new Color(255, 255, 255, 15);
+                        FlashColour = new Color(220, 220, 220, 15);
+
+                        if (HuskInfectionState >= 1f) FlashColour = new Color(200, 0, 200, 255);
+                        else if (HuskInfectionState > 0.5f) FlashColour = new Color(85, 0, 85, 150);
+                        else if (HuskInfectionState > 0f) FlashColour = new Color(50, 0, 120, 50);
+                        else if (pressureFactor > 80f) FlashColour = new Color(200, 200, 0, 100);
+                        else if (bleeding > 0.75f) FlashColour = new Color(80, 30, 20, 100);
+                        else if (pressureFactor > 45f) FlashColour = new Color(200, 200, 0, 100);
+                        else if (oxygen < 50f) FlashColour = new Color(40, 40, 255, 40);
+                        else if (health < 40f) FlashColour = new Color(25, 25, 25, 40);
+                        else if (Stun >= 1f) FlashColour = new Color(5, 5, 5, 80);
+
+                        if (IsUnconscious || Stun >= 5f) baseoutlinecolour = new Color(40, 40, 40, 35);
+                    }
+                    //Is an AI or well, not controlled by anybody, make their border different
+                    else
+                    {
+                        baseoutlinecolour = new Color(40, 40, 40, 15);
+                        FlashColour = new Color(5, 5, 5, 15);
+
+                        //if (HuskInfectionState >= 2f) FlashColour = new Color(255, 0, 255, 255);
+                        //else if (HuskInfectionState > 1f) FlashColour = new Color(200, 0, 200, 150);
+                        //else if (HuskInfectionState > 0f) FlashColour = new Color(120, 0, 120, 100);
+                        if (pressureFactor > 80f && NeedsAir) FlashColour = new Color(200, 200, 0, 100);
+                        else if (bleeding > 1f) FlashColour = new Color(255, 10, 10, 100);
+                        else if (pressureFactor > 45f && NeedsAir) FlashColour = new Color(200, 200, 0, 100);
+                        else if (Stun >= 1f) FlashColour = new Color(10, 10, 10, 100);
+                    }
+
+                    if (GameMain.NilMod.CharFlashColourTime >= (NilMod.CharFlashColourRate / 2))
+                    {
+                        outLineColour = Color.Lerp(baseoutlinecolour, FlashColour, (GameMain.NilMod.CharFlashColourTime - (NilMod.CharFlashColourRate / 2)) / (NilMod.CharFlashColourRate / 2));
+                    }
+                    else
+                    {
+                        outLineColour = Color.Lerp(FlashColour, baseoutlinecolour, GameMain.NilMod.CharFlashColourTime / (NilMod.CharFlashColourRate / 2));
+                    }
+
+                    //Smooth out the Health bar movement a little c:
+                    if (LastHealthStatusVector == null || LastHealthStatusVector == Vector2.Zero) LastHealthStatusVector = new Vector2(pos.X - 20f, DrawPosition.Y + 70.0f);
+                    if ((LastHealthStatusVector.X + 40f) - DrawPosition.X > 2.0f || (LastHealthStatusVector.X + 40f) - DrawPosition.X < -2.0f || (LastHealthStatusVector.Y - 70f) - DrawPosition.Y > 2.0f || (LastHealthStatusVector.Y - 70f) - DrawPosition.Y < -2.0f) LastHealthStatusVector = new Vector2(pos.X - 40f, DrawPosition.Y + 70.0f);
+                    Vector2 healthBarPos = LastHealthStatusVector;
+
+                    //GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 10.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
+
+                    //Health Bar (Keep visible)
+                    if (Health >= 0f)
+                    {
+                        if ((NeedsAir && oxygen > 85f) || !NeedsAir)
+                        {
+                            GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(80.0f, 20.0f), health / maxHealth, Color.Lerp(HealthPositiveLow, HealthPositiveHigh, health / maxHealth), outLineColour, 2f, 0, "Left");
+                        }
+                        else
+                        {
+                            GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(80.0f, 10.0f), health / maxHealth, Color.Lerp(HealthPositiveLow, HealthPositiveHigh, health / maxHealth), outLineColour, 2f, 0, "Left");
+                        }
+                    }
+                    //Health has gone below 0
+                    else
+                    {
+                        if ((NeedsAir && oxygen > 85f) || !NeedsAir)
+                        {
+                            GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(80.0f, 20.0f), -(health / maxHealth), Color.Lerp(NegativeLow, NegativeHigh, -(health / maxHealth)), outLineColour, 2f, 0, "Right");
+                        }
+                        else
+                        {
+                            GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(80.0f, 10.0f), -(health / maxHealth), Color.Lerp(NegativeLow, NegativeHigh, -(health / maxHealth)), outLineColour, 2f, 0, "Right");
+                        }
+                    }
+
+                    //Oxygen Bar
+                    if (NeedsAir && (oxygen <= 85f && oxygen >= 0f))
+                    {
+                        GUI.DrawProgressBar(spriteBatch, new Vector2(healthBarPos.X, healthBarPos.Y - 10f), new Vector2(80.0f, 10.0f), oxygen / 100f, Color.Lerp(OxygenPositiveLow, OxygenPositiveHigh, oxygen / 100f), outLineColour, 2f, 0f, "Left");
+                    }
+                    //Oxygen has gone below 0
+                    else if (NeedsAir && oxygen < 0f)
+                    {
+                        GUI.DrawProgressBar(spriteBatch, new Vector2(healthBarPos.X, healthBarPos.Y - 10f), new Vector2(80.0f, 10.0f), -(oxygen / 100f), Color.Lerp(NegativeLow, NegativeHigh, -(oxygen / 100f)), outLineColour, 2f, 0f, "Right");
+                    }
+
+                    //Stun Bar
+                    if (Stun > 1.0f && !IsUnconscious)
+                    {
+                        GUI.DrawProgressBar(spriteBatch, new Vector2(healthBarPos.X, healthBarPos.Y - 20f), new Vector2(80.0f, 10.0f), Stun / 60f, Color.Lerp(StunPositiveLow, StunPositiveHigh, Stun / 60f), outLineColour, 2f, 0f, "Left");
+                    }
+
+                    //Bleed Bar
+                    if (bleeding > 0.0f)
+                    {
+                        GUI.DrawProgressBar(spriteBatch, new Vector2(healthBarPos.X, healthBarPos.Y + 10f), new Vector2(40.0f, 10.0f), bleeding / 5f, Color.Lerp(BleedPositiveLow, BleedPositiveHigh, bleeding / 5f), outLineColour, 2f, 0f, "Left");
+                    }
+                    //Pressure Bar
+                    if (pressureFactor > 0.0f)
+                    {
+                        GUI.DrawProgressBar(spriteBatch, new Vector2(healthBarPos.X + 40f, healthBarPos.Y + 10f), new Vector2(40.0f, 10.0f), pressureFactor / 100f, Color.Lerp(PressurePositiveLow, PressurePositiveHigh, pressureFactor / 100f), outLineColour, 2f, 0f, "Right");
+                    }
+                    //Husk Bar
+                    if (HuskInfectionState > 0.0f)
+                    {
+                        GUI.DrawProgressBar(spriteBatch, new Vector2(healthBarPos.X + 80f, healthBarPos.Y - ((pressureFactor > 0.0f) ? 10.0f : 0.0f)), new Vector2(20.0f, (pressureFactor > 0.0f) ? 30.0f : 20.0f), HuskInfectionState, Color.Lerp(HuskPositiveLow, HuskPositiveHigh, HuskInfectionState), outLineColour, 2f, 0f, "Bottom");
+                    }
+                }
+            }
+            else
+            {
+                if (health < maxHealth * 0.98f)
+                {
+                    Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
+
+                    GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
+                }
             }
         }
 

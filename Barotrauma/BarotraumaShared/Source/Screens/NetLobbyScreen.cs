@@ -22,7 +22,7 @@ namespace Barotrauma
         }
         
         private string levelSeed = "";
-        
+
         public void ToggleTraitorsEnabled(int dir)
         {
             if (GameMain.Server == null) return;

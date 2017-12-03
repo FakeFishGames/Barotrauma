@@ -22,6 +22,7 @@ namespace Barotrauma.Networking
 
         public enum MessageType
         {
+            /* Old Chat Types
             Chat,
             ItemInteraction,
             Inventory,
@@ -29,21 +30,55 @@ namespace Barotrauma.Networking
             Spawning,
             ServerMessage,
             Error
+            */
+
+            Chat,
+            Doorinteraction,
+            ItemInteraction,
+            Inventory,
+            Attack,
+            Husk,
+            Reactor,
+            Set,
+            Rewire,
+            Spawns,
+            Connection,
+            ServerMessage,
+            Error,
+            NilMod
         }
 
         private readonly Color[] messageColor =
         {
-            Color.LightBlue,
-            new Color(255, 142, 0),
-            new Color(238, 208, 0),
-            new Color(204, 74, 78),
-            new Color(163, 73, 164),
-            new Color(157, 225, 160),
-            Color.Red
+            /* Old colours
+            Color.LightBlue,                //Chat
+            new Color(255, 142, 0),         //ItemInteraction
+            new Color(238, 208, 0),         //Inventory
+            new Color(204, 74, 78),         //Attack
+            new Color(163, 73, 164),        //Spawning
+            new Color(157, 225, 160),       //ServerMessage
+            Color.Red                       //Error
+            */
+
+            Color.LightCoral,       //Chat
+            Color.White,            //DoorInteraction
+            Color.Orange,           //ItemInteraction
+            Color.Yellow,           //Inventory
+            Color.Red,              //Attack
+            Color.MediumPurple,     //Husk
+            Color.MediumSeaGreen,   //Reactor
+            Color.ForestGreen,      //Set
+            Color.LightPink,        //Rewire
+            Color.DarkMagenta,      //Spawns
+            Color.DarkCyan,         //Connection
+            Color.Cyan,             //ServerMessage
+            Color.Red,              //Error
+            Color.Violet            //NilMod
         };
 
         private readonly string[] messageTypeName =
         {
+            /* Old Message Type Names
             "Chat message",
             "Item interaction",
             "Inventory usage",
@@ -51,6 +86,22 @@ namespace Barotrauma.Networking
             "Spawning",
             "Server message",
             "Error"
+            */
+
+            "Chat message",
+            "Door interaction",
+            "Item interaction",
+            "Inventory usage",
+            "Attack & death",
+            "Husk Infection",
+            "Reactor",
+            "Powered/Pump set",
+            "Wiring",
+            "Spawning",
+            "Connection Info",
+            "Server message",
+            "Error",
+            "NilMod Extras"
         };
 
         private int linesPerFile = 800;
@@ -65,6 +116,8 @@ namespace Barotrauma.Networking
 
         private string msgFilter;
         private bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
+
+        StreamWriter sw;
 
         public int LinesPerFile
         {
@@ -102,11 +155,23 @@ namespace Barotrauma.Networking
             
             unsavedLineCount++;
 
-            if (unsavedLineCount >= LinesPerFile)
+            if(GameMain.NilMod.LogAppendCurrentRound)
             {
-                Save();
-                unsavedLineCount = 0;
+                if (unsavedLineCount >= GameMain.NilMod.LogAppendLineSaveRate)
+                {
+                    Save();
+                    //unsavedLineCount = 0;
+                }
             }
+            else
+            {
+                if (unsavedLineCount >= LinesPerFile)
+                {
+                    Save();
+                    unsavedLineCount = 0;
+                }
+            }
+            
 
             while (lines.Count > LinesPerFile)
             {
@@ -123,35 +188,118 @@ namespace Barotrauma.Networking
 
         public void Save()
         {
-            if (!Directory.Exists(SavePath))
+            if (unsavedLineCount > 0)
             {
-                try
+                if (!Directory.Exists(SavePath))
                 {
-                    Directory.CreateDirectory(SavePath);
+                    try
+                    {
+                        Directory.CreateDirectory(SavePath);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("Failed to create a folder for server logs", e);
+                        return;
+                    }
                 }
-                catch (Exception e)
+
+                //Append current round file method
+                if (GameMain.NilMod.LogAppendCurrentRound)
                 {
-                    DebugConsole.ThrowError("Failed to create a folder for server logs", e);
-                    return;
-                }                
+                    //Get the filename
+                    if (GameMain.NilMod.RoundSaveName == "")
+                    {
+                        GameMain.NilMod.RoundSaveName = serverName + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+
+                        GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace(":", "");
+                        GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace("../", "");
+                        GameMain.NilMod.RoundSaveName = GameMain.NilMod.RoundSaveName.Replace("/", "");
+
+                        string filePath = Path.Combine(SavePath, GameMain.NilMod.RoundSaveName);
+
+                        //Just write all lines we currently have in our log at the moment
+                        try
+                        {
+                            File.WriteAllLines(filePath, lines.Select(l => l.Text));
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError("Saving the server log to " + filePath + " failed", e);
+                        }
+                    }
+                    //Append our newest lines
+                    else
+                    {
+                        string filePath = Path.Combine(SavePath, GameMain.NilMod.RoundSaveName);
+
+                        try
+                        {
+                            //This method is apparently faster and performs considerably better
+                            //The last number is the buffer size, 65536 is 64kb, default is 4kb, higher may have worse performance
+                            sw = new StreamWriter(filePath, true, System.Text.Encoding.UTF8, 65536);
+
+                            for (int i = (lines.Count() - unsavedLineCount); i < lines.Count(); i++)
+                            {
+                                sw.WriteLine(lines.ElementAt(i).Text);
+                            }
+
+                            sw.Close();
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError("Saving the server log to " + filePath + " failed", e);
+                        }
+                    }
+                }
+                //Default Saving Methods
+                else
+                {
+                    string fileName = serverName + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+
+                    fileName = fileName.Replace(":", "");
+                    fileName = fileName.Replace("../", "");
+                    fileName = fileName.Replace("/", "");
+
+                    string filePath = Path.Combine(SavePath, fileName);
+
+                    try
+                    {
+                        File.WriteAllLines(filePath, lines.Select(l => l.Text));
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("Saving the server log to " + filePath + " failed", e);
+                    }
+                }
+                unsavedLineCount = 0;
             }
-
-            string fileName = serverName+"_"+DateTime.Now.ToShortDateString()+"_"+DateTime.Now.ToShortTimeString()+".txt";
-
-            fileName = fileName.Replace(":", "");
-            fileName = fileName.Replace("../", "");
-            fileName = fileName.Replace("/", "");
-
-            string filePath = Path.Combine(SavePath, fileName);
-            
-            try
+            else
             {
-                File.WriteAllLines(filePath, lines.Select(l => l.Text));
+                DebugConsole.NewMessage("NILMOD WARNING - Attempt to save server log with no messages to save", Color.Cyan);
             }
-            catch (Exception e)
+        }
+
+        //NilMod Clear Log at start of next round : > (By saving everything remaining + the prev. round)
+        public void ClearLog()
+        {
+            if (unsavedLineCount >= 0)
             {
-                DebugConsole.ThrowError("Saving the server log to " + filePath + " failed", e);
+                Save();
+                unsavedLineCount = 0;
             }
+
+            while (lines.Count > 0)
+            {
+                lines.Dequeue();
+            }
+
+#if CLIENT
+            while (listBox != null && listBox.children.Count > 0)
+            {
+                listBox.RemoveChild(listBox.children[0]);
+            }
+#endif
+            GameMain.NilMod.RoundSaveName = "";
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Barotrauma
         {
             base.Update(deltaTime, cam);
 
-            if (!Enabled || IsRemotePlayer) return;
+            if (!Enabled || IsRemotePlayer || GameMain.NilMod.FrozenCharacters.Find(c => c == this) != null) return;
             
             float dist = Vector2.DistanceSquared(cam.WorldViewCenter, WorldPosition);
             if (dist > 8000.0f * 8000.0f)

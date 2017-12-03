@@ -16,6 +16,9 @@ namespace Barotrauma.Particles
         private Vector2 position;
         private Vector2 prevPosition;
 
+        private Vector2 dragVec = Vector2.Zero;
+        private int dragWait = 0;
+
         private Vector2 velocity;
 
         private float rotation;
@@ -102,8 +105,16 @@ namespace Barotrauma.Particles
 
             angularVelocity = prefab.AngularVelocityMin + (prefab.AngularVelocityMax - prefab.AngularVelocityMin) * Rand.Range(0.0f, 1.0f);
 
-            totalLifeTime = prefab.LifeTime;
-            lifeTime = prefab.LifeTime;
+            if(GameMain.NilMod.ParticleWhitelist.Find(p => p == prefab.Name) != null)
+            {
+                totalLifeTime = prefab.LifeTime;
+                lifeTime = prefab.LifeTime;
+            }
+            else
+            {
+                totalLifeTime = prefab.LifeTime * GameMain.NilMod.ParticleLifeMultiplier;
+                lifeTime = prefab.LifeTime * GameMain.NilMod.ParticleLifeMultiplier;
+            }
             
             size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
 
@@ -266,10 +277,24 @@ namespace Barotrauma.Particles
 
         private void ApplyDrag(float dragCoefficient, float deltaTime)
         {
+            if (velocity.LengthSquared() < dragVec.LengthSquared())
+            {
+                velocity = Vector2.Zero;
+                return;
+            }
             if (Math.Abs(velocity.X) < 0.0001f && Math.Abs(velocity.Y) < 0.0001f) return;
-            float speed = velocity.Length();
 
-            velocity -= (velocity / speed) * Math.Min(speed * speed * dragCoefficient * deltaTime, 1.0f);
+            dragWait--;
+            if (dragWait <= 0)
+            {
+                dragWait = 30;
+
+                float speed = velocity.Length();
+
+                dragVec = (velocity / speed) * Math.Min(speed * speed * dragCoefficient * deltaTime, 1.0f);
+            }
+
+            velocity -= dragVec;
         }
 
         private void OnWallCollisionInside(Hull prevHull, Vector2 collisionNormal)

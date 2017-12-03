@@ -31,6 +31,9 @@ namespace Barotrauma
             private set;
         }
 
+        //NilMod Class
+        public static NilMod NilMod;
+
         //only screens the server implements
         public static GameScreen GameScreen;
         public static NetLobbyScreen NetLobbyScreen;
@@ -71,6 +74,9 @@ namespace Barotrauma
                 Config.WasGameUpdated = false;
                 Config.Save("serverconfig.xml");
             }
+
+            NilMod = new NilMod();
+            NilMod.Load();
 
             GameScreen = new GameScreen();
         }

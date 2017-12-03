@@ -170,7 +170,7 @@ namespace Barotrauma.Items.Components
                 {
                     msg += ", contained items: " + string.Join(", ", Array.FindAll(projectiles[0].Item.ContainedItems, i => i != null).Select(i => i.Name)) + ")";
                 }
-                GameServer.Log(msg, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(msg, ServerLog.MessageType.Attack);
             }
 
             return true;

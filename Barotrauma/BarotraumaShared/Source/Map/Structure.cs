@@ -620,6 +620,8 @@ namespace Barotrauma
         {
             if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f);
             if (!prefab.HasBody || prefab.IsPlatform) return new AttackResult(0.0f, 0.0f);
+            //Nilmod CanDamageSubBody
+            if (Submarine != null && !GameMain.NilMod.CanDamageSubBody) return new AttackResult(0.0f, 0.0f);
 
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
@@ -648,6 +650,8 @@ namespace Barotrauma
         {
             if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.HasBody) return;
+            //Nilmod CanDamageSubBody
+            if (Submarine != null && !GameMain.NilMod.CanDamageSubBody) return;
 
             if (!MathUtils.IsValid(damage)) return;
 

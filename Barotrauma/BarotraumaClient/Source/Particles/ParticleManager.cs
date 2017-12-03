@@ -15,10 +15,12 @@ namespace Barotrauma.Particles
     {
         public static int particleCount;
 
-        private const int MaxOutOfViewDist = 500;
+        public int MaxOutOfViewDist = 500;
         
-        private const int MaxParticles = 1500;
+        public int MaxParticles = 1500;
         private Particle[] particles;
+
+        private string loadedconfig = "";
 
         private Dictionary<string, ParticlePrefab> prefabs;
 
@@ -28,7 +30,11 @@ namespace Barotrauma.Particles
         {
             this.cam = cam;
 
+            MaxParticles = GameMain.NilMod.MaxParticles;
+
             particles = new Particle[MaxParticles];
+
+            loadedconfig = configFile;
 
             XDocument doc = ToolBox.TryLoadXml(configFile);
             if (doc == null || doc.Root == null) return;
@@ -66,19 +72,25 @@ namespace Barotrauma.Particles
 
         public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation = 0.0f, Hull hullGuess = null)
         {
-            if (!Submarine.RectContains(MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist), position)) return null;
-            //if (!cam.WorldView.Contains(position)) return null;
+            if (((Rand.Range(1, 100) <= GameMain.NilMod.ParticleSpawnPercent) || GameMain.NilMod.ParticleWhitelist.Find(p => p == prefab.Name) != null) && !GameMain.NilMod.DisableParticles)
+            {
+                if (!Submarine.RectContains(MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist), position)) return null;
+                //if (!cam.WorldView.Contains(position)) return null;
 
-            if (particleCount >= MaxParticles) return null;
+                if (particleCount >= MaxParticles) return null;
 
-            if (particles[particleCount] == null) particles[particleCount] = new Particle();
+                if (particles[particleCount] == null) particles[particleCount] = new Particle();
 
-            particles[particleCount].Init(prefab, position, speed, rotation, hullGuess);
+                particles[particleCount].Init(prefab, position, speed, rotation, hullGuess);
 
-            particleCount++;
+                particleCount++;
 
-            return particles[particleCount-1];
-
+                return particles[particleCount - 1];
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public ParticlePrefab FindPrefab(string prefabName)
@@ -144,5 +156,24 @@ namespace Barotrauma.Particles
             }
         }
 
+        //NilMod Reset Particles for changing their settings
+        public void ResetParticleManager()
+        {
+            //Nullify the variables
+
+            for(int i = MaxParticles - 1; i > 0; i--)
+            {
+                particles[i] = null;
+            }
+            particles = null;
+
+            MaxParticles = GameMain.NilMod.MaxParticles;
+
+            //Reset the entire componant
+
+            particles = new Particle[MaxParticles];
+
+            particleCount = 0;
+        }
     }
 }

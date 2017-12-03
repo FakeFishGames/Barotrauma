@@ -165,7 +165,7 @@ namespace Barotrauma.Networking
                 if (c.ChatSpamCount > 3)
                 {
                     //kick for spamming too much
-                    GameMain.Server.KickClient(c, "You have been kicked by the spam filter.");
+                    GameMain.Server.KickClient(c, "You have been kicked by the spam filter.",0f,0f);
                 }
                 else
                 {

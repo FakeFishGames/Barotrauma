@@ -279,18 +279,82 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
+        public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float outlineThickness = 1f, float depth = 0.0f, string StartDirection = "Left")
         {
-            DrawProgressBar(sb, start, size, progress, clr, new Color(0.5f, 0.57f, 0.6f, 1.0f), depth);
+            DrawProgressBar(sb, start, size, progress, clr, new Color(0.5f, 0.57f, 0.6f, 1.0f),1f, depth, StartDirection);
         }
 
-        public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, Color outlineColor, float depth = 0.0f)
+        public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, Color outlineColor, float outlineThickness, float depth = 0.0f,string startDirection = "Left")
         {
-            DrawRectangle(sb, new Vector2(start.X, -start.Y), size, outlineColor, false, depth);
-
             int padding = 2;
-            DrawRectangle(sb, new Rectangle((int)start.X + padding, -(int)(start.Y - padding), (int)((size.X - padding * 2) * progress), (int)size.Y - padding * 2),
-                clr, true, depth);
+            switch (startDirection)
+            {
+                //Left To Right progress bar
+                case "Left":
+                    DrawRectangle(sb, new Vector2(start.X, -start.Y), size, outlineColor, false, depth);
+
+                    //Basic Variable thickness
+                    if (outlineThickness > 1f)
+                    {
+                        for (float i = 0f; i <= outlineThickness; i += 0.5f)
+                        {
+                            DrawRectangle(sb, new Vector2(start.X + i, -start.Y - i), size, outlineColor, false, depth);
+                        }
+                    }
+
+                    DrawRectangle(sb, new Rectangle((int)start.X + padding, -(int)(start.Y - padding), (int)((size.X - padding * 2) * progress), (int)size.Y - padding * 2),
+                        clr, true, depth);
+                    break;
+
+                case "Right":
+                    DrawRectangle(sb, new Vector2(start.X, -start.Y), size, outlineColor, false, depth);
+
+                    //Basic Variable thickness
+                    if (outlineThickness > 1f)
+                    {
+                        for (float i = 0f; i <= outlineThickness; i += 0.5f)
+                        {
+                            DrawRectangle(sb, new Vector2(start.X + i, -start.Y - i), size, outlineColor, false, depth);
+                        }
+                    }
+
+                    DrawRectangle(sb, new Rectangle((int)((start.X + padding) - (((size.X - padding)) * (-1f + progress))), -(int)((start.Y - padding)), (int)((size.X - padding) - ((size.X - padding) * (1f - progress))), (int)(size.Y - (padding * 2))),
+                        clr, true, depth);
+                    break;
+
+                case "Top":
+                    DrawRectangle(sb, new Vector2(start.X, -start.Y), size, outlineColor, false, depth);
+
+                    //Basic Variable thickness
+                    if (outlineThickness > 1f)
+                    {
+                        for (float i = 0f; i <= outlineThickness; i += 0.5f)
+                        {
+                            DrawRectangle(sb, new Vector2(start.X + i, -start.Y - i), size, outlineColor, false, depth);
+                        }
+                    }
+
+                    DrawRectangle(sb, new Rectangle((int)(start.X + padding), -(int)((start.Y - padding)), (int)(size.X - (padding * 2)), (int)((size.Y - (padding * 2)) + ((size.Y - (padding * 2)) * (-1f + progress)))),
+                        clr, true, depth);
+                    break;
+
+                case "Bottom":
+                    DrawRectangle(sb, new Vector2(start.X, -start.Y), size, outlineColor, false, depth);
+
+                    //Basic Variable thickness
+                    if (outlineThickness > 1f)
+                    {
+                        for (float i = 0f; i <= outlineThickness; i += 0.5f)
+                        {
+                            DrawRectangle(sb, new Vector2(start.X + i, -start.Y - i), size, outlineColor, false, depth);
+                        }
+                    }
+
+                    DrawRectangle(sb, new Rectangle((int)start.X + padding, -(int)(start.Y - padding), (int)((size.X - padding * 2)), (int)((size.Y - padding * 2) * progress)),
+                        clr, true, depth);
+                    break;
+            }
+            
         }
 
 

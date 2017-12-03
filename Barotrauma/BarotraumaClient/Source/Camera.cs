@@ -12,6 +12,8 @@ namespace Barotrauma
         const float ZoomSmoothness = 8.0f;
         const float MoveSmoothness = 8.0f;
 
+        public float ZoomModifier;
+
         private float zoom;
 
         private float offsetAmount;
@@ -42,6 +44,7 @@ namespace Barotrauma
                 zoom = Math.Max(value, GameMain.DebugDraw ? 0.01f : 0.1f);
                 
                 Vector2 center = WorldViewCenter;
+
                 float newWidth = resolution.X / zoom;
                 float newHeight = resolution.Y / zoom;
 
@@ -178,7 +181,7 @@ namespace Barotrauma
             {
                 if (allowMove && GUIComponent.KeyboardDispatcher.Subscriber == null)
                 {
-                    if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
+                    if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 3.0f;
                     if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;
 
                     if (GameMain.Config.KeyBind(InputType.Left).IsDown())   moveCam.X -= moveSpeed;
@@ -219,8 +222,9 @@ namespace Barotrauma
                 if (offset.Length() > 1.0f) offset.Normalize();
 
                 offset = offset * offsetAmount;
-
-                float newZoom = Math.Min(DefaultZoom - Math.Min(offset.Length() / resolution.Y, 1.0f),1.0f);
+                float newZoom;
+                newZoom = (Math.Min(DefaultZoom - Math.Min(offset.Length() / resolution.Y, 1.0f), 1.0f) + ZoomModifier);
+                
                 Zoom += (newZoom - zoom) / ZoomSmoothness;
 
                 Vector2 diff = (targetPos + offset) - position;

@@ -209,7 +209,7 @@ namespace Barotrauma.Items.Components
             if (item.CanClientAccess(c))
             {
                 RechargeSpeed = newRechargeSpeed;
-                GameServer.Log(c.Character + " set the recharge speed of "+item.Name+" to "+ (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(c.Character + " set the recharge speed of "+item.Name+" to "+ (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.Set);
             }
 
             item.CreateServerEvent(this);

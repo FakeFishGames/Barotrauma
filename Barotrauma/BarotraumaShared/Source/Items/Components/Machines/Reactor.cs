@@ -180,7 +180,7 @@ namespace Barotrauma.Items.Components
                             ", Cooling rate: " + coolingRate +
                             ", Shutdown temp: " + shutDownTemp +
                             (autoTemp ? ", Autotemp ON" : ", Autotemp OFF"),
-                            ServerLog.MessageType.ItemInteraction);
+                            ServerLog.MessageType.Reactor);
                     
                     nextServerLogWriteTime = null;
                     lastServerLogWriteTime = (float)Timing.TotalTime;
@@ -323,7 +323,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Condition <= 0.0f) return;
 
-            GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
+            GameServer.Log("Reactor meltdown!", ServerLog.MessageType.Reactor);
  
             new RepairTask(item, 60.0f, "Reactor meltdown!");
             item.Condition = 0.0f;

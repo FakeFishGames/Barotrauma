@@ -175,25 +175,33 @@ namespace Barotrauma.Items.Components
 
             if (user != null)
             {
-                foreach (Limb limb in user.AnimController.Limbs)
+                if (user.AnimController != null)
                 {
-                    try
+                    foreach (Limb limb in user.AnimController.Limbs)
                     {
-                        item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
-                    }
+                        try
+                        {
+                            item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);
+                        }
 
-                    catch
-                    {
-                        continue;
+                        catch
+                        {
+                            continue;
+                        }
                     }
                 }
             }
 
-            foreach (Limb limb in character.AnimController.Limbs)
+            if (user != null)
             {
-                item.body.FarseerBody.IgnoreCollisionWith(limb.body.FarseerBody);
+                if (user.AnimController != null)
+                {
+                    foreach (Limb limb in character.AnimController.Limbs)
+                    {
+                        item.body.FarseerBody.IgnoreCollisionWith(limb.body.FarseerBody);
+                    }
+                }
             }
-
             user = character;
         }
 

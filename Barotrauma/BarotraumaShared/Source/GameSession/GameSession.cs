@@ -153,9 +153,26 @@ namespace Barotrauma
         public void StartShift(Level level, bool reloadSub = true, bool loadSecondSub = false)
         {
 #if CLIENT
-            GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
+            if(GameMain.NilMod.DisableLOSOnStart)
+            {
+                GameMain.LightManager.LosEnabled = false;
+            }
+            else
+            {
+                GameMain.LightManager.LosEnabled = (GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null);
+            }
+            if (GameMain.NilMod.DisableLightsOnStart)
+            {
+                GameMain.LightManager.LightingEnabled = false;
+            }
+            else
+            {
+                //GameMain.LightManager.LightingEnabled = (GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null);
+            }
+
+                
 #endif
-                        
+
             this.level = level;
 
             if (submarine==null)

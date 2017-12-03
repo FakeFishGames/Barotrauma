@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Barotrauma</RootNamespace>
-    <AssemblyName>Barotrauma</AssemblyName>
+    <AssemblyName>Barotrauma NilEdit</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
@@ -185,6 +185,7 @@
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
+    <Compile Include="Source\NilModification\LagDiagnostics.cs" />
     <Compile Include="Source\Particles\Decal.cs" />
     <Compile Include="Source\Particles\DecalManager.cs" />
     <Compile Include="Source\Particles\DecalPrefab.cs" />

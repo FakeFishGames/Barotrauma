@@ -43,6 +43,11 @@ namespace Barotrauma.Networking
 
         public BanList()
         {
+            load();
+        }
+
+        public void load()
+        {
             bannedPlayers = new List<BannedPlayer>();
 
             if (File.Exists(SavePath))
@@ -63,8 +68,8 @@ namespace Barotrauma.Networking
                     string[] separatedLine = line.Split(',');
                     if (separatedLine.Length < 2) continue;
 
-                    string name     = separatedLine[0];
-                    string ip       = separatedLine[1];
+                    string name = separatedLine[0];
+                    string ip = separatedLine[1];
 
                     DateTime? expirationTime = null;
                     if (separatedLine.Length > 2 && !string.IsNullOrEmpty(separatedLine[2]))
@@ -86,6 +91,7 @@ namespace Barotrauma.Networking
 
         public void BanPlayer(string name, string ip, string reason, TimeSpan? duration)
         {
+            load();
             if (bannedPlayers.Any(bp => bp.IP == ip)) return;
 
             System.Diagnostics.Debug.Assert(!name.Contains(','));
@@ -112,10 +118,41 @@ namespace Barotrauma.Networking
             return bannedPlayers.Any(bp => bp.CompareTo(IP));
         }
 
+        public string GetBanName(string IP)
+        {
+            BannedPlayer Result;
+            Result = bannedPlayers.Find(bp => bp.CompareTo(IP));
+            return Result.Name;
+        }
+
+        public string GetBanReason(string IP)
+        {
+            BannedPlayer Result;
+            Result = bannedPlayers.Find(bp => bp.CompareTo(IP));
+            return Result.Reason;
+        }
+
+        public DateTime? GetBanExpiry(string IP)
+        {
+            BannedPlayer Result;
+            Result = bannedPlayers.Find(bp => bp.CompareTo(IP));
+            return Result.ExpirationTime;
+        }
+
         private void RemoveBan(BannedPlayer banned)
         {
+            load();
+
+            BannedPlayer removetarget;
+
             DebugConsole.Log("Removing ban from " + banned.Name);
             GameServer.Log("Removing ban from " + banned.Name, ServerLog.MessageType.ServerMessage);
+
+            while ((removetarget = bannedPlayers.Find(x => banned.IP.Equals(x.IP) && banned.Name.Equals(x.Name) && banned.Reason.Equals(x.Reason) && banned.ExpirationTime.Equals(x.ExpirationTime))) != null)
+            {
+                //remove all specific bans that are now covered by the rangeban
+                bannedPlayers.Remove(removetarget);
+            }
 
             bannedPlayers.Remove(banned);
 
@@ -137,6 +174,7 @@ namespace Barotrauma.Networking
 
         private void RangeBan(BannedPlayer banned)
         {
+            load();
             banned.IP = ToRange(banned.IP);
 
             BannedPlayer bp;
