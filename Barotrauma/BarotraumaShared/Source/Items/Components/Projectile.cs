@@ -5,6 +5,7 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -255,7 +256,8 @@ namespace Barotrauma.Items.Components
 
             target.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
 
-            if (attackResult.HitArmor)
+            if (attackResult.AppliedDamageModifiers != null &&
+                attackResult.AppliedDamageModifiers.Any(dm => dm.DeflectProjectiles))
             {
                 item.body.LinearVelocity *= 0.1f;
             }

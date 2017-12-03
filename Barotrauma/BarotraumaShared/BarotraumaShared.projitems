@@ -277,6 +277,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Diving\DivingSuit.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Diving\Scooter.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Door\dockingport.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1353,6 +1356,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HuskInfection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />

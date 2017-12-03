@@ -130,7 +130,15 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj + "\" to " + value + " (not a valid " + propertyInfo.PropertyType + ")", e);
                         return false;
                     }
-                    propertyInfo.SetValue(obj, enumVal);
+                    try
+                    {
+                        propertyInfo.SetValue(obj, enumVal);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString(), e);
+                        return false;
+                    }
                 }
                 else
                 {
@@ -141,44 +149,54 @@ namespace Barotrauma
                 }
             }
 
-            switch (typeName)
+            try
             {
-                case "bool":
-                    propertyInfo.SetValue(obj, value.ToLowerInvariant() == "true", null);
-                    break;
-                case "int":
-                    int intVal;
-                    if (int.TryParse(value, out intVal))
-                    {
-                        propertyInfo.SetValue(obj, intVal, null);
-                    }
-                    break;
-                case "float":
-                    float floatVal;
-                    if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))
-                    {
-                        propertyInfo.SetValue(obj, floatVal, null);
-                    }
-                    break;
-                case "string":
-                    propertyInfo.SetValue(obj, value, null);
-                    break;
-                case "vector2":
-                    propertyInfo.SetValue(obj, XMLExtensions.ParseVector2(value));
-                    break;
-                case "vector3":
-                    propertyInfo.SetValue(obj, XMLExtensions.ParseVector3(value));
-                    break;
-                case "vector4":
-                    propertyInfo.SetValue(obj, XMLExtensions.ParseVector4(value));
-                    break;
-                case "color":
-                    propertyInfo.SetValue(obj, XMLExtensions.ParseColor(value));
-                    break;
-                case "rectangle":
-                    propertyInfo.SetValue(obj, XMLExtensions.ParseRect(value, true));
-                    break;
+                switch (typeName)
+                {
+                    case "bool":
+                        propertyInfo.SetValue(obj, value.ToLowerInvariant() == "true", null);
+                        break;
+                    case "int":
+                        int intVal;
+                        if (int.TryParse(value, out intVal))
+                        {
+                            propertyInfo.SetValue(obj, intVal, null);
+                        }
+                        break;
+                    case "float":
+                        float floatVal;
+                        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out floatVal))
+                        {
+                            propertyInfo.SetValue(obj, floatVal, null);
+                        }
+                        break;
+                    case "string":
+                        propertyInfo.SetValue(obj, value, null);
+                        break;
+                    case "vector2":
+                        propertyInfo.SetValue(obj, XMLExtensions.ParseVector2(value));
+                        break;
+                    case "vector3":
+                        propertyInfo.SetValue(obj, XMLExtensions.ParseVector3(value));
+                        break;
+                    case "vector4":
+                        propertyInfo.SetValue(obj, XMLExtensions.ParseVector4(value));
+                        break;
+                    case "color":
+                        propertyInfo.SetValue(obj, XMLExtensions.ParseColor(value));
+                        break;
+                    case "rectangle":
+                        propertyInfo.SetValue(obj, XMLExtensions.ParseRect(value, true));
+                        break;
+                }
             }
+
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString(), e);
+                return false;
+            }
+
 
             return true;
         }
@@ -215,42 +233,52 @@ namespace Barotrauma
                     }
                 }
 
-                if (value.GetType() == typeof(string))
+                try
                 {
-                    switch (typeName)
+                    if (value.GetType() == typeof(string))
                     {
-                        case "string":
-                            propertyInfo.SetValue(obj, value, null);
-                            return true;
-                        case "vector2":
-                            propertyInfo.SetValue(obj, XMLExtensions.ParseVector2((string)value));
-                            return true;
-                        case "vector3":
-                            propertyInfo.SetValue(obj, XMLExtensions.ParseVector3((string)value));
-                            return true;
-                        case "vector4":
-                            propertyInfo.SetValue(obj, XMLExtensions.ParseVector4((string)value));
-                            return true;
-                        case "color":
-                            propertyInfo.SetValue(obj, XMLExtensions.ParseColor((string)value));
-                            return true;
-                        case "rectangle":
-                            propertyInfo.SetValue(obj, XMLExtensions.ParseColor((string)value));
-                            return true;
-                        default:
-                            DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
-                            DebugConsole.ThrowError("(Cannot convert a string to a " + propertyDescriptor.PropertyType.ToString() + ")");
-                            return false;
+                        switch (typeName)
+                        {
+                            case "string":
+                                propertyInfo.SetValue(obj, value, null);
+                                return true;
+                            case "vector2":
+                                propertyInfo.SetValue(obj, XMLExtensions.ParseVector2((string)value));
+                                return true;
+                            case "vector3":
+                                propertyInfo.SetValue(obj, XMLExtensions.ParseVector3((string)value));
+                                return true;
+                            case "vector4":
+                                propertyInfo.SetValue(obj, XMLExtensions.ParseVector4((string)value));
+                                return true;
+                            case "color":
+                                propertyInfo.SetValue(obj, XMLExtensions.ParseColor((string)value));
+                                return true;
+                            case "rectangle":
+                                propertyInfo.SetValue(obj, XMLExtensions.ParseRect((string)value, false));
+                                return true;
+                            default:
+                                DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
+                                DebugConsole.ThrowError("(Cannot convert a string to a " + propertyDescriptor.PropertyType.ToString() + ")");
+                                return false;
+                        }
                     }
+                    else if (propertyDescriptor.PropertyType != value.GetType())
+                    {
+                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
+                        DebugConsole.ThrowError("(Non-matching type, should be " + propertyDescriptor.PropertyType + " instead of " + value.GetType() + ")");
+                        return false;
+                    }
+
+                    propertyInfo.SetValue(obj, value, null);
                 }
-                else if (propertyDescriptor.PropertyType != value.GetType())
+
+                catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString());
-                    DebugConsole.ThrowError("(Non-matching type, should be " + propertyDescriptor.PropertyType + " instead of " + value.GetType() + ")");
+                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + obj.ToString() + "\" to " + value.ToString(), e);
                     return false;
                 }
 
-                propertyInfo.SetValue(obj, value, null);
                 return true;
             }
             catch
