@@ -112,7 +112,7 @@ namespace Barotrauma
             {
                 Character character = entity as Character;
                 Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
-                if (client != null) client.Character = null;
+                if (client != null) GameMain.Server.SetClientCharacter(client, null);
             }
             
 
