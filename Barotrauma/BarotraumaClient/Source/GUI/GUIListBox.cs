@@ -259,29 +259,21 @@ namespace Barotrauma
             if (!Visible) return;
             if (ComponentsToUpdate.Contains(this)) return;
             ComponentsToUpdate.Add(this);
-
-            try
+            
+            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+            int lastVisible = 0;
+            for (int i = 0; i < fixedChildren.Count; i++)
             {
-                List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
-                int lastVisible = 0;
-                for (int i = 0; i < fixedChildren.Count; i++)
+                if (fixedChildren[i] == frame) continue;
+
+                if (!IsChildVisible(fixedChildren[i]))
                 {
-                    if (fixedChildren[i] == frame) continue;
-
-                    if (!IsChildVisible(fixedChildren[i]))
-                    {
-                        if (lastVisible > 0) break;
-                        continue;
-                    }
-
-                    lastVisible = i;
-                    fixedChildren[i].AddToGUIUpdateList();
+                    if (lastVisible > 0) break;
+                    continue;
                 }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.NewMessage("Error in AddToGUIUpdateList! GUIComponent runtime type: " + this.GetType().ToString() + "; children count: " + children.Count.ToString(), Color.Red);
-                throw;
+
+                lastVisible = i;
+                fixedChildren[i].AddToGUIUpdateList();
             }
 
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.AddToGUIUpdateList();
