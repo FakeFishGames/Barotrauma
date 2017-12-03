@@ -223,9 +223,8 @@ namespace Barotrauma
                     //index of the connection in the connectionpanel of the target item
                     int connectionIndex = connectedItem.Connections.IndexOf(originalWire.Connections[n]);
                     
-                    (clones[itemIndex] as Item).GetComponent<ConnectionPanel>().Connections[connectionIndex].TryAddLink(cloneWire);
+                    (clones[itemIndex] as Item).Connections[connectionIndex].TryAddLink(cloneWire);
                     cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
-
                 }
             }
 
