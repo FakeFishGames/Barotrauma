@@ -224,14 +224,11 @@ namespace Barotrauma.Networking
             msg.Write((byte)Type);
             msg.Write(Text);
 
+            msg.Write(SenderName);
             msg.Write(Sender != null && c.InGame);
             if (Sender != null && c.InGame)
             {
                 msg.Write(Sender.ID);
-            }
-            else
-            {
-                msg.Write(SenderName);
             }
         }
 
