@@ -102,6 +102,16 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
             }));
 
+            commands.Add(new Command("traitorlist", "traitorlist: List all the traitors and their targets.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                TraitorManager traitorManager = GameMain.Server.TraitorManager;
+                if (traitorManager == null) return;
+                foreach (Traitor T in traitorManager.TraitorList)
+                {
+                    NewMessage("- Traitor " + T.Character.Name + "'s target is " + T.TargetCharacter.Name + ".", Color.Cyan);
+                }
+            }));
 
             commands.Add(new Command("createfilelist", "", (string[] args) =>
             {
