@@ -73,3 +73,4 @@ ice
 cold
 hot
 fire
+extinguisher
