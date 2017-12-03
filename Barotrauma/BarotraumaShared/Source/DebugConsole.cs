@@ -722,12 +722,30 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
+            {
+                Character killedCharacter = null;
+                if (args.Length == 0)
+                {
+                    killedCharacter = Character.Controlled;
+                }
+                else
+                {
+                    killedCharacter = FindMatchingCharacter(args);
+                }
+
+                if (killedCharacter != null)
+                {
+                    killedCharacter.AddDamage(CauseOfDeath.Damage, killedCharacter.MaxHealth * 2, null);
+                }
+            }));
+
             commands.Add(new Command("killmonsters", "killmonsters: Immediately kills all AI-controlled enemies in the level.", (string[] args) =>
             {
                 foreach (Character c in Character.CharacterList)
                 {
                     if (!(c.AIController is EnemyAIController)) continue;
-                    c.AddDamage(CauseOfDeath.Damage, 10000.0f, null);
+                    c.AddDamage(CauseOfDeath.Damage, c.MaxHealth * 2, null);
                 }
             }));
 
