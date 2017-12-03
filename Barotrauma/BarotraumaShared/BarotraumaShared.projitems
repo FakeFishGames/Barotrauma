@@ -222,6 +222,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\watcher.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\CodeWords.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\damageshader.fx" />
     <Content Include="$(MSBuildThisFileDirectory)Content\InfoTexts.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

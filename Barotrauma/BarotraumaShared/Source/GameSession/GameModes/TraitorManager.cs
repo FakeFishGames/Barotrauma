@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Barotrauma
 {
@@ -16,6 +17,8 @@ namespace Barotrauma
 
     partial class TraitorManager
     {
+        private static string CodeWords = Path.Combine("Content", "CodeWords.txt");
+
         public List<Traitor> TraitorList
         {
             get { return traitorList; }
@@ -47,13 +50,20 @@ namespace Barotrauma
                     traitorCandidates.Add(client.Character);
                 }
             }
-            
-            if (server.Character!= null) characters.Add(server.Character); //Add host character
+
+            if (server.Character != null)
+            {
+                characters.Add(server.Character); //Add host character
+                traitorCandidates.Add(server.Character);
+            }
 
             if (characters.Count < 2)
             {
                 return;
             }
+
+            string codeWords = ToolBox.GetRandomLine(CodeWords) + ", " + ToolBox.GetRandomLine(CodeWords);
+            string codeResponse = ToolBox.GetRandomLine(CodeWords) + ", " + ToolBox.GetRandomLine(CodeWords);
 
             traitorList = new List<Traitor>();
             while (TraitorCount-- >= 0)
@@ -75,6 +85,34 @@ namespace Barotrauma
                 //Add them to the list
                 traitorList.Add(new Traitor(traitorCharacter, targetCharacter));
 
+                string greetingMessage = "You are the Traitor! Your secret task is to assassinate " + targetCharacter.Name + "! Discretion is an utmost concern; sinking the submarine and killing the entire crew "
+                + "will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.";
+                string moreAgentsMessage = "It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. "
+                + "Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.";
+                moreAgentsMessage += "\nThe code words are: " + codeWords + ".";
+                moreAgentsMessage += "\nThe code response is: " + codeResponse + ".";
+
+                if (server.Character != traitorCharacter)
+                {
+                    var chatMsg = ChatMessage.Create(
+                    null,
+                    greetingMessage + "\n" + moreAgentsMessage,
+                    (ChatMessageType)ChatMessageType.Server,
+                    null);
+
+                    var msgBox = ChatMessage.Create(
+                    null,
+                    "There might be other agents. Use these to communicate with them." +
+                    "\nThe code words are: " + codeWords + "." +
+                    "\nThe code response is: " + codeResponse + ".",
+                    (ChatMessageType)ChatMessageType.MessageBox,
+                    null);
+
+                    Client client = server.ConnectedClients.Find(c => c.Character == traitorCharacter);
+                    GameMain.Server.SendChatMessage(chatMsg, client);
+                    GameMain.Server.SendChatMessage(msgBox, client);
+                }
+
 #if CLIENT
                 if (server.Character == null)
                 {
@@ -83,6 +121,10 @@ namespace Barotrauma
                 else if (server.Character == traitorCharacter)
                 {
                     CreateStartPopUp(targetCharacter.Name);
+                    GameMain.NetworkMember.AddChatMessage(greetingMessage + "\n" + moreAgentsMessage, ChatMessageType.Server);
+                    GameMain.NetworkMember.AddChatMessage("There might be other agents. Use these to communicate with them." +
+                    "\nThe code words are: " + codeWords + "." +
+                    "\nThe code response is: " + codeResponse + ".", ChatMessageType.MessageBox);
                     return;
                 }
 #endif
