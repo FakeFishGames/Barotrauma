@@ -81,7 +81,7 @@ namespace Barotrauma
                 new Vector2(pos.X, -pos.Y),
                 Size, progress, 
                 Color.Lerp(emptyColor, fullColor, progress) * a,
-                Color.White * a * 0.8f);
+                Color.White * a * 0.8f,1f);
         }
     }
 }

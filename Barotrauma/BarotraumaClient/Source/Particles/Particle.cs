@@ -16,6 +16,9 @@ namespace Barotrauma.Particles
         private Vector2 position;
         private Vector2 prevPosition;
 
+        private Vector2 dragVec = Vector2.Zero;
+        private int dragWait = 0;
+
         private Vector2 velocity;
 
         private float rotation;
@@ -110,8 +113,16 @@ namespace Barotrauma.Particles
 
             angularVelocity = Rand.Range(prefab.AngularVelocityMinRad, prefab.AngularVelocityMaxRad);
 
-            totalLifeTime = prefab.LifeTime;
-            lifeTime = prefab.LifeTime;
+            if(GameMain.NilMod.ParticleWhitelist.Find(p => p == prefab.Name) != null)
+            {
+                totalLifeTime = prefab.LifeTime;
+                lifeTime = prefab.LifeTime;
+            }
+            else
+            {
+                totalLifeTime = prefab.LifeTime * GameMain.NilMod.ParticleLifeMultiplier;
+                lifeTime = prefab.LifeTime * GameMain.NilMod.ParticleLifeMultiplier;
+            }
             
             size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
 

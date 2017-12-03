@@ -35,7 +35,7 @@ namespace Barotrauma
         {
             base.Update(deltaTime, cam);
 
-            if (!Enabled) return;
+            if (!Enabled || IsRemotePlayer || GameMain.NilMod.FrozenCharacters.Find(c => c == this) != null) return;
 
             if (!IsRemotePlayer)
             {

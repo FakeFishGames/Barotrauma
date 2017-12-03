@@ -188,7 +188,7 @@ namespace Barotrauma
 
         private static void InitProjectSpecific()
         {
-            commands.Add(new Command("startclient", "", (string[] args) =>
+            commands.Add(new Command("startclient", CommandType.Generic, "", (string[] args) =>
             {
                 if (args.Length == 0) return;
                 
@@ -199,7 +199,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("mainmenuscreen|mainmenu|menu", "mainmenu/menu: Go to the main menu.", (string[] args) =>
+            commands.Add(new Command("mainmenuscreen|mainmenu|menu", CommandType.Generic, "mainmenu/menu: Go to the main menu.", (string[] args) =>
             {
                 GameMain.GameSession = null;
 
@@ -212,12 +212,12 @@ namespace Barotrauma
                 GameMain.MainMenuScreen.Select();
             }));
 
-            commands.Add(new Command("gamescreen|game", "gamescreen/game: Go to the \"in-game\" view.", (string[] args) =>
+            commands.Add(new Command("gamescreen|game", CommandType.Generic, "gamescreen/game: Go to the \"in-game\" view.", (string[] args) =>
             {
                 GameMain.GameScreen.Select();
             }));
 
-            commands.Add(new Command("editsubscreen|editsub|subeditor", "editsub/subeditor: Switch to the submarine editor.", (string[] args) =>
+            commands.Add(new Command("editsubscreen|editsub|subeditor", CommandType.Generic, "editsub/subeditor: Switch to the submarine editor.", (string[] args) =>
             {
                 if (args.Length > 0)
                 {
@@ -225,8 +225,8 @@ namespace Barotrauma
                 }
                 GameMain.SubEditorScreen.Select();
             }));
-            
-            commands.Add(new Command("editcharacter", "", (string[] args) =>
+
+            commands.Add(new Command("editcharacter", CommandType.Generic, "", (string[] args) =>
             {
                 GameMain.CharacterEditorScreen.Select();
             }));
@@ -236,8 +236,7 @@ namespace Barotrauma
                 GameMain.ParticleEditorScreen.Select();
             }));
 
-
-            commands.Add(new Command("control|controlcharacter", "control [character name]: Start controlling the specified character.", (string[] args) =>
+            commands.Add(new Command("control|controlcharacter", CommandType.Character, "control [character name]: Start controlling the specified character.", (string[] args) =>
             {
                 if (args.Length < 1) return;
 
@@ -249,34 +248,34 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("shake", "", (string[] args) =>
+            commands.Add(new Command("shake", CommandType.Debug, "", (string[] args) =>
             {
                 GameMain.GameScreen.Cam.Shake = 10.0f;
             }));
 
-            commands.Add(new Command("los", "los: Toggle the line of sight effect on/off.", (string[] args) =>
+            commands.Add(new Command("los", CommandType.Render, "los: Toggle the line of sight effect on/off.", (string[] args) =>
             {
                 GameMain.LightManager.LosEnabled = !GameMain.LightManager.LosEnabled;
                 NewMessage("Line of sight effect " + (GameMain.LightManager.LosEnabled ? "enabled" : "disabled"), Color.White);
             }));
 
-            commands.Add(new Command("lighting|lights", "Toggle lighting on/off.", (string[] args) =>
+            commands.Add(new Command("lighting|lights", CommandType.Render, "Toggle lighting on/off.", (string[] args) =>
             {
                 GameMain.LightManager.LightingEnabled = !GameMain.LightManager.LightingEnabled;
                 NewMessage("Lighting " + (GameMain.LightManager.LightingEnabled ? "enabled" : "disabled"), Color.White);
             }));
 
-            commands.Add(new Command("tutorial", "", (string[] args) =>
+            commands.Add(new Command("tutorial", CommandType.Generic, "", (string[] args) =>
             {
                 TutorialMode.StartTutorial(Tutorials.TutorialType.TutorialTypes[0]);
             }));
 
-            commands.Add(new Command("lobby|lobbyscreen", "", (string[] args) =>
+            commands.Add(new Command("lobby|lobbyscreen", CommandType.Generic, "", (string[] args) =>
             {
                 GameMain.LobbyScreen.Select();
             }));
 
-            commands.Add(new Command("save|savesub", "save [submarine name]: Save the currently loaded submarine using the specified name.", (string[] args) =>
+            commands.Add(new Command("save|savesub", CommandType.Generic, "save [submarine name]: Save the currently loaded submarine using the specified name.", (string[] args) =>
             {
                 if (args.Length < 1) return;
 
@@ -298,13 +297,13 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("load|loadsub", "load [submarine name]: Load a submarine.", (string[] args) =>
+            commands.Add(new Command("load|loadsub", CommandType.Generic, "load [submarine name]: Load a submarine.", (string[] args) =>
             {
                 if (args.Length == 0) return;
                 Submarine.Load(string.Join(" ", args), true);
             }));
 
-            commands.Add(new Command("cleansub", "", (string[] args) =>
+            commands.Add(new Command("cleansub", CommandType.Generic, "", (string[] args) =>
             {
                 for (int i = MapEntity.mapEntityList.Count - 1; i >= 0; i--)
                 {
@@ -335,45 +334,100 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("messagebox", "", (string[] args) =>
-            {
-                new GUIMessageBox("", string.Join(" ", args));
-            }));
-
-            commands.Add(new Command("autorestart", "autorestart: Toggle autorestart on/off when hosting a server.", (string[] args) =>
+            commands.Add(new Command("autorestart", CommandType.Network, "autorestart: Toggle autorestart on/off when hosting a server.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 GameMain.NetLobbyScreen.ToggleAutoRestart();
                 NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
             }));
 
-            commands.Add(new Command("debugdraw", "debugdraw: Toggle the debug drawing mode on/off.", (string[] args) =>
+            commands.Add(new Command("debugdraw", CommandType.Render, "debugdraw: Toggle the debug drawing mode on/off.", (string[] args) =>
             {
                 GameMain.DebugDraw = !GameMain.DebugDraw;
+#if CLIENT
+                if (GameMain.Server != null)
+                {
+                    if (GameMain.DebugDraw)
+                    {
+                        GameMain.Server.ToggleDebugDrawButton.Text = "DebugDraw Off";
+                        GameMain.Server.ToggleDebugDrawButton.ToolTip = "Turns off debugdraw view information.";
+                    }
+                    else
+                    {
+                        GameMain.Server.ToggleDebugDrawButton.Text = "DebugDraw On";
+                        GameMain.Server.ToggleDebugDrawButton.ToolTip = "Turns on debugdraw view information.";
+                    }
+                }
+#endif
                 NewMessage("Debug draw mode " + (GameMain.DebugDraw ? "enabled" : "disabled"), Color.White);
 
             }));
 
-            commands.Add(new Command("togglehud|hud", "togglehud/hud: Toggle the character HUD (inventories, icons, buttons, etc) on/off.", (string[] args) =>
+            commands.Add(new Command("togglehud|hud", CommandType.Render, "togglehud/hud: Toggle the character HUD (inventories, icons, buttons, etc) on/off.", (string[] args) =>
             {
                 GUI.DisableHUD = !GUI.DisableHUD;
                 GameMain.Instance.IsMouseVisible = !GameMain.Instance.IsMouseVisible;
+#if CLIENT
+                if (GameMain.Server != null)
+                {
+                    if (GUI.DisableHUD)
+                    {
+                        GameMain.Server.ToggleHudButton.Text = "CharHud On";
+                        GameMain.Server.ToggleHudButton.ToolTip = "Turns On the character HUD.";
+                    }
+                    else
+                    {
+                        GameMain.Server.ToggleHudButton.Text = "CharHud Off";
+                        GameMain.Server.ToggleHudButton.ToolTip = "Turns off the character HUD.";
+                    }
+                }
+#endif
                 NewMessage(GUI.DisableHUD ? "Disabled HUD" : "Enabled HUD", Color.White);
             }));
 
-            commands.Add(new Command("followsub", "followsub: Toggle whether the ", (string[] args) =>
+            commands.Add(new Command("followsub", CommandType.Render, "followsub: Toggle whether the ", (string[] args) =>
             {
                 Camera.FollowSub = !Camera.FollowSub;
+#if CLIENT
+                if (GameMain.Server != null)
+                {
+                    if (Camera.FollowSub)
+                    {
+                        GameMain.Server.ToggleFollowSubButton.Text = "Follow Sub Off";
+                        GameMain.Server.ToggleFollowSubButton.ToolTip = "Stops the camera automatically following submarines.";
+                    }
+                    else
+                    {
+                        GameMain.Server.ToggleFollowSubButton.Text = "Follow Sub On";
+                        GameMain.Server.ToggleFollowSubButton.ToolTip = "Attaches the camera automatically to begin following submarines again.";
+                    }
+                }
+#endif
                 NewMessage(Camera.FollowSub ? "Set the camera to follow the closest submarine" : "Disabled submarine following.", Color.White);
             }));
 
-            commands.Add(new Command("toggleaitargets|aitargets", "toggleaitargets/aitargets: Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from).", (string[] args) =>
+            commands.Add(new Command("toggleaitargets|aitargets", CommandType.Debug, "toggleaitargets/aitargets: Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from).", (string[] args) =>
             {
                 AITarget.ShowAITargets = !AITarget.ShowAITargets;
+#if CLIENT
+                if (GameMain.Server != null)
+                {
+                    if (AITarget.ShowAITargets)
+                    {
+                        GameMain.Server.ToggleAITargetsButton.Text = "AITargets Off";
+                        GameMain.Server.ToggleAITargetsButton.ToolTip = "Turns off AI Targetting range information for Debugdraw mode.";
+                    }
+                    else
+                    {
+                        GameMain.Server.ToggleAITargetsButton.Text = "AITargets On";
+                        GameMain.Server.ToggleAITargetsButton.ToolTip = "Turns on AI Targetting range information for Debugdraw mode.";
+                    }
+                }
+#endif
                 NewMessage(AITarget.ShowAITargets ? "Enabled AI target drawing" : "Disabled AI target drawing", Color.White);
             }));
 #if DEBUG
-            commands.Add(new Command("spamchatmessages", "", (string[] args) =>
+            commands.Add(new Command("spamchatmessages", CommandType.Debug, "", (string[] args) =>
             {
                 int msgCount = 1000;
                 if (args.Length > 0) int.TryParse(args[0], out msgCount);
@@ -393,7 +447,7 @@ namespace Barotrauma
                 }
             }));
 #endif
-            commands.Add(new Command("cleanbuild", "", (string[] args) =>
+            commands.Add(new Command("cleanbuild", CommandType.Generic, "", (string[] args) =>
             {
                 GameMain.Config.MusicVolume = 0.5f;
                 GameMain.Config.SoundVolume = 0.5f;
@@ -475,6 +529,13 @@ namespace Barotrauma
                 {
                     ThrowError("TutorialSub.sub not found!");
                 }
+            }));
+
+            //Nilmod Disable/Enable particles command
+            commands.Add(new Command("particles", CommandType.Render, "particles: Toggle the Particle System on/off.", (string[] args) =>
+            {
+                GameMain.NilMod.DisableParticles = !GameMain.NilMod.DisableParticles;
+                NewMessage("Particle System " + (GameMain.NilMod.DisableParticles ? "disabled" : "enabled"), Color.White);
             }));
 
         }

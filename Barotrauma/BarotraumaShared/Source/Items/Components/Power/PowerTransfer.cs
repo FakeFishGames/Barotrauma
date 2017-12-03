@@ -75,13 +75,16 @@ namespace Barotrauma.Items.Components
                 pt.Item.SendSignal(0, "", "power", null, fullPower / Math.Max(fullLoad, 1.0f));
                 pt.Item.SendSignal(0, "", "power_out", null, fullPower / Math.Max(fullLoad, 1.0f));
 
+                //Nilmod Regenerate the health of a damaged junction over time
+                if (GameMain.NilMod.ElectricalRegenerateCondition && pt.item.Condition > 0f && pt.item.Condition < 100f) pt.item.Condition += deltaTime * GameMain.NilMod.ElectricalRegenAmount;
+
                 //damage the item if voltage is too high 
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
-                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.9f,2.1f), 200.0f)) continue;
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(GameMain.NilMod.ElectricalOverloadVoltRangeMin, GameMain.NilMod.ElectricalOverloadVoltRangeMax), GameMain.NilMod.ElectricalOverloadMinPower)) continue;
                                 
                 float prevCondition = pt.item.Condition;
-                pt.item.Condition -= deltaTime * 10.0f;
+                pt.item.Condition -= deltaTime * GameMain.NilMod.ElectricalOverloadDamage;
 
                 if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
@@ -98,7 +101,7 @@ namespace Barotrauma.Items.Components
                     }
 #endif
 
-                    if (FireProbability > 0.0f && Rand.Int((int)(1.0f / FireProbability)) == 1)
+                    if ((GameMain.NilMod.ElectricalOverloadFiresChance / 100f) > 0.0f && Rand.Int((int)(1.0f / (GameMain.NilMod.ElectricalOverloadFiresChance / 100f))) == 1)
                     {
                         new FireSource(pt.item.WorldPosition);
                     }

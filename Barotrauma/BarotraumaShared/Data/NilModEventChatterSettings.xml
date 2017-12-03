@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<!--The chat information below can currently use the following TAGS:-->
+<!--#SERVERNAME #CLIENTNAME #TRAITORTARGET #TRAITORNAME #SHUTTLELEAVETIME #MISSIONNAME #MISSIONDESC #REWARD #RADARLABEL #STARTLOCATION #ENDLOCATION-->
+<!--Remember that these messages have a maximum size and you should write considering the per-line looks, as well as test for issues-->
+<!--They are sent to specific clients and others do not get sent these messages but if there is enough messages to a single client their spam filter may or may not block them-->
+
+<!--ChatModRules = Setting to enable per-client-sending of messages on server-join (configured at bottom of the xml), Default=false-->
+<!--ChatTraitorReminder = Setting to per-client-sending of messages to specifically the traitor on initial spawn (configured at bottom of the xml), Default=false-->
+<!--ChatNoneTraitorReminder = Setting to enable per-client-sending of messages to none-traitors on initial spawn (configured at bottom of the xml), Default=false-->
+<!--ChatShuttleRespawn = Setting to enable per-client-sending of messages on shuttle respawn (configured at bottom of the xml), Default=false-->
+<!--ChatShuttleLeavingKill = Setting to enable per-client-sending of messages if shuttle kills the player by leaving (configured at bottom of the xml), Default=false-->
+<!--ChatSubvsSub = Setting to enable per-client-sending of the Coalition/Renegade text below (configured at bottom of the xml), Default=false-->
+<!--ChatSalvage = Setting to enable per-client-sending of the text below (configured at bottom of the xml), Default=false-->
+<!--ChatMonster = Setting to enable per-client-sending of the text below (configured at bottom of the xml), Default=false-->
+<!--ChatCargo = Setting to enable per-client-sending of the text below (configured at bottom of the xml), Default=false-->
+<!--ChatSandbox = Setting to enable per-client-sending per-player dialogue (configured at bottom of the xml), Default=false-->
+
+<NilModEvents>
+  <NilModEventChatterSettings
+    ChatModServerJoin="true"
+    ChatTraitorReminder="true"
+    ChatNoneTraitorReminder="true"
+    ChatShuttleRespawn="true"
+    ChatShuttleLeavingKill="true"
+    ChatSubvsSub="true"
+    ChatSalvage="true"
+    ChatMonster="true"
+    ChatCargo="true"
+    ChatSandbox="true"
+    ChatVotedEnd="true"
+  />
+
+  <!--This is for the initial On server join messages to inform players of rules, welcome text or otherwise for your server!-->
+  <NilModServerJoin>
+    <Line Text="Welcome to #SERVERNAME! Feel free to visit our website for communication! - Please read the following:"/>
+    <Line Text="1.) Do your job - Security/Captains can stun/cuff for unauthorised access or anyone may perform actions towards the mission goal."/>
+    <Line Text="2.) No Random Murders - if you can cuff use it, if you can stun and disarm do it."/>
+    <Line Text="3.) No Griefing - annoying everybody for your fun only is not really fun."/>
+    <Line Text="4.) Server is heavilly modified to be very difficult! expect slight oddities as your client attempts to cope."/>
+  </NilModServerJoin>
+  <!--This is the custom text a TRAITOR will see on spawn, it replaces the none-traitor round text.-->
+  <NilTraitorReminder>
+    <Line Text="You have been handed a secret mission by your fellow Renegade forces!"/>
+    <Line Text="Your task is to Assassinate #TRAITORTARGET! Though take care in this important endeavour"/>
+    <Line Text="Take as few Coalition out as possible and make it back in one piece #TRAITORNAME, They must not find out your involvement."/>
+  </NilTraitorReminder>
+  <!--This is the custom text a NONE TRAITOR will see on spawn, if it is set to MAYBE or YES (Regardless of traitors)-->
+  <NilNoneTraitorReminder>
+    <Line Text="The coalition have potential reports of renegade spies targeting key personnel!"/>
+    <Line Text="Although it is unknown if they have made it onboard or what their target may be..."/>
+    <Line Text="The coalition finds it unacceptable to let these scum have their way!"/>
+    <Line Text="Ensure the submarine reaches its objective and the traitor either hangs or fails."/>
+  </NilNoneTraitorReminder>
+  <!--This is the text a player will see when respawning Via Shuttle-->
+  <NilShuttleRespawn>
+    <Line Text="The coalition have sent you useless meatbags as additional backup."/>
+    <Line Text="Locate the submarine and use your provided supplies to aid its mission."/>
+    <Line Text="You only have #SHUTTLELEAVETIME to disembark the shuttle, we will be disappointed if you should fail us."/>
+  </NilShuttleRespawn>
+  <!--This is the text a player will see if they have 5 minutes remaining inside the shuttle-->
+  <NilShuttleLeavingWarn500>
+    <Line Text="You have #SHUTTLELEAVETIME to reach the main submarine and disembark."/>
+  </NilShuttleLeavingWarn500>
+  <!--This is the text a player will see if they have 4 minutes remaining inside the shuttle-->
+  <NilShuttleLeavingWarn400>
+    <Line Text="You have #SHUTTLELEAVETIME to reach the main submarine and disembark."/>
+  </NilShuttleLeavingWarn400>
+  <!--This is the text a player will see if they have 3 minutes remaining inside the shuttle-->
+  <NilShuttleLeavingWarn300>
+    <Line Text="You have #SHUTTLELEAVETIME to reach the main submarine and disembark."/>
+  </NilShuttleLeavingWarn300>
+  <!--This is the text a player will see if they have 2 minutes remaining inside the shuttle-->
+  <NilShuttleLeavingWarn200>
+    <Line Text="You have #SHUTTLELEAVETIME to reach the main submarine and disembark."/>
+  </NilShuttleLeavingWarn200>
+  <!--This is the text a player will see if they have 1:30 minutes remaining inside the shuttle-->
+  <NilShuttleLeavingWarn130>
+    <Line Text="You have #SHUTTLELEAVETIME to reach the main submarine and disembark."/>
+  </NilShuttleLeavingWarn130>
+  <!--This is the text a player will see if they have 1 minute remaining inside the shuttle-->
+  <NilShuttleLeavingWarn100>
+    <Line Text="You only have #SHUTTLELEAVETIME to reach the main submarine and disembark!"/>
+  </NilShuttleLeavingWarn100>
+  <!--This is the text a player will see if they have 30 seconds remaining inside the shuttle-->
+  <NilShuttleLeavingWarn030>
+    <Line Text="You only have #SHUTTLELEAVETIME to reach the main submarine and disembark."/>
+  </NilShuttleLeavingWarn030>
+  <!--This is the text a player will see if they have 15 seconds remaining inside the shuttle-->
+  <NilShuttleLeavingWarn015>
+    <Line Text="You only have #SHUTTLELEAVETIME to reach the main submarine and disembark!"/>
+    <Line Text="You must leave before the shuttle returns or we will throw you in the drink for insubordination!"/>
+  </NilShuttleLeavingWarn015>
+  <!--This is the text a player will see if they are killed by staying on a shuttle as it leaves-->
+  <NilShuttleLeavingKill>
+    <Line Text="Cowardess is not tolerated by the coalition #CLIENTNAME."/>
+    <Line Text="You will be sent back into the drink, Fish food or otherwise..."/>
+    <Line Text="(Next time examine a shuttle for invisible suits, supplies and disembark before the timer ends!)"/>
+  </NilShuttleLeavingKill>
+  <!--This is the text a player will see if its sub vs sub and they are on the Coalition team-->
+  <NilSubvsSubCoalition>
+    <Line Text="A renegade vessel has been located in the nearby area, Remove the subversive elements."/>
+    <Line Text="Gear up and use sonar to find the Renegade sub, then shoot, board and do anything it takes."/>
+    <Line Text="Failiure is not an option."/>
+  </NilSubvsSubCoalition>
+  <!--This is the text a player will see if its sub vs sub and they are on the Renegade team-->
+  <NilSubvsSubRenegade>
+    <Line Text="A Nearby coalition sub has likely identified we are not with the coalition, dispose of them!"/>
+    <Line Text="Gear up and use sonar to find the Coalition sub, then shoot, board and do anything it takes."/>
+    <Line Text="Failiure is not an option."/>
+  </NilSubvsSubRenegade>
+  <!--This is the text a player will see on spawn if the mission is Salvage-->
+  <NilSalvage>
+    <Line Text="#CLIENTNAME! You have been employed by the coalition to embark from #STARTLOCATION and collect an artifact!"/>
+    <Line Text="Gear up into your diving suits and use a portable Sonar to locate the #RADARLABEL"/>
+    <Line Text="You will be compensated with #REWARD Credits to divy up amongst your fellow crewmates."/>
+    <Line Text="Provided you successfully get our artifact to #ENDLOCATION without losing it."/>
+    <Line Text="Some artifacts are very dangerous, Great care is to be taken depending on its type."/>
+  </NilSalvage>
+  <!--This is the text a player will see on spawn if the mission is Monster-->
+  <NilMonster>
+    <Line Text="#CLIENTNAME! You have been employed by the coalition to embark from #STARTLOCATION for monster patrol!"/>
+    <Line Text="Prepare your submarine for combat and reach the designated target: #RADARLABEL"/>
+    <Line Text="You will be compensated with #REWARD Credits to divy up amongst your fellow crewmates."/>
+    <Line Text="Provided you successfully survive the ordeal and actually reach #ENDLOCATION with the submarine intact"/>
+    <Line Text="The coalition is not in the business of losing submarines, It is unacceptable to return without it."/>
+  </NilMonster>
+  <!--This is the text a player will see on spawn if the mission is Cargo-->
+  <NilCargo>
+    <Line Text="#CLIENTNAME! You have been employed by the coalition to embark from #STARTLOCATION for a Cargo run"/>
+    <Line Text="Simply reach #ENDLOCATION without losing the cargo."/>
+    <Line Text="You will be compensated with #REWARD Credits to divy up amongst your fellow crewmates."/>
+    <Line Text="Consider it an almost free meal and paycheck for this simple work."/>
+  </NilCargo>
+  <!--This is the text a player will see on spawn if the Gamemode is Sandbox-->
+  <NilSandbox>
+    <Line Text="#CLIENTNAME! Welcome to sandbox mode."/>
+    <Line Text="No Goals, No paychecks, no respawning fishies im afraid (They spawn once per level generation)"/>
+    <Line Text="When your bored of this feel free to hit the vote end at the top right"/>
+    <Line Text="Simply reach #ENDLOCATION alive."/>
+  </NilSandbox>
+  <!--Text for players voting end round-->
+  <NilVotedEnd>
+    <Line Text="#CLIENTNAME you and your crew are dishonerable cowards! x:"/>
+  </NilVotedEnd>
+</NilModEvents>

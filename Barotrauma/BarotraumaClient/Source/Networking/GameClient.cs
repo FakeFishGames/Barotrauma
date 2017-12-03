@@ -1252,7 +1252,7 @@ namespace Barotrauma.Networking
         public override bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
         {
             if (character == null) return false;
-            
+
             if (character != myCharacter)
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
@@ -1311,7 +1311,7 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public override void KickPlayer(string kickedName, string reason)
+        public override void KickPlayer(string kickedName, string reason, float Expiretime = 0f, float Rejointime = 0f)
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);

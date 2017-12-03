@@ -17,10 +17,12 @@ namespace Barotrauma.Particles
         public readonly string ConfigFile;
         public static int particleCount;
 
-        private const int MaxOutOfViewDist = 500;
+        public int MaxOutOfViewDist = 500;
         
-        private const int MaxParticles = 1500;
+        public int MaxParticles = 1500;
         private Particle[] particles;
+
+        private string loadedconfig = "";
 
         private Dictionary<string, ParticlePrefab> prefabs;
 
@@ -30,6 +32,8 @@ namespace Barotrauma.Particles
         {
             ConfigFile = configFile;
             this.cam = cam;
+
+            MaxParticles = GameMain.NilMod.MaxParticles;
 
             particles = new Particle[MaxParticles];
 
@@ -90,7 +94,7 @@ namespace Barotrauma.Particles
 
             particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess);
 
-            particleCount++;
+                particleCount++;
 
             return particles[particleCount - 1];
         }
@@ -164,5 +168,24 @@ namespace Barotrauma.Particles
             }
         }
 
+        //NilMod Reset Particles for changing their settings
+        public void ResetParticleManager()
+        {
+            //Nullify the variables
+
+            for(int i = MaxParticles - 1; i > 0; i--)
+            {
+                particles[i] = null;
+            }
+            particles = null;
+
+            MaxParticles = GameMain.NilMod.MaxParticles;
+
+            //Reset the entire componant
+
+            particles = new Particle[MaxParticles];
+
+            particleCount = 0;
+        }
     }
 }

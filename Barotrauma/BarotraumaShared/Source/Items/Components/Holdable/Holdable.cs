@@ -99,7 +99,8 @@ namespace Barotrauma.Items.Components
                 prevMsg = Msg;
                 prevPickKey = PickKey;
                 prevRequiredItems = new List<RelatedItem>(requiredItems);
-                                
+
+                
                 if (item.Submarine != null)
                 {
                     if (item.Submarine.Loading)
@@ -354,6 +355,10 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(NetBuffer msg, Client c, object[] extraData = null)
         {
+            if (!attachable && Attached)
+            {
+                DebugConsole.ThrowError("sent an attachment event for item: " + item.Name.ToString() + " that's not attachable.");
+            }
             msg.Write(Attached);
         }
 
@@ -363,7 +368,7 @@ namespace Barotrauma.Items.Components
 
             if (!attachable)
             {
-                DebugConsole.ThrowError("Received an attachment event for an item that's not attachable.");
+                DebugConsole.ThrowError("Received an attachment event for item: " + item.Name.ToString() + " that's not attachable.");
                 return;
             }
 

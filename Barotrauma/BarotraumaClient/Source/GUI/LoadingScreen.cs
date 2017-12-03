@@ -61,15 +61,18 @@ namespace Barotrauma
 
             if (GameMain.Config.EnableSplashScreen)
             {
-                try
+                //NilMod Disable splash for server loading
+                if (!GameMain.NilMod.StartToServer)
                 {
-                    splashScreenVideo = GameMain.Instance.Content.Load<Video>("utg_4");
-                } 
-
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Failed to load splashscreen", e);
-                    GameMain.Config.EnableSplashScreen = false;
+                    try
+                    {
+                        splashScreenVideo = GameMain.Instance.Content.Load<Video>("utg_4");
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("Failed to load splashscreen", e);
+                        GameMain.Config.EnableSplashScreen = false;
+                    }
                 }
             }
 #endif
@@ -155,15 +158,49 @@ namespace Barotrauma
                 string loadText = "";
                 if (loadState == 100.0f)
                 {
-                    loadText = "Press any key to continue";
+                    if (GameMain.NilMod.StartToServer)
+                    {
+                        loadText = "Initializing server...";
+                    }
+                    else
+                    {
+                        loadText = "Press any key to continue" + Environment.NewLine
+                            + "(WARNING: THIS CANNOT BE USED AS A CLIENT AND SHOULD NOT BE USED FOR SINGLE)" + Environment.NewLine
+                            + "Use Data/NilModSettings.xml to configure!";
+                    }
                 }
                 else
                 {
-                    loadText = "Loading... ";
-                    if (loadState!=null)
+                    if (GameMain.NilMod.StartToServer)
                     {
-                        loadText += (int)loadState + " %";
+                        loadText = "Starting server:" + GameMain.NilMod.ServerName + " ..." + Environment.NewLine +
+                        "Port: " + GameMain.NilMod.ServerPort
+                        + " Public:" + GameMain.NilMod.PublicServer
+                        + " MaxPlayers:" + GameMain.NilMod.MaxPlayers
+                        + " UPNP:" + GameMain.NilMod.UPNPForwarding;
+
+                        if (GameMain.NilMod.UseServerPassword && GameMain.NilMod.ServerPassword != "")
+                        {
+                            loadText += "Pass: " + GameMain.NilMod.ServerPassword;
+                        }
+
+                        if (loadState != null)
+                        {
+                            loadText += Environment.NewLine + (int)loadState + " % Loading Complete";
+                        }
                     }
+                    else
+                    {
+                        loadText = "Loading: ...";
+
+                        if (loadState != null)
+                        {
+                            loadText += (int)loadState + " % Ready";
+                        }
+                        loadText += Environment.NewLine + "(WARNING: THIS SHOULD NOT BE USED AS A CLIENT)" + Environment.NewLine
+                            + "Use Data/NilModSettings.xml to configure for server!";
+                    }
+
                 }
 
                 if (GUI.LargeFont!=null)

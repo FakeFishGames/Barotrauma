@@ -49,6 +49,8 @@ namespace Barotrauma.Networking
         public Dictionary<string, int> extraCargo;
 
         public bool ShowNetStats;
+        //Nil Mod Diagnostics
+        public bool ShowLagDiagnostics;
 
         private TimeSpan refreshMasterInterval = new TimeSpan(0, 0, 30);
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
@@ -281,7 +283,7 @@ namespace Barotrauma.Networking
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
 
-            AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
+            AutoRestart = ToolBox.GetAttributeBool(doc.Root, "autorestart", false);
 #if CLIENT
             if (autoRestart)
             {
@@ -382,3 +384,10 @@ namespace Barotrauma.Networking
         }
     }
 }
+
+            AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
+#if CLIENT
+            if (autoRestart)
+            {
+                GameMain.NetLobbyScreen.SetAutoRestart(autoRestart, AutoRestartInterval);
+            }

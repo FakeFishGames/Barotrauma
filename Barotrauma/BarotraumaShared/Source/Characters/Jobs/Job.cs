@@ -46,9 +46,23 @@ namespace Barotrauma
             prefab = jobPrefab;
 
             skills = new Dictionary<string, Skill>();
-            foreach (SkillPrefab skillPrefab in prefab.Skills)
+            if (prefab != null)
             {
-                skills.Add(skillPrefab.Name, new Skill(skillPrefab));
+                if (prefab.Skills != null)
+                {
+                    foreach (SkillPrefab skillPrefab in prefab.Skills)
+                    {
+                        skills.Add(skillPrefab.Name, new Skill(skillPrefab));
+                    }
+                }
+                else
+                {
+                    DebugConsole.NewMessage("Error - server attempted to load skills from a null skill prefab", Microsoft.Xna.Framework.Color.Red);
+                }
+            }
+            else
+            {
+                DebugConsole.NewMessage("Error - server attempted to load skills from a null job prefab", Microsoft.Xna.Framework.Color.Red);
             }
         }
 

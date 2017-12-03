@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
 
         public Dictionary<string, bool> monsterEnabled;
 
-        protected RespawnManager respawnManager;
+        public RespawnManager respawnManager;
 
         public Voting Voting;
         
@@ -160,9 +160,10 @@ namespace Barotrauma.Networking
 #if CLIENT
             GameMain.NetLobbyScreen.NewChatMessage(message);
 
-            while (chatBox.CountChildren > 20)
+            //NilMod Chat Changes
+            while (chatBox.CountChildren > GameMain.NilMod.ChatboxMaxMessages)
             {
-                chatBox.RemoveChild(chatBox.children[1]);
+                chatBox.RemoveChild(chatBox.children[0]);
             }
 
             if (!string.IsNullOrWhiteSpace(message.SenderName))
@@ -174,6 +175,7 @@ namespace Barotrauma.Networking
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
                 Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
             msg.UserData = message.SenderName;
+            msg.CanBeFocused = false;
 
             msg.Padding = new Vector4(20.0f, 0, 0, 0);
 
@@ -198,7 +200,7 @@ namespace Barotrauma.Networking
 #endif
         }
 
-        public virtual void KickPlayer(string kickedName, string reason) { }
+        public virtual void KickPlayer(string kickedName, string reason, float Expiretime = 0f, float Rejointime = 0f) { }
 
         public virtual void BanPlayer(string kickedName, string reason, bool range = false, TimeSpan? duration = null) { }
 

@@ -1362,5 +1362,104 @@ namespace Barotrauma
             return true;
         }
 
+        //NilMod Default Server Setup
+        public void DefaultServerStartup()
+        {
+            //Default Mission Parameters
+            if (GameMain.NilMod.DefaultGamemode.ToLowerInvariant() == "mission")
+            {
+                modeList.Select(1);
+                SelectMode(1);
+                //GameMain.NilMod.DefaultMissionType = "Cargo";
+                //Only select this default if we actually default to mission mode
+                switch (GameMain.NilMod.DefaultMissionType.ToLowerInvariant())
+                {
+                    case "random":
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[1];
+                        missionTypeBlock.UserData = 0;
+                        break;
+                    case "salvage":
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[1];
+                        missionTypeBlock.UserData = 1;
+                        break;
+                    case "monster":
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[2];
+                        missionTypeBlock.UserData = 2;
+                        break;
+                    case "cargo":
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[3];
+                        missionTypeBlock.UserData = 3;
+                        break;
+                    case "combat":
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[4];
+                        missionTypeBlock.UserData = 4;
+                        break;
+                    //Random if no valid mission type
+                    default:
+                        missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[0];
+                        missionTypeBlock.UserData = 0;
+                        break;
+                }
+            }
+            else
+            {
+                modeList.Select(0);
+            }
+
+            if (GameMain.NilMod.AutoRestart)
+            {
+                autoRestartBox.Selected = true;
+                GameMain.Server.AutoRestart = true;
+                SetAutoRestart(true);
+            }
+
+            //SelectMode(1);
+            //modeList.Select(1);
+            //0 = Random
+            //1 = Salvage
+            //2 = Monster
+            //3 = Cargo
+            //4 = Combat
+            //SetMissionType(2);
+            //missionTypeBlock.UserData = 2;
+
+            //GameMain.NilMod.DefaultSubmarine = "Test Sub";
+
+            //List<Submarine> subs = GetSubList();
+
+            //for (int i=0; i < subs.Count;i++)
+            //{
+            //    DebugConsole.NewMessage("Submarine name = " + subs[i].Name, Color.Red);
+            //    DebugConsole.NewMessage("Submarine Index = " + i, Color.Red);
+            //subList.UserData.ToString();
+            //}
+
+
+        }
+
+        public void DefaultServerStartupSubSelect()
+        {
+            List<Submarine> subsToShow = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
+
+            if (GameMain.NilMod.DefaultSubmarine != "")
+            {
+                int DefaultSub = subsToShow.FindIndex(s => s.Name.ToLowerInvariant() == GameMain.NilMod.DefaultSubmarine.ToLowerInvariant());
+
+                if (DefaultSub != -1)
+                {
+                    subList.Select(Math.Max(0, DefaultSub));
+                }
+            }
+
+            if (GameMain.NilMod.DefaultRespawnShuttle != "")
+            {
+                int DefaultShuttle = subsToShow.FindIndex(s => s.Name.ToLowerInvariant() == GameMain.NilMod.DefaultRespawnShuttle.ToLowerInvariant());
+
+                if (DefaultShuttle != -1)
+                {
+                    shuttleList.Select(Math.Max(0, DefaultShuttle));
+                }
+            }
+        }
     }
 }

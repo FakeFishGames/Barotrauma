@@ -89,8 +89,16 @@ namespace Barotrauma
             joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), "Refresh", Alignment.BottomRight, "", menu);
             joinButton.OnClicked = RefreshServers;
 
-            joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join", Alignment.BottomRight, "", menu);
+#if DEBUG
+            //joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join (Test)", Alignment.BottomRight, "", menu);
+            //joinButton.OnClicked = JoinServer;
+#endif
+
+#if !DEBUG
+            //joinButton = new GUIButton(new Rectangle(0, 0, 150, 30), "DISABLED - Use Client", Alignment.BottomRight, "", menu);
             joinButton.OnClicked = JoinServer;
+            joinButton.Enabled = false;
+#endif
 
             //--------------------------------------------------------
 

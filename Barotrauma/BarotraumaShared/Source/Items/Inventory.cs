@@ -32,9 +32,9 @@ namespace Barotrauma
 
             Items = new Item[capacity];
 
-#if CLIENT
+#if CLIENT 
             this.slotsPerRow = slotsPerRow;
-            CenterPos = (centerPos==null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
+            CenterPos = (centerPos == null) ? new Vector2(0.5f, 0.5f) : (Vector2)centerPos;
 #endif
         }
 
@@ -160,7 +160,7 @@ namespace Barotrauma
                 item.ParentInventory = null;                
             }
         }
-            
+
         public void ClientWrite(NetBuffer msg, object[] extraData = null)
         {
             ServerWrite(msg, null);
@@ -212,12 +212,29 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
-                        GameServer.Log(c.Character + " picked up " + item.Name, ServerLog.MessageType.Inventory);
+                        if (item.ContainedItems == null || item.ContainedItems.All(i => i == null))
+                        {
+                            GameServer.Log(c.Character + " picked up " + item.Name, ServerLog.MessageType.Inventory);
+                        }
+                        else
+                        {
+                            GameServer.Log(
+                                c.Character + " picked up " + item.Name + " (contained items: " + string.Join(", ", Array.FindAll(item.ContainedItems, i => i != null).Select(i => i.Name)) + ")",
+                                ServerLog.MessageType.Inventory);
+                        }
                     }
                     else
                     {
-                        GameServer.Log(c.Character + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
+                        if (item.ContainedItems == null || item.ContainedItems.All(i => i == null))
+                        {
+                            GameServer.Log(c.Character + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
+                        }
+                        else
+                        {
+                            GameServer.Log(c.Character + " placed " + item.Name + " (contained items: " + string.Join(", ", Array.FindAll(item.ContainedItems, i => i != null).Select(i => i.Name)) + ")" + " in " + Owner, ServerLog.MessageType.Inventory);
+                        }
                     }
+                    
                 }
             }
             foreach (Item item in prevItems.Distinct())
@@ -227,11 +244,25 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
-                        GameServer.Log(c.Character + " dropped " + item.Name, ServerLog.MessageType.Inventory);
+                        if (item.ContainedItems == null || item.ContainedItems.All(i => i == null))
+                        {
+                            GameServer.Log(c.Character + " dropped " + item.Name, ServerLog.MessageType.Inventory);
+                        }
+                        else
+                        {
+                            GameServer.Log(c.Character + " dropped " + item.Name + " (contained items: " + string.Join(", ", Array.FindAll(item.ContainedItems, i => i != null).Select(i => i.Name)) + ")", ServerLog.MessageType.Inventory);
+                        }
                     }
                     else
                     {
-                        GameServer.Log(c.Character + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
+                        if (item.ContainedItems == null || item.ContainedItems.All(i => i == null))
+                        {
+                            GameServer.Log(c.Character + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
+                        }
+                        else
+                        {
+                            GameServer.Log(c.Character + " removed " + item.Name + " (contained items: " + string.Join(", ", Array.FindAll(item.ContainedItems, i => i != null).Select(i => i.Name)) + ")" + " from " + Owner, ServerLog.MessageType.Inventory);
+                        }
                     }
                 }
             }

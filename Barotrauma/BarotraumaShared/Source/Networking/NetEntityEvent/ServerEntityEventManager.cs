@@ -151,7 +151,7 @@ namespace Barotrauma.Networking
                 inGameClients.ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.LastRecvEntityEventID)) lastSentToAll = c.LastRecvEntityEventID; });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
-                if (firstEventToResend != null && (Timing.TotalTime - firstEventToResend.CreateTime) > 10.0f)
+                if (firstEventToResend != null && (Timing.TotalTime - firstEventToResend.CreateTime) > (10.0f * GameMain.NilMod.DesyncTimerMultiplier))
                 {
                     //it's been 10 seconds since this event was created
                     //kick everyone that hasn't received it yet, this is way too old
@@ -301,7 +301,7 @@ namespace Barotrauma.Networking
             else
             {
                 double midRoundSyncTimeOut = uniqueEvents.Count / MaxEventsPerWrite * server.UpdateInterval.TotalSeconds;
-                midRoundSyncTimeOut = Math.Max(5.0f, midRoundSyncTimeOut * 2.0f);
+                midRoundSyncTimeOut = (Math.Max(5.0f, midRoundSyncTimeOut * 2.0f) * GameMain.NilMod.DesyncTimerMultiplier);
 
                 client.UnreceivedEntityEventCount = (UInt16)uniqueEvents.Count;
                 client.FirstNewEventID = 0;
