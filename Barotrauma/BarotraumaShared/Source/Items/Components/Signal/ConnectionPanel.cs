@@ -120,6 +120,11 @@ namespace Barotrauma.Items.Components
             return componentElement;
         }
 
+        protected override void ShallowRemoveComponentSpecific()
+        {
+            //do nothing
+        }
+
         protected override void RemoveComponentSpecific()
         {
             foreach (Connection c in Connections)
