@@ -11,24 +11,32 @@ namespace Barotrauma
         Damage, Bloodloss, Pressure, Suffocation, Drowning, Burn, Husk, Disconnected
     }
 
-    public enum DamageType { None, Blunt, Slash, Burn }
+    [Flags]
+    public enum DamageType
+    {
+        None = 0,
+        Blunt = 1,
+        Slash = 2,
+        Burn = 4,
+        Any = Blunt | Slash | Burn
+    }
 
     struct AttackResult
     {
         public readonly float Damage;
         public readonly float Bleeding;
-        
-        public readonly bool HitArmor;
 
-        public AttackResult(float damage, float bleeding, bool hitArmor=false)
+        public readonly List<DamageModifier> AppliedDamageModifiers;
+
+        public AttackResult(float damage, float bleeding, List<DamageModifier> appliedDamageModifiers = null)
         {
             this.Damage = damage;
             this.Bleeding = bleeding;
 
-            this.HitArmor = hitArmor;
+            this.AppliedDamageModifiers = appliedDamageModifiers;
         }
     }
-
+    
     partial class Attack
     {
         public readonly float Range;

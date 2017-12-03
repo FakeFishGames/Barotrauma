@@ -761,7 +761,7 @@ namespace Barotrauma
             float damageAmount = attack.GetStructureDamage(deltaTime);
             Condition -= damageAmount;
 
-            return new AttackResult(damageAmount, 0.0f, false);
+            return new AttackResult(damageAmount, 0.0f, null);
         }
 
         private bool IsInWater()

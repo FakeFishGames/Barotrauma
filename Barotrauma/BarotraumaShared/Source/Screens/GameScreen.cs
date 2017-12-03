@@ -57,7 +57,7 @@ namespace Barotrauma
 
 #if DEBUG && CLIENT
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
-                !DebugConsole.IsOpen)
+                !DebugConsole.IsOpen && GUIComponent.KeyboardDispatcher.Subscriber == null)
             {
                 var closestSub = Submarine.FindClosest(cam.WorldViewCenter);
                 if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
