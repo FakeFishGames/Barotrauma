@@ -108,6 +108,13 @@ namespace Barotrauma
         {
             if (GameMain.Client != null) return;
             if (removeQueue.Contains(entity) || entity.Removed) return;
+            if (entity is Character)
+            {
+                Character character = entity as Character;
+                Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
+                if (client != null) client.Character = null;
+            }
+            
 
             removeQueue.Enqueue(entity);
         }

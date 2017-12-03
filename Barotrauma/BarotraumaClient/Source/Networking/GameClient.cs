@@ -1064,7 +1064,7 @@ namespace Barotrauma.Networking
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
                 message, 
                 ChatMessageType.Default, 
-                gameStarted ? myCharacter : null);
+                gameStarted && myCharacter != null ? myCharacter : null);
 
             lastQueueChatMsgID++;
             chatMessage.NetStateID = lastQueueChatMsgID;

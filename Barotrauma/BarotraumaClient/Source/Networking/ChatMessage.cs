@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
             ChatMessageType type = (ChatMessageType)msg.ReadByte();
             string txt = msg.ReadString();
 
-            string senderName = "";
+            string senderName = msg.ReadString();
             Character senderCharacter = null;
             bool hasSenderCharacter = msg.ReadBoolean();
             if (hasSenderCharacter)
@@ -32,10 +32,6 @@ namespace Barotrauma.Networking
                 {
                     senderName = senderCharacter.Name;
                 }
-            }
-            else
-            {
-                senderName = msg.ReadString();
             }
 
             if (NetIdUtils.IdMoreRecent(ID, LastID))
