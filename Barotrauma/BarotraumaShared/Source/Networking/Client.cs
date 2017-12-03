@@ -21,7 +21,9 @@ namespace Barotrauma.Networking
         [Description("Select game mode")]
         SelectMode = 16,
         [Description("Manage campaign")]
-        ManageCampaign = 32
+        ManageCampaign = 32,
+        [Description("Console commands")]
+        ConsoleCommands = 64
     }
 
     class Client
@@ -79,6 +81,7 @@ namespace Barotrauma.Networking
         public float DeleteDisconnectedTimer;
 
         public ClientPermissions Permissions = ClientPermissions.None;
+        public List<DebugConsole.Command> PermittedConsoleCommands = new List<DebugConsole.Command>();
 
         public bool SpectateOnly;
                 

@@ -1928,6 +1928,18 @@ namespace Barotrauma.Networking
             var msg = server.CreateMessage();
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
             msg.Write((byte)client.Permissions);
+            if (client.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
+            {
+                msg.Write((UInt16)client.PermittedConsoleCommands.Sum(c => c.names.Length));
+                foreach (DebugConsole.Command command in client.PermittedConsoleCommands)
+                {
+                    foreach (string commandName in command.names)
+                    {
+                        msg.Write(commandName);
+                    }
+                }
+            }
+
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
 
             SaveClientPermissions();

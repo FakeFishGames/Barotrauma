@@ -27,11 +27,13 @@ namespace Barotrauma
 
     static partial class DebugConsole
     {
-        class Command
+        public class Command
         {
             public readonly string[] names;
             public readonly string help;
             private Action<string[]> onExecute;
+
+            private bool relayToServer;
 
             public Command(string name, string help, Action<string[]> onExecute)
             {
@@ -40,7 +42,7 @@ namespace Barotrauma
 
                 this.onExecute = onExecute;
             }
-
+            
             public void Execute(string[] args)
             {
                 onExecute(args);
@@ -967,10 +969,19 @@ namespace Barotrauma
             }
 
 #if !DEBUG && CLIENT
-            if (GameMain.Client != null && !IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
+            if (GameMain.Client != null)
             {
-                ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
-                return;
+                if (GameMain.Client.HasConsoleCommandPermission(splitCommand[0].ToLowerInvariant()))
+                {
+                    GameMain.Client.SendConsoleCommand(command);
+                    NewMessage("Server command: "+command, Color.White);
+                    return;
+                }
+                if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
+                {
+                    ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
+                    return;
+                }
             }
 #endif
 
@@ -987,7 +998,7 @@ namespace Barotrauma
 
             if (!commandFound)
             {
-                ThrowError("Command \""+splitCommand[0]+"\" not found.");
+                ThrowError("Command \"" + splitCommand[0] + "\" not found.");
             }
         }
         

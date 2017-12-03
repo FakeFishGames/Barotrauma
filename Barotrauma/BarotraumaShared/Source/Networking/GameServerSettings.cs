@@ -316,6 +316,8 @@ namespace Barotrauma.Networking
 
         public void LoadClientPermissions()
         {
+            //TODO: load console command permissions
+
             if (!File.Exists(ClientPermissionsFile)) return;
             
             string[] lines;
@@ -348,13 +350,15 @@ namespace Barotrauma.Networking
         
         public void SaveClientPermissions()
         {
-            GameServer.Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
+            //TODO: save console command permissions
+
+            Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
 
             List<string> lines = new List<string>();
 
             foreach (SavedClientPermission clientPermission in clientPermissions)
             {
-                lines.Add(clientPermission.Name + "|" + clientPermission.IP+"|"+clientPermission.Permissions.ToString());
+                lines.Add(clientPermission.Name + "|" + clientPermission.IP + "|" + clientPermission.Permissions.ToString());
             }
 
             try

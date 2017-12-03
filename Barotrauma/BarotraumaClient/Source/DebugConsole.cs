@@ -134,7 +134,7 @@ namespace Barotrauma
                 case "entitylist":
                     return true;
                 default:
-                    return false;
+                    return client.HasConsoleCommandPermission(command);
             }
         }
 
