@@ -47,6 +47,12 @@ namespace Barotrauma
             private set;
         }
 
+        public float MinKarma
+        {
+            get;
+            private set;
+        }
+
         public float Commonness
         {
             get;
@@ -61,6 +67,7 @@ namespace Barotrauma
 
             MinNumber = element.GetAttributeInt("minnumber", 0);
             MaxNumber = element.GetAttributeInt("maxnumber", 10);
+            MinKarma = element.GetAttributeFloat("minkarma", 0.0f);
 
             Commonness = element.GetAttributeInt("commonness", 10);
 

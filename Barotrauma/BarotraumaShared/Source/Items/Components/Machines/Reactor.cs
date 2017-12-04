@@ -20,6 +20,8 @@ namespace Barotrauma.Items.Components
 
         private float temperature;
 
+        private Client BlameOnBroken;
+
         //is automatic temperature control on
         //(adjusts the cooling rate automatically to keep the
         //amount of power generated balanced with the load)
@@ -326,6 +328,14 @@ namespace Barotrauma.Items.Components
                 if (containedItem == null) continue;
                 containedItem.Condition = 0.0f;
             }
+
+            if (GameMain.Server != null)
+            {
+                if (GameMain.Server.ConnectedClients.Contains(BlameOnBroken))
+                {
+                    BlameOnBroken.Karma = 0.0f;
+                }
+            }
         }
 
         public override bool Pick(Character picker)
@@ -387,8 +397,12 @@ namespace Barotrauma.Items.Components
             float coolingRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             float fissionRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
 
-            if (!item.CanClientAccess(c)) return; 
+            if (!item.CanClientAccess(c)) return;
 
+            if (!autoTemp && AutoTemp) BlameOnBroken = c;
+            if (shutDownTemp > ShutDownTemp) BlameOnBroken = c;
+            if (fissionRate > FissionRate) BlameOnBroken = c;
+            
             AutoTemp = autoTemp;
             ShutDownTemp = shutDownTemp;
 

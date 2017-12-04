@@ -209,7 +209,7 @@ namespace Barotrauma.Items.Components
                 if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
 #endif
 
-                targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess);
+                targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess,user);
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
