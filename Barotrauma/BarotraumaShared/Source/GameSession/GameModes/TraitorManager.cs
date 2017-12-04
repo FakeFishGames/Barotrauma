@@ -14,15 +14,15 @@ namespace Barotrauma
             Character = character;
         }
 
-        public void Greet(GameServer server)
+        public void Greet(GameServer server, string codeWords, string codeResponse)
         {
             //Greeting messages TODO: Move this to a function in Traitor class
             string greetingMessage = "You are the Traitor! Your secret task is to assassinate " + TargetCharacter.Name + "! Discretion is an utmost concern; sinking the submarine and killing the entire crew "
             + "will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.";
             string moreAgentsMessage = "It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. "
             + "Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.";
-            moreAgentsMessage += "\nThe code words are: " + server.TraitorManager.codeWords + ".";
-            moreAgentsMessage += "\nThe code response is: " + server.TraitorManager.codeResponse + ".\n";
+            moreAgentsMessage += "\nThe code words are: " + codeWords + ".";
+            moreAgentsMessage += "\nThe code response is: " + codeResponse + ".\n";
 
             if (server.Character != Character)
             {
@@ -35,8 +35,8 @@ namespace Barotrauma
                 var msgBox = ChatMessage.Create(
                 null,
                 "There might be other agents. Use these to communicate with them." +
-                "\nThe code words are: " + server.TraitorManager.codeWords + "." +
-                "\nThe code response is: " + server.TraitorManager.codeResponse + ".",
+                "\nThe code words are: " + codeWords + "." +
+                "\nThe code response is: " + codeResponse + ".",
                 (ChatMessageType)ChatMessageType.MessageBox,
                 null);
 
@@ -48,15 +48,12 @@ namespace Barotrauma
 #if CLIENT
             if (server.Character == null)
             {
-                new GUIMessageBox("New traitor", Character.Name + " is the traitor and the target is " + Character.Name+".");
+                new GUIMessageBox("New traitor", Character.Name + " is the traitor and the target is " + TargetCharacter.Name+".");
             }
             else if (server.Character == Character)
             {
                 TraitorManager.CreateStartPopUp(TargetCharacter.Name);
-                GameMain.NetworkMember.AddChatMessage(greetingMessage + "\n" + moreAgentsMessage, ChatMessageType.Server);
-                GameMain.NetworkMember.AddChatMessage("There might be other agents. Use these to communicate with them." +
-                "\nThe code words are: " + server.TraitorManager.codeWords + "." +
-                "\nThe code response is: " + server.TraitorManager.codeResponse + ".", ChatMessageType.MessageBox);
+                GameMain.NetworkMember.AddChatMessage(moreAgentsMessage, ChatMessageType.Server);
                 return;
             }
 #endif
@@ -141,7 +138,7 @@ namespace Barotrauma
 
                 Character targetCharacter = characters[targetIndex];
                 traitor.TargetCharacter = targetCharacter;
-                traitor.Greet(server);
+                traitor.Greet(server, codeWords, codeResponse);
             }
         }
 
