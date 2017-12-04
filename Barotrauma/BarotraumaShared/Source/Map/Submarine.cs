@@ -30,6 +30,8 @@ namespace Barotrauma
 
     partial class Submarine : Entity, IServerSerializable
     {
+        public byte TeamID = 1;
+
         public static string SavePath = "Submarines";
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);

@@ -555,7 +555,7 @@ namespace Barotrauma
             return (isHorizontal ? sections[sectionIndex].rect.Width : sections[sectionIndex].rect.Height);
         }
 
-        public void AddDamage(int sectionIndex, float damage)
+        public void AddDamage(int sectionIndex, float damage, IDamageable attacker=null)
         {
             if (!prefab.Body || prefab.Platform) return;
 
@@ -580,7 +580,7 @@ namespace Barotrauma
             }
 #endif
 
-            if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage);
+            if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage, attacker);
         }
 
         public int FindSectionIndex(Vector2 displayPos)
@@ -622,6 +622,27 @@ namespace Barotrauma
             return sectionPos;
         }
 
+        private void AdjustKarma(IDamageable attacker, float amount)
+        {
+            if (GameMain.Server != null)
+            {
+                if (Submarine == null) return;
+                if (attacker == null) return;
+                if (attacker is Character)
+                {
+                    Character attackerCharacter = attacker as Character;
+                    Barotrauma.Networking.Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
+                    if (attackerClient != null)
+                    {
+                        if (attackerCharacter.TeamID == Submarine.TeamID)
+                        {
+                            attackerClient.Karma -= amount * 0.001f;
+                        }
+                    }
+                }
+            }
+        }
+
         public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f);
@@ -635,7 +656,7 @@ namespace Barotrauma
             
             float damageAmount = attack.GetStructureDamage(deltaTime);
 
-            AddDamage(i, damageAmount);
+            AddDamage(i, damageAmount, attacker);
 
 #if CLIENT
             GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
@@ -650,18 +671,21 @@ namespace Barotrauma
             return new AttackResult(damageAmount, 0.0f);
         }
 
-        private void SetDamage(int sectionIndex, float damage)
+        private void SetDamage(int sectionIndex, float damage, IDamageable attacker=null)
         {
             if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.Body) return;
 
             if (!MathUtils.IsValid(damage)) return;
 
+            float damageDiff = damage - sections[sectionIndex].damage;
+
             if (GameMain.Server != null && damage != sections[sectionIndex].damage)
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
-            
+
+            AdjustKarma(attacker, damageDiff);
             if (damage < prefab.MaxHealth*0.5f)
             {
                 if (sections[sectionIndex].gap != null)
@@ -685,6 +709,7 @@ namespace Barotrauma
                     gapRect.Height += 20;
                     sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
                     sections[sectionIndex].gap.ConnectedWall = this;
+                    AdjustKarma(attacker, 300);
 #if CLIENT
                     if(CastShadow) GenerateConvexHull();
 #endif

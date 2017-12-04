@@ -141,7 +141,7 @@ namespace Barotrauma.Items.Components
             Vector2 rayStart = item.SimPosition;
             Vector2 rayEnd = item.SimPosition + dir * 1000.0f;
 
-            bool hitSomething = false;
+            List<Tuple<Fixture, Vector2, Vector2>> hits = new List<Tuple<Fixture, Vector2, Vector2>>();
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (fixture == null || fixture.IsSensor) return -1;
@@ -150,14 +150,34 @@ namespace Barotrauma.Items.Components
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return -1;
 
+                /*item.body.SetTransform(point, rotation);
+                if (OnProjectileCollision(fixture, normal))
+                {
+                    Character.Controlled.AnimController.Teleport(point - Character.Controlled.SimPosition, Vector2.Zero);
+                    hitSomething = true;
+                    return 0;
+                }*/
+
+                hits.Add(new Tuple<Fixture, Vector2, Vector2>(fixture,point,normal));
+
+                return hits.Count<25 ? 1 : 0;
+            }, rayStart, rayEnd);
+
+            bool hitSomething = false;
+            hits = hits.OrderBy(t => Vector2.DistanceSquared(rayStart, t.Item2)).ToList();
+            foreach (Tuple<Fixture, Vector2, Vector2> t in hits)
+            {
+                Fixture fixture = t.Item1;
+                Vector2 point = t.Item2;
+                Vector2 normal = t.Item3;
                 item.body.SetTransform(point, rotation);
                 if (OnProjectileCollision(fixture, normal))
                 {
                     hitSomething = true;
-                    return 0;
-                }                
-                return 1;
-            }, rayStart, rayEnd);
+                    //Character.Controlled.AnimController.Teleport(point - Character.Controlled.SimPosition, Vector2.Zero);
+                    break;
+                }
+            }
 
             //the raycast didn't hit anything -> the projectile flew somewhere outside the level and is permanently lost
             if (!hitSomething)

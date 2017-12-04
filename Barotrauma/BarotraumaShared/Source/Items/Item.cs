@@ -139,6 +139,14 @@ namespace Barotrauma
             get { return prefab.InteractPriority; }
         }
 
+        public override Vector2 Position
+        {
+            get
+            {
+                return (body == null) ? base.Position : ConvertUnits.ToDisplayUnits(SimPosition);
+            }
+        }
+
         public override Vector2 SimPosition
         {
             get

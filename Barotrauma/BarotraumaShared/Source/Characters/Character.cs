@@ -1524,7 +1524,7 @@ namespace Barotrauma
             speechBubbleColor = color;
         }
         
-        public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
+        private void AdjustKarma(IDamageable attacker,float amount)
         {
             if (GameMain.Server != null)
             {
@@ -1546,7 +1546,10 @@ namespace Barotrauma
                     }
                 }
             }
+        }
 
+        public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
+        {
             Health = health-amount;
             if (amount > 0.0f)
             {
@@ -1554,6 +1557,7 @@ namespace Barotrauma
 
                 DamageHUD(amount);
             }
+            AdjustKarma(attacker, amount);
             if (health <= minHealth) Kill(causeOfDeath);
         }
         partial void DamageHUD(float amount);
