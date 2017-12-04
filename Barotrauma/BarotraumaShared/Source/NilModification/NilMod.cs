@@ -280,7 +280,6 @@ namespace Barotrauma
         public float CreatureBleedMultiplier;
         //This needs to be changed into a percent instead : >
         public Boolean ArmourBleedBypassNoDamage;
-        public Boolean ArmourSoakFireDamage;
         public float ArmourAbsorptionHealth;
         public float ArmourDirectReductionHealth;
         public float ArmourResistanceMultiplierHealth;
@@ -344,8 +343,6 @@ namespace Barotrauma
         public Boolean SyncFireSizeChange;
         public float FireSyncFrequency;
         public float FireSizeChangeToSync;
-        public float FireProofDamagePercentReduction;
-        public float FireProofRangePercentReduction;
         public float FireCharDamageMultiplier;
         public float FireCharRangeMultiplier;
         public float FireItemRangeMultiplier;
@@ -1097,8 +1094,6 @@ namespace Barotrauma
                 SyncFireSizeChange = ServerModSubmarineSettings.GetAttributeBool("SyncFireSizeChange", false);
                 FireSyncFrequency = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireSyncFrequency", 4f), 1f, 60f);
                 FireSizeChangeToSync = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireSizeChangeToSync", 6f), 1f, 30f);
-                FireProofDamagePercentReduction = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireProofDamagePercentReduction", 100f), 0f, 100f);
-                FireProofRangePercentReduction = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireProofRangePercentReduction", 0f), 0f, 100f);
                 FireCharDamageMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireCharDamageMultiplier", 1f), 0f, 100f);
                 FireCharRangeMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireCharRangeMultiplier", 1f), 0f, 100f);
                 FireItemRangeMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireItemRangeMultiplier", 1f), 0f, 100f);
@@ -1150,14 +1145,13 @@ namespace Barotrauma
                 MinHealthBleedCap = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("MinHealthBleedCap", 5f),0f,5f); //Implemented
                 CreatureBleedMultiplier = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("CreatureBleedMultiplier", 1.00f),0f,20f);
                 ArmourBleedBypassNoDamage = ServerModAllCharacterSettings.GetAttributeBool("ArmourBleedBypassNoDamage", false);
-                ArmourSoakFireDamage = ServerModAllCharacterSettings.GetAttributeBool("ArmourSoakFireDamage", false);
-                ArmourAbsorptionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionHealth", 0f), 0f, 10000f);
-                ArmourDirectReductionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionHealth", 1f), 0f, 10000f);
+                ArmourAbsorptionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionHealth", 0f), 1f, 10000f);
+                ArmourDirectReductionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionHealth", 0f), 0f, 10000f);
                 ArmourMinimumHealthPercent = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourMinimumHealthPercent", 0f), 0f, 100f);
                 ArmourResistancePowerHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistancePowerHealth", 0f), 0f, 1f);
                 ArmourResistanceMultiplierHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistanceMultiplierHealth", 0f), 0f, 100000f);
-                ArmourAbsorptionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionBleed", 0f), 0f, 10000f);
-                ArmourDirectReductionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionBleed", 1f), 0f, 10000f);
+                ArmourAbsorptionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionBleed", 1f), 0f, 10000f);
+                ArmourDirectReductionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionBleed", 0f), 0f, 10000f);
                 ArmourResistancePowerBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistancePowerBleed", 0f), 0f, 1f);
                 ArmourResistanceMultiplierBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistanceMultiplierBleed", 0f), 0f, 100000f);
                 ArmourMinimumBleedPercent = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourMinimumBleedPercent", 0f), 0f, 100f);
@@ -1476,8 +1470,6 @@ namespace Barotrauma
                 @"    SyncFireSizeChange=""" + SyncFireSizeChange + @"""",
                 @"    FireSyncFrequency=""" + FireSyncFrequency + @"""",
                 @"    FireSizeChangeToSync=""" + FireSizeChangeToSync + @"""",
-                @"    FireProofDamagePercentReduction=""" + FireProofDamagePercentReduction + @"""",
-                @"    FireProofRangePercentReduction=""" + FireProofRangePercentReduction + @"""",
                 @"    FireCharDamageMultiplier=""" + FireCharDamageMultiplier + @"""",
                 @"    FireCharRangeMultiplier=""" + FireCharRangeMultiplier + @"""",
                 @"    FireItemRangeMultiplier=""" + FireItemRangeMultiplier + @"""",
@@ -1530,7 +1522,6 @@ namespace Barotrauma
                 @"    MinHealthBleedCap=""" + MinHealthBleedCap + @"""",
                 @"    CreatureBleedMultiplier=""" + CreatureBleedMultiplier + @"""",
                 @"    ArmourBleedBypassNoDamage=""" + ArmourBleedBypassNoDamage + @"""",
-                @"    ArmourSoakFireDamage=""" + ArmourSoakFireDamage + @"""",
                 @"    ArmourAbsorptionHealth=""" + ArmourAbsorptionHealth + @"""",
                 @"    ArmourDirectReductionHealth=""" + ArmourDirectReductionHealth + @"""",
                 @"    ArmourResistanceMultiplierHealth=""" + ArmourResistanceMultiplierHealth + @"""",
@@ -1808,8 +1799,6 @@ namespace Barotrauma
             SyncFireSizeChange = false;
             FireSyncFrequency = 4f;
             FireSizeChangeToSync = 6f;
-            FireProofDamagePercentReduction = 100f;
-            FireProofRangePercentReduction = 0f;
             FireCharDamageMultiplier = 1f;
             FireCharRangeMultiplier = 1f;
             FireItemRangeMultiplier = 1f;
@@ -1858,13 +1847,13 @@ namespace Barotrauma
             MinHealthBleedCap = 5f;
             CreatureBleedMultiplier = 1.00f;
             ArmourBleedBypassNoDamage = false;
-            ArmourAbsorptionHealth = 0f;
-            ArmourDirectReductionHealth = 1f;
+            ArmourAbsorptionHealth = 1f;
+            ArmourDirectReductionHealth = 0f;
             ArmourMinimumHealthPercent = 0f;
             ArmourResistancePowerHealth = 0f;
             ArmourResistanceMultiplierHealth = 0f;
-            ArmourAbsorptionBleed = 0f;
-            ArmourDirectReductionBleed = 1f;
+            ArmourAbsorptionBleed = 1f;
+            ArmourDirectReductionBleed = 0f;
             ArmourResistancePowerBleed = 0f;
             ArmourResistanceMultiplierBleed = 0f;
             ArmourMinimumBleedPercent = 0f;
