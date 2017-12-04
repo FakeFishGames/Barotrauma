@@ -108,10 +108,11 @@ namespace Barotrauma.Items.Components
                 
                     projectile.body.ResetDynamics();
                     projectile.SetTransform(TransformedBarrelPos, rotation);
+
                     projectileComponent.User = character;
                     projectileComponent.IgnoredBodies = new List<Body>(limbBodies);
-
                     projectile.Use(deltaTime);
+                    projectileComponent.User = character;
 
                     projectile.body.ApplyTorque(projectile.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
 

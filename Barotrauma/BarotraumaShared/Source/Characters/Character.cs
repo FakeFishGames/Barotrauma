@@ -1526,6 +1526,27 @@ namespace Barotrauma
         
         public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
         {
+            if (GameMain.Server != null)
+            {
+                if (attacker is Character)
+                {
+                    Character attackerCharacter = attacker as Character;
+                    Barotrauma.Networking.Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
+                    if (attackerClient != null)
+                    {
+                        Barotrauma.Networking.Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
+                        if (targetClient != null || this == Character.Controlled)
+                        {
+                            if (attackerCharacter.TeamID == TeamID)
+                            {
+                                attackerClient.Karma -= amount * 0.01f;
+                                if (health <= minHealth) attackerClient.Karma = 0.0f;
+                            }
+                        }
+                    }
+                }
+            }
+
             Health = health-amount;
             if (amount > 0.0f)
             {
