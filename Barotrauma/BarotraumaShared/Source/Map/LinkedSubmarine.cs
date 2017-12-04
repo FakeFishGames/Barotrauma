@@ -43,7 +43,7 @@ namespace Barotrauma
 
         private XElement saveElement;
 
-        public override bool IsLinkable
+        public override bool Linkable
         {
             get
             {

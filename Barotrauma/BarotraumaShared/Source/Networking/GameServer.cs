@@ -815,9 +815,9 @@ namespace Barotrauma.Networking
                             {
                                 c.NeedsMidRoundSync = false;
                                 lastRecvEntityEventID = (UInt16)(c.FirstNewEventID - 1);
-                                c.lastRecvEntityEventID = lastRecvEntityEventID;
+                                c.LastRecvEntityEventID = lastRecvEntityEventID;
 
-                                DisconnectedCharacter disconnectedcharcheck = GameMain.NilMod.DisconnectedCharacters.Find(dc => dc.character.Name == c.name && c.Connection.RemoteEndPoint.Address.ToString() == dc.IPAddress);
+                                DisconnectedCharacter disconnectedcharcheck = GameMain.NilMod.DisconnectedCharacters.Find(dc => dc.character.Name == c.Name && c.Connection.RemoteEndPoint.Address.ToString() == dc.IPAddress);
 
                                 if(disconnectedcharcheck != null)
                                 {
@@ -913,8 +913,8 @@ namespace Barotrauma.Networking
                     var kickedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == kickedName);
                     if (kickedClient != null)
                     {
-                        Log("Client \"" + sender.name + "\" kicked \"" + kickedClient.name + "\".", ServerLog.MessageType.ServerMessage);
-                        KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? "Kicked by " + sender.name : kickReason, GameMain.NilMod.AdminKickStateNameTimer, GameMain.NilMod.AdminKickDenyRejoinTimer);
+                        Log("Client \"" + sender.Name + "\" kicked \"" + kickedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
+                        KickClient(kickedClient, string.IsNullOrEmpty(kickReason) ? "Kicked by " + sender.Name : kickReason, GameMain.NilMod.AdminKickStateNameTimer, GameMain.NilMod.AdminKickDenyRejoinTimer);
                     }
                     break;
                 case ClientPermissions.Ban:
@@ -1208,7 +1208,7 @@ namespace Barotrauma.Networking
 
                 //and assume the message was received, so we don't have to keep resending
                 //these large initial messages until the client acknowledges receiving them
-                c.lastRecvGeneralUpdate++;
+                c.LastRecvGeneralUpdate++;
 
                 //Nilmod Rules code
 
@@ -1271,7 +1271,7 @@ namespace Barotrauma.Networking
                         if (c.GetVote<Submarine>(VoteType.Sub) == selectedSub)
                         {
 
-                            GameMain.NilMod.SubmarineVoters += " " + c.name + ",";
+                            GameMain.NilMod.SubmarineVoters += " " + c.Name + ",";
                         }
                     }
 
@@ -1576,7 +1576,7 @@ namespace Barotrauma.Networking
                 //List the players for the given team
                 foreach (Client client in teamClients)
                 {
-                    GameServer.Log("spawn: " + client.characterInfo.Name + " As " + client.characterInfo.Job.Name + " On " + client.Connection.RemoteEndPoint.Address, ServerLog.MessageType.Spawns);
+                    GameServer.Log("spawn: " + client.CharacterInfo.Name + " As " + client.CharacterInfo.Job.Name + " On " + client.Connection.RemoteEndPoint.Address, ServerLog.MessageType.Spawns);
                 }
 
             }
@@ -1861,7 +1861,7 @@ namespace Barotrauma.Networking
             
             string msg = "You have been kicked from the server.";
             if (!string.IsNullOrWhiteSpace(reason)) msg += "\nReason: " + reason;
-            DisconnectKickClient(client, client.name + " has been kicked from the server.", msg, Expiretime, Rejointime);            
+            DisconnectKickClient(client, client.Name + " has been kicked from the server.", msg, Expiretime, Rejointime);            
         }
 
         public override void BanPlayer(string playerName, string reason, bool range = false, TimeSpan? duration = null)
@@ -1910,7 +1910,7 @@ namespace Barotrauma.Networking
                 }
                 client.Connection.Disconnect("You have been banned from the server\n" + reason);
                 //conn.Disconnect("You have been banned from the server\n" + reason);
-                SendChatMessage(client.name + " has been banned from the server", ChatMessageType.Server);
+                SendChatMessage(client.Name + " has been banned from the server", ChatMessageType.Server);
             }
             else
             {
@@ -1962,7 +1962,7 @@ namespace Barotrauma.Networking
                 //conn.Disconnect("You have been banned from the server\n" + reason);
                 SendChatMessage("VPN Blacklisted player: " + clname + " attempted to join the server.", ChatMessageType.Server);
 #if CLIENT
-                GameMain.NetLobbyScreen.RemovePlayer(client.name);
+                GameMain.NetLobbyScreen.RemovePlayer(client.Name);
 #endif
                 ConnectedClients.Remove(client);
             }
@@ -1980,7 +1980,7 @@ namespace Barotrauma.Networking
             
             string msg = "You have been banned from the server.";
             if (!string.IsNullOrWhiteSpace(reason)) msg += "\nReason: " + reason;
-            DisconnectKickClient(client, client.name + " has been banned from the server.", msg);
+            DisconnectKickClient(client, client.Name + " has been banned from the server.", msg);
             string ip = client.Connection.RemoteEndPoint.Address.ToString();
             if (range) { ip = banList.ToRange(ip); }
             banList.BanPlayer(client.Name, ip, reason, duration);
@@ -2015,7 +2015,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     kickedclient = new KickedClient();
-                    kickedclient.clientname = client.name;
+                    kickedclient.clientname = client.Name;
                     kickedclient.IPAddress = client.Connection.RemoteEndPoint.Address.ToString();
                     kickedclient.RejoinTimer = rejointime;
                     kickedclient.ExpireTimer = expiretime;
@@ -2030,8 +2030,6 @@ namespace Barotrauma.Networking
                 client.Character.Kill(CauseOfDeath.Disconnected, true);
             }
 
-
-
             client.Character = null;
             client.InGame = false;
 
@@ -2044,7 +2042,7 @@ namespace Barotrauma.Networking
             connectedClients.Remove(client);
 
 #if CLIENT
-            GameMain.NetLobbyScreen.RemovePlayer(client.name);
+            GameMain.NetLobbyScreen.RemovePlayer(client.Name);
             Voting.UpdateVoteTexts(connectedClients, VoteType.Sub);
             Voting.UpdateVoteTexts(connectedClients, VoteType.Mode);
 #endif
@@ -2067,7 +2065,7 @@ namespace Barotrauma.Networking
             {
                 client.Character.ClearInputs();
                 DisconnectedCharacter disconnectedchar = new DisconnectedCharacter();
-                disconnectedchar.clientname = client.name;
+                disconnectedchar.clientname = client.Name;
                 disconnectedchar.IPAddress = client.Connection.RemoteEndPoint.Address.ToString();
                 disconnectedchar.DisconnectStun = client.Character.Stun;
                 disconnectedchar.character = client.Character;
@@ -2082,9 +2080,9 @@ namespace Barotrauma.Networking
             }
 
             client.Character = null;
-            client.inGame = false;
+            client.InGame = false;
 
-            if (string.IsNullOrWhiteSpace(msg)) msg = client.name + " has left the server";
+            if (string.IsNullOrWhiteSpace(msg)) msg = client.Name + " has left the server";
             if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "You have left the server";
 
             Log(msg, ServerLog.MessageType.ServerMessage);
@@ -2092,8 +2090,11 @@ namespace Barotrauma.Networking
             client.Connection.Disconnect(targetmsg);
 
 #if CLIENT
-            GameMain.NetLobbyScreen.RemovePlayer(client.name);        
+            GameMain.NetLobbyScreen.RemovePlayer(client.Name);
+            Voting.UpdateVoteTexts(connectedClients, VoteType.Sub);
+            Voting.UpdateVoteTexts(connectedClients, VoteType.Mode);
 #endif
+            connectedClients.Remove(client);
 
             UpdateVoteStatus();
 
@@ -2363,11 +2364,6 @@ namespace Barotrauma.Networking
 
         private void FileTransferChanged(FileSender.FileTransferOut transfer)
         {
-            if (connectedClients.Any(c=> c.Connection == null))
-            {
-                int sdfgsdfg = 1;
-            }
-
             Client recipient = connectedClients.Find(c => c.Connection == transfer.Connection);
 #if CLIENT
             UpdateFileTransferIndicator(recipient);
@@ -2395,7 +2391,7 @@ namespace Barotrauma.Networking
             var clientsToKick = connectedClients.FindAll(c => c.KickVoteCount >= connectedClients.Count * KickVoteRequiredRatio);
             foreach (Client c in clientsToKick)
             {
-                SendChatMessage(c.name + " has been kicked from the server.", ChatMessageType.Server, null);
+                SendChatMessage(c.Name + " has been kicked from the server.", ChatMessageType.Server, null);
                 KickClient(c, "Kicked by vote", GameMain.NilMod.VoteKickStateNameTimer, GameMain.NilMod.VoteKickDenyRejoinTimer);
             }
 
@@ -2411,7 +2407,7 @@ namespace Barotrauma.Networking
                 //Custom Nilmod End Vote Messages for other players whom are spectating the round or playing.
                 foreach (Client client in ConnectedClients)
                 {
-                    if (client.inGame)
+                    if (client.InGame)
                     {
                         if (NilMod.NilModEventChatter.NilVoteEnd.Count() > 0 && NilMod.NilModEventChatter.ChatVoteEnd)
                         {
@@ -2743,7 +2739,7 @@ namespace Barotrauma.Networking
         //NilMod
         public void MoveSub(int sub, Vector2 Position)
         {
-            Submarine.MainSubs[sub].PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.ShaftBody);
+            //Submarine.MainSubs[sub].PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.ShaftBody);
 
             Steering movedsubSteering = null;
 
@@ -2766,7 +2762,7 @@ namespace Barotrauma.Networking
             //Teleport the submarine and prevent any collission or other issues, remove speed, etc
             Submarine.MainSubs[sub].SetPosition(Position);
             Submarine.MainSubs[sub].Velocity = Vector2.Zero;
-            Submarine.MainSubs[sub].PhysicsBody.FarseerBody.RestoreCollisionWith(Level.Loaded.ShaftBody);
+            //Submarine.MainSubs[sub].PhysicsBody.FarseerBody.RestoreCollisionWith(Level.Loaded.ShaftBody);
 
             //activate Maintain position on all controllers.
             foreach (Item item in Item.ItemList)
@@ -2869,8 +2865,8 @@ namespace Barotrauma.Networking
             if (GameMain.NilMod.PacketNumber == 0)
             {
                 outmsg.Write((byte)ServerNetObject.SYNC_IDS);
-                outmsg.Write(c.lastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
-                outmsg.Write(c.lastSentEntityEventID);
+                outmsg.Write(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
+                outmsg.Write(c.LastSentEntityEventID);
 
                 entityEventManager.Write(c, outmsg);
 
@@ -3030,7 +3026,7 @@ namespace Barotrauma.Networking
                             {
                                 if (!PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
                                 {
-                                    if (GameMain.Server.ConnectedClients.Find(c => c.name == closestDistChar.Name) != null)
+                                    if (GameMain.Server.ConnectedClients.Find(c => c.Name == closestDistChar.Name) != null)
                                     {
                                         if (GameMain.Server != null)
                                         {
@@ -3038,7 +3034,7 @@ namespace Barotrauma.Networking
                                             foreach (Client c in GameMain.Server.ConnectedClients)
                                             {
                                                 //Don't even consider reviving a client if it is not ingame yet.
-                                                if (!c.inGame || c.NeedsMidRoundSync) continue;
+                                                if (!c.InGame || c.NeedsMidRoundSync) continue;
 
                                                 //Check if this client just happens to be the same character.
                                                 if(c.Character == closestDistChar)
@@ -3050,14 +3046,14 @@ namespace Barotrauma.Networking
                                                 else if (c.Character != null)
                                                 {
                                                     //Check if this is the same named client, and if so, skip if they have a living character.
-                                                    if (c.name != closestDistChar.Name || c.name == closestDistChar.Name && !c.Character.IsDead) continue;
+                                                    if (c.Name != closestDistChar.Name || c.Name == closestDistChar.Name && !c.Character.IsDead) continue;
                                                     //This name matches that of their client name.
                                                     MatchedClient = c;
                                                 }
                                                 //This client has no character, simply check the name
                                                 else
                                                 {
-                                                    if (c.name != closestDistChar.Name) continue;
+                                                    if (c.Name != closestDistChar.Name) continue;
 
                                                     MatchedClient = c;
                                                 }
@@ -3089,7 +3085,7 @@ namespace Barotrauma.Networking
                                 }
                                 else
                                 {
-                                    if (GameMain.Server.ConnectedClients.Find(c => c.name == closestDistChar.Name) != null)
+                                    if (GameMain.Server.ConnectedClients.Find(c => c.Name == closestDistChar.Name) != null)
                                     {
                                         if (GameMain.Server != null)
                                         {
@@ -3097,7 +3093,7 @@ namespace Barotrauma.Networking
                                             foreach (Client c in GameMain.Server.ConnectedClients)
                                             {
                                                 //Don't even consider reviving a client if it is not ingame yet.
-                                                if (!c.inGame || c.NeedsMidRoundSync) continue;
+                                                if (!c.InGame || c.NeedsMidRoundSync) continue;
 
                                                 //Check if this client just happens to be the same character.
                                                 if (c.Character == closestDistChar)
@@ -3109,14 +3105,14 @@ namespace Barotrauma.Networking
                                                 else if (c.Character != null)
                                                 {
                                                     //Check if this is the same named client, and if so, skip if they have a living character.
-                                                    if (c.name != closestDistChar.Name || c.name == closestDistChar.Name && !c.Character.IsDead) continue;
+                                                    if (c.Name != closestDistChar.Name || c.Name == closestDistChar.Name && !c.Character.IsDead) continue;
                                                     //This name matches that of their client name.
                                                     MatchedClient = c;
                                                 }
                                                 //This client has no character, simply check the name
                                                 else
                                                 {
-                                                    if (c.name != closestDistChar.Name) continue;
+                                                    if (c.Name != closestDistChar.Name) continue;
 
                                                     MatchedClient = c;
                                                 }

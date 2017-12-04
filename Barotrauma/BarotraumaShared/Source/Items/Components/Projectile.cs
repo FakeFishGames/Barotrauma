@@ -5,6 +5,7 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -58,8 +59,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public Projectile(Item item, XElement element) 
-            : base (item, element)
+        public Projectile(Item item, XElement element)
+            : base(item, element)
         {
             IgnoredBodies = new List<Body>();
 
@@ -94,9 +95,9 @@ namespace Barotrauma.Items.Components
         {
             item.Drop();
 
-            item.body.Enabled = true;            
+            item.body.Enabled = true;
             item.body.ApplyLinearImpulse(impulse);
-            
+
             item.body.FarseerBody.OnCollision += OnProjectileCollision;
             item.body.FarseerBody.IsBullet = true;
 
@@ -154,7 +155,7 @@ namespace Barotrauma.Items.Components
                 {
                     hitSomething = true;
                     return 0;
-                }                
+                }
                 return 1;
             }, rayStart, rayEnd);
 
@@ -164,13 +165,13 @@ namespace Barotrauma.Items.Components
                 Item.Spawner.AddToRemoveQueue(item);
             }
         }
-        
+
         public override void Update(float deltaTime, Camera cam)
         {
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null); 
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (stickJoint != null && 
-                (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f))  
+            if (stickJoint != null &&
+                (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f))
             {
                 if (stickTarget != null)
                 {
@@ -195,10 +196,10 @@ namespace Barotrauma.Items.Components
                     //the body that the projectile was stuck to has been removed
                 }
 
-                stickJoint = null; 
-             
-                IsActive = false; 
-            }           
+                stickJoint = null;
+
+                IsActive = false;
+            }
         }
 
         private bool OnProjectileCollision(Fixture f1, Fixture f2, Contact contact)
@@ -255,7 +256,8 @@ namespace Barotrauma.Items.Components
 
             target.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
 
-            if (attackResult.HitArmor)
+            if (attackResult.AppliedDamageModifiers != null &&
+                attackResult.AppliedDamageModifiers.Any(dm => dm.DeflectProjectiles))
             {
                 item.body.LinearVelocity *= 0.1f;
             }

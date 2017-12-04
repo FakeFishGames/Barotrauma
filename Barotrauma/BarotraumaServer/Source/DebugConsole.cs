@@ -147,14 +147,6 @@ namespace Barotrauma
                 GameMain.Server.EndGame();
             }));
 
-            commands.Add(new Command("autorestart", CommandType.Network, "autorestart: Toggle automatic round restarting on/off.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-
-                GameMain.Server.AutoRestart = !GameMain.Server.AutoRestart;
-                NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
-            }));
-
             commands.Add(new Command("entitydata", CommandType.Debug, "", (string[] args) =>
             {
                 if (args.Length == 0) return;

@@ -393,7 +393,7 @@ namespace Barotrauma
                     NilMod.Update((float)Timing.Step);
 
                     NilModProfiler.SWSoundPlayer.Start();
-                    SoundPlayer.Update();
+                    SoundPlayer.Update((float)Timing.Step);
                     NilModProfiler.RecordSoundPlayer();
 
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();

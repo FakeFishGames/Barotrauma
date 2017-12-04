@@ -22,8 +22,6 @@ namespace Barotrauma.Particles
         public int MaxParticles = 1500;
         private Particle[] particles;
 
-        private string loadedconfig = "";
-
         private Dictionary<string, ParticlePrefab> prefabs;
 
         private Camera cam;
@@ -78,25 +76,32 @@ namespace Barotrauma.Particles
 
         public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null)
         {
-            if (particleCount >= MaxParticles || prefab == null) return null;
+            if (particleCount >= MaxParticles || prefab == null || GameMain.NilMod.DisableParticles) return null;
 
-            Vector2 particleEndPos = prefab.CalculateEndPosition(position, velocity);
+            if (((Rand.Range(1, 100) <= GameMain.NilMod.ParticleSpawnPercent) || GameMain.NilMod.ParticleWhitelist.Find(p => p == prefab.Name) != null))
+            {
+                Vector2 particleEndPos = prefab.CalculateEndPosition(position, velocity);
 
-            Vector2 minPos = new Vector2(Math.Min(position.X, particleEndPos.X), Math.Min(position.Y, particleEndPos.Y));
-            Vector2 maxPos = new Vector2(Math.Max(position.X, particleEndPos.X), Math.Max(position.Y, particleEndPos.Y));
+                Vector2 minPos = new Vector2(Math.Min(position.X, particleEndPos.X), Math.Min(position.Y, particleEndPos.Y));
+                Vector2 maxPos = new Vector2(Math.Max(position.X, particleEndPos.X), Math.Max(position.Y, particleEndPos.Y));
 
-            Rectangle expandedViewRect = MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist);
+                Rectangle expandedViewRect = MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist);
 
-            if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) return null;
-            if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) return null;
+                if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) return null;
+                if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) return null;
 
-            if (particles[particleCount] == null) particles[particleCount] = new Particle();
+                if (particles[particleCount] == null) particles[particleCount] = new Particle();
 
-            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess);
+                particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess);
 
                 particleCount++;
 
-            return particles[particleCount - 1];
+                return particles[particleCount - 1];
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public List<ParticlePrefab> GetPrefabList()

@@ -79,14 +79,14 @@ namespace Barotrauma
         {
             base.Init();
 
-            monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server));
+            monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server), false);
             if (GameSettings.VerboseLogging)
             {
                 DebugConsole.NewMessage("Initialized MonsterEvent (" + monsters[0]?.SpeciesName + " x" + monsters.Length + ")", Color.White);
             }
         }
 
-        private Character[] SpawnMonsters(int amount)
+        private Character[] SpawnMonsters(int amount, bool createNetworkEvent)
         {
             if (disallowed) return null;
             
@@ -113,27 +113,6 @@ namespace Barotrauma
             return monsters;
         }
 
-        //Nilmod monster respawning fix
-        private Character[] MidRoundSpawnMonsters(int amount)
-        {
-            if (disallowed) return null;
-
-            Vector2 spawnPos = Level.Loaded.GetRandomInterestingPosition(true, spawnPosType, true);
-
-            var monsters = new Character[amount];
-
-            if (spawnDeep) spawnPos.Y -= Level.Loaded.Size.Y;
-
-            for (int i = 0; i < amount; i++)
-            {
-                spawnPos.X += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
-                spawnPos.Y += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
-                monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null, true, true);
-            }
-
-            return monsters;
-        }
-
         public override void Update(float deltaTime)
         {
             if (disallowed)
@@ -150,27 +129,13 @@ namespace Barotrauma
                     return;
                 }
 
-                if (GameMain.NilMod.CreatureLimitRespawns)
-                {
-                    if (Respawned < MaxRespawned)
-                    {
-                        for (int i = 0; i < monsters.Length; i++)
-                        {
-                            if (monsters[i] == null || monsters[i].Removed || monsters[i].IsDead)
-                            {
-                                monsters[i] = MidRoundSpawnMonsters(1)[0];
-                                Respawned += 1;
-                            }
-                        }
-                    }
-                }
-                else
+                if ((GameMain.NilMod.CreatureLimitRespawns && Respawned < MaxRespawned) || !GameMain.NilMod.CreatureLimitRespawns)
                 {
                     for (int i = 0; i < monsters.Length; i++)
                     {
                         if (monsters[i] == null || monsters[i].Removed || monsters[i].IsDead)
                         {
-                            monsters[i] = MidRoundSpawnMonsters(1)[0];
+                            monsters[i] = SpawnMonsters(1, true)[0];
                             Respawned += 1;
                         }
                     }

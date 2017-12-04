@@ -45,6 +45,7 @@ namespace Barotrauma
             if (LightSource != null)
             {
                 LightSource.ParentSub = body.Submarine;
+                LightSource.Rotation = (dir == Direction.Right) ? body.Rotation : body.Rotation - MathHelper.Pi;
             }
         }
 

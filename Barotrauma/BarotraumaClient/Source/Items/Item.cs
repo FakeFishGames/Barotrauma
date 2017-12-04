@@ -125,20 +125,37 @@ namespace Barotrauma
 
             if (Screen.Selected != GameMain.SubEditorScreen) return;
 
-            if (!prefab.IsLinkable) return;
+            if (!Linkable) return;
 
-            if (!PlayerInput.LeftButtonClicked() || !PlayerInput.KeyDown(Keys.Space)) return;
+            if (!PlayerInput.KeyDown(Keys.Space)) return;
+            bool lClick = PlayerInput.LeftButtonClicked();
+            bool rClick = PlayerInput.RightButtonClicked();
+            if (!lClick && !rClick) return;
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-
-            foreach (MapEntity entity in mapEntityList)
+            if (lClick)
             {
-                if (entity == this || !entity.IsHighlighted) continue;
-                if (linkedTo.Contains(entity)) continue;
-                if (!entity.IsMouseOn(position)) continue;
+                foreach (MapEntity entity in mapEntityList)
+                {
+                    if (entity == this || !entity.IsHighlighted) continue;
+                    if (linkedTo.Contains(entity)) continue;
+                    if (!entity.IsMouseOn(position)) continue;
 
-                linkedTo.Add(entity);
-                if (entity.IsLinkable && entity.linkedTo != null) entity.linkedTo.Add(this);
+                    linkedTo.Add(entity);
+                    if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
+                }
+            }
+            else
+            {
+                foreach (MapEntity entity in mapEntityList)
+                {
+                    if (entity == this || !entity.IsHighlighted) continue;
+                    if (!linkedTo.Contains(entity)) continue;
+                    if (!entity.IsMouseOn(position)) continue;
+
+                    linkedTo.Remove(entity);
+                    if (entity.linkedTo != null && entity.linkedTo.Contains(this)) entity.linkedTo.Remove(this);
+                }
             }
         }
 
@@ -159,8 +176,8 @@ namespace Barotrauma
             listBox.Spacing = 5;
             
             var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
-            
-            if (!inGame && prefab.IsLinkable)
+
+            if (!inGame && Linkable)
             {
                 itemEditor.AddCustomContent(new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", "", null, GUI.SmallFont), 1);
             }            

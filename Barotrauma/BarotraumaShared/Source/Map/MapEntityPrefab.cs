@@ -61,12 +61,12 @@ namespace Barotrauma
         }
 
         [Serialize(false, false)]
-        public virtual bool IsLinkable
+        public bool Linkable
         {
             get;
             private set;
         }
-        
+
         public MapEntityCategory Category
         {
             get;

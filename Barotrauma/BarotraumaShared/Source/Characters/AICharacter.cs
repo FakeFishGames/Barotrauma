@@ -35,7 +35,7 @@ namespace Barotrauma
         {
             base.Update(deltaTime, cam);
 
-            if (!Enabled || IsRemotePlayer || GameMain.NilMod.FrozenCharacters.Find(c => c == this) != null) return;
+            if (!Enabled) return;
 
             if (!IsRemotePlayer)
             {
@@ -72,7 +72,7 @@ namespace Barotrauma
             
             SoundUpdate(deltaTime);
 
-            if (!IsRemotePlayer)
+            if (!IsRemotePlayer || GameMain.NilMod.FrozenCharacters.Find(c => c == this) == null)
             {
                 aiController.Update(deltaTime);
             }

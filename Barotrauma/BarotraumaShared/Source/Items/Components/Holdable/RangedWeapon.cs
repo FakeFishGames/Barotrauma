@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
                 return (Vector2.Transform(flippedPos, bodyTransform) + item.body.SimPosition);
             }
         }
-                
+
         public RangedWeapon(Item item, XElement element)
             : base(item, element)
         {
@@ -67,7 +67,7 @@ namespace Barotrauma.Items.Components
                 IsActive = false;
             }
         }
-        
+
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null) return false;
@@ -81,7 +81,7 @@ namespace Barotrauma.Items.Components
                 limbBodies.Add(l.body.FarseerBody);
             }
 
-            float degreeOfFailure = (100.0f - DegreeOfSuccess(character))/100.0f;
+            float degreeOfFailure = (100.0f - DegreeOfSuccess(character)) / 100.0f;
 
             degreeOfFailure *= degreeOfFailure;
 
@@ -99,13 +99,13 @@ namespace Barotrauma.Items.Components
                     //find the projectile-itemcomponent of the projectile,
                     //and add the limbs of the shooter to the list of bodies to be ignored
                     //so that the player can't shoot himself
-                    Projectile projectileComponent= projectile.GetComponent<Projectile>();
+                    Projectile projectileComponent = projectile.GetComponent<Projectile>();
                     if (projectileComponent == null) continue;
 
                     float spread = MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
                     float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
                     rotation += spread * Rand.Range(-0.5f, 0.5f);
-                
+
                     projectile.body.ResetDynamics();
                     projectile.SetTransform(TransformedBarrelPos, rotation);
                     projectileComponent.User = character;
@@ -120,10 +120,10 @@ namespace Barotrauma.Items.Components
 
                     //recoil
                     item.body.ApplyLinearImpulse(
-                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);                
+                        new Vector2((float)Math.Cos(projectile.body.Rotation), (float)Math.Sin(projectile.body.Rotation)) * item.body.Mass * -50.0f);
 
                     item.RemoveContained(projectile);
-                
+
                     Rope rope = item.GetComponent<Rope>();
                     if (rope != null) rope.Attach(projectile);
 
@@ -131,8 +131,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            return true;      
+            return true;
         }
-            
+
     }
 }

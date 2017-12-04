@@ -296,9 +296,9 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsLinkable
+        public override bool Linkable
         {
-            get { return prefab.IsLinkable; }
+            get { return prefab.Linkable; }
         }
 
         public override string ToString()
@@ -761,7 +761,7 @@ namespace Barotrauma
             float damageAmount = attack.GetStructureDamage(deltaTime);
             Condition -= damageAmount;
 
-            return new AttackResult(damageAmount, 0.0f, false);
+            return new AttackResult(damageAmount, 0.0f, null);
         }
 
         private bool IsInWater()

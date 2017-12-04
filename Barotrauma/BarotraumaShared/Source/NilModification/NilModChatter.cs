@@ -88,13 +88,13 @@ namespace Barotrauma
 
             if (File.Exists(ChatSavePath))
             {
-                doc = ToolBox.TryLoadXml(ChatSavePath);
+                doc = XMLExtensions.TryLoadXml(ChatSavePath);
             }
             else
             {
                 DebugConsole.ThrowError("NilModChatter config file \"" + ChatSavePath + "\" Does not exist, generating new XML");
                 Save();
-                doc = ToolBox.TryLoadXml(ChatSavePath);
+                doc = XMLExtensions.TryLoadXml(ChatSavePath);
             }
             if (doc == null)
             {
@@ -107,25 +107,25 @@ namespace Barotrauma
                 //Chatter Settings
                 XElement NilModEventChatterSettings = doc.Root.Element("NilModEventChatterSettings");
 
-                ChatModServerJoin = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatModServerJoin", false); //Implemented
-                ChatTraitorReminder = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatTraitorReminder", false); //Implemented
-                ChatNoneTraitorReminder = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatNoneTraitorReminder", false); //Implemented
-                ChatShuttleRespawn = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleRespawn", false); //Implemented
-                ChatShuttleLeaving500 = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleLeaving500", false);
-                ChatShuttleLeaving400 = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleLeaving400", false);
-                ChatShuttleLeaving300 = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleLeaving300", false);
-                ChatShuttleLeaving200 = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleLeaving200", false);
-                ChatShuttleLeaving130 = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleLeaving130", false);
-                ChatShuttleLeaving100 = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleLeaving100", false);
-                ChatShuttleLeaving030 = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleLeaving030", false);
-                ChatShuttleLeaving015 = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleLeaving015", false);
-                ChatShuttleLeavingKill = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatShuttleLeavingKill", false);
-                ChatSubvsSub = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatSubvsSub", false); //Implemented
-                ChatSalvage = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatSalvage", false); //Implemented
-                ChatMonster = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatMonster", false); //Implemented
-                ChatCargo = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatCargo", false); //Implemented
-                ChatSandbox = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatSandbox", false); //Implemented
-                ChatVoteEnd = ToolBox.GetAttributeBool(NilModEventChatterSettings, "ChatVoteEnd", false); //Implemented
+                ChatModServerJoin = NilModEventChatterSettings.GetAttributeBool("ChatModServerJoin", false); //Implemented
+                ChatTraitorReminder = NilModEventChatterSettings.GetAttributeBool("ChatTraitorReminder", false); //Implemented
+                ChatNoneTraitorReminder = NilModEventChatterSettings.GetAttributeBool("ChatNoneTraitorReminder", false); //Implemented
+                ChatShuttleRespawn = NilModEventChatterSettings.GetAttributeBool("ChatShuttleRespawn", false); //Implemented
+                ChatShuttleLeaving500 = NilModEventChatterSettings.GetAttributeBool("ChatShuttleLeaving500", false);
+                ChatShuttleLeaving400 = NilModEventChatterSettings.GetAttributeBool("ChatShuttleLeaving400", false);
+                ChatShuttleLeaving300 = NilModEventChatterSettings.GetAttributeBool("ChatShuttleLeaving300", false);
+                ChatShuttleLeaving200 = NilModEventChatterSettings.GetAttributeBool("ChatShuttleLeaving200", false);
+                ChatShuttleLeaving130 = NilModEventChatterSettings.GetAttributeBool("ChatShuttleLeaving130", false);
+                ChatShuttleLeaving100 = NilModEventChatterSettings.GetAttributeBool("ChatShuttleLeaving100", false);
+                ChatShuttleLeaving030 = NilModEventChatterSettings.GetAttributeBool("ChatShuttleLeaving030", false);
+                ChatShuttleLeaving015 = NilModEventChatterSettings.GetAttributeBool("ChatShuttleLeaving015", false);
+                ChatShuttleLeavingKill = NilModEventChatterSettings.GetAttributeBool("ChatShuttleLeavingKill", false);
+                ChatSubvsSub = NilModEventChatterSettings.GetAttributeBool("ChatSubvsSub", false); //Implemented
+                ChatSalvage = NilModEventChatterSettings.GetAttributeBool("ChatSalvage", false); //Implemented
+                ChatMonster = NilModEventChatterSettings.GetAttributeBool("ChatMonster", false); //Implemented
+                ChatCargo = NilModEventChatterSettings.GetAttributeBool("ChatCargo", false); //Implemented
+                ChatSandbox = NilModEventChatterSettings.GetAttributeBool("ChatSandbox", false); //Implemented
+                ChatVoteEnd = NilModEventChatterSettings.GetAttributeBool("ChatVoteEnd", false); //Implemented
 
                 //Rules + Greeting Text On Lobby Join
 
@@ -137,7 +137,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilModRulesdoc.Elements())
                     {
 
-                        NilModRules.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilModRules.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -151,7 +151,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilTraitorReminderdoc.Elements())
                     {
 
-                        NilTraitorReminder.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilTraitorReminder.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -165,7 +165,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilNoneTraitorReminderdoc.Elements())
                     {
 
-                        NilNoneTraitorReminder.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilNoneTraitorReminder.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -179,7 +179,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleRespawndoc.Elements())
                     {
 
-                        NilShuttleRespawn.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleRespawn.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -193,7 +193,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleLeaving500doc.Elements())
                     {
 
-                        NilShuttleLeaving500.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleLeaving500.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -207,7 +207,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleLeaving400doc.Elements())
                     {
 
-                        NilShuttleLeaving400.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleLeaving400.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -221,7 +221,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleLeaving300doc.Elements())
                     {
 
-                        NilShuttleLeaving300.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleLeaving300.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -235,7 +235,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleLeaving200doc.Elements())
                     {
 
-                        NilShuttleLeaving200.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleLeaving200.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -249,7 +249,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleLeaving130doc.Elements())
                     {
 
-                        NilShuttleLeaving130.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleLeaving130.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -263,7 +263,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleLeaving100doc.Elements())
                     {
 
-                        NilShuttleLeaving100.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleLeaving100.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -277,7 +277,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleLeaving030doc.Elements())
                     {
 
-                        NilShuttleLeaving030.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleLeaving030.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -291,7 +291,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleLeaving015doc.Elements())
                     {
 
-                        NilShuttleLeaving015.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleLeaving015.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -305,7 +305,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilShuttleLeavingKilldoc.Elements())
                     {
 
-                        NilShuttleLeavingKill.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilShuttleLeavingKill.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -319,7 +319,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilSubvsSubCoalitiondoc.Elements())
                     {
 
-                        NilSubvsSubCoalition.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilSubvsSubCoalition.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -333,7 +333,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilSubvsSubRenegadedoc.Elements())
                     {
 
-                        NilSubvsSubRenegade.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilSubvsSubRenegade.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -345,7 +345,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilSalvagedoc.Elements())
                     {
 
-                        NilSalvage.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilSalvage.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -357,7 +357,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilMonsterdoc.Elements())
                     {
 
-                        NilMonster.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilMonster.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -369,7 +369,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilCargodoc.Elements())
                     {
 
-                        NilCargo.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilCargo.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -381,7 +381,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilSandboxdoc.Elements())
                     {
 
-                        NilSandbox.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilSandbox.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
 
@@ -393,7 +393,7 @@ namespace Barotrauma
                     foreach (XElement subElement in NilVoteEnddoc.Elements())
                     {
 
-                        NilVoteEnd.Add(ToolBox.GetAttributeString(subElement, "Text", ""));
+                        NilVoteEnd.Add(subElement.GetAttributeString("Text", ""));
                     }
                 }
             }
@@ -585,7 +585,7 @@ namespace Barotrauma
                 {
                     if (clientreceiver != null)
                     {
-                        RefinedMessage = RefinedMessage.Replace("#CLIENTNAME", clientreceiver.name);
+                        RefinedMessage = RefinedMessage.Replace("#CLIENTNAME", clientreceiver.Name);
                     }
                     else
                     {
@@ -605,7 +605,7 @@ namespace Barotrauma
                     {
                         if (GameMain.Server.ConnectedClients.Count() > 0)
                         {
-                            RefinedMessage = RefinedMessage.Replace("#TRAITORTARGET", GameMain.Server.ConnectedClients[Rand.Int(GameMain.Server.ConnectedClients.Count() - 1)].name);
+                            RefinedMessage = RefinedMessage.Replace("#TRAITORTARGET", GameMain.Server.ConnectedClients[Rand.Int(GameMain.Server.ConnectedClients.Count() - 1)].Name);
                         }
                         else
                         {
@@ -762,7 +762,7 @@ namespace Barotrauma
 
             if (GameMain.Server.TraitorsEnabled == YesNoMaybe.Yes | GameMain.Server.TraitorsEnabled == YesNoMaybe.Maybe)
             {
-                if (receivingclient.name == GameMain.NilMod.Traitor)
+                if (receivingclient.Name == GameMain.NilMod.Traitor)
                 {
                     if (NilMod.NilModEventChatter.NilTraitorReminder.Count() > 0 && NilMod.NilModEventChatter.ChatTraitorReminder == true)
                     {

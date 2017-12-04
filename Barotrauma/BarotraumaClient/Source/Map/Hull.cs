@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -56,7 +57,38 @@ namespace Barotrauma
 
             return decal;
         }
-        
+
+        public override void UpdateEditing(Camera cam)
+        {
+            if (!PlayerInput.KeyDown(Keys.Space)) return;
+            bool lClick = PlayerInput.LeftButtonClicked();
+            bool rClick = PlayerInput.RightButtonClicked();
+            if (!lClick && !rClick) return;
+
+            Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+
+            if (lClick)
+            {
+                foreach (MapEntity entity in mapEntityList)
+                {
+                    if (entity == this || !entity.IsHighlighted) continue;
+                    if (!entity.IsMouseOn(position)) continue;
+
+                    if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
+                }
+            }
+            else
+            {
+                foreach (MapEntity entity in mapEntityList)
+                {
+                    if (entity == this || !entity.IsHighlighted) continue;
+                    if (!entity.IsMouseOn(position)) continue;
+
+                    if (entity.linkedTo != null && entity.linkedTo.Contains(this)) entity.linkedTo.Remove(this);
+                }
+            }
+        }
+
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
             if (EditWater)
@@ -195,25 +227,25 @@ namespace Barotrauma
                 {
                     GUI.SmallFont.DrawString(spriteBatch, "PRESS: " + ((int)pressure - rect.Y).ToString() +
                     " - OXY: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 45, -drawRect.Y + 35), Color.White, 0f, new Vector2(0, 0), 2.0f, SpriteEffects.None, 0f);
-                    if(GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 45, -drawRect.Y + 60), Color.White, 0f, new Vector2(0, 0), 2.0f, SpriteEffects.None, 0f);
+                    if(GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 45, -drawRect.Y + 60), Color.White, 0f, new Vector2(0, 0), 2.0f, SpriteEffects.None, 0f);
                 }
                 else if (rect.Width >= 320 && rect.Height >= 160)
                 {
                     GUI.SmallFont.DrawString(spriteBatch, "PRESS: " + ((int)pressure - rect.Y).ToString() +
                     " - OXY: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 45, -drawRect.Y + 35), Color.White, 0f, new Vector2(0, 0), 1.5f, SpriteEffects.None, 0f);
-                    if (GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 45, -drawRect.Y + 60), Color.White, 0f, new Vector2(0, 0), 1.5f, SpriteEffects.None, 0f);
+                    if (GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 45, -drawRect.Y + 60), Color.White, 0f, new Vector2(0, 0), 1.5f, SpriteEffects.None, 0f);
                 }
                 else if (rect.Width >= 160 && rect.Height >= 120)
                 {
                     GUI.SmallFont.DrawString(spriteBatch, "PRESS: " + ((int)pressure - rect.Y).ToString() +
                     " - OXY: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 40, -drawRect.Y + 30), Color.White, 0f, new Vector2(0, 0), 1.0f, SpriteEffects.None, 0f);
-                    if (GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 45, -drawRect.Y + 40), Color.White, 0f, new Vector2(0, 0), 1.0f, SpriteEffects.None, 0f);
+                    if (GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 45, -drawRect.Y + 40), Color.White, 0f, new Vector2(0, 0), 1.0f, SpriteEffects.None, 0f);
                 }
                 else if (rect.Width >= 100 && rect.Height >= 60)
                 {
                     GUI.SmallFont.DrawString(spriteBatch, "PRESS: " + ((int)pressure - rect.Y).ToString() +
                     " - OXY: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 40, -drawRect.Y + 25), Color.White, 0f, new Vector2(0, 0), 0.50f, SpriteEffects.None, 0f);
-                    if (GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, volume + " / " + FullVolume, new Vector2(drawRect.X + 40, -drawRect.Y + 35), Color.White, 0f, new Vector2(0, 0), 0.50f, SpriteEffects.None, 0f);
+                    if (GameMain.DebugDraw) GUI.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 40, -drawRect.Y + 35), Color.White, 0f, new Vector2(0, 0), 0.50f, SpriteEffects.None, 0f);
                 }
             }
 

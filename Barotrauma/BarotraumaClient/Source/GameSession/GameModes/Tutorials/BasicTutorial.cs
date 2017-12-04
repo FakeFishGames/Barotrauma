@@ -10,13 +10,16 @@ namespace Barotrauma.Tutorials
     class BasicTutorial : TutorialType
     {
         public BasicTutorial(string name)
-            :base (name)
+            : base(name)
         {
 
         }
 
         public override IEnumerable<object> UpdateState()
         {
+            Character Controlled = Character.Controlled;
+            if (Controlled == null) yield return CoroutineStatus.Success;
+
             foreach (Item item in Item.ItemList)
             {
                 var wire = item.GetComponent<Wire>();
@@ -38,9 +41,9 @@ namespace Barotrauma.Tutorials
 
             Door tutorialDoor = Item.ItemList.Find(i => i.HasTag("tutorialdoor")).GetComponent<Door>();
 
-            while (!tutorialDoor.IsOpen && Character.Controlled.WorldPosition.X < tutorialDoor.Item.WorldPosition.X)
+            while (!tutorialDoor.IsOpen && Controlled.WorldPosition.X < tutorialDoor.Item.WorldPosition.X)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             yield return new WaitForSeconds(2.0f);
@@ -51,7 +54,7 @@ namespace Barotrauma.Tutorials
 
             while (infoBox != null)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             //-----------------------------------
@@ -61,30 +64,30 @@ namespace Barotrauma.Tutorials
             Reactor reactor = Item.ItemList.Find(i => i.HasTag("tutorialreactor")).GetComponent<Reactor>();
             reactor.MeltDownTemp = 20000.0f;
 
-            while (Vector2.Distance(Character.Controlled.Position, reactor.Item.Position) > 200.0f)
+            while (Vector2.Distance(Controlled.Position, reactor.Item.Position) > 200.0f)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("The reactor requires fuel rods to generate power. You can grab one from the steel cabinet by walking next to it and pressing E.");
 
-            while (Character.Controlled.SelectedConstruction == null || Character.Controlled.SelectedConstruction.Name != "Steel Cabinet")
+            while (Controlled.SelectedConstruction == null || Controlled.SelectedConstruction.Name != "Steel Cabinet")
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Pick up one of the fuel rods either by double-clicking or dragging and dropping it into your inventory.");
 
             while (!HasItem("Fuel Rod"))
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Select the reactor by walking next to it and pressing E.");
 
-            while (Character.Controlled.SelectedConstruction != reactor.Item)
+            while (Controlled.SelectedConstruction != reactor.Item)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -92,14 +95,14 @@ namespace Barotrauma.Tutorials
 
             while (reactor.AvailableFuel <= 0.0f)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("The reactor is now fueled up. Try turning it on by increasing the fission rate.");
 
             while (reactor.FissionRate <= 0.0f)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -109,7 +112,7 @@ namespace Barotrauma.Tutorials
             while (infoBox != null)
             {
                 reactor.ShutDownTemp = Math.Min(reactor.ShutDownTemp, 5000.0f);
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -121,7 +124,7 @@ namespace Barotrauma.Tutorials
             {
                 reactor.AutoTemp = false;
                 reactor.ShutDownTemp = Math.Min(reactor.ShutDownTemp, 5000.0f);
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -131,7 +134,7 @@ namespace Barotrauma.Tutorials
 
             while (!reactor.AutoTemp)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -141,18 +144,18 @@ namespace Barotrauma.Tutorials
             Steering steering = Item.ItemList.Find(i => i.HasTag("tutorialsteering")).GetComponent<Steering>();
             Radar radar = steering.Item.GetComponent<Radar>();
 
-            while (Vector2.Distance(Character.Controlled.Position, steering.Item.Position) > 150.0f)
+            while (Vector2.Distance(Controlled.Position, steering.Item.Position) > 150.0f)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             CoroutineManager.StartCoroutine(KeepReactorRunning(reactor));
 
             infoBox = CreateInfoFrame("Select the navigation terminal by walking next to it and pressing E.");
 
-            while (Character.Controlled.SelectedConstruction != steering.Item)
+            while (Controlled.SelectedConstruction != steering.Item)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -161,19 +164,19 @@ namespace Barotrauma.Tutorials
                 + " running or the lights would've gone out, so it's most likely a problem with the wiring."
                 + " Deselect the terminal by pressing E to start checking the wiring.");
 
-            while (Character.Controlled.SelectedConstruction == steering.Item)
+            while (Controlled.SelectedConstruction == steering.Item)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(1.0f);
 
             infoBox = CreateInfoFrame("You need a screwdriver to check the wiring of the terminal."
             + " Equip a screwdriver by pulling it to either of the slots with a hand symbol, and then use it on the terminal by left clicking.");
 
-            while (Character.Controlled.SelectedConstruction != steering.Item ||
-                Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Name == "Screwdriver") == null)
+            while (Controlled.SelectedConstruction != steering.Item ||
+                Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Name == "Screwdriver") == null)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
 
@@ -183,27 +186,27 @@ namespace Barotrauma.Tutorials
 
             while (!HasItem("Wire"))
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Head back to the navigation terminal to fix the wiring.");
 
             PowerTransfer junctionBox = Item.ItemList.Find(i => i != null && i.HasTag("tutorialjunctionbox")).GetComponent<PowerTransfer>();
 
-            while ((Character.Controlled.SelectedConstruction != junctionBox.Item &&
-                Character.Controlled.SelectedConstruction != steering.Item) ||
-            Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Name == "Screwdriver") == null)
+            while ((Controlled.SelectedConstruction != junctionBox.Item &&
+                Controlled.SelectedConstruction != steering.Item) ||
+            Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Name == "Screwdriver") == null)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
-            if (Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>() != null) == null)
+            if (Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>() != null) == null)
             {
                 infoBox = CreateInfoFrame("Equip the wire by dragging it to one of the slots with a hand symbol.");
 
-                while (Character.Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>() != null) == null)
+                while (Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>() != null) == null)
                 {
-                    yield return CoroutineStatus.Running;
+                    yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
                 }
             }
 
@@ -213,16 +216,16 @@ namespace Barotrauma.Tutorials
 
             while (steeringConnection.Wires.FirstOrDefault(w => w != null) == null)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
 
             }
 
             infoBox = CreateInfoFrame("Now you have to connect the other end of the wire to a power source. "
                 + "The junction box in the room just below the command room should do.");
 
-            while (Character.Controlled.SelectedConstruction != null)
+            while (Controlled.SelectedConstruction != null)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             yield return new WaitForSeconds(2.0f);
@@ -231,31 +234,31 @@ namespace Barotrauma.Tutorials
                 + "remove the previous attachment by right clicking. Or if you don't care for neatly laid out wiring, you can just "
                 + "run it straight to the junction box.");
 
-            while (Character.Controlled.SelectedConstruction == null || Character.Controlled.SelectedConstruction.GetComponent<PowerTransfer>() == null)
+            while (Controlled.SelectedConstruction == null || Controlled.SelectedConstruction.GetComponent<PowerTransfer>() == null)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Connect the wire to the junction box by pulling it to the power connection, the same way you did with the navigation terminal.");
 
             while (radar.Voltage < 0.1f)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Great! Now we should be able to get moving.");
 
 
-            while (Character.Controlled.SelectedConstruction != steering.Item)
+            while (Controlled.SelectedConstruction != steering.Item)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("You can take a look at the area around the sub by selecting the \"Sonar\" checkbox.");
 
             while (!radar.IsActive)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(0.5f);
 
@@ -264,7 +267,7 @@ namespace Barotrauma.Tutorials
 
             while (steering.TargetVelocity == Vector2.Zero && steering.TargetVelocity.Length() < 50.0f)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(4.0f);
 
@@ -273,19 +276,19 @@ namespace Barotrauma.Tutorials
 
             while (infoBox != null)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
             while (Submarine.MainSub.WorldPosition.Y > 40000.0f)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(1.0f);
 
             var moloch = Character.Create(
-                "Content/Characters/Moloch/moloch.xml", 
+                "Content/Characters/Moloch/moloch.xml",
                 steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f));
 
             moloch.PlaySound(CharacterSound.SoundType.Attack);
@@ -298,7 +301,7 @@ namespace Barotrauma.Tutorials
             foreach (Structure s in Structure.WallList)
             {
                 if (s.CastShadow || !s.HasBody) continue;
-                
+
                 if (s.Rect.Right > steering.Item.CurrentHull.Rect.Right) windows.Add(s);
             }
 
@@ -308,14 +311,14 @@ namespace Barotrauma.Tutorials
             {
                 steering.TargetVelocity = Vector2.Zero;
 
-                slowdownTimer = Math.Max(0.0f, slowdownTimer - CoroutineManager.DeltaTime*0.3f);
+                slowdownTimer = Math.Max(0.0f, slowdownTimer - CoroutineManager.DeltaTime * 0.3f);
                 Submarine.MainSub.Velocity *= slowdownTimer;
 
                 moloch.AIController.SelectTarget(steering.Item.CurrentHull.AiTarget);
                 Vector2 steeringDir = windows[0].WorldPosition - moloch.WorldPosition;
                 if (steeringDir != Vector2.Zero) steeringDir = Vector2.Normalize(steeringDir);
 
-                moloch.AIController.SteeringManager.SteeringManual(CoroutineManager.DeltaTime, steeringDir*100.0f);
+                moloch.AIController.SteeringManager.SteeringManual(CoroutineManager.DeltaTime, steeringDir * 100.0f);
 
                 foreach (Structure window in windows)
                 {
@@ -329,7 +332,7 @@ namespace Barotrauma.Tutorials
                 }
                 if (broken) break;
 
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             } while (!broken);
 
             //fix everything except the command windows
@@ -366,12 +369,12 @@ namespace Barotrauma.Tutorials
             Door commandDoor3 = Item.ItemList.Find(i => i.HasTag("commanddoor3")).GetComponent<Door>();
 
             //wait until the player is out of the room and the doors are closed
-            while (Character.Controlled.WorldPosition.X > commandDoor1.Item.WorldPosition.X ||
+            while (Controlled.WorldPosition.X > commandDoor1.Item.WorldPosition.X ||
                 (commandDoor1.IsOpen || (commandDoor2.IsOpen || commandDoor3.IsOpen)))
             {
                 //prevent the hull from filling up completely and crushing the player
                 steering.Item.CurrentHull.WaterVolume = Math.Min(steering.Item.CurrentHull.WaterVolume, steering.Item.CurrentHull.Volume * 0.9f);
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
 
@@ -383,7 +386,7 @@ namespace Barotrauma.Tutorials
             while (!HasItem("Diving Mask") && !HasItem("Diving Suit"))
             {
                 if (!divingMaskSelected &&
-                    Character.Controlled.FocusedItem != null && Character.Controlled.FocusedItem.Name == "Diving Suit")
+                    Controlled.FocusedItem != null && Controlled.FocusedItem.Name == "Diving Suit")
                 {
                     infoBox = CreateInfoFrame("There can only be one item in each inventory slot, so you need to take off "
                         + "the jumpsuit if you wish to wear a diving suit.");
@@ -391,7 +394,7 @@ namespace Barotrauma.Tutorials
                     divingMaskSelected = true;
                 }
 
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             if (HasItem("Diving Mask"))
@@ -409,7 +412,7 @@ namespace Barotrauma.Tutorials
 
             while (!HasItem("Oxygen Tank"))
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             yield return new WaitForSeconds(5.0f);
@@ -418,7 +421,7 @@ namespace Barotrauma.Tutorials
 
             var railGun = Item.ItemList.Find(i => i.GetComponent<Turret>() != null);
 
-            while (Vector2.Distance(Character.Controlled.Position, railGun.Position) > 500)
+            while (Vector2.Distance(Controlled.Position, railGun.Position) > 500)
             {
                 yield return new WaitForSeconds(1.0f);
             }
@@ -437,9 +440,9 @@ namespace Barotrauma.Tutorials
 
             var loader = Item.ItemList.Find(i => i.Name == "Railgun Loader").GetComponent<ItemContainer>();
 
-            while (Math.Abs(Character.Controlled.Position.Y - loader.Item.Position.Y) > 80)
+            while (Math.Abs(Controlled.Position.Y - loader.Item.Position.Y) > 80)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Grab one of the shells. You can load it by selecting the railgun loader and dragging the shell to. "
@@ -451,30 +454,30 @@ namespace Barotrauma.Tutorials
 
                 capacitor1.Charge += 5.0f;
                 capacitor2.Charge += 5.0f;
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("Now we're ready to shoot! Select the railgun controller.");
 
-            while (Character.Controlled.SelectedConstruction == null || Character.Controlled.SelectedConstruction.Name != "Railgun Controller")
+            while (Controlled.SelectedConstruction == null || Controlled.SelectedConstruction.Name != "Railgun Controller")
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
-            moloch.AnimController.SetPosition(ConvertUnits.ToSimUnits(Character.Controlled.WorldPosition + Vector2.UnitY * 600.0f));
+            moloch.AnimController.SetPosition(ConvertUnits.ToSimUnits(Controlled.WorldPosition + Vector2.UnitY * 600.0f));
 
             infoBox = CreateInfoFrame("Use the right mouse button to aim and wait for the creature to come closer. When you're ready to shoot, "
                 + "press the left mouse button.");
 
             while (!moloch.IsDead)
             {
-                if (moloch.WorldPosition.Y > Character.Controlled.WorldPosition.Y + 600.0f)
+                if (moloch.WorldPosition.Y > Controlled.WorldPosition.Y + 600.0f)
                 {
-                    moloch.AIController.SteeringManager.SteeringManual(CoroutineManager.DeltaTime, Character.Controlled.WorldPosition - moloch.WorldPosition);
+                    moloch.AIController.SteeringManager.SteeringManual(CoroutineManager.DeltaTime, Controlled.WorldPosition - moloch.WorldPosition);
                 }
 
-                moloch.AIController.SelectTarget(Character.Controlled.AiTarget);
-                yield return CoroutineStatus.Running;
+                moloch.AIController.SelectTarget(Controlled.AiTarget);
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             Submarine.MainSub.GodMode = false;
@@ -484,7 +487,7 @@ namespace Barotrauma.Tutorials
 
             while (!HasItem("Welding Tool"))
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("The welding tool requires fuel to work. Grab a welding fuel tank and attach it to the tool " +
@@ -492,11 +495,11 @@ namespace Barotrauma.Tutorials
 
             do
             {
-                var weldingTool = Character.Controlled.Inventory.Items.FirstOrDefault(i => i != null && i.Name == "Welding Tool");
+                var weldingTool = Controlled.Inventory.Items.FirstOrDefault(i => i != null && i.Name == "Welding Tool");
                 if (weldingTool != null &&
                     weldingTool.ContainedItems.FirstOrDefault(contained => contained != null && contained.Name == "Welding Fuel Tank") != null) break;
 
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             } while (true);
 
 
@@ -525,9 +528,9 @@ namespace Barotrauma.Tutorials
 
             Pump pump = Item.ItemList.Find(i => i.HasTag("tutorialpump")).GetComponent<Pump>();
 
-            while (Vector2.Distance(Character.Controlled.Position, pump.Item.Position) > 100.0f)
+            while (Vector2.Distance(Controlled.Position, pump.Item.Position) > 100.0f)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("The two pumps inside the ballast tanks "
@@ -537,7 +540,7 @@ namespace Barotrauma.Tutorials
 
             while (infoBox != null)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
 
@@ -547,29 +550,29 @@ namespace Barotrauma.Tutorials
 
             while (pump.FlowPercentage > 0.0f || pump.CurrFlow <= 0.0f || !pump.IsActive)
             {
-                if (!brokenMsgShown && pump.Voltage < pump.MinVoltage && Character.Controlled.SelectedConstruction == pump.Item)
+                if (!brokenMsgShown && pump.Voltage < pump.MinVoltage && Controlled.SelectedConstruction == pump.Item)
                 {
                     brokenMsgShown = true;
 
                     infoBox = CreateInfoFrame("Looks like the pump isn't getting any power. The water must have short-circuited some of the junction "
-                        +"boxes. You can check which boxes are broken by selecting them.");
+                        + "boxes. You can check which boxes are broken by selecting them.");
 
                     while (true)
                     {
-                        if (Character.Controlled.SelectedConstruction!=null && 
-                            Character.Controlled.SelectedConstruction.GetComponent<PowerTransfer>() != null && 
-                            Character.Controlled.SelectedConstruction.Condition == 0.0f)
+                        if (Controlled.SelectedConstruction != null &&
+                            Controlled.SelectedConstruction.GetComponent<PowerTransfer>() != null &&
+                            Controlled.SelectedConstruction.Condition == 0.0f)
                         {
-                            brokenBox = Character.Controlled.SelectedConstruction;
+                            brokenBox = Controlled.SelectedConstruction;
 
                             infoBox = CreateInfoFrame("Here's our problem: this junction box is broken. Luckily engineers are adept at fixing electrical devices - "
-                                +"you just need to find a spare wire and click the \"Fix\"-button to repair the box.");
+                                + "you just need to find a spare wire and click the \"Fix\"-button to repair the box.");
                             break;
                         }
 
                         if (pump.Voltage > pump.MinVoltage) break;
 
-                        yield return CoroutineStatus.Running;
+                        yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
                     }
                 }
 
@@ -584,14 +587,14 @@ namespace Barotrauma.Tutorials
                     brokenBox = null;
                 }
 
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("The pump is up and running. Wait for the water to be drained out.");
 
             while (pump.Item.CurrentHull.WaterVolume > 1000.0f)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             infoBox = CreateInfoFrame("That was all there is to this tutorial! Now you should be able to handle " +
@@ -599,7 +602,7 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(4.0f);
 
-            Character.Controlled = null;
+            Controlled = null;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
 
@@ -607,7 +610,7 @@ namespace Barotrauma.Tutorials
 
             while (cinematic.Running)
             {
-                yield return CoroutineStatus.Running;
+                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             Submarine.Unload();

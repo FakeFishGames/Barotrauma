@@ -466,7 +466,7 @@ namespace Barotrauma
 
                                     for (int i = 0; i < GameMain.Server.ConnectedClients.Count; i++)
                                     {
-                                        if (GameMain.Server.ConnectedClients[i].Character != null && !GameMain.Server.ConnectedClients[i].Character.IsDead && GameMain.Server.ConnectedClients[i].inGame)
+                                        if (GameMain.Server.ConnectedClients[i].Character != null && !GameMain.Server.ConnectedClients[i].Character.IsDead && GameMain.Server.ConnectedClients[i].InGame)
                                         {
                                             DesyncPreventionPlayerStatusList.Add(GameMain.Server.ConnectedClients[i].Character);
                                         }
@@ -536,9 +536,9 @@ namespace Barotrauma
                                     DisconnectedCharacters[i].character.Stun = 60f;
                                 }
 
-                                Client clientmatch = GameMain.Server?.ConnectedClients?.Find(c => c.name == DisconnectedCharacters[i].clientname && c.Connection.RemoteEndPoint.Address.ToString() == DisconnectedCharacters[i].IPAddress);
+                                Client clientmatch = GameMain.Server?.ConnectedClients?.Find(c => c.Name == DisconnectedCharacters[i].clientname && c.Connection.RemoteEndPoint.Address.ToString() == DisconnectedCharacters[i].IPAddress);
 
-                                if (clientmatch != null && DisconnectedCharacters[i].ClientSetCooldown <= 0f && clientmatch.inGame)
+                                if (clientmatch != null && DisconnectedCharacters[i].ClientSetCooldown <= 0f && clientmatch.InGame)
                                 {
                                     if (DisconnectedCharacters[i].character != null && !DisconnectedCharacters[i].character.Removed)
                                     {
@@ -898,14 +898,14 @@ namespace Barotrauma
             if (File.Exists(SettingsSavePath))
             {
                 ResetToDefault();
-                doc = ToolBox.TryLoadXml(SettingsSavePath);
+                doc = XMLExtensions.TryLoadXml(SettingsSavePath);
             }
             //We have not actually started once yet, lets reset to current versions default instead without errors.
             else
             {
                 ResetToDefault();
                 Save();
-                doc = ToolBox.TryLoadXml(SettingsSavePath);
+                doc = XMLExtensions.TryLoadXml(SettingsSavePath);
             }
 
             if (doc == null)
@@ -919,60 +919,62 @@ namespace Barotrauma
             {
                 //Core Settings
                 XElement ServerModGeneralSettings = doc.Root.Element("ServerModGeneralSettings");
+
                 
-                BypassMD5 = ToolBox.GetAttributeBool(ServerModGeneralSettings, "BypassMD5", false); //Implemented
-                ServerMD5A = ToolBox.GetAttributeString(ServerModGeneralSettings, "ServerMD5A", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
-                ServerMD5B = ToolBox.GetAttributeString(ServerModGeneralSettings, "ServerMD5B", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
-                DebugConsoleTimeStamp = ClearLogRoundStart = ToolBox.GetAttributeBool(ServerModGeneralSettings, "DebugConsoleTimeStamp", false);
-                MaxLogMessages = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModGeneralSettings, "MaxLogMessages", 800), 10,16000); //Implemented
-                LogAppendCurrentRound = ToolBox.GetAttributeBool(ServerModGeneralSettings, "LogAppendCurrentRound", false); //Implemented
-                LogAppendLineSaveRate = Math.Min(MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModGeneralSettings, "LogAppendLineSaveRate", 5),1,16000), MaxLogMessages); //Implemented
-                ClearLogRoundStart = ToolBox.GetAttributeBool(ServerModGeneralSettings, "ClearLogRoundStart", false); //Implemented
-                ChatboxHeight = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModGeneralSettings, "ChatboxHeight", 0.15f), 0.10f, 0.50f);
-                ChatboxWidth = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModGeneralSettings, "ChatboxWidth", 0.35f), 0.25f, 0.85f);
-                ChatboxMaxMessages = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModGeneralSettings, "ChatboxMaxMessages", 20), 10,100);
-                ShowRoomInfo = ToolBox.GetAttributeBool(ServerModGeneralSettings, "ShowRoomInfo", false);
-                UseUpdatedCharHUD = ToolBox.GetAttributeBool(ServerModGeneralSettings, "UseUpdatedCharHUD", false);
-                UseCreatureZoomBoost = ToolBox.GetAttributeBool(ServerModGeneralSettings, "UseCreatureZoomBoost", false);
-                CreatureZoomMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModGeneralSettings, "CreatureZoomMultiplier", 1f), 0.4f, 3f);
-                StartToServer = ToolBox.GetAttributeBool(ServerModGeneralSettings, "StartToServer", false); //Implemented
-                EnableEventChatterSystem = ToolBox.GetAttributeBool(ServerModGeneralSettings, "EnableEventChatterSystem", false);
-                EnableHelpSystem = ToolBox.GetAttributeBool(ServerModGeneralSettings, "EnableHelpSystem", false);
-                EnableAdminSystem = ToolBox.GetAttributeBool(ServerModGeneralSettings, "EnableAdminSystem", false);
-                EnablePlayerLogSystem = ToolBox.GetAttributeBool(ServerModGeneralSettings, "EnablePlayerLogSystem", false);
-                NilMod.NilModPlayerLog.PlayerLogStateNames = ToolBox.GetAttributeBool(ServerModGeneralSettings, "PlayerLogStateNames", false);
-                NilMod.NilModPlayerLog.PlayerLogStateFirstJoinedNames = ToolBox.GetAttributeBool(ServerModGeneralSettings, "PlayerLogStateFirstJoinedNames", false);
-                NilMod.NilModPlayerLog.PlayerLogStateLastJoinedNames = ToolBox.GetAttributeBool(ServerModGeneralSettings, "PlayerLogStateLastJoinedNames", false);
-                EnableVPNBanlist = ToolBox.GetAttributeBool(ServerModGeneralSettings, "EnableVPNBanlist", false);
-                SubVotingConsoleLog = ToolBox.GetAttributeBool(ServerModGeneralSettings, "SubVotingConsoleLog", false);
-                SubVotingServerLog = ToolBox.GetAttributeBool(ServerModGeneralSettings, "SubVotingServerLog", false);
-                SubVotingAnnounce = ToolBox.GetAttributeBool(ServerModGeneralSettings, "SubVotingAnnounce", false);
-                LogAIDamage = ToolBox.GetAttributeBool(ServerModGeneralSettings, "LogAIDamage", false);
-                CrashRestart = ToolBox.GetAttributeBool(ServerModGeneralSettings, "CrashRestart", false);
-                StartXPos = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModGeneralSettings, "StartXPos", 0), 0, 16000);
-                StartYPos = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModGeneralSettings, "StartYPos", 0), 0, 16000);
-                UseStartWindowPosition = ToolBox.GetAttributeBool(ServerModGeneralSettings, "UseStartWindowPosition", false);
-                BanListReloadTimer = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModGeneralSettings, "BanListReloadTimer", 15), 0, 60);
-                BansOverrideBannedInfo = ToolBox.GetAttributeBool(ServerModGeneralSettings, "BansOverrideBannedInfo", true);
-                BansInfoAddBanName = ToolBox.GetAttributeBool(ServerModGeneralSettings, "BansInfoAddBanName", true);
-                BansInfoAddBanDuration = ToolBox.GetAttributeBool(ServerModGeneralSettings, "BansInfoAddBanDuration", true);
-                BansInfoUseRemainingTime = ToolBox.GetAttributeBool(ServerModGeneralSettings, "BansInfoUseRemainingTime", true);
-                BansInfoAddCustomString = ToolBox.GetAttributeBool(ServerModGeneralSettings, "BansInfoAddCustomString", false);
-                BansInfoCustomtext = ToolBox.GetAttributeString(ServerModGeneralSettings, "BansInfoCustomtext", "");
-                BansInfoAddBanReason = ToolBox.GetAttributeBool(ServerModGeneralSettings, "BansInfoAddBanReason", false);
-                VoteKickStateNameTimer = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModGeneralSettings, "VoteKickStateNameTimer", 600f), 0f, 86400f);
-                VoteKickDenyRejoinTimer = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModGeneralSettings, "VoteKickDenyRejoinTimer", 60f), 0f, 86400f);
-                AdminKickStateNameTimer = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModGeneralSettings, "AdminKickStateNameTimer", 120f), 0f, 86400f);
-                AdminKickDenyRejoinTimer = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModGeneralSettings, "AdminKickDenyRejoinTimer", 20f), 0f, 86400f);
-                KickStateNameTimerIncreaseOnRejoin = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModGeneralSettings, "KickStateNameTimerIncreaseOnRejoin", 60f), 0f, 86400f);
-                KickMaxStateNameTimer = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModGeneralSettings, "KickMaxStateNameTimer", 60f),0f,86400f);
-                ClearKickStateNameOnRejoin = ToolBox.GetAttributeBool(ServerModGeneralSettings, "ClearKickStateNameOnRejoin", false);
-                ClearKicksOnRoundStart = ToolBox.GetAttributeBool(ServerModGeneralSettings, "ClearKicksOnRoundStart", false);
+
+                BypassMD5 = ServerModGeneralSettings.GetAttributeBool("BypassMD5", false); //Implemented
+                ServerMD5A = ServerModGeneralSettings.GetAttributeString("ServerMD5A", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
+                ServerMD5B = ServerModGeneralSettings.GetAttributeString("ServerMD5B", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
+                DebugConsoleTimeStamp = ServerModGeneralSettings.GetAttributeBool("DebugConsoleTimeStamp", false);
+                MaxLogMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxLogMessages", 800), 10,16000); //Implemented
+                LogAppendCurrentRound = ServerModGeneralSettings.GetAttributeBool("LogAppendCurrentRound", false); //Implemented
+                LogAppendLineSaveRate = Math.Min(MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("LogAppendLineSaveRate", 5),1,16000), MaxLogMessages); //Implemented
+                ClearLogRoundStart = ServerModGeneralSettings.GetAttributeBool("ClearLogRoundStart", false); //Implemented
+                ChatboxHeight = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxHeight", 0.15f), 0.10f, 0.50f);
+                ChatboxWidth = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxWidth", 0.35f), 0.25f, 0.85f);
+                ChatboxMaxMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("ChatboxMaxMessages", 20), 10,100);
+                ShowRoomInfo = ServerModGeneralSettings.GetAttributeBool("ShowRoomInfo", false);
+                UseUpdatedCharHUD = ServerModGeneralSettings.GetAttributeBool("UseUpdatedCharHUD", false);
+                UseCreatureZoomBoost = ServerModGeneralSettings.GetAttributeBool("UseCreatureZoomBoost", false);
+                CreatureZoomMultiplier = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("CreatureZoomMultiplier", 1f), 0.4f, 3f);
+                StartToServer = ServerModGeneralSettings.GetAttributeBool("StartToServer", false); //Implemented
+                EnableEventChatterSystem = ServerModGeneralSettings.GetAttributeBool("EnableEventChatterSystem", false);
+                EnableHelpSystem = ServerModGeneralSettings.GetAttributeBool("EnableHelpSystem", false);
+                EnableAdminSystem = ServerModGeneralSettings.GetAttributeBool("EnableAdminSystem", false);
+                EnablePlayerLogSystem = ServerModGeneralSettings.GetAttributeBool("EnablePlayerLogSystem", false);
+                NilMod.NilModPlayerLog.PlayerLogStateNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateNames", false);
+                NilMod.NilModPlayerLog.PlayerLogStateFirstJoinedNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateFirstJoinedNames", false);
+                NilMod.NilModPlayerLog.PlayerLogStateLastJoinedNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateLastJoinedNames", false);
+                EnableVPNBanlist = ServerModGeneralSettings.GetAttributeBool("EnableVPNBanlist", false);
+                SubVotingConsoleLog = ServerModGeneralSettings.GetAttributeBool("SubVotingConsoleLog", false);
+                SubVotingServerLog = ServerModGeneralSettings.GetAttributeBool("SubVotingServerLog", false);
+                SubVotingAnnounce = ServerModGeneralSettings.GetAttributeBool("SubVotingAnnounce", false);
+                LogAIDamage = ServerModGeneralSettings.GetAttributeBool("LogAIDamage", false);
+                CrashRestart = ServerModGeneralSettings.GetAttributeBool("CrashRestart", false);
+                StartXPos = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("StartXPos", 0), 0, 16000);
+                StartYPos = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("StartYPos", 0), 0, 16000);
+                UseStartWindowPosition = ServerModGeneralSettings.GetAttributeBool("UseStartWindowPosition", false);
+                BanListReloadTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("BanListReloadTimer", 15), 0, 60);
+                BansOverrideBannedInfo = ServerModGeneralSettings.GetAttributeBool("BansOverrideBannedInfo", true);
+                BansInfoAddBanName = ServerModGeneralSettings.GetAttributeBool("BansInfoAddBanName", true);
+                BansInfoAddBanDuration = ServerModGeneralSettings.GetAttributeBool("BansInfoAddBanDuration", true);
+                BansInfoUseRemainingTime = ServerModGeneralSettings.GetAttributeBool("BansInfoUseRemainingTime", true);
+                BansInfoAddCustomString = ServerModGeneralSettings.GetAttributeBool("BansInfoAddCustomString", false);
+                BansInfoCustomtext = ServerModGeneralSettings.GetAttributeString("BansInfoCustomtext", "");
+                BansInfoAddBanReason = ServerModGeneralSettings.GetAttributeBool("BansInfoAddBanReason", false);
+                VoteKickStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("VoteKickStateNameTimer", 600f), 0f, 86400f);
+                VoteKickDenyRejoinTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("VoteKickDenyRejoinTimer", 60f), 0f, 86400f);
+                AdminKickStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("AdminKickStateNameTimer", 120f), 0f, 86400f);
+                AdminKickDenyRejoinTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("AdminKickDenyRejoinTimer", 20f), 0f, 86400f);
+                KickStateNameTimerIncreaseOnRejoin = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("KickStateNameTimerIncreaseOnRejoin", 60f), 0f, 86400f);
+                KickMaxStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("KickMaxStateNameTimer", 60f),0f,86400f);
+                ClearKickStateNameOnRejoin = ServerModGeneralSettings.GetAttributeBool("ClearKickStateNameOnRejoin", false);
+                ClearKicksOnRoundStart = ServerModGeneralSettings.GetAttributeBool("ClearKicksOnRoundStart", false);
 
                 //Server Default Settings
                 XElement ServerModDefaultServerSettings = doc.Root.Element("ServerModDefaultServerSettings");
 
-                ServerName = ToolBox.GetAttributeString(ServerModDefaultServerSettings, "ServerName", "Barotrauma Server");
+                ServerName = ServerModDefaultServerSettings.GetAttributeString("ServerName", "Barotrauma Server");
                 //Sanitize Server Name Code here
                 if (ServerName != "")
                 {
@@ -993,54 +995,54 @@ namespace Barotrauma
                     DebugConsole.ThrowError(@"Server name invalid, too short or not supplied. Defaulting to ""Barotrauma Server""");
                 }
 
-                ServerPort = Math.Min(Math.Max(ToolBox.GetAttributeInt(ServerModDefaultServerSettings, "ServerPort", 14242), 1025), 65536);
+                ServerPort = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("ServerPort", 14242), 1025), 65536);
 
-                MaxPlayers = Math.Min(Math.Max(ToolBox.GetAttributeInt(ServerModDefaultServerSettings, "MaxPlayers", 8), 1), 32);
-                UseServerPassword = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "UseServerPassword", false);
-                ServerPassword = ToolBox.GetAttributeString(ServerModDefaultServerSettings, "ServerPassword", "");
-                AdminAuth = ToolBox.GetAttributeString(ServerModDefaultServerSettings, "AdminAuth", "");
-                PublicServer = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "PublicServer", true);
-                UPNPForwarding = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "UPNPForwarding", false);
-                AutoRestart = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "AutoRestart", false);
-                DefaultGamemode = ToolBox.GetAttributeString(ServerModDefaultServerSettings, "DefaultGamemode", "Sandbox");
-                DefaultMissionType = ToolBox.GetAttributeString(ServerModDefaultServerSettings, "DefaultMissionType", "Random");
-                DefaultRespawnShuttle = ToolBox.GetAttributeString(ServerModDefaultServerSettings, "DefaultRespawnShuttle", "");
-                DefaultSubmarine = ToolBox.GetAttributeString(ServerModDefaultServerSettings, "DefaultSubmarine", "");
-                DefaultLevelSeed = ToolBox.GetAttributeString(ServerModDefaultServerSettings, "DefaultLevelSeed", "");
-                SetDefaultsAlways = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "SetDefaultsAlways", false);
-                UseAlternativeNetworking = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "UseAlternativeNetworking", false);
-                UseCharStatOptimisation = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "UseCharStatOptimisation", true);
-                CharacterDisabledistance = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModDefaultServerSettings, "CharacterDisabledistance", 20000.0f), 10000.00f, 100000.00f);
+                MaxPlayers = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("MaxPlayers", 8), 1), 32);
+                UseServerPassword = ServerModDefaultServerSettings.GetAttributeBool("UseServerPassword", false);
+                ServerPassword = ServerModDefaultServerSettings.GetAttributeString("ServerPassword", "");
+                AdminAuth = ServerModDefaultServerSettings.GetAttributeString("AdminAuth", "");
+                PublicServer = ServerModDefaultServerSettings.GetAttributeBool("PublicServer", true);
+                UPNPForwarding = ServerModDefaultServerSettings.GetAttributeBool("UPNPForwarding", false);
+                AutoRestart = ServerModDefaultServerSettings.GetAttributeBool("AutoRestart", false);
+                DefaultGamemode = ServerModDefaultServerSettings.GetAttributeString("DefaultGamemode", "Sandbox");
+                DefaultMissionType = ServerModDefaultServerSettings.GetAttributeString("DefaultMissionType", "Random");
+                DefaultRespawnShuttle = ServerModDefaultServerSettings.GetAttributeString("DefaultRespawnShuttle", "");
+                DefaultSubmarine = ServerModDefaultServerSettings.GetAttributeString("DefaultSubmarine", "");
+                DefaultLevelSeed = ServerModDefaultServerSettings.GetAttributeString("DefaultLevelSeed", "");
+                SetDefaultsAlways = ServerModDefaultServerSettings.GetAttributeBool("SetDefaultsAlways", false);
+                UseAlternativeNetworking = ServerModDefaultServerSettings.GetAttributeBool("UseAlternativeNetworking", false);
+                UseCharStatOptimisation = ServerModDefaultServerSettings.GetAttributeBool("UseCharStatOptimisation", true);
+                CharacterDisabledistance = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("CharacterDisabledistance", 20000.0f), 10000.00f, 100000.00f);
                 NetConfig.CharacterIgnoreDistance = CharacterDisabledistance;
                 NetConfig.CharacterIgnoreDistanceSqr = CharacterDisabledistance * CharacterDisabledistance;
-                ItemPosUpdateDistance = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModDefaultServerSettings, "ItemPosUpdateDistance", 2.00f), 0.25f, 5.00f);
+                ItemPosUpdateDistance = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ItemPosUpdateDistance", 2.00f), 0.25f, 5.00f);
                 NetConfig.ItemPosUpdateDistance = ItemPosUpdateDistance;
-                DesyncTimerMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModDefaultServerSettings, "DesyncTimerMultiplier", 1.00f), 1.00f, 30.00f);
-                DisableParticlesOnStart = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "DisableParticlesOnStart", false);
-                DisableLightsOnStart = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "DisableLightsOnStart", false);
-                DisableLOSOnStart = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "DisableLOSOnStart", false);
-                AllowReconnect = ToolBox.GetAttributeBool(ServerModDefaultServerSettings, "AllowReconnect", false);
-                ReconnectAddStun = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModDefaultServerSettings, "ReconnectAddStun", 5.00f), 0.00f, 60.00f);
-                ReconnectTimeAllowed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModDefaultServerSettings, "ReconnectTimeAllowed", 10.00f), 10.00f, 600.00f);
+                DesyncTimerMultiplier = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncTimerMultiplier", 1.00f), 1.00f, 30.00f);
+                DisableParticlesOnStart = ServerModDefaultServerSettings.GetAttributeBool("DisableParticlesOnStart", false);
+                DisableLightsOnStart = ServerModDefaultServerSettings.GetAttributeBool("DisableLightsOnStart", false);
+                DisableLOSOnStart = ServerModDefaultServerSettings.GetAttributeBool("DisableLOSOnStart", false);
+                AllowReconnect = ServerModDefaultServerSettings.GetAttributeBool("AllowReconnect", false);
+                ReconnectAddStun = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ReconnectAddStun", 5.00f), 0.00f, 60.00f);
+                ReconnectTimeAllowed = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ReconnectTimeAllowed", 10.00f), 10.00f, 600.00f);
 
 
                 //Debug Settings
                 XElement ServerModDebugSettings = doc.Root.Element("ServerModDebugSettings");
 
-                DebugReportSettingsOnLoad = ToolBox.GetAttributeBool(ServerModDebugSettings, "DebugReportSettingsOnLoad", false); //Implemented
-                ShowPacketMTUErrors = ToolBox.GetAttributeBool(ServerModDebugSettings, "ShowPacketMTUErrors", true); //Implemented
-                ShowOpenALErrors = ToolBox.GetAttributeBool(ServerModDebugSettings, "ShowOpenALErrors", true);
-                ShowPathfindingErrors = ToolBox.GetAttributeBool(ServerModDebugSettings, "ShowPathfindingErrors", true);
-                ShowMasterServerSuccess = ToolBox.GetAttributeBool(ServerModDebugSettings, "ShowMasterServerSuccess", true);
-                DebugLag = ToolBox.GetAttributeBool(ServerModDebugSettings, "DebugLag", false);
-                DebugLagSimulatedPacketLoss = ToolBox.GetAttributeFloat(ServerModDebugSettings, "DebugLagSimulatedPacketLoss", 0.05f); //Implemented
-                DebugLagSimulatedRandomLatency = ToolBox.GetAttributeFloat(ServerModDebugSettings, "DebugLagSimulatedRandomLatency", 0.05f); //Implemented
-                DebugLagSimulatedDuplicatesChance = ToolBox.GetAttributeFloat(ServerModDebugSettings, "DebugLagSimulatedDuplicatesChance", 0.05f); //Implemented
-                DebugLagSimulatedMinimumLatency = ToolBox.GetAttributeFloat(ServerModDebugSettings, "DebugLagSimulatedMinimumLatency", 0.10f); //Implemented
-                DebugLagConnectionTimeout = ToolBox.GetAttributeFloat(ServerModDebugSettings, "DebugLagConnectionTimeout", 60f); //Implemented
-                MaxParticles = Math.Min(Math.Max(ToolBox.GetAttributeInt(ServerModDebugSettings, "MaxParticles", 1500), 150), 15000);
-                ParticleSpawnPercent = Math.Min(Math.Max(ToolBox.GetAttributeInt(ServerModDebugSettings, "ParticleSpawnPercent", 100), 0), 100);
-                MathHelper.Clamp(ParticleLifeMultiplier = ToolBox.GetAttributeFloat(ServerModDebugSettings, "ParticleLifeMultiplier", 1f),0.15f,1f); //Implemented
+                DebugReportSettingsOnLoad = ServerModDebugSettings.GetAttributeBool("DebugReportSettingsOnLoad", false); //Implemented
+                ShowPacketMTUErrors = ServerModDebugSettings.GetAttributeBool("ShowPacketMTUErrors", true); //Implemented
+                ShowOpenALErrors = ServerModDebugSettings.GetAttributeBool("ShowOpenALErrors", true);
+                ShowPathfindingErrors = ServerModDebugSettings.GetAttributeBool("ShowPathfindingErrors", true);
+                ShowMasterServerSuccess = ServerModDebugSettings.GetAttributeBool("ShowMasterServerSuccess", true);
+                DebugLag = ServerModDebugSettings.GetAttributeBool("DebugLag", false);
+                DebugLagSimulatedPacketLoss = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedPacketLoss", 0.05f); //Implemented
+                DebugLagSimulatedRandomLatency = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedRandomLatency", 0.05f); //Implemented
+                DebugLagSimulatedDuplicatesChance = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedDuplicatesChance", 0.05f); //Implemented
+                DebugLagSimulatedMinimumLatency = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedMinimumLatency", 0.10f); //Implemented
+                DebugLagConnectionTimeout = ServerModDebugSettings.GetAttributeFloat("DebugLagConnectionTimeout", 60f); //Implemented
+                MaxParticles = Math.Min(Math.Max(ServerModDebugSettings.GetAttributeInt("MaxParticles", 1500), 150), 15000);
+                ParticleSpawnPercent = Math.Min(Math.Max(ServerModDebugSettings.GetAttributeInt("ParticleSpawnPercent", 100), 0), 100);
+                MathHelper.Clamp(ParticleLifeMultiplier = ServerModDebugSettings.GetAttributeFloat("ParticleLifeMultiplier", 1f),0.15f,1f); //Implemented
 
 #if CLIENT
                 if (GameMain.ParticleManager != null)
@@ -1052,113 +1054,113 @@ namespace Barotrauma
                 //Respawn Settings
                 XElement ServerModRespawnSettings = doc.Root.Element("ServerModRespawnSettings");
 
-                LimitCharacterRespawns = ToolBox.GetAttributeBool(ServerModRespawnSettings, "LimitCharacterRespawns", false); //Unimplemented
-                LimitShuttleRespawns = ToolBox.GetAttributeBool(ServerModRespawnSettings, "LimitShuttleRespawns", false); //Unimplemented
-                MaxRespawnCharacters = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModRespawnSettings, "MaxRespawnCharacters", -1), -1, 10000);
-                MaxRespawnShuttles = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModRespawnSettings, "MaxRespawnShuttles", -1), -1, 1000);
-                BaseRespawnCharacters = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModRespawnSettings, "BaseRespawnCharacters", 0f), 0f, 10000f);
-                BaseRespawnShuttles = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModRespawnSettings, "BaseRespawnShuttles", 0f), 0f, 1000f);
-                RespawnCharactersPerPlayer = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModRespawnSettings, "RespawnCharactersPerPlayer", 0f), 0f, 10000f);
-                RespawnShuttlesPerPlayer = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModRespawnSettings, "RespawnShuttlesPerPlayer", 0f), 0f, 1000f);
-                AlwaysRespawnNewConnections = ToolBox.GetAttributeBool(ServerModRespawnSettings, "AlwaysRespawnNewConnections", false); //Unimplemented
-                RespawnNewConnectionsToSub = ToolBox.GetAttributeBool(ServerModRespawnSettings, "RespawnNewConnectionsToSub", false); //Unimplemented
-                RespawnOnMainSub = ToolBox.GetAttributeBool(ServerModRespawnSettings, "RespawnOnMainSub", false); //Implemented
-                RespawnWearingSuitGear = ToolBox.GetAttributeBool(ServerModRespawnSettings, "RespawnWearingSuitGear", false);
-                RespawnLeavingAutoPilotMode = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModRespawnSettings, "RespawnLeavingAutoPilotMode", 0),0,3);
-                RespawnShuttleLeavingCloseDoors = ToolBox.GetAttributeBool(ServerModRespawnSettings, "RespawnShuttleLeavingCloseDoors", true);
-                RespawnShuttleLeavingUndock = ToolBox.GetAttributeBool(ServerModRespawnSettings, "RespawnShuttleLeavingUndock", true);
-                RespawnShuttleLeaveAtTime = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModRespawnSettings, "RespawnShuttleLeaveAtTime", -1f), -1f, 600f);
+                LimitCharacterRespawns = ServerModRespawnSettings.GetAttributeBool("LimitCharacterRespawns", false); //Unimplemented
+                LimitShuttleRespawns = ServerModRespawnSettings.GetAttributeBool("LimitShuttleRespawns", false); //Unimplemented
+                MaxRespawnCharacters = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeInt("MaxRespawnCharacters", -1), -1, 10000);
+                MaxRespawnShuttles = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeInt("MaxRespawnShuttles", -1), -1, 1000);
+                BaseRespawnCharacters = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("BaseRespawnCharacters", 0f), 0f, 10000f);
+                BaseRespawnShuttles = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("BaseRespawnShuttles", 0f), 0f, 1000f);
+                RespawnCharactersPerPlayer = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("RespawnCharactersPerPlayer", 0f), 0f, 10000f);
+                RespawnShuttlesPerPlayer = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("RespawnShuttlesPerPlayer", 0f), 0f, 1000f);
+                AlwaysRespawnNewConnections = ServerModRespawnSettings.GetAttributeBool("AlwaysRespawnNewConnections", false); //Unimplemented
+                RespawnNewConnectionsToSub = ServerModRespawnSettings.GetAttributeBool("RespawnNewConnectionsToSub", false); //Unimplemented
+                RespawnOnMainSub = ServerModRespawnSettings.GetAttributeBool("RespawnOnMainSub", false); //Implemented
+                RespawnWearingSuitGear = ServerModRespawnSettings.GetAttributeBool("RespawnWearingSuitGear", false);
+                RespawnLeavingAutoPilotMode = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeInt("RespawnLeavingAutoPilotMode", 0),0,3);
+                RespawnShuttleLeavingCloseDoors = ServerModRespawnSettings.GetAttributeBool("RespawnShuttleLeavingCloseDoors", true);
+                RespawnShuttleLeavingUndock = ServerModRespawnSettings.GetAttributeBool("RespawnShuttleLeavingUndock", true);
+                RespawnShuttleLeaveAtTime = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("RespawnShuttleLeaveAtTime", -1f), -1f, 600f);
 
                 //Submarine Settings
                 XElement ServerModSubmarineSettings = doc.Root.Element("ServerModSubmarineSettings");
 
-                HullOxygenDistributionSpeed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "HullOxygenDistributionSpeed", 500f),0f,50000f); //Implemented
-                HullOxygenDetoriationSpeed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "HullOxygenDetoriationSpeed", 0.3f), -10000f, 50000f); //Implemented
-                HullOxygenConsumptionSpeed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "HullOxygenConsumptionSpeed", 1000f), 0f, 50000f); //Implemented
-                HullUnbreathablePercent = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "HullUnbreathablePercent", 30.0f),0f,100f); //Implemented
-                CanDamageSubBody = ToolBox.GetAttributeBool(ServerModSubmarineSettings, "CanDamageSubBody", true); //Implemented
-                CanRewireMainSubs = ToolBox.GetAttributeBool(ServerModSubmarineSettings, "CanRewireMainSubs", true); //Not Implemented.
-                CrushDamageDepth = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "CrushDamageDepth", -30000f),-1000000f,100000f);
-                PlayerCrushDepthInHull = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PlayerCrushDepthInHull", -30000f), -1000000f, 100000f);
-                PlayerCrushDepthOutsideHull = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PlayerCrushDepthOutsideHull", -30000f), -1000000f, 100000f);
-                UseProgressiveCrush = ToolBox.GetAttributeBool(ServerModSubmarineSettings, "UseProgressiveCrush", false);
-                PCrushUseWallRemainingHealthCheck = ToolBox.GetAttributeBool(ServerModSubmarineSettings, "PCrushUseWallRemainingHealthCheck", false);
-                PCrushDepthHealthResistMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PCrushDepthHealthResistMultiplier", 1.0f),0f,100.0f);
-                PCrushDepthBaseHealthResist = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PCrushDepthBaseHealthResist", 0f), 0f, 1000000f);
-                PCrushDamageDepthMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PCrushDamageDepthMultiplier", 1.0f), 0f, 100.0f);
-                PCrushBaseDamage = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PCrushBaseDamage", 0f), 0f, 100000000f);
-                PCrushWallHealthDamagePercent = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PCrushWallHealthDamagePercent", 0f), 0f, 100f);
-                PCrushWallBaseDamageChance = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PCrushWallBaseDamageChance", 35f), 0f, 100f);
-                PCrushWallDamageChanceIncrease = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PCrushWallDamageChanceIncrease", 5f), 0f, 1000f);
-                PCrushWallMaxDamageChance = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PCrushWallMaxDamageChance", 100f), 0f, 100f);
-                PCrushInterval = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "PCrushInterval", 10f), 0.5f, 60f);
-                SyncFireSizeChange = ToolBox.GetAttributeBool(ServerModSubmarineSettings, "SyncFireSizeChange", false);
-                FireSyncFrequency = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireSyncFrequency", 4f), 1f, 60f);
-                FireSizeChangeToSync = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireSizeChangeToSync", 6f), 1f, 30f);
-                FireProofDamagePercentReduction = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireProofDamagePercentReduction", 100f), 0f, 100f);
-                FireProofRangePercentReduction = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireProofRangePercentReduction", 0f), 0f, 100f);
-                FireCharDamageMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireCharDamageMultiplier", 1f), 0f, 100f);
-                FireCharRangeMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireCharRangeMultiplier", 1f), 0f, 100f);
-                FireItemRangeMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireItemRangeMultiplier", 1f), 0f, 100f);
-                FireUseRangedDamage = ToolBox.GetAttributeBool(ServerModSubmarineSettings, "FireUseRangedDamage", false);
-                FireRangedDamageStrength = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireRangedDamageStrength", 1.0f), -1f, 10f);
-                FireRangedDamageMinMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireRangedDamageMinMultiplier", 0.05f), 0f, 2f);
-                FireRangedDamageMaxMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireRangedDamageMaxMultiplier", 1f), FireRangedDamageMinMultiplier, 100f);
-                FireOxygenConsumption = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireOxygenConsumption", 50f), 0f, 50000f);
-                FireGrowthSpeed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireGrowthSpeed", 5f), 0.1f, 1000f);
-                FireShrinkSpeed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireShrinkSpeed", 5f), 0.1f, 1000f);
-                FireWaterExtinguishMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireWaterExtinguishMultiplier", 1f), 0.5f, 60f);
-                FireToolExtinguishMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "FireToolExtinguishMultiplier", 1f), 0.5f, 60f);
-                EnginesRegenerateCondition = ToolBox.GetAttributeBool(ServerModSubmarineSettings, "EnginesRegenerateCondition", false);
-                EnginesRegenAmount = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "EnginesRegenAmount", 0f), 0f, 1000f);
-                ElectricalRegenerateCondition = ToolBox.GetAttributeBool(ServerModSubmarineSettings, "ElectricalRegenerateCondition", false);
-                ElectricalRegenAmount = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "ElectricalRegenAmount", 0f), 0f, 1000f);
-                ElectricalOverloadDamage = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "ElectricalOverloadDamage", 10f), 0f, 60f);
-                ElectricalOverloadMinPower = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "ElectricalOverloadMinPower", 200f), 0f, 100000f);
-                ElectricalOverloadVoltRangeMin = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "ElectricalOverloadVoltRangeMin", 1.9f), 0f, 60f);
-                ElectricalOverloadVoltRangeMax = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "ElectricalOverloadVoltRangeMax", 2.1f), ElectricalOverloadVoltRangeMin, 60f);
-                ElectricalOverloadFiresChance = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "ElectricalOverloadFiresChance", 100f), 0.5f, 60f);
-                ElectricalFailMaxVoltage = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "ElectricalFailMaxVoltage", 0.1f), 0f, 100f);
-                ElectricalFailStunTime = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModSubmarineSettings, "ElectricalFailStunTime", 5f), 0.1f, 60f);
+                HullOxygenDistributionSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullOxygenDistributionSpeed", 500f),0f,50000f); //Implemented
+                HullOxygenDetoriationSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullOxygenDetoriationSpeed", 0.3f), -10000f, 50000f); //Implemented
+                HullOxygenConsumptionSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullOxygenConsumptionSpeed", 1000f), 0f, 50000f); //Implemented
+                HullUnbreathablePercent = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullUnbreathablePercent", 30.0f),0f,100f); //Implemented
+                CanDamageSubBody = ServerModSubmarineSettings.GetAttributeBool("CanDamageSubBody", true); //Implemented
+                CanRewireMainSubs = ServerModSubmarineSettings.GetAttributeBool("CanRewireMainSubs", true); //Not Implemented.
+                CrushDamageDepth = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("CrushDamageDepth", -30000f),-1000000f,100000f);
+                PlayerCrushDepthInHull = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PlayerCrushDepthInHull", -30000f), -1000000f, 100000f);
+                PlayerCrushDepthOutsideHull = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PlayerCrushDepthOutsideHull", -30000f), -1000000f, 100000f);
+                UseProgressiveCrush = ServerModSubmarineSettings.GetAttributeBool("UseProgressiveCrush", false);
+                PCrushUseWallRemainingHealthCheck = ServerModSubmarineSettings.GetAttributeBool("PCrushUseWallRemainingHealthCheck", false);
+                PCrushDepthHealthResistMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushDepthHealthResistMultiplier", 1.0f),0f,100.0f);
+                PCrushDepthBaseHealthResist = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushDepthBaseHealthResist", 0f), 0f, 1000000f);
+                PCrushDamageDepthMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushDamageDepthMultiplier", 1.0f), 0f, 100.0f);
+                PCrushBaseDamage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushBaseDamage", 0f), 0f, 100000000f);
+                PCrushWallHealthDamagePercent = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallHealthDamagePercent", 0f), 0f, 100f);
+                PCrushWallBaseDamageChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallBaseDamageChance", 35f), 0f, 100f);
+                PCrushWallDamageChanceIncrease = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallDamageChanceIncrease", 5f), 0f, 1000f);
+                PCrushWallMaxDamageChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallMaxDamageChance", 100f), 0f, 100f);
+                PCrushInterval = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushInterval", 10f), 0.5f, 60f);
+                SyncFireSizeChange = ServerModSubmarineSettings.GetAttributeBool("SyncFireSizeChange", false);
+                FireSyncFrequency = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireSyncFrequency", 4f), 1f, 60f);
+                FireSizeChangeToSync = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireSizeChangeToSync", 6f), 1f, 30f);
+                FireProofDamagePercentReduction = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireProofDamagePercentReduction", 100f), 0f, 100f);
+                FireProofRangePercentReduction = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireProofRangePercentReduction", 0f), 0f, 100f);
+                FireCharDamageMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireCharDamageMultiplier", 1f), 0f, 100f);
+                FireCharRangeMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireCharRangeMultiplier", 1f), 0f, 100f);
+                FireItemRangeMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireItemRangeMultiplier", 1f), 0f, 100f);
+                FireUseRangedDamage = ServerModSubmarineSettings.GetAttributeBool("FireUseRangedDamage", false);
+                FireRangedDamageStrength = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireRangedDamageStrength", 1.0f), -1f, 10f);
+                FireRangedDamageMinMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireRangedDamageMinMultiplier", 0.05f), 0f, 2f);
+                FireRangedDamageMaxMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireRangedDamageMaxMultiplier", 1f), FireRangedDamageMinMultiplier, 100f);
+                FireOxygenConsumption = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireOxygenConsumption", 50f), 0f, 50000f);
+                FireGrowthSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireGrowthSpeed", 5f), 0.1f, 1000f);
+                FireShrinkSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireShrinkSpeed", 5f), 0.1f, 1000f);
+                FireWaterExtinguishMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireWaterExtinguishMultiplier", 1f), 0.5f, 60f);
+                FireToolExtinguishMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireToolExtinguishMultiplier", 1f), 0.5f, 60f);
+                EnginesRegenerateCondition = ServerModSubmarineSettings.GetAttributeBool("EnginesRegenerateCondition", false);
+                EnginesRegenAmount = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("EnginesRegenAmount", 0f), 0f, 1000f);
+                ElectricalRegenerateCondition = ServerModSubmarineSettings.GetAttributeBool("ElectricalRegenerateCondition", false);
+                ElectricalRegenAmount = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalRegenAmount", 0f), 0f, 1000f);
+                ElectricalOverloadDamage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadDamage", 10f), 0f, 60f);
+                ElectricalOverloadMinPower = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadMinPower", 200f), 0f, 100000f);
+                ElectricalOverloadVoltRangeMin = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadVoltRangeMin", 1.9f), 0f, 60f);
+                ElectricalOverloadVoltRangeMax = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadVoltRangeMax", 2.1f), ElectricalOverloadVoltRangeMin, 60f);
+                ElectricalOverloadFiresChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadFiresChance", 100f), 0.5f, 60f);
+                ElectricalFailMaxVoltage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailMaxVoltage", 0.1f), 0f, 100f);
+                ElectricalFailStunTime = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailStunTime", 5f), 0.1f, 60f);
 
 
                 //All Character Settings
                 XElement ServerModAllCharacterSettings = doc.Root.Element("ServerModAllCharacterSettings");
 
-                PlayerOxygenUsageAmount = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "PlayerOxygenUsageAmount", -5.0f), -400f, 20f); //Implemented
-                PlayerOxygenGainSpeed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "PlayerOxygenGainSpeed", 10.0f), -20f, 400f); //Implemented
-                UseProgressiveImplodeDeath = ToolBox.GetAttributeBool(ServerModAllCharacterSettings, "UseProgressiveImplodeDeath", false);
-                ImplodeHealthLoss = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ImplodeHealthLoss", 0.35f), 0f, 1000000f);
-                ImplodeBleedGain = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ImplodeBleedGain", 0.12f), 0f, 1000000f);
-                ImplodeOxygenLoss = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ImplodeOxygenLoss", 1.5f), 0f, 1000000f);
-                PreventImplodeHealing = ToolBox.GetAttributeBool(ServerModAllCharacterSettings, "PreventImplodeHealing", false);
-                PreventImplodeClotting = ToolBox.GetAttributeBool(ServerModAllCharacterSettings, "PreventImplodeClotting", false);
-                PreventImplodeOxygen = ToolBox.GetAttributeBool(ServerModAllCharacterSettings, "PreventImplodeOxygen", false);
-                CharacterImplodeDeathAtMinHealth = ToolBox.GetAttributeBool(ServerModAllCharacterSettings, "CharacterImplodeDeathAtMinHealth", true);
-                HuskHealingMultiplierinfected = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "HuskHealingMultiplierinfected", 1.0f), -1000f, 1000f);
-                HuskHealingMultiplierincurable = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "HuskHealingMultiplierincurable", 1.0f), -1000f, 1000f);
-                PlayerHuskInfectedDrain = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "PlayerHuskInfectedDrain", 0.00f), -1000f, 1000f);
-                PlayerHuskIncurableDrain = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "PlayerHuskIncurableDrain", 0.50f), -1000f, 1000f);
-                HealthUnconciousDecayHealth = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "HealthUnconciousDecayHealth", 0.5f),-500f,200f); //Implemented
-                HealthUnconciousDecayBleed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "HealthUnconciousDecayBleed", 0.0f), -500f, 200f); //Implemented
-                HealthUnconciousDecayOxygen = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "HealthUnconciousDecayOxygen", 0.0f),-100f,200f); //Implemented
-                OxygenUnconciousDecayHealth = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "OxygenUnconciousDecayHealth", 0.0f), -500f, 200f); //Implemented
-                OxygenUnconciousDecayBleed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "OxygenUnconciousDecayBleed", 0.0f), -500f, 200f); //Implemented
-                OxygenUnconciousDecayOxygen = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "OxygenUnconciousDecayOxygen", 0.0f), -100f, 200f); //Implemented
-                MinHealthBleedCap = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "MinHealthBleedCap", 5f),0f,5f); //Implemented
-                CreatureBleedMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "CreatureBleedMultiplier", 1.00f),0f,20f);
-                ArmourBleedBypassNoDamage = ToolBox.GetAttributeBool(ServerModAllCharacterSettings, "ArmourBleedBypassNoDamage", false);
-                ArmourSoakFireDamage = ToolBox.GetAttributeBool(ServerModAllCharacterSettings, "ArmourSoakFireDamage", false);
-                ArmourAbsorptionHealth = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourAbsorptionHealth", 0f), 0f, 10000f);
-                ArmourDirectReductionHealth = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourDirectReductionHealth", 1f), 0f, 10000f);
-                ArmourMinimumHealthPercent = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourMinimumHealthPercent", 0f), 0f, 100f);
-                ArmourResistancePowerHealth = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourResistancePowerHealth", 0f), 0f, 1f);
-                ArmourResistanceMultiplierHealth = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourResistanceMultiplierHealth", 0f), 0f, 100000f);
-                ArmourAbsorptionBleed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourAbsorptionBleed", 0f), 0f, 10000f);
-                ArmourDirectReductionBleed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourDirectReductionBleed", 1f), 0f, 10000f);
-                ArmourResistancePowerBleed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourResistancePowerBleed", 0f), 0f, 1f);
-                ArmourResistanceMultiplierBleed = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourResistanceMultiplierBleed", 0f), 0f, 100000f);
-                ArmourMinimumBleedPercent = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAllCharacterSettings, "ArmourMinimumBleedPercent", 0f), 0f, 100f);
+                PlayerOxygenUsageAmount = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerOxygenUsageAmount", -5.0f), -400f, 20f); //Implemented
+                PlayerOxygenGainSpeed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerOxygenGainSpeed", 10.0f), -20f, 400f); //Implemented
+                UseProgressiveImplodeDeath = ServerModAllCharacterSettings.GetAttributeBool("UseProgressiveImplodeDeath", false);
+                ImplodeHealthLoss = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImplodeHealthLoss", 0.35f), 0f, 1000000f);
+                ImplodeBleedGain = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImplodeBleedGain", 0.12f), 0f, 1000000f);
+                ImplodeOxygenLoss = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImplodeOxygenLoss", 1.5f), 0f, 1000000f);
+                PreventImplodeHealing = ServerModAllCharacterSettings.GetAttributeBool("PreventImplodeHealing", false);
+                PreventImplodeClotting = ServerModAllCharacterSettings.GetAttributeBool("PreventImplodeClotting", false);
+                PreventImplodeOxygen = ServerModAllCharacterSettings.GetAttributeBool("PreventImplodeOxygen", false);
+                CharacterImplodeDeathAtMinHealth = ServerModAllCharacterSettings.GetAttributeBool("CharacterImplodeDeathAtMinHealth", true);
+                HuskHealingMultiplierinfected = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HuskHealingMultiplierinfected", 1.0f), -1000f, 1000f);
+                HuskHealingMultiplierincurable = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HuskHealingMultiplierincurable", 1.0f), -1000f, 1000f);
+                PlayerHuskInfectedDrain = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerHuskInfectedDrain", 0.00f), -1000f, 1000f);
+                PlayerHuskIncurableDrain = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerHuskIncurableDrain", 0.50f), -1000f, 1000f);
+                HealthUnconciousDecayHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HealthUnconciousDecayHealth", 0.5f),-500f,200f); //Implemented
+                HealthUnconciousDecayBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HealthUnconciousDecayBleed", 0.0f), -500f, 200f); //Implemented
+                HealthUnconciousDecayOxygen = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HealthUnconciousDecayOxygen", 0.0f),-100f,200f); //Implemented
+                OxygenUnconciousDecayHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("OxygenUnconciousDecayHealth", 0.0f), -500f, 200f); //Implemented
+                OxygenUnconciousDecayBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("OxygenUnconciousDecayBleed", 0.0f), -500f, 200f); //Implemented
+                OxygenUnconciousDecayOxygen = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("OxygenUnconciousDecayOxygen", 0.0f), -100f, 200f); //Implemented
+                MinHealthBleedCap = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("MinHealthBleedCap", 5f),0f,5f); //Implemented
+                CreatureBleedMultiplier = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("CreatureBleedMultiplier", 1.00f),0f,20f);
+                ArmourBleedBypassNoDamage = ServerModAllCharacterSettings.GetAttributeBool("ArmourBleedBypassNoDamage", false);
+                ArmourSoakFireDamage = ServerModAllCharacterSettings.GetAttributeBool("ArmourSoakFireDamage", false);
+                ArmourAbsorptionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionHealth", 0f), 0f, 10000f);
+                ArmourDirectReductionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionHealth", 1f), 0f, 10000f);
+                ArmourMinimumHealthPercent = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourMinimumHealthPercent", 0f), 0f, 100f);
+                ArmourResistancePowerHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistancePowerHealth", 0f), 0f, 1f);
+                ArmourResistanceMultiplierHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistanceMultiplierHealth", 0f), 0f, 100000f);
+                ArmourAbsorptionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionBleed", 0f), 0f, 10000f);
+                ArmourDirectReductionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionBleed", 1f), 0f, 10000f);
+                ArmourResistancePowerBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistancePowerBleed", 0f), 0f, 1f);
+                ArmourResistanceMultiplierBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistanceMultiplierBleed", 0f), 0f, 100000f);
+                ArmourMinimumBleedPercent = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourMinimumBleedPercent", 0f), 0f, 100f);
 
 
 
@@ -1166,46 +1168,46 @@ namespace Barotrauma
                 //Player Settings
                 XElement ServerModPlayerSettings = doc.Root.Element("ServerModPlayerSettings");
 
-                PlayerCanTraumaDeath = ToolBox.GetAttributeBool(ServerModPlayerSettings, "PlayerCanTraumaDeath", true); //Implemented
-                PlayerCanImplodeDeath = ToolBox.GetAttributeBool(ServerModPlayerSettings, "PlayerCanImplodeDeath", true); //Implemented
-                PlayerCanSuffocateDeath = ToolBox.GetAttributeBool(ServerModPlayerSettings, "PlayerCanSuffocateDeath", true); //Implemented
-                PlayerHealthMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerHealthMultiplier", 1f), 0.01f, 10000f); //Implemented
-                PlayerHuskHealthMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerHuskHealthMultiplier", 1f), 0.01f, 10000f); //Implemented
-                PlayerHuskAiOnDeath = ToolBox.GetAttributeBool(ServerModPlayerSettings, "PlayerHuskAiOnDeath", true); //Implemented
-                PlayerHealthRegen = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerHealthRegen", 0f), 0f, 10000000f); //Implemented
-                PlayerHealthRegenMin = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerHealthRegenMin", -100f), -100f, 100f) / 100f; //Implemented
-                PlayerHealthRegenMax = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerHealthRegenMax", 100f), -100f, 100f) / 100f; //Implemented
-                PlayerCPROnlyWhileUnconcious = ToolBox.GetAttributeBool(ServerModPlayerSettings, "PlayerCPROnlyWhileUnconcious", true); //Implemented
-                PlayerCPRHealthBaseValue = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerCPRHealthBaseValue", 0f),-1000f,1000f); //Implemented
-                PlayerCPRHealthSkillMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerCPRHealthSkillMultiplier", 0f), -10f, 100f); //Implemented
-                PlayerCPRHealthSkillNeeded = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModPlayerSettings, "PlayerCPRHealthSkillNeeded", 100), 0, 100); //Implemented
-                PlayerCPRStunBaseValue = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerCPRStunBaseValue", 0f), -1000f, 1000f); //Implemented
-                PlayerCPRStunSkillMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerCPRStunSkillMultiplier", 0f), -10f, 100f); //Implemented
-                PlayerCPRStunSkillNeeded = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModPlayerSettings, "PlayerCPRStunSkillNeeded", 0), 0, 100); //Implemented
-                PlayerCPRClotBaseValue = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerCPRClotBaseValue", 0f), -1000f, 1000f); //Implemented
-                PlayerCPRClotSkillMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerCPRClotSkillMultiplier", 0f), -10f, 100f); //Implemented
-                PlayerCPRClotSkillNeeded = MathHelper.Clamp(ToolBox.GetAttributeInt(ServerModPlayerSettings, "PlayerCPRClotSkillNeeded", 0), 0, 100); //Implemented
-                PlayerCPROxygenBaseValue = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerCPROxygenBaseValue", 0f), -1000f, 1000f); //Implemented
-                PlayerCPROxygenSkillMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerCPROxygenSkillMultiplier", 0.1f), -10f, 100f); //Implemented
-                PlayerUnconciousTimer = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModPlayerSettings, "PlayerUnconciousTimer", 5f), 0f, 60f); //Implemented //Implemented
+                PlayerCanTraumaDeath = ServerModPlayerSettings.GetAttributeBool("PlayerCanTraumaDeath", true); //Implemented
+                PlayerCanImplodeDeath = ServerModPlayerSettings.GetAttributeBool("PlayerCanImplodeDeath", true); //Implemented
+                PlayerCanSuffocateDeath = ServerModPlayerSettings.GetAttributeBool("PlayerCanSuffocateDeath", true); //Implemented
+                PlayerHealthMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthMultiplier", 1f), 0.01f, 10000f); //Implemented
+                PlayerHuskHealthMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHuskHealthMultiplier", 1f), 0.01f, 10000f); //Implemented
+                PlayerHuskAiOnDeath = ServerModPlayerSettings.GetAttributeBool("PlayerHuskAiOnDeath", true); //Implemented
+                PlayerHealthRegen = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthRegen", 0f), 0f, 10000000f); //Implemented
+                PlayerHealthRegenMin = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthRegenMin", -100f), -100f, 100f) / 100f; //Implemented
+                PlayerHealthRegenMax = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthRegenMax", 100f), -100f, 100f) / 100f; //Implemented
+                PlayerCPROnlyWhileUnconcious = ServerModPlayerSettings.GetAttributeBool("PlayerCPROnlyWhileUnconcious", true); //Implemented
+                PlayerCPRHealthBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRHealthBaseValue", 0f),-1000f,1000f); //Implemented
+                PlayerCPRHealthSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRHealthSkillMultiplier", 0f), -10f, 100f); //Implemented
+                PlayerCPRHealthSkillNeeded = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeInt("PlayerCPRHealthSkillNeeded", 100), 0, 100); //Implemented
+                PlayerCPRStunBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRStunBaseValue", 0f), -1000f, 1000f); //Implemented
+                PlayerCPRStunSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRStunSkillMultiplier", 0f), -10f, 100f); //Implemented
+                PlayerCPRStunSkillNeeded = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeInt("PlayerCPRStunSkillNeeded", 0), 0, 100); //Implemented
+                PlayerCPRClotBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRClotBaseValue", 0f), -1000f, 1000f); //Implemented
+                PlayerCPRClotSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRClotSkillMultiplier", 0f), -10f, 100f); //Implemented
+                PlayerCPRClotSkillNeeded = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeInt("PlayerCPRClotSkillNeeded", 0), 0, 100); //Implemented
+                PlayerCPROxygenBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPROxygenBaseValue", 0f), -1000f, 1000f); //Implemented
+                PlayerCPROxygenSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPROxygenSkillMultiplier", 0.1f), -10f, 100f); //Implemented
+                PlayerUnconciousTimer = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerUnconciousTimer", 5f), 0f, 60f); //Implemented //Implemented
 
                 //Host Specific settings
                 XElement ServerModHostSettings = doc.Root.Element("ServerModHostSettings");
                 
-                PlayYourselfName = ToolBox.GetAttributeString(ServerModHostSettings, "PlayYourselfName", ""); //Implemented
-                HostBypassSkills = ToolBox.GetAttributeBool(ServerModHostSettings, "HostBypassSkills", false); //Implemented
+                PlayYourselfName = ServerModHostSettings.GetAttributeString("PlayYourselfName", ""); //Implemented
+                HostBypassSkills = ServerModHostSettings.GetAttributeBool("HostBypassSkills", false); //Implemented
 
                 //Creature specific settings
                 XElement ServerModAICreatureSettings = doc.Root.Element("ServerModAICreatureSettings");
 
-                CreatureHealthMultiplier = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAICreatureSettings, "CreatureHealthMultiplier", 1f),0.01f,1000000f);
-                CreatureHealthRegen = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAICreatureSettings, "CreatureHealthRegen", 0f), 0f, 10000000f); //Implemented
-                CreatureHealthRegenMin = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAICreatureSettings, "CreatureHealthRegenMin", 0f), 0f, 100f) / 100f;
-                CreatureHealthRegenMax = MathHelper.Clamp(ToolBox.GetAttributeFloat(ServerModAICreatureSettings, "CreatureHealthRegenMax", 100f), 0f, 100f) / 100f;
-                CreatureEatDyingPlayers = ToolBox.GetAttributeBool(ServerModAICreatureSettings, "CreatureEatDyingPlayers", true); //Implemented
-                CreatureRespawnMonsterEvents = ToolBox.GetAttributeBool(ServerModAICreatureSettings, "CreatureRespawnMonsterEvents", true);
-                CreatureLimitRespawns = ToolBox.GetAttributeBool(ServerModAICreatureSettings, "CreatureLimitRespawns", false);
-                CreatureMaxRespawns = Math.Min(Math.Max(ToolBox.GetAttributeInt(ServerModAICreatureSettings, "CreatureMaxRespawns", 1), 2), 50);
+                CreatureHealthMultiplier = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthMultiplier", 1f),0.01f,1000000f);
+                CreatureHealthRegen = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthRegen", 0f), 0f, 10000000f); //Implemented
+                CreatureHealthRegenMin = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthRegenMin", 0f), 0f, 100f) / 100f;
+                CreatureHealthRegenMax = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthRegenMax", 100f), 0f, 100f) / 100f;
+                CreatureEatDyingPlayers = ServerModAICreatureSettings.GetAttributeBool("CreatureEatDyingPlayers", true); //Implemented
+                CreatureRespawnMonsterEvents = ServerModAICreatureSettings.GetAttributeBool("CreatureRespawnMonsterEvents", true);
+                CreatureLimitRespawns = ServerModAICreatureSettings.GetAttributeBool("CreatureLimitRespawns", false);
+                CreatureMaxRespawns = Math.Min(Math.Max(ServerModAICreatureSettings.GetAttributeInt("CreatureMaxRespawns", 1), 1), 50);
 
 
                 //Sanitize the hosts name
@@ -1935,6 +1937,7 @@ namespace Barotrauma
 
         public void TestArmour(float armourrating)
         {
+            /*
             DebugConsole.NewMessage("ArmourDebug Test Calculations (Does not factor bleed bypass or impossible reverse damage):", Color.White);
             //1 armour damage reduction console messages
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 001, Bleed: 00.25 Damage Taken: "
@@ -1993,6 +1996,7 @@ namespace Barotrauma
                 + Limb.CalculateHealthArmor(600f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(75f, armourrating), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 800, Bleed: 90.00 Damage Taken: "
                 + Limb.CalculateHealthArmor(800f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(90f, armourrating), Color.White);
+                */
         }
 
         //Things that are generally done at round start or server start for the server.

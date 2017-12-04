@@ -303,7 +303,7 @@ namespace Barotrauma
 
                         if (GameMain.NilMod.DisconnectedCharacters.Count > 0)
                         {
-                            DisconnectedCharacter disconnectedcharcheck = GameMain.NilMod.DisconnectedCharacters.Find(dc => dc.character.Name == c.name && c.Connection.RemoteEndPoint.Address.ToString() == dc.IPAddress);
+                            DisconnectedCharacter disconnectedcharcheck = GameMain.NilMod.DisconnectedCharacters.Find(dc => dc.character.Name == c.Name && c.Connection.RemoteEndPoint.Address.ToString() == dc.IPAddress);
 
                             if (disconnectedcharcheck != null)
                             {

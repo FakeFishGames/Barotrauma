@@ -347,6 +347,9 @@ namespace Barotrauma.Items.Components
                 if (returnNull)
                 {
                     var itemContainer = projectileContainer.GetComponent<ItemContainer>();
+                    if (itemContainer == null) continue;
+                    if (itemContainer.Inventory == null) continue;
+                    if (itemContainer.Inventory.Items == null) continue;
                     for (int i = 0; i < itemContainer.Inventory.Items.Length; i++)
                     {
                         projectiles.Add(itemContainer.Inventory.Items[i]?.GetComponent<Projectile>());                        

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Vanilla 0.6" path="Data/ContentPackages/Vanilla 0.6">
+<contentpackage name="Vanilla 0.7" path="Data/ContentPackages/Vanilla 0.7">
   <Item file="Content/Items/idcard.xml" />
   <Item file="Content/Items/itemlabel.xml" />
   <Item file="Content/Items/Artifacts/artifacts.xml" />

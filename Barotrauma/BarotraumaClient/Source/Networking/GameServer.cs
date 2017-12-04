@@ -910,7 +910,7 @@ namespace Barotrauma.Networking
 
                     if (y >= startY && y < startY + height - 120)
                     {
-                        GUI.SmallFont.DrawString(spriteBatch, c.name + " (" + c.Connection.RemoteEndPoint.Address.ToString() + ")", new Vector2(x + 10, y), clientColor);
+                        GUI.SmallFont.DrawString(spriteBatch, c.Name + " (" + c.Connection.RemoteEndPoint.Address.ToString() + ")", new Vector2(x + 10, y), clientColor);
                         GUI.SmallFont.DrawString(spriteBatch, "Ping: " + (int)(c.Connection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x + 20, y + 10), clientColor);
                     }
                     if (y + 25 >= startY && y < startY + height - 130) GUI.SmallFont.DrawString(spriteBatch, "Resent messages: " + c.Connection.Statistics.ResentMessages, new Vector2(x + 20, y + 20), clientColor);

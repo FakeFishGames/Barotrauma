@@ -36,7 +36,7 @@ namespace Barotrauma
             int PageNumber;
             if (RequestingClient != null)
             {
-                DebugConsole.NewMessage("Help request from player: \"" + RequestingClient.name + "\" with help command: \"" + HelpCommand + "\" Received", Microsoft.Xna.Framework.Color.White);
+                DebugConsole.NewMessage("Help request from player: \"" + RequestingClient.Name + "\" with help command: \"" + HelpCommand + "\" Received", Microsoft.Xna.Framework.Color.White);
             }
             else
             {
@@ -154,7 +154,7 @@ namespace Barotrauma
 
             if (File.Exists(SavePath))
             {
-                doc = ToolBox.TryLoadXml(SavePath);
+                doc = XMLExtensions.TryLoadXml(SavePath);
             }
             else
             {
@@ -167,7 +167,7 @@ namespace Barotrauma
                 XElement NilModDefaultHelpTopicdoc = doc.Root.Element("DefaultHelpTopic");
                 Topics = new List<HelpTopic>();
 
-                DefaultHelpstring = ToolBox.GetAttributeString(NilModDefaultHelpTopicdoc.Element("Line"), "Text", "1").Trim();
+                DefaultHelpstring = NilModDefaultHelpTopicdoc.Element("Line").GetAttributeString("Text", "1").Trim();
                 //DefaultHelpstring = ToolBox.GetAttributeString(NilModDefaultHelpTopicdoc, "Text", "1").Trim();
 
                 //Load the help topics
@@ -176,11 +176,11 @@ namespace Barotrauma
                     foreach (XElement subElementTopic in NilModHelpTopicsdoc.Elements())
                     {
                         HelpTopic newtopic = new HelpTopic();
-                        newtopic.Name = ToolBox.GetAttributeString(subElementTopic, "Name", "1").Trim();
+                        newtopic.Name = subElementTopic.GetAttributeString("Name", "1").Trim();
                         newtopic.Pages = new List<string>();
                         foreach (XElement SubElementPage in subElementTopic.Elements())
                         {
-                            newtopic.Pages.Add(ToolBox.GetAttributeString(SubElementPage, "Text", ""));
+                            newtopic.Pages.Add(SubElementPage.GetAttributeString("Text", ""));
                         }
                         Topics.Add(newtopic);
                     }

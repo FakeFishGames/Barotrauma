@@ -283,7 +283,7 @@ namespace Barotrauma.Networking
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
 
-            AutoRestart = ToolBox.GetAttributeBool(doc.Root, "autorestart", false);
+            AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
 #if CLIENT
             if (autoRestart)
             {
@@ -384,10 +384,3 @@ namespace Barotrauma.Networking
         }
     }
 }
-
-            AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
-#if CLIENT
-            if (autoRestart)
-            {
-                GameMain.NetLobbyScreen.SetAutoRestart(autoRestart, AutoRestartInterval);
-            }

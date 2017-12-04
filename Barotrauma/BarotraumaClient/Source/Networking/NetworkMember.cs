@@ -80,7 +80,11 @@ namespace Barotrauma.Networking
         {
             textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
 
-            if (string.IsNullOrWhiteSpace(message)) return false;
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                if (textBox == chatMsgBox) textBox.Deselect();
+                return false;
+            }
 
             if (this == GameMain.Server)
             {
@@ -198,7 +202,7 @@ namespace Barotrauma.Networking
                 {
                     if (!permaBanTickBox.Selected)
                     {
-                        TimeSpan banDuration = new TimeSpan(durationInputDays.Value, durationInputHours.Value, 0, 0);
+                        TimeSpan banDuration = new TimeSpan(durationInputDays.IntValue, durationInputHours.IntValue, 0, 0);
                         BanPlayer(clientName, banReasonBox.Text, rangeBan, banDuration);
                     }
                     else

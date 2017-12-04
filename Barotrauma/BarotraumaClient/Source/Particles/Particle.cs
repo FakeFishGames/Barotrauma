@@ -26,9 +26,6 @@ namespace Barotrauma.Particles
 
         private float angularVelocity;
 
-        private Vector2 dragVec = Vector2.Zero;
-        private int dragWait = 0;
-
         private Vector2 size;
         private Vector2 sizeChange;
 

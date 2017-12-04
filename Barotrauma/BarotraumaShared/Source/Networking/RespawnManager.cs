@@ -493,22 +493,22 @@ namespace Barotrauma.Networking
             server.AssignJobs(clients, server.Character != null && server.Character.IsDead);
             foreach (Client c in clients)
             {
-                if (c.assignedJob != null)
+                if (c.AssignedJob != null)
                 {
-                    c.characterInfo.Job = new Job(c.assignedJob);
+                    c.CharacterInfo.Job = new Job(c.AssignedJob);
                 }
                 else
                 {
-                    DebugConsole.NewMessage("Error - Server Attempted to respawn player: " + c.name + " Without an assigned job.", Color.Red);
+                    DebugConsole.NewMessage("Error - Server Attempted to respawn player: " + c.Name + " Without an assigned job.", Color.Red);
                     DebugConsole.NewMessage("Retrying job assignment. . .", Color.Red);
                     server.AssignJobs(clients, server.Character != null && server.Character.IsDead);
-                    if (c.assignedJob != null)
+                    if (c.AssignedJob != null)
                     {
-                        c.characterInfo.Job = new Job(c.assignedJob);
+                        c.CharacterInfo.Job = new Job(c.AssignedJob);
                     }
                     else
                     {
-                        DebugConsole.NewMessage("Error - Player: " + c.name + " Still has no assigned job, skipping job assignment.", Color.Red);
+                        DebugConsole.NewMessage("Error - Player: " + c.Name + " Still has no assigned job, skipping job assignment.", Color.Red);
                     }
                 }
             }

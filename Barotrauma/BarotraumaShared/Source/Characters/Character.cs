@@ -1962,8 +1962,11 @@ namespace Barotrauma
 
             if (needsAir) UpdateOxygen(deltaTime);
 
-            Health -= (Bleeding * GameMain.NilMod.CreatureBleedMultiplier) * deltaTime;
-            Bleeding -= BleedingDecreaseSpeed * deltaTime;
+            if (Bleeding > 0f)
+            {
+                Health -= (Bleeding * GameMain.NilMod.CreatureBleedMultiplier) * deltaTime;
+                Bleeding -= BleedingDecreaseSpeed * deltaTime;
+            }
 
             //NilMod Anti death code
             if (Health <= minHealth)

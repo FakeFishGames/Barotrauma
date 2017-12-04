@@ -70,7 +70,7 @@ namespace Barotrauma
             MaxNumber = element.GetAttributeInt("maxnumber", 10);
 
             //NilMod Required players for job code
-            ReqNumber = ToolBox.GetAttributeInt(element, "reqnumber", 0);
+            ReqNumber = element.GetAttributeInt("reqnumber", 0);
 
             Commonness = element.GetAttributeInt("commonness", 10);
 

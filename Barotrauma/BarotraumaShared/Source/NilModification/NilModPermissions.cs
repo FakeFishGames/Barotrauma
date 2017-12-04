@@ -76,13 +76,13 @@ namespace Barotrauma
 
             if (File.Exists(PermissionsSavePath))
             {
-                doc = ToolBox.TryLoadXml(PermissionsSavePath);
+                doc = XMLExtensions.TryLoadXml(PermissionsSavePath);
             }
             //We have not actually started once yet, lets reset to current versions default instead without errors.
             else
             {
                 //Save();
-                doc = ToolBox.TryLoadXml(PermissionsSavePath);
+                doc = XMLExtensions.TryLoadXml(PermissionsSavePath);
             }
 
             if (doc == null)
@@ -96,10 +96,10 @@ namespace Barotrauma
             {
                 //Base Settings
                 XElement PermissionSettings = doc.Root.Element("Settings");
-                BonusSlots = ToolBox.GetAttributeInt(PermissionSettings, "BonusSlots", 0);
-                AdminSlots = ToolBox.GetAttributeInt(PermissionSettings, "AdminSlots", 0);
-                MasterserverShowAllSlots = ToolBox.GetAttributeBool(PermissionSettings, "MasterserverShowAllSlots", false);
-                MasterserverCountAllSlots = ToolBox.GetAttributeBool(PermissionSettings, "MasterserverCountAllSlots", false);
+                BonusSlots = PermissionSettings.GetAttributeInt("BonusSlots", 0);
+                AdminSlots = PermissionSettings.GetAttributeInt("AdminSlots", 0);
+                MasterserverShowAllSlots = PermissionSettings.GetAttributeBool("MasterserverShowAllSlots", false);
+                MasterserverCountAllSlots = PermissionSettings.GetAttributeBool("MasterserverCountAllSlots", false);
 
                 //NoGroup Permission loading
                 XElement NoGroup = doc.Root.Element("NoGroup");

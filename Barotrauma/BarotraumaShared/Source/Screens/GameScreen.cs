@@ -58,7 +58,7 @@ namespace Barotrauma
 
 #if DEBUG && CLIENT
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
-                !DebugConsole.IsOpen)
+                !DebugConsole.IsOpen && GUIComponent.KeyboardDispatcher.Subscriber == null)
             {
                 /*
                 var closestSub = Submarine.FindClosest(cam.WorldViewCenter);
@@ -112,7 +112,7 @@ namespace Barotrauma
 #if CLIENT
                 GameMain.NilModProfiler.SWLevelUpdate.Start();
 #endif
-                Level.Loaded.Update((float)deltaTime);
+                Level.Loaded.Update((float)deltaTime, cam);
 #if CLIENT
                 GameMain.NilModProfiler.RecordLevelUpdate();
 #endif

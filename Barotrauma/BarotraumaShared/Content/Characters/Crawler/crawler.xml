@@ -30,17 +30,20 @@
     <collider width="45" radius="22"/>
 
     <!-- head -->
-    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="1.0" armorsector="0.0,180.0" armorvalue="30.0" mouthpos="17,35">
+    <limb id = "0" radius="22" height="45"  type="Head" flip="true" steerforce="1.0" mouthpos="17,35">
+      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.2" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63"/>
     </limb>
 
     <!-- middle part -->
-    <limb id = "1" radius="22" height="40" flip="true" armorsector="0.0,180.0" armorvalue="20.0">0
+    <limb id = "1" radius="22" height="40" flip="true" >
+      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.2" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="57,7,59,57" depth="0.021" origin="0.3,0.65"/>
     </limb>
 
     <!-- tail -->
-    <limb id = "2" radius="22" height="45" type="Tail" flip="true" armorsector="0.0,180.0" armorvalue="20.0">
+    <limb id = "2" radius="22" height="45" type="Tail" flip="true">
+      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.2" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
       <sprite texture="Content/Characters/Crawler/crawler.png" sourcerect="6,141,60,95" depth="0.022" origin="0.37,0.43"/>
     </limb>
       
