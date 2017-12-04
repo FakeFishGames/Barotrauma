@@ -29,6 +29,13 @@ namespace Barotrauma.Networking
         public string Name;
         public byte ID;
 
+        private float karma = 1.0f;
+        public float Karma
+        {
+            get { return karma; }
+            set { karma = Math.Min(Math.Max(value,0.0f),1.0f); DebugConsole.NewMessage(Name+"'s karma set to "+karma,Microsoft.Xna.Framework.Color.Yellow); }
+        }
+
         public byte TeamID = 0;
 
         public Character Character;
