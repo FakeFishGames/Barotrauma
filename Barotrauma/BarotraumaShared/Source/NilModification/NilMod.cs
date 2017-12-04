@@ -917,8 +917,6 @@ namespace Barotrauma
                 //Core Settings
                 XElement ServerModGeneralSettings = doc.Root.Element("ServerModGeneralSettings");
 
-                
-
                 BypassMD5 = ServerModGeneralSettings.GetAttributeBool("BypassMD5", false); //Implemented
                 ServerMD5A = ServerModGeneralSettings.GetAttributeString("ServerMD5A", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
                 ServerMD5B = ServerModGeneralSettings.GetAttributeString("ServerMD5B", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
@@ -1022,6 +1020,13 @@ namespace Barotrauma
                 ReconnectAddStun = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ReconnectAddStun", 5.00f), 0.00f, 60.00f);
                 ReconnectTimeAllowed = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ReconnectTimeAllowed", 10.00f), 10.00f, 600.00f);
 
+                UseDesyncPrevention = ServerModDefaultServerSettings.GetAttributeBool("UseDesyncPrevention", true);
+                DesyncPreventionItemPassTimer = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncPreventionItemPassTimer", 0.15f), 0.00f, 10.00f);
+                DesyncPreventionPassItemCount = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("DesyncPreventionPassItemCount", 10), 0), 50);
+                DesyncPreventionPlayerStatusTimer = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncPreventionPlayerStatusTimer", 0.5f), 0.00f, 10.00f);
+                DesyncPreventionPassPlayerStatusCount = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("DesyncPreventionPassPlayerStatusCount", 1), 0), 10);
+                DesyncPreventionHullStatusTimer = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncPreventionHullStatusTimer", 1f), 0.00f, 10.00f);
+                DesyncPreventionPassHullCount = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("DesyncPreventionPassHullCount", 8), 0), 10);
 
                 //Debug Settings
                 XElement ServerModDebugSettings = doc.Root.Element("ServerModDebugSettings");
@@ -1401,6 +1406,13 @@ namespace Barotrauma
                 @"    AllowReconnect=""" + AllowReconnect + @"""",
                 @"    ReconnectAddStun=""" + ReconnectAddStun + @"""",
                 @"    ReconnectTimeAllowed=""" + ReconnectTimeAllowed + @"""",
+                @"    UseDesyncPrevention=""" + UseDesyncPrevention + @"""",
+                @"    DesyncPreventionItemPassTimer=""" + DesyncPreventionItemPassTimer + @"""",
+                @"    DesyncPreventionPassItemCount=""" + DesyncPreventionPassItemCount + @"""",
+                @"    DesyncPreventionPlayerStatusTimer=""" + DesyncPreventionPlayerStatusTimer + @"""",
+                @"    DesyncPreventionPassPlayerStatusCount=""" + DesyncPreventionPassPlayerStatusCount + @"""",
+                @"    DesyncPreventionHullStatusTimer=""" + DesyncPreventionHullStatusTimer + @"""",
+                @"    DesyncPreventionPassHullCount=""" + DesyncPreventionPassHullCount + @"""",
                 "  />",
 
                 "",
@@ -1749,11 +1761,11 @@ namespace Barotrauma
             //ParticleWhitelist.Add("shrapnel");
             //ParticleWhitelist.Add("iceshards");
 
-            UseDesyncPrevention = false;
+            UseDesyncPrevention = true;
             DesyncPreventionItemPassTimer = 0.15f;
-            DesyncPreventionPassItemCount = 20;
+            DesyncPreventionPassItemCount = 10;
             DesyncPreventionPlayerStatusTimer = 0.5f;
-            DesyncPreventionPassPlayerStatusCount = 3;
+            DesyncPreventionPassPlayerStatusCount = 1;
             DesyncPreventionHullStatusTimer = 1f;
             DesyncPreventionPassHullCount = 1;
 
