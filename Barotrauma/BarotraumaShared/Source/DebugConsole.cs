@@ -111,6 +111,7 @@ namespace Barotrauma
                 {
                     NewMessage("- Traitor " + T.Character.Name + "'s target is " + T.TargetCharacter.Name + ".", Color.Cyan);
                 }
+                NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
             }));
 
             commands.Add(new Command("createfilelist", "", (string[] args) =>
