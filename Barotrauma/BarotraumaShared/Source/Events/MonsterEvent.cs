@@ -73,14 +73,14 @@ namespace Barotrauma
         {
             base.Init();
 
-            monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server));
+            monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server), false);
             if (GameSettings.VerboseLogging)
             {
                 DebugConsole.NewMessage("Initialized MonsterEvent (" + monsters[0]?.SpeciesName + " x" + monsters.Length + ")", Color.White);
             }
         }
 
-        private Character[] SpawnMonsters(int amount)
+        private Character[] SpawnMonsters(int amount, bool createNetworkEvent)
         {
             if (disallowed) return null;
             
@@ -101,7 +101,7 @@ namespace Barotrauma
             {
                 spawnPos.X += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
                 spawnPos.Y += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
-                monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null, true, false);
+                monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null, true, createNetworkEvent);
             }
 
             return monsters;
@@ -127,7 +127,7 @@ namespace Barotrauma
                 {
                     if (monsters[i] == null || monsters[i].Removed || monsters[i].IsDead)
                     {
-                        monsters[i] = SpawnMonsters(1)[0];
+                        monsters[i] = SpawnMonsters(1, true)[0];
                     }
                 }
             }
