@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
     {
         No = 0, Maybe = 1, Yes = 2
     }
-
+    
     partial class GameServer : NetworkMember, ISerializableEntity
     {
         private class SavedClientPermission
@@ -69,7 +69,7 @@ namespace Barotrauma.Networking
         private bool isPublic;
 
         private int maxPlayers;
-
+        
         private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
         
         [Serialize(true, true)]
@@ -208,6 +208,13 @@ namespace Barotrauma.Networking
         {
             get;
             private set;
+        }
+
+        [Serialize(false,true)]
+        public bool KarmaEnabled
+        {
+            get;
+            set;
         }
 
         private void SaveSettings()
