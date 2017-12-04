@@ -709,7 +709,7 @@ namespace Barotrauma
                     gapRect.Height += 20;
                     sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
                     sections[sectionIndex].gap.ConnectedWall = this;
-                    AdjustKarma(attacker, 300);
+                    //AdjustKarma(attacker, 300);
 #if CLIENT
                     if(CastShadow) GenerateConvexHull();
 #endif

@@ -1329,6 +1329,8 @@ namespace Barotrauma
                         Condition = prefab.Health;
                     }
 
+                    c.Karma += 0.4f;
+
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
 
                     break;

@@ -2082,7 +2082,7 @@ namespace Barotrauma.Networking
                 {
                     //the maximum number of players that can have this job hasn't been reached yet
                     // -> assign it to the client
-                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber)
+                    if (assignedClientCount[preferredJob] < preferredJob.MaxNumber && c.Karma >= preferredJob.MinKarma)
                     {
                         c.AssignedJob = preferredJob;
                         assignedClientCount[preferredJob]++;
@@ -2092,13 +2092,22 @@ namespace Barotrauma.Networking
                     else if (preferredJob == c.JobPreferences.Last())
                     {
                         //find all jobs that are still available
-                        var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[preferredJob] < jp.MaxNumber);
+                        var remainingJobs = JobPrefab.List.FindAll(jp => assignedClientCount[preferredJob] < jp.MaxNumber && c.Karma >= jp.MinKarma);
 
                         //all jobs taken, give a random job
                         if (remainingJobs.Count == 0)
                         {
                             DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                            c.AssignedJob = JobPrefab.List[Rand.Range(0, JobPrefab.List.Count)];
+                            int jobIndex = Rand.Range(0,JobPrefab.List.Count);
+                            int skips = 0;
+                            while (c.Karma < JobPrefab.List[jobIndex].MinKarma)
+                            {
+                                jobIndex++;
+                                skips++;
+                                if (jobIndex >= JobPrefab.List.Count) jobIndex -= JobPrefab.List.Count;
+                                if (skips >= JobPrefab.List.Count) break;
+                            }
+                            c.AssignedJob = JobPrefab.List[jobIndex];
                             assignedClientCount[c.AssignedJob]++;
                         }
                         else //some jobs still left, choose one of them by random
@@ -2117,6 +2126,7 @@ namespace Barotrauma.Networking
             Client preferredClient = null;
             foreach (Client c in clients)
             {
+                if (c.Karma < job.MinKarma) continue;
                 int index = c.JobPreferences.IndexOf(job);
                 if (index == -1) index = 1000;
 

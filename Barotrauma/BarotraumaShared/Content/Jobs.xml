@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Jobs>
-  <Job name="Captain" description="The Commanding Officer is responsible for commanding the entirety of the crew and ensuring that everything is running smoothly." minnumber="1" maxnumber="1">
+  <Job name="Captain" description="The Commanding Officer is responsible for commanding the entirety of the crew and ensuring that everything is running smoothly." minnumber="1" maxnumber="1" minkarma="0.7">
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Construction" level="20,30"/>
@@ -22,7 +22,7 @@
     </Items>
   </Job>
   
-  <Job name="Engineer" description="Engineers are the backbone of a submarine's crew, complementing a mechanic's construction skill with their knowledge of electrical engineering. They are capable of performing maintenance on the various electrical pieces of the submarine." minnumber="1">
+  <Job name="Engineer" description="Engineers are the backbone of a submarine's crew, complementing a mechanic's construction skill with their knowledge of electrical engineering. They are capable of performing maintenance on the various electrical pieces of the submarine." minnumber="1" minkarma="0.5">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="20,30"/>
@@ -40,7 +40,7 @@
     </Items>
   </Job>
 
-  <Job name="Mechanic" description="Mechanics are capable of fixing various mechanical devices with their high construction skill. Together with engineers they ensure a submarine is working to its fullest." minnumber="1">
+  <Job name="Mechanic" description="Mechanics are capable of fixing various mechanical devices with their high construction skill. Together with engineers they ensure a submarine is working to its fullest." minnumber="1" minkarma="0.5">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="50,60"/>
@@ -58,7 +58,7 @@
     </Items>
   </Job>
 
-  <Job name="Security Officer" description="Security Officers are responsible for keeping the submarine safe from threats, both external and internal. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." maxnumber="2">
+  <Job name="Security Officer" description="Security Officers are responsible for keeping the submarine safe from threats, both external and internal. The creatures inhabiting the ocean aren't the only threat they need to worry about, as several of the renegade groups opposing the Europa Coalition are known to have sent infiltrators on board the vessels." maxnumber="2" minkarma="0.7">
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Medical" level="30,40"/>
@@ -78,7 +78,7 @@
     </Items>
   </Job>
 
-  <Job name="Medical Doctor" description="Although usually taken for granted, Doctors play an important role on the submarine, possessing the required skill to treat injured or unconscious crew members. Their skills can also be useful for creating various non-medicinal chemicals." maxnumber="2">
+  <Job name="Medical Doctor" description="Although usually taken for granted, Doctors play an important role on the submarine, possessing the required skill to treat injured or unconscious crew members. Their skills can also be useful for creating various non-medicinal chemicals." maxnumber="2" minkarma="0.7">
     <Skills>
       <Skill name="Weapons" level="10,20"/>
       <Skill name="Construction" level="10,20"/>
@@ -97,7 +97,7 @@
     </Items>
   </Job>
 
-  <Job name="Assistant" description="Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for." allowalways="true">
+  <Job name="Assistant" description="Assistants don't have any specific responsibilities or areas of expertise. This job is a good choice for newcomers who want to get a hang of working on board the submarine without taking up tasks that they aren't qualified for." allowalways="true" minkarma="0.0">
     <Skills>
       <Skill name="Weapons" level="20,30"/>
       <Skill name="Construction" level="20,30"/>

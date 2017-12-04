@@ -117,10 +117,19 @@ namespace Barotrauma
                     (GameMain.GameSession.Mission.Completed) ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
                     "", innerFrame, true);
 
+                if (GameMain.GameSession.Mission.Completed)
+                {
+                    GameMain.Server.ConnectedClients.ForEach(c => c.Karma += 0.1f);
+                }
+
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
                     new GUITextBlock(new Rectangle(0, 0, 0, 30), "Reward: " + GameMain.GameSession.Mission.Reward, "", Alignment.BottomLeft, Alignment.BottomLeft, innerFrame);
                 }  
+            }
+            else
+            {
+                GameMain.Server.ConnectedClients.ForEach(c => c.Karma += 0.1f);
             }
 
             return frame;
