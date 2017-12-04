@@ -22,8 +22,6 @@ namespace Barotrauma.Particles
         public int MaxParticles = 1500;
         private Particle[] particles;
 
-        private string loadedconfig = "";
-
         private Dictionary<string, ParticlePrefab> prefabs;
 
         private Camera cam;

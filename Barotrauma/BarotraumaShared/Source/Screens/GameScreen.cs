@@ -88,7 +88,12 @@ namespace Barotrauma
 #if CLIENT
             GameMain.NilModProfiler.SWMapEntityUpdate.Stop();
 
-            BackgroundCreatureManager.Update((float)deltaTime, cam);
+            if (GameMain.GameSession != null)
+            {
+                GameMain.NilModProfiler.SWGameSessionUpdate.Start();
+                GameMain.GameSession.Update((float)deltaTime);
+                GameMain.NilModProfiler.RecordGameSessionUpdate();
+            }
 
             GameMain.NilModProfiler.SWParticleManager.Start();
 
@@ -102,7 +107,16 @@ namespace Barotrauma
             GameMain.NilModProfiler.RecordLightManager();
 #endif
 
-            if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime);
+            if (Level.Loaded != null)
+            {
+#if CLIENT
+                GameMain.NilModProfiler.SWLevelUpdate.Start();
+#endif
+                Level.Loaded.Update((float)deltaTime, cam);
+#if CLIENT
+                GameMain.NilModProfiler.RecordLevelUpdate();
+#endif
+            }
 
 #if CLIENT
 
@@ -233,20 +247,3 @@ namespace Barotrauma
         }
     }
 }
-
-            if (GameMain.GameSession != null)
-            {
-                GameMain.NilModProfiler.SWGameSessionUpdate.Start();
-                GameMain.GameSession.Update((float)deltaTime);
-                GameMain.NilModProfiler.RecordGameSessionUpdate();
-            }
-            if (Level.Loaded != null)
-            {
-#if CLIENT
-                GameMain.NilModProfiler.SWLevelUpdate.Start();
-#endif
-                Level.Loaded.Update((float)deltaTime, cam);
-#if CLIENT
-                GameMain.NilModProfiler.RecordLevelUpdate();
-#endif
-            }

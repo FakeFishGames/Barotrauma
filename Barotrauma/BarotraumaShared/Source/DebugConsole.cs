@@ -397,7 +397,32 @@ namespace Barotrauma
 #endif
             }));
 
-            commands.Add(new Command("autorestartinterval", "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one.", (string[] args) =>
+            commands.Add(new Command("autorestart", CommandType.Network, "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                bool enabled = GameMain.Server.AutoRestart;
+                if (args.Length > 0)
+                {
+                    bool.TryParse(args[0], out enabled);
+                }
+                else
+                {
+                    enabled = !enabled;
+                }
+                if (enabled != GameMain.Server.AutoRestart)
+                {
+                    if (GameMain.Server.AutoRestartInterval <= 0) GameMain.Server.AutoRestartInterval = 10;
+                    GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
+                    GameMain.Server.AutoRestart = enabled;
+#if CLIENT
+                    GameMain.NetLobbyScreen.SetAutoRestart(enabled, GameMain.Server.AutoRestartTimer);
+#endif
+                    GameMain.NetLobbyScreen.LastUpdateID++;
+                }
+                NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
+            }));
+
+            commands.Add(new Command("autorestartinterval", CommandType.Network, "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 if (args.Length > 0)
@@ -425,8 +450,7 @@ namespace Barotrauma
                 }
             }));
 
-
-            commands.Add(new Command("autorestarttimer", "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", (string[] args) =>
+            commands.Add(new Command("autorestarttimer", CommandType.Network, "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 if (args.Length > 0)
@@ -544,7 +568,7 @@ namespace Barotrauma
 
                 ShowQuestionPrompt("Reason for kicking \"" + client.Name + "\"?", (reason) =>
                 {
-                    GameMain.Server.KickPlayer(client.name, reason);                    
+                    GameMain.Server.KickPlayer(client.Name, reason, GameMain.NilMod.AdminKickStateNameTimer, GameMain.NilMod.AdminKickDenyRejoinTimer);
                 });
             }));
 
@@ -966,7 +990,28 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("killmonsters", "killmonsters: Immediately kills all AI-controlled enemies in the level.", (string[] args) =>
+            commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
+            {
+                Character killedCharacter = null;
+                if (args.Length == 0)
+                {
+                    killedCharacter = Character.Controlled;
+                }
+                else
+                {
+                    killedCharacter = FindMatchingCharacter(args);
+                }
+
+                if (killedCharacter != null)
+                {
+                    //Use high damage values due to health multipliers
+                    killedCharacter.AddDamage(CauseOfDeath.Damage, 1000000.0f, null);
+                    //If still not dead make extra sure they are due to anti death code.
+                    if(!killedCharacter.IsDead) killedCharacter.Kill(CauseOfDeath.Damage, true);
+                }
+            }));
+
+            commands.Add(new Command("killmonsters", CommandType.GamePower, "killmonsters: Immediately kills all AI-controlled enemies in the level.", (string[] args) =>
             {
                 foreach (Character c in Character.CharacterList)
                 {
@@ -1025,8 +1070,8 @@ namespace Barotrauma
                 var character = FindMatchingCharacter(argsRight, false);
                 GameMain.Server.SetClientCharacter(client, character);
             }));
-#if DEBUG
-            commands.Add(new Command("spamevents", "A debug command that immediately creates entity events for all items, characters and structures.", (string[] args) =>
+
+            commands.Add(new Command("campaigninfo|campaignstatus", CommandType.Generic, "campaigninfo: Display information about the state of the currently active campaign.", (string[] args) =>
             {
                 var campaign = GameMain.GameSession?.GameMode as CampaignMode;
                 if (campaign == null)
@@ -1465,61 +1510,6 @@ namespace Barotrauma
             isOpen = true;
 #endif
         }
-    }
-}
-
-            commands.Add(new Command("autorestart", CommandType.Network, "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                bool enabled = GameMain.Server.AutoRestart;
-                if (args.Length > 0)
-                {
-                    bool.TryParse(args[0], out enabled);
-                }
-                else
-                {
-                    enabled = !enabled;
-                }
-                if (enabled != GameMain.Server.AutoRestart)
-                {
-                    if (GameMain.Server.AutoRestartInterval <= 0) GameMain.Server.AutoRestartInterval = 10;
-                    GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
-                    GameMain.Server.AutoRestart = enabled;
-#if CLIENT
-                    GameMain.NetLobbyScreen.SetAutoRestart(enabled, GameMain.Server.AutoRestartTimer);
-#endif
-                    GameMain.NetLobbyScreen.LastUpdateID++;
-                }
-                NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
-            }));
-
-            commands.Add(new Command("autorestartinterval", CommandType.Network, "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", (string[] args) =>
-            commands.Add(new Command("autorestarttimer", CommandType.Network, "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", (string[] args) =>
-                    GameMain.Server.KickPlayer(client.Name, reason, GameMain.NilMod.AdminKickStateNameTimer, GameMain.NilMod.AdminKickDenyRejoinTimer);
-            commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
-            {
-                Character killedCharacter = null;
-                if (args.Length == 0)
-                {
-                    killedCharacter = Character.Controlled;
-                }
-                else
-                {
-                    killedCharacter = FindMatchingCharacter(args);
-                }
-
-                if (killedCharacter != null)
-                {
-                    //Use high damage values due to health multipliers
-                    killedCharacter.AddDamage(CauseOfDeath.Damage, 1000000.0f, null);
-                    //If still not dead make extra sure they are due to anti death code.
-                    if(!killedCharacter.IsDead) killedCharacter.Kill(CauseOfDeath.Damage, true);
-                }
-            }));
-
-            commands.Add(new Command("killmonsters", CommandType.GamePower, "killmonsters: Immediately kills all AI-controlled enemies in the level.", (string[] args) =>
-
-            commands.Add(new Command("campaigninfo|campaignstatus", CommandType.Generic, "campaigninfo: Display information about the state of the currently active campaign.", (string[] args) =>
 
         //NilMod Custom Commands
         public static void AddNilModCommands()
@@ -1877,3 +1867,5 @@ namespace Barotrauma
                 NewMessage(GameMain.NilMod.DisableCrushDamage ? "Abyss crush damage off" : "Abyss crush damage on", Color.White);
             }));
         }
+    }
+}

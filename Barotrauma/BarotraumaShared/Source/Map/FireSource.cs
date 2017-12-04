@@ -235,9 +235,18 @@ namespace Barotrauma
                 float dmg = (((float)Math.Sqrt(size.X) * deltaTime * GameMain.NilMod.FireCharDamageMultiplier) / c.AnimController.Limbs.Length);
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (limb.WearingItems.Find(w => w != null && w.WearableComponent.Item.FireProof) != null) continue;
-                    limb.Burnt += dmg * 10.0f;
-                    c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
+                    if (GameMain.NilMod.FireUseRangedDamage)
+                    {
+                        float closestdistance = Math.Abs(limb.Position.X - position.X) / range;
+                        if (closestdistance > Math.Abs(limb.Position.X - (position.X + size.X)) / range) closestdistance = Math.Abs((limb.Position.X - (position.X + size.X)) / range);
+                        if (limb.Position.X > position.X && limb.Position.X < (position.X + size.X)) closestdistance = 0f;
+
+                        c.AddDamage(limb.SimPosition, DamageType.Burn, (dmg * Math.Min(Math.Max(((GameMain.NilMod.FireRangedDamageStrength) - (closestdistance * (GameMain.NilMod.FireRangedDamageStrength))), GameMain.NilMod.FireRangedDamageMinMultiplier), GameMain.NilMod.FireRangedDamageMaxMultiplier)), 0, 0, false);
+                    }
+                    else
+                    {
+                        c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
+                    }
                 }
             }
         }
@@ -362,17 +371,3 @@ namespace Barotrauma
         }
     }
 }
-
-                {
-                    if (GameMain.NilMod.FireUseRangedDamage)
-                    {
-                        float closestdistance = Math.Abs(limb.Position.X - position.X) / range;
-                        if (closestdistance > Math.Abs(limb.Position.X - (position.X + size.X)) / range) closestdistance = Math.Abs((limb.Position.X - (position.X + size.X)) / range);
-                        if (limb.Position.X > position.X && limb.Position.X < (position.X + size.X)) closestdistance = 0f;
-
-                        c.AddDamage(limb.SimPosition, DamageType.Burn, (dmg * Math.Min(Math.Max(((GameMain.NilMod.FireRangedDamageStrength) - (closestdistance * (GameMain.NilMod.FireRangedDamageStrength))), GameMain.NilMod.FireRangedDamageMinMultiplier), GameMain.NilMod.FireRangedDamageMaxMultiplier)), 0, 0, false);
-                    }
-                    else
-                    {
-                        c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
-                    }
