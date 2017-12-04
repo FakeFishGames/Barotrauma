@@ -2030,6 +2030,8 @@ namespace Barotrauma.Networking
                 client.Character.Kill(CauseOfDeath.Disconnected, true);
             }
 
+
+
             client.Character = null;
             client.InGame = false;
 

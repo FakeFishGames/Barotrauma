@@ -340,37 +340,25 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, bool playSound)
         {
-            List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
+            bool hitArmor = false;
+            float totalArmorValue = 0.0f;
 
-
-            foreach (DamageModifier damageModifier in damageModifiers)
+            if (armorValue > 0.0f && SectorHit(armorSector, position))
             {
-                if (damageModifier.DamageType.HasFlag(damageType) && SectorHit(damageModifier.ArmorSector, position))
-                {
-                    appliedDamageModifiers.Add(damageModifier);
-                }
+                hitArmor = true;
+                totalArmorValue += armorValue;
             }
 
             foreach (WearableSprite wearable in wearingItems)
             {
-                foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
+                if (wearable.WearableComponent.ArmorValue > 0.0f &&
+                    SectorHit(wearable.WearableComponent.ArmorSectorLimits, position))
                 {
-                    if (damageModifier.DamageType.HasFlag(damageType) && SectorHit(damageModifier.ArmorSector, position))
-                    {
-                        appliedDamageModifiers.Add(damageModifier);
-                    }
+                    hitArmor = true;
+                    totalArmorValue += wearable.WearableComponent.ArmorValue;
                 }
-            }
-            float originalamount = amount;
-            float originalbleed = bleedingAmount;
+            }            
 
-            foreach (DamageModifier damageModifier in appliedDamageModifiers)
-            {
-                amount = CalculateNewHealth(amount, originalamount, damageModifier.DamageMultiplier);
-                bleedingAmount = CalculateNewBleed(bleedingAmount, originalbleed, damageModifier.BleedingMultiplier);
-            }
-
-            /*
             if (hitArmor)
             {
                 totalArmorValue = Math.Max(totalArmorValue, 0.0f);
@@ -378,53 +366,20 @@ namespace Barotrauma
                 amount = Math.Max(0.0f, amount - totalArmorValue);
                 bleedingAmount = Math.Max(0.0f, bleedingAmount - totalArmorValue);
             }
-            */
-
-            //NilMod Armour Rebalance
-            /*
-            if (hitArmor)
-            {
-                totalArmorValue = Math.Max(totalArmorValue, 0.0f);
-
-                //Health Damage Mechanics
-                amount = CalculateHealthArmor(amount, totalArmorValue);
-
-                //Armour Bleeding Mechanics
-                if ((amount == 0.0f && GameMain.NilMod.ArmourBleedBypassNoDamage) | amount > 0.0f)
-                {
-                    bleedingAmount = CalculateBleedArmor(bleedingAmount, totalArmorValue);
-                }
-                else
-                {
-                    //No Damage and not allowed to cause bleed without damage.
-                    bleedingAmount = 0.0f;
-                }
-
-                //Don't allow negative values
-                amount = Math.Max(0.0f, amount);
-                bleedingAmount = Math.Max(0.0f, bleedingAmount);
-            }
-            */
 
 #if CLIENT
-
             if (playSound)
             {
                 DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
-
-                foreach (DamageModifier damageModifier in appliedDamageModifiers)
+                if (hitArmor) 
                 {
-                    if (damageModifier.DamageSoundType != DamageSoundType.None)
-                    {
-                        damageSoundType = damageModifier.DamageSoundType;
-                        break;
-                    }
-                }
+                    damageSoundType = DamageSoundType.LimbArmor;
+                } 
 
                 SoundPlayer.PlayDamageSound(damageSoundType, amount, position);
             }
-
-            float bloodParticleAmount = bleedingAmount <= 0.0f ? 0 : (int)Math.Min(amount / 5, 10);
+            
+            float bloodParticleAmount = hitArmor || bleedingAmount <= 0.0f ? 0 : (int)Math.Min(amount / 5, 10);
             float bloodParticleSize = MathHelper.Clamp(amount / 50.0f, 0.1f, 1.0f);
 
             for (int i = 0; i < bloodParticleAmount; i++)
@@ -582,6 +537,88 @@ namespace Barotrauma
             }
 #endif
         }
+    }
+}
+
+            List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
+
+
+            foreach (DamageModifier damageModifier in damageModifiers)
+            {
+                if (damageModifier.DamageType.HasFlag(damageType) && SectorHit(damageModifier.ArmorSector, position))
+                {
+                    appliedDamageModifiers.Add(damageModifier);
+                }
+            }
+
+            foreach (WearableSprite wearable in wearingItems)
+            {
+                foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
+                {
+                    if (damageModifier.DamageType.HasFlag(damageType) && SectorHit(damageModifier.ArmorSector, position))
+                    {
+                        appliedDamageModifiers.Add(damageModifier);
+                    }
+                }
+            }
+            float originalamount = amount;
+            float originalbleed = bleedingAmount;
+
+            foreach (DamageModifier damageModifier in appliedDamageModifiers)
+            {
+                amount = CalculateNewHealth(amount, originalamount, damageModifier.DamageMultiplier);
+                bleedingAmount = CalculateNewBleed(bleedingAmount, originalbleed, damageModifier.BleedingMultiplier);
+            }
+
+            /*
+            if (hitArmor)
+            {
+                totalArmorValue = Math.Max(totalArmorValue, 0.0f);
+
+                amount = Math.Max(0.0f, amount - totalArmorValue);
+                bleedingAmount = Math.Max(0.0f, bleedingAmount - totalArmorValue);
+            }
+            */
+
+            //NilMod Armour Rebalance
+            /*
+            if (hitArmor)
+            {
+                totalArmorValue = Math.Max(totalArmorValue, 0.0f);
+
+                //Health Damage Mechanics
+                amount = CalculateHealthArmor(amount, totalArmorValue);
+
+                //Armour Bleeding Mechanics
+                if ((amount == 0.0f && GameMain.NilMod.ArmourBleedBypassNoDamage) | amount > 0.0f)
+                {
+                    bleedingAmount = CalculateBleedArmor(bleedingAmount, totalArmorValue);
+                }
+                else
+                {
+                    //No Damage and not allowed to cause bleed without damage.
+                    bleedingAmount = 0.0f;
+                }
+
+                //Don't allow negative values
+                amount = Math.Max(0.0f, amount);
+                bleedingAmount = Math.Max(0.0f, bleedingAmount);
+            }
+            */
+
+
+                DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
+
+                foreach (DamageModifier damageModifier in appliedDamageModifiers)
+                {
+                    if (damageModifier.DamageSoundType != DamageSoundType.None)
+                    {
+                        damageSoundType = damageModifier.DamageSoundType;
+                        break;
+                    }
+                }
+
+            float bloodParticleAmount = bleedingAmount <= 0.0f ? 0 : (int)Math.Min(amount / 5, 10);
 
         public static float CalculateNewHealth(float health, float originalhealth, float damageModifier)
         {
@@ -677,5 +714,3 @@ namespace Barotrauma
             return bleedingAmount;
         }
         */
-    }
-}

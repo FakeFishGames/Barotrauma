@@ -202,8 +202,8 @@ namespace Barotrauma.Networking
                 {
                     if (!permaBanTickBox.Selected)
                     {
-                        TimeSpan banDuration = new TimeSpan(durationInputDays.IntValue, durationInputHours.IntValue, 0, 0);
-                        BanPlayer(clientName, banReasonBox.Text, rangeBan, banDuration);
+                        TimeSpan banDuration = new TimeSpan(durationInputDays.Value, durationInputHours.Value, 0, 0);
+                        BanPlayer(clientName, banReasonBox.Text, ban, banDuration);
                     }
                     else
                     {
@@ -221,3 +221,6 @@ namespace Barotrauma.Networking
         }
     }
 }
+
+                        TimeSpan banDuration = new TimeSpan(durationInputDays.IntValue, durationInputHours.IntValue, 0, 0);
+                        BanPlayer(clientName, banReasonBox.Text, rangeBan, banDuration);
