@@ -32,8 +32,18 @@ namespace Barotrauma.Networking
         private float karma = 1.0f;
         public float Karma
         {
-            get { return karma; }
-            set { karma = Math.Min(Math.Max(value,0.0f),1.0f); DebugConsole.NewMessage(Name+"'s karma set to "+karma,Microsoft.Xna.Framework.Color.Yellow); }
+            get
+            {
+                if (GameMain.Server == null) return 1.0f;
+                if (!GameMain.Server.KarmaEnabled) return 1.0f;
+                return karma;
+            }
+            set
+            {
+                if (GameMain.Server == null) return;
+                if (!GameMain.Server.KarmaEnabled) return;
+                karma = Math.Min(Math.Max(value,0.0f),1.0f);
+            }
         }
 
         public byte TeamID = 0;
