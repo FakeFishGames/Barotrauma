@@ -96,7 +96,7 @@ namespace Barotrauma
 
             int y = 180;
 
-            new GUITextBlock(new Rectangle(0, y, 0, 30), "Filter servers:", "", menu);
+            new GUITextBlock(new Rectangle(0, y, 200, 30), "Filter servers:", "", menu);
             searchBox = new GUITextBox(new Rectangle(0, y + 30, 200, 30), "", menu);
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
             filterPassword = new GUITickBox(new Rectangle(0, y + 60, 30, 30), "No password required", Alignment.TopLeft, menu);
