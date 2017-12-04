@@ -7,17 +7,65 @@ namespace Barotrauma
     partial class Traitor
     {
         public Character Character;
-        public Character TargetCharacter;
+        public Character TargetCharacter; //TODO: make a modular objective system (similar to crew missions) that allows for things OTHER than assasinations.
 
-        public Traitor(Character character, Character targetCharacter)
+        public Traitor(Character character)
         {
-            Character = character; TargetCharacter = targetCharacter;
+            Character = character;
+        }
+
+        public void Greet(GameServer server)
+        {
+            //Greeting messages TODO: Move this to a function in Traitor class
+            string greetingMessage = "You are the Traitor! Your secret task is to assassinate " + TargetCharacter.Name + "! Discretion is an utmost concern; sinking the submarine and killing the entire crew "
+            + "will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.";
+            string moreAgentsMessage = "It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. "
+            + "Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.";
+            moreAgentsMessage += "\nThe code words are: " + server.TraitorManager.codeWords + ".";
+            moreAgentsMessage += "\nThe code response is: " + server.TraitorManager.codeResponse + ".\n";
+
+            if (server.Character != Character)
+            {
+                var chatMsg = ChatMessage.Create(
+                null,
+                greetingMessage + "\n" + moreAgentsMessage,
+                (ChatMessageType)ChatMessageType.Server,
+                null);
+
+                var msgBox = ChatMessage.Create(
+                null,
+                "There might be other agents. Use these to communicate with them." +
+                "\nThe code words are: " + server.TraitorManager.codeWords + "." +
+                "\nThe code response is: " + server.TraitorManager.codeResponse + ".",
+                (ChatMessageType)ChatMessageType.MessageBox,
+                null);
+
+                Client client = server.ConnectedClients.Find(c => c.Character == Character);
+                GameMain.Server.SendChatMessage(chatMsg, client);
+                GameMain.Server.SendChatMessage(msgBox, client);
+            }
+
+#if CLIENT
+            if (server.Character == null)
+            {
+                new GUIMessageBox("New traitor", Character.Name + " is the traitor and the target is " + Character.Name+".");
+            }
+            else if (server.Character == Character)
+            {
+                TraitorManager.CreateStartPopUp(TargetCharacter.Name);
+                GameMain.NetworkMember.AddChatMessage(greetingMessage + "\n" + moreAgentsMessage, ChatMessageType.Server);
+                GameMain.NetworkMember.AddChatMessage("There might be other agents. Use these to communicate with them." +
+                "\nThe code words are: " + server.TraitorManager.codeWords + "." +
+                "\nThe code response is: " + server.TraitorManager.codeResponse + ".", ChatMessageType.MessageBox);
+                return;
+            }
+#endif
         }
     }
 
     partial class TraitorManager
     {
-        private static string CodeWords = Path.Combine("Content", "CodeWords.txt");
+        private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
 
         public List<Traitor> TraitorList
         {
@@ -25,6 +73,8 @@ namespace Barotrauma
         }
 
         private List<Traitor> traitorList;
+
+        public string codeWords, codeResponse;
 
         public TraitorManager(GameServer server, int TraitorCount)
         {
@@ -62,8 +112,8 @@ namespace Barotrauma
                 return;
             }
 
-            string codeWords = ToolBox.GetRandomLine(CodeWords) + ", " + ToolBox.GetRandomLine(CodeWords);
-            string codeResponse = ToolBox.GetRandomLine(CodeWords) + ", " + ToolBox.GetRandomLine(CodeWords);
+            codeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
+            codeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
 
             traitorList = new List<Traitor>();
             while (TraitorCount-- >= 0)
@@ -72,62 +122,26 @@ namespace Barotrauma
                     break;
 
                 int traitorIndex = Rand.Int(traitorCandidates.Count);
-                var traitorCharacter = traitorCandidates[traitorIndex];
+                Character traitorCharacter = traitorCandidates[traitorIndex];
                 traitorCandidates.Remove(traitorCharacter);
 
+                //Add them to the list
+                traitorList.Add(new Traitor(traitorCharacter));
+            }
+
+            //Now that traitors have been decided, let's do objectives in post for deciding things like Document Exchange.
+            foreach (Traitor traitor in traitorList)
+            {
+                Character traitorCharacter = traitor.Character;
                 int targetIndex = Rand.Int(characters.Count);
                 while (characters[targetIndex] == traitorCharacter) //Cannot target self
                 {
                     targetIndex = Rand.Int(characters.Count);
                 }
-                var targetCharacter = characters[targetIndex];
 
-                //Add them to the list
-                traitorList.Add(new Traitor(traitorCharacter, targetCharacter));
-
-                string greetingMessage = "You are the Traitor! Your secret task is to assassinate " + targetCharacter.Name + "! Discretion is an utmost concern; sinking the submarine and killing the entire crew "
-                + "will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.";
-                string moreAgentsMessage = "It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. "
-                + "Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.";
-                moreAgentsMessage += "\nThe code words are: " + codeWords + ".";
-                moreAgentsMessage += "\nThe code response is: " + codeResponse + ".";
-
-                if (server.Character != traitorCharacter)
-                {
-                    var chatMsg = ChatMessage.Create(
-                    null,
-                    greetingMessage + "\n" + moreAgentsMessage,
-                    (ChatMessageType)ChatMessageType.Server,
-                    null);
-
-                    var msgBox = ChatMessage.Create(
-                    null,
-                    "There might be other agents. Use these to communicate with them." +
-                    "\nThe code words are: " + codeWords + "." +
-                    "\nThe code response is: " + codeResponse + ".",
-                    (ChatMessageType)ChatMessageType.MessageBox,
-                    null);
-
-                    Client client = server.ConnectedClients.Find(c => c.Character == traitorCharacter);
-                    GameMain.Server.SendChatMessage(chatMsg, client);
-                    GameMain.Server.SendChatMessage(msgBox, client);
-                }
-
-#if CLIENT
-                if (server.Character == null)
-                {
-                    new GUIMessageBox("New traitor", traitorCharacter.Name + " is the traitor and the target is " + targetCharacter.Name+".");
-                }
-                else if (server.Character == traitorCharacter)
-                {
-                    CreateStartPopUp(targetCharacter.Name);
-                    GameMain.NetworkMember.AddChatMessage(greetingMessage + "\n" + moreAgentsMessage, ChatMessageType.Server);
-                    GameMain.NetworkMember.AddChatMessage("There might be other agents. Use these to communicate with them." +
-                    "\nThe code words are: " + codeWords + "." +
-                    "\nThe code response is: " + codeResponse + ".", ChatMessageType.MessageBox);
-                    return;
-                }
-#endif
+                Character targetCharacter = characters[targetIndex];
+                traitor.TargetCharacter = targetCharacter;
+                traitor.Greet(server);
             }
         }
 
