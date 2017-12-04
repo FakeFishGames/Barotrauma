@@ -344,6 +344,7 @@ namespace Barotrauma
 
             foreach (DamageModifier damageModifier in damageModifiers)
             {
+                if (damageModifier.DamageType == DamageType.None) continue;
                 if (damageModifier.DamageType.HasFlag(damageType) && SectorHit(damageModifier.ArmorSector, position))
                 {
                     appliedDamageModifiers.Add(damageModifier);
@@ -354,6 +355,7 @@ namespace Barotrauma
             {
                 foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                 {
+                    if (damageModifier.DamageType == DamageType.None) continue;
                     if (damageModifier.DamageType.HasFlag(damageType) && SectorHit(damageModifier.ArmorSector, position))
                     {
                         appliedDamageModifiers.Add(damageModifier);
