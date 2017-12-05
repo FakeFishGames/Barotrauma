@@ -107,9 +107,9 @@ namespace Barotrauma
                 if (GameMain.Server == null) return;
                 TraitorManager traitorManager = GameMain.Server.TraitorManager;
                 if (traitorManager == null) return;
-                foreach (Traitor T in traitorManager.TraitorList)
+                foreach (Traitor t in traitorManager.TraitorList)
                 {
-                    NewMessage("- Traitor " + T.Character.Name + "'s target is " + T.TargetCharacter.Name + ".", Color.Cyan);
+                    NewMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", Color.Cyan);
                 }
                 NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
             }));
