@@ -1329,8 +1329,8 @@ namespace Barotrauma.Networking
                     if (client.Character != null)
                         characters.Add(client.Character);
                 }
-                var max = (int)Math.Round(characters.Count * 0.2f, 1);
-                var traitorCount = Math.Max(1, TraitorsEnabled == YesNoMaybe.Maybe ? Rand.Int(max) + 1 : max);
+                int max = (int)Math.Round(characters.Count * 0.2f, 1);
+                int traitorCount = Math.Max(1, TraitorsEnabled == YesNoMaybe.Maybe ? Rand.Int(max) + 1 : max);
                 TraitorManager = new TraitorManager(this, traitorCount);
 
                 if (TraitorManager.TraitorList.Count > 0)
