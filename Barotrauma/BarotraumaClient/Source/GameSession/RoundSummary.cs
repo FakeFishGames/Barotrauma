@@ -119,7 +119,7 @@ namespace Barotrauma
 
                 if (GameMain.GameSession.Mission.Completed)
                 {
-                    GameMain.Server.ConnectedClients.ForEach(c => c.Karma += 0.1f);
+                    GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
                 }
 
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
@@ -129,7 +129,7 @@ namespace Barotrauma
             }
             else
             {
-                GameMain.Server.ConnectedClients.ForEach(c => c.Karma += 0.1f);
+                GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
             }
 
             return frame;
