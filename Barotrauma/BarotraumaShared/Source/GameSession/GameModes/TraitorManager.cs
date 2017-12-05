@@ -69,7 +69,7 @@ namespace Barotrauma
             get { return traitorList; }
         }
 
-        private List<Traitor> traitorList;
+        private List<Traitor> traitorList = new List<Traitor>();
 
         public string codeWords, codeResponse;
 
@@ -112,7 +112,6 @@ namespace Barotrauma
             codeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
             codeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
 
-            traitorList = new List<Traitor>();
             while (TraitorCount-- >= 0)
             {
                 if (traitorCandidates.Count <= 0)
