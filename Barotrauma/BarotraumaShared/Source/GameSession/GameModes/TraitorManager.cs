@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     partial class Traitor
     {
-        public Character Character;
+        public readonly Character Character;
         public Character TargetCharacter; //TODO: make a modular objective system (similar to crew missions) that allows for things OTHER than assasinations.
 
         public Traitor(Character character)
@@ -73,17 +73,17 @@ namespace Barotrauma
 
         public string codeWords, codeResponse;
 
-        public TraitorManager(GameServer server, int TraitorCount)
+        public TraitorManager(GameServer server, int traitorCount)
         {
-            if(TraitorCount < 1) //what why how
+            if (traitorCount < 1) //what why how
             {
-                TraitorCount = 1;
+                traitorCount = 1;
                 DebugConsole.ThrowError("Traitor Manager: TraitorCount somehow ended up less than 1, setting it to 1.");
             }
-            Start(server, TraitorCount);
+            Start(server, traitorCount);
         }
 
-        private void Start(GameServer server, int TraitorCount)
+        private void Start(GameServer server, int traitorCount)
         {
             if (server == null) return;
 
@@ -112,7 +112,7 @@ namespace Barotrauma
             codeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
             codeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
 
-            while (TraitorCount-- >= 0)
+            while (traitorCount-- >= 0)
             {
                 if (traitorCandidates.Count <= 0)
                     break;
