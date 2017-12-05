@@ -762,7 +762,7 @@ namespace Barotrauma
         }
 
 
-        public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
             if (prefab.Indestructible) return new AttackResult();
 

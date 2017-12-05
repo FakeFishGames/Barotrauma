@@ -245,7 +245,6 @@ namespace Barotrauma.Items.Components
                     item.Move(-submarine.Position);
                     item.Submarine = submarine;
                     item.body.Submarine = submarine;
-                    //item.FindHull();
                     return true;
                 }
 
@@ -253,7 +252,7 @@ namespace Barotrauma.Items.Components
                 Structure structure;
                 if ((limb = (target.Body.UserData as Limb)) != null)
                 {
-                    attackResult = attack.DoDamage(User, limb.character, item.WorldPosition, 1.0f);
+                    attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f);
                 }
                 else if ((structure = (target.Body.UserData as Structure)) != null)
                 {

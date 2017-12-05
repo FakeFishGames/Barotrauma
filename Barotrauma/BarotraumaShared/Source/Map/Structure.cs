@@ -643,7 +643,7 @@ namespace Barotrauma
             }
         }
 
-        public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f);
             if (!prefab.Body || prefab.Platform) return new AttackResult(0.0f, 0.0f);
