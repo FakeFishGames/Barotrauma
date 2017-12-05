@@ -33,6 +33,13 @@ namespace Barotrauma
         private GUIListBox jobList;
 
         private GUITextBox textBox, seedBox;
+        public GUITextBox TextBox
+        {
+            get
+            {
+                return textBox;
+            }
+        }
 
         private GUIFrame defaultModeContainer, campaignContainer;
 
