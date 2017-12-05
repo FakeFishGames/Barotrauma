@@ -106,7 +106,7 @@ namespace Barotrauma
 
         public float Health
         {
-            get { return prefab.MaxHealth; }
+            get { return prefab.Health; }
         }
 
         public override bool DrawBelowWater
@@ -535,7 +535,7 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
 
-            return (sections[sectionIndex].damage>=prefab.MaxHealth);
+            return (sections[sectionIndex].damage>=prefab.Health);
         }
 
         /// <summary>
@@ -545,7 +545,7 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
 
-            return (sections[sectionIndex].damage >= prefab.MaxHealth*0.5f);
+            return (sections[sectionIndex].damage >= prefab.Health*0.5f);
         }
 
         public int SectionLength(int sectionIndex)
@@ -686,7 +686,7 @@ namespace Barotrauma
             }
 
             AdjustKarma(attacker, damageDiff);
-            if (damage < prefab.MaxHealth*0.5f)
+            if (damage < prefab.Health*0.5f)
             {
                 if (sections[sectionIndex].gap != null)
                 {
@@ -715,11 +715,11 @@ namespace Barotrauma
 #endif
                 }
 
-                sections[sectionIndex].gap.Open = (damage / prefab.MaxHealth - 0.5f) * 2.0f;
+                sections[sectionIndex].gap.Open = (damage / prefab.Health - 0.5f) * 2.0f;
             }
             
             bool hadHole = SectionBodyDisabled(sectionIndex);
-            sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.MaxHealth);
+            sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
 

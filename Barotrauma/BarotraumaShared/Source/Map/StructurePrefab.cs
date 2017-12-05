@@ -10,7 +10,7 @@ namespace Barotrauma
     {
         private bool canSpriteFlipX;
 
-        private float maxHealth;
+        private float health;
         
         //default size
         private Vector2 size;
@@ -31,10 +31,10 @@ namespace Barotrauma
         }
 
         [Serialize(100.0f, false)]
-        public float MaxHealth
+        public float Health
         {
-            get { return maxHealth; }
-            set { maxHealth = Math.Max(value, 0.0f); }
+            get { return health; }
+            set { health = Math.Max(value, 0.0f); }
         }
 
         [Serialize(false, false)]
