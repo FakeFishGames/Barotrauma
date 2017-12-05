@@ -9,6 +9,7 @@ namespace Barotrauma
     {
         private Submarine selectedSub;
         private Submarine selectedShuttle;
+        private bool usingShuttle = true;
 
         public Submarine SelectedSub
         {
@@ -19,6 +20,11 @@ namespace Barotrauma
         {
             get { return selectedShuttle; }
             set { selectedShuttle = value; lastUpdateID++; }
+        }
+        public bool UsingShuttle
+        {
+            get { return usingShuttle; }
+            set { usingShuttle = value; lastUpdateID++; }
         }
 
         private GameModePreset[] gameModes;

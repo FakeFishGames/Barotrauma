@@ -47,6 +47,7 @@ namespace Barotrauma
         private GUITickBox autoRestartBox;
 
         private GUIDropDown shuttleList;
+        private GUITickBox shuttleTickBox;
 
         private CampaignUI campaignUI;
 
@@ -75,6 +76,11 @@ namespace Barotrauma
         public GUIDropDown ShuttleList
         {
             get { return shuttleList; }
+        }
+
+        public GUITickBox ShuttleTickBox
+        {
+            get { return shuttleTickBox; }
         }
 
         public GUIListBox ModeList
@@ -118,6 +124,12 @@ namespace Barotrauma
         public Submarine SelectedShuttle
         {
             get { return shuttleList.SelectedData as Submarine; }
+        }
+
+        public bool UsingShuttle
+        {
+            get { return shuttleTickBox.Selected; }
+            set { shuttleTickBox.Selected = value; if (GameMain.Client != null) shuttleTickBox.Enabled = false; }
         }
 
         public GameModePreset SelectedMode
@@ -245,9 +257,15 @@ namespace Barotrauma
 
             //respawn shuttle ------------------------------------------------------------------
 
-            new GUITextBlock(new Rectangle(columnX, 110, 20, 20), "Respawn shuttle:", "", defaultModeContainer);
+            shuttleTickBox = new GUITickBox(new Rectangle(columnX, 110, 20, 20), "Respawn shuttle:",Alignment.Left, defaultModeContainer);
             shuttleList = new GUIDropDown(new Rectangle(columnX, 140, 200, 20), "", "", defaultModeContainer);
-
+            shuttleTickBox.Selected = true;
+            shuttleTickBox.OnSelected = (GUITickBox box) =>
+            {
+                shuttleList.Enabled = box.Selected;
+                if (GameMain.Server != null) lastUpdateID++;
+                return true;
+            };
 
             //gamemode ------------------------------------------------------------------
 
