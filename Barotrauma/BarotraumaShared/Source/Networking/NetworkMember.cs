@@ -224,7 +224,7 @@ namespace Barotrauma.Networking
             //tab doesn't autoselect the chatbox when debug console is open, 
             //because tab is used for autocompleting console commands
             if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                (Screen.Selected == GameMain.GameScreen && msgBox.Visible || (!DebugConsole.IsOpen && GUIComponent.KeyboardDispatcher.Subscriber == null)))
+                (!DebugConsole.IsOpen && GUIComponent.KeyboardDispatcher.Subscriber == null) && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
             {
                 if (msgBox.Selected)
                 {
@@ -234,7 +234,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     msgBox.Select();
-                    if (PlayerInput.KeyHit(InputType.RadioChat))
+                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
                     {
                         msgBox.Text = "r; ";
                         msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
