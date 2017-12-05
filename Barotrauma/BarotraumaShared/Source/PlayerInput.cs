@@ -11,7 +11,8 @@ namespace Barotrauma
         Up, Down, Left, Right,
         Attack,
         Run, Crouch,
-        Chat, RadioChat, CrewOrders
+        Chat, RadioChat, CrewOrders,
+        Ragdoll
     }
 
     public class KeyOrMouse

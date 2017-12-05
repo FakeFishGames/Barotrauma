@@ -109,6 +109,10 @@ namespace Barotrauma
 
                             TransformCursorPos();
                         }
+                        bool ragdollInput = msg.ReadBoolean();
+                        keys[(int)InputType.Ragdoll].Held = ragdollInput;
+                        keys[(int)InputType.Ragdoll].SetState(false, ragdollInput);
+
                         facingRight = msg.ReadBoolean();
                     }
 

@@ -13,9 +13,9 @@ namespace Barotrauma
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
-        
+
         public static bool DisableControls;
-        
+
         private bool enabled = true;
         public bool Enabled
         {
@@ -68,7 +68,7 @@ namespace Barotrauma
         }
 
         protected Key[] keys;
-        
+
         private Item selectedConstruction;
         private Item[] selectedItems;
 
@@ -99,7 +99,7 @@ namespace Barotrauma
         private bool isDead;
         private CauseOfDeath lastAttackCauseOfDeath;
         private CauseOfDeath causeOfDeath;
-        
+
         public readonly bool IsHumanoid;
 
         //the name of the species (e.q. human)
@@ -113,16 +113,16 @@ namespace Barotrauma
         {
             get;
             set;
-        }        
+        }
 
         private CharacterInfo info;
         public CharacterInfo Info
         {
             get
-            { 
+            {
                 return info;
             }
-            set 
+            set
             {
                 if (info != null && info != value) info.Remove();
 
@@ -154,7 +154,7 @@ namespace Barotrauma
         {
             get { return inventory; }
         }
-        
+
         private Color speechBubbleColor;
         private float speechBubbleTimer;
 
@@ -184,8 +184,8 @@ namespace Barotrauma
         public Vector2 CursorPosition
         {
             get { return cursorPosition; }
-            set 
-            { 
+            set
+            {
                 if (!MathUtils.IsValid(value)) return;
                 cursorPosition = value;
             }
@@ -245,6 +245,9 @@ namespace Barotrauma
                 pressureProtection = MathHelper.Clamp(value, 0.0f, 100.0f);
             }
         }
+
+        public bool IsRagdolled;
+        public bool IsForceRagdolled;
 
         public bool IsUnconscious
         {
@@ -661,6 +664,8 @@ namespace Barotrauma
                         return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered                                                                           
                     case InputType.Use:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
+                    case InputType.Ragdoll:
+                        return !(dequeuedInput.HasFlag(InputType.Ragdoll)) && (prevDequeuedInput.HasFlag(InputType.Ragdoll));
                     default:
                         return false;
                 }
@@ -695,6 +700,8 @@ namespace Barotrauma
                         return dequeuedInput.HasFlag(InputNetFlags.Use);
                     case InputType.Attack:
                         return dequeuedInput.HasFlag(InputNetFlags.Attack);
+                    case InputType.Ragdoll:
+                        return dequeuedInput.HasFlag(InputNetFlags.Ragdoll);
                 }
                 return false;
             }
@@ -1435,7 +1442,22 @@ namespace Barotrauma
                 UpdateUnconscious(deltaTime);
                 return;
             }
-            
+
+            if (IsForceRagdolled)
+                IsRagdolled = IsForceRagdolled;
+            else if (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
+                IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
+
+            if (IsRagdolled)
+            {
+                ((HumanoidAnimController)AnimController).Crouching = false;
+                Stun = Math.Max(0.1f, Stun);
+
+                AnimController.ResetPullJoints();
+                selectedConstruction = null;
+                return;
+            }
+
             Control(deltaTime, cam);
             if (controlled != this && (!(this is AICharacter) || IsRemotePlayer))
             {
