@@ -185,7 +185,7 @@ namespace Barotrauma.Networking
                 GameMain.Server.SendChatMessage(denyMsg, c);
                 return;
             }
-
+            if (c.Character != null && !c.Character.CanSpeak) return;
             GameMain.Server.SendChatMessage(txt, null, c);
         }
 
