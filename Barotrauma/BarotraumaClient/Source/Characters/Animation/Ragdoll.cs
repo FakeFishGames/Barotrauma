@@ -13,7 +13,7 @@ namespace Barotrauma
         {
             float volume = Math.Min(impact - 3.0f, 1.0f);
 
-            if (body.UserData is Limb)
+            if (body.UserData is Limb && character.Stun <= 0f)
             {
                 Limb limb = (Limb)body.UserData;
 
@@ -23,7 +23,7 @@ namespace Barotrauma
                     limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
                 }
             }
-            else if (body == Collider.FarseerBody)
+            else if (body.UserData is Limb || body == Collider.FarseerBody)
             {
                 if (!character.IsRemotePlayer || GameMain.Server != null)
                 {

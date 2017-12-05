@@ -504,10 +504,7 @@ namespace Barotrauma
             
             ImpactProjSpecific(impact,f1.Body);
             
-            if (f1.Body.UserData is Limb)
-            {
-            }
-            else if (f1.Body == Collider.FarseerBody)
+            if ((f1.Body.UserData is Limb && character.Stun > 0f) || f1.Body == Collider.FarseerBody)
             {
                 if (!character.IsRemotePlayer || GameMain.Server != null)
                 {
