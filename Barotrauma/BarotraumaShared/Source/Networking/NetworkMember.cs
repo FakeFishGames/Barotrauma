@@ -167,7 +167,7 @@ namespace Barotrauma.Networking
 
             if (!string.IsNullOrWhiteSpace(message.SenderName))
             {
-                displayedText = message.SenderName + ": " + displayedText;
+                displayedText = (message.Type == ChatMessageType.Private ? "[PM] " : "" ) + message.SenderName + ": " + displayedText;
             }
             
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 40, 0), displayedText,
