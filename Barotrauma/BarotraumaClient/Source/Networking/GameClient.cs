@@ -528,12 +528,14 @@ namespace Barotrauma.Networking
                                 string subName = inc.ReadString();
                                 string subHash = inc.ReadString();
 
+                                bool usingShuttle = inc.ReadBoolean();
                                 string shuttleName = inc.ReadString();
                                 string shuttleHash = inc.ReadString();
 
                                 NetOutgoingMessage readyToStartMsg = client.CreateMessage();
                                 readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
 
+                                GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
                                 readyToStartMsg.Write(
                                     GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList) &&
                                     GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox));
@@ -654,6 +656,7 @@ namespace Barotrauma.Networking
             string subName          = inc.ReadString();
             string subHash          = inc.ReadString();
 
+            bool usingShuttle       = inc.ReadBoolean();
             string shuttleName      = inc.ReadString();
             string shuttleHash      = inc.ReadString();
 
@@ -697,6 +700,8 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
+            GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
+
             if (campaign == null)
             {
                 if (!GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList))
@@ -723,7 +728,7 @@ namespace Barotrauma.Networking
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, false);
             }
             
-            if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
+            if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
             
             if (isTraitor)
             {
@@ -842,6 +847,7 @@ namespace Barotrauma.Networking
                             string selectSubName        = inc.ReadString();
                             string selectSubHash        = inc.ReadString();
 
+                            bool usingShuttle           = inc.ReadBoolean();
                             string selectShuttleName    = inc.ReadString();
                             string selectShuttleHash    = inc.ReadString();
 
@@ -877,6 +883,8 @@ namespace Barotrauma.Networking
 
                                 GameMain.NetLobbyScreen.ServerName = serverName;
                                 GameMain.NetLobbyScreen.ServerMessage.Text = serverText;
+
+                                GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
 
                                 if (!allowSubVoting)
                                 {

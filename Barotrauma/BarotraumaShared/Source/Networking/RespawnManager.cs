@@ -27,6 +27,11 @@ namespace Barotrauma.Networking
         private Submarine respawnShuttle;
         private Steering shuttleSteering;
         private List<Door> shuttleDoors;
+        
+        public bool UsingShuttle
+        {
+            get { return respawnShuttle != null; }
+        }
 
         /// <summary>
         /// How long until the shuttle is dispatched with respawned characters
@@ -69,41 +74,48 @@ namespace Barotrauma.Networking
         {
             this.networkMember = networkMember;
 
-            respawnShuttle = new Submarine(shuttle.FilePath, shuttle.MD5Hash.Hash, true);
-            respawnShuttle.Load(false);
-
-            ResetShuttle();
-
-            //respawnShuttle.GodMode = true;
-            
-            shuttleDoors = new List<Door>();
-            foreach (Item item in Item.ItemList)
+            if (shuttle != null)
             {
-                if (item.Submarine != respawnShuttle) continue;
+                respawnShuttle = new Submarine(shuttle.FilePath, shuttle.MD5Hash.Hash, true);
+                respawnShuttle.Load(false);
 
-                var steering = item.GetComponent<Steering>();
-                if (steering != null) shuttleSteering = steering;
+                ResetShuttle();
+                
+                //respawnShuttle.GodMode = true;
 
-                var door = item.GetComponent<Door>();
-                if (door != null) shuttleDoors.Add(door);
-
-                //lock all wires to prevent the players from messing up the electronics
-                var connectionPanel = item.GetComponent<ConnectionPanel>();
-                if (connectionPanel != null)
+                shuttleDoors = new List<Door>();
+                foreach (Item item in Item.ItemList)
                 {
-                    foreach (Connection connection in connectionPanel.Connections)
+                    if (item.Submarine != respawnShuttle) continue;
+
+                    var steering = item.GetComponent<Steering>();
+                    if (steering != null) shuttleSteering = steering;
+
+                    var door = item.GetComponent<Door>();
+                    if (door != null) shuttleDoors.Add(door);
+
+                    //lock all wires to prevent the players from messing up the electronics
+                    var connectionPanel = item.GetComponent<ConnectionPanel>();
+                    if (connectionPanel != null)
                     {
-                        Array.ForEach(connection.Wires, w => { if (w != null) w.Locked = true; });
+                        foreach (Connection connection in connectionPanel.Connections)
+                        {
+                            Array.ForEach(connection.Wires, w => { if (w != null) w.Locked = true; });
+                        }
                     }
                 }
             }
-                        
+            else
+            {
+                respawnShuttle = null;
+            }
+            
             var server = networkMember as GameServer;
             if (server != null)
             {
                 respawnInterval = server.RespawnInterval;
                 maxTransportTime = server.MaxTransportTime;
-            }            
+            }
 
             respawnTimer = respawnInterval;            
         }
@@ -118,6 +130,14 @@ namespace Barotrauma.Networking
 
         public void Update(float deltaTime)
         {
+            if (respawnShuttle == null)
+            {
+                if (state != State.Waiting)
+                {
+                    state = State.Waiting;
+                }
+            }
+
             switch (state)
             {
                 case State.Waiting:
@@ -143,11 +163,6 @@ namespace Barotrauma.Networking
                 }
                 return;
             }
-
-            respawnShuttle.Velocity = Vector2.Zero;
-
-            shuttleSteering.AutoPilot = false;
-            shuttleSteering.MaintainPos = false;
 
             int characterToRespawnCount = GetClientsToRespawn().Count;
             int totalCharacterCount = server.ConnectedClients.Count;
@@ -180,6 +195,13 @@ namespace Barotrauma.Networking
 
                 DispatchShuttle();
             }
+            
+            if (respawnShuttle == null) return;
+
+            respawnShuttle.Velocity = Vector2.Zero;
+
+            shuttleSteering.AutoPilot = false;
+            shuttleSteering.MaintainPos = false;
         }
 
         private void UpdateTransporting(float deltaTime)
@@ -290,19 +312,30 @@ namespace Barotrauma.Networking
             var server = networkMember as GameServer;
             if (server == null) return;
 
-            state = State.Transporting;
-            server.CreateEntityEvent(this);
+            if (respawnShuttle != null)
+            {
+                state = State.Transporting;
+                server.CreateEntityEvent(this);
 
-            ResetShuttle();
+                ResetShuttle();
 
-            shuttleSteering.TargetVelocity = Vector2.Zero;
+                shuttleSteering.TargetVelocity = Vector2.Zero;
 
-            GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.Spawning);
+                GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.Spawning);
 
-            RespawnCharacters();
+                RespawnCharacters();
 
-            CoroutineManager.StopCoroutines("forcepos");
-            CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
+                CoroutineManager.StopCoroutines("forcepos");
+                CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
+            }
+            else
+            {
+                state = State.Waiting;
+                GameServer.Log("Respawning everyone in main sub.", ServerLog.MessageType.Spawning);
+                server.CreateEntityEvent(this);
+
+                RespawnCharacters();
+            }
         }
 
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
@@ -401,6 +434,7 @@ namespace Barotrauma.Networking
             var server = networkMember as GameServer;
             if (server == null) return;
 
+            var respawnSub = respawnShuttle != null ? respawnShuttle : Submarine.MainSub;
             
             var clients = GetClientsToRespawn();
             foreach (Client c in clients)
@@ -424,7 +458,7 @@ namespace Barotrauma.Networking
             }
 
             //the spawnpoints where the characters will spawn
-            var shuttleSpawnPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnShuttle);
+            var shuttleSpawnPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, respawnSub);
             //the spawnpoints where they would spawn if they were spawned inside the main sub
             //(in order to give them appropriate ID card tags)
             var mainSubSpawnPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
@@ -434,7 +468,7 @@ namespace Barotrauma.Networking
             ItemPrefab scooterPrefab    = MapEntityPrefab.Find("Underwater Scooter") as ItemPrefab;
             ItemPrefab batteryPrefab    = MapEntityPrefab.Find("Battery Cell") as ItemPrefab;
 
-            var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnShuttle && wp.SpawnType == SpawnType.Cargo);
+            var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnSub && wp.SpawnType == SpawnType.Cargo);
 
             for (int i = 0; i < characterInfos.Count; i++)
             {
@@ -470,20 +504,20 @@ namespace Barotrauma.Networking
 
                 if (divingSuitPrefab != null && oxyPrefab != null)
                 {
-                    var divingSuit  = new Item(divingSuitPrefab, pos, respawnShuttle);
+                    var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
                     Entity.Spawner.CreateNetworkEvent(divingSuit, false);
 
-                    var oxyTank     = new Item(oxyPrefab, pos, respawnShuttle);
+                    var oxyTank     = new Item(oxyPrefab, pos, respawnSub);
                     Entity.Spawner.CreateNetworkEvent(oxyTank, false);
                     divingSuit.Combine(oxyTank);                    
                 }
 
                 if (scooterPrefab != null && batteryPrefab != null)
                 {
-                    var scooter     = new Item(scooterPrefab, pos, respawnShuttle);
+                    var scooter     = new Item(scooterPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(scooter, false);
 
-                    var battery     = new Item(batteryPrefab, pos, respawnShuttle);
+                    var battery     = new Item(batteryPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(battery, false);
 
                     scooter.Combine(battery);
