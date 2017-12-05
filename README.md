@@ -14,4 +14,4 @@ Before downloading the source code, please read the [EULA](EULA.txt).
 
 ## Prerequisities:
 - [Visual Studio](https://www.visualstudio.com/vs/community/) with C# 6.0 support (VS 2015 or later recommended)
-- [MonoGame 3.5](http://www.monogame.net/2016/03/17/monogame-3-5/)
+- [MonoGame 3.6](http://www.monogame.net/downloads/)
