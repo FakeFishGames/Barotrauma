@@ -1,106 +1,203 @@
 ﻿using Barotrauma.Networking;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Barotrauma
 {
-    partial class TraitorManager
+    partial class Traitor
     {
-        public Character TraitorCharacter
+        public readonly Character Character;
+        public Character TargetCharacter; //TODO: make a modular objective system (similar to crew missions) that allows for things OTHER than assasinations.
+
+        public Traitor(Character character)
         {
-            get { return traitorCharacter; }
+            Character = character;
         }
 
-        public Character TargetCharacter
+        public void Greet(GameServer server, string codeWords, string codeResponse)
         {
-            get { return targetCharacter; }
-        }
+            //Greeting messages TODO: Move this to a function in Traitor class
+            string greetingMessage = "You are the Traitor! Your secret task is to assassinate " + TargetCharacter.Name + "! Discretion is an utmost concern; sinking the submarine and killing the entire crew "
+            + "will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.";
+            string moreAgentsMessage = "It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. "
+            + "Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.";
+            moreAgentsMessage += "\nThe code words are: " + codeWords + ".";
+            moreAgentsMessage += "\nThe code response is: " + codeResponse + ".\n";
 
-        private Character traitorCharacter, targetCharacter;
-        
-        public TraitorManager(GameServer server)
-        {
-            Start(server);
-        }
-
-        private void Start(GameServer server)
-        {
-            if (server == null) return;
-
-            List<Character> characters = new List<Character>();
-            foreach (Client client in server.ConnectedClients)
+            if (server.Character != Character)
             {
-                if (client.Character != null)
-                    characters.Add(client.Character);
+                var chatMsg = ChatMessage.Create(
+                null,
+                greetingMessage + "\n" + moreAgentsMessage,
+                (ChatMessageType)ChatMessageType.Server,
+                null);
+
+                var msgBox = ChatMessage.Create(
+                null,
+                "There might be other agents. Use these to communicate with them." +
+                "\nThe code words are: " + codeWords + "." +
+                "\nThe code response is: " + codeResponse + ".",
+                (ChatMessageType)ChatMessageType.MessageBox,
+                null);
+
+                Client client = server.ConnectedClients.Find(c => c.Character == Character);
+                GameMain.Server.SendChatMessage(chatMsg, client);
+                GameMain.Server.SendChatMessage(msgBox, client);
             }
-
-            if (server.Character!= null) characters.Add(server.Character);
-
-            if (characters.Count < 2)
-            {
-                traitorCharacter = null;
-                targetCharacter = null;
-                return;
-            }
-
-            int traitorIndex = Rand.Range(0, characters.Count);
-
-            int targetIndex = Rand.Range(0, characters.Count);
-            while (targetIndex == traitorIndex)
-            {
-                targetIndex = Rand.Range(0, characters.Count);
-            }
-
-            traitorCharacter = characters[traitorIndex];
-            targetCharacter = characters[targetIndex];
 
 #if CLIENT
             if (server.Character == null)
             {
-                new GUIMessageBox("New traitor", traitorCharacter.Name + " is the traitor and the target is " + targetCharacter.Name+".");
+                new GUIMessageBox("New traitor", Character.Name + " is the traitor and the target is " + TargetCharacter.Name+".");
             }
-            else if (server.Character == traitorCharacter)
+            else if (server.Character == Character)
             {
-                CreateStartPopUp(targetCharacter.Name);
+                TraitorManager.CreateStartPopUp(TargetCharacter.Name);
+                GameMain.NetworkMember.AddChatMessage(moreAgentsMessage, ChatMessageType.Server);
                 return;
             }
 #endif
         }
+    }
+
+    partial class TraitorManager
+    {
+        private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
+
+        public List<Traitor> TraitorList
+        {
+            get { return traitorList; }
+        }
+
+        private List<Traitor> traitorList = new List<Traitor>();
+
+        public string codeWords, codeResponse;
+
+        public TraitorManager(GameServer server, int traitorCount)
+        {
+            if (traitorCount < 1) //what why how
+            {
+                traitorCount = 1;
+                DebugConsole.ThrowError("Traitor Manager: TraitorCount somehow ended up less than 1, setting it to 1.");
+            }
+            Start(server, traitorCount);
+        }
+
+        private void Start(GameServer server, int traitorCount)
+        {
+            if (server == null) return;
+
+            List<Character> characters = new List<Character>(); //ANYONE can be a target.
+            List<Character> traitorCandidates = new List<Character>(); //Keep this to not re-pick traitors twice
+            foreach (Client client in server.ConnectedClients)
+            {
+                if (client.Character != null)
+                {
+                    characters.Add(client.Character);
+                    traitorCandidates.Add(client.Character);
+                }
+            }
+
+            if (server.Character != null)
+            {
+                characters.Add(server.Character); //Add host character
+                traitorCandidates.Add(server.Character);
+            }
+
+            if (characters.Count < 2)
+            {
+                return;
+            }
+
+            codeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
+            codeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
+
+            while (traitorCount-- >= 0)
+            {
+                if (traitorCandidates.Count <= 0)
+                    break;
+
+                int traitorIndex = Rand.Int(traitorCandidates.Count);
+                Character traitorCharacter = traitorCandidates[traitorIndex];
+                traitorCandidates.Remove(traitorCharacter);
+
+                //Add them to the list
+                traitorList.Add(new Traitor(traitorCharacter));
+            }
+
+            //Now that traitors have been decided, let's do objectives in post for deciding things like Document Exchange.
+            foreach (Traitor traitor in traitorList)
+            {
+                Character traitorCharacter = traitor.Character;
+                int targetIndex = Rand.Int(characters.Count);
+                while (characters[targetIndex] == traitorCharacter) //Cannot target self
+                {
+                    targetIndex = Rand.Int(characters.Count);
+                }
+
+                Character targetCharacter = characters[targetIndex];
+                traitor.TargetCharacter = targetCharacter;
+                traitor.Greet(server, codeWords, codeResponse);
+            }
+        }
 
         public string GetEndMessage()
         {
-            if (GameMain.Server == null || traitorCharacter == null || targetCharacter == null) return "";
+            if (GameMain.Server == null || traitorList.Count <= 0) return "";
 
             string endMessage = "";
 
-            if (targetCharacter.IsDead && !traitorCharacter.IsDead)
+            foreach (Traitor traitor in traitorList)
             {
-                endMessage = traitorCharacter.Name + " was a traitor! ";
+                Character traitorCharacter = traitor.Character;
+                Character targetCharacter = traitor.TargetCharacter;
+                endMessage += traitorCharacter.Name + " was a traitor! ";
                 endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + targetCharacter.Name + ". The task was successful.";
-            }
-            else if (targetCharacter.IsDead && traitorCharacter.IsDead)
-            {
-                endMessage = traitorCharacter.Name + " was a traitor! ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + targetCharacter.Name + ". The task was successful, but luckily the bastard didn't make it out alive either.";
-            }
-            else if (traitorCharacter.IsDead)
-            {
-                endMessage = traitorCharacter.Name + " was a traitor! ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + targetCharacter.Name + ", but ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
-                endMessage += " got " + ((traitorCharacter.Info.Gender == Gender.Male) ? "himself" : "herself");
-                endMessage += " killed before completing it.";
-            }
-            else
-            {
-                endMessage = traitorCharacter.Name + " was a traitor! ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + targetCharacter.Name + ". ";
-                endMessage += (Submarine.MainSub.AtEndPosition) ?
-                    "The task was unsuccessful - the submarine has reached its destination." : 
-                    "The task was unsuccessful.";
+                endMessage += " task was to assassinate " + targetCharacter.Name;
+
+                if (targetCharacter.IsDead) //Partial or complete mission success
+                {
+                    endMessage += ". The task was successful";
+                    if (traitorCharacter.IsDead)
+                    {
+                        endMessage += ", but luckily the bastard didn't make it out alive either.";
+                    }
+                    else if (traitorCharacter.LockHands)
+                    {
+                        endMessage += ", but ";
+                        endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
+                        endMessage += " was successfuly detained.";
+                    }
+                    else
+                        endMessage += ".";
+                }
+                else //Partial or complete failure
+                {
+                    if (traitorCharacter.IsDead)
+                    {
+                        endMessage += ", but ";
+                        endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
+                        endMessage += " got " + ((traitorCharacter.Info.Gender == Gender.Male) ? "himself" : "herself");
+                        endMessage += " killed before completing it.";
+                    }
+                    else
+                    {
+                        endMessage += ". The task was unsuccessful";
+                        if (traitorCharacter.LockHands)
+                        {
+                            endMessage += " - ";
+                            endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
+                            endMessage += " was successfuly detained";
+                        }
+                        if (Submarine.MainSub.AtEndPosition)
+                        {
+                            endMessage += (traitorCharacter.LockHands ? " and " : " - ");
+                            endMessage += "the submarine has reached its destination";
+                        }
+                        endMessage += ".";
+                    }
+                }
+                endMessage += "\n";
             }
 
             return endMessage;          
