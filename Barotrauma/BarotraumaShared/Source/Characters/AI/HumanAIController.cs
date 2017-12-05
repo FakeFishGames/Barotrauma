@@ -137,7 +137,7 @@ namespace Barotrauma
             }
         }
 
-        public override void OnAttacked(IDamageable attacker, float amount)
+        public override void OnAttacked(Character attacker, float amount)
         {
             if (amount <= 0.0f) return;
 

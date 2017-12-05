@@ -213,27 +213,38 @@ namespace Barotrauma.Items.Components
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
-            Character target = null;
+            Character targetCharacter = null;
+            Limb targetLimb = null;
 
-            Limb limb = f2.Body.UserData as Limb;
-            if (limb != null)
+            if (f2.Body.UserData is Limb)
             {
-                if (limb.character == picker) return false;
-                target = limb.character;
+                targetLimb = (Limb)f2.Body.UserData;
+                if (targetLimb.IsSevered || targetLimb.character == null) return false;
+                targetCharacter = targetLimb.character;
+            }
+            else if (f2.Body.UserData is Character)
+            {
+
+                targetCharacter = (Character)f2.Body.UserData;
             }
             else
             {
                 return false;
             }
 
-            if (target == null)
+            if (targetCharacter == picker) return false;
+
+            if (attack != null)
             {
-                target = f2.Body.UserData as Character;
+                if (targetLimb == null)
+                {
+                    attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
+                }
+                else
+                {
+                    attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
+                }
             }
-
-            if (target == null) return false;
-
-            if (attack != null) attack.DoDamage(user, target, item.WorldPosition, 1.0f);
 
             RestoreCollision();
             hitting = false;
@@ -242,18 +253,18 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.Server != null)
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, target.ID });
+                GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, targetCharacter.ID });
 
                 string logStr = picker?.Name + " used " + item.Name;
                 if (item.ContainedItems != null && item.ContainedItems.Length > 0)
                 {
                     logStr += "(" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
                 }
-                logStr += " on " + target + ".";
+                logStr += " on " + targetCharacter + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
             }
 
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, limb.character);
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, targetLimb.character);
 
             return true;
         }

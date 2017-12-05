@@ -1523,19 +1523,19 @@ namespace Barotrauma
             speechBubbleTimer = Math.Max(speechBubbleTimer, duration);
             speechBubbleColor = color;
         }
-        
-        private void AdjustKarma(IDamageable attacker,float amount)
+
+        private void AdjustKarma(Character attacker, float amount)
         {
             if (GameMain.Server != null)
             {
                 if (attacker is Character)
                 {
                     Character attackerCharacter = attacker as Character;
-                    Barotrauma.Networking.Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
+                    Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
                     if (attackerClient != null)
                     {
-                        Barotrauma.Networking.Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
-                        if (targetClient != null || this == Character.Controlled)
+                        Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
+                        if (targetClient != null || this == Controlled)
                         {
                             if (attackerCharacter.TeamID == TeamID)
                             {
@@ -1548,9 +1548,12 @@ namespace Barotrauma
             }
         }
 
-        public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
+        /// <summary>
+        /// Directly reduce the health of the character without any additional effects (particles, sounds, status effects...)
+        /// </summary>
+        public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, Character attacker)
         {
-            Health = health-amount;
+            Health = health - amount;
             if (amount > 0.0f)
             {
                 lastAttackCauseOfDeath = causeOfDeath;
@@ -1562,10 +1565,21 @@ namespace Barotrauma
         }
         partial void DamageHUD(float amount);
 
-        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            Limb limbHit = null;
-            var attackResult = AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit, attacker);
+            return ApplyAttack(attacker, worldPosition, attack, deltaTime, playSound, null);
+        }
+
+        /// <summary>
+        /// Apply the specified attack to this character. If the targetLimb is not specified, the limb closest to worldPosition will receive the damage.
+        /// </summary>
+        public virtual AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
+        {
+            Limb limbHit = targetLimb;
+            var attackResult = targetLimb == null ?
+                AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit, attacker) :
+                DamageLimb(worldPosition, targetLimb, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, attacker);
+
             if (limbHit == null) return new AttackResult();
 
             var attackingCharacter = attacker as Character;
@@ -1612,14 +1626,12 @@ namespace Barotrauma
             return AddDamage(worldPosition, damageType, amount, bleedingAmount, stun, playSound, attackForce, out temp);
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, out Limb hitLimb,IDamageable attacker=null)
+        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
         {
             hitLimb = null;
 
             if (Removed) return new AttackResult();
 
-            SetStun(stun);
-            
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
             {
@@ -1630,13 +1642,22 @@ namespace Barotrauma
                     closestDistance = distance;
                 }
             }
-            
+
+            return DamageLimb(worldPosition, hitLimb, damageType, amount, bleedingAmount, stun, playSound, attackForce, attacker);
+        }
+
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, Character attacker = null)
+        {
+            if (Removed) return new AttackResult();
+
+            SetStun(stun);
+
             if (Math.Abs(attackForce) > 0.0f)
             {
                 Vector2 diff = hitLimb.WorldPosition - worldPosition;
                 if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
                 hitLimb.body.ApplyForce(Vector2.Normalize(diff) * attackForce, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
-            }
+            }            
 
             AttackResult attackResult = hitLimb.AddDamage(worldPosition, damageType, amount, bleedingAmount, playSound);
 

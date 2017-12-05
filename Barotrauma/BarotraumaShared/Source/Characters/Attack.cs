@@ -156,7 +156,7 @@ namespace Barotrauma
         }
         partial void InitProjSpecific(XElement element);
         
-        public AttackResult DoDamage(IDamageable attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
+        public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
             if (onlyHumans)
             {
@@ -167,19 +167,14 @@ namespace Barotrauma
             DamageParticles(deltaTime, worldPosition);
 
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
-
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
-
-            if (statusEffects == null)
-            {
-                return attackResult;
-            }
+            if (statusEffects == null) return attackResult;
 
             foreach (StatusEffect effect in statusEffects)
             {
-                if (effect.Targets.HasFlag(StatusEffect.TargetType.This) && attacker is Character)
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
                 {
-                    effect.Apply(effectType, deltaTime, (Character)attacker, (Character)attacker);
+                    effect.Apply(effectType, deltaTime, attacker, attacker);
                 }
                 if (effect.Targets.HasFlag(StatusEffect.TargetType.Character) && target is Character)
                 {
@@ -189,6 +184,37 @@ namespace Barotrauma
 
             return attackResult;
         }
+
+        public AttackResult DoDamageToLimb(Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true)
+        {
+            if (targetLimb == null) return new AttackResult();
+
+            if (onlyHumans)
+            {
+                if (targetLimb.character != null && targetLimb.character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
+            }
+
+            DamageParticles(deltaTime, worldPosition);
+
+            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb);
+            var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+            if (statusEffects == null) return attackResult;            
+
+            foreach (StatusEffect effect in statusEffects)
+            {
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.This))
+                {
+                    effect.Apply(effectType, deltaTime, attacker, attacker);
+                }
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.Character))
+                {
+                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character);
+                }
+            }
+
+            return attackResult;
+        }
+
         partial void DamageParticles(float deltaTime, Vector2 worldPosition);
     }
 }
