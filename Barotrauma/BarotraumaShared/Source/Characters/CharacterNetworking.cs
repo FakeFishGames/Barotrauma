@@ -52,8 +52,9 @@ namespace Barotrauma
             Use = 0x100,
             Aim = 0x200,
             Attack = 0x400,
+            Ragdoll = 0x800,
 
-            MaxVal = 0x7FF
+            MaxVal = 0xFFF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
@@ -208,6 +209,7 @@ namespace Barotrauma
                 if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
                 if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
                 if (IsKeyDown(InputType.Attack))    newInput |= InputNetFlags.Attack;
+                if (IsKeyDown(InputType.Ragdoll))   newInput |= InputNetFlags.Ragdoll;
 
                 if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
@@ -438,6 +440,7 @@ namespace Barotrauma
                         Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
                         tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
                     }
+                    tempBuffer.Write(IsRagdolled);
 
                     tempBuffer.Write(AnimController.TargetDir == Direction.Right);
                 }

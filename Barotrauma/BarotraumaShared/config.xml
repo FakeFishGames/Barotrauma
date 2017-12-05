@@ -2,7 +2,7 @@
 <config masterserverurl="http://www.undertowgames.com/baromaster" autocheckupdates="true" musicvolume="0.5" soundvolume="0.5" verboselogging="false">
   <graphicsmode fullscreen="true" vsync="true" />
   <contentpackage path="Data/ContentPackages/Vanilla 0.7.xml" />
-  <keymapping Select="E" Use="0" Aim="1" Up="W" Down="S" Left="A" Right="D" Attack="R" Run="LeftShift" Crouch="LeftControl" Chat="Tab" CrewOrders="C" />
+  <keymapping Select="E" Use="0" Aim="1" Up="W" Down="S" Left="A" Right="D" Attack="R" Run="LeftShift" Crouch="LeftControl" Chat="Tab" RadioChat="OemTilde" CrewOrders="C" Ragdoll="Space" /> />
   <gameplay>
     <jobpreferences>
       <job name="Engineer" />
