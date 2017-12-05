@@ -69,7 +69,10 @@ namespace Barotrauma.Networking
                     textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
                     break;
                 default:
-                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+                    if (command != "") //PMing
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
+                    else
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
                     break;
             }
 
