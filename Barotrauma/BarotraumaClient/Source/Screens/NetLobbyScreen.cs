@@ -33,6 +33,13 @@ namespace Barotrauma
         private GUIListBox jobList;
 
         private GUITextBox textBox, seedBox;
+        public GUITextBox TextBox
+        {
+            get
+            {
+                return textBox;
+            }
+        }
 
         private GUIFrame defaultModeContainer, campaignContainer;
 
@@ -1092,7 +1099,7 @@ namespace Barotrauma
             }
 
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 20, 0),
-                message.TextWithSender,
+                (message.Type == ChatMessageType.Private ? "[PM] " : "") + message.TextWithSender,
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
                 Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
             msg.UserData = message;

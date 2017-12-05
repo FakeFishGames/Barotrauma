@@ -167,7 +167,7 @@ namespace Barotrauma.Networking
 
             if (!string.IsNullOrWhiteSpace(message.SenderName))
             {
-                displayedText = message.SenderName + ": " + displayedText;
+                displayedText = (message.Type == ChatMessageType.Private ? "[PM] " : "" ) + message.SenderName + ": " + displayedText;
             }
             
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 40, 0), displayedText,
@@ -205,9 +205,10 @@ namespace Barotrauma.Networking
         public virtual void Update(float deltaTime) 
         {
 #if CLIENT
+            GUITextBox msgBox = (Screen.Selected == GameMain.GameScreen ? chatMsgBox : GameMain.NetLobbyScreen.TextBox);
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                chatMsgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
+                msgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
 
                 inGameHUD.Update(deltaTime);
 
@@ -222,22 +223,21 @@ namespace Barotrauma.Networking
 
             //tab doesn't autoselect the chatbox when debug console is open, 
             //because tab is used for autocompleting console commands
-            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) && 
-                chatMsgBox.Visible && !DebugConsole.IsOpen)
+            if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
+                (!DebugConsole.IsOpen && GUIComponent.KeyboardDispatcher.Subscriber == null) && (Screen.Selected != GameMain.GameScreen || msgBox.Visible))
             {
-                if (chatMsgBox.Selected)
+                if (msgBox.Selected)
                 {
-                    chatMsgBox.Text = "";
-                    chatMsgBox.Deselect();
+                    msgBox.Text = "";
+                    msgBox.Deselect();
                 }
                 else
                 {
-                    chatMsgBox.Select();
-                    if (PlayerInput.KeyHit(InputType.RadioChat))
+                    msgBox.Select();
+                    if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
                     {
-                        chatMsgBox.Text = "r; ";
-                        chatMsgBox.OnTextChanged?.Invoke(chatMsgBox, chatMsgBox.Text);
-
+                        msgBox.Text = "r; ";
+                        msgBox.OnTextChanged?.Invoke(msgBox, msgBox.Text);
                     }
                 }
             }
