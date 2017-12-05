@@ -108,7 +108,8 @@
 
   <Item
     name="Stun Grenade"
-    category="Equipment"    
+    category="Equipment"
+    
     price="200"
     tags="smallitem,weapon">
 
@@ -126,7 +127,8 @@
 
   <Item
     name="Incendium Grenade"
-    category="Equipment"    
+    category="Equipment"
+    
     tags="smallitem,weapon">
 
     <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.55"/>
