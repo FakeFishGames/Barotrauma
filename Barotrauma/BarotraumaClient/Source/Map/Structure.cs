@@ -147,7 +147,7 @@ namespace Barotrauma
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = Math.Min((sections[i].damage / prefab.MaxHealth), 0.65f);
+                        float newCutoff = Math.Min((sections[i].damage / prefab.Health), 0.65f);
 
                         if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f)
                         {

@@ -128,34 +128,28 @@ namespace Barotrauma
                 Level.Loaded.DrawBack(graphics, spriteBatch, cam);
             }
 
+            //draw structures that are in water and not part of any sub (e.g. ruins)
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, cam.Transform);
+            Submarine.DrawBack(spriteBatch, false, s => s is Structure && s.Submarine == null);
+            spriteBatch.End();
+
+            //draw alpha blended particles that are in water and behind subs
 #if LINUX
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
 #else
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            null, DepthStencilState.DepthRead, null, null,
-            cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.DepthRead, null, null, cam.Transform);
 #endif
             GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.AlphaBlend);
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Additive,
-                null, DepthStencilState.Default, null, null,
-                cam.Transform);
+            //draw additive particles that are in water and behind subs
+            spriteBatch.Begin(SpriteSortMode.Deferred,  BlendState.Additive,  null, DepthStencilState.Default, null, null, cam.Transform);
             GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
-
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend,
-                null, null, null, null,
-                cam.Transform);
-
-            Submarine.DrawBack(spriteBatch, false, s => s is Structure);
-
+            
+            //draw submarine structures that are behind water
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, cam.Transform);
+            Submarine.DrawBack(spriteBatch, false, s => s is Structure && s.Submarine != null);
             spriteBatch.End();
 
             graphics.SetRenderTarget(renderTarget);
@@ -180,29 +174,21 @@ namespace Barotrauma
             //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
             graphics.SetRenderTarget(renderTargetWater);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Opaque);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), waterColor);
             spriteBatch.End();
 
+            //draw alpha blended particles that are inside a sub
 #if LINUX
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
 #else
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            null, DepthStencilState.DepthRead, null, null,
-            cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.DepthRead, null, null, cam.Transform);
 #endif
             GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.AlphaBlend);
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Additive,
-                null, DepthStencilState.Default, null, null,
-                cam.Transform);
+            //draw additive particles that are inside a sub
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.Default, null, null, cam.Transform);
             GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
 
@@ -210,29 +196,21 @@ namespace Barotrauma
             //draw the rendertarget and particles that are only supposed to be drawn in air into renderTargetAir
 
             graphics.SetRenderTarget(renderTargetAir);
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Opaque);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
             spriteBatch.End();
-#if LINUX
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
-#else
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
-#endif
 
+            //draw alpha blended particles that are not in water
+#if LINUX
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
+#else
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.DepthRead, null, null, cam.Transform);
+#endif
             GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.AlphaBlend);
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Additive,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
+            //draw additive particles that are not in water
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.DepthRead, null, null, cam.Transform);
             GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
 
