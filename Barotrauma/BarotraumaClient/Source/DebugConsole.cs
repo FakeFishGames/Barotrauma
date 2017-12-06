@@ -438,6 +438,11 @@ namespace Barotrauma
                     NewMessage("Deleted filelist", Color.Green);
                 }
 
+                if (System.IO.File.Exists("Data/bannedplayers.txt"))
+                {
+                    System.IO.File.Delete("Data/bannedplayers.txt");
+                    NewMessage("Deleted bannedplayers.txt", Color.Green);
+                }
 
                 if (System.IO.File.Exists("Submarines/TutorialSub.sub"))
                 {
