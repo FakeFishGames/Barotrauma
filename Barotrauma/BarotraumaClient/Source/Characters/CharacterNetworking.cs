@@ -127,7 +127,7 @@ namespace Barotrauma
                         if (selectedEntity is Character)
                         {
                             bool doingCpr = msg.ReadBoolean();
-                            if (doingCpr && selectedCharacter != null)
+                            if (doingCpr && SelectedCharacter != null)
                             {
                                 animation = AnimController.Animation.CPR;
                             }
