@@ -154,6 +154,8 @@ namespace Barotrauma
                 }
             }
 
+            if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter);
+
             if (!flip) return;
 
             flipTimer += deltaTime;
@@ -166,6 +168,79 @@ namespace Barotrauma
                     if (mirror || !inWater) Mirror();
                     flipTimer = 0.0f;
                 }
+            }
+        }
+
+        private float eatTimer = 0.0f;
+
+        public override void DragCharacter(Character target)
+        {
+            if (target == null) return;
+            
+            Limb mouthLimb = Array.Find(Limbs, l => l != null && l.MouthPos.HasValue);
+            if (mouthLimb == null) mouthLimb = GetLimb(LimbType.Head);
+
+            if (mouthLimb == null)
+            {
+                DebugConsole.ThrowError("Character \"" + character.SpeciesName + "\" failed to eat a target (a head or a limb with a mouthpos required)");
+                return;
+            }
+
+            Character targetCharacter = target;
+            float eatSpeed = character.Mass / targetCharacter.Mass * 0.1f;
+
+            eatTimer += (float)Timing.Step * eatSpeed;
+
+            Vector2 mouthPos = mouthLimb.SimPosition;
+            if (mouthLimb.MouthPos.HasValue)
+            {
+                float cos = (float)Math.Cos(mouthLimb.Rotation);
+                float sin = (float)Math.Sin(mouthLimb.Rotation);
+
+                mouthPos += new Vector2(
+                     mouthLimb.MouthPos.Value.X * cos - mouthLimb.MouthPos.Value.Y * sin,
+                     mouthLimb.MouthPos.Value.X * sin + mouthLimb.MouthPos.Value.Y * cos);
+            }
+
+            Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
+
+            Vector2 limbDiff = attackSimPosition - mouthPos;
+            float limbDist = limbDiff.Length();
+            if (limbDist < 1.0f)
+            {
+                //pull the target character to the position of the mouth
+                //(+ make the force fluctuate to waggle the character a bit)
+                targetCharacter.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                targetCharacter.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation);
+                targetCharacter.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+
+                //pull the character's mouth to the target character (again with a fluctuating force)
+                float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
+                mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength);
+
+                if (eatTimer % 1.0f < 0.5f && (eatTimer - (float)Timing.Step * eatSpeed) % 1.0f > 0.5f)
+                {
+                    //apply damage to the target character to get some blood particles flying 
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), 10.0f, false);
+
+                    //keep severing joints until there is only one limb left
+                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered && l.CanBeSevered);
+                    if (nonSeveredJoints.Length == 0)
+                    {
+                        //only one limb left, the character is now full eaten
+                        Entity.Spawner.AddToRemoveQueue(targetCharacter);
+                        character.SelectedCharacter = null;
+                        character.Health += 10.0f;
+                    }
+                    else //sever a random joint
+                    {
+                        targetCharacter.AnimController.SeverLimbJoint(nonSeveredJoints[Rand.Int(nonSeveredJoints.Length)]);
+                    }
+                }
+            }
+            else
+            {
+                character.SelectedCharacter = null;
             }
         }
 
