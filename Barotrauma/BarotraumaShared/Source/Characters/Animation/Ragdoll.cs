@@ -67,7 +67,7 @@ namespace Barotrauma
 
         protected float colliderHeightFromFloor;
         
-        protected Structure stairs;
+        public Structure Stairs;
                 
         protected Direction dir;
 
@@ -452,7 +452,7 @@ namespace Barotrauma
             }
             else if (structure.StairDirection != Direction.None)
             {
-                stairs = null;
+                Stairs = null;
 
                 //don't collider with stairs if
                 
@@ -475,8 +475,15 @@ namespace Barotrauma
                 if (inWater && targetMovement.Y < 0.5f) return false;
 
                 //---------------
-                
-                stairs = structure;
+
+                //set stairs to that of the one dragging us
+                if (character.SelectedBy != null)
+                    Stairs = character.SelectedBy.AnimController.Stairs;
+                else
+                    Stairs = structure;
+
+                if (Stairs == null)
+                    return false;
             }
 
             CalculateImpact(f1, f2, contact);
@@ -504,10 +511,7 @@ namespace Barotrauma
             
             ImpactProjSpecific(impact,f1.Body);
             
-            if (f1.Body.UserData is Limb)
-            {
-            }
-            else if (f1.Body == Collider.FarseerBody)
+            if ((f1.Body.UserData is Limb && character.Stun > 0f) || f1.Body == Collider.FarseerBody)
             {
                 if (!character.IsRemotePlayer || GameMain.Server != null)
                 {
@@ -898,8 +902,8 @@ namespace Barotrauma
                 limb.Update(deltaTime);
             }
             
-            bool onStairs = stairs != null;
-            stairs = null;
+            bool onStairs = Stairs != null;
+            Stairs = null;
 
             var contacts = Collider.FarseerBody.ContactList;
             while (Collider.FarseerBody.Enabled && contacts != null && contacts.Contact != null)
@@ -917,7 +921,7 @@ namespace Barotrauma
                             Structure structure = contacts.Contact.FixtureA.Body.UserData as Structure;
                             if (structure != null && onStairs)
                             {
-                                stairs = structure;
+                                Stairs = structure;
                             }
                             break;
                     }
@@ -966,7 +970,7 @@ namespace Barotrauma
             rayEnd.Y -= Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor*1.2f;
 
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
-            if (!inWater && !character.IsDead && !character.IsUnconscious && levitatingCollider && Collider.LinearVelocity.Y>-ImpactTolerance)
+            if (!inWater && !character.IsDead && character.Stun <= 0f && levitatingCollider && Collider.LinearVelocity.Y>-ImpactTolerance)
             {
                 float closestFraction = 1.0f;
                 Fixture closestFixture = null;
@@ -978,6 +982,7 @@ namespace Barotrauma
                             Structure structure = fixture.Body.UserData as Structure;
                             if (inWater && targetMovement.Y < 0.5f) return -1;
                             if (colliderBottomDisplay.Y < structure.Rect.Y - structure.Rect.Height + 30 && TargetMovement.Y < 0.5f) return -1;
+                            if (character.SelectedBy != null) return -1;
                             break;
                         case Physics.CollisionPlatform:
                             Structure platform = fixture.Body.UserData as Structure;
@@ -1007,7 +1012,7 @@ namespace Barotrauma
                     switch (closestFixture.CollisionCategories)
                     {
                         case Physics.CollisionStairs:
-                            stairs = closestFixture.Body.UserData as Structure;
+                            Stairs = closestFixture.Body.UserData as Structure;
                             onStairs = true;
                             forceImmediate = true;
                             break;

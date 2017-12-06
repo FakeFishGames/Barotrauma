@@ -13,9 +13,9 @@ namespace Barotrauma
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
-        
+
         public static bool DisableControls;
-        
+
         private bool enabled = true;
         public bool Enabled
         {
@@ -68,7 +68,7 @@ namespace Barotrauma
         }
 
         protected Key[] keys;
-        
+
         private Item selectedConstruction;
         private Item[] selectedItems;
 
@@ -94,12 +94,12 @@ namespace Barotrauma
         protected float minHealth, maxHealth;
 
         protected Item focusedItem;
-        private Character focusedCharacter, selectedCharacter;
+        private Character focusedCharacter, selectedCharacter, selectedBy;
 
         private bool isDead;
         private CauseOfDeath lastAttackCauseOfDeath;
         private CauseOfDeath causeOfDeath;
-        
+
         public readonly bool IsHumanoid;
 
         //the name of the species (e.q. human)
@@ -113,16 +113,16 @@ namespace Barotrauma
         {
             get;
             set;
-        }        
+        }
 
         private CharacterInfo info;
         public CharacterInfo Info
         {
             get
-            { 
+            {
                 return info;
             }
-            set 
+            set
             {
                 if (info != null && info != value) info.Remove();
 
@@ -154,7 +154,7 @@ namespace Barotrauma
         {
             get { return inventory; }
         }
-        
+
         private Color speechBubbleColor;
         private float speechBubbleTimer;
 
@@ -184,8 +184,8 @@ namespace Barotrauma
         public Vector2 CursorPosition
         {
             get { return cursorPosition; }
-            set 
-            { 
+            set
+            {
                 if (!MathUtils.IsValid(value)) return;
                 cursorPosition = value;
             }
@@ -204,6 +204,27 @@ namespace Barotrauma
         public Character SelectedCharacter
         {
             get { return selectedCharacter; }
+            set
+            {
+                if (selectedCharacter != null)
+                    selectedCharacter.selectedBy = null;
+                selectedCharacter = value;
+                if (selectedCharacter != null)
+                    selectedCharacter.selectedBy = this;
+            }
+        }
+
+        public Character SelectedBy
+        {
+            get { return selectedBy; }
+            set
+            {
+                if (selectedBy != null)
+                    selectedBy.selectedCharacter = null;
+                selectedBy = value;
+                if (selectedBy != null)
+                    selectedBy.selectedCharacter = this;
+            }
         }
 
         private float lowPassMultiplier;
@@ -245,6 +266,9 @@ namespace Barotrauma
                 pressureProtection = MathHelper.Clamp(value, 0.0f, 100.0f);
             }
         }
+
+        public bool IsRagdolled;
+        public bool IsForceRagdolled;
 
         public bool IsUnconscious
         {
@@ -661,6 +685,8 @@ namespace Barotrauma
                         return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered                                                                           
                     case InputType.Use:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
+                    case InputType.Ragdoll:
+                        return !(dequeuedInput.HasFlag(InputType.Ragdoll)) && (prevDequeuedInput.HasFlag(InputType.Ragdoll));
                     default:
                         return false;
                 }
@@ -695,6 +721,8 @@ namespace Barotrauma
                         return dequeuedInput.HasFlag(InputNetFlags.Use);
                     case InputType.Attack:
                         return dequeuedInput.HasFlag(InputNetFlags.Attack);
+                    case InputType.Ragdoll:
+                        return dequeuedInput.HasFlag(InputNetFlags.Ragdoll);
                 }
                 return false;
             }
@@ -765,7 +793,7 @@ namespace Barotrauma
                 //  - dragging someone
                 //  - crouching
                 //  - moving backwards
-                if (selectedCharacter == null &&
+                if (SelectedCharacter == null &&
                     (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
                     Math.Sign(targetMovement.X) != -Math.Sign(AnimController.Dir))
                 {
@@ -912,9 +940,9 @@ namespace Barotrauma
                 if (selectedConstruction != null && IsKeyDown(InputType.Aim)) selectedConstruction.SecondaryUse(deltaTime, this);
             }
 
-            if (selectedCharacter != null)
+            if (SelectedCharacter != null)
             {
-                if (Vector2.DistanceSquared(selectedCharacter.WorldPosition, WorldPosition) > 90000.0f || !selectedCharacter.CanBeSelected)
+                if (Vector2.DistanceSquared(SelectedCharacter.WorldPosition, WorldPosition) > 90000.0f || !SelectedCharacter.CanBeSelected)
                 {
                     DeselectCharacter();
                 }
@@ -986,7 +1014,7 @@ namespace Barotrauma
                 var owner = (Character)inventory.Owner;
 
                 //can only be accessed if the character is incapacitated and has been selected
-                return selectedCharacter == owner && (!owner.CanInteract);
+                return SelectedCharacter == owner && (!owner.CanInteract);
             }
 
             if (inventory.Owner is Item)
@@ -1215,22 +1243,22 @@ namespace Barotrauma
         {
             if (character == null) return;
 
-            selectedCharacter = character;
+            SelectedCharacter = character;
         }
 
         public void DeselectCharacter()
         {
-            if (selectedCharacter == null) return;
+            if (SelectedCharacter == null) return;
 
             if (SelectedCharacter.AnimController != null)
             {
-                foreach (Limb limb in selectedCharacter.AnimController.Limbs)
+                foreach (Limb limb in SelectedCharacter.AnimController.Limbs)
                 {
                     if (limb.pullJoint != null) limb.pullJoint.Enabled = false;
                 }
             }
 
-            selectedCharacter = null;
+            SelectedCharacter = null;
         }
 
         public void DoInteractionUpdate(float deltaTime, Vector2 mouseSimPos)
@@ -1243,7 +1271,7 @@ namespace Barotrauma
 
             if (!CanInteract)
             {
-                if (selectedCharacter != null)
+                if (SelectedCharacter != null)
                 {
                     DeselectCharacter();
                 }
@@ -1276,7 +1304,7 @@ namespace Barotrauma
                 findFocusedTimer -= deltaTime;
             }
 
-            if (selectedCharacter != null && IsKeyHit(InputType.Select))
+            if (SelectedCharacter != null && IsKeyHit(InputType.Select))
             {
                 DeselectCharacter();
             }
@@ -1435,7 +1463,22 @@ namespace Barotrauma
                 UpdateUnconscious(deltaTime);
                 return;
             }
-            
+
+            if (IsForceRagdolled)
+                IsRagdolled = IsForceRagdolled;
+            else if (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
+                IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
+
+            if (IsRagdolled)
+            {
+                ((HumanoidAnimController)AnimController).Crouching = false;
+                Stun = Math.Max(0.1f, Stun);
+
+                AnimController.ResetPullJoints();
+                selectedConstruction = null;
+                return;
+            }
+
             Control(deltaTime, cam);
             if (controlled != this && (!(this is AICharacter) || IsRemotePlayer))
             {
@@ -1448,9 +1491,9 @@ namespace Barotrauma
                 selectedConstruction = null;
             }
 
-            if (selectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
+            if (SelectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
             {
-                if (GameMain.Client == null) selectedCharacter.Oxygen += (GetSkillLevel("Medical") / 10.0f) * deltaTime;
+                if (GameMain.Client == null) SelectedCharacter.Oxygen += (GetSkillLevel("Medical") / 10.0f) * deltaTime;
             }
 
             UpdateSightRange();
@@ -1839,7 +1882,7 @@ namespace Barotrauma
             foreach (Character c in CharacterList)
             {
                 if (c.focusedCharacter == this) c.focusedCharacter = null;
-                if (c.selectedCharacter == this) c.selectedCharacter = null;
+                if (c.SelectedCharacter == this) c.SelectedCharacter = null;
             }
         }
         partial void DisposeProjSpecific();

@@ -109,6 +109,10 @@ namespace Barotrauma
 
                             TransformCursorPos();
                         }
+                        bool ragdollInput = msg.ReadBoolean();
+                        keys[(int)InputType.Ragdoll].Held = ragdollInput;
+                        keys[(int)InputType.Ragdoll].SetState(false, ragdollInput);
+
                         facingRight = msg.ReadBoolean();
                     }
 
@@ -123,7 +127,7 @@ namespace Barotrauma
                         if (selectedEntity is Character)
                         {
                             bool doingCpr = msg.ReadBoolean();
-                            if (doingCpr && selectedCharacter != null)
+                            if (doingCpr && SelectedCharacter != null)
                             {
                                 animation = AnimController.Animation.CPR;
                             }

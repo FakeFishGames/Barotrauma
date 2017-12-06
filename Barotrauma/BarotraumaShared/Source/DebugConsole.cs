@@ -658,6 +658,24 @@ namespace Barotrauma
                 if (Character.Controlled != null) Character.Controlled.AnimController.Frozen = !Character.Controlled.AnimController.Frozen;
             }));
 
+            commands.Add(new Command("ragdoll", "ragdoll [character name]: Force-ragdoll the specified character. If the name parameter is omitted, the controlled character will be ragdolled.", (string[] args) =>
+            {
+                Character ragdolledCharacter = null;
+                if (args.Length == 0)
+                {
+                    ragdolledCharacter = Character.Controlled;
+                }
+                else
+                {
+                    ragdolledCharacter = FindMatchingCharacter(args);
+                }
+
+                if (ragdolledCharacter != null)
+                {
+                    ragdolledCharacter.IsForceRagdolled = !ragdolledCharacter.IsForceRagdolled;
+                }
+            }));
+
             commands.Add(new Command("freecamera|freecam", "freecam: Detach the camera from the controlled character.", (string[] args) =>
             {
                 Character.Controlled = null;
