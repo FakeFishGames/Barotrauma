@@ -774,7 +774,12 @@ namespace Barotrauma
 
             //if the section has holes (or is just one big hole with no bodies),
             //we need a sensor for repairtools to be able to target the structure
-            if (hasHoles || !bodies.Any()) CreateRectBody(rect).IsSensor = true;            
+            if (hasHoles || !bodies.Any())
+            {
+                Body sensorBody = CreateRectBody(rect);
+                sensorBody.CollisionCategories = Physics.CollisionRepair;
+                sensorBody.IsSensor = true;
+            }
         }
 
         private Body CreateRectBody(Rectangle rect)

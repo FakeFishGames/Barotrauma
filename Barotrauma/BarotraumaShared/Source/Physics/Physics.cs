@@ -13,6 +13,7 @@ namespace Barotrauma
         public const Category CollisionItem         = Category.Cat5;
         public const Category CollisionProjectile   = Category.Cat6;
         public const Category CollisionLevel        = Category.Cat7;
+        public const Category CollisionRepair       = Category.Cat8;
 
         public static float DisplayToRealWorldRatio = 1.0f / 80.0f;
 
