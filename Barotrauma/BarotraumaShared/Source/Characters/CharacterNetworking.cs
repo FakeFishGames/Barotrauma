@@ -128,6 +128,12 @@ namespace Barotrauma
                     if (!AllowInput)
                     {
                         AnimController.Frozen = false;
+                        if (memInput.Count > 0)
+                        {
+                            prevDequeuedInput = dequeuedInput;
+                            dequeuedInput = memInput[memInput.Count - 1].states;
+                            memInput.RemoveAt(memInput.Count - 1);
+                        }
                     }
                     else if (memInput.Count == 0)
                     {
@@ -289,20 +295,20 @@ namespace Barotrauma
                             newInteract = msg.ReadUInt16();                 
                         }
 
-                        if (AllowInput)
+                        //if (AllowInput)
+                        //{
+                        if (NetIdUtils.IdMoreRecent((ushort)(networkUpdateID - i), LastNetworkUpdateID) && (i < 60))
                         {
-                            if (NetIdUtils.IdMoreRecent((ushort)(networkUpdateID - i), LastNetworkUpdateID) && (i < 60))
-                            {
-                                NetInputMem newMem = new NetInputMem();
-                                newMem.states = newInput;
-                                newMem.intAim = newAim;
-                                newMem.interact = newInteract;
+                            NetInputMem newMem = new NetInputMem();
+                            newMem.states = newInput;
+                            newMem.intAim = newAim;
+                            newMem.interact = newInteract;
 
-                                newMem.networkUpdateID = (ushort)(networkUpdateID - i);
+                            newMem.networkUpdateID = (ushort)(networkUpdateID - i);
 
-                                memInput.Insert(i, newMem);
-                            }
+                            memInput.Insert(i, newMem);
                         }
+                        //}
                     }
 
                     if (NetIdUtils.IdMoreRecent(networkUpdateID, LastNetworkUpdateID))

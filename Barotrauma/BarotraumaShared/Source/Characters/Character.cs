@@ -303,7 +303,7 @@ namespace Barotrauma
         private float stunTimer;
         public float Stun
         {
-            get { return stunTimer; }
+            get { return IsRagdolled ? 1.0f : stunTimer; }
             set
             {
                 if (GameMain.Client != null) return;
@@ -686,7 +686,7 @@ namespace Barotrauma
                     case InputType.Use:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
                     case InputType.Ragdoll:
-                        return !(dequeuedInput.HasFlag(InputType.Ragdoll)) && (prevDequeuedInput.HasFlag(InputType.Ragdoll));
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
                     default:
                         return false;
                 }
@@ -722,6 +722,7 @@ namespace Barotrauma
                     case InputType.Attack:
                         return dequeuedInput.HasFlag(InputNetFlags.Attack);
                     case InputType.Ragdoll:
+                        if (dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) DebugConsole.NewMessage("RAGDOLL", Color.Lime);
                         return dequeuedInput.HasFlag(InputNetFlags.Ragdoll);
                 }
                 return false;
@@ -1448,7 +1449,7 @@ namespace Barotrauma
 
             UpdateControlled(deltaTime, cam);
 
-            if (Stun > 0.0f)
+            if (stunTimer > 0.0f)
             {
                 stunTimer -= deltaTime;
                 if (stunTimer < 0.0f && GameMain.Server != null)
@@ -1472,7 +1473,6 @@ namespace Barotrauma
             if (IsRagdolled)
             {
                 ((HumanoidAnimController)AnimController).Crouching = false;
-                Stun = Math.Max(0.1f, Stun);
 
                 AnimController.ResetPullJoints();
                 selectedConstruction = null;
