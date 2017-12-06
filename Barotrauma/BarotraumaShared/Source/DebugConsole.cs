@@ -1135,6 +1135,12 @@ namespace Barotrauma
             return true;
         }
 
+        public static Command FindCommand(string commandName)
+        {
+            commandName = commandName.ToLowerInvariant();
+            return commands.Find(c => c.names.Any(n => n.ToLowerInvariant() == commandName));
+        }
+
 
         public static void Log(string message)
         {
