@@ -16,7 +16,7 @@ namespace Barotrauma
             {
                 while (QueuedCommands.Count>0)
                 {
-                    ExecuteCommand(QueuedCommands[0], GameMain.Instance);
+                    ExecuteCommand(QueuedCommands[0]);
                     QueuedCommands.RemoveAt(0);
                 }
             }

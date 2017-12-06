@@ -795,6 +795,11 @@ namespace Barotrauma.Networking
                         campaign.ServerRead(inc, sender);
                     }
                     break;
+                case ClientPermissions.ConsoleCommands:
+                    string consoleCommand = inc.ReadString();
+                    Vector2 clientCursorPos = new Vector2(inc.ReadSingle(), inc.ReadSingle());
+                    DebugConsole.ExecuteClientCommand(sender, clientCursorPos, consoleCommand);
+                    break;
             }
 
             inc.ReadPadBits();
@@ -853,7 +858,7 @@ namespace Barotrauma.Networking
             outmsg.Write(GameStarted);
             outmsg.Write(AllowSpectating);
 
-            outmsg.Write((byte)c.Permissions);
+            WritePermissions(outmsg, c);
         }
 
         private void ClientWriteIngame(Client c)
@@ -1622,6 +1627,12 @@ namespace Barotrauma.Networking
             }
         }
 
+        public void SendChatMessage(string txt, Client recipient)
+        {
+            ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Server, null);
+            SendChatMessage(msg, recipient);
+        }
+
         public void SendChatMessage(ChatMessage msg, Client recipient)
         {
             msg.NetStateID = recipient.ChatMsgQueue.Count > 0 ?
@@ -1928,6 +1939,15 @@ namespace Barotrauma.Networking
 
             var msg = server.CreateMessage();
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
+            WritePermissions(msg, client);
+
+            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
+
+            SaveClientPermissions();
+        }
+
+        private void WritePermissions(NetBuffer msg, Client client)
+        {
             msg.Write((byte)client.Permissions);
             if (client.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
@@ -1940,10 +1960,6 @@ namespace Barotrauma.Networking
                     }
                 }
             }
-
-            server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
-
-            SaveClientPermissions();
         }
         
         public void SetClientCharacter(Client client, Character newCharacter)

@@ -105,7 +105,7 @@ namespace Barotrauma
                 
                 if (PlayerInput.KeyHit(Keys.Enter))
                 {
-                    ExecuteCommand(textBox.Text, game);
+                    ExecuteCommand(textBox.Text);
                     textBox.Text = "";
                 }
             }
