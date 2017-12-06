@@ -111,10 +111,12 @@ namespace Barotrauma
             if (entity is Character)
             {
                 Character character = entity as Character;
-                Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
-                if (client != null) GameMain.Server.SetClientCharacter(client, null);
-            }
-            
+                if (GameMain.Server != null)
+                {
+                    Client client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
+                    if (client != null) GameMain.Server.SetClientCharacter(client, null);
+                }
+            }            
 
             removeQueue.Enqueue(entity);
         }
@@ -143,8 +145,8 @@ namespace Barotrauma
         public void Update()
         {
             if (GameMain.Client != null) return;
-            
-            while (spawnQueue.Count>0)
+
+            while (spawnQueue.Count > 0)
             {
                 var entitySpawnInfo = spawnQueue.Dequeue();
 
