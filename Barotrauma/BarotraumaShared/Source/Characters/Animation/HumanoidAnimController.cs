@@ -237,7 +237,7 @@ namespace Barotrauma
             
             float getUpSpeed = 0.3f;
             float walkCycleSpeed = movement.X * walkAnimSpeed;
-            if (stairs != null)
+            if (Stairs != null)
             {
                 TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.5f, 1.5f), TargetMovement.Y);
 
@@ -328,7 +328,7 @@ namespace Barotrauma
             float floorPos = GetFloorY(colliderPos + new Vector2(Math.Sign(movement.X) * 0.5f, 1.0f));
             bool onSlope = floorPos > GetColliderBottom().Y + 0.05f;
 
-            if (stairs != null || onSlope)
+            if (Stairs != null || onSlope)
             {
                 torso.pullJoint.WorldAnchorB = new Vector2(
                     MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * 0.25f, getUpSpeed * 0.8f),
@@ -382,7 +382,7 @@ namespace Barotrauma
                     Vector2 footPos = stepSize * -i;
                     if (stepSize.Y < 0.0f) stepSize.Y = -0.15f;
 
-                    if (onSlope && stairs == null)
+                    if (onSlope && Stairs == null)
                     {
                         footPos.Y *= 2.0f;
                     }
@@ -462,7 +462,7 @@ namespace Barotrauma
                         footPos = new Vector2(GetCenterOfMass().X + stepSize.X * i * 0.2f, colliderPos.Y - 0.1f);
                     }
 
-                    if (stairs == null)
+                    if (Stairs == null)
                     {
                         footPos.Y = Math.Max(Math.Min(floorPos, footPos.Y + 0.5f), footPos.Y);
                     }
@@ -987,7 +987,7 @@ namespace Barotrauma
             }
             
             //if on stairs, make the dragged character "climb up" (= collide with stairs)
-            if (stairs != null) target.AnimController.TargetMovement = new Vector2 (target.AnimController.TargetMovement.X, 1.0f);
+            //if (Stairs != null) target.AnimController.TargetMovement = new Vector2 (target.AnimController.TargetMovement.X, 1.0f);
         }
 
         public void Grab(Vector2 rightHandPos, Vector2 leftHandPos)

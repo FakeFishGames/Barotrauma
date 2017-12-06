@@ -259,14 +259,14 @@ namespace Barotrauma
         {
             if (character == null) return false;
 
-            GUIComponent existingFrame = crewList.Parent.FindChild("selectedcharacter");
+            GUIComponent existingFrame = crewList.Parent.FindChild("SelectedCharacter");
             if (existingFrame != null) crewList.Parent.RemoveChild(existingFrame);
 
             var previewPlayer = new GUIFrame(
                 new Rectangle(0, 0, 230, 300),
                 new Color(0.0f, 0.0f, 0.0f, 0.8f), Alignment.TopRight, "", crewList.Parent);
             previewPlayer.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            previewPlayer.UserData = "selectedcharacter";
+            previewPlayer.UserData = "SelectedCharacter";
 
             character.Info.CreateInfoFrame(previewPlayer);
 
