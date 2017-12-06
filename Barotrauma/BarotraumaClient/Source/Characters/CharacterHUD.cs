@@ -114,7 +114,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
                     character.SelectedCharacter.Inventory.Update(deltaTime);
                 }
@@ -164,7 +164,7 @@ namespace Barotrauma
                     character.Inventory.DrawOwn(spriteBatch);
                 }
 
-                if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
                     character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f, 0.0f);
                     character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
