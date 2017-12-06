@@ -25,20 +25,22 @@ namespace Barotrauma.Networking
         {
             public readonly string IP;
             public readonly string Name;
+            public List<DebugConsole.Command> PermittedCommands;
 
             public ClientPermissions Permissions;
 
-            public SavedClientPermission(string name, string ip, ClientPermissions permissions)
+            public SavedClientPermission(string name, string ip, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;
                 this.IP = ip;
 
                 this.Permissions = permissions;
+                this.PermittedCommands = permittedCommands;
             }
         }
 
         public const string SettingsFile = "serversettings.xml";
-        public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.txt";
+        public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
 
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -316,14 +318,68 @@ namespace Barotrauma.Networking
 
         public void LoadClientPermissions()
         {
-            //TODO: load console command permissions
+            clientPermissions.Clear();
 
-            if (!File.Exists(ClientPermissionsFile)) return;
-            
+            if (File.Exists("Data/clientpermissions.txt") && !File.Exists(ClientPermissionsFile))
+            {
+                LoadClientPermissionsOld("Data/clientpermissions.txt");
+                return;
+            }
+
+            XDocument doc = XMLExtensions.TryLoadXml(ClientPermissionsFile);
+            foreach (XElement clientElement in doc.Root.Elements())
+            {
+                string clientName = clientElement.GetAttributeString("name", "");
+                string clientIP = clientElement.GetAttributeString("ip", "");
+                if (string.IsNullOrWhiteSpace(clientName) || string.IsNullOrWhiteSpace(clientIP))
+                {
+                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name and an IP address.");
+                    continue;
+                }
+
+                string permissionsStr = clientElement.GetAttributeString("permissions", "");
+                ClientPermissions permissions;
+                if (!Enum.TryParse(permissionsStr, out permissions))
+                {
+                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + permissionsStr + "\" is not a valid client permission.");
+                    continue;
+                }
+
+                List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
+                if (permissions.HasFlag(ClientPermissions.ConsoleCommands))
+                {
+                    foreach (XElement commandElement in clientElement.Elements())
+                    {
+                        if (commandElement.Name.ToString().ToLowerInvariant() != "command") continue;
+
+                        string commandName = commandElement.GetAttributeString("name", "");
+                        DebugConsole.Command command = DebugConsole.FindCommand(commandName);
+                        if (command == null)
+                        {
+                            DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + commandName + "\" is not a valid console command.");
+                            continue;
+                        }
+
+                        permittedCommands.Add(command);
+                    }
+                }
+
+                new SavedClientPermission(clientName, clientIP, permissions, permittedCommands);
+            }
+        }
+
+        /// <summary>
+        /// Method for loading old .txt client permission files to provide backwards compatibility
+        /// </summary>
+        /// <param name="file"></param>
+        private void LoadClientPermissionsOld(string file)
+        {
+            if (!File.Exists(file)) return;
+
             string[] lines;
             try
             {
-                lines = File.ReadAllLines(ClientPermissionsFile);
+                lines = File.ReadAllLines(file);
             }
             catch (Exception e)
             {
@@ -332,38 +388,57 @@ namespace Barotrauma.Networking
             }
 
             clientPermissions.Clear();
+
             foreach (string line in lines)
             {
                 string[] separatedLine = line.Split('|');
                 if (separatedLine.Length < 3) continue;
 
-                string name = String.Join("|", separatedLine.Take(separatedLine.Length - 2));
+                string name = string.Join("|", separatedLine.Take(separatedLine.Length - 2));
                 string ip = separatedLine[separatedLine.Length - 2];
 
                 ClientPermissions permissions = ClientPermissions.None;
-                if (Enum.TryParse<ClientPermissions>(separatedLine.Last(), out permissions))
+                if (Enum.TryParse(separatedLine.Last(), out permissions))
                 {
-                    clientPermissions.Add(new SavedClientPermission(name, ip, permissions));
+                    clientPermissions.Add(new SavedClientPermission(name, ip, permissions, new List<DebugConsole.Command>()));
                 }
             }            
         }
         
         public void SaveClientPermissions()
         {
-            //TODO: save console command permissions
-
             Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
 
-            List<string> lines = new List<string>();
+            XDocument doc = new XDocument(new XElement("ClientPermissions"));
 
             foreach (SavedClientPermission clientPermission in clientPermissions)
             {
-                lines.Add(clientPermission.Name + "|" + clientPermission.IP + "|" + clientPermission.Permissions.ToString());
+                XElement clientElement = new XElement("Client", 
+                    new XAttribute("name", clientPermission.Name),
+                    new XAttribute("ip", clientPermission.IP),
+                    new XAttribute("permissions", clientPermission.Permissions.ToString()));
+
+                if (clientPermission.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
+                {
+                    foreach (DebugConsole.Command command in clientPermission.PermittedCommands)
+                    {
+                        clientElement.Add(new XElement("command", new XAttribute("name", command.names[0])));
+                    }
+                }
+
+                doc.Root.Add(clientElement);
             }
 
             try
             {
-                File.WriteAllLines(ClientPermissionsFile, lines);
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Indent = true;
+                settings.NewLineOnAttributes = true;
+
+                using (var writer = XmlWriter.Create(ClientPermissionsFile, settings))
+                {
+                    doc.Save(writer);
+                }
             }
             catch (Exception e)
             {

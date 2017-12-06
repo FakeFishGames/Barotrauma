@@ -1922,7 +1922,8 @@ namespace Barotrauma.Networking
                 clientPermissions.Add(new SavedClientPermission(
                     client.Name, 
                     client.Connection.RemoteEndPoint.Address.ToString(), 
-                    client.Permissions));
+                    client.Permissions,
+                    client.PermittedConsoleCommands));
             }
 
             var msg = server.CreateMessage();
