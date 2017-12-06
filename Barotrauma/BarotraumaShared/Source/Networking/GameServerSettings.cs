@@ -364,14 +364,13 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                new SavedClientPermission(clientName, clientIP, permissions, permittedCommands);
+                clientPermissions.Add(new SavedClientPermission(clientName, clientIP, permissions, permittedCommands));
             }
         }
 
         /// <summary>
         /// Method for loading old .txt client permission files to provide backwards compatibility
         /// </summary>
-        /// <param name="file"></param>
         private void LoadClientPermissionsOld(string file)
         {
             if (!File.Exists(file)) return;
@@ -407,6 +406,12 @@ namespace Barotrauma.Networking
         
         public void SaveClientPermissions()
         {
+            //delete old client permission file
+            if (File.Exists("Data/clientpermissions.txt"))
+            {
+                File.Delete("Data/clientpermissions.txt");
+            }
+
             Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
 
             XDocument doc = new XDocument(new XElement("ClientPermissions"));

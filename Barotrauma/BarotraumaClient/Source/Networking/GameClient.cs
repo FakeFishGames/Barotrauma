@@ -608,15 +608,17 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (newPermissions != permissions)
-            {
-                SetPermissions(newPermissions, permittedConsoleCommands);
-            }                              
+            SetPermissions(newPermissions, permittedConsoleCommands);
         }
 
         private void SetPermissions(ClientPermissions newPermissions, List<string> permittedConsoleCommands)
         {
-            if (newPermissions == permissions) return;
+            if (!(this.permittedConsoleCommands.Any(c => !permittedConsoleCommands.Contains(c)) ||
+                permittedConsoleCommands.Any(c => !this.permittedConsoleCommands.Contains(c))))
+            {
+                if (newPermissions == permissions) return;
+            }
+
             GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");            
 
             string msg = "";
@@ -637,7 +639,9 @@ namespace Barotrauma.Networking
 
                 //TODO: display permitted console commands
             }
+
             permissions = newPermissions;
+            this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
             new GUIMessageBox("Permissions changed", msg).UserData = "permissions";
 
             GameMain.NetLobbyScreen.SubList.Enabled = Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
@@ -1384,6 +1388,9 @@ namespace Barotrauma.Networking
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
             msg.Write((byte)ClientPermissions.ConsoleCommands);
             msg.Write(command);
+            Vector2 cursorWorldPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+            msg.Write(cursorWorldPos.X);
+            msg.Write(cursorWorldPos.Y);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
