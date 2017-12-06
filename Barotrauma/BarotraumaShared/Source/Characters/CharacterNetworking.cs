@@ -193,7 +193,7 @@ namespace Barotrauma
                     SimPosition,
                     LastNetworkUpdateID, 
                     AnimController.TargetDir, 
-                    selectedCharacter == null ? (Entity)selectedConstruction : (Entity)selectedCharacter,
+                    SelectedCharacter == null ? (Entity)selectedConstruction : (Entity)SelectedCharacter,
                     AnimController.Anim);
 
                 memLocalState.Add(posInfo);
@@ -445,11 +445,11 @@ namespace Barotrauma
                     tempBuffer.Write(AnimController.TargetDir == Direction.Right);
                 }
 
-                if (selectedCharacter != null || selectedConstruction != null)
+                if (SelectedCharacter != null || selectedConstruction != null)
                 {
                     tempBuffer.Write(true);
-                    tempBuffer.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
-                    if (selectedCharacter != null)
+                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : selectedConstruction.ID);
+                    if (SelectedCharacter != null)
                     {
                         tempBuffer.Write(AnimController.Anim == AnimController.Animation.CPR);
                     }
