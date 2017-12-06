@@ -722,7 +722,6 @@ namespace Barotrauma
                     case InputType.Attack:
                         return dequeuedInput.HasFlag(InputNetFlags.Attack);
                     case InputType.Ragdoll:
-                        if (dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) DebugConsole.NewMessage("RAGDOLL", Color.Lime);
                         return dequeuedInput.HasFlag(InputNetFlags.Ragdoll);
                 }
                 return false;
