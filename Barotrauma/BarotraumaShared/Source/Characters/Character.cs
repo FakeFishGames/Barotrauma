@@ -1059,6 +1059,9 @@ namespace Barotrauma
             Wire wire = item.GetComponent<Wire>();
             if (wire != null)
             {
+                //locked wires are never interactable
+                if (wire.Locked) return false;
+
                 //wires are interactable if the character has selected either of the items the wire is connected to
                 if (wire.Connections[0]?.Item != null && selectedConstruction == wire.Connections[0].Item) return true;
                 if (wire.Connections[1]?.Item != null && selectedConstruction == wire.Connections[1].Item) return true;
