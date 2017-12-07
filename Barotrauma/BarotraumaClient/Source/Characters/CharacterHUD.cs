@@ -205,10 +205,15 @@ namespace Barotrauma
                     Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
                     startPos = cam.WorldToScreen(startPos);
 
+                    string focusName = character.FocusedCharacter.SpeciesName;
+                    if (character.FocusedCharacter.Info != null)
+                    {
+                        focusName = character.FocusedCharacter.Info.Name;
+                    }
                     Vector2 textPos = startPos;
-                    textPos -= new Vector2(GUI.Font.MeasureString(character.FocusedCharacter.Info.Name).X / 2, 20);
+                    textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);
 
-                    GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.Info.Name, Color.White, Color.Black, 2);
+                    GUI.DrawString(spriteBatch, textPos, focusName, Color.White, Color.Black, 2);
                 }
                 else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
                 {
