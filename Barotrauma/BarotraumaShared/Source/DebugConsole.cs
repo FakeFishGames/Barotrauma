@@ -111,6 +111,10 @@ namespace Barotrauma
 #endif
 
         private static List<Command> commands = new List<Command>();
+        public static List<Command> Commands
+        {
+            get { return commands; }
+        }
         
         private static string currentAutoCompletedCommand;
         private static int currentAutoCompletedIndex;

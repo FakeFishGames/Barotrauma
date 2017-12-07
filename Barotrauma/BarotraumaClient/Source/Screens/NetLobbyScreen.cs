@@ -857,7 +857,7 @@ namespace Barotrauma
 
             playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.6f);
 
-            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 280), null, Alignment.Center, "", playerFrame);
+            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 370), null, Alignment.Center, "", playerFrame);
             playerFrameInner.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
             new GUITextBlock(new Rectangle(0, 0, 200, 20), component.UserData.ToString(),
@@ -870,7 +870,7 @@ namespace Barotrauma
 
                 new GUITextBlock(new Rectangle(0, 25, 150, 15), selectedClient.Connection.RemoteEndPoint.Address.ToString(), "", playerFrameInner);
 
-                var permissionsBox = new GUIFrame(new Rectangle(0, 60, 0, 90), null, playerFrameInner);
+                var permissionsBox = new GUIFrame(new Rectangle(0, 40, 0, 110), null, playerFrameInner);
                 permissionsBox.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 permissionsBox.UserData = selectedClient;
 
@@ -911,8 +911,38 @@ namespace Barotrauma
                     if (y >= permissionsBox.Rect.Height - 40)
                     {
                         y = 0;
-                        x += 100;
+                        x += 120;
                     }
+                }
+
+
+                new GUITextBlock(new Rectangle(0, 145, 0, 15), "Permitted console commands:", "", playerFrameInner);
+                var commandList = new GUIListBox(new Rectangle(0,170,0, 80), "", playerFrameInner);
+                commandList.UserData = selectedClient;
+                foreach (DebugConsole.Command command in DebugConsole.Commands)
+                {
+                    var commandTickBox = new GUITickBox(new Rectangle(0,0,15,15), command.names[0], Alignment.TopLeft, GUI.SmallFont, commandList);
+                    commandTickBox.Selected = selectedClient.PermittedConsoleCommands.Contains(command);
+                    commandTickBox.ToolTip = command.help;
+                    commandTickBox.UserData = command;
+                    commandTickBox.OnSelected += (GUITickBox tickBox) =>
+                    {
+                        Client client = tickBox.Parent.UserData as Client;
+                        DebugConsole.Command selectedCommand = tickBox.UserData as DebugConsole.Command;
+                        if (client == null) return false;
+
+                        if (!tickBox.Selected)
+                        {
+                            client.PermittedConsoleCommands.Remove(selectedCommand);
+                        }
+                        else if (!client.PermittedConsoleCommands.Contains(selectedCommand))
+                        {
+                            client.PermittedConsoleCommands.Add(selectedCommand);
+                        }
+
+                        GameMain.Server.UpdateClientPermissions(client);
+                        return true;
+                    };
                 }
             }
 
