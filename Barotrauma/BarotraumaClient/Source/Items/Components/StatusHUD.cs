@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,81 @@ namespace Barotrauma.Items.Components
 {
     partial class StatusHUD : ItemComponent
     {
+        private static readonly string[] BleedingTexts = { "Minor bleeding", "Bleeding", "Bleeding heavily", "Catastrophic Bleeding" };
+
+        private static readonly string[] HealthTexts = { "No visible injuries", "Minor injuries", "Injured", "Major injuries", "Critically injured" };
+
+        private static readonly string[] OxygenTexts = { "Oxygen level normal", "Gasping for air", "Signs of oxygen deprivation", "Not breathing" };
+
+        [Serialize(500.0f, false)]
+        public float Range
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(50.0f, false)]
+        public float FadeOutRange
+        {
+            get;
+            private set;
+        }
+
+        private List<Character> visibleCharacters = new List<Character>();
+
+        private const float UpdateInterval = 0.5f;
+        private float updateTimer;
+
+        private Character equipper;
+
+        public override void Update(float deltaTime, Camera cam)
+        {
+            base.Update(deltaTime, cam);
+
+            if (equipper == null)
+            {
+                IsActive = false;
+                return;
+            }
+            
+            if (updateTimer > 0.0f)
+            {
+                updateTimer -= deltaTime;
+                return;
+            }
+
+            visibleCharacters.Clear();
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c == equipper) continue;
+
+                float dist = Vector2.DistanceSquared(equipper.WorldPosition, c.WorldPosition);
+                if (dist < Range * Range)
+                {
+                    Vector2 diff = c.WorldPosition - equipper.WorldPosition;
+                    if (Submarine.CheckVisibility(equipper.SimPosition, equipper.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
+                    {
+                        visibleCharacters.Add(c);
+                    }
+                }
+            }
+
+            updateTimer = UpdateInterval;
+        }
+        
+        public override void Equip(Character character)
+        {
+            updateTimer = 0.0f;
+            equipper = character;
+            IsActive = true;
+        }
+
+        public override void Unequip(Character character)
+        {
+            equipper = null;
+            IsActive = false;
+        }
+
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             if (character == null) return;
@@ -14,16 +90,27 @@ namespace Barotrauma.Items.Components
             GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 Color.Green * 0.1f, true);
 
-            if (character.FocusedCharacter == null) return;
+            foreach (Character c in visibleCharacters)
+            {
+                if (c == character) continue;
 
-            var target = character.FocusedCharacter;
+                float dist = Vector2.Distance(character.WorldPosition, c.WorldPosition);
+                DrawCharacterInfo(spriteBatch, c, 1.0f - MathHelper.Max((dist - (Range - FadeOutRange)) / FadeOutRange, 0.0f));                
+            }
 
+        }
+
+        private void DrawCharacterInfo(SpriteBatch spriteBatch, Character target, float alpha = 1.0f)
+        {
             Vector2 hudPos = GameMain.GameScreen.Cam.WorldToScreen(target.WorldPosition);
             hudPos += Vector2.UnitX * 50.0f;
 
             List<string> texts = new List<string>();
 
-            texts.Add(target.Name);
+            if (target.Info != null)
+            {
+                texts.Add(target.Name);
+            }
 
             if (target.IsDead)
             {
@@ -63,7 +150,7 @@ namespace Barotrauma.Items.Components
 
             foreach (string text in texts)
             {
-                GUI.DrawString(spriteBatch, hudPos, text, Color.LightGreen, Color.Black * 0.7f, 2);
+                GUI.DrawString(spriteBatch, hudPos, text, Color.LightGreen * alpha, Color.Black * 0.7f * alpha, 2);
                 hudPos.Y += 24.0f;
             }
         }
