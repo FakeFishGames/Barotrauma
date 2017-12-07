@@ -7,12 +7,8 @@ namespace Barotrauma
     {
         public static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
 
-        const int DefaultWidth=400, DefaultHeight=250;
-
-        //public delegate bool OnClickedHandler(GUIButton button, object obj);
-        //public OnClickedHandler OnClicked;
-
-        //GUIFrame frame;
+        public const int DefaultWidth = 400, DefaultHeight = 250;
+        
         public GUIButton[] Buttons;
 
         public static GUIComponent VisibleBox
