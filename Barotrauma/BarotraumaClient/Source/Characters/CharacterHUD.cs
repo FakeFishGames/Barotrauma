@@ -213,10 +213,16 @@ namespace Barotrauma
 
                             character.AnimController.GrabLimb = character.AnimController.GrabLimb == LimbType.None ? LimbType.Torso : LimbType.None;
 
+                            foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
+                            {
+                                limb.pullJoint.Enabled = false;
+                            }
+
                             if (GameMain.Client != null)
                             {
-                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
+                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Control });
                             }
+
                             grabHoldButton.Text = "Grabbing: " + (character.AnimController.GrabLimb == LimbType.Torso ? "Torso" : "Hands");
                             return true;
                         };

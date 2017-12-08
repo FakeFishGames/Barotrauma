@@ -17,15 +17,19 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 2, 0);
+                        msg.WriteRangedInteger(0, 3, 0);
                         inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Repair:
-                        msg.WriteRangedInteger(0, 2, 1);
+                        msg.WriteRangedInteger(0, 3, 1);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(0, 2, 2);
+                        msg.WriteRangedInteger(0, 3, 2);
+                        break;
+                    case NetEntityEvent.Type.Control:
+                        msg.WriteRangedInteger(0, 3, 3);
+                        msg.Write((int)AnimController.GrabLimb);
                         break;
                 }
             }
@@ -91,7 +95,7 @@ namespace Barotrauma
                             bool crouching = msg.ReadBoolean();
                             keys[(int)InputType.Crouch].Held = crouching;
                             keys[(int)InputType.Crouch].SetState(false, crouching);
-                            AnimController.GrabLimb = (LimbType)msg.ReadInt16();
+                            AnimController.GrabLimb = (LimbType)msg.ReadInt32();
                         }
 
                         bool hasAttackLimb = msg.ReadBoolean();
