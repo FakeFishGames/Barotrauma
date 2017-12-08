@@ -1308,7 +1308,7 @@ namespace Barotrauma
                 findFocusedTimer -= deltaTime;
             }
             
-            if (SelectedCharacter != null && IsKeyHit(InputType.Select))
+            if (SelectedCharacter != null && focusedItem == null && IsKeyHit(InputType.Select)) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
             }
