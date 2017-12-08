@@ -13,6 +13,8 @@ namespace Barotrauma
         private static Sprite noiseOverlay, damageOverlay;
 
         private static GUIButton cprButton;
+        
+        private static GUIButton grabHoldButton;
 
         private static GUIButton suicideButton;
 
@@ -40,6 +42,8 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
 
             if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
+
+            if (grabHoldButton != null && cprButton.Visible) grabHoldButton.AddToGUIUpdateList();
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.AddToGUIUpdateList();
             
@@ -88,6 +92,8 @@ namespace Barotrauma
             if (healthBar != null) healthBar.Update(deltaTime);
 
             if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
+
+            if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
 
@@ -195,9 +201,31 @@ namespace Barotrauma
                         };
                     }
 
+                    if (grabHoldButton == null)
+                    {
+                        grabHoldButton = new GUIButton(
+                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(320, -60), new Point(130, 20)),
+                                "Grabbing: " + (character.AnimController.GrabLimb == LimbType.Torso ? "Torso" : "Hands"), "");
+
+                        grabHoldButton.OnClicked = (button, userData) =>
+                        {
+                            if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
+
+                            character.AnimController.GrabLimb = character.AnimController.GrabLimb == LimbType.None ? LimbType.Torso : LimbType.None;
+
+                            if (GameMain.Client != null)
+                            {
+                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Repair });
+                            }
+                            grabHoldButton.Text = "Grabbing: " + (character.AnimController.GrabLimb == LimbType.Torso ? "Torso" : "Hands");
+                            return true;
+                        };
+                    }
+
                     //cprButton.Visible = character.GetSkillLevel("Medical") > 20.0f;
 
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
+                    if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
                 }
 
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
