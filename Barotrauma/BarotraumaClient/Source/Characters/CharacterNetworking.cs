@@ -91,6 +91,7 @@ namespace Barotrauma
                             bool crouching = msg.ReadBoolean();
                             keys[(int)InputType.Crouch].Held = crouching;
                             keys[(int)InputType.Crouch].SetState(false, crouching);
+                            AnimController.GrabLimb = (LimbType)msg.ReadInt16();
                         }
 
                         bool hasAttackLimb = msg.ReadBoolean();
