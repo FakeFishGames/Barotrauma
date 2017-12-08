@@ -869,7 +869,34 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
                 IgnorePlatforms = false;
             }
+            else if (character.SelectedCharacter != null && !character.SelectedCharacter.AllowInput)
+            {
+                Limb targetLeftHand = character.SelectedCharacter.AnimController.GetLimb(LimbType.LeftHand);
+                Limb targetRightHand = character.SelectedCharacter.AnimController.GetLimb(LimbType.RightHand);
+                Limb targetTorso = character.SelectedCharacter.AnimController.GetLimb(LimbType.Torso);
 
+                if (character.SelectedCharacter.AnimController.Dir != Dir)
+                    character.SelectedCharacter.AnimController.Flip();
+
+                targetTorso.pullJoint.Enabled = true;
+                targetTorso.pullJoint.WorldAnchorB = torso.SimPosition + (Vector2.UnitX * -Dir) * 0.2f;
+                targetTorso.pullJoint.MaxForce = 5000.0f;
+                
+                if (!targetLeftHand.IsSevered)
+                {
+                    targetLeftHand.pullJoint.Enabled = true;
+                    targetLeftHand.pullJoint.WorldAnchorB = torso.SimPosition + (new Vector2(1 * Dir, 1)) * 0.2f;
+                    targetLeftHand.pullJoint.MaxForce = 5000.0f;
+                }
+                if (!targetRightHand.IsSevered)
+                {
+                    targetRightHand.pullJoint.Enabled = true;
+                    targetRightHand.pullJoint.WorldAnchorB = torso.SimPosition + (new Vector2(1 * Dir, 1)) * 0.2f;
+                    targetRightHand.pullJoint.MaxForce = 5000.0f;
+                }
+                
+                character.SelectedCharacter.AnimController.IgnorePlatforms = true;
+            }
         }
 
         private void UpdateCPR(float deltaTime)
@@ -880,11 +907,13 @@ namespace Barotrauma
                 return;
             }
 
+            Character target = character.SelectedCharacter;
+
             Crouching = true;
 
-            Vector2 diff = character.SelectedCharacter.SimPosition - character.SimPosition;
-            Limb targetHead = character.SelectedCharacter.AnimController.GetLimb(LimbType.Head);
-            Limb targetTorso = character.SelectedCharacter.AnimController.GetLimb(LimbType.Torso);
+            Vector2 diff = target.SimPosition - character.SimPosition;
+            Limb targetHead = target.AnimController.GetLimb(LimbType.Head);
+            Limb targetTorso = target.AnimController.GetLimb(LimbType.Torso);
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
             
@@ -986,6 +1015,9 @@ namespace Barotrauma
                         pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
                         pullLimb.pullJoint.MaxForce = 5000.0f;
                         targetMovement *= 0.7f; //Carrying people like that takes a lot of effort.
+                        
+                        if (target.AnimController.Dir != Dir)
+                            target.AnimController.Flip();
                     }                        
                     else
                     {
