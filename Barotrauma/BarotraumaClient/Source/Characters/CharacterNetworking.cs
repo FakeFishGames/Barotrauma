@@ -29,7 +29,7 @@ namespace Barotrauma
                         break;
                     case NetEntityEvent.Type.Control:
                         msg.WriteRangedInteger(0, 3, 3);
-                        msg.Write((int)AnimController.GrabLimb);
+                        msg.Write((UInt16)AnimController.GrabLimb);
                         break;
                 }
             }
@@ -95,7 +95,7 @@ namespace Barotrauma
                             bool crouching = msg.ReadBoolean();
                             keys[(int)InputType.Crouch].Held = crouching;
                             keys[(int)InputType.Crouch].SetState(false, crouching);
-                            AnimController.GrabLimb = (LimbType)msg.ReadInt32();
+                            AnimController.GrabLimb = (LimbType)msg.ReadUInt16();
                         }
 
                         bool hasAttackLimb = msg.ReadBoolean();
@@ -370,6 +370,9 @@ namespace Barotrauma
                 {
                     SetStun(0.0f, true, true);
                 }
+
+                bool ragdolled = msg.ReadBoolean();
+                IsRagdolled = ragdolled;
 
                 bool huskInfected = msg.ReadBoolean();
                 if (huskInfected)

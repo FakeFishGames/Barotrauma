@@ -1468,15 +1468,17 @@ namespace Barotrauma
                 return;
             }
 
+            //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             if (IsForceRagdolled)
                 IsRagdolled = IsForceRagdolled;
-            else if (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
+            else if (!IsRagdolled || (GameMain.Server != null && AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
 
             if (IsRagdolled)
             {
                 if (AnimController is HumanoidAnimController) ((HumanoidAnimController)AnimController).Crouching = false;
-
+                if(GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                 AnimController.ResetPullJoints();
                 selectedConstruction = null;
                 return;
