@@ -175,7 +175,7 @@ namespace Barotrauma
         {
             get { return !IsUnconscious && Stun <= 0.0f && !isDead; }
         }
-
+        
         public bool CanInteract
         {
             get { return AllowInput && IsHumanoid && !LockHands; }
@@ -206,6 +206,7 @@ namespace Barotrauma
             get { return selectedCharacter; }
             set
             {
+                if (value == selectedCharacter) return;
                 if (selectedCharacter != null)
                     selectedCharacter.selectedBy = null;
                 selectedCharacter = value;
@@ -303,7 +304,7 @@ namespace Barotrauma
         private float stunTimer;
         public float Stun
         {
-            get { return stunTimer; }
+            get { return IsRagdolled ? 1.0f : stunTimer; }
             set
             {
                 if (GameMain.Client != null) return;
@@ -686,7 +687,7 @@ namespace Barotrauma
                     case InputType.Use:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
                     case InputType.Ragdoll:
-                        return !(dequeuedInput.HasFlag(InputType.Ragdoll)) && (prevDequeuedInput.HasFlag(InputType.Ragdoll));
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
                     default:
                         return false;
                 }
@@ -1030,7 +1031,7 @@ namespace Barotrauma
 
         public bool CanInteractWith(Character c, float maxDist = 200.0f)
         {
-            if (c == this || !c.Enabled || c.info == null || !c.IsHumanoid || !c.CanBeSelected) return false;
+            if (c == this || !c.Enabled || !c.IsHumanoid || !c.CanBeSelected) return false;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
             if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;
@@ -1058,6 +1059,9 @@ namespace Barotrauma
             Wire wire = item.GetComponent<Wire>();
             if (wire != null)
             {
+                //locked wires are never interactable
+                if (wire.Locked) return false;
+
                 //wires are interactable if the character has selected either of the items the wire is connected to
                 if (wire.Connections[0]?.Item != null && selectedConstruction == wire.Connections[0].Item) return true;
                 if (wire.Connections[1]?.Item != null && selectedConstruction == wire.Connections[1].Item) return true;
@@ -1242,7 +1246,7 @@ namespace Barotrauma
         public void SelectCharacter(Character character)
         {
             if (character == null) return;
-
+            
             SelectedCharacter = character;
         }
 
@@ -1264,27 +1268,27 @@ namespace Barotrauma
         public void DoInteractionUpdate(float deltaTime, Vector2 mouseSimPos)
         {
             bool isLocalPlayer = (controlled == this);
-            if (!isLocalPlayer && (this is AICharacter || !IsRemotePlayer))
+            if (!isLocalPlayer && (this is AICharacter && !IsRemotePlayer))
             {
                 return;
             }
 
             if (!CanInteract)
             {
-                if (SelectedCharacter != null)
-                {
-                    DeselectCharacter();
-                }
                 selectedConstruction = null;
                 focusedItem = null;
-                focusedCharacter = null;
-                return;
+                if (!AllowInput)
+                {
+                    focusedCharacter = null;
+                    if (SelectedCharacter != null) DeselectCharacter();
+                    return;
+                }
             }
             if ((!isLocalPlayer && IsKeyHit(InputType.Select) && GameMain.Server == null) || 
                 (isLocalPlayer && (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)))
             {
                 focusedCharacter = FindCharacterAtPosition(mouseSimPos);
-                focusedItem = FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.5f : 0.25f);
+                focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, AnimController.InWater ? 0.5f : 0.25f) : null;
 
                 if (focusedCharacter != null && focusedItem != null)
                 {
@@ -1303,7 +1307,7 @@ namespace Barotrauma
             {
                 findFocusedTimer -= deltaTime;
             }
-
+            
             if (SelectedCharacter != null && IsKeyHit(InputType.Select))
             {
                 DeselectCharacter();
@@ -1448,7 +1452,7 @@ namespace Barotrauma
 
             UpdateControlled(deltaTime, cam);
 
-            if (Stun > 0.0f)
+            if (stunTimer > 0.0f)
             {
                 stunTimer -= deltaTime;
                 if (stunTimer < 0.0f && GameMain.Server != null)
@@ -1471,8 +1475,7 @@ namespace Barotrauma
 
             if (IsRagdolled)
             {
-                ((HumanoidAnimController)AnimController).Crouching = false;
-                Stun = Math.Max(0.1f, Stun);
+                if (AnimController is HumanoidAnimController) ((HumanoidAnimController)AnimController).Crouching = false;
 
                 AnimController.ResetPullJoints();
                 selectedConstruction = null;
