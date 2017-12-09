@@ -419,12 +419,6 @@ namespace Barotrauma
                 });
             }));
 
-            commands.Add(new Command("togglekarma", "togglekarma: Toggles the karma system.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;
-            }));
-
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
