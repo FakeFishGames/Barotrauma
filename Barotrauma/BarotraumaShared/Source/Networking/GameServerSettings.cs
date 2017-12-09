@@ -131,6 +131,13 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(true, true)]
+        public bool AllowRagdollButton
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(true, true)]
         public bool AllowFileTransfers
         {
             get;
@@ -205,6 +212,20 @@ namespace Barotrauma.Networking
 
         [Serialize(0.6f, true)]
         public float KickVoteRequiredRatio
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(true, true)]
+        public bool traitorUseRatio
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.2f, true)]
+        public float traitorRatio
         {
             get;
             private set;
