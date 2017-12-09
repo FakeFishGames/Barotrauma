@@ -320,7 +320,7 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            y += 40;
+            y += 20;
 
             var voteKickBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow vote kicking", Alignment.Left, settingsTabs[1]);
             voteKickBox.Selected = Voting.AllowVoteKick;
@@ -357,7 +357,7 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            y += 40;
+            y += 20;
 
             var randomizeLevelBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Randomize level seed between rounds", Alignment.Left, settingsTabs[1]);
             randomizeLevelBox.Selected = RandomizeSeed;
@@ -367,7 +367,7 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            y += 40;
+            y += 20;
 
             var saveLogsBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Save server logs", Alignment.Left, settingsTabs[1]);
             saveLogsBox.Selected = SaveServerLogs;
@@ -378,6 +378,83 @@ namespace Barotrauma.Networking
                 return true;
             };
 
+            y += 20;
+
+            var ragdollButtonBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow ragdoll button", Alignment.Left, settingsTabs[1]);
+            ragdollButtonBox.Selected = AllowRagdollButton;
+            ragdollButtonBox.OnSelected = (GUITickBox) =>
+            {
+                AllowRagdollButton = GUITickBox.Selected;
+                return true;
+            };
+
+            y += 20;
+
+            var traitorRatioBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Use % of players for max traitors", Alignment.Left, settingsTabs[1]);
+            var traitorRatioText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Traitor ratio: 20 %", "", settingsTabs[1], GUI.SmallFont);
+            var traitorRatioSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
+            //Prepare the slider before the tick box
+            if (traitorUseRatio)
+            {
+                traitorRatioSlider.UserData = traitorRatioText;
+                traitorRatioSlider.Step = 0.01f; //Lots of fine-tuning
+                traitorRatioSlider.BarScroll = (traitorRatio - 0.1f) / 0.9f;
+            }
+            else
+            {
+                traitorRatioSlider.UserData = traitorRatioText;
+                traitorRatioSlider.Step = 1f / (maxPlayers-1);
+                traitorRatioSlider.BarScroll = MathUtils.Round(traitorRatio, 1f);
+            }
+            //Slider END
+
+            traitorRatioBox.Selected = traitorUseRatio;
+            traitorRatioBox.OnSelected = (GUITickBox) =>
+            {
+                traitorUseRatio = GUITickBox.Selected;
+                //Affect the slider graphics
+                if (traitorUseRatio)
+                {
+                    traitorRatioSlider.UserData = traitorRatioText;
+                    traitorRatioSlider.Step = 0.01f; //Lots of fine-tuning
+                    traitorRatioSlider.BarScroll = 0.2f; //default values
+                    traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll); //Update the scroll bar
+                }
+                else
+                {
+                    traitorRatioSlider.UserData = traitorRatioText;
+                    traitorRatioSlider.Step = 1f / (maxPlayers-1);
+                    traitorRatioSlider.BarScroll = 1; //default values
+                    traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll); //Update the scroll bar
+                }
+                return true;
+            };
+            traitorRatioSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                GUITextBlock traitorText = scrollBar.UserData as GUITextBlock;
+                if (traitorUseRatio)
+                {
+                    traitorRatio = barScroll * 0.9f + 0.1f;
+                    traitorText.Text = "Traitor ratio: " + (int)MathUtils.Round(traitorRatio * 100.0f, 1.0f) + " %";
+                }
+                else
+                {
+                    traitorRatio = MathUtils.Round(barScroll * (maxPlayers-1), 1f) + 1;
+                    traitorText.Text = "Traitor count: " + traitorRatio;
+                }
+                return true;
+            };
+            traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll);
+
+            y += 45;
+
+            var karmaButtonBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Use Karma", Alignment.Left, settingsTabs[1]);
+            karmaButtonBox.Selected = KarmaEnabled;
+            karmaButtonBox.OnSelected = (GUITickBox) =>
+            {
+                KarmaEnabled = GUITickBox.Selected;
+                return true;
+            };
 
             //--------------------------------------------------------------------------------
             //                              banlist

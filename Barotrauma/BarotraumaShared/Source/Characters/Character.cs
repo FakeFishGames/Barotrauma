@@ -1471,7 +1471,7 @@ namespace Barotrauma
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             if (IsForceRagdolled)
                 IsRagdolled = IsForceRagdolled;
-            else if (!IsRagdolled || (GameMain.Server != null && AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
+            else if (GameMain.Server != null && GameMain.Server.AllowRagdollButton && (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
 
             if (IsRagdolled)
