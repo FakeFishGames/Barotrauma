@@ -128,7 +128,7 @@ namespace Barotrauma
                     Character.AnimController.TargetDir = Direction.Left;
                 }
 
-                if (Character.SelectedConstruction != null) Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
+                if (Character.SelectedConstruction != null) Character.SelectedConstruction.Aim(deltaTime, Character);
 
             }
             else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)

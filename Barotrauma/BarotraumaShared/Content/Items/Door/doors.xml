@@ -96,7 +96,7 @@
     <DockingPort IsHorizontal="true" DistanceTolerance="128,64" DockedDistance="64">
       <Sprite texture ="dockingport.png" sourcerect="127,0,112,144" depth="0.05" origin="0.5,0.5"/>
       <sound file="dockingport1.ogg" type="OnUse" range="1000.0"/>
-      <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+      <sound file="dockingport2.ogg" type="OnAim" range="1000.0"/>
     </DockingPort>
 
     <PowerTransfer/>
@@ -127,7 +127,7 @@
     <DockingPort IsHorizontal="false" DistanceTolerance="64,128" DockedDistance="64">
       <Sprite texture ="dockingport.png" sourcerect="127,144,48,112" depth="0.05" origin="0.5,0.5"/>
       <sound file="dockingport1.ogg" type="OnUse" range="1000.0"/>
-      <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+      <sound file="dockingport2.ogg" type="OnAim" range="1000.0"/>
     </DockingPort>
 
     <fixrequirement name="Electrical repairs">

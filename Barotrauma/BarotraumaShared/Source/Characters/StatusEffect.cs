@@ -41,6 +41,7 @@ namespace Barotrauma
         private readonly float duration;
 
         private readonly bool useItem;
+        private readonly bool hudUseItem;
 
         public readonly ActionType type;
 
@@ -166,8 +167,10 @@ namespace Barotrauma
                         FireSize = subElement.GetAttributeFloat("size",10.0f);
                         break;
                     case "use":
-                    case "useitem":
                         useItem = true;
+                        break;
+                    case "huduse":
+                        hudUseItem = true;
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -256,6 +259,13 @@ namespace Barotrauma
                 foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
                 {
                     item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
+                }
+            }
+            if (hudUseItem)
+            {
+                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                {
+                    item.HudUse(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
                 }
             }
 

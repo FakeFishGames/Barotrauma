@@ -118,7 +118,7 @@ namespace Barotrauma.Items.Components
 
         }
 
-        public override void SecondaryUse(float deltaTime, Character character = null)
+        public override void Aim(float deltaTime, Character character = null)
         {
             if (reload > 0.0f) return;
 
