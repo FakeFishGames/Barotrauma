@@ -11,6 +11,7 @@ namespace Barotrauma.Items.Components
         float throwPos;
 
         bool throwing;
+        bool throwDone;
 
         [Serialize(1.0f, false)]
         public float ThrowForce
@@ -32,7 +33,8 @@ namespace Barotrauma.Items.Components
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (!throwing) return false; //This should only be triggered 
+            if (!throwDone) return false; //This should only be triggered in update
+            throwDone = false;
             return true;
         }
 
@@ -52,7 +54,14 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (!item.body.Enabled) return;
-            if (!picker.HasSelectedItem(item)) IsActive = false;
+            if (!picker.HasSelectedItem(item))
+            {
+                IsActive = false;
+                return;
+            }
+
+            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Use))
+                throwing = true;
 
             if (!picker.IsKeyDown(InputType.Aim) && !throwing) throwPos = 0.0f;
 
@@ -98,6 +107,7 @@ namespace Barotrauma.Items.Components
 
                     Limb rightHand = ac.GetLimb(LimbType.RightHand);
                     item.body.AngularVelocity = rightHand.body.AngularVelocity;
+                    throwDone = true;
                     ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, picker); //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
                     throwing = false;
                 }
