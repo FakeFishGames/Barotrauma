@@ -16,7 +16,7 @@ namespace Barotrauma
 {
     public enum ActionType
     {
-        Always, OnPicked, OnUse, OnAim,
+        Always, OnPicked, OnUse, OnSecondaryUse,
         OnWearing, OnContaining, OnContained, 
         OnActive, OnFailure, OnBroken, 
         OnFire, InWater,
@@ -800,6 +800,7 @@ namespace Barotrauma
                 if (!ic.WasUsed)
                 {
                     ic.StopSounds(ActionType.OnUse);
+                    ic.StopSounds(ActionType.OnSecondaryUse);
                 }
 #endif
                 ic.WasUsed = false;
@@ -1165,12 +1166,30 @@ namespace Barotrauma
             if (remove) Remove();
         }
 
+        public void SecondaryUse(float deltaTime, Character character = null)
         {
+            if (condition == 0.0f) return;
+
+            bool remove = false;
+
             foreach (ItemComponent ic in components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
-                ic.Aim(deltaTime, character);
+                if (ic.Use(deltaTime, character))
+                {
+                    ic.WasUsed = true;
+
+#if CLIENT
+                    ic.PlaySound(ActionType.OnSecondaryUse, WorldPosition);
+#endif
+
+                    ic.ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character);
+
+                    if (ic.DeleteOnUse) remove = true;
+                }
             }
+
+            if (remove) Remove();
         }
 
         public List<ColoredText> GetHUDTexts(Character character)

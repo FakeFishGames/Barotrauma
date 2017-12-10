@@ -932,13 +932,13 @@ namespace Barotrauma
                 if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
 
                 if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
-                if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].Aim(deltaTime, this);                
+                if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
             }
 
             if (selectedConstruction != null)
             {
                 if (IsKeyDown(InputType.Use)) selectedConstruction.Use(deltaTime, this);
-                if (selectedConstruction != null && IsKeyDown(InputType.Aim)) selectedConstruction.Aim(deltaTime, this);
+                if (selectedConstruction != null && IsKeyDown(InputType.Aim)) selectedConstruction.SecondaryUse(deltaTime, this);
             }
 
             if (SelectedCharacter != null)

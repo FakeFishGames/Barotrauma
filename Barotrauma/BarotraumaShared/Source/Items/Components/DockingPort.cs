@@ -255,7 +255,7 @@ namespace Barotrauma.Items.Components
             dockingTarget.dockingDir = -dockingDir;
 
 #if CLIENT
-            PlaySound(ActionType.OnAim, item.WorldPosition);
+            PlaySound(ActionType.OnSecondaryUse, item.WorldPosition);
 #endif
 
             ConnectWireBetweenPorts();

@@ -27,18 +27,13 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null) return false;
-            if (!character.IsKeyDown(InputType.Aim) || throwing) return false;
-            
-            throwing = true;
-
-            IsActive = true;
-            return true;
+            return true; //We do the actual throwing in Aim because Use might be used by chems
         }
 
-        public override void Aim(float deltaTime, Character character = null)
+        public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (throwing) return;
+            if (!throwing) return false; //This should only be triggered 
+            return true;
         }
 
         public override void Drop(Character dropper)
@@ -103,7 +98,7 @@ namespace Barotrauma.Items.Components
 
                     Limb rightHand = ac.GetLimb(LimbType.RightHand);
                     item.body.AngularVelocity = rightHand.body.AngularVelocity;
-
+                    ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, picker); //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
                     throwing = false;
                 }
             }
