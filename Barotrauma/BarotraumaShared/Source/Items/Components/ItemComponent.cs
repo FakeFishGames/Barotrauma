@@ -291,7 +291,10 @@ namespace Barotrauma.Items.Components
         }
 
         //called when the item is equipped and right mouse button is pressed
-        public virtual void Aim(float deltaTime, Character character = null) { }  
+        public virtual bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return false;
+        }
 
         //called when the item is placed in a "limbslot"
         public virtual void Equip(Character character) { }
