@@ -36,7 +36,6 @@ namespace Barotrauma
         {
             if (Items[slotIndex] == null) return false;
 
-//Isn't this useless? Client isn't handling status effects. Plus, this doesn't send the ActionType so it can be wrong even.
 #if CLIENT
             if (GameMain.Client != null)
             {
@@ -47,10 +46,10 @@ namespace Barotrauma
 
             if (GameMain.Server != null)
             {
-                GameMain.Server.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnHudUse, character.ID });
+                GameMain.Server.CreateEntityEvent(Items[slotIndex], new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID });
             }
 
-            Items[slotIndex].ApplyStatusEffects(ActionType.OnHudUse, 1.0f, character);
+            Items[slotIndex].ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
 
             return true;
         }

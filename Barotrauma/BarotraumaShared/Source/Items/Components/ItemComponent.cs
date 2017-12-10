@@ -290,13 +290,6 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        //called when the item is used via the HUD button
-        //returns true if the item was used succesfully (not out of ammo, reloading, etc)
-        public virtual bool HudUse(float deltaTime, Character character = null)
-        {
-            return false;
-        }
-
         //called when the item is equipped and right mouse button is pressed
         public virtual void Aim(float deltaTime, Character character = null) { }  
 
