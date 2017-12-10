@@ -114,6 +114,17 @@ namespace Barotrauma
                 NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
             }));
 
+            commands.Add(new Command("itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
+            {
+                NewMessage("***************", Color.Cyan);
+                foreach (ItemPrefab itemPrefab in MapEntityPrefab.List)
+                {
+                    
+                    NewMessage("- " + itemPrefab.Name, Color.Cyan);
+                }
+                NewMessage("***************", Color.Cyan);
+            }));
+
             commands.Add(new Command("createfilelist", "", (string[] args) =>
             {
                 UpdaterUtil.SaveFileList("filelist.xml");

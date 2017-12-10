@@ -265,7 +265,7 @@ namespace Barotrauma
                 {
                     SerializableProperty property;
 
-                    if (!target.SerializableProperties.TryGetValue(propertyNames[i], out property)) continue;
+                    if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(propertyNames[i], out property)) continue;
 
                     if (duration > 0.0f)
                     {

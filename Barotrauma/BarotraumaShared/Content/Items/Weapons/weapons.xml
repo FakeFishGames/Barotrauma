@@ -57,6 +57,38 @@
   </Item>
 
   <Item
+    name="Syringe Gun"
+    category="Equipment"
+    
+    price="700"
+    tags="weapon">
+
+    <Deconstruct time="10">      
+      <Item name="Steel Bar"/>
+      <Item name="Aluminium"/>      
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+  
+    <Sprite texture="weapons.png" sourcerect="62,97,44,24" depth="0.55"/>
+
+    <Body width="40" height="25" density="50"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
+              aimpos="90,10" handle1="-10,-7"/>
+    
+    <RangedWeapon barrelpos="30,13" spread="0" unskilledspread="10">
+      <Sound file="syringegun.ogg" type="OnUse"/>
+      <RequiredItems name="Medical Syringe" type="Contained" msg="Please load a Syringe"/>
+      <RequiredSkill name="Weapons" level="15"/>
+      <RequiredSkill name="Medical" level="30"/>
+    </RangedWeapon>
+
+    <ItemContainer capacity="1" itempos="10,10" hideitems="false">
+      <Containable name="Medical Syringe"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
     name="Revolver Round"
     category="Equipment"
     interactthroughwalls="true"
