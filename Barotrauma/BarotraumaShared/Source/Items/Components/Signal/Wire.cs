@@ -242,7 +242,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void SecondaryUse(float deltaTime, Character character = null)
+        public override void Aim(float deltaTime, Character character = null)
         {
             if (nodes.Count > 1)
             {

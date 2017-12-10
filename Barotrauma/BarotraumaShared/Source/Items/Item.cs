@@ -16,7 +16,7 @@ namespace Barotrauma
 {
     public enum ActionType
     {
-        Always, OnPicked, OnUse, OnSecondaryUse,
+        Always, OnPicked, OnUse, OnHudUse, OnAim,
         OnWearing, OnContaining, OnContained, 
         OnActive, OnFailure, OnBroken, 
         OnFire, InWater,
@@ -800,6 +800,7 @@ namespace Barotrauma
                 if (!ic.WasUsed)
                 {
                     ic.StopSounds(ActionType.OnUse);
+                    ic.StopSounds(ActionType.OnHudUse);
                 }
 #endif
                 ic.WasUsed = false;
@@ -1165,12 +1166,38 @@ namespace Barotrauma
             if (remove) Remove();
         }
 
-        public void SecondaryUse(float deltaTime, Character character = null)
+        public void HudUse(float deltaTime, Character character = null)
+        {
+            if (condition == 0.0f) return;
+
+            bool remove = false;
+
+            foreach (ItemComponent ic in components)
+            {
+                if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
+                if (ic.HudUse(deltaTime, character))
+                {
+                    ic.WasUsed = true;
+
+#if CLIENT
+                    ic.PlaySound(ActionType.OnHudUse, WorldPosition);
+#endif
+
+                    ic.ApplyStatusEffects(ActionType.OnHudUse, deltaTime, character);
+
+                    if (ic.DeleteOnUse) remove = true;
+                }
+            }
+
+            if (remove) Remove();
+        }
+
+        public void Aim(float deltaTime, Character character = null)
         {
             foreach (ItemComponent ic in components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
-                ic.SecondaryUse(deltaTime, character);
+                ic.Aim(deltaTime, character);
             }
         }
 
