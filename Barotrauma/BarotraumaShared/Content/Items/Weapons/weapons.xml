@@ -76,14 +76,14 @@
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
               aimpos="90,10" handle1="-10,-7"/>
     
-    <RangedWeapon barrelpos="30,13" spread="0" unskilledspread="10">
+    <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
       <Sound file="syringegun.ogg" type="OnUse"/>
       <RequiredItems name="Medical Syringe" type="Contained" msg="Please load a Syringe"/>
       <RequiredSkill name="Weapons" level="15"/>
       <RequiredSkill name="Medical" level="30"/>
     </RangedWeapon>
 
-    <ItemContainer capacity="1" itempos="10,10" hideitems="false">
+    <ItemContainer capacity="1" itempos="0,10" hideitems="false">
       <Containable name="Medical Syringe"/>
     </ItemContainer>
   </Item>

@@ -117,9 +117,10 @@ namespace Barotrauma
             commands.Add(new Command("itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
                 NewMessage("***************", Color.Cyan);
-                foreach (ItemPrefab itemPrefab in MapEntityPrefab.List)
+                foreach (MapEntityPrefab ep in MapEntityPrefab.List)
                 {
-                    
+                    var itemPrefab = ep as ItemPrefab;
+                    if (itemPrefab == null || itemPrefab.Name == null) continue;
                     NewMessage("- " + itemPrefab.Name, Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
