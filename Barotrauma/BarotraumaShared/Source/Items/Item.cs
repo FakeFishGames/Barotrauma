@@ -800,6 +800,7 @@ namespace Barotrauma
                 if (!ic.WasUsed)
                 {
                     ic.StopSounds(ActionType.OnUse);
+                    ic.StopSounds(ActionType.OnSecondaryUse);
                 }
 #endif
                 ic.WasUsed = false;
@@ -1167,11 +1168,28 @@ namespace Barotrauma
 
         public void SecondaryUse(float deltaTime, Character character = null)
         {
+            if (condition == 0.0f) return;
+
+            bool remove = false;
+
             foreach (ItemComponent ic in components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
-                ic.SecondaryUse(deltaTime, character);
+                if (ic.SecondaryUse(deltaTime, character))
+                {
+                    ic.WasUsed = true;
+
+#if CLIENT
+                    ic.PlaySound(ActionType.OnSecondaryUse, WorldPosition);
+#endif
+
+                    ic.ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character);
+
+                    if (ic.DeleteOnUse) remove = true;
+                }
             }
+
+            if (remove) Remove();
         }
 
         public List<ColoredText> GetHUDTexts(Character character)
