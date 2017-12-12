@@ -1339,13 +1339,18 @@ namespace Barotrauma
                         }
                     }
 
-                    Vector2 positionError = serverPos.Position - localPos.Position;                    
+                    Vector2 positionError = serverPos.Position - localPos.Position;
+                    float rotationError = serverPos.Rotation - localPos.Rotation;
                     for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
                     {
-                        character.MemLocalState[i].Translate(positionError);
+                        character.MemLocalState[i].Translate(positionError,rotationError);
                     }
 
-                    Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation);
+                    Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation + rotationError);
+                    foreach (Limb limb in Limbs)
+                    {
+                        limb.body.SetTransform(limb.body.SimPosition + positionError, limb.body.Rotation + rotationError);
+                    }
                 }
 
                 if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);

@@ -83,9 +83,13 @@ namespace Barotrauma
             {
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
-
-                Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;
-                Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);                
+                
+                if (Math.Abs(Collider.Rotation-GetLimb(LimbType.Torso).Rotation)>Math.PI*0.6f)
+                {
+                    Collider.SetTransform(Collider.SimPosition, MathHelper.WrapAngle(Collider.Rotation + (float)Math.PI));
+                }
+                Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
+                Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;           
                 
                 return;
             }

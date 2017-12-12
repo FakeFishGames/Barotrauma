@@ -16,22 +16,29 @@ namespace Barotrauma
             private set;
         }
 
+        public float Rotation
+        {
+            get;
+            private set;
+        }
+
         public readonly float Timestamp;
         public readonly UInt16 ID;
 
-        public PosInfo(Vector2 pos, float time)
-            : this(pos, 0, time)
+        public PosInfo(Vector2 pos, float rotation, float time)
+            : this(pos, rotation, 0, time)
         {
         }
 
-        public PosInfo(Vector2 pos, UInt16 ID)
-            : this(pos, ID, 0.0f)
+        public PosInfo(Vector2 pos, float rotation, UInt16 ID)
+            : this(pos, rotation, ID, 0.0f)
         {
         }
         
-        protected PosInfo(Vector2 pos, UInt16 ID, float time)
+        protected PosInfo(Vector2 pos, float rotation, UInt16 ID, float time)
         {
             Position = pos;
+            Rotation = rotation;
             this.ID = ID;
             
             Timestamp = time;
@@ -52,9 +59,9 @@ namespace Barotrauma
             }         
         }
 
-        public void Translate(Vector2 amount)
+        public void Translate(Vector2 posAmount,float rotationAmount)
         {
-            Position += amount;
+            Position += posAmount; Rotation += rotationAmount;
         }
     }
 
