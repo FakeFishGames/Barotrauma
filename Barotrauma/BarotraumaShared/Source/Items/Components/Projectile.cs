@@ -237,6 +237,7 @@ namespace Barotrauma.Items.Components
             }
 
             AttackResult attackResult = new AttackResult();
+            Character character = null;
             if (attack != null)
             {
                 var submarine = target.Body.UserData as Submarine;
@@ -248,11 +249,13 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
 
-                Limb limb;
+                Limb limb = target.Body.UserData as Limb;
                 Structure structure;
-                if ((limb = (target.Body.UserData as Limb)) != null)
+                if (limb != null)
                 {
                     attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f);
+                    if (limb.character != null)
+                        character = limb.character;
                 }
                 else if ((structure = (target.Body.UserData as Structure)) != null)
                 {
@@ -260,8 +263,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            ApplyStatusEffects(ActionType.OnUse, 1.0f);
-            ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
+            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character);
 
             IsActive = false;
 
@@ -306,7 +309,7 @@ namespace Barotrauma.Items.Components
                     {
                         contained.SetTransform(item.SimPosition, contained.body.Rotation);
                     }
-                    contained.Condition = 0.0f;
+                    //contained.Condition = 0.0f; //Let the freaking .xml handle it jeez
                 }
             }
 
