@@ -1258,7 +1258,7 @@ namespace Barotrauma
                 return;
             }
             
-            subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, sendingTime));
+            subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, 0.0f, sendingTime));
         }
     }
 
