@@ -117,7 +117,7 @@
     <Body width="11" height="24" density="30"/>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false"/>
       </StatusEffect>
@@ -134,7 +134,7 @@
     <Body width="11" height="24" density="30"/>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" damage="5" stun="1" force="0.1"/>
         <Fire size="300.0"/>

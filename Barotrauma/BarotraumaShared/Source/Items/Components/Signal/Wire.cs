@@ -242,7 +242,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void SecondaryUse(float deltaTime, Character character = null)
+        public override bool SecondaryUse(float deltaTime, Character character = null)
         {
             if (nodes.Count > 1)
             {
@@ -251,6 +251,7 @@ namespace Barotrauma.Items.Components
             }
 
             Drawable = IsActive || sections.Count > 0;
+            return true;
         }
 
         public override bool Pick(Character picker)
