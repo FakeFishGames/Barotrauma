@@ -40,13 +40,16 @@
       <fabricableitem name="And Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Or Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Not Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+      <fabricableitem name="Relay Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+      <fabricableitem name="Delay Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Light Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Oxygen Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Water Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
       <fabricableitem name="Signal Check Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>      
       <fabricableitem name="RegEx Find Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
+      <fabricableitem name="Oscillator" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Wifi Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
-
+      <fabricableitem name="Emergency Siren" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Alarm Buzzer" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
 
       <fabricableitem name="Underwater Scooter" requireditems="Steel Bar, Polycarbonate Bar, Polycarbonate Bar, FPGA Circuit" requiredtime="30"/>
@@ -96,6 +99,7 @@
 
       <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
 
+      <fabricableitem name="Medical Syringe" requireditems="Steel Bar" requiredtime="10"/>
       <fabricableitem name="Chloral Hydrate" requireditems="Chlorine, Ethanol" requiredtime="20">
         <RequiredSkill name="Medical" level="30"/>
       </fabricableitem>
