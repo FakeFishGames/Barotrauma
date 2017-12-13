@@ -231,13 +231,30 @@ namespace Barotrauma.Items.Components
                         {
                             GameServer.Log(c.Character.Name + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[0].Item.Name + " (" + existingWire.Connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
+
+                            //wires that are not in anyone's inventory (i.e. not currently being rewired) 
+                            //can never be connected to only one connection
+                            // -> the client must have dropped the wire from the connection panel
+                            if (existingWire.Item.ParentInventory == null)
+                            {
+                                //let other clients know the item was also disconnected from the other connection
+                                existingWire.Connections[0].Item.CreateServerEvent(existingWire.Connections[0].Item.GetComponent<ConnectionPanel>());
+                                existingWire.Item.Drop(c.Character);
+                            }
                         }
                         else if (existingWire.Connections[1] != null)
                         {
                             GameServer.Log(c.Character.Name + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
-                        }
 
+                            if (existingWire.Item.ParentInventory == null)
+                            {
+                                //let other clients know the item was also disconnected from the other connection
+                                existingWire.Connections[1].Item.CreateServerEvent(existingWire.Connections[1].Item.GetComponent<ConnectionPanel>());
+                                existingWire.Item.Drop(c.Character);
+                            }
+                        }
+                        
                         Connections[i].Wires[j] = null;
                     }
                     
@@ -281,6 +298,9 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
+            List<Wire> prevWires = Connections.SelectMany(c => Array.FindAll(c.Wires, w => w != null)).ToList();
+            List<Wire> newWires = new List<Wire>();
+
             foreach (Connection connection in Connections)
             {
                 connection.ClearConnections();
@@ -289,14 +309,31 @@ namespace Barotrauma.Items.Components
                 {
                     ushort wireId = msg.ReadUInt16();
 
-                    Item wireItem = MapEntity.FindEntityByID(wireId) as Item;
+                    Item wireItem = Entity.FindEntityByID(wireId) as Item;
                     if (wireItem == null) continue;
 
                     Wire wireComponent = wireItem.GetComponent<Wire>();
                     if (wireComponent == null) continue;
 
+                    newWires.Add(wireComponent);
+
                     connection.Wires[i] = wireComponent;
                     wireComponent.Connect(connection, false);
+                }
+            }
+
+            foreach (Wire wire in prevWires)
+            {
+                if (wire.Connections[0] == null && wire.Connections[1] == null)
+                {
+                    wire.Item.Drop(null);
+                }
+                //wires that are not in anyone's inventory (i.e. not currently being rewired) can never be connected to only one connection
+                // -> someone must have dropped the wire from the connection panel
+                else if (wire.Item.ParentInventory == null && 
+                    (wire.Connections[0] != null ^ wire.Connections[1] != null))
+                {
+                    wire.Item.Drop(null);
                 }
             }
         }        
