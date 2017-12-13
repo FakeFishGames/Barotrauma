@@ -163,8 +163,11 @@ namespace Barotrauma
                 searchPos[1] = new Vector2(rect.Center.X, rect.Y - rect.Height);
             }
 
-            hulls[0] = Hull.FindHullOld(searchPos[0], null, false);
-            hulls[1] = Hull.FindHullOld(searchPos[1], null, false);
+            for (int i = 0; i < 2; i++)
+            {
+                hulls[i] = Hull.FindHullOld(searchPos[i], null, false);
+                if (hulls[i] == null) hulls[i] = Hull.FindHullOld(searchPos[i], null, false, true);
+            }
 
             if (hulls[0] == null && hulls[1] == null) return;
 
