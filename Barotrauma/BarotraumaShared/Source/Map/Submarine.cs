@@ -491,10 +491,18 @@ namespace Barotrauma
             return new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
         }
 
-        public static bool RectContains(Rectangle rect, Vector2 pos)
+        public static bool RectContains(Rectangle rect, Vector2 pos, bool inclusive = false)
         {
-            return (pos.X > rect.X && pos.X < rect.X + rect.Width
-                && pos.Y < rect.Y && pos.Y > rect.Y - rect.Height);
+            if (inclusive)
+            {
+                return (pos.X >= rect.X && pos.X <= rect.X + rect.Width
+                    && pos.Y <= rect.Y && pos.Y >= rect.Y - rect.Height);
+            }
+            else
+            {
+                return (pos.X > rect.X && pos.X < rect.X + rect.Width
+                    && pos.Y < rect.Y && pos.Y > rect.Y - rect.Height);
+            }
         }
 
         public static bool RectsOverlap(Rectangle rect1, Rectangle rect2, bool inclusive=true)
