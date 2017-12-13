@@ -23,7 +23,7 @@
   kickvoterequiredratio="0.6"
   traitoruseratio="True"
   traitorratio="0.2"
-  karmaenabled="True"
+  karmaenabled="False"
   SubSelection="Manual"
   ModeSelection="Manual"
   TraitorsEnabled="No"
