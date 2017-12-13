@@ -23,7 +23,6 @@ namespace Barotrauma.Items.Components
 
             HighlightedWire = null;
             Connection.DrawConnections(spriteBatch, this, character);
-
         }
     }
 }
