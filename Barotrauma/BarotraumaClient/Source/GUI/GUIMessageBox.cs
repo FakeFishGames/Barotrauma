@@ -32,7 +32,7 @@ namespace Barotrauma
         }
 
         public GUIMessageBox(string headerText, string text)
-            : this(headerText, text, new string[] {"OK"})
+            : this(headerText, text, new string[] {"OK"}, DefaultWidth, 0)
         {
             this.Buttons[0].OnClicked = Close;
         }
