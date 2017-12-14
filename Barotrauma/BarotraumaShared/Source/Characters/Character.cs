@@ -591,7 +591,7 @@ namespace Barotrauma
             {
                 AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
                 AnimController.TargetDir = Direction.Right;
-                inventory = new CharacterInventory(16, this);
+                inventory = new CharacterInventory(17, this);
             }
             else
             {

@@ -119,9 +119,11 @@ namespace Barotrauma
             get { return prefab.Name; }
         }
 
+        private string description;
         public string Description
         {
-            get { return prefab.Description; }
+            get { return description == null ? prefab.Description : description; }
+            set { description = value; }
         }
 
         public float ImpactTolerance
@@ -1458,6 +1460,7 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
             
             msg.Write(Prefab.Name);
+            msg.Write(Description);
             msg.Write(ID);
 
             if (ParentInventory == null || ParentInventory.Owner == null)
@@ -1476,7 +1479,8 @@ namespace Barotrauma
                 msg.Write(index < 0 ? (byte)255 : (byte)index);
             }
 
-            if (Name == "ID Card") msg.Write(Tags);            
+            //TODO: See if tags are different from their prefab before sending 'em
+            msg.Write(Tags);            
         }
 
         public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
@@ -1484,6 +1488,7 @@ namespace Barotrauma
             if (GameMain.Server != null) return null;
 
             string itemName     = msg.ReadString();
+            string itemDesc     = msg.ReadString();
             ushort itemId       = msg.ReadUInt16();
 
             ushort inventoryId  = msg.ReadUInt16();
@@ -1507,11 +1512,7 @@ namespace Barotrauma
                 }
             }
 
-            string tags = "";
-            if (itemName == "ID Card")
-            {
-                tags = msg.ReadString();
-            }
+            string tags = msg.ReadString();
 
             if (!spawn) return null;
 
@@ -1541,6 +1542,7 @@ namespace Barotrauma
 
             var item = new Item(itemPrefab, pos, sub);
 
+            item.Description = itemDesc;
             item.ID = itemId;
             if (sub != null)
             {
