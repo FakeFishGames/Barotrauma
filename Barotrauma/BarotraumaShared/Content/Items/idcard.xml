@@ -10,8 +10,5 @@
 
 	<Body width="16" height="16" density="20"/>
 
-	<Pickable/>
+	<Pickable slots="Card,Any"/>
 </Item>
-	
-
-

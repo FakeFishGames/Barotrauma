@@ -8,7 +8,7 @@
       <Skill name="Medical" level="10,30"/>
     </Skills>
     <Items>
-      <Item name="ID Card"/>
+      <Item name="ID Card" equip="true"/>
       <Item name="Captain's Cap" equip="true"/>
       <Item name="Captain's Jacket" equip="true"/>
       <Item name="Captain's Trousers" equip="true"/>
@@ -30,7 +30,7 @@
       <Skill name="Medical" level="10,20"/>
     </Skills>
     <Items>
-      <Item name="ID Card"/>
+      <Item name="ID Card" equip="true"/>
       <Item name="Wrench"/>
       <Item name="Screwdriver"/>
       <Item name="Orange Jumpsuit" equip="true"/>
@@ -48,7 +48,7 @@
       <Skill name="Medical" level="10,20"/>
     </Skills>
     <Items>
-      <Item name="ID Card"/>
+      <Item name="ID Card" equip="true"/>
       <Item name="Wrench"/>
       <Item name="Screwdriver"/>
       <Item name="Blue Jumpsuit" equip="true"/>
@@ -66,7 +66,7 @@
       <Skill name="Electrical Engineering" level="10,20"/>
     </Skills>
     <Items>
-      <Item name="ID Card"/>
+      <Item name="ID Card" equip="true"/>
       <Item name="Stun Baton"/>
       <Item name="Battery Cell"/>
       <Item name="Handcuffs"/>
@@ -86,7 +86,7 @@
       <Skill name="Medical" level="60,70"/>
     </Skills>
     <Items>
-      <Item name="ID Card"/>
+      <Item name="ID Card" equip="true"/>
       <Item name="Doctor's Coat" equip="true"/>
       <Item name="Doctor's Trousers" equip="true"/>
       <Item name="Health Scanner HUD"/>
@@ -105,7 +105,7 @@
       <Skill name="Medical" level="10,20"/>
     </Skills>
     <Items>
-      <Item name="ID Card"/>
+      <Item name="ID Card" equip="true"/>
       <Item name="Wrench"/>
       <Item name="Screwdriver"/>
       <Item name="Headset" equip="true">
