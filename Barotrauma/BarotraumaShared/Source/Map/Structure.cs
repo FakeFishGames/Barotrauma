@@ -678,14 +678,13 @@ namespace Barotrauma
 
             if (!MathUtils.IsValid(damage)) return;
 
-            float damageDiff = damage - sections[sectionIndex].damage;
+            
 
             if (GameMain.Server != null && damage != sections[sectionIndex].damage)
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
 
-            AdjustKarma(attacker, damageDiff);
             if (damage < prefab.Health*0.5f)
             {
                 if (sections[sectionIndex].gap != null)
@@ -717,9 +716,13 @@ namespace Barotrauma
 
                 sections[sectionIndex].gap.Open = (damage / prefab.Health - 0.5f) * 2.0f;
             }
-            
+
+            float damageDiff = damage - sections[sectionIndex].damage;
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
+
+            if (sections[sectionIndex].damage < prefab.Health) //otherwise it's possible to infinitely gain karma by welding fixed things
+                AdjustKarma(attacker, damageDiff);
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
 
