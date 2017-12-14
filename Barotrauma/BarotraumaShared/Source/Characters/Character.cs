@@ -926,13 +926,16 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < selectedItems.Length; i++ )
+            if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
             {
-                if (selectedItems[i] == null) continue;
-                if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
+                for (int i = 0; i < selectedItems.Length; i++ )
+                {
+                    if (selectedItems[i] == null) continue;
+                    if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
 
-                if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
-                if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
+                    if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
+                    if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
+                }
             }
 
             if (selectedConstruction != null)
