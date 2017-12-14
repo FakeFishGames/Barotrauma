@@ -16,7 +16,7 @@
     <Body width="64" height="5" density="20"/>
 
     <Pickable slots="Any"/>
-    <Projectile launchimpulse="20.0" doesstick="true">
+    <Projectile launchimpulse="20.0" sticktocharacters="true">
       <Attack damage="20" bleedingdamage="2" structuredamage="50" damagetype="Blunt" stun="0.2" targetforce="50"/>
     </Projectile>
   </Item>
@@ -100,7 +100,7 @@
     <Body width="8" height="3" density="40"/>
 
     <Pickable slots="Any"/>
-    <Projectile hitscan="true" doesstick="false" removeonhit="true" >
+    <Projectile hitscan="true" removeonhit="true" >
       <Attack damage="40" bleedingdamage="3" structuredamage="100" damagetype="Blunt" stun="0.5" targetforce="50"/>
     </Projectile>
   </Item>

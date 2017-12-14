@@ -26,7 +26,7 @@
       <Containable name="chem"/>
     </ItemContainer>
 
-    <Projectile launchimpulse="10.0" doesstick="true">
+    <Projectile launchimpulse="20.0" sticktocharacters="true">
       <Attack damage="5" bleedingdamage="0.2" structuredamage="1" damagetype="Blunt" stun="0.1" targetforce="5"/>
       <StatusEffect type="OnImpact" target="Contained, Character" Condition="-50.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
