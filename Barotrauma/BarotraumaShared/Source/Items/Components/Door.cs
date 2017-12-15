@@ -13,7 +13,7 @@ using Barotrauma.Lights;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Door : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
         private Gap linkedGap;
 
@@ -203,12 +203,10 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-
-        public override bool Pick(Character picker)
+        public override bool OnPicked(Character picker)
         {
-            isOpen = !isOpen;
-
-            return true;
+            SetState(predictedState == null ? !isOpen : !predictedState.Value, false, true); //crowbar function
+            return false;
         }
 
         public override bool Select(Character character)
