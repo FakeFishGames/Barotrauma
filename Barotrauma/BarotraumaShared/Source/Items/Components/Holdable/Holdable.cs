@@ -224,7 +224,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        protected override bool OnPicked(Character picker)
+        public override bool OnPicked(Character picker)
         {
             if (base.OnPicked(picker))
             {
