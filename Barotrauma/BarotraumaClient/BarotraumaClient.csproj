@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">ReleaseLinux</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Barotrauma</RootNamespace>
-    <AssemblyName>Barotrauma</AssemblyName>
+    <AssemblyName>BarotraumaClient</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
@@ -28,36 +28,35 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\bin\Windows\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WINDOWS;CLIENT</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\bin\Windows\Release\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS;CLIENT</DefineConstants>
-    <AllowedReferenceRelatedFileExtensions>
-      <!-- Prevent default XML and PDB files copied to output in RELEASE. 
-           Only *.allowedextension files will be included, which doesn't exist in my case.
-       -->
-      .allowedextension
-    </AllowedReferenceRelatedFileExtensions>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
+    <ReleaseVersion>0.7.0.1</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseLinux|x86' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\ReleaseLinux\</OutputPath>
+    <DefineConstants>TRACE;LINUX;CLIENT</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugLinux|x86' ">
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\DebugLinux\</OutputPath>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWindows|x86' ">
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\ReleaseWindows\</OutputPath>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugWindows|x86' ">
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\DebugWindows\</OutputPath>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -221,32 +220,38 @@
     <Compile Include="Source\Utils\ToolBox.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="NVorbis, Version=0.8.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Libraries\NuGet\NVorbis.0.8.5.0\lib\NVorbis.dll</HintPath>
-    </Reference>
     <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Libraries\NuGet\OpenTK.2.0.0\lib\net20\OpenTK.dll</HintPath>
-    </Reference>
-    <Reference Include="PresentationCore" />
-    <Reference Include="RestSharp">
-      <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="RestSharp">
+      <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
+  <Choose>
+    <When Condition=" '$(Configuration)'=='ReleaseWindows' Or '$(Configuration)'=='DebugWindows' ">
+      <ItemGroup>
+        <Reference Include="MonoGame.Framework.WindowsDX">
+          <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+        </Reference>
+        <Reference Include="SharpDX">
+          <HintPath>..\..\Libraries\NuGet\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition=" '$(Configuration)'=='ReleaseLinux' Or '$(Configuration)'=='DebugLinux' ">
+      <ItemGroup>
+        <Reference Include="MonoGame.Framework.DesktopGL">
+          <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <Content Include="freetype6.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -255,6 +260,17 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="wrap_oal.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MonoGame.Framework.dll.config">
+      <DeployService.Deploy>true</DeployService.Deploy>
+      <DeployService.UseProjectRelativePath>true</DeployService.UseProjectRelativePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SharpFont.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -299,7 +315,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
