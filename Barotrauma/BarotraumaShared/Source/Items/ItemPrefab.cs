@@ -134,6 +134,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool DisableItemUsageWhenSelected
+        {
+            get;
+            private set;
+        }
+
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }
