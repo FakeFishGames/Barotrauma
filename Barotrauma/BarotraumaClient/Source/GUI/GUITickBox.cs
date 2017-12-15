@@ -63,7 +63,7 @@ namespace Barotrauma
 
         public override Rectangle MouseRect
         {
-            get { return box.Rect; }
+			get { return ClampRect(box.Rect); }
         }
 
         public override ScalableFont Font
