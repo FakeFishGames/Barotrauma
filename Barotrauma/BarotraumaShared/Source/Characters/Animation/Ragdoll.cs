@@ -1469,5 +1469,12 @@ namespace Barotrauma
             list.Remove(this);
         }
 
+        public static void RemoveAll()
+        {
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                list[i].Remove();
+            }
+        }
     }
 }
