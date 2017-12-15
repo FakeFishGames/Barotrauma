@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -427,12 +427,15 @@ namespace Barotrauma
                     ScreenOverlayColor, true);
             }
 
-            if (GameMain.DebugDraw)
+            if (GameMain.ShowFPS || GameMain.DebugDraw)
             {
-                DrawString(spriteBatch, new Vector2(10, 10), 
+                DrawString(spriteBatch, new Vector2(10, 10),
                     "FPS: " + (int)GameMain.FrameCounter.AverageFramesPerSecond,
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
+            }
 
+            if (GameMain.DebugDraw)
+            {
                 DrawString(spriteBatch, new Vector2(10, 25),
                     "Physics: " + GameMain.World.UpdateTime,
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
