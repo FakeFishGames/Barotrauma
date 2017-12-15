@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using System.Windows;
 using System.Xml;
 using System.Text;
+using System.Windows.Forms;
 
 namespace Barotrauma
 {
