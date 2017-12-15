@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+using Barotrauma.Networking;
 using Barotrauma.Particles;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -14,6 +14,7 @@ namespace Barotrauma
 {
     class GameMain : Game
     {
+        public static bool ShowFPS = true;
         public static bool DebugDraw;
         
         public static FrameCounter FrameCounter;
