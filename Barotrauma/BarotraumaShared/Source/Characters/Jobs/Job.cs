@@ -132,6 +132,8 @@ namespace Barotrauma
                 }
                 item.AddTag("name:" + character.Name);
                 item.AddTag("job:" + Name);
+                if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc))
+                    item.Description = spawnPoint.IdCardDesc;
             }
             
             if (parentItem != null) parentItem.Combine(item);

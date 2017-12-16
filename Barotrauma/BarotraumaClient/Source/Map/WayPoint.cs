@@ -106,6 +106,16 @@ namespace Barotrauma
             return true;
         }
 
+        private bool EnterIDCardDesc(GUITextBox textBox, string text)
+        {
+            IdCardDesc = text;
+            textBox.Text = text;
+            textBox.Color = Color.Green;
+
+            textBox.Deselect();
+
+            return true;
+        }
         private bool EnterIDCardTags(GUITextBox textBox, string text)
         {
             IdCardTags = text.Split(',');
@@ -172,8 +182,16 @@ namespace Barotrauma
 
                 y = 40 + 20;
 
-                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
+                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card description:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
                 GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), "", editingHUD);
+                propertyBox.Text = idCardDesc;
+                propertyBox.OnEnterPressed = EnterIDCardDesc;
+                propertyBox.OnTextChanged = TextBoxChanged;
+                propertyBox.ToolTip = "Characters spawning at this spawnpoint will have the specified description added to their ID card. This can be used to describe additional access levels their card has on the sub.";
+
+                y = y + 30;
+
+                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
                 propertyBox.Text = string.Join(", ", idCardTags);
                 propertyBox.OnEnterPressed = EnterIDCardTags;
                 propertyBox.OnTextChanged = TextBoxChanged;
