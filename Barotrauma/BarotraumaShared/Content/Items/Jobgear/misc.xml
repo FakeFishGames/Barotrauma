@@ -38,6 +38,7 @@
 
     <Wearable limbtype="Head" slots="Any,Face">
       <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5"/>
+      <StatusEffect type="OnWearing" target="Character" HideFace="true"/>
     </Wearable>
   </Item>
 

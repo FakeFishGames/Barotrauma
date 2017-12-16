@@ -197,8 +197,8 @@
     <Body width="60" height="10" density="50"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
-          aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.8">
-      <Attack damage="15" stun="0.4" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+          aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.7">
+      <Attack damage="10" stun="0.4" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 

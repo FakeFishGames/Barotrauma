@@ -139,6 +139,19 @@ namespace Barotrauma
             }
         }
 
+        private float hideFaceTimer;
+        public bool HideFace
+        {
+            get
+            {
+                return hideFaceTimer > 0.0f;
+            }
+            set
+            {
+                hideFaceTimer = MathHelper.Clamp(hideFaceTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
+            }
+        }
+
         public string ConfigPath
         {
             get;
@@ -1406,6 +1419,8 @@ namespace Barotrauma
                     item.Submarine = Submarine;
                 }
             }
+
+            HideFace = false;
                         
             if (isDead) return;
 

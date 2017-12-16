@@ -296,9 +296,26 @@ namespace Barotrauma
                     }
                     else
                     {
-                        toolTip = string.IsNullOrEmpty(Items[i].Description) ?
+                        string description = Items[i].Description;
+                        if (Items[i].Name == "ID Card")
+                        {
+                            string[] readTags = Items[i].Tags.Split(',');
+                            string idName = null;
+                            string idJob = null;
+                            foreach (string tag in readTags)
+                            {
+                                string[] s = tag.Split(':');
+                                if (s[0] == "name")
+                                    idName = s[1];
+                                if (s[0] == "job")
+                                    idJob = s[1];
+                            }
+                            if (idName != null)
+                                description = "This belongs to " + idName + (idJob != null ? ", the " + idJob + ".\n" : ".\n") + description;
+                        }
+                        toolTip = string.IsNullOrEmpty(description) ?
                             Items[i].Name :
-                            Items[i].Name + '\n' + Items[i].Description;
+                            Items[i].Name + '\n' + description;
                     }
 
                     DrawToolTip(spriteBatch, toolTip, slots[i].Rect);
