@@ -138,6 +138,14 @@ namespace Barotrauma
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name : SpeciesName;
             }
         }
+        //Only used by server logs to determine "true identity" of the player for cases when they're disguised
+        public string LogName
+        {
+            get
+            {
+                return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name + (info.DisplayName != info.Name ? " (as " + info.DisplayName + ")" : "") : SpeciesName;
+            }
+        }
 
         private float hideFaceTimer;
         public bool HideFace
@@ -1646,7 +1654,7 @@ namespace Barotrauma
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
-                GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
+                GameServer.Log(LogName + " attacked by " + attackingCharacter.LogName +". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
             }
             
             if (GameMain.Client == null &&
@@ -1811,7 +1819,7 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            GameServer.Log(Name+" has died (Cause of death: "+causeOfDeath+")", ServerLog.MessageType.Attack);
+            GameServer.Log(LogName+" has died (Cause of death: "+causeOfDeath+")", ServerLog.MessageType.Attack);
 
             if (OnDeath != null) OnDeath(this, causeOfDeath);
 

@@ -1361,12 +1361,12 @@ namespace Barotrauma
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {
-                        GameServer.Log(c.Character.Name + " used item " + Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(c.Character.LogName + " used item " + Name, ServerLog.MessageType.ItemInteraction);
                     }
                     else
                     {
                         GameServer.Log(
-                            c.Character.Name + " used item " + Name + " (contained items: " + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")", 
+                            c.Character.LogName + " used item " + Name + " (contained items: " + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")", 
                             ServerLog.MessageType.ItemInteraction);
                     }
 
