@@ -153,7 +153,7 @@ namespace Barotrauma
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
             int width = 500;
-            int height = spawnType == SpawnType.Path ? 100 : 140;
+            int height = spawnType == SpawnType.Path ? 100 : 200;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
 
             editingHUD = new GUIFrame(new Rectangle(x, y, width, height), Color.Black * 0.5f);
@@ -182,8 +182,9 @@ namespace Barotrauma
 
                 y = 40 + 20;
 
-                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card description:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), "", editingHUD);
+                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card desc:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
+                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 350, 20), "", editingHUD);
+                propertyBox.MaxTextLength = 150;
                 propertyBox.Text = idCardDesc;
                 propertyBox.OnEnterPressed = EnterIDCardDesc;
                 propertyBox.OnTextChanged = TextBoxChanged;
@@ -192,6 +193,8 @@ namespace Barotrauma
                 y = y + 30;
 
                 new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
+                propertyBox = new GUITextBox(new Rectangle(100, y, 350, 20), "", editingHUD);
+                propertyBox.MaxTextLength = 60;
                 propertyBox.Text = string.Join(", ", idCardTags);
                 propertyBox.OnEnterPressed = EnterIDCardTags;
                 propertyBox.OnTextChanged = TextBoxChanged;
@@ -200,7 +203,8 @@ namespace Barotrauma
                 y = y + 30;
 
                 new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-                propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), "", editingHUD);
+                propertyBox = new GUITextBox(new Rectangle(100, y, 350, 20), "", editingHUD);
+                propertyBox.MaxTextLength = 60;
                 propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
                 propertyBox.OnEnterPressed = EnterAssignedJob;
                 propertyBox.OnTextChanged = TextBoxChanged;
