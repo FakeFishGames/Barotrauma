@@ -506,13 +506,15 @@ namespace Barotrauma.Items.Components
             }
 
             List<RelatedItem> prevRequiredItems = new List<RelatedItem>(requiredItems);
-            requiredItems.Clear();
+            bool overrideRequiredItems = false;
 
             foreach (XElement subElement in componentElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
+                        if (!overrideRequiredItems) requiredItems.Clear();
+                        overrideRequiredItems = true;
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
                         
                         if (newRequiredItem == null) continue;
