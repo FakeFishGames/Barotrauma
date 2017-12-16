@@ -299,6 +299,8 @@ namespace Barotrauma
             if (info != null)
             {
                 string name = Info.DisplayName;
+                if (controlled == null && name != Info.Name)
+                    name += " (Disguised)";
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
 

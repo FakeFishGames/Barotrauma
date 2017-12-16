@@ -97,7 +97,7 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
+                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.RemoteEndPoint.Address.ToString(), Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
             }));

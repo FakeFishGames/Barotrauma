@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled + (IsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(Character.Controlled.LogName + (IsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
                 }
                 else if (GameMain.Client != null)
                 {
@@ -39,7 +39,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(Character.Controlled.LogName + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (GameMain.Client != null)
                 {
@@ -58,7 +58,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(Character.Controlled + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(Character.Controlled.LogName + " set the pumping speed of " + item.Name + " to " + (int)(flowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (GameMain.Client != null)
                 {

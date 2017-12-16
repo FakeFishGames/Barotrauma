@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
                 item.body.Enabled = true;
                 IsActive = true;
 
-                if (!alreadySelected) GameServer.Log(character.Name + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (!alreadySelected) GameServer.Log(character.LogName + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
         }
 
@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
 
             picker.DeselectItem(item);
 
-            GameServer.Log(character.Name + " unequipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+            GameServer.Log(character.LogName + " unequipped " + item.Name, ServerLog.MessageType.ItemInteraction);
 
             item.body.Enabled = false;
             IsActive = false;
@@ -235,7 +235,7 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                     if (picker != null)
                     {
-                        Networking.GameServer.Log(picker.Name + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
+                        Networking.GameServer.Log(picker.LogName + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
                     }
                 }
                 return true;
@@ -290,7 +290,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(character.Name + " attached " + item.Name+" to a wall", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(character.LogName + " attached " + item.Name+" to a wall", ServerLog.MessageType.ItemInteraction);
                 }
                 item.Drop();
             }

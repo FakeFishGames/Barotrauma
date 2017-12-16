@@ -159,7 +159,7 @@ namespace Barotrauma.Items.Components
 
             if (user != null)
             {
-                GameServer.Log(user.Name + " started fabricating " + selectedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(user.LogName + " started fabricating " + selectedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
 #if CLIENT
@@ -184,7 +184,7 @@ namespace Barotrauma.Items.Components
         {
             if (fabricatedItem != null && user != null)
             {
-                GameServer.Log(user.Name + " cancelled the fabrication of " + fabricatedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.TargetItem.Name + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
             IsActive = false;
