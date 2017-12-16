@@ -616,7 +616,7 @@ namespace Barotrauma
                 new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
                 new XAttribute("spawn", spawnType));
 
-            if (idCardDesc != null) element.Add(new XAttribute("idcarddesc", idCardDesc));            
+            if (!string.IsNullOrWhiteSpace(idCardDesc)) element.Add(new XAttribute("idcarddesc", idCardDesc));            
             if (idCardTags.Length > 0)
             {
                 element.Add(new XAttribute("idcardtags", string.Join(",", idCardTags)));
