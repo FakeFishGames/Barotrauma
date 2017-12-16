@@ -130,7 +130,8 @@ namespace Barotrauma
                 {
                     item.AddTag(s);
                 }
-                item.Description = "This belongs to " + character.Name + ", the " + Name + ".";
+                item.AddTag("name:" + character.Name);
+                item.AddTag("job:" + Name);
             }
             
             if (parentItem != null) parentItem.Combine(item);

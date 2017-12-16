@@ -298,15 +298,16 @@ namespace Barotrauma
 
             if (info != null)
             {
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                string name = Info.DisplayName;
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
 
                 if (Character.Controlled != null && TeamID != Character.Controlled.TeamID)
                 {
                     nameColor = Color.Red;
                 }
-                GUI.Font.DrawString(spriteBatch, Info.Name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
-                GUI.Font.DrawString(spriteBatch, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
+                GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
+                GUI.Font.DrawString(spriteBatch, name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
 
                 if (GameMain.DebugDraw)
                 {
