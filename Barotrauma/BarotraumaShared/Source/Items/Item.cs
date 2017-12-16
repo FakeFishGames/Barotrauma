@@ -120,6 +120,7 @@ namespace Barotrauma
         }
 
         private string description;
+        [Editable, Serialize("", true)]
         public string Description
         {
             get { return description == null ? prefab.Description : description; }
