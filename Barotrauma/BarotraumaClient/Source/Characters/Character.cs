@@ -15,6 +15,8 @@ namespace Barotrauma
     {
         protected float soundTimer;
         protected float soundInterval;
+        protected float nameTimer;
+        protected bool nameVisible;
 
         private List<CharacterSound> sounds;
 
@@ -295,11 +297,33 @@ namespace Barotrauma
             }
 
             if (this == controlled) return;
+            
+            nameTimer -= (float)Timing.Step;
+            if (nameTimer <= 0.0f)
+            {
+                //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
+                Limb selfHead = controlled != null ? controlled.AnimController.GetLimb(LimbType.Head) : null;
+                Limb targHead = this.AnimController.GetLimb(LimbType.Head);
 
-            //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
-            Limb selfHead = controlled != null ? controlled.AnimController.GetLimb(LimbType.Head) : null;
-            Limb targHead = this.AnimController.GetLimb(LimbType.Head);
-            if (controlled != null && selfHead != null && targHead != null && Submarine.CheckVisibility(selfHead.SimPosition, targHead.SimPosition) != null) //TODO: use Line of Sight instead of CheckVisibility
+                if (controlled != null && controlled.Submarine == Submarine)
+                {
+                    if (selfHead != null && targHead != null)
+                    {
+                        Body closestBody = Submarine.CheckVisibility(selfHead.SimPosition, targHead.SimPosition);
+                        Structure wall = null;
+                        if (closestBody != null)
+                            wall = closestBody.UserData as Structure;
+                        nameVisible = closestBody == null || wall == null || !wall.CastShadow;
+                    }
+                    else
+                        nameVisible = false;
+                }
+                else
+                    nameVisible = true; //Ideally it should check for visibility from outside the sub/from sub-to-sub, but this will work for now.
+                nameTimer = Rand.Range(0.5f, 2f);
+            }
+
+            if (!nameVisible)
                 return;
 
             if (info != null)

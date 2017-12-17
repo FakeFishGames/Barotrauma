@@ -31,14 +31,14 @@ namespace Barotrauma.Items.Components
         private WearableSprite[] wearableSprites;
         private LimbType[] limbType;
         private Limb[] limb;
+
         private List<DamageModifier> damageModifiers;
 
         public List<DamageModifier> DamageModifiers
         {
             get { return damageModifiers; }
         }
-
-        public bool Disguise;
+        
         public Wearable (Item item, XElement element)
             : base(item, element)
         {
