@@ -218,8 +218,7 @@
   <Item
     name="Flashlight"
     category="Equipment"
-    Tags="smallitem"
-    
+    Tags="smallitem"    
     price="10">
 
     <Deconstruct time="15">
@@ -231,12 +230,11 @@
 
     <Body width="27" height="10" density="15"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="0,0">
+    <Holdable slots="Any,RightHand,LeftHand,Face" holdpos="100,0" aimpos="100,0" handle1="-13" handle2="-13">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2"/>
     </Holdable>
 
     <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.1" range="800" powerconsumption="10" IsOn="true">
-
       <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
     </LightComponent>
     
