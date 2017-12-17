@@ -206,43 +206,29 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            nameTimer -= deltaTime;
-            if (nameTimer <= 0.0f)
+            if (info != null)
             {
-                if (controlled == null)
+                nameTimer -= deltaTime;
+                if (nameTimer <= 0.0f)
                 {
-                    nameVisible = true;
-                }
-                //if the character is not in the camera view, the name can't be visible and we can avoid the expensive visibility checks
-                else if (WorldPosition.X < cam.WorldView.X || WorldPosition.X > cam.WorldView.Right || 
-                        WorldPosition.Y > cam.WorldView.Y || WorldPosition.Y < cam.WorldView.Y - cam.WorldView.Height)
-                {
-                    nameVisible = false;
-                }
-                else
-                {
-                    //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
-                    Limb selfLimb = controlled.AnimController.GetLimb(LimbType.Head);
-                    if (selfLimb == null) selfLimb = controlled.AnimController.GetLimb(LimbType.Torso);
-
-                    Limb targHead = AnimController.GetLimb(LimbType.Head);
-                    if (targHead == null) targHead = AnimController.GetLimb(LimbType.Torso);
-
-                    if (selfLimb != null && targHead != null)
+                    if (controlled == null)
                     {
-                        Vector2 diff = ConvertUnits.ToSimUnits(targHead.WorldPosition - selfLimb.WorldPosition);
-
-                        Body closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
-                        Structure wall = null;
-                        if (closestBody != null) wall = closestBody.UserData as Structure;
-                        nameVisible = closestBody == null || wall == null || !wall.CastShadow;
+                        nameVisible = true;
                     }
-                    else
+
+                    //if the character is not in the camera view, the name can't be visible and we can avoid the expensive visibility checks
+                    else if (WorldPosition.X < cam.WorldView.X || WorldPosition.X > cam.WorldView.Right || 
+                            WorldPosition.Y > cam.WorldView.Y || WorldPosition.Y < cam.WorldView.Y - cam.WorldView.Height)
                     {
                         nameVisible = false;
                     }
+                    else
+                    {
+                        //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
+                        nameVisible = controlled.CanSeeCharacter(this);                    
+                    }
+                    nameTimer = Rand.Range(0.5f, 1.0f);
                 }
-                nameTimer = Rand.Range(0.5f, 1.0f);
             }
         }
 
@@ -294,23 +280,20 @@ namespace Barotrauma
             {
                 GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f,
                     speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f,
-                    Math.Min((float)speechBubbleTimer, 1.0f));
+                    Math.Min(speechBubbleTimer, 1.0f));
             }
 
             if (this == controlled) return;
             
-            if (!nameVisible) return;
-
-            if (info != null)
+            if (nameVisible && info != null)
             {
                 string name = Info.DisplayName;
-                if (controlled == null && name != Info.Name)
-                    name += " (Disguised)";
+                if (controlled == null && name != Info.Name) name += " (Disguised)";
 
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
 
-                if (Character.Controlled != null && TeamID != Character.Controlled.TeamID)
+                if (Controlled != null && TeamID != Controlled.TeamID)
                 {
                     nameColor = Color.Red;
                 }
