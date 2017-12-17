@@ -14,30 +14,34 @@ namespace Barotrauma
         public string Name;
         public string DisplayName
         {
-            get {
+            get
+            {
                 string disguiseName = "?";
-                if (Character != null && Character.HideFace)
+                if (Character == null || !Character.HideFace)
                 {
-                    if (Character.Inventory != null)
+                    return Name;
+                }
+
+                if (Character.Inventory != null)
+                {
+                    int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
+                    if (cardSlotIndex < 0) return disguiseName;
+
+                    var idCard = Character.Inventory.Items[cardSlotIndex];
+                    if (idCard == null) return disguiseName;
+
+                    //Disguise as the ID card name if it's equipped                    
+                    string[] readTags = idCard.Tags.Split(',');
+                    foreach (string tag in readTags)
                     {
-                        var idCard = Character.Inventory.FindItem("ID Card");
-                        if (idCard != null && Character.Inventory.IsInLimbSlot(idCard, InvSlotType.Card)) //Disguise as the ID card name if it's equipped
+                        string[] s = tag.Split(':');
+                        if (s[0] == "name")
                         {
-                            string[] readTags = idCard.Tags.Split(',');
-                            foreach (string tag in readTags)
-                            {
-                                string[] s = tag.Split(':');
-                                if (s[0] == "name")
-                                {
-                                    disguiseName = s[1];
-                                    break;
-                                }
-                            }
+                            return s[1];
                         }
                     }
-                    return disguiseName;
                 }
-                return Name;
+                return disguiseName;
             }
         }
         public Character Character;
