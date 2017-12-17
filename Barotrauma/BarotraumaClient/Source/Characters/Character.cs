@@ -296,11 +296,18 @@ namespace Barotrauma
 
             if (this == controlled) return;
 
+            //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
+            Limb selfHead = controlled != null ? controlled.AnimController.GetLimb(LimbType.Head) : null;
+            Limb targHead = this.AnimController.GetLimb(LimbType.Head);
+            if (controlled != null && selfHead != null && targHead != null && Submarine.CheckVisibility(selfHead.SimPosition, targHead.SimPosition) != null) //TODO: use Line of Sight instead of CheckVisibility
+                return;
+
             if (info != null)
             {
                 string name = Info.DisplayName;
                 if (controlled == null && name != Info.Name)
                     name += " (Disguised)";
+
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
 
