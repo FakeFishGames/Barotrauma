@@ -85,7 +85,7 @@ namespace Barotrauma
             if (disallowed) return null;
             
             Vector2 spawnPos;
-            if (!Level.Loaded.TryGetInterestingPosition(true, spawnPosType, true, out spawnPos))
+            if (!Level.Loaded.TryGetInterestingPosition(true, spawnPosType, 20000.0f, out spawnPos))
             {
                 //no suitable position found, disable the event
                 repeat = false;

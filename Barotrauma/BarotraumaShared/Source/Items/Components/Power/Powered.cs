@@ -88,7 +88,16 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (currPowerConsumption == 0.0f) return;
+            if (currPowerConsumption == 0.0f)
+            {
+                //if the item consumes no power, ignore the voltage requirement and
+                //apply OnActive statuseffects as long as this component is active
+                if (powerConsumption == 0.0f)
+                {
+                    ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+                }
+                return;
+            }
 
 #if CLIENT
             if (voltage > minVoltage)

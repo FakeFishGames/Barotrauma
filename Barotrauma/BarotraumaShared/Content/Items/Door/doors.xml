@@ -6,11 +6,13 @@
 
     <Sprite texture ="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
-    <Door canbeselected="true">
+    <Door canbeselected="true" selectkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
+      <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture ="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture ="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture ="door.png" sourcerect="133,0,58,208" depth="0.051" origin="0.5,0.0" scale="true"/>
       <sound file="door.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0"/>
     </Door>
 
     <AiTarget sightrange="500.0"/>
@@ -35,11 +37,13 @@
 
     <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
-    <Door window="0,-32,10,75" canbeselected="true">
+    <Door window="0,-32,10,75" canbeselected="true" selectkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
+      <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="door.png" sourcerect="192,0,40,208" depth="0.051" origin="0.5,0.0" scale="true"/>
       <sound file="door.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0"/>
     </Door>
 
     <AiTarget sightrange="500.0"/>
@@ -64,11 +68,13 @@
 
     <Sprite texture="hatch.png" sourcerect="0,0,128,46" depth="0.01" origin="0.5,0.5"/>
 
-    <Door canbeselected="true" horizontal="true">
+    <Door canbeselected="true" horizontal="true" selectkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
+      <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture="hatch.png" sourcerect="128,0,128,19" depth="0.05" origin="0.0,0.5"/>
       <WeldedSprite texture="hatch.png" sourcerect="0,56,108,33" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="hatch.png" sourcerect="128,21,128,58" depth="0.051" origin="0.0,0.5" scale="true"/>
       <sound file="door.ogg" type="OnUse" range="500.0"/>
+      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0"/>
     </Door>
 
     <AiTarget sightrange="500.0"/>

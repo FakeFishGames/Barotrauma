@@ -217,7 +217,15 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
-                if (item.ParentInventory != null && item.ParentInventory.Owner is Character) return;
+
+                //don't apply OnFire effects if the item is inside a fireproof container
+                //(or if it's inside a container that's inside a fireproof container, etc)
+                Item container = item.Container;
+                while (container != null)
+                {
+                    if (container.FireProof) return;
+                    container = container.Container;
+                }
 
                 float range = (float)Math.Sqrt(size.X) * 10.0f;
                 if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) continue;

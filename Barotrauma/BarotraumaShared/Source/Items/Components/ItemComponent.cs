@@ -291,7 +291,10 @@ namespace Barotrauma.Items.Components
         }
 
         //called when the item is equipped and right mouse button is pressed
-        public virtual void SecondaryUse(float deltaTime, Character character = null) { }  
+        public virtual bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return false;
+        }
 
         //called when the item is placed in a "limbslot"
         public virtual void Equip(Character character) { }
@@ -503,13 +506,15 @@ namespace Barotrauma.Items.Components
             }
 
             List<RelatedItem> prevRequiredItems = new List<RelatedItem>(requiredItems);
-            requiredItems.Clear();
+            bool overrideRequiredItems = false;
 
             foreach (XElement subElement in componentElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
+                        if (!overrideRequiredItems) requiredItems.Clear();
+                        overrideRequiredItems = true;
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
                         
                         if (newRequiredItem == null) continue;

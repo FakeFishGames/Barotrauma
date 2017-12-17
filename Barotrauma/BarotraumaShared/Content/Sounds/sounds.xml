@@ -16,8 +16,8 @@
   <damagesound file="Content/Sounds/Damage/GlassImpact3.ogg" damagerange="10.0,20.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
 
   <damagesound file="Content/Sounds/Damage/GlassBreak1.ogg" damagerange="20.0,50.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
-  <damagesound file="Content/Sounds/Damage/GlassBreak1.ogg" damagerange="25.0,80.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
-  <damagesound file="Content/Sounds/Damage/GlassBreak1.ogg" damagerange="50.0,100.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassBreak2.ogg" damagerange="25.0,80.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
+  <damagesound file="Content/Sounds/Damage/GlassBreak3.ogg" damagerange="50.0,100.0" damagesoundtype="StructureBlunt" requiredtag="glass"/>
 
   <damagesound file="Content/Sounds/Damage/StructureCrunch1.ogg" damagerange="0.0,40.0" damagesoundtype="StructureSlash"/>
   <damagesound file="Content/Sounds/Damage/StructureCrunch2.ogg" damagerange="5.0,70.0" damagesoundtype="StructureSlash"/>

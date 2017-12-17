@@ -242,7 +242,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void SecondaryUse(float deltaTime, Character character = null)
+        public override bool SecondaryUse(float deltaTime, Character character = null)
         {
             if (nodes.Count > 1)
             {
@@ -251,6 +251,7 @@ namespace Barotrauma.Items.Components
             }
 
             Drawable = IsActive || sections.Count > 0;
+            return true;
         }
 
         public override bool Pick(Character picker)
@@ -307,18 +308,18 @@ namespace Barotrauma.Items.Components
             {
                 if (connections[0] != null && connections[1] != null)
                 {
-                    GameServer.Log(user.Name + " disconnected a wire from " + 
+                    GameServer.Log(user.LogName + " disconnected a wire from " + 
                         connections[0].Item.Name + " (" + connections[0].Name + ") to "+
                         connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (connections[0] != null)
                 {
-                    GameServer.Log(user.Name + " disconnected a wire from " +
+                    GameServer.Log(user.LogName + " disconnected a wire from " +
                         connections[0].Item.Name + " (" + connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (connections[1] != null)
                 {
-                    GameServer.Log(user.Name + " disconnected a wire from " +
+                    GameServer.Log(user.LogName + " disconnected a wire from " +
                         connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
             }

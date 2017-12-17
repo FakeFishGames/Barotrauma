@@ -1339,13 +1339,34 @@ namespace Barotrauma
                         }
                     }
 
-                    Vector2 positionError = serverPos.Position - localPos.Position;                    
-                    for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
+                    Hull serverHull = Hull.FindHull(serverPos.Position, character.CurrentHull, false);
+                    Hull clientHull = Hull.FindHull(localPos.Position, serverHull, false);
+                    
+                    Vector2 positionError = serverPos.Position - localPos.Position;
+                    float rotationError = serverPos.Rotation - localPos.Rotation;
+
+                    if (serverHull!=clientHull && ((serverHull==null) || (clientHull==null) || (serverHull.Submarine != clientHull.Submarine)))
                     {
-                        character.MemLocalState[i].Translate(positionError);
+                        //hull subs don't match => just teleport the player to exactly this position to avoid mismatches,
+                        //since this would completely break the camera
+                        positionError = Collider.SimPosition - serverPos.Position;
+                        character.MemLocalState.Clear();
+                    }
+                    else
+                    {
+                        for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
+                        {
+                            Hull pointHull = Hull.FindHull(character.MemLocalState[i].Position, clientHull, false);
+                            if (pointHull != clientHull && ((pointHull == null) || (clientHull == null) || (pointHull.Submarine == clientHull.Submarine))) break;
+                            character.MemLocalState[i].Translate(positionError, rotationError);
+                        }
                     }
 
-                    Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation);
+                    Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation + rotationError);
+                    foreach (Limb limb in Limbs)
+                    {
+                        limb.body.SetTransform(limb.body.SimPosition + positionError, limb.body.Rotation);
+                    }
                 }
 
                 if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);

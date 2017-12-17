@@ -70,7 +70,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        protected virtual bool OnPicked(Character picker)
+        public virtual bool OnPicked(Character picker)
         {
             if (picker.Inventory.TryPutItem(item, picker, allowedSlots))
             {
@@ -89,6 +89,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
                 if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) GUI.PlayUISound(GUISoundType.PickItem);
+                PlaySound(ActionType.OnPicked, item.WorldPosition);
 #endif
 
                 return true;

@@ -11,6 +11,7 @@ namespace Barotrauma.Items.Components
         float throwPos;
 
         bool throwing;
+        bool throwDone;
 
         [Serialize(1.0f, false)]
         public float ThrowForce
@@ -27,18 +28,14 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null) return false;
-            if (!character.IsKeyDown(InputType.Aim) || throwing) return false;
-            
-            throwing = true;
-
-            IsActive = true;
-            return true;
+            return true; //We do the actual throwing in Aim because Use might be used by chems
         }
 
-        public override void SecondaryUse(float deltaTime, Character character = null)
+        public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (throwing) return;
+            if (!throwDone) return false; //This should only be triggered in update
+            throwDone = false;
+            return true;
         }
 
         public override void Drop(Character dropper)
@@ -57,7 +54,14 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (!item.body.Enabled) return;
-            if (!picker.HasSelectedItem(item)) IsActive = false;
+            if (!picker.HasSelectedItem(item))
+            {
+                IsActive = false;
+                return;
+            }
+
+            if (picker.IsKeyDown(InputType.Aim) && picker.IsKeyHit(InputType.Use))
+                throwing = true;
 
             if (!picker.IsKeyDown(InputType.Aim) && !throwing) throwPos = 0.0f;
 
@@ -93,7 +97,7 @@ namespace Barotrauma.Items.Components
                     Vector2 throwVector = picker.CursorWorldPosition - picker.WorldPosition;
                     throwVector = Vector2.Normalize(throwVector);
 
-                    GameServer.Log(picker.Name + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(picker.LogName + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 
                     item.Drop();
                     item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f);
@@ -103,7 +107,8 @@ namespace Barotrauma.Items.Components
 
                     Limb rightHand = ac.GetLimb(LimbType.RightHand);
                     item.body.AngularVelocity = rightHand.body.AngularVelocity;
-
+                    throwDone = true;
+                    ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, picker); //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
                     throwing = false;
                 }
             }

@@ -84,9 +84,13 @@ namespace Barotrauma
             {
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
-
-                Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;
-                Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);                
+                
+                if (Math.Abs(Collider.Rotation-GetLimb(LimbType.Torso).Rotation)>Math.PI*0.6f)
+                {
+                    Collider.SetTransform(Collider.SimPosition, MathHelper.WrapAngle(Collider.Rotation + (float)Math.PI));
+                }
+                Collider.SmoothRotate(GetLimb(LimbType.Torso).Rotation);
+                Collider.LinearVelocity = (GetLimb(LimbType.Waist).SimPosition - Collider.SimPosition) * 20.0f;           
                 
                 return;
             }
@@ -1083,8 +1087,6 @@ namespace Barotrauma
 
         public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle)
         {
-            Holdable holdable = item.GetComponent<Holdable>();
-
             if (character.IsUnconscious || character.Stun > 0.0f) aim = false;
 
             //calculate the handle positions
@@ -1102,7 +1104,6 @@ namespace Barotrauma
 
             bool usingController = character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Controller>() != null;
 
-
             float itemAngle;
             if (Anim != Animation.Climbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
             {
@@ -1114,6 +1115,7 @@ namespace Barotrauma
 
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
 
+                Holdable holdable = item.GetComponent<Holdable>();
                 if (holdable.ControlPose)
                 {
                     head.body.SmoothRotate(itemAngle);

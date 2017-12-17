@@ -25,6 +25,15 @@
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="chem"/>
     </ItemContainer>
+
+    <Projectile launchimpulse="20.0" sticktocharacters="true">
+      <Attack damage="5" bleedingdamage="0.2" structuredamage="1" damagetype="Blunt" stun="0.1" targetforce="5"/>
+      <StatusEffect type="OnImpact" target="Contained, Character" Condition="-50.0" disabledeltatime="true" >
+        <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
+        <RequiredItem name="chem" type="Contained"/>
+        <Use/>
+      </StatusEffect>
+    </Projectile>
   </Item>
 
   <Item

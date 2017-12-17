@@ -184,13 +184,13 @@ namespace Barotrauma.Items.Components
                 item.SetTransform(rightHand.SimPosition, 0.0f);
             }
 
-            bool alreadySelected = character.HasSelectedItem(item);
-            if (picker.TrySelectItem(item))
+            bool alreadySelected = character.HasEquippedItem(item);
+            if (picker.TrySelectItem(item) || picker.HasEquippedItem(item))
             {
                 item.body.Enabled = true;
                 IsActive = true;
 
-                if (!alreadySelected) GameServer.Log(character.Name + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (!alreadySelected) GameServer.Log(character.LogName + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
         }
 
@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
 
             picker.DeselectItem(item);
 
-            GameServer.Log(character.Name + " unequipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+            GameServer.Log(character.LogName + " unequipped " + item.Name, ServerLog.MessageType.ItemInteraction);
 
             item.body.Enabled = false;
             IsActive = false;
@@ -224,7 +224,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        protected override bool OnPicked(Character picker)
+        public override bool OnPicked(Character picker)
         {
             if (base.OnPicked(picker))
             {
@@ -235,7 +235,7 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                     if (picker != null)
                     {
-                        Networking.GameServer.Log(picker.Name + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
+                        Networking.GameServer.Log(picker.LogName + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
                     }
                 }
                 return true;
@@ -290,7 +290,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null)
                 {
                     item.CreateServerEvent(this);
-                    GameServer.Log(character.Name + " attached " + item.Name+" to a wall", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(character.LogName + " attached " + item.Name+" to a wall", ServerLog.MessageType.ItemInteraction);
                 }
                 item.Drop();
             }
@@ -308,7 +308,7 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.body == null || !item.body.Enabled) return;
-            if (picker == null || !picker.HasSelectedItem(item))
+            if (picker == null || !picker.HasEquippedItem(item))
             {
                 IsActive = false;
                 return;
@@ -320,7 +320,37 @@ namespace Barotrauma.Items.Components
 
             item.Submarine = picker.Submarine;
 
-            picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim), holdAngle);
+            if (picker.HasSelectedItem(item))
+            {
+                picker.AnimController.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, picker.IsKeyDown(InputType.Aim), holdAngle);
+            }
+            else
+            {
+                Limb equipLimb = null;
+                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Face) || picker.Inventory.IsInLimbSlot(item, InvSlotType.Head))
+                {
+                    equipLimb = picker.AnimController.GetLimb(LimbType.Head);
+                }
+                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Torso))
+                {
+                    equipLimb = picker.AnimController.GetLimb(LimbType.Torso);
+                }
+                else if (picker.Inventory.IsInLimbSlot(item, InvSlotType.Legs))
+                {
+                    equipLimb = picker.AnimController.GetLimb(LimbType.Waist);
+                }
+
+                if (equipLimb != null)
+                {
+                    float itemAngle = (equipLimb.Rotation + holdAngle * picker.AnimController.Dir);
+
+                    Matrix itemTransfrom = Matrix.CreateRotationZ(equipLimb.Rotation);
+                    Vector2 transformedHandlePos = Vector2.Transform(handlePos[0], itemTransfrom);
+
+                    item.body.ResetDynamics();
+                    item.SetTransform(equipLimb.SimPosition - transformedHandlePos, itemAngle);
+                }
+            }
         }
 
         protected void Flip(Item item)

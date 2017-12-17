@@ -1848,7 +1848,7 @@ namespace Barotrauma.Networking
                 case ChatMessageType.Default:
                     if (!receiver.IsDead)
                     {
-                        return ChatMessage.ApplyDistanceEffect(receiver, sender, message, ChatMessage.SpeakRange);
+                        return ChatMessage.ApplyDistanceEffect(receiver, sender, message, ChatMessage.SpeakRange, 3.0f);
                     }
                     break;
                 case ChatMessageType.Radio:

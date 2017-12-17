@@ -242,7 +242,7 @@ namespace Barotrauma
                     string focusName = character.FocusedCharacter.SpeciesName;
                     if (character.FocusedCharacter.Info != null)
                     {
-                        focusName = character.FocusedCharacter.Info.Name;
+                        focusName = character.FocusedCharacter.Info.DisplayName;
                     }
                     Vector2 textPos = startPos;
                     textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);

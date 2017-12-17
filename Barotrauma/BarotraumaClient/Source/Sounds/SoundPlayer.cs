@@ -453,10 +453,11 @@ namespace Barotrauma
         {
             damage = MathHelper.Clamp(damage+Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
             var sounds = damageSounds.FindAll(s => 
-                damage >= s.damageRange.X && 
-                damage <= s.damageRange.Y && 
+                s.damageRange == null ||
+                (damage >= s.damageRange.X && 
+                damage <= s.damageRange.Y) && 
                 s.damageType == damageType &&
-                (string.IsNullOrEmpty(s.requiredTag) || (tags != null && tags.Contains(s.requiredTag))));
+                (tags == null ? string.IsNullOrEmpty(s.requiredTag) : tags.Contains(s.requiredTag)));
 
             if (!sounds.Any()) return;
 
