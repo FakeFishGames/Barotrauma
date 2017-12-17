@@ -297,7 +297,7 @@ namespace Barotrauma
                     else
                     {
                         string description = Items[i].Description;
-                        if (Items[i].Prefab.Name == "ID Card")
+                        if (Items[i].Prefab.NameMatches("ID Card"))
                         {
                             string[] readTags = Items[i].Tags.Split(',');
                             string idName = null;
