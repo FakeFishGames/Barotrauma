@@ -206,6 +206,9 @@ namespace Barotrauma.Items.Components
         public override bool OnPicked(Character picker)
         {
             SetState(predictedState == null ? !isOpen : !predictedState.Value, false, true); //crowbar function
+#if CLIENT
+            PlaySound(ActionType.OnPicked, item.WorldPosition);
+#endif
             return false;
         }
 
