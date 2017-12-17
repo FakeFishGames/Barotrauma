@@ -144,7 +144,7 @@ namespace Barotrauma
         {
             if (itemName == null) return null;
 
-            return Items.FirstOrDefault(i => i != null && (i.Name == itemName || i.HasTag(itemName)));
+            return Items.FirstOrDefault(i => i != null && (i.Prefab.NameMatches(itemName) || i.HasTag(itemName)));
         }
 
         public virtual void RemoveItem(Item item)
