@@ -204,6 +204,48 @@ namespace Barotrauma
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
         }
 
+        partial void UpdateProjSpecific(float deltaTime, Camera cam)
+        {
+            nameTimer -= deltaTime;
+            if (nameTimer <= 0.0f)
+            {
+                if (controlled == null)
+                {
+                    nameVisible = true;
+                }
+                //if the character is not in the camera view, the name can't be visible and we can avoid the expensive visibility checks
+                else if (WorldPosition.X < cam.WorldView.X || WorldPosition.X > cam.WorldView.Right || 
+                        WorldPosition.Y > cam.WorldView.Y || WorldPosition.Y < cam.WorldView.Y - cam.WorldView.Height)
+                {
+                    nameVisible = false;
+                }
+                else
+                {
+                    //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
+                    Limb selfLimb = controlled.AnimController.GetLimb(LimbType.Head);
+                    if (selfLimb == null) selfLimb = controlled.AnimController.GetLimb(LimbType.Torso);
+
+                    Limb targHead = AnimController.GetLimb(LimbType.Head);
+                    if (targHead == null) targHead = AnimController.GetLimb(LimbType.Torso);
+
+                    if (selfLimb != null && targHead != null)
+                    {
+                        Vector2 diff = ConvertUnits.ToSimUnits(targHead.WorldPosition - selfLimb.WorldPosition);
+
+                        Body closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
+                        Structure wall = null;
+                        if (closestBody != null) wall = closestBody.UserData as Structure;
+                        nameVisible = closestBody == null || wall == null || !wall.CastShadow;
+                    }
+                    else
+                    {
+                        nameVisible = false;
+                    }
+                }
+                nameTimer = Rand.Range(0.5f, 1.0f);
+            }
+        }
+
         public static void AddAllToGUIUpdateList()
         {
             for (int i = 0; i < CharacterList.Count; i++)
@@ -242,48 +284,7 @@ namespace Barotrauma
 
                 if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
-
-            /*if (memPos != null && memPos.Count > 0 && controlled == this)
-            {
-                PosInfo serverPos = memPos.Last();
-                Vector2 remoteVec = ConvertUnits.ToDisplayUnits(serverPos.Position);
-                if (Submarine != null)
-                {
-                    remoteVec += Submarine.DrawPosition;
-                }
-                remoteVec.Y = -remoteVec.Y;
-
-                PosInfo localPos = memLocalPos.Find(m => m.ID == serverPos.ID);
-                int mpind = memLocalPos.FindIndex(lp => lp.ID == localPos.ID);
-                PosInfo localPos1 = mpind > 0 ? memLocalPos[mpind - 1] : null;
-                PosInfo localPos2 = mpind < memLocalPos.Count-1 ? memLocalPos[mpind + 1] : null;
-
-                Vector2 localVec = ConvertUnits.ToDisplayUnits(localPos.Position);
-                Vector2 localVec1 = localPos1 != null ? ConvertUnits.ToDisplayUnits(((PosInfo)localPos1).Position) : Vector2.Zero;
-                Vector2 localVec2 = localPos2 != null ? ConvertUnits.ToDisplayUnits(((PosInfo)localPos2).Position) : Vector2.Zero;
-                if (Submarine != null)
-                {
-                    localVec += Submarine.DrawPosition;
-                    localVec1 += Submarine.DrawPosition;
-                    localVec2 += Submarine.DrawPosition;
-                }
-                localVec.Y = -localVec.Y;
-                localVec1.Y = -localVec1.Y;
-                localVec2.Y = -localVec2.Y;
-
-                //GUI.DrawLine(spriteBatch, remoteVec, localVec, Color.Yellow, 0, 10);
-                if (localPos1 != null) GUI.DrawLine(spriteBatch, remoteVec, localVec1, Color.Lime, 0, 2);
-                if (localPos2 != null) GUI.DrawLine(spriteBatch, remoteVec + Vector2.One, localVec2 + Vector2.One, Color.Red, 0, 2);
-            }
-
-            Vector2 mouseDrawPos = CursorWorldPosition;
-            mouseDrawPos.Y = -mouseDrawPos.Y;
-            GUI.DrawLine(spriteBatch, mouseDrawPos - new Vector2(0, 5), mouseDrawPos + new Vector2(0, 5), Color.Red, 0, 10);
-
-            Vector2 closestItemPos = closestItem != null ? closestItem.DrawPosition : Vector2.Zero;
-            closestItemPos.Y = -closestItemPos.Y;
-            GUI.DrawLine(spriteBatch, closestItemPos - new Vector2(0, 5), closestItemPos + new Vector2(0, 5), Color.Lime, 0, 10);*/
-
+            
             if (this == controlled || GUI.DisableHUD) return;
 
             Vector2 pos = DrawPosition;
@@ -298,33 +299,7 @@ namespace Barotrauma
 
             if (this == controlled) return;
             
-            nameTimer -= (float)Timing.Step;
-            if (nameTimer <= 0.0f)
-            {
-                //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
-                Limb selfHead = controlled != null ? controlled.AnimController.GetLimb(LimbType.Head) : null;
-                Limb targHead = this.AnimController.GetLimb(LimbType.Head);
-
-                if (controlled != null && controlled.Submarine == Submarine)
-                {
-                    if (selfHead != null && targHead != null)
-                    {
-                        Body closestBody = Submarine.CheckVisibility(selfHead.SimPosition, targHead.SimPosition);
-                        Structure wall = null;
-                        if (closestBody != null)
-                            wall = closestBody.UserData as Structure;
-                        nameVisible = closestBody == null || wall == null || !wall.CastShadow;
-                    }
-                    else
-                        nameVisible = false;
-                }
-                else
-                    nameVisible = true; //Ideally it should check for visibility from outside the sub/from sub-to-sub, but this will work for now.
-                nameTimer = Rand.Range(0.5f, 2f);
-            }
-
-            if (!nameVisible)
-                return;
+            if (!nameVisible) return;
 
             if (info != null)
             {
