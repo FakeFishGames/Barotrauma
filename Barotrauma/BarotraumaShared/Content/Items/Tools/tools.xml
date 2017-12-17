@@ -248,7 +248,7 @@
 
     <Body width="27" height="10" density="15"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="0,0">
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" aimpos="100,0" handle1="0,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2"/>
     </Holdable>
 
