@@ -1011,8 +1011,6 @@ namespace Barotrauma
 
         public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle)
         {
-            Holdable holdable = item.GetComponent<Holdable>();
-
             if (character.IsUnconscious || character.Stun > 0.0f) aim = false;
 
             //calculate the handle positions
@@ -1030,7 +1028,6 @@ namespace Barotrauma
 
             bool usingController = character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Controller>() != null;
 
-
             float itemAngle;
             if (Anim != Animation.Climbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
             {
@@ -1042,6 +1039,7 @@ namespace Barotrauma
 
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
 
+                Holdable holdable = item.GetComponent<Holdable>();
                 if (holdable.ControlPose)
                 {
                     head.body.SmoothRotate(itemAngle);

@@ -372,7 +372,11 @@ namespace Barotrauma
             commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
-                if (args.Length < 1) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("giveperm [id]: Grants administrative permissions to the player with the specified client ID.", Color.Cyan);
+                    return;
+                }
 
                 int id;
                 int.TryParse(args[0], out id);
@@ -382,7 +386,13 @@ namespace Barotrauma
                     ThrowError("Client id \"" + id + "\" not found.");
                     return;
                 }
-                
+
+                NewMessage("Valid permissions are:",Color.White);
+                NewMessage(" - all",Color.White);
+                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                {
+                    NewMessage(" - " + permission.ToString(),Color.White);
+                }
                 ShowQuestionPrompt("Permission to grant to \"" + client.Name + "\"?", (perm) =>
                 {
                     ClientPermissions permission = ClientPermissions.None;
@@ -392,7 +402,11 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Enum.TryParse<ClientPermissions>(perm, out permission);
+                        if (!Enum.TryParse<ClientPermissions>(perm, out permission))
+                        {
+                            ThrowError("\"" + perm + "\" sn't a valid permission!");
+                            return;
+                        }
                     }
                     client.SetPermissions(client.Permissions | permission);
                     GameMain.Server.UpdateClientPermissions(client);
@@ -403,7 +417,11 @@ namespace Barotrauma
             commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
-                if (args.Length < 1) return;
+                if (args.Length < 1)
+                {
+                    NewMessage("revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", Color.Cyan);
+                    return;
+                }
 
                 int id;
                 int.TryParse(args[0], out id);
@@ -414,6 +432,12 @@ namespace Barotrauma
                     return;
                 }
 
+                NewMessage("Valid permissions are:", Color.White);
+                NewMessage(" - all", Color.White);
+                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                {
+                    NewMessage(" - " + permission.ToString(), Color.White);
+                }
                 ShowQuestionPrompt("Permission to revoke from \"" + client.Name + "\"?", (perm) =>
                 {
                     ClientPermissions permission = ClientPermissions.None;
@@ -423,7 +447,11 @@ namespace Barotrauma
                     }
                     else
                     {
-                        Enum.TryParse<ClientPermissions>(perm, out permission);
+                        if (!Enum.TryParse<ClientPermissions>(perm, out permission))
+                        {
+                            ThrowError("\"" + perm + "\" isn't a valid permission!");
+                            return;
+                        }
                     }
                     client.SetPermissions(client.Permissions & ~permission);
                     GameMain.Server.UpdateClientPermissions(client);
