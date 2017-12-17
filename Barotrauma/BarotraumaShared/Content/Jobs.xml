@@ -49,6 +49,7 @@
     </Skills>
     <Items>
       <Item name="ID Card" equip="true"/>
+      <Item name="Crowbar"/>
       <Item name="Wrench"/>
       <Item name="Screwdriver"/>
       <Item name="Blue Jumpsuit" equip="true"/>
