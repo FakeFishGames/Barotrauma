@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma
 {
@@ -980,6 +981,56 @@ namespace Barotrauma
                 {
                     key.ResetHit();
                 }
+            }
+        }
+
+        public bool CanSeeCharacter(Character character)
+        {
+            Limb selfLimb = AnimController.GetLimb(LimbType.Head);
+            if (selfLimb == null) selfLimb = AnimController.GetLimb(LimbType.Torso);
+            if (selfLimb == null) selfLimb = AnimController.Limbs[0];
+
+            Limb targetLimb = character.AnimController.GetLimb(LimbType.Head);
+            if (targetLimb == null) targetLimb = character.AnimController.GetLimb(LimbType.Torso);
+            if (targetLimb == null) targetLimb = character.AnimController.Limbs[0];
+
+            if (selfLimb != null && targetLimb != null)
+            {
+                Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - selfLimb.WorldPosition);
+                
+                Body closestBody = null;
+                //both inside the same sub (or both outside)
+                //OR the we're inside, the other character outside
+                if (character.Submarine == Submarine || character.Submarine == null)
+                {
+                    closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
+                    if (closestBody == null) return true;
+                }
+                //we're outside, the other character inside
+                else if (Submarine == null)
+                {
+                    closestBody = Submarine.CheckVisibility(targetLimb.SimPosition, targetLimb.SimPosition - diff);
+                    if (closestBody == null) return true;
+                }
+                //both inside different subs
+                else
+                {
+                    closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
+                    if (closestBody != null && closestBody.UserData is Structure)
+                    {
+                        if (((Structure)closestBody.UserData).CastShadow) return false;
+                    }
+                    closestBody = Submarine.CheckVisibility(targetLimb.SimPosition, targetLimb.SimPosition - diff);
+                    if (closestBody == null) return true;
+
+                }
+                
+                Structure wall = closestBody.UserData as Structure;
+                return wall == null || !wall.CastShadow;
+            }
+            else
+            {
+                return false;
             }
         }
         
