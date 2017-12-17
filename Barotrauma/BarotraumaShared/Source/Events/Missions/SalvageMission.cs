@@ -46,7 +46,7 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
-            Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, 30.0f);
+            Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, Level.Loaded.Size.X * 0.3f, 30.0f);
             
             item = new Item(itemPrefab, position, null);
             item.MoveWithLevel = true;
