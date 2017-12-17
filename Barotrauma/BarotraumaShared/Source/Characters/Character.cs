@@ -1400,6 +1400,8 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime, Camera cam)
         {
+            UpdateProjSpecific(deltaTime, cam);
+
             if (GameMain.Client != null && this == Controlled && !isSynced) return;
 
             if (!Enabled) return;
@@ -1543,6 +1545,8 @@ namespace Barotrauma
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
+
+        partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
         private void UpdateOxygen(float deltaTime)
         {
