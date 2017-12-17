@@ -137,7 +137,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(hitPos, 0.0f), aimPos, false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, false, holdAngle);
                 }
             }
             else

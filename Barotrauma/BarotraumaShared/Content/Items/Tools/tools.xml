@@ -190,15 +190,15 @@
     category="Equipment"
     Tags="smallitem"
     
-    price="10">
+    price="15">
 
     <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
 
     <Body width="60" height="10" density="50"/>
 
-    <MeleeWeapon slots="Any,RightHand,LeftHand"
-          aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.7">
-      <Attack damage="10" stun="0.4" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+    <MeleeWeapon slots="RightHand+LeftHand,Any"
+          controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
+      <Attack damage="20" stun="0.6" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 
