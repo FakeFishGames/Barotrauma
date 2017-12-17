@@ -506,14 +506,14 @@ namespace Barotrauma
 
                     float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal)*f2.Body.Mass*0.1f;
 
-                    if (impact < 10.0f) return true;
-
 #if CLIENT
                     SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact,
                         new Vector2(
-                            sections[section].rect.X + sections[section].rect.Width / 2, 
-                            sections[section].rect.Y - sections[section].rect.Height / 2));
+                            sections[section].rect.X + sections[section].rect.Width / 2,
+                            sections[section].rect.Y - sections[section].rect.Height / 2), tags: Tags);
 #endif
+
+                    if (impact < 10.0f) return true;
 
                     AddDamage(section, impact);                 
                 }
@@ -661,10 +661,10 @@ namespace Barotrauma
 #if CLIENT
             GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
 
-            if (playSound && !SectionBodyDisabled(i))
+            if (playSound)// && !SectionBodyDisabled(i))
             {
                 DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
-                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition);
+                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
             
