@@ -143,11 +143,12 @@ namespace Barotrauma
                         msg.ReadFloat(),
                         msg.ReadFloat());
 
+                    float rotation = msg.ReadFloat();
 
                     int index = 0;
-                    if (GameMain.NetworkMember.Character == this && AllowInput)
+                    if (GameMain.NetworkMember.Character == this)
                     {
-                        var posInfo = new CharacterStateInfo(pos, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
                             index++;
 
@@ -155,7 +156,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        var posInfo = new CharacterStateInfo(pos, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        var posInfo = new CharacterStateInfo(pos, rotation, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                             index++;
 

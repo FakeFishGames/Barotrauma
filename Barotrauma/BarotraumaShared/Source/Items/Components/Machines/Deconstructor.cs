@@ -105,7 +105,7 @@ namespace Barotrauma.Items.Components
 
             if (user != null)
             {
-                GameServer.Log(user.Name + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(user.LogName + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 
 #if CLIENT

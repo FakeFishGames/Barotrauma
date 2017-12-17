@@ -12,7 +12,34 @@ namespace Barotrauma
     partial class CharacterInfo
     {
         public string Name;
-
+        public string DisplayName
+        {
+            get {
+                string disguiseName = "?";
+                if (Character != null && Character.HideFace)
+                {
+                    if (Character.Inventory != null)
+                    {
+                        var idCard = Character.Inventory.FindItem("ID Card");
+                        if (idCard != null && Character.Inventory.IsInLimbSlot(idCard, InvSlotType.Card)) //Disguise as the ID card name if it's equipped
+                        {
+                            string[] readTags = idCard.Tags.Split(',');
+                            foreach (string tag in readTags)
+                            {
+                                string[] s = tag.Split(':');
+                                if (s[0] == "name")
+                                {
+                                    disguiseName = s[1];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    return disguiseName;
+                }
+                return Name;
+            }
+        }
         public Character Character;
 
         public readonly string File;

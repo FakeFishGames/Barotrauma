@@ -533,7 +533,9 @@ namespace Barotrauma.Networking
                     foreach (string s in shuttleSpawnPoints[i].IdCardTags)
                     {
                         item.AddTag(s);
-                    }                    
+                    }
+                    if (!string.IsNullOrWhiteSpace(shuttleSpawnPoints[i].IdCardDesc))
+                        item.Description = shuttleSpawnPoints[i].IdCardDesc;
                 }
 #if CLIENT
                 GameMain.GameSession.CrewManager.AddCharacter(character);

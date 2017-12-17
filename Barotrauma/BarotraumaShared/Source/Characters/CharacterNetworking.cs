@@ -15,18 +15,18 @@ namespace Barotrauma
 
         public readonly AnimController.Animation Animation;
 
-        public CharacterStateInfo(Vector2 pos, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, 0, time, dir, interact, animation)
+        public CharacterStateInfo(Vector2 pos, float rotation, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : this(pos, rotation, 0, time, dir, interact, animation)
         {
         }
 
-        public CharacterStateInfo(Vector2 pos, UInt16 ID, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, ID, 0.0f, dir, interact, animation)
+        public CharacterStateInfo(Vector2 pos, float rotation, UInt16 ID, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : this(pos, rotation, ID, 0.0f, dir, interact, animation)
         {
         }
 
-        protected CharacterStateInfo(Vector2 pos, UInt16 ID, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : base(pos, ID, time)
+        protected CharacterStateInfo(Vector2 pos, float rotation, UInt16 ID, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : base(pos, rotation, ID, time)
         {
             Direction = dir;
             Interact = interact;
@@ -197,6 +197,7 @@ namespace Barotrauma
             {
                 var posInfo = new CharacterStateInfo(
                     SimPosition,
+                    AnimController.Collider.Rotation,
                     LastNetworkUpdateID, 
                     AnimController.TargetDir, 
                     SelectedCharacter == null ? (Entity)selectedConstruction : (Entity)SelectedCharacter,
@@ -471,6 +472,7 @@ namespace Barotrauma
 
                 tempBuffer.Write(SimPosition.X);
                 tempBuffer.Write(SimPosition.Y);
+                tempBuffer.Write(AnimController.Collider.Rotation);
 
                 tempBuffer.WritePadBits();
 

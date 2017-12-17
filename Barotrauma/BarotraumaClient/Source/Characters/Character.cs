@@ -15,6 +15,8 @@ namespace Barotrauma
     {
         protected float soundTimer;
         protected float soundInterval;
+        protected float nameTimer;
+        protected bool nameVisible;
 
         private List<CharacterSound> sounds;
 
@@ -295,18 +297,50 @@ namespace Barotrauma
             }
 
             if (this == controlled) return;
+            
+            nameTimer -= (float)Timing.Step;
+            if (nameTimer <= 0.0f)
+            {
+                //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
+                Limb selfHead = controlled != null ? controlled.AnimController.GetLimb(LimbType.Head) : null;
+                Limb targHead = this.AnimController.GetLimb(LimbType.Head);
+
+                if (controlled != null && controlled.Submarine == Submarine)
+                {
+                    if (selfHead != null && targHead != null)
+                    {
+                        Body closestBody = Submarine.CheckVisibility(selfHead.SimPosition, targHead.SimPosition);
+                        Structure wall = null;
+                        if (closestBody != null)
+                            wall = closestBody.UserData as Structure;
+                        nameVisible = closestBody == null || wall == null || !wall.CastShadow;
+                    }
+                    else
+                        nameVisible = false;
+                }
+                else
+                    nameVisible = true; //Ideally it should check for visibility from outside the sub/from sub-to-sub, but this will work for now.
+                nameTimer = Rand.Range(0.5f, 2f);
+            }
+
+            if (!nameVisible)
+                return;
 
             if (info != null)
             {
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                string name = Info.DisplayName;
+                if (controlled == null && name != Info.Name)
+                    name += " (Disguised)";
+
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
 
                 if (Character.Controlled != null && TeamID != Character.Controlled.TeamID)
                 {
                     nameColor = Color.Red;
                 }
-                GUI.Font.DrawString(spriteBatch, Info.Name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
-                GUI.Font.DrawString(spriteBatch, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
+                GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
+                GUI.Font.DrawString(spriteBatch, name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
 
                 if (GameMain.DebugDraw)
                 {

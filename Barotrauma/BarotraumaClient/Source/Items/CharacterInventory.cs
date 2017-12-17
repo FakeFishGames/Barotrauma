@@ -39,7 +39,7 @@ namespace Barotrauma
                     case 3:
                     case 4:
                         SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 2),
+                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 1),
                             GameMain.GraphicsHeight - (spacing + rectHeight) * 3);
 
                         useOnSelfButton[i - 3] = new GUIButton(
@@ -52,7 +52,15 @@ namespace Barotrauma
 
 
                         break;
+                    //face
                     case 5:
+                        SlotPositions[i] = new Vector2(
+                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 5),
+                            GameMain.GraphicsHeight - (spacing + rectHeight) * 3);
+
+                        break;
+                    //id card
+                    case 6:
                         SlotPositions[i] = new Vector2(
                             spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 5),
                             GameMain.GraphicsHeight - (spacing + rectHeight) * 3);
@@ -60,8 +68,8 @@ namespace Barotrauma
                         break;
                     default:
                         SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 6) % 5),
-                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i > 10) ? 2 : 1));
+                            spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 7) % 5),
+                            GameMain.GraphicsHeight - (spacing + rectHeight) * ((i > 11) ? 2 : 1));
                         break;
                 }
             }
@@ -245,6 +253,13 @@ namespace Barotrauma
                     spriteBatch.Draw(icons, new Vector2(slotRect.Center.X, slotRect.Center.Y),
                         new Rectangle(57, 0, 31, 32), Color.White * 0.7f, 0.0f,
                         new Vector2(15.0f, 16.0f), Vector2.One,
+                        SpriteEffects.None, 0.1f);
+                }
+                else if (i == 6)
+                {
+                    spriteBatch.Draw(icons, new Vector2(slotRect.Center.X, slotRect.Center.Y),
+                        new Rectangle(62, 36, 22, 18), Color.White * 0.7f, 0.0f,
+                        new Vector2(11.0f, 9.0f), Vector2.One,
                         SpriteEffects.None, 0.1f);
                 }
             }

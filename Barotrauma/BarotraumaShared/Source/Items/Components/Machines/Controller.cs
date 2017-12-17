@@ -160,20 +160,20 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void SecondaryUse(float deltaTime, Character character = null)
+        public override bool SecondaryUse(float deltaTime, Character character = null)
         {
             if (this.character == null || this.character != character || this.character.SelectedConstruction != item || !character.CanInteractWith(item))
             {
                 character = null;
-                return;
+                return false;
             }
-            if (character == null) return;     
+            if (character == null) return false;     
 
             Entity focusTarget = GetFocusTarget();
             if (focusTarget == null)
             {
                 item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
-                return;
+                return false;
             }
             
             character.ViewTarget = focusTarget;
@@ -191,6 +191,8 @@ namespace Barotrauma.Items.Components
             {
                 item.SendSignal(0, XMLExtensions.Vector2ToString(character.CursorWorldPosition), "position_out", character);
             }
+
+            return true;
         }
 
         private Item GetFocusTarget()

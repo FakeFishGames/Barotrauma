@@ -175,7 +175,7 @@ namespace Barotrauma.Items.Components
 
             if (character != null)
             {
-                string msg = character.Name + " launched " + item.Name + " (projectile: " + projectiles[0].Item.Name;
+                string msg = character.LogName + " launched " + item.Name + " (projectile: " + projectiles[0].Item.Name;
                 if (projectiles[0].Item.ContainedItems == null || projectiles[0].Item.ContainedItems.All(i => i == null))
                 {
                     msg += ")";

@@ -138,6 +138,27 @@ namespace Barotrauma
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name : SpeciesName;
             }
         }
+        //Only used by server logs to determine "true identity" of the player for cases when they're disguised
+        public string LogName
+        {
+            get
+            {
+                return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name + (info.DisplayName != info.Name ? " (as " + info.DisplayName + ")" : "") : SpeciesName;
+            }
+        }
+
+        private float hideFaceTimer;
+        public bool HideFace
+        {
+            get
+            {
+                return hideFaceTimer > 0.0f;
+            }
+            set
+            {
+                hideFaceTimer = MathHelper.Clamp(hideFaceTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
+            }
+        }
 
         public string ConfigPath
         {
@@ -591,7 +612,7 @@ namespace Barotrauma
             {
                 AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
                 AnimController.TargetDir = Direction.Right;
-                inventory = new CharacterInventory(16, this);
+                inventory = new CharacterInventory(17, this);
             }
             else
             {
@@ -926,13 +947,16 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < selectedItems.Length; i++ )
+            if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
             {
-                if (selectedItems[i] == null) continue;
-                if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
+                for (int i = 0; i < selectedItems.Length; i++ )
+                {
+                    if (selectedItems[i] == null) continue;
+                    if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
 
-                if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
-                if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
+                    if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
+                    if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
+                }
             }
 
             if (selectedConstruction != null)
@@ -1406,6 +1430,8 @@ namespace Barotrauma
                     item.Submarine = Submarine;
                 }
             }
+
+            HideFace = false;
                         
             if (isDead) return;
 
@@ -1633,7 +1659,7 @@ namespace Barotrauma
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
-                GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
+                GameServer.Log(LogName + " attacked by " + attackingCharacter.LogName +". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
             }
             
             if (GameMain.Client == null &&
@@ -1798,7 +1824,7 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            GameServer.Log(Name+" has died (Cause of death: "+causeOfDeath+")", ServerLog.MessageType.Attack);
+            GameServer.Log(LogName+" has died (Cause of death: "+causeOfDeath+")", ServerLog.MessageType.Attack);
 
             if (OnDeath != null) OnDeath(this, causeOfDeath);
 
