@@ -211,7 +211,7 @@ namespace Barotrauma
                         {
                             if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
 
-                            character.AnimController.GrabLimb = character.AnimController.GrabLimb == LimbType.None ? LimbType.Torso : LimbType.None;
+                            Character.Controlled.AnimController.GrabLimb = Character.Controlled.AnimController.GrabLimb == LimbType.None ? LimbType.Torso : LimbType.None;
 
                             foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
                             {
@@ -223,7 +223,7 @@ namespace Barotrauma
                                 GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Control });
                             }
 
-                            grabHoldButton.Text = "Grabbing: " + (character.AnimController.GrabLimb == LimbType.Torso ? "Torso" : "Hands");
+                            grabHoldButton.Text = "Grabbing: " + (Character.Controlled.AnimController.GrabLimb == LimbType.Torso ? "Torso" : "Hands");
                             return true;
                         };
                     }
