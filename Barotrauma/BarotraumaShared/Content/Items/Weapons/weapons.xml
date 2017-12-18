@@ -109,7 +109,7 @@
     name="Revolver"
     category="Equipment"    
     price="700"
-    tags="weapon">
+    tags="smallitem,weapon">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
