@@ -1538,15 +1538,12 @@ namespace Barotrauma
                 selectedConstruction = null;
             }
 
-            if (SelectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
-            {
-                if (GameMain.Client == null) SelectedCharacter.Oxygen += (GetSkillLevel("Medical") / 10.0f) * deltaTime;
-            }
-
             UpdateSightRange();
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
+
+            //CPR stuff is handled in the UpdateCPR function in HumanoidAnimController
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
@@ -1586,8 +1583,7 @@ namespace Barotrauma
             AnimController.ResetPullJoints();
             selectedConstruction = null;
 
-            if (oxygen <= 0.0f) Oxygen -= deltaTime * 0.5f; //Slow down oxygen consumption to increase time in crit
-            else if (needsAir) UpdateOxygen(deltaTime); //So you can't simply cheat out of requiring oxygen when crit
+            Oxygen -= deltaTime * 0.5f; //We're critical - our heart stopped!
 
             if (health <= 0.0f) //Critical health - use current state for crit time
             {

@@ -933,6 +933,17 @@ namespace Barotrauma
             Grab(handPos, handPos);
 
             Vector2 colliderPos = GetColliderBottom();
+
+            if (GameMain.Client == null) //Serverside code
+            {
+                if (target.Bleeding <= 0.5f && target.Oxygen <= 0.0f) //If they're bleeding too hard CPR will hurt them
+                {
+                    target.Oxygen += deltaTime * 0.5f; //Stabilize them
+                }
+            }
+
+
+            int skill = character.GetSkillLevel("Medical");
             if (cprAnimState % 17 > 15.0f)
             {
                 float yPos = (float)Math.Sin(cprAnimState) * 0.2f;
@@ -940,6 +951,16 @@ namespace Barotrauma
                 head.pullJoint.Enabled = true;
                 torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition - 0.2f));
                 torso.pullJoint.Enabled = true;
+
+                if (GameMain.Client == null) //Serverside code
+                {
+                    float cpr = skill / 2.0f; //Max possible oxygen addition is 20 per second
+                    character.Oxygen -= (30.0f - cpr) * deltaTime; //Worse skill = more oxygen required
+                    if (character.Oxygen > 0.0f) //we didn't suffocate yet did we
+                        target.Oxygen += cpr * deltaTime;
+
+                    //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
+                }
             }
             else
             {
@@ -952,6 +973,48 @@ namespace Barotrauma
                     torso.body.ApplyForce(new Vector2(0, -1000f));
                     targetTorso.body.ApplyForce(new Vector2(0, -1000f));
                     cprPump = 0;
+
+                    if (target.Bleeding <= 0.5f && target.Health <= 0.0f && !target.IsDead) //Have a chance to revive them to 2 HP if they were damaged.
+                    {
+                        if (GameMain.Client == null) //Serverside code
+                        {
+                            float reviveChance = (cprAnimState % 17) * (skill / 50.0f); //~5% max chance for 10 skill, ~50% max chance for 100 skill
+                            float rng = Rand.Int(100, Rand.RandSync.Server);
+
+                            //DebugConsole.NewMessage("CPR Pump cprAnimState: " + (cprAnimState % 17) + " revive chance: " + reviveChance + " rng: " + rng, Color.Aqua);
+                            if (rng <= reviveChance) //HOLY CRAP YOU SAVED HIM!!!
+                            {
+                                target.Oxygen = Math.Max(target.Oxygen, 10.0f);
+                                target.Health = 2.0f;
+                                Anim = Animation.None;
+                                return;
+                            }
+                        }
+                    }
+                    else if (target.Bleeding > 0.5f || skill < 50) //We will hurt them if they're bleeding or we suck
+                    {
+                        //If not bleeding: 10% skill causes 0.8 damage per pump, 40% skill causes only 0.2
+                        if (target.Bleeding <= 0.5f)
+                            target.AddDamage(CauseOfDeath.Damage, (50 - skill) * 0.02f, character);
+                        else //If bleeding: 2 HP damage per pump. Basically speeds up their death. Don't pump bleeding people!
+                        {
+                            target.AddDamage(CauseOfDeath.Bloodloss, 1.0f, character);
+#if CLIENT
+                            SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 25.0f, targetTorso.body);
+                            float bloodParticleAmount = 4;
+                            float bloodParticleSize = 1.0f;
+
+                            for (int i = 0; i < bloodParticleAmount; i++)
+                            {
+                                var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", targetTorso.WorldPosition, Rand.Vector(10.0f), 0.0f, target.AnimController.CurrentHull);
+                                if (blood != null)
+                                {
+                                    blood.Size *= bloodParticleSize;
+                                }
+                            }
+#endif
+                        }
+                    }
                 }
                 cprPump += deltaTime;
             }
