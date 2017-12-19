@@ -40,6 +40,7 @@ namespace Barotrauma.Networking
         }
 
         public const string SettingsFile = "serversettings.xml";
+        public static readonly string PermissionPresetFile = "Data" + Path.DirectorySeparatorChar + "permissionpresets.xml";
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
 
         public Dictionary<string, SerializableProperty> SerializableProperties

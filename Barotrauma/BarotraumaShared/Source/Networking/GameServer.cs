@@ -125,8 +125,9 @@ namespace Barotrauma.Networking
             banList = new BanList();
 
             LoadSettings();
+            PermissionPreset.LoadAll(PermissionPresetFile);
             LoadClientPermissions();
-            
+                        
             CoroutineManager.StartCoroutine(StartServer(isPublic));
         }
 
