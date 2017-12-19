@@ -373,21 +373,8 @@ namespace Barotrauma
             Limb limb = f2.Body.UserData as Limb;
             if (limb != null)
             {
-                bool collision = HandleLimbCollision(contact, limb);
-
-                if (collision && limb.Mass > 100.0f)
-                {
-                    Vector2 normal = Vector2.Normalize(Body.SimPosition - limb.SimPosition);
-
-                    float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f * Math.Min(limb.Mass / 200.0f, 1);
-
-                    ApplyImpact(impact, -normal, contact);
-                    foreach (Submarine dockedSub in submarine.DockedTo)
-                    {
-                        dockedSub.SubBody.ApplyImpact(impact, -normal, contact);
-                    }
-                }
-
+                bool collision = CheckLimbCollision(contact, limb);
+                if (collision) HandleLimbCollision(contact, limb);
                 return collision;
             }
 
@@ -408,18 +395,18 @@ namespace Barotrauma
             return true;
         }
 
-        private bool HandleLimbCollision(Contact contact, Limb limb)
+        private bool CheckLimbCollision(Contact contact, Limb limb)
         {
             if (limb.character.Submarine != null) return false;
 
-            Vector2 normal2;
+            Vector2 contactNormal;
             FixedArray2<Vector2> points;
-            contact.GetWorldManifold(out normal2, out points);
+            contact.GetWorldManifold(out contactNormal, out points);
 
             Vector2 normalizedVel = limb.character.AnimController.Collider.LinearVelocity == Vector2.Zero ?
                 Vector2.Zero : Vector2.Normalize(limb.character.AnimController.Collider.LinearVelocity);
 
-            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - normal2);
+            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - contactNormal);
             Hull newHull = Hull.FindHull(targetPos, null);
 
             if (newHull == null)
@@ -438,6 +425,73 @@ namespace Barotrauma
             ragdoll.FindHull(newHull.WorldPosition, true);
 
             return false;
+        }
+
+        private void HandleLimbCollision(Contact contact, Limb limb)
+        {
+            if (limb.Mass > 100.0f)
+            {
+                Vector2 normal = Vector2.Normalize(Body.SimPosition - limb.SimPosition);
+
+                float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f * Math.Min(limb.Mass / 200.0f, 1);
+
+                ApplyImpact(impact, -normal, contact);
+                foreach (Submarine dockedSub in submarine.DockedTo)
+                {
+                    dockedSub.SubBody.ApplyImpact(impact, -normal, contact);
+                }
+            }
+
+            //find all contacts between the limb and level walls
+            List<Contact> levelContacts = new List<Contact>();
+            ContactEdge contactEdge = limb.body.FarseerBody.ContactList;
+            while (contactEdge.Next != null)
+            {
+                if (contactEdge.Contact.Enabled &&
+                    contactEdge.Other.UserData is VoronoiCell &&
+                    contactEdge.Contact.IsTouching)
+                {
+                    levelContacts.Add(contactEdge.Contact);
+                }
+                contactEdge = contactEdge.Next;
+            }
+
+            if (levelContacts.Count == 0) return;
+
+            //if the limb is in contact with the level, apply an artifical impact to prevent the sub from bouncing on top of it
+            //not a very realistic way to handle the collisions (makes it seem as if the characters were made of reinforced concrete),
+            //but more realistic than bouncing and prevents using characters as "bumpers" that prevent all collision damage
+
+            //TODO: apply impact damage and/or gib the character that got crushed between the sub and the level?
+            Vector2 avgContactNormal = Vector2.Zero;
+            foreach (Contact levelContact in levelContacts)
+            {
+                Vector2 contactNormal;
+                FixedArray2<Vector2> temp;
+                levelContact.GetWorldManifold(out contactNormal, out temp);
+
+                //if the contact normal is pointing from the limb towards the level cell it's touching, flip the normal
+                VoronoiCell cell = levelContact.FixtureB.Body.UserData is VoronoiCell ?
+                    ((VoronoiCell)levelContact.FixtureB.Body.UserData) : ((VoronoiCell)levelContact.FixtureA.Body.UserData);
+
+                var cellDiff = ConvertUnits.ToDisplayUnits(limb.body.SimPosition) - cell.Center;
+                if (Vector2.Dot(contactNormal, cellDiff) < 0)
+                {
+                    contactNormal = -contactNormal;
+                }
+
+                avgContactNormal += contactNormal;
+
+                //apply impacts at the positions where this sub is touching the limb
+                ApplyImpact((Vector2.Dot(-Velocity, contactNormal) / 2.0f) / levelContacts.Count, contactNormal, levelContact);
+            }
+            avgContactNormal /= levelContacts.Count;
+            
+            float contactDot = Vector2.Dot(Body.LinearVelocity, -avgContactNormal);
+            if (contactDot > 0.0f)
+            {
+                Body.LinearVelocity -= Vector2.Normalize(Body.LinearVelocity) * contactDot;
+            }
         }
 
         private void HandleLevelCollision(Contact contact, VoronoiCell cell)
