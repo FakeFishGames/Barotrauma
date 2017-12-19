@@ -115,10 +115,11 @@ namespace Barotrauma
             listBox.AddChild(child);
         }
 
-        public void AddItem(string text, object userData = null)
+        public void AddItem(string text, object userData = null, string toolTip = "")
         {
             GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox);
             textBlock.UserData = userData;
+            textBlock.ToolTip = toolTip;
         }
 
         public override void ClearChildren()
