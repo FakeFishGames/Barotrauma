@@ -1490,6 +1490,7 @@ namespace Barotrauma
                 }                
             }
 
+            //Skip health effects as critical health handles it differently
             if (IsUnconscious)
             {
                 UpdateUnconscious(deltaTime);
@@ -1502,6 +1503,17 @@ namespace Barotrauma
             else if ((GameMain.Server == null || GameMain.Server.AllowRagdollButton) && (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
 
+            //Health effects
+            if (needsAir) UpdateOxygen(deltaTime);
+
+            Health -= bleeding * deltaTime;
+            Bleeding -= BleedingDecreaseSpeed * deltaTime;
+
+            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
+
+            if (!IsDead) LockHands = false;
+
+            //ragdoll button
             if (IsRagdolled)
             {
                 if (AnimController is HumanoidAnimController) ((HumanoidAnimController)AnimController).Crouching = false;
@@ -1511,6 +1523,8 @@ namespace Barotrauma
                 selectedConstruction = null;
                 return;
             }
+
+            //AI and control stuff
 
             Control(deltaTime, cam);
             if (controlled != this && (!(this is AICharacter) || IsRemotePlayer))
@@ -1533,15 +1547,6 @@ namespace Barotrauma
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
-
-            if (needsAir) UpdateOxygen(deltaTime);
-
-            Health -= bleeding * deltaTime;
-            Bleeding -= BleedingDecreaseSpeed * deltaTime;
-
-            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
-
-            if (!IsDead) LockHands = false;
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
@@ -1581,11 +1586,17 @@ namespace Barotrauma
             AnimController.ResetPullJoints();
             selectedConstruction = null;
 
-            if (oxygen <= 0.0f) Oxygen -= deltaTime * 0.5f;
+            if (oxygen <= 0.0f) Oxygen -= deltaTime * 0.5f; //Slow down oxygen consumption to increase time in crit
+            else if (needsAir) UpdateOxygen(deltaTime); //So you can't simply cheat out of requiring oxygen when crit
 
-            if (health <= 0.0f)
+            if (health <= 0.0f) //Critical health - use current state for crit time
             {
                 AddDamage(bleeding > 0.5f ? CauseOfDeath.Bloodloss : CauseOfDeath.Damage, Math.Max(bleeding, 1.0f) * deltaTime, null);
+            }
+            else //Keep on bleedin'
+            {
+                Health -= bleeding * deltaTime;
+                Bleeding -= BleedingDecreaseSpeed * deltaTime;
             }
         }
 
