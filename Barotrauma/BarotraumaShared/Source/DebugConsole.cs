@@ -13,13 +13,15 @@ namespace Barotrauma
     {
         public string Text;
         public Color Color;
+		public bool IsCommand;
 
         public readonly string Time;
 
-        public ColoredText(string text, Color color)
+        public ColoredText(string text, Color color, bool isCommand)
         {
             this.Text = text;
             this.Color = color;
+			this.IsCommand = isCommand;
 
             Time = DateTime.Now.ToString();
         }
@@ -1028,9 +1030,14 @@ namespace Barotrauma
 
             direction = MathHelper.Clamp(direction, -1, 1);
 
-            selectedIndex += direction;
-            if (selectedIndex < 0) selectedIndex = Messages.Count - 1;
-            selectedIndex = selectedIndex % Messages.Count;
+			int i = 0;
+			do
+			{
+				selectedIndex += direction;
+				if (selectedIndex < 0) selectedIndex = Messages.Count - 1;
+				selectedIndex = selectedIndex % Messages.Count;
+				if (++i >= Messages.Count) break;
+			} while (!Messages[selectedIndex].IsCommand);
 
             return Messages[selectedIndex].Text;            
         }
@@ -1042,7 +1049,7 @@ namespace Barotrauma
 #if CLIENT
                 activeQuestionText = null;
 #endif
-                NewMessage(command, Color.White);
+                NewMessage(command, Color.White, true);
                 //reset the variable before invoking the delegate because the method may need to activate another question
                 var temp = activeQuestionCallback;
                 activeQuestionCallback = null;
@@ -1056,7 +1063,7 @@ namespace Barotrauma
             
             if (!splitCommand[0].ToLowerInvariant().Equals("admin"))
             {
-                NewMessage(command, Color.White);
+                NewMessage(command, Color.White, true);
             }
 
 #if !DEBUG && CLIENT
@@ -1131,12 +1138,12 @@ namespace Barotrauma
             return null;
         }
 
-        public static void NewMessage(string msg, Color color)
+        public static void NewMessage(string msg, Color color, bool isCommand = false)
         {
             if (string.IsNullOrEmpty((msg))) return;
 
 #if SERVER
-            Messages.Add(new ColoredText(msg, color));
+            Messages.Add(new ColoredText(msg, color, isCommand));
 
             //TODO: REMOVE
             Console.ForegroundColor = XnaToConsoleColor.Convert(color);
@@ -1151,7 +1158,7 @@ namespace Barotrauma
 #elif CLIENT
             lock (queuedMessages)
             {
-                queuedMessages.Enqueue(new ColoredText(msg, color));
+                queuedMessages.Enqueue(new ColoredText(msg, color, isCommand));
             }
 #endif
         }

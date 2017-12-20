@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+using Barotrauma.Networking;
 using Barotrauma.Particles;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -299,6 +299,14 @@ namespace Barotrauma
             if (info != null)
             {
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+                Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
+                namePos.X -= cam.WorldView.X; namePos.Y += cam.WorldView.Y;
+                namePos *= screenSize / viewportSize;
+                namePos.X = (float)Math.Floor(namePos.X); namePos.Y = (float)Math.Floor(namePos.Y);
+                namePos *= viewportSize / screenSize;
+                namePos.X += cam.WorldView.X; namePos.Y -= cam.WorldView.Y;
+
                 Color nameColor = Color.White;
 
                 if (Character.Controlled != null && TeamID != Character.Controlled.TeamID)

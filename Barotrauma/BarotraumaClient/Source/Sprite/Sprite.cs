@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
@@ -186,18 +186,23 @@ namespace Barotrauma
 
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Color color)
         {
-            DrawTiled(spriteBatch, pos, targetSize, startOffset, sourceRect, color);
+            DrawTiled(spriteBatch, pos, targetSize, startOffset, sourceRect, color, Vector2.One);
         }
 
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Rectangle sourceRect, Color color)
+        {
+            DrawTiled(spriteBatch, pos, targetSize, startOffset, sourceRect, color, Vector2.One);
+        }
+
+        public void DrawTiled(SpriteBatch spriteBatch, Vector2 pos, Vector2 targetSize, Vector2 startOffset, Rectangle sourceRect, Color color, Vector2 scale)
         {
             //pos.X = (int)pos.X;
             //pos.Y = (int)pos.Y;
 
             //how many times the texture needs to be drawn on the x-axis
-            int xTiles = (int)Math.Ceiling((targetSize.X + startOffset.X) / sourceRect.Width);
+            int xTiles = (int)Math.Ceiling((targetSize.X + startOffset.X) / (sourceRect.Width*scale.X));
             //how many times the texture needs to be drawn on the y-axis
-            int yTiles = (int)Math.Ceiling((targetSize.Y + startOffset.Y) / sourceRect.Height);
+            int yTiles = (int)Math.Ceiling((targetSize.Y + startOffset.Y) / (sourceRect.Height*scale.Y));
 
             Vector2 position = pos - startOffset;
             Rectangle drawRect = sourceRect;
@@ -211,11 +216,11 @@ namespace Barotrauma
 
                 if (x == xTiles - 1)
                 {
-                    drawRect.Width -= (int)((position.X + sourceRect.Width) - (pos.X + targetSize.X));
+                    drawRect.Width -= (int)((position.X + sourceRect.Width*scale.X) - (pos.X + targetSize.X));
                 }
                 else
                 {
-                    drawRect.Width = sourceRect.Width;
+                    drawRect.Width = (int)(sourceRect.Width*scale.X);
                 }
 
                 if (position.X < pos.X)
@@ -234,11 +239,11 @@ namespace Barotrauma
 
                     if (y == yTiles - 1)
                     {
-                        drawRect.Height -= (int)((position.Y + sourceRect.Height) - (pos.Y + targetSize.Y));
+                        drawRect.Height -= (int)((position.Y + sourceRect.Height*scale.Y) - (pos.Y + targetSize.Y));
                     }
                     else
                     {
-                        drawRect.Height = sourceRect.Height;
+                        drawRect.Height = (int)(sourceRect.Height*scale.Y);
                     }
 
                     if (position.Y < pos.Y)
@@ -252,10 +257,10 @@ namespace Barotrauma
                     spriteBatch.Draw(texture, position,
                         drawRect, color, rotation, Vector2.Zero, 1.0f, effects, depth);
 
-                    position.Y += sourceRect.Height;
+                    position.Y += sourceRect.Height*scale.Y;
                 }
 
-                position.X += sourceRect.Width;
+                position.X += sourceRect.Width*scale.X;
             }
         }
 

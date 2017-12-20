@@ -258,7 +258,7 @@ namespace Barotrauma.Particles
                     }
                     else
                     {
-                        Hull newHull = Hull.FindHull(position);
+                        Hull newHull = Hull.FindHull(position,currentHull);
                         if (newHull != currentHull)
                         {
                             currentHull = newHull;

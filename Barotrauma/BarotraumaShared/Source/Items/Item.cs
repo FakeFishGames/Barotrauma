@@ -1204,7 +1204,7 @@ namespace Barotrauma
                 Color color = Color.Red;
                 if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
 
-                texts.Add(new ColoredText(ic.Msg, color));
+                texts.Add(new ColoredText(ic.Msg, color, false));
             }
 
             return texts;
