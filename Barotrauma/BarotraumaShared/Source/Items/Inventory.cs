@@ -144,7 +144,7 @@ namespace Barotrauma
         {
             if (itemName == null) return null;
 
-            return Items.FirstOrDefault(i => i != null && (i.Name == itemName || i.HasTag(itemName)));
+            return Items.FirstOrDefault(i => i != null && (i.Prefab.NameMatches(itemName) || i.HasTag(itemName)));
         }
 
         public virtual void RemoveItem(Item item)
@@ -212,11 +212,11 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
-                        GameServer.Log(c.Character + " picked up " + item.Name, ServerLog.MessageType.Inventory);
+                        GameServer.Log(c.Character.LogName+ " picked up " + item.Name, ServerLog.MessageType.Inventory);
                     }
                     else
                     {
-                        GameServer.Log(c.Character + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
+                        GameServer.Log(c.Character.LogName + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
                     }
                 }
             }
@@ -227,11 +227,11 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
-                        GameServer.Log(c.Character + " dropped " + item.Name, ServerLog.MessageType.Inventory);
+                        GameServer.Log(c.Character.LogName + " dropped " + item.Name, ServerLog.MessageType.Inventory);
                     }
                     else
                     {
-                        GameServer.Log(c.Character + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
+                        GameServer.Log(c.Character.LogName + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
                     }
                 }
             }

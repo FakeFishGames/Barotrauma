@@ -13,7 +13,7 @@ using Barotrauma.Lights;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Door : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
         private Gap linkedGap;
 
@@ -203,12 +203,13 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-
-        public override bool Pick(Character picker)
+        public override bool OnPicked(Character picker)
         {
-            isOpen = !isOpen;
-
-            return true;
+            SetState(predictedState == null ? !isOpen : !predictedState.Value, false, true); //crowbar function
+#if CLIENT
+            PlaySound(ActionType.OnPicked, item.WorldPosition);
+#endif
+            return false;
         }
 
         public override bool Select(Character character)
@@ -419,7 +420,7 @@ namespace Barotrauma.Items.Components
             bool newState = predictedState == null ? isOpen : predictedState.Value;
             if (sender != null && wasOpen != newState)
             {
-                GameServer.Log(sender.Name + (newState ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(sender.LogName + (newState ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
         }
 

@@ -1,29 +1,10 @@
 ﻿using Lidgren.Network;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    [Flags]
-    enum ClientPermissions
-    {
-        None = 0,
-        [Description("End round")]
-        EndRound = 1,
-        [Description("Kick")]
-        Kick = 2,
-        [Description("Ban")]
-        Ban = 4,
-        [Description("Select submarine")]
-        SelectSub = 8,
-        [Description("Select game mode")]
-        SelectMode = 16,
-        [Description("Manage campaign")]
-        ManageCampaign = 32
-    }
-
     class Client
     {
         public string Name;
@@ -96,6 +77,11 @@ namespace Barotrauma.Networking
         public float DeleteDisconnectedTimer;
 
         public ClientPermissions Permissions = ClientPermissions.None;
+        public List<DebugConsole.Command> PermittedConsoleCommands
+        {
+            get;
+            private set;
+        }
 
         public bool SpectateOnly;
                 
@@ -130,6 +116,7 @@ namespace Barotrauma.Networking
             this.Name = name;
             this.ID = ID;
 
+            PermittedConsoleCommands = new List<DebugConsole.Command>();
             kickVoters = new List<Client>();
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
@@ -171,9 +158,10 @@ namespace Barotrauma.Networking
             return rName;
         }
 
-        public void SetPermissions(ClientPermissions permissions)
+        public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
         {
             this.Permissions = permissions;
+            this.PermittedConsoleCommands = new List<DebugConsole.Command>(permittedConsoleCommands);
         }
 
         public void GivePermission(ClientPermissions permission)

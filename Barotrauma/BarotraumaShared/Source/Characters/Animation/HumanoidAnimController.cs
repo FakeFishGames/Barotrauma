@@ -20,6 +20,7 @@ namespace Barotrauma
         private float thighTorque;
 
         private float cprAnimState;
+        private float cprPump;
 
         private float inWaterTimer;
         private bool swimming;
@@ -872,7 +873,34 @@ namespace Barotrauma
                 character.SelectedConstruction = null;
                 IgnorePlatforms = false;
             }
+            else if (character.SelectedCharacter != null && !character.SelectedCharacter.AllowInput)
+            {
+                Limb targetLeftHand = character.SelectedCharacter.AnimController.GetLimb(LimbType.LeftHand);
+                Limb targetRightHand = character.SelectedCharacter.AnimController.GetLimb(LimbType.RightHand);
+                Limb targetTorso = character.SelectedCharacter.AnimController.GetLimb(LimbType.Torso);
 
+                if (character.SelectedCharacter.AnimController.Dir != Dir)
+                    character.SelectedCharacter.AnimController.Flip();
+
+                targetTorso.pullJoint.Enabled = true;
+                targetTorso.pullJoint.WorldAnchorB = torso.SimPosition + (Vector2.UnitX * -Dir) * 0.2f;
+                targetTorso.pullJoint.MaxForce = 5000.0f;
+                
+                if (!targetLeftHand.IsSevered)
+                {
+                    targetLeftHand.pullJoint.Enabled = true;
+                    targetLeftHand.pullJoint.WorldAnchorB = torso.SimPosition + (new Vector2(1 * Dir, 1)) * 0.2f;
+                    targetLeftHand.pullJoint.MaxForce = 5000.0f;
+                }
+                if (!targetRightHand.IsSevered)
+                {
+                    targetRightHand.pullJoint.Enabled = true;
+                    targetRightHand.pullJoint.WorldAnchorB = torso.SimPosition + (new Vector2(1 * Dir, 1)) * 0.2f;
+                    targetRightHand.pullJoint.MaxForce = 5000.0f;
+                }
+                
+                character.SelectedCharacter.AnimController.IgnorePlatforms = true;
+            }
         }
 
         private void UpdateCPR(float deltaTime)
@@ -883,11 +911,16 @@ namespace Barotrauma
                 return;
             }
 
+            Character target = character.SelectedCharacter;
+
             Crouching = true;
 
-            Vector2 diff = character.SelectedCharacter.SimPosition - character.SimPosition;
-            var targetHead = character.SelectedCharacter.AnimController.GetLimb(LimbType.Head);
-
+            Vector2 diff = target.SimPosition - character.SimPosition;
+            Limb targetHead = target.AnimController.GetLimb(LimbType.Head);
+            Limb targetTorso = target.AnimController.GetLimb(LimbType.Torso);
+            Limb head = GetLimb(LimbType.Head);
+            Limb torso = GetLimb(LimbType.Torso);
+            
             Vector2 headDiff = targetHead == null ? diff : targetHead.SimPosition - character.SimPosition;
 
             targetMovement = new Vector2(diff.X, 0.0f);
@@ -895,21 +928,98 @@ namespace Barotrauma
 
             UpdateStanding();
 
-            Vector2 handPos = character.SelectedCharacter.AnimController.GetLimb(LimbType.Torso).SimPosition + Vector2.UnitY * 0.2f;
+            Vector2 handPos = targetTorso.SimPosition + Vector2.UnitY * 0.2f;
 
             Grab(handPos, handPos);
 
-            float yPos = (float)Math.Sin(cprAnimState) * 0.1f;
-            cprAnimState += deltaTime * 8.0f;
+            Vector2 colliderPos = GetColliderBottom();
 
-            var head = GetLimb(LimbType.Head);
-            head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.6f + yPos);
-            head.pullJoint.Enabled = true;
+            if (GameMain.Client == null) //Serverside code
+            {
+                if (target.Bleeding <= 0.5f && target.Oxygen <= 0.0f) //If they're bleeding too hard CPR will hurt them
+                {
+                    target.Oxygen += deltaTime * 0.5f; //Stabilize them
+                }
+            }
+
+
+            int skill = character.GetSkillLevel("Medical");
+            if (cprAnimState % 17 > 15.0f)
+            {
+                float yPos = (float)Math.Sin(cprAnimState) * 0.2f;
+                head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.3f + yPos);
+                head.pullJoint.Enabled = true;
+                torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition - 0.2f));
+                torso.pullJoint.Enabled = true;
+
+                if (GameMain.Client == null) //Serverside code
+                {
+                    float cpr = skill / 2.0f; //Max possible oxygen addition is 20 per second
+                    character.Oxygen -= (30.0f - cpr) * deltaTime; //Worse skill = more oxygen required
+                    if (character.Oxygen > 0.0f) //we didn't suffocate yet did we
+                        target.Oxygen += cpr * deltaTime;
+
+                    //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
+                }
+            }
+            else
+            {
+                head.pullJoint.WorldAnchorB = new Vector2(targetHead.SimPosition.X, targetHead.SimPosition.Y + 0.8f);
+                head.pullJoint.Enabled = true;
+                torso.pullJoint.WorldAnchorB = new Vector2(torso.SimPosition.X, colliderPos.Y + (TorsoPosition - 0.1f));
+                torso.pullJoint.Enabled = true;
+                if (cprPump >= 1)
+                {
+                    torso.body.ApplyForce(new Vector2(0, -1000f));
+                    targetTorso.body.ApplyForce(new Vector2(0, -1000f));
+                    cprPump = 0;
+
+                    if (target.Bleeding <= 0.5f && target.Health <= 0.0f && !target.IsDead) //Have a chance to revive them to 2 HP if they were damaged.
+                    {
+                        if (GameMain.Client == null) //Serverside code
+                        {
+                            float reviveChance = (cprAnimState % 17) * (skill / 50.0f); //~5% max chance for 10 skill, ~50% max chance for 100 skill
+                            float rng = Rand.Int(100, Rand.RandSync.Server);
+
+                            //DebugConsole.NewMessage("CPR Pump cprAnimState: " + (cprAnimState % 17) + " revive chance: " + reviveChance + " rng: " + rng, Color.Aqua);
+                            if (rng <= reviveChance) //HOLY CRAP YOU SAVED HIM!!!
+                            {
+                                target.Oxygen = Math.Max(target.Oxygen, 10.0f);
+                                target.Health = 2.0f;
+                                Anim = Animation.None;
+                                return;
+                            }
+                        }
+                    }
+                    else if (target.Bleeding > 0.5f || skill < 50) //We will hurt them if they're bleeding or we suck
+                    {
+                        //If not bleeding: 10% skill causes 0.8 damage per pump, 40% skill causes only 0.2
+                        if (target.Bleeding <= 0.5f)
+                            target.AddDamage(CauseOfDeath.Damage, (50 - skill) * 0.02f, character);
+                        else //If bleeding: 2 HP damage per pump. Basically speeds up their death. Don't pump bleeding people!
+                        {
+                            target.AddDamage(CauseOfDeath.Bloodloss, 1.0f, character);
+#if CLIENT
+                            SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 25.0f, targetTorso.body);
+
+                            for (int i = 0; i < 4; i++)
+                            {
+                                var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", targetTorso.WorldPosition, Rand.Vector(10.0f), 0.0f, target.AnimController.CurrentHull);
+                            }
+#endif
+                        }
+                    }
+                }
+                cprPump += deltaTime;
+            }
+
+            cprAnimState += deltaTime;
         }
         public override void DragCharacter(Character target)
         {
             if (target == null) return;
 
+            Limb torso = GetLimb(LimbType.Torso);
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 
@@ -922,31 +1032,34 @@ namespace Barotrauma
 
             for (int i = 0; i < 2; i++)
             {
-                Limb targetLimb = target.AnimController.GetLimb(LimbType.Torso);
+                Limb targetLimb = target.AnimController.GetLimb(GrabLimb);
 
-                if (i == 0)
+                if (targetLimb == null || targetLimb.IsSevered)
                 {
-                    if (!targetLeftHand.IsSevered)
+                    targetLimb = target.AnimController.GetLimb(LimbType.Torso);
+                    if (i == 0)
                     {
-                        targetLimb = targetLeftHand;
+                        if (!targetLeftHand.IsSevered)
+                        {
+                            targetLimb = targetLeftHand;
+                        }
+                        else if (!targetRightHand.IsSevered)
+                        {
+                            targetLimb = targetRightHand;
+                        }
                     }
-                    else if (!targetRightHand.IsSevered)
+                    else
                     {
-                        targetLimb = targetRightHand;
+                        if (!targetRightHand.IsSevered)
+                        {
+                            targetLimb = targetRightHand;
+                        }
+                        else if (!targetLeftHand.IsSevered)
+                        {
+                            targetLimb = targetLeftHand;
+                        }
                     }
                 }
-                else
-                {
-                    if (!targetRightHand.IsSevered)
-                    {
-                        targetLimb = targetRightHand;
-                    }
-                    else if (!targetLeftHand.IsSevered)
-                    {
-                        targetLimb = targetLeftHand;
-                    }
-                }
-
                 Limb pullLimb = i == 0 ? leftHand : rightHand;
 
                 if (i == 1 && inWater)
@@ -958,12 +1071,32 @@ namespace Barotrauma
                     Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
 
                     pullLimb.pullJoint.Enabled = true;
-                    pullLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition + diff;
-                    pullLimb.pullJoint.MaxForce = 10000.0f;
+                    if (targetLimb.type == LimbType.Torso)
+                    {
+                        pullLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition;
+                        pullLimb.pullJoint.MaxForce = 5000.0f;
+                        targetMovement *= 0.7f; //Carrying people like that takes a lot of effort.
+                        
+                        if (target.AnimController.Dir != Dir)
+                            target.AnimController.Flip();
+                    }                        
+                    else
+                    {
+                        pullLimb.pullJoint.WorldAnchorB = pullLimb.SimPosition + diff;
+                        pullLimb.pullJoint.MaxForce = 5000.0f;
+                    }
 
                     targetLimb.pullJoint.Enabled = true;
-                    targetLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition - diff;
-                    targetLimb.pullJoint.MaxForce = 10000.0f;
+                    if (targetLimb.type == LimbType.Torso)
+                    {
+                        targetLimb.pullJoint.WorldAnchorB = torso.SimPosition + (Vector2.UnitX * Dir) * 0.6f;
+                        targetLimb.pullJoint.MaxForce = 300.0f;
+                    }
+                    else
+                    {
+                        targetLimb.pullJoint.WorldAnchorB = targetLimb.SimPosition - diff;                    
+                        targetLimb.pullJoint.MaxForce = 5000.0f;
+                    }
 
                     target.AnimController.movement = -diff;
                 }
@@ -1011,8 +1144,6 @@ namespace Barotrauma
 
         public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle)
         {
-            Holdable holdable = item.GetComponent<Holdable>();
-
             if (character.IsUnconscious || character.Stun > 0.0f) aim = false;
 
             //calculate the handle positions
@@ -1030,7 +1161,6 @@ namespace Barotrauma
 
             bool usingController = character.SelectedConstruction != null && character.SelectedConstruction.GetComponent<Controller>() != null;
 
-
             float itemAngle;
             if (Anim != Animation.Climbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
             {
@@ -1042,6 +1172,7 @@ namespace Barotrauma
 
                 itemAngle = (torso.body.Rotation + holdAngle * Dir);
 
+                Holdable holdable = item.GetComponent<Holdable>();
                 if (holdable.ControlPose)
                 {
                     head.body.SmoothRotate(itemAngle);

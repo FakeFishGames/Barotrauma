@@ -106,6 +106,16 @@ namespace Barotrauma
             return true;
         }
 
+        private bool EnterIDCardDesc(GUITextBox textBox, string text)
+        {
+            IdCardDesc = text;
+            textBox.Text = text;
+            textBox.Color = Color.Green;
+
+            textBox.Deselect();
+
+            return true;
+        }
         private bool EnterIDCardTags(GUITextBox textBox, string text)
         {
             IdCardTags = text.Split(',');
@@ -143,7 +153,7 @@ namespace Barotrauma
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
             int width = 500;
-            int height = spawnType == SpawnType.Path ? 100 : 140;
+            int height = spawnType == SpawnType.Path ? 100 : 200;
             int x = GameMain.GraphicsWidth / 2 - width / 2, y = 10;
 
             editingHUD = new GUIFrame(new Rectangle(x, y, width, height), Color.Black * 0.5f);
@@ -172,8 +182,19 @@ namespace Barotrauma
 
                 y = 40 + 20;
 
+                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card desc:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
+                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 350, 20), "", editingHUD);
+                propertyBox.MaxTextLength = 150;
+                propertyBox.Text = idCardDesc;
+                propertyBox.OnEnterPressed = EnterIDCardDesc;
+                propertyBox.OnTextChanged = TextBoxChanged;
+                propertyBox.ToolTip = "Characters spawning at this spawnpoint will have the specified description added to their ID card. This can be used to describe additional access levels their card has on the sub.";
+
+                y = y + 30;
+
                 new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-                GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), "", editingHUD);
+                propertyBox = new GUITextBox(new Rectangle(100, y, 350, 20), "", editingHUD);
+                propertyBox.MaxTextLength = 60;
                 propertyBox.Text = string.Join(", ", idCardTags);
                 propertyBox.OnEnterPressed = EnterIDCardTags;
                 propertyBox.OnTextChanged = TextBoxChanged;
@@ -182,7 +203,8 @@ namespace Barotrauma
                 y = y + 30;
 
                 new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
-                propertyBox = new GUITextBox(new Rectangle(100, y, 200, 20), "", editingHUD);
+                propertyBox = new GUITextBox(new Rectangle(100, y, 350, 20), "", editingHUD);
+                propertyBox.MaxTextLength = 60;
                 propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
                 propertyBox.OnEnterPressed = EnterAssignedJob;
                 propertyBox.OnTextChanged = TextBoxChanged;

@@ -28,18 +28,20 @@ namespace Barotrauma.Networking
             Attack,
             Spawning,
             ServerMessage,
+            ConsoleUsage,
             Error
         }
 
         private readonly Color[] messageColor =
         {
-            Color.LightBlue,
-            new Color(255, 142, 0),
-            new Color(238, 208, 0),
-            new Color(204, 74, 78),
-            new Color(163, 73, 164),
-            new Color(157, 225, 160),
-            Color.Red
+            Color.LightBlue,            //Chat
+            new Color(255, 142, 0),     //ItemInteraction
+            new Color(238, 208, 0),     //Inventory
+            new Color(204, 74, 78),     //Attack
+            new Color(163, 73, 164),    //Spawning
+            new Color(157, 225, 160),   //ServerMessage
+            new Color(0, 162, 232),     //ConsoleUsage
+            Color.Red                   //Error
         };
 
         private readonly string[] messageTypeName =
@@ -50,6 +52,7 @@ namespace Barotrauma.Networking
             "Attack & death",
             "Spawning",
             "Server message",
+            "Console usage",
             "Error"
         };
 

@@ -173,7 +173,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Timing.TotalTime >= (float)nextServerLogWriteTime)
                 {
-                    GameServer.Log(lastUser + " adjusted reactor settings: " +
+                    GameServer.Log(lastUser.LogName + " adjusted reactor settings: " +
                             "Temperature: " + (int)temperature +
                             ", Fission rate: " + (int)fissionRate +
                             ", Cooling rate: " + (int)coolingRate +
