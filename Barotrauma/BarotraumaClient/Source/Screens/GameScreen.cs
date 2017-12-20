@@ -133,7 +133,6 @@ namespace Barotrauma
 			spriteBatch.End();
 
 			//draw additive particles that are in water and behind subs
-			//TODO: make these draw properly somehow, since they're not rendered into the lightmap anymore
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.None, null, null, cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.Additive);
 			spriteBatch.End();
@@ -217,7 +216,6 @@ namespace Barotrauma
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.Default, null, null, cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.Additive);
 			spriteBatch.End();
-
 			if (GameMain.LightManager.LightingEnabled)
 			{
 				spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None, null, null, null);
@@ -235,7 +233,9 @@ namespace Barotrauma
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, null, null);
 			if (GameMain.LightManager.LosEnabled && Character.Controlled!=null)
 			{
-				spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), new Color(10, 24, 30, 255));
+				float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
+				spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+				                 Color.Lerp(GameMain.LightManager.AmbientLight * 0.5f, Color.Red, r));
 				spriteBatch.End();
 				Hull.renderer.waterEffect.CurrentTechnique = Hull.renderer.waterEffect.Techniques["LosShader"];
 				Hull.renderer.waterEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.losTexture);
