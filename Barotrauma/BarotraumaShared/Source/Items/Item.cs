@@ -777,11 +777,13 @@ namespace Barotrauma
 
         private bool IsInWater()
         {
+            if (parentInventory != null && parentInventory.Owner != null)
+                FindHull();
             if (CurrentHull == null) return true;
             
             float surfaceY = CurrentHull.Surface;
 
-            return Position.Y < surfaceY;            
+            return CurrentHull.WaterVolume > 0.0f && Position.Y < surfaceY;
         }
 
 
@@ -826,44 +828,46 @@ namespace Barotrauma
                 }
             }
             
-            inWater = IsInWater();
-            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
-            
-            if (body == null || !body.Enabled) return;
-
-            System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
-
-            if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
+            if (body != null && body.Enabled)
             {
-                Submarine prevSub = Submarine;
+                System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
 
-                FindHull();
+                if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
+                {
+                    Submarine prevSub = Submarine;
 
-                if (Submarine == null && prevSub != null)
-                {
-                    body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
-                }
-                else if (Submarine != null && prevSub == null)
-                {
-                    body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
-                }
-                
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-                rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-                rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+                    FindHull();
 
-                if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
-                {
-                    body.LinearVelocity = new Vector2(
-                        MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
-                        MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                    if (Submarine == null && prevSub != null)
+                    {
+                        body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
+                    }
+                    else if (Submarine != null && prevSub == null)
+                    {
+                        body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
+                    }
+                    
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+                    rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+                    rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+                    if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+                    {
+                        body.LinearVelocity = new Vector2(
+                            MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
+                            MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                    }
                 }
+
+                UpdateNetPosition();
             }
 
-            UpdateNetPosition();
-            
-            if (!inWater || ParentInventory != null) return;
-            
+            inWater = IsInWater();
+
+            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
+
+            if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
+
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
         }
