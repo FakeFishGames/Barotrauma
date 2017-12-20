@@ -44,6 +44,10 @@ namespace Barotrauma.Networking
                 {
                     new GUIMessageBox("", txt);
                 }
+                else if (type == ChatMessageType.Console)
+                {
+                    DebugConsole.NewMessage(txt, MessageColor[(int)ChatMessageType.Console]);
+                }
                 else
                 {
                     GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);

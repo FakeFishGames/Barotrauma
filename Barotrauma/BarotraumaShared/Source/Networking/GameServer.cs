@@ -1634,6 +1634,12 @@ namespace Barotrauma.Networking
             SendChatMessage(msg, recipient);
         }
 
+        public void SendConsoleMessage(string txt, Client recipient)
+        {
+            ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Console, null);
+            SendChatMessage(msg, recipient);
+        }
+
         public void SendChatMessage(ChatMessage msg, Client recipient)
         {
             msg.NetStateID = recipient.ChatMsgQueue.Count > 0 ?
