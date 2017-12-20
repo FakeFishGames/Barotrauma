@@ -125,8 +125,9 @@ namespace Barotrauma.Networking
             banList = new BanList();
 
             LoadSettings();
+            PermissionPreset.LoadAll(PermissionPresetFile);
             LoadClientPermissions();
-            
+                        
             CoroutineManager.StartCoroutine(StartServer(isPublic));
         }
 
@@ -795,6 +796,11 @@ namespace Barotrauma.Networking
                         campaign.ServerRead(inc, sender);
                     }
                     break;
+                case ClientPermissions.ConsoleCommands:
+                    string consoleCommand = inc.ReadString();
+                    Vector2 clientCursorPos = new Vector2(inc.ReadSingle(), inc.ReadSingle());
+                    DebugConsole.ExecuteClientCommand(sender, clientCursorPos, consoleCommand);
+                    break;
             }
 
             inc.ReadPadBits();
@@ -853,7 +859,7 @@ namespace Barotrauma.Networking
             outmsg.Write(GameStarted);
             outmsg.Write(AllowSpectating);
 
-            outmsg.Write((byte)c.Permissions);
+            WritePermissions(outmsg, c);
         }
 
         private void ClientWriteIngame(Client c)
@@ -1636,6 +1642,18 @@ namespace Barotrauma.Networking
             }
         }
 
+        public void SendChatMessage(string txt, Client recipient)
+        {
+            ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Server, null);
+            SendChatMessage(msg, recipient);
+        }
+
+        public void SendConsoleMessage(string txt, Client recipient)
+        {
+            ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Console, null);
+            SendChatMessage(msg, recipient);
+        }
+
         public void SendChatMessage(ChatMessage msg, Client recipient)
         {
             msg.NetStateID = recipient.ChatMsgQueue.Count > 0 ?
@@ -1936,15 +1954,33 @@ namespace Barotrauma.Networking
                 clientPermissions.Add(new SavedClientPermission(
                     client.Name, 
                     client.Connection.RemoteEndPoint.Address.ToString(), 
-                    client.Permissions));
+                    client.Permissions,
+                    client.PermittedConsoleCommands));
             }
 
             var msg = server.CreateMessage();
             msg.Write((byte)ServerPacketHeader.PERMISSIONS);
-            msg.Write((byte)client.Permissions);
+            WritePermissions(msg, client);
+
             server.SendMessage(msg, client.Connection, NetDeliveryMethod.ReliableUnordered);
 
             SaveClientPermissions();
+        }
+
+        private void WritePermissions(NetBuffer msg, Client client)
+        {
+            msg.Write((byte)client.Permissions);
+            if (client.Permissions.HasFlag(ClientPermissions.ConsoleCommands))
+            {
+                msg.Write((UInt16)client.PermittedConsoleCommands.Sum(c => c.names.Length));
+                foreach (DebugConsole.Command command in client.PermittedConsoleCommands)
+                {
+                    foreach (string commandName in command.names)
+                    {
+                        msg.Write(commandName);
+                    }
+                }
+            }
         }
         
         public void SetClientCharacter(Client client, Character newCharacter)
