@@ -106,9 +106,6 @@ namespace Barotrauma
 
         public delegate void QuestionCallback(string answer);
         private static QuestionCallback activeQuestionCallback;
-#if CLIENT
-        private static GUIComponent activeQuestionText;
-#endif
 
         private static List<Command> commands = new List<Command>();
         public static List<Command> Commands
@@ -1127,8 +1124,8 @@ namespace Barotrauma
             {
                 NewMessage(command, Color.White);
             }
-            
-#if !DEBUG && CLIENT
+
+#if CLIENT
             if (GameMain.Client != null)
             {
                 if (GameMain.Client.HasConsoleCommandPermission(splitCommand[0].ToLowerInvariant()))
@@ -1148,11 +1145,13 @@ namespace Barotrauma
                     NewMessage("Server command: " + command, Color.White);
                     return;
                 }
+#if !DEBUG
                 if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
                 {
                     ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
                     return;
                 }
+#endif
             }
 #endif
 
@@ -1427,14 +1426,15 @@ namespace Barotrauma
 
         public static void ShowQuestionPrompt(string question, QuestionCallback onAnswered)
         {
-            NewMessage("   >>" + question, Color.Cyan);
-            activeQuestionCallback += onAnswered;
+
 #if CLIENT
-            if (listBox != null && listBox.children.Count > 0)
-            {
-                activeQuestionText = listBox.children[listBox.children.Count - 1];
-            }
+            activeQuestionText = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 30), "   >>" + question, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
+            activeQuestionText.CanBeFocused = false;
+            activeQuestionText.TextColor = Color.Cyan;
+#else
+            NewMessage("   >>" + question, Color.Cyan);
 #endif
+            activeQuestionCallback += onAnswered;
         }
 
         private static bool TryParseTimeSpan(string s, out TimeSpan timeSpan)
