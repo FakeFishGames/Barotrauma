@@ -48,8 +48,9 @@ float4 main(float4 position : SV_Position, float4 color : COLOR0, float2 texCoor
 float4 main2(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {	
 	float4 losColor = tex2D(LosSampler, texCoord);
+    float4 sample = tex2D(TextureSampler, texCoord);
 	
-	float4 outColor = float4(losColor.x, losColor.y, losColor.z, color.w);
+	float4 outColor = float4(sample.x, sample.y, sample.z, losColor.x);
 		
     return outColor;
 }

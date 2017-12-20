@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
@@ -63,7 +63,7 @@ namespace Barotrauma
 
         public override Rectangle MouseRect
         {
-			get { return ClampRect(box.Rect); }
+            get { return ClampRect(box.Rect); }
         }
 
         public override ScalableFont Font

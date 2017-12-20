@@ -50,7 +50,7 @@ namespace Barotrauma
 
         public GUIMessage(string text, Color color, Vector2 position, float lifeTime, Alignment textAlignment, bool centered)
         {
-            coloredText = new ColoredText(text, color);
+            coloredText = new ColoredText(text, color, false);
             pos = position;
             this.lifeTime = lifeTime;
             this.Alignment = textAlignment;
