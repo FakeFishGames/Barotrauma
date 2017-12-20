@@ -218,11 +218,11 @@ namespace Barotrauma.Networking
             var savedPermissions = clientPermissions.Find(cp => cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
             if (savedPermissions != null)
             {
-                newClient.SetPermissions(savedPermissions.Permissions);
+                newClient.SetPermissions(savedPermissions.Permissions, savedPermissions.PermittedCommands);
             }
             else
             {
-                newClient.SetPermissions(ClientPermissions.None);
+                newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
             }
         }
                 

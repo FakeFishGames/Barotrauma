@@ -882,24 +882,54 @@ namespace Barotrauma
 
             playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.6f);
 
-            var playerFrameInner = new GUIFrame(new Rectangle(0, 0, 300, 280), null, Alignment.Center, "", playerFrame);
+            var playerFrameInner = new GUIFrame(GameMain.Server != null ? new Rectangle(0, 0, 450, 370) : new Rectangle(0, 0, 450, 150), null, Alignment.Center, "", playerFrame);
             playerFrameInner.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0, 0, 200, 20), component.UserData.ToString(),
+            new GUITextBlock(new Rectangle(0, 0, 200, 20), obj.ToString(),
                 "", Alignment.TopLeft, Alignment.TopLeft,
                 playerFrameInner, false, GUI.LargeFont);
 
             if (GameMain.Server != null)
             {
-                var selectedClient = GameMain.Server.ConnectedClients.Find(c => c.Name == component.UserData.ToString());
+                var selectedClient = GameMain.Server.ConnectedClients.Find(c => c.Name == obj.ToString());
+                playerFrame.UserData = selectedClient;
 
                 new GUITextBlock(new Rectangle(0, 25, 150, 15), selectedClient.Connection.RemoteEndPoint.Address.ToString(), "", playerFrameInner);
 
-                var permissionsBox = new GUIFrame(new Rectangle(0, 60, 0, 90), null, playerFrameInner);
+                new GUITextBlock(new Rectangle(0, 45, 0, 15), "Rank", "", playerFrameInner);
+                var rankDropDown = new GUIDropDown(new Rectangle(0, 70, 150, 20), "Rank", "", playerFrameInner);
+                rankDropDown.UserData = selectedClient;
+                foreach (PermissionPreset permissionPreset in PermissionPreset.List)
+                {
+                    rankDropDown.AddItem(permissionPreset.Name, permissionPreset, permissionPreset.Description);
+                }
+                rankDropDown.AddItem("Custom", null);
+
+                PermissionPreset currentPreset = PermissionPreset.List.Find(p =>
+                    p.Permissions == selectedClient.Permissions &&
+                    p.PermittedCommands.Count == selectedClient.PermittedConsoleCommands.Count && !p.PermittedCommands.Except(selectedClient.PermittedConsoleCommands).Any());
+                rankDropDown.SelectItem(currentPreset);
+
+                rankDropDown.OnSelected += (c, userdata) =>
+                {
+                    PermissionPreset selectedPreset = (PermissionPreset)userdata;
+                    if (selectedPreset != null)
+                    {
+                        var client = playerFrame.UserData as Client;
+                        client.SetPermissions(selectedPreset.Permissions, selectedPreset.PermittedCommands);
+                        GameMain.Server.UpdateClientPermissions(client);
+
+                        playerFrame = null;
+                        SelectPlayer(null, client.Name);
+                    }
+                    return true;
+                };
+
+                var permissionsBox = new GUIFrame(new Rectangle(0, 125, (int)(playerFrameInner.Rect.Width * 0.5f), 160), null, playerFrameInner);
                 permissionsBox.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
                 permissionsBox.UserData = selectedClient;
 
-                new GUITextBlock(new Rectangle(0, 0, 0, 15), "Permissions:", "", permissionsBox);
+                new GUITextBlock(new Rectangle(0, 100, permissionsBox.Rect.Width, 15), "Permissions:", "", playerFrameInner);
                 int x = 0, y = 0;
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                 {
@@ -910,13 +940,16 @@ namespace Barotrauma
 
                     string permissionStr = attributes.Length > 0 ? attributes[0].Description : permission.ToString();
 
-                    var permissionTick = new GUITickBox(new Rectangle(x, y + 25, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
+                    var permissionTick = new GUITickBox(new Rectangle(x, y, 15, 15), permissionStr, Alignment.TopLeft, GUI.SmallFont, permissionsBox);
                     permissionTick.UserData = permission;
                     permissionTick.Selected = selectedClient.HasPermission(permission);
 
                     permissionTick.OnSelected = (tickBox) =>
                     {
-                        var client = tickBox.Parent.UserData as Client;
+                        //reset rank to custom
+                        rankDropDown.SelectItem(null);
+
+                        var client = playerFrame.UserData as Client;
                         if (client == null) return false;
 
                         var thisPermission = (ClientPermissions)tickBox.UserData;
@@ -931,19 +964,50 @@ namespace Barotrauma
                         return true;
                     };
 
-
                     y += 20;
-                    if (y >= permissionsBox.Rect.Height - 40)
+                    if (y >= permissionsBox.Rect.Height - 15)
                     {
                         y = 0;
-                        x += 100;
+                        x += 120;
                     }
+                }
+
+                new GUITextBlock(new Rectangle(0, 100, (int)(playerFrameInner.Rect.Width * 0.5f), 15), "Permitted console commands:", "", Alignment.TopRight, Alignment.TopLeft, playerFrameInner, true);
+                var commandList = new GUIListBox(new Rectangle(0, 125, (int)(playerFrameInner.Rect.Width * 0.5f), 160), "", Alignment.TopRight, playerFrameInner);
+                commandList.UserData = selectedClient;
+                foreach (DebugConsole.Command command in DebugConsole.Commands)
+                {
+                    var commandTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), command.names[0], Alignment.TopLeft, GUI.SmallFont, commandList);
+                    commandTickBox.Selected = selectedClient.PermittedConsoleCommands.Contains(command);
+                    commandTickBox.ToolTip = command.help;
+                    commandTickBox.UserData = command;
+                    commandTickBox.OnSelected += (GUITickBox tickBox) =>
+                    {
+                        //reset rank to custom
+                        rankDropDown.SelectItem(null);
+
+                        Client client = playerFrame.UserData as Client;
+                        DebugConsole.Command selectedCommand = tickBox.UserData as DebugConsole.Command;
+                        if (client == null) return false;
+
+                        if (!tickBox.Selected)
+                        {
+                            client.PermittedConsoleCommands.Remove(selectedCommand);
+                        }
+                        else if (!client.PermittedConsoleCommands.Contains(selectedCommand))
+                        {
+                            client.PermittedConsoleCommands.Add(selectedCommand);
+                        }
+
+                        GameMain.Server.UpdateClientPermissions(client);
+                        return true;
+                    };
                 }
             }
 
             if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Kick))
             {
-                var kickButton = new GUIButton(new Rectangle(0, -50, 100, 20), "Kick", Alignment.BottomLeft, "", playerFrameInner);
+                var kickButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Kick", Alignment.BottomLeft, "", playerFrameInner);
                 kickButton.UserData = obj;
                 kickButton.OnClicked += KickPlayer;
                 kickButton.OnClicked += ClosePlayerFrame;
@@ -951,12 +1015,12 @@ namespace Barotrauma
 
             if (GameMain.Server != null || GameMain.Client.HasPermission(ClientPermissions.Ban))
             {
-                var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomLeft, "", playerFrameInner);
+                var banButton = new GUIButton(new Rectangle(90, 0, 80, 20), "Ban", Alignment.BottomLeft, "", playerFrameInner);
                 banButton.UserData = obj;
                 banButton.OnClicked += BanPlayer;
                 banButton.OnClicked += ClosePlayerFrame;
 
-                var rangebanButton = new GUIButton(new Rectangle(0, -25, 100, 20), "Ban range", Alignment.BottomLeft, "", playerFrameInner);
+                var rangebanButton = new GUIButton(new Rectangle(180, 0, 80, 20), "Ban range", Alignment.BottomLeft, "", playerFrameInner);
                 rangebanButton.UserData = obj;
                 rangebanButton.OnClicked += BanPlayerRange;
                 rangebanButton.OnClicked += ClosePlayerFrame;
