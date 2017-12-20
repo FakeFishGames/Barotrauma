@@ -15,6 +15,8 @@ namespace Barotrauma
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
+        private static GUITextBlock activeQuestionText;
+
         public static bool IsOpen
         {
             get
@@ -67,6 +69,13 @@ namespace Barotrauma
                 {
                     AddMessage(queuedMessages.Dequeue());
                 }
+            }
+
+            if (activeQuestionText != null &&
+                (listBox.children.Count == 0 || listBox.children[listBox.children.Count - 1] != activeQuestionText))
+            {
+                listBox.children.Remove(activeQuestionText);
+                listBox.children.Add(activeQuestionText);
             }
 
             if (PlayerInput.KeyHit(Keys.F3))
@@ -177,13 +186,6 @@ namespace Barotrauma
             }
 
             selectedIndex = Messages.Count;
-
-            if (activeQuestionText != null)
-            {
-                //make sure the active question stays at the bottom of the list
-                listBox.children.Remove(activeQuestionText);
-                listBox.children.Add(activeQuestionText);
-            }
         }
 
         private static void InitProjectSpecific()
