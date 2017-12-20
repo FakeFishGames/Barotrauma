@@ -96,27 +96,34 @@
     tags="alien,smallitem"
     impacttolerance="8">
 
+    <Deconstruct time="20">
+      <Item name="Steel Bar"/>
+      <Item name="Liquid Oxygenite"/>
+      <Item name="Liquid Oxygenite"/>
+      <Item name="Liquid Oxygenite"/>
+    </Deconstruct>
+
     <Sprite texture="artifact.png" depth="0.7" sourcerect="119,0,9,32"/>
 
     <Body width="9" height="32" density="15"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,-5">
+    <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="Always" target="Hull" oxygen="5000.0"/>
 
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="600.0" structuredamage="400" damage="300" stun="5" force="20.0"/>
       </StatusEffect>
-    </Holdable>
+    </Throwable>
   </Item>
 
   <Item
-   name="Sulphurite Shard"
-   category="Alien"
-   
-   tags="alien,smallitem"
-   impacttolerance="8"
-   spritecolor="1.0,0.0,0.0,1.0">
+    name="Sulphurite Shard"
+    category="Alien"
+
+    tags="alien,smallitem"
+    impacttolerance="8"
+    spritecolor="1.0,0.0,0.0,1.0">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
@@ -131,7 +138,7 @@
 
     <Body width="8" height="32" density="15"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" handle1="0,-5"/>
+    <Throwable slots="Any,RightHand,LeftHand" handle1="0,-5" throwforce="4.0" aimpos="35,-10"/>
   </Item>
 
   <Item
