@@ -549,6 +549,9 @@ namespace Barotrauma
             }            
         }
 
+        /// <summary>
+        /// Displays a message at the center of the screen, automatically preventing overlapping with other centered messages
+        /// </summary>
         public static void AddMessage(string message, Color color, float lifeTime = 3.0f, bool playSound = true)
         {
             if (messages.Count > 0 && messages[messages.Count - 1].Text == message)
@@ -558,12 +561,15 @@ namespace Barotrauma
             }
 
             Vector2 pos = new Vector2(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight * 0.7f);
-            pos.Y += messages.FindAll(m => m.Centered).Count * 30;
+            pos.Y += messages.FindAll(m => m.AutoCenter).Count * 30;
 
             messages.Add(new GUIMessage(message, color, pos, lifeTime, Alignment.Center, true));
             if (playSound) PlayUISound(GUISoundType.Message);
         }
 
+        /// <summary>
+        /// Display and automatically fade out a piece of text at an arbitrary position on the screen
+        /// </summary>
         public static void AddMessage(string message, Vector2 position, Alignment alignment, Color color, float lifeTime = 3.0f, bool playSound = true)
         {
             if (messages.Count > 0 && messages[messages.Count - 1].Text == message)
@@ -602,7 +608,7 @@ namespace Barotrauma
                     alpha -= 1.0f - msg.LifeTime;
                 }
 
-                if (msg.Centered)
+                if (msg.AutoCenter)
                 {
                     msg.Pos = MathUtils.SmoothStep(msg.Pos, currPos, deltaTime * 20.0f);
                     currPos.Y += 30.0f;

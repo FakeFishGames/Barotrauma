@@ -116,7 +116,7 @@
 
     <Body width="12" height="33" density="5"/>
 
-    <Holdable slots="RightHand,Any" holdpos="30,-15" handle1="0,5" handle2="0,-5">
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="15" damage="25" stun="5" force="3.0"/>
@@ -175,13 +175,30 @@
     
     price="10">
 
-    <Sprite  texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
+    <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
 
     <Body width="30" height="7" density="50"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
           aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
       <Attack damage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+    </MeleeWeapon>
+  </Item>
+
+  <Item
+    name="Crowbar"
+    category="Equipment"
+    Tags="smallitem"
+    
+    price="15">
+
+    <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
+
+    <Body width="60" height="10" density="50"/>
+
+    <MeleeWeapon slots="RightHand+LeftHand,Any"
+          controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
+      <Attack damage="20" stun="0.6" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 
@@ -218,8 +235,7 @@
   <Item
     name="Flashlight"
     category="Equipment"
-    Tags="smallitem"
-    
+    Tags="smallitem"    
     price="10">
 
     <Deconstruct time="15">
@@ -231,12 +247,11 @@
 
     <Body width="27" height="10" density="15"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="0,0">
+    <Holdable slots="Any,RightHand,LeftHand,Face" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2"/>
     </Holdable>
 
     <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.1" range="800" powerconsumption="10" IsOn="true">
-
       <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
     </LightComponent>
     

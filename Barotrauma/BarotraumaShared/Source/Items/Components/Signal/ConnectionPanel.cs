@@ -215,7 +215,7 @@ namespace Barotrauma.Items.Components
                         if (existingWire.Locked)
                         {
                             //this should not be possible unless the client is running a modified version of the game
-                            GameServer.Log(c.Character.Name + " attempted to disconnect a locked wire from " +
+                            GameServer.Log(c.Character.LogName + " attempted to disconnect a locked wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ")", ServerLog.MessageType.Error);
                             continue;
                         }
@@ -224,12 +224,12 @@ namespace Barotrauma.Items.Components
 
                         if (existingWire.Connections[0] == null && existingWire.Connections[1] == null)
                         {
-                            GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ")", ServerLog.MessageType.ItemInteraction);
                         }
                         else if (existingWire.Connections[0] != null)
                         {
-                            GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[0].Item.Name + " (" + existingWire.Connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
 
                             //wires that are not in anyone's inventory (i.e. not currently being rewired) 
@@ -244,7 +244,7 @@ namespace Barotrauma.Items.Components
                         }
                         else if (existingWire.Connections[1] != null)
                         {
-                            GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
 
                             if (existingWire.Item.ParentInventory == null)
@@ -276,13 +276,13 @@ namespace Barotrauma.Items.Components
 
                     if (otherConnection == null)
                     {
-                        GameServer.Log(c.Character.Name + " connected a wire to " +
+                        GameServer.Log(c.Character.LogName + " connected a wire to " +
                             Connections[i].Item.Name + " (" + Connections[i].Name + ")", 
                             ServerLog.MessageType.ItemInteraction);
                     }
                     else
                     {
-                        GameServer.Log(c.Character.Name + " connected a wire from " +
+                        GameServer.Log(c.Character.LogName + " connected a wire from " +
                             Connections[i].Item.Name + " (" + Connections[i].Name + ") to " +
                             (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), 
                             ServerLog.MessageType.ItemInteraction);

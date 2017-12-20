@@ -21,6 +21,7 @@ namespace Barotrauma
         protected SpawnType spawnType;
 
         //characters spawning at the waypoint will be given an ID card with these tags
+        private string idCardDesc;
         private string[] idCardTags;
 
         //only characters with this job will be spawned at the waypoint
@@ -57,6 +58,11 @@ namespace Barotrauma
             }
         }
 
+        public string IdCardDesc
+        {
+            get { return idCardDesc; }
+            private set { idCardDesc = value; }
+        }
         public string[] IdCardTags
         {
             get { return idCardTags; }
@@ -113,6 +119,7 @@ namespace Barotrauma
         public override MapEntity Clone()
         {
             var clone = new WayPoint(rect, Submarine);
+            clone.idCardDesc = idCardDesc;
             clone.idCardTags = idCardTags;
             clone.spawnType = spawnType;
             clone.assignedJob = assignedJob;
@@ -570,6 +577,11 @@ namespace Barotrauma
 
             Enum.TryParse<SpawnType>(element.GetAttributeString("spawn", "Path"), out w.spawnType);
 
+            string idCardDescString = element.GetAttributeString("idcarddesc", "");
+            if (!string.IsNullOrWhiteSpace(idCardDescString))
+            {
+                w.IdCardDesc = idCardDescString;
+            }
             string idCardTagString = element.GetAttributeString("idcardtags", "");
             if (!string.IsNullOrWhiteSpace(idCardTagString))
             {
@@ -604,6 +616,7 @@ namespace Barotrauma
                 new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
                 new XAttribute("spawn", spawnType));
 
+            if (!string.IsNullOrWhiteSpace(idCardDesc)) element.Add(new XAttribute("idcarddesc", idCardDesc));            
             if (idCardTags.Length > 0)
             {
                 element.Add(new XAttribute("idcardtags", string.Join(",", idCardTags)));

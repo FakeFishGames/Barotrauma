@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma
 {
@@ -136,6 +137,27 @@ namespace Barotrauma
             get
             {
                 return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name : SpeciesName;
+            }
+        }
+        //Only used by server logs to determine "true identity" of the player for cases when they're disguised
+        public string LogName
+        {
+            get
+            {
+                return info != null && !string.IsNullOrWhiteSpace(info.Name) ? info.Name + (info.DisplayName != info.Name ? " (as " + info.DisplayName + ")" : "") : SpeciesName;
+            }
+        }
+
+        private float hideFaceTimer;
+        public bool HideFace
+        {
+            get
+            {
+                return hideFaceTimer > 0.0f;
+            }
+            set
+            {
+                hideFaceTimer = MathHelper.Clamp(hideFaceTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
             }
         }
 
@@ -591,7 +613,7 @@ namespace Barotrauma
             {
                 AnimController = new HumanoidAnimController(this, doc.Root.Element("ragdoll"));
                 AnimController.TargetDir = Direction.Right;
-                inventory = new CharacterInventory(16, this);
+                inventory = new CharacterInventory(17, this);
             }
             else
             {
@@ -961,6 +983,56 @@ namespace Barotrauma
                 }
             }
         }
+
+        public bool CanSeeCharacter(Character character)
+        {
+            Limb selfLimb = AnimController.GetLimb(LimbType.Head);
+            if (selfLimb == null) selfLimb = AnimController.GetLimb(LimbType.Torso);
+            if (selfLimb == null) selfLimb = AnimController.Limbs[0];
+
+            Limb targetLimb = character.AnimController.GetLimb(LimbType.Head);
+            if (targetLimb == null) targetLimb = character.AnimController.GetLimb(LimbType.Torso);
+            if (targetLimb == null) targetLimb = character.AnimController.Limbs[0];
+
+            if (selfLimb != null && targetLimb != null)
+            {
+                Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - selfLimb.WorldPosition);
+                
+                Body closestBody = null;
+                //both inside the same sub (or both outside)
+                //OR the we're inside, the other character outside
+                if (character.Submarine == Submarine || character.Submarine == null)
+                {
+                    closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
+                    if (closestBody == null) return true;
+                }
+                //we're outside, the other character inside
+                else if (Submarine == null)
+                {
+                    closestBody = Submarine.CheckVisibility(targetLimb.SimPosition, targetLimb.SimPosition - diff);
+                    if (closestBody == null) return true;
+                }
+                //both inside different subs
+                else
+                {
+                    closestBody = Submarine.CheckVisibility(selfLimb.SimPosition, selfLimb.SimPosition + diff);
+                    if (closestBody != null && closestBody.UserData is Structure)
+                    {
+                        if (((Structure)closestBody.UserData).CastShadow) return false;
+                    }
+                    closestBody = Submarine.CheckVisibility(targetLimb.SimPosition, targetLimb.SimPosition - diff);
+                    if (closestBody == null) return true;
+
+                }
+                
+                Structure wall = closestBody.UserData as Structure;
+                return wall == null || !wall.CastShadow;
+            }
+            else
+            {
+                return false;
+            }
+        }
         
         public bool HasEquippedItem(Item item)
         {
@@ -1311,7 +1383,7 @@ namespace Barotrauma
                 findFocusedTimer -= deltaTime;
             }
             
-            if (SelectedCharacter != null && IsKeyHit(InputType.Select))
+            if (SelectedCharacter != null && focusedItem == null && IsKeyHit(InputType.Select)) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
             }
@@ -1379,6 +1451,8 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime, Camera cam)
         {
+            UpdateProjSpecific(deltaTime, cam);
+
             if (GameMain.Client != null && this == Controlled && !isSynced) return;
 
             if (!Enabled) return;
@@ -1409,6 +1483,8 @@ namespace Barotrauma
                     item.Submarine = Submarine;
                 }
             }
+
+            HideFace = false;
                         
             if (isDead) return;
 
@@ -1465,25 +1541,41 @@ namespace Barotrauma
                 }                
             }
 
+            //Skip health effects as critical health handles it differently
             if (IsUnconscious)
             {
                 UpdateUnconscious(deltaTime);
                 return;
             }
 
+            //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             if (IsForceRagdolled)
                 IsRagdolled = IsForceRagdolled;
-            else if (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
+            else if ((GameMain.Server == null || GameMain.Server.AllowRagdollButton) && (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
 
+            //Health effects
+            if (needsAir) UpdateOxygen(deltaTime);
+
+            Health -= bleeding * deltaTime;
+            Bleeding -= BleedingDecreaseSpeed * deltaTime;
+
+            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
+
+            if (!IsDead) LockHands = false;
+
+            //ragdoll button
             if (IsRagdolled)
             {
                 if (AnimController is HumanoidAnimController) ((HumanoidAnimController)AnimController).Crouching = false;
-
+                if(GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                 AnimController.ResetPullJoints();
                 selectedConstruction = null;
                 return;
             }
+
+            //AI and control stuff
 
             Control(deltaTime, cam);
             if (controlled != this && (!(this is AICharacter) || IsRemotePlayer))
@@ -1497,27 +1589,17 @@ namespace Barotrauma
                 selectedConstruction = null;
             }
 
-            if (SelectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
-            {
-                if (GameMain.Client == null) SelectedCharacter.Oxygen += (GetSkillLevel("Medical") / 10.0f) * deltaTime;
-            }
-
             UpdateSightRange();
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
-            if (needsAir) UpdateOxygen(deltaTime);
-
-            Health -= bleeding * deltaTime;
-            Bleeding -= BleedingDecreaseSpeed * deltaTime;
-
-            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
-
-            if (!IsDead) LockHands = false;
+            //CPR stuff is handled in the UpdateCPR function in HumanoidAnimController
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
+
+        partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
         private void UpdateOxygen(float deltaTime)
         {
@@ -1552,11 +1634,16 @@ namespace Barotrauma
             AnimController.ResetPullJoints();
             selectedConstruction = null;
 
-            if (oxygen <= 0.0f) Oxygen -= deltaTime * 0.5f;
+            Oxygen -= deltaTime * 0.5f; //We're critical - our heart stopped!
 
-            if (health <= 0.0f)
+            if (health <= 0.0f) //Critical health - use current state for crit time
             {
                 AddDamage(bleeding > 0.5f ? CauseOfDeath.Bloodloss : CauseOfDeath.Damage, Math.Max(bleeding, 1.0f) * deltaTime, null);
+            }
+            else //Keep on bleedin'
+            {
+                Health -= bleeding * deltaTime;
+                Bleeding -= BleedingDecreaseSpeed * deltaTime;
             }
         }
 
@@ -1634,7 +1721,7 @@ namespace Barotrauma
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
-                GameServer.Log(Name + " attacked by " + attackingCharacter.Name+". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
+                GameServer.Log(LogName + " attacked by " + attackingCharacter.LogName +". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
             }
             
             if (GameMain.Client == null &&
@@ -1799,7 +1886,7 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            GameServer.Log(Name+" has died (Cause of death: "+causeOfDeath+")", ServerLog.MessageType.Attack);
+            GameServer.Log(LogName+" has died (Cause of death: "+causeOfDeath+")", ServerLog.MessageType.Attack);
 
             if (OnDeath != null) OnDeath(this, causeOfDeath);
 

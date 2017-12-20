@@ -506,14 +506,14 @@ namespace Barotrauma
 
                     float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal)*f2.Body.Mass*0.1f;
 
-                    if (impact < 10.0f) return true;
-
 #if CLIENT
                     SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact,
                         new Vector2(
-                            sections[section].rect.X + sections[section].rect.Width / 2, 
-                            sections[section].rect.Y - sections[section].rect.Height / 2));
+                            sections[section].rect.X + sections[section].rect.Width / 2,
+                            sections[section].rect.Y - sections[section].rect.Height / 2), tags: Tags);
 #endif
+
+                    if (impact < 10.0f) return true;
 
                     AddDamage(section, impact);                 
                 }
@@ -566,7 +566,7 @@ namespace Barotrauma
 #if CLIENT
             float particleAmount = Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f);
 
-            particleAmount = Math.Min(particleAmount + Rand.Range(-5,1), 100);
+            particleAmount = Math.Min(particleAmount + Rand.Range(-5,1), 20);
             for (int i = 0; i < particleAmount; i++)
             {
                 Vector2 particlePos = new Vector2(
@@ -661,10 +661,10 @@ namespace Barotrauma
 #if CLIENT
             GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
 
-            if (playSound && !SectionBodyDisabled(i))
+            if (playSound)// && !SectionBodyDisabled(i))
             {
                 DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
-                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition);
+                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
             
@@ -678,14 +678,13 @@ namespace Barotrauma
 
             if (!MathUtils.IsValid(damage)) return;
 
-            float damageDiff = damage - sections[sectionIndex].damage;
+            
 
             if (GameMain.Server != null && damage != sections[sectionIndex].damage)
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
 
-            AdjustKarma(attacker, damageDiff);
             if (damage < prefab.Health*0.5f)
             {
                 if (sections[sectionIndex].gap != null)
@@ -717,9 +716,13 @@ namespace Barotrauma
 
                 sections[sectionIndex].gap.Open = (damage / prefab.Health - 0.5f) * 2.0f;
             }
-            
+
+            float damageDiff = damage - sections[sectionIndex].damage;
             bool hadHole = SectionBodyDisabled(sectionIndex);
             sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
+
+            if (sections[sectionIndex].damage < prefab.Health) //otherwise it's possible to infinitely gain karma by welding fixed things
+                AdjustKarma(attacker, damageDiff);
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
 

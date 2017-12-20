@@ -171,12 +171,12 @@ namespace Barotrauma
         {
             for (int i = 0; i < children.Count; i++)
             {
-                if (!children[i].UserData.Equals(userData)) continue;
-
-                Select(i, force);
-
-                //if (OnSelected != null) OnSelected(Selected, Selected.UserData);
-                if (!SelectMultiple) return;
+                if ((children[i].UserData != null && children[i].UserData.Equals(userData)) ||
+                    (children[i].UserData == null && userData == null))
+                {
+                    Select(i, force);
+                    if (!SelectMultiple) return;
+                }
             }
         }
 

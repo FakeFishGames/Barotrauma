@@ -7,7 +7,7 @@ using System;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Door : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
         private ConvexHull convexHull;
         private ConvexHull convexHull2;

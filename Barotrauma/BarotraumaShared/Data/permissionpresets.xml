@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<PermissionPresets>
+  <Preset 
+    name="None" 
+    description="No special privileges." 
+    permissions="None"/>
+
+  <Preset 
+    name="Moderator" 
+    description="Allowed to manage round settings and kick players." 
+    permissions="EndRound,Kick,SelectSub,SelectMode,ManageCampaign,ConsoleCommands">
+    <Command name="clientlist"/>
+    <Command name="autorestart"/>
+    <Command name="autorestartinterval"/>
+    <Command name="autorestarttimer"/>
+    <Command name="kick"/>
+    <Command name="kickid"/>
+    <Command name="campaigninfo"/>
+    <Command name="campaigndestination"/>
+  </Preset>
+
+  <Preset 
+    name="Admin" 
+    description="Allowed to ban and kick players, manage round settings and use nearly all console commands." 
+    permissions="EndRound,Kick,Ban,SelectSub,SelectMode,ManageCampaign,ConsoleCommands">
+    <Command name="clientlist"/>
+    <Command name="autorestart"/>
+    <Command name="autorestartinterval"/>
+    <Command name="autorestarttimer"/>
+    <Command name="kick"/>
+    <Command name="kickid"/>
+    <Command name="campaigninfo"/>
+    <Command name="campaigndestination"/>
+    <Command name="spawn"/>
+    <Command name="spawnitem"/>
+    <Command name="disablecrewai"/>
+    <Command name="enablecrewai"/>
+    <Command name="ban"/>
+    <Command name="banid"/>
+    <Command name="banip"/>
+    <Command name="teleportcharacter"/>
+    <Command name="godmode"/>
+    <Command name="lockx"/>
+    <Command name="locky"/>
+    <Command name="heal"/>
+    <Command name="revive"/>
+    <Command name="freeze"/>
+    <Command name="freecam"/>
+    <Command name="explosion"/>
+    <Command name="fixitems"/>
+    <Command name="fixhulls"/>
+    <Command name="power"/>
+    <Command name="oxygen"/>
+    <Command name="setclientcharacter"/>
+  </Preset>
+</PermissionPresets>

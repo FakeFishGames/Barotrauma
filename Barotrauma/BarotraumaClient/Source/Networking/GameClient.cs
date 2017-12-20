@@ -19,6 +19,7 @@ namespace Barotrauma.Networking
         private GUITickBox endVoteTickBox;
 
         private ClientPermissions permissions = ClientPermissions.None;
+        private List<string> permittedConsoleCommands = new List<string>();
 
         private bool connected;
 
@@ -598,16 +599,28 @@ namespace Barotrauma.Networking
 
         private void ReadPermissions(NetIncomingMessage inc)
         {
+            List<string> permittedConsoleCommands = new List<string>();
             ClientPermissions newPermissions = (ClientPermissions)inc.ReadByte();
-            if (newPermissions != permissions)
+            if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
-                SetPermissions(newPermissions);
-            }                              
+                UInt16 consoleCommandCount = inc.ReadUInt16();
+                for (int i = 0; i < consoleCommandCount; i++)
+                {
+                    permittedConsoleCommands.Add(inc.ReadString());
+                }
+            }
+
+            SetPermissions(newPermissions, permittedConsoleCommands);
         }
 
-        private void SetPermissions(ClientPermissions newPermissions)
+        private void SetPermissions(ClientPermissions newPermissions, List<string> permittedConsoleCommands)
         {
-            if (newPermissions == permissions) return;
+            if (!(this.permittedConsoleCommands.Any(c => !permittedConsoleCommands.Contains(c)) ||
+                permittedConsoleCommands.Any(c => !this.permittedConsoleCommands.Contains(c))))
+            {
+                if (newPermissions == permissions) return;
+            }
+
             GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");            
 
             string msg = "";
@@ -626,8 +639,22 @@ namespace Barotrauma.Networking
                     msg += "   - " + attributes[0].Description + "\n";
                 }
             }
+
             permissions = newPermissions;
-            new GUIMessageBox("Permissions changed", msg).UserData = "permissions";
+            this.permittedConsoleCommands = new List<string>(permittedConsoleCommands);
+            GUIMessageBox msgBox = new GUIMessageBox("Permissions changed", msg, GUIMessageBox.DefaultWidth, 0);
+            msgBox.UserData = "permissions";
+
+            if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
+            {
+                int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width - msgBox.InnerFrame.Padding.X - msgBox.InnerFrame.Padding.Z) / 2 - 30;
+                new GUITextBlock(new Rectangle(0, 0, listBoxWidth, 15), "Permitted console commands:", "", Alignment.TopRight, Alignment.TopLeft, msgBox.InnerFrame, true, GUI.SmallFont);
+                var commandList = new GUIListBox(new Rectangle(0, 20, listBoxWidth, 0), "", Alignment.BottomRight, msgBox.InnerFrame);
+                foreach (string permittedCommand in permittedConsoleCommands)
+                {
+                    new GUITextBlock(new Rectangle(0, 0, 0, 15), permittedCommand, "", commandList, GUI.SmallFont).CanBeFocused = false;
+                }
+            }
 
             GameMain.NetLobbyScreen.SubList.Enabled = Voting.AllowSubVoting || HasPermission(ClientPermissions.SelectSub);
             GameMain.NetLobbyScreen.ModeList.Enabled = Voting.AllowModeVoting || HasPermission(ClientPermissions.SelectMode);
@@ -805,7 +832,7 @@ namespace Barotrauma.Networking
             gameStarted = inc.ReadBoolean();
             bool allowSpectating = inc.ReadBoolean();
 
-            SetPermissions((ClientPermissions)inc.ReadByte());
+            ReadPermissions(inc);
 
             if (gameStarted)
             {
@@ -1169,6 +1196,14 @@ namespace Barotrauma.Networking
             return permissions.HasFlag(permission);
         }
 
+        public bool HasConsoleCommandPermission(string command)
+        {
+            if (!permissions.HasFlag(ClientPermissions.ConsoleCommands)) return false;
+
+            command = command.ToLowerInvariant();
+            return permittedConsoleCommands.Any(c => c.ToLowerInvariant() == command);
+        }
+
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
@@ -1355,6 +1390,25 @@ namespace Barotrauma.Networking
             msg.Write((byte)ClientPermissions.ManageCampaign);
             campaign.ClientWrite(msg);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
+        public void SendConsoleCommand(string command)
+        {
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                DebugConsole.ThrowError("Cannot send an empty console command to the server!\n" + Environment.StackTrace);
+                return;
+            }
+
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);
+            msg.Write((byte)ClientPermissions.ConsoleCommands);
+            msg.Write(command);
+            Vector2 cursorWorldPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+            msg.Write(cursorWorldPos.X);
+            msg.Write(cursorWorldPos.Y);
 
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
