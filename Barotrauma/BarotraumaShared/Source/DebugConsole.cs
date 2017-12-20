@@ -157,12 +157,12 @@ namespace Barotrauma
             }, null,
             (Client client, Vector2 cursorWorldPos, string[] args) =>
             {
-                GameMain.Server.SendChatMessage("***************", client);
+                GameMain.Server.SendConsoleMessage("***************", client);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    GameMain.Server.SendChatMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), client);
+                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.RemoteEndPoint.Address.ToString(), client);
                 }
-                GameMain.Server.SendChatMessage("***************", client);
+                GameMain.Server.SendConsoleMessage("***************", client);
             }));
 
 
@@ -222,7 +222,7 @@ namespace Barotrauma
             {
                 HumanAIController.DisableCrewAI = true;
                 NewMessage("Crew AI disabled by \"" + client.Name + "\"", Color.White);
-                GameMain.Server.SendChatMessage("Crew AI disabled", client);
+                GameMain.Server.SendConsoleMessage("Crew AI disabled", client);
             }));
 
             commands.Add(new Command("enablecrewai", "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
@@ -235,7 +235,7 @@ namespace Barotrauma
             {
                 HumanAIController.DisableCrewAI = false;
                 NewMessage("Crew AI enabled by \"" + client.Name + "\"", Color.White);
-                GameMain.Server.SendChatMessage("Crew AI enabled", client);
+                GameMain.Server.SendConsoleMessage("Crew AI enabled", client);
             }));
 
             commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
@@ -384,7 +384,7 @@ namespace Barotrauma
                 var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
                 if (client == null)
                 {
-                    GameMain.Server.SendChatMessage("Client id \"" + id + "\" not found.", senderClient);
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
                     return;
                 }
 
@@ -400,13 +400,13 @@ namespace Barotrauma
                 {
                     if (!Enum.TryParse(perm, true, out permission))
                     {
-                        GameMain.Server.SendChatMessage(perm + " is not a valid permission!", senderClient);
+                        GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
                         return;
                     }
                 }
                 client.GivePermission(permission);
                 GameMain.Server.UpdateClientPermissions(client);
-                GameMain.Server.SendChatMessage("Granted " + perm + " permissions to " + client.Name + ".", senderClient);
+                GameMain.Server.SendConsoleMessage("Granted " + perm + " permissions to " + client.Name + ".", senderClient);
                 NewMessage(senderClient.Name + " granted " + perm + " permissions to " + client.Name + ".", Color.White);
             }));
 
@@ -472,7 +472,7 @@ namespace Barotrauma
                 var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
                 if (client == null)
                 {
-                    GameMain.Server.SendChatMessage("Client id \"" + id + "\" not found.", senderClient);
+                    GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
                     return;
                 }
 
@@ -488,13 +488,13 @@ namespace Barotrauma
                 {
                     if (!Enum.TryParse(perm, true, out permission))
                     {
-                        GameMain.Server.SendChatMessage(perm + " is not a valid permission!", senderClient);
+                        GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
                         return;
                     }
                 }
                 client.RemovePermission(permission);
                 GameMain.Server.UpdateClientPermissions(client);
-                GameMain.Server.SendChatMessage("Revoked " + perm + " permissions from " + client.Name + ".", senderClient);
+                GameMain.Server.SendConsoleMessage("Revoked " + perm + " permissions from " + client.Name + ".", senderClient);
                 NewMessage(senderClient.Name + " revoked " + perm + " permissions from " + client.Name + ".", Color.White);
             }));
 
@@ -682,7 +682,7 @@ namespace Barotrauma
 
                 Submarine.MainSub.GodMode = !Submarine.MainSub.GodMode;
                 NewMessage((Submarine.MainSub.GodMode ? "Godmode turned on by \"" : "Godmode off by \"") + client.Name+"\"", Color.White);
-                GameMain.Server.SendChatMessage(Submarine.MainSub.GodMode ? "Godmode on" : "Godmode off", client);
+                GameMain.Server.SendConsoleMessage(Submarine.MainSub.GodMode ? "Godmode on" : "Godmode off", client);
             }));
 
             commands.Add(new Command("lockx", "lockx: Lock horizontal movement of the main submarine.", (string[] args) =>
@@ -953,7 +953,7 @@ namespace Barotrauma
                 int separatorIndex = Array.IndexOf(args, ";");
                 if (separatorIndex == -1 || args.Length < 3)
                 {
-                    GameMain.Server.SendChatMessage("Invalid parameters. The command should be formatted as \"setclientcharacter [client] ; [character]\"", senderClient);
+                    GameMain.Server.SendConsoleMessage("Invalid parameters. The command should be formatted as \"setclientcharacter [client] ; [character]\"", senderClient);
                     return;
                 }
 
@@ -964,7 +964,7 @@ namespace Barotrauma
                 var client = GameMain.Server.ConnectedClients.Find(c => c.Name == clientName);
                 if (client == null)
                 {
-                    GameMain.Server.SendChatMessage("Client \"" + clientName + "\" not found.", senderClient);
+                    GameMain.Server.SendConsoleMessage("Client \"" + clientName + "\" not found.", senderClient);
                 }
 
                 var character = FindMatchingCharacter(argsRight, false);
@@ -1076,7 +1076,7 @@ namespace Barotrauma
                 var campaign = GameMain.GameSession?.GameMode as CampaignMode;
                 if (campaign == null)
                 {
-                    GameMain.Server.SendChatMessage("No campaign active!", senderClient);
+                    GameMain.Server.SendConsoleMessage("No campaign active!", senderClient);
                     return;
                 }
 
@@ -1084,12 +1084,12 @@ namespace Barotrauma
                 if (args.Length < 1 || !int.TryParse(args[0], out destinationIndex)) return;
                 if (destinationIndex < 0 || destinationIndex >= campaign.Map.CurrentLocation.Connections.Count)
                 {
-                    GameMain.Server.SendChatMessage("Index out of bounds!", senderClient);
+                    GameMain.Server.SendConsoleMessage("Index out of bounds!", senderClient);
                     return;
                 }
                 Location location = campaign.Map.CurrentLocation.Connections[destinationIndex].OtherLocation(campaign.Map.CurrentLocation);
                 campaign.Map.SelectLocation(location);
-                GameMain.Server.SendChatMessage(location.Name + " selected.", senderClient);
+                GameMain.Server.SendConsoleMessage(location.Name + " selected.", senderClient);
             }));
 
 #if DEBUG
@@ -1289,7 +1289,8 @@ namespace Barotrauma
             if (string.IsNullOrWhiteSpace(command)) return;
             if (!client.HasPermission(ClientPermissions.ConsoleCommands))
             {
-                GameMain.Server.SendChatMessage("You are not permitted to use console commands!", client);
+                GameMain.Server.SendConsoleMessage("You are not permitted to use console commands!", client);
+                GameServer.Log(client.Name + " attempted to execute the console command \"" + command + "\" without a permission to use console commands.", ServerLog.MessageType.ConsoleUsage);
                 return;
             }
 
@@ -1297,22 +1298,24 @@ namespace Barotrauma
             Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
             if (matchingCommand != null && !client.PermittedConsoleCommands.Contains(matchingCommand))
             {
-                GameMain.Server.SendChatMessage("You are not permitted to use the command\"" + matchingCommand.names[0] + "\"!", client);
+                GameMain.Server.SendConsoleMessage("You are not permitted to use the command\"" + matchingCommand.names[0] + "\"!", client);
+                GameServer.Log(client.Name + " attempted to execute the console command \"" + command + "\" without a permission to use the command.", ServerLog.MessageType.ConsoleUsage);
                 return;
             }
             else if (matchingCommand == null)
             {
-                GameMain.Server.SendChatMessage("Command \"" + splitCommand[0] + "\" not found.", client);
+                GameMain.Server.SendConsoleMessage("Command \"" + splitCommand[0] + "\" not found.", client);
                 return;
             }
 
             try
             {
                 matchingCommand.ServerExecuteOnClientRequest(client, cursorWorldPos, splitCommand.Skip(1).ToArray());
+                GameServer.Log("Console command \"" + command + "\" executed by " + client.Name + ".", ServerLog.MessageType.ConsoleUsage);
             }
             catch (Exception e)
             {
-                ThrowError("Executing the command \"" + matchingCommand.names[0]+"\" by request from \""+client.Name+"\" failed.", e);
+                ThrowError("Executing the command \"" + matchingCommand.names[0] + "\" by request from \"" + client.Name + "\" failed.", e);
             }
         }
 
