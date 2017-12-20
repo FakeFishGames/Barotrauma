@@ -1001,16 +1001,10 @@ namespace Barotrauma
                             target.AddDamage(CauseOfDeath.Bloodloss, 1.0f, character);
 #if CLIENT
                             SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 25.0f, targetTorso.body);
-                            float bloodParticleAmount = 4;
-                            float bloodParticleSize = 1.0f;
 
-                            for (int i = 0; i < bloodParticleAmount; i++)
+                            for (int i = 0; i < 4; i++)
                             {
                                 var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", targetTorso.WorldPosition, Rand.Vector(10.0f), 0.0f, target.AnimController.CurrentHull);
-                                if (blood != null)
-                                {
-                                    blood.Size *= bloodParticleSize;
-                                }
                             }
 #endif
                         }

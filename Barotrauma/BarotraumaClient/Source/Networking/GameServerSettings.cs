@@ -394,26 +394,26 @@ namespace Barotrauma.Networking
             var traitorRatioText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Traitor ratio: 20 %", "", settingsTabs[1], GUI.SmallFont);
             var traitorRatioSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
             //Prepare the slider before the tick box
-            if (traitorUseRatio)
+            if (TraitorUseRatio)
             {
                 traitorRatioSlider.UserData = traitorRatioText;
                 traitorRatioSlider.Step = 0.01f; //Lots of fine-tuning
-                traitorRatioSlider.BarScroll = (traitorRatio - 0.1f) / 0.9f;
+                traitorRatioSlider.BarScroll = (TraitorRatio - 0.1f) / 0.9f;
             }
             else
             {
                 traitorRatioSlider.UserData = traitorRatioText;
                 traitorRatioSlider.Step = 1f / (maxPlayers-1);
-                traitorRatioSlider.BarScroll = MathUtils.Round(traitorRatio, 1f);
+                traitorRatioSlider.BarScroll = MathUtils.Round(TraitorRatio, 1f);
             }
             //Slider END
 
-            traitorRatioBox.Selected = traitorUseRatio;
+            traitorRatioBox.Selected = TraitorUseRatio;
             traitorRatioBox.OnSelected = (GUITickBox) =>
             {
-                traitorUseRatio = GUITickBox.Selected;
+                TraitorUseRatio = GUITickBox.Selected;
                 //Affect the slider graphics
-                if (traitorUseRatio)
+                if (TraitorUseRatio)
                 {
                     traitorRatioSlider.UserData = traitorRatioText;
                     traitorRatioSlider.Step = 0.01f; //Lots of fine-tuning
@@ -432,15 +432,15 @@ namespace Barotrauma.Networking
             traitorRatioSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 GUITextBlock traitorText = scrollBar.UserData as GUITextBlock;
-                if (traitorUseRatio)
+                if (TraitorUseRatio)
                 {
-                    traitorRatio = barScroll * 0.9f + 0.1f;
-                    traitorText.Text = "Traitor ratio: " + (int)MathUtils.Round(traitorRatio * 100.0f, 1.0f) + " %";
+                    TraitorRatio = barScroll * 0.9f + 0.1f;
+                    traitorText.Text = "Traitor ratio: " + (int)MathUtils.Round(TraitorRatio * 100.0f, 1.0f) + " %";
                 }
                 else
                 {
-                    traitorRatio = MathUtils.Round(barScroll * (maxPlayers-1), 1f) + 1;
-                    traitorText.Text = "Traitor count: " + traitorRatio;
+                    TraitorRatio = MathUtils.Round(barScroll * (maxPlayers-1), 1f) + 1;
+                    traitorText.Text = "Traitor count: " + TraitorRatio;
                 }
                 return true;
             };

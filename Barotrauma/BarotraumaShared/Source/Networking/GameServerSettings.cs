@@ -221,14 +221,14 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(true, true)]
-        public bool traitorUseRatio
+        public bool TraitorUseRatio
         {
             get;
             private set;
         }
 
         [Serialize(0.2f, true)]
-        public float traitorRatio
+        public float TraitorRatio
         {
             get;
             private set;
