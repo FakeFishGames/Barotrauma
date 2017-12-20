@@ -325,7 +325,7 @@ namespace Barotrauma
                     break;
 
                 case ClientNetObject.ENTITY_STATE:
-                    int eventType = msg.ReadRangedInteger(0,2);
+                    int eventType = msg.ReadRangedInteger(0,3);
                     switch (eventType)
                     {
                         case 0:
@@ -356,6 +356,9 @@ namespace Barotrauma
                             {
                                 Kill(lastAttackCauseOfDeath);
                             }
+                            break;
+                        case 3:
+                            AnimController.GrabLimb = (LimbType)msg.ReadUInt16();
                             break;
                     }
                     break;
@@ -436,6 +439,7 @@ namespace Barotrauma
                     if (AnimController is HumanoidAnimController)
                     {
                         tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
+                        tempBuffer.Write((UInt16)AnimController.GrabLimb);
                     }
 
                     bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null);
@@ -533,6 +537,8 @@ namespace Barotrauma
                 {
                     msg.WriteRangedSingle(MathHelper.Clamp(Stun, 0.0f, MaxStun), 0.0f, MaxStun, 8);
                 }
+
+                msg.Write(IsRagdolled);
 
                 msg.Write(HuskInfectionState > 0.0f);
             }

@@ -9,6 +9,8 @@ namespace Barotrauma
         public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
         public Animation Anim;
 
+        public LimbType GrabLimb;
+
         protected Character character;
 
         protected float walkSpeed, swimSpeed;

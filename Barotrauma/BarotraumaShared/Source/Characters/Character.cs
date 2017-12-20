@@ -1383,7 +1383,7 @@ namespace Barotrauma
                 findFocusedTimer -= deltaTime;
             }
             
-            if (SelectedCharacter != null && IsKeyHit(InputType.Select))
+            if (SelectedCharacter != null && focusedItem == null && IsKeyHit(InputType.Select)) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
             }
@@ -1541,25 +1541,41 @@ namespace Barotrauma
                 }                
             }
 
+            //Skip health effects as critical health handles it differently
             if (IsUnconscious)
             {
                 UpdateUnconscious(deltaTime);
                 return;
             }
 
+            //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             if (IsForceRagdolled)
                 IsRagdolled = IsForceRagdolled;
-            else if (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
+            else if ((GameMain.Server == null || GameMain.Server.AllowRagdollButton) && (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
 
+            //Health effects
+            if (needsAir) UpdateOxygen(deltaTime);
+
+            Health -= bleeding * deltaTime;
+            Bleeding -= BleedingDecreaseSpeed * deltaTime;
+
+            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
+
+            if (!IsDead) LockHands = false;
+
+            //ragdoll button
             if (IsRagdolled)
             {
                 if (AnimController is HumanoidAnimController) ((HumanoidAnimController)AnimController).Crouching = false;
-
+                if(GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                 AnimController.ResetPullJoints();
                 selectedConstruction = null;
                 return;
             }
+
+            //AI and control stuff
 
             Control(deltaTime, cam);
             if (controlled != this && (!(this is AICharacter) || IsRemotePlayer))
@@ -1573,24 +1589,12 @@ namespace Barotrauma
                 selectedConstruction = null;
             }
 
-            if (SelectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
-            {
-                if (GameMain.Client == null) SelectedCharacter.Oxygen += (GetSkillLevel("Medical") / 10.0f) * deltaTime;
-            }
-
             UpdateSightRange();
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
-            if (needsAir) UpdateOxygen(deltaTime);
-
-            Health -= bleeding * deltaTime;
-            Bleeding -= BleedingDecreaseSpeed * deltaTime;
-
-            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
-
-            if (!IsDead) LockHands = false;
+            //CPR stuff is handled in the UpdateCPR function in HumanoidAnimController
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
@@ -1630,11 +1634,16 @@ namespace Barotrauma
             AnimController.ResetPullJoints();
             selectedConstruction = null;
 
-            if (oxygen <= 0.0f) Oxygen -= deltaTime * 0.5f;
+            Oxygen -= deltaTime * 0.5f; //We're critical - our heart stopped!
 
-            if (health <= 0.0f)
+            if (health <= 0.0f) //Critical health - use current state for crit time
             {
                 AddDamage(bleeding > 0.5f ? CauseOfDeath.Bloodloss : CauseOfDeath.Damage, Math.Max(bleeding, 1.0f) * deltaTime, null);
+            }
+            else //Keep on bleedin'
+            {
+                Health -= bleeding * deltaTime;
+                Bleeding -= BleedingDecreaseSpeed * deltaTime;
             }
         }
 
