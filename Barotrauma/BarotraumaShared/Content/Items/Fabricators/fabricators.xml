@@ -143,10 +143,6 @@
       <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Corrigodone" requiredtime="30">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
-
-      <fabricableitem name="Liquid Oxygenite" requireditems="Stabilozine, Oxygenite Shard" requiredtime="30">
-        <RequiredSkill name="Medical" level="60"/>
-      </fabricableitem>
     </Fabricator>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true">

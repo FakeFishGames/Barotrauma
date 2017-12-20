@@ -777,8 +777,6 @@ namespace Barotrauma
 
         private bool IsInWater()
         {
-            if (parentInventory != null && parentInventory.Owner != null)
-                FindHull();
             if (CurrentHull == null) return true;
             
             float surfaceY = CurrentHull.Surface;
