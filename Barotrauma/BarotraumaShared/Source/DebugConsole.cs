@@ -342,22 +342,76 @@ namespace Barotrauma
                     if (perm.ToLower() == "all")
                     {
                         permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban | 
-                        ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
+                            ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
                     }
                     else
                     {
-                        Enum.TryParse(perm, out permission);
+                        if (!Enum.TryParse(perm, true, out permission))
+                        {
+                            NewMessage(perm + " is not a valid permission!", Color.Red);
+                            return;
+                        }
                     }
                     client.GivePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Granted " + perm + " permissions to " + client.Name + ".", Color.White);
                 });
+            }, 
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Permission to grant to client #" + id + "?", (perm) =>
+                {
+                    GameMain.Client.SendConsoleCommand("giveperm " +id + " " + perm);
+                });
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendChatMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                string perm = string.Join("", args.Skip(1));
+
+                ClientPermissions permission = ClientPermissions.None;
+                if (perm.ToLower() == "all")
+                {
+                    permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban |
+                        ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
+                }
+                else
+                {
+                    if (!Enum.TryParse(perm, true, out permission))
+                    {
+                        GameMain.Server.SendChatMessage(perm + " is not a valid permission!", senderClient);
+                        return;
+                    }
+                }
+                client.GivePermission(permission);
+                GameMain.Server.UpdateClientPermissions(client);
+                GameMain.Server.SendChatMessage("Granted " + perm + " permissions to " + client.Name + ".", senderClient);
+                NewMessage(senderClient.Name + " granted " + perm + " permissions to " + client.Name + ".", Color.White);
             }));
 
             commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", (string[] args) =>
             {
-                //todo: allow client usage
-
                 if (GameMain.Server == null) return;
                 if (args.Length < 1) return;
 
@@ -375,16 +429,73 @@ namespace Barotrauma
                     ClientPermissions permission = ClientPermissions.None;
                     if (perm.ToLower() == "all")
                     {
-                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban | ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign;
+                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban | 
+                            ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
                     }
                     else
                     {
-                        Enum.TryParse(perm, out permission);
+                        if (!Enum.TryParse(perm, true, out permission))
+                        {
+                            NewMessage(perm + " is not a valid permission!", Color.Red);
+                            return;
+                        }
                     }
                     client.RemovePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Revoked " + perm + " permissions from " + client.Name + ".", Color.White);
                 });
+            },
+            (string[] args) =>
+            {
+#if CLIENT
+                if (args.Length < 1) return;
+
+                int id;
+                if (!int.TryParse(args[0], out id))
+                {
+                    ThrowError("\"" + id + "\" is not a valid client ID.");
+                    return;
+                }
+
+                ShowQuestionPrompt("Permission to revoke from client #" + id + "?", (perm) =>
+                {
+                    GameMain.Client.SendConsoleCommand("revokeperm " + id + " " + perm);
+                });
+#endif
+            },
+            (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (args.Length < 2) return;
+
+                int id;
+                int.TryParse(args[0], out id);
+                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                if (client == null)
+                {
+                    GameMain.Server.SendChatMessage("Client id \"" + id + "\" not found.", senderClient);
+                    return;
+                }
+
+                string perm = string.Join("", args.Skip(1));
+
+                ClientPermissions permission = ClientPermissions.None;
+                if (perm.ToLower() == "all")
+                {
+                    permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban |
+                        ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign | ClientPermissions.ConsoleCommands;
+                }
+                else
+                {
+                    if (!Enum.TryParse(perm, true, out permission))
+                    {
+                        GameMain.Server.SendChatMessage(perm + " is not a valid permission!", senderClient);
+                        return;
+                    }
+                }
+                client.RemovePermission(permission);
+                GameMain.Server.UpdateClientPermissions(client);
+                GameMain.Server.SendChatMessage("Revoked " + perm + " permissions from " + client.Name + ".", senderClient);
+                NewMessage(senderClient.Name + " revoked " + perm + " permissions from " + client.Name + ".", Color.White);
             }));
 
             commands.Add(new Command("kick", "kick [name]: Kick a player out of the server.", (string[] args) =>
