@@ -436,7 +436,7 @@ namespace Barotrauma
 
             InfoFrame.FindChild("showlog").Visible = GameMain.Server != null;
             
-            campaignViewButton = new GUIButton(new Rectangle(0, 0, 130, 30), "Campaign view", Alignment.BottomRight, "", defaultModeContainer);
+            campaignViewButton = new GUIButton(new Rectangle(-80, 0, 120, 30), "Campaign view", Alignment.BottomRight, "", defaultModeContainer);
             campaignViewButton.OnClicked = (btn, obj) => { ToggleCampaignView(true); return true; };
             campaignViewButton.Visible = false;
 
