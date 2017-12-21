@@ -203,8 +203,22 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
+        public override bool HasRequiredItems(Character character, bool addMessage)
+        {
+            if (item.Condition <= 0.0f) return true; //For repairing
+
+            return base.HasRequiredItems(character, addMessage);
+        }
+
+        public override bool Pick(Character picker)
+        {
+            return item.Condition <= 0.0f ? true : base.Pick(picker);
+        }
+
         public override bool OnPicked(Character picker)
         {
+            if (item.Condition <= 0.0f) return true; //repairs
+
             SetState(predictedState == null ? !isOpen : !predictedState.Value, false, true); //crowbar function
 #if CLIENT
             PlaySound(ActionType.OnPicked, item.WorldPosition);

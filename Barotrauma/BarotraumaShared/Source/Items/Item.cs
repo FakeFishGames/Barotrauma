@@ -1106,8 +1106,6 @@ namespace Barotrauma
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 
 #if CLIENT
-                    ic.PlaySound(ActionType.OnPicked, picker.WorldPosition);
-
                     if (picker == Character.Controlled) GUIComponent.ForceMouseOn(null);
 #endif
 

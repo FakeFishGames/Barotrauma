@@ -196,7 +196,7 @@ namespace Barotrauma.Items.Components
 
             try
             {
-                string pickKeyStr = element.GetAttributeString("selectkey", "Select");
+                string pickKeyStr = element.GetAttributeString("pickkey", "Select");
                 pickKeyStr = ToolBox.ConvertInputType(pickKeyStr);
                 PickKey = (InputType)Enum.Parse(typeof(InputType),pickKeyStr, true);
             }
@@ -437,7 +437,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public bool HasRequiredItems(Character character, bool addMessage)
+        public virtual bool HasRequiredItems(Character character, bool addMessage)
         {
             if (!requiredItems.Any()) return true;
             if (character.Inventory == null) return false;
