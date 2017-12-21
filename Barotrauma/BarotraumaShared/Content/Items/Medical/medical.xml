@@ -287,7 +287,7 @@
     <Body width="8" height="16" density="20"/>
 
     <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" Health="1.0" Oxygen="2.0" Bleeding="-0.05" duration="60.0">
+      <StatusEffect type="OnUse" target="Character" Health="0.5" Oxygen="0.5" Bleeding="-0.025" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
