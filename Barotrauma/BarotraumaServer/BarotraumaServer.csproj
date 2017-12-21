@@ -36,7 +36,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\x86\ReleaseLinux</OutputPath>
+    <OutputPath>..\bin\ReleaseLinux</OutputPath>
     <DefineConstants>TRACE;SERVER</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
@@ -45,7 +45,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\x86\DebugLinux</OutputPath>
+    <OutputPath>..\bin\DebugLinux</OutputPath>
     <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
@@ -54,7 +54,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\x86\ReleaseWindows</OutputPath>
+    <OutputPath>..\bin\ReleaseWindows</OutputPath>
     <DefineConstants>TRACE;SERVER</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
@@ -63,7 +63,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\x86\DebugWindows</OutputPath>
+    <OutputPath>..\bin\DebugWindows</OutputPath>
     <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
