@@ -33,6 +33,12 @@
       <fabricableitem name="Nuclear Shell" requireditems="Steel Bar, Steel Bar, Uranium Bar, Polycarbonate Bar" requiredtime="30">
         <RequiredSkill name="Construction" level="40"/>
       </fabricableitem>
+      <fabricableitem name="Diving Mask" requireditems="Polycarbonate Bar" requiredtime="20">
+        <RequiredSkill name="Construction" level="25"/>
+      </fabricableitem>
+      <fabricableitem name="Diving Suit" requireditems="Steel Bar, Aluminium, Aluminium, Polycarbonate Bar, Polycarbonate Bar" requiredtime="30">
+        <RequiredSkill name="Construction" level="40"/>
+      </fabricableitem>
 
       <fabricableitem name="Wire" requireditems="Copper Bar" requiredtime="5"/>
       
@@ -143,6 +149,10 @@
       </fabricableitem>
 
       <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Corrigodone" requiredtime="30">
+        <RequiredSkill name="Medical" level="60"/>
+      </fabricableitem>
+
+      <fabricableitem name="Amanitin" requireditems="Erythrozine, Flash Powder, Sulphuric Acid" requiredtime="30">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
     </Fabricator>

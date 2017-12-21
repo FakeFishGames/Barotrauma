@@ -36,6 +36,10 @@
 
     <Body width="10" radius="10"  density="10"/>
 
+    <Deconstruct time="10">
+      <Item name="Bike Horn"/>
+    </Deconstruct>
+
     <Wearable limbtype="Head" slots="Any,Face">
       <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5"/>
       <StatusEffect type="OnWearing" target="Character" HideFace="true"/>
@@ -52,6 +56,12 @@
     <Sprite texture ="clownpants.png" sourcerect="0,62,53,18" depth="0.6"/>
 
     <Body width="53" height="18" density="30"/>
+
+    <Deconstruct time="40">
+      <Item name="Bike Horn"/>
+      <Item name="Bike Horn"/>
+      <Item name="Bike Horn"/>
+    </Deconstruct>
 
     <Wearable slots="Any,Torso+Legs">
       <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depth="0.02"/>

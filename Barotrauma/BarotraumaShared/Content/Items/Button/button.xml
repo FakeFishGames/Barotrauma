@@ -10,7 +10,7 @@
     <Sprite texture ="button.png" sourcerect="0,0,24,27" depth="0.8"/>
 
     <Deconstruct time="10">
-      <Item name="Polycarbonate Bar"/>
+      <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
     </Deconstruct>
 
@@ -43,7 +43,7 @@
     <Sprite texture ="button.png" sourcerect="24,0,11,16" depth="0.79"/>
 
     <Deconstruct time="10">
-      <Item name="Polycarbonate Bar"/>
+      <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
     </Deconstruct>
 
