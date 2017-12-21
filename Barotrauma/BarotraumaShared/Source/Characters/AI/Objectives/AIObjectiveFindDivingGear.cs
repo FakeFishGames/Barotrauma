@@ -15,7 +15,7 @@ namespace Barotrauma
             if (item == null) return false;
 
             var containedItems = item.ContainedItems;
-            var oxygenTank = Array.Find(containedItems, i => i.Name == "Oxygen Tank" && i.Condition > 0.0f);
+            var oxygenTank = Array.Find(containedItems, i => i.Prefab.NameMatches("Oxygen Tank") && i.Condition > 0.0f);
             return oxygenTank != null;
         }
 
@@ -42,7 +42,7 @@ namespace Barotrauma
                 if (containedItems == null) return;
 
                 //check if there's an oxygen tank in the mask
-                var oxygenTank = Array.Find(containedItems, i => i.Name == "Oxygen Tank");
+                var oxygenTank = Array.Find(containedItems, i => i.Prefab.NameMatches("Oxygen Tank"));
 
                 if (oxygenTank != null)
                 {
@@ -66,14 +66,17 @@ namespace Barotrauma
             if (subObjective != null)
             {
                 subObjective.TryComplete(deltaTime);
-
-                //isCompleted = subObjective.IsCompleted();
             }
         }
 
-        public override float GetPriority(Character character)
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (character.AnimController.CurrentHull == null) return 100.0f;
+
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
 
             return 100.0f - character.Oxygen;
         }

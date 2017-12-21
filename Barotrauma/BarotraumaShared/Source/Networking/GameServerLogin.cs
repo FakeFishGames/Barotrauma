@@ -179,7 +179,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", Color.Red);
                 return;
             }
-            Client nameTaken = ConnectedClients.Find(c => c.Name.ToLower() == clName.ToLower());
+            Client nameTaken = ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), clName.ToLower()));
             if (nameTaken != null)
             {
                 if (nameTaken.Connection.RemoteEndPoint.Address.ToString() == inc.SenderEndPoint.Address.ToString())
@@ -218,11 +218,11 @@ namespace Barotrauma.Networking
             var savedPermissions = clientPermissions.Find(cp => cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
             if (savedPermissions != null)
             {
-                newClient.SetPermissions(savedPermissions.Permissions);
+                newClient.SetPermissions(savedPermissions.Permissions, savedPermissions.PermittedCommands);
             }
             else
             {
-                newClient.SetPermissions(ClientPermissions.None);
+                newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
             }
         }
                 

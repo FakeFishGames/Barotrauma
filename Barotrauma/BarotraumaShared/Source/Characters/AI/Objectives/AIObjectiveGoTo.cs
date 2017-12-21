@@ -18,6 +18,16 @@ namespace Barotrauma
 
         private bool getDivingGearIfNeeded;
 
+        public override float GetPriority(AIObjectiveManager objectiveManager)
+        {
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
+
+            return 1.0f;
+        }
+
         public override bool CanBeCompleted
         {
             get
@@ -93,7 +103,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Vector2.Distance(currTargetPos, character.SimPosition) < 1.0f)
+            if (Vector2.DistanceSquared(currTargetPos, character.SimPosition) < 0.5f * 0.5f)
             {
                 character.AIController.SteeringManager.Reset();
                 character.AnimController.TargetDir = currTargetPos.X > character.SimPosition.X ? Direction.Right : Direction.Left;
@@ -104,7 +114,7 @@ namespace Barotrauma
 
                 var indoorsSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
-                if (indoorsSteering.CurrentPath==null || indoorsSteering.CurrentPath.Unreachable)
+                if (indoorsSteering.CurrentPath == null || indoorsSteering.CurrentPath.Unreachable)
                 {
                     indoorsSteering.SteeringWander();
                 }
@@ -130,7 +140,7 @@ namespace Barotrauma
                 if (item.IsInsideTrigger(character.WorldPosition)) completed = true;
             }
 
-            completed = completed || Vector2.Distance(target != null ? target.SimPosition : targetPos, character.SimPosition) < allowedDistance;
+            completed = completed || Vector2.DistanceSquared(target != null ? target.SimPosition : targetPos, character.SimPosition) < allowedDistance * allowedDistance;
 
             if (completed) character.AIController.SteeringManager.Reset();
 
