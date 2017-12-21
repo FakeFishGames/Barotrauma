@@ -335,7 +335,7 @@
       <Item name="FPGA Circuit"/>
     </Deconstruct>
 
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="96,0,31,24"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="97,0,31,24"/>
 
     <OxygenDetector canbeselected = "true"/>
 
@@ -366,7 +366,7 @@
       <Item name="FPGA Circuit"/>
     </Deconstruct>
 
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="64,0,31,25"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,0,31,24"/>
 
     <WaterDetector canbeselected = "true"/>
 
@@ -380,6 +380,37 @@
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
       <output name="signal_out"/>
+    </ConnectionPanel>
+  </Item>
+  
+  <Item
+    name="Motion Detector"
+    category="Electrical"
+    Tags="smallitem"
+
+    linkable="true"
+    price="10"
+    description="Sends out a signal when it detects movement.">
+   
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,24,31,24"/>
+
+    <MotionSensor range="100" canbeselected = "true"/>
+	
+	  <Body width="31" height="24" density="30"/>
+
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <output name="state_out"/>
     </ConnectionPanel>
   </Item>
 
@@ -561,7 +592,7 @@
       <Item name="FPGA Circuit"/>
     </Deconstruct>
 
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="64,32,23,16"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="34,64,23,16"/>
 
     <Body width="20" height="16" density="20"/>
 

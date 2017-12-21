@@ -37,6 +37,7 @@
       <fabricableitem name="Wire" requireditems="Copper Bar" requiredtime="5"/>
       
       <fabricableitem name="Button" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
+      <fabricableitem name="Switch" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="And Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Or Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Not Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
@@ -45,6 +46,7 @@
       <fabricableitem name="Light Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Oxygen Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Water Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
+      <fabricableitem name="Motion Detector" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
       <fabricableitem name="Signal Check Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>      
       <fabricableitem name="RegEx Find Component" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>  
       <fabricableitem name="Oscillator" requireditems="Steel Bar, FPGA Circuit" requiredtime="10"/>
