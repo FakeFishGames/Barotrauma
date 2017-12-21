@@ -11,15 +11,17 @@ namespace Barotrauma
 
         private Character character;
 
-        private AIObjective currentObjective;
+        private AIObjective currentOrder;
         
+        public AIObjective CurrentOrder
+        {
+            get { return currentOrder; }
+        }
+
         public AIObjective CurrentObjective
         {
-            get
-            {
-                if (currentObjective != null) return currentObjective;
-                return objectives.Any() ? objectives[0] : null;
-            }
+            get;
+            private set;
         }
 
         public AIObjectiveManager(Character character)
@@ -47,8 +49,13 @@ namespace Barotrauma
 
         public float GetCurrentPriority(Character character)
         {
-            if (currentObjective != null) return OrderPriority;
-            return (CurrentObjective == null) ? 0.0f : CurrentObjective.GetPriority(character);
+            if (CurrentOrder != null &&
+                (objectives.Count == 0 || currentOrder.GetPriority(this) > objectives[0].GetPriority(this)))
+            {
+                return CurrentOrder.GetPriority(this);
+            }
+
+            return objectives.Count == 0 ? 0.0f : objectives[0].GetPriority(this);
         }
 
         public void UpdateObjectives()
@@ -59,43 +66,46 @@ namespace Barotrauma
             objectives = objectives.FindAll(o => !o.IsCompleted() && o.CanBeCompleted);
 
             //sort objectives according to priority
-            objectives.Sort((x, y) => y.GetPriority(character).CompareTo(x.GetPriority(character)));
+            objectives.Sort((x, y) => y.GetPriority(this).CompareTo(x.GetPriority(this)));
         }
 
         public void DoCurrentObjective(float deltaTime)
         {
-            if (currentObjective != null && (!objectives.Any() || objectives[0].GetPriority(character) < OrderPriority))
+            if (currentOrder != null && (!objectives.Any() || objectives[0].GetPriority(this) < currentOrder.GetPriority(this)))
             {
-                currentObjective.TryComplete(deltaTime);
+                CurrentObjective = currentOrder;
+                currentOrder.TryComplete(deltaTime);
                 return;
             }
 
             if (!objectives.Any()) return;
             objectives[0].TryComplete(deltaTime);
+
+            CurrentObjective = objectives[0];
         }
 
         public void SetOrder(Order order, string option)
         {
             if (order == null) return;
 
-            currentObjective = null;
+            currentOrder = null;
 
             switch (order.Name.ToLowerInvariant())
             {
                 case "follow":
-                    currentObjective = new AIObjectiveGoTo(Character.Controlled, character, true);
+                    currentOrder = new AIObjectiveGoTo(Character.Controlled, character, true);
                     break;
                 case "wait":
-                    currentObjective = new AIObjectiveGoTo(character, character, true);
+                    currentOrder = new AIObjectiveGoTo(character, character, true);
                     break;
                 case "fixleaks":
                 case "fix leaks":
-                    currentObjective = new AIObjectiveFixLeaks(character);
+                    currentOrder = new AIObjectiveFixLeaks(character);
                     break;
                 default:
                     if (order.TargetItem == null) return;
 
-                    currentObjective = new AIObjectiveOperateItem(order.TargetItem, character, option, null, order.UseController);
+                    currentOrder = new AIObjectiveOperateItem(order.TargetItem, character, option, false, null, order.UseController);
 
                     break;
             }

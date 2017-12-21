@@ -7,7 +7,9 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeak : AIObjective
     {
-        private Gap leak;
+        private readonly Gap leak;
+
+        private AIObjectiveGoTo gotoObjective;
 
         public Gap Leak
         {
@@ -20,15 +22,20 @@ namespace Barotrauma
             this.leak = leak;
         }
 
-        public override float GetPriority(Character character)
+        public override bool IsCompleted()
+        {
+            return leak.Open <= 0.0f || leak.Removed;
+        }
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             if (leak.Open == 0.0f) return 0.0f;
 
             float leakSize = (leak.IsHorizontal ? leak.Rect.Height : leak.Rect.Width) * Math.Max(leak.Open, 0.1f);
 
             float dist = Vector2.DistanceSquared(character.SimPosition, leak.SimPosition);
-            dist = Math.Max(dist/100.0f, 1.0f);
-            return Math.Min(leakSize/dist, 40.0f);
+            dist = Math.Max(dist / 100.0f, 1.0f);
+            return Math.Min(leakSize / dist, 40.0f);
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
@@ -44,7 +51,7 @@ namespace Barotrauma
 
             if (weldingTool == null)
             {
-                subObjectives.Add(new AIObjectiveGetItem(character, "Welding Tool", true));
+                AddSubObjective(new AIObjectiveGetItem(character, "Welding Tool", true));
                 return;
             }
             else
@@ -52,25 +59,31 @@ namespace Barotrauma
                 var containedItems = weldingTool.ContainedItems;
                 if (containedItems == null) return;
                 
-                var fuelTank = Array.Find(containedItems, i => i.Name == "Welding Fuel Tank" && i.Condition > 0.0f);
+                var fuelTank = Array.Find(containedItems, i => i.Prefab.NameMatches("Welding Fuel Tank") && i.Condition > 0.0f);
 
                 if (fuelTank == null)
                 {
                     AddSubObjective(new AIObjectiveContainItem(character, "Welding Fuel Tank", weldingTool.GetComponent<ItemContainer>()));
+                    return;
                 }
             }
 
             var repairTool = weldingTool.GetComponent<RepairTool>();
             if (repairTool == null) return;
 
-            if (Vector2.Distance(character.WorldPosition, leak.WorldPosition) > 300.0f)
+            Vector2 standPosition = GetStandPosition();
+
+            if (Vector2.DistanceSquared(character.WorldPosition, leak.WorldPosition) > 100.0f * 100.0f)
             {
-                AddSubObjective(new AIObjectiveGoTo(ConvertUnits.ToSimUnits(GetStandPosition()), character));
+                var gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(standPosition), character);
+                if (!gotoObjective.IsCompleted())
+                {
+                    AddSubObjective(gotoObjective);
+                    return;
+                }
             }
-            else
-            {
-                AddSubObjective(new AIObjectiveOperateItem(repairTool, character, "", leak));
-            }            
+
+            AddSubObjective(new AIObjectiveOperateItem(repairTool, character, "", true, leak));                       
         }
 
         private Vector2 GetStandPosition()
