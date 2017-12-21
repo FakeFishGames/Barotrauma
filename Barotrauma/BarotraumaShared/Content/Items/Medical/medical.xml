@@ -175,7 +175,6 @@
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
-      <!-- InWater is horribly broken right now. https://github.com/Regalis11/Barotrauma/issues/187 -->
       <StatusEffect type="InWater" target="This" Condition="0.0" setvalue="true">
         <Sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="10" damage="20" stun="5" force="5.0"/>
@@ -502,7 +501,7 @@
    category="Material"
    spritecolor="1.0,0.3,0.3,1.0"
    Tags="smallitem,chem,medical"   
-   description="A devious poison with a delayed effect.">
+   description="A devious poison with a delayed effect. Requires higher dosage to be lethal.">
    <!-- price="2000" Should be mixed by traitor medics more than anything -->
    <!-- Direct counter to Amanitin is Liquid Oxygenite -->
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
@@ -515,7 +514,7 @@
       </StatusEffect>
       <!-- Here's a problem: if a chemical with delay is injected into more than one person, only the last person will get that delayed effect.
       Everyone else gets off scott free! Woo!!!..... -->
-      <StatusEffect type="OnUse" target="Character" Oxygen="-15.0" Health="-1.0" duration="60.0" delay="20.0"> 
+      <StatusEffect type="OnUse" target="Character" Oxygen="-10.0" Health="-0.5" duration="60.0" delay="20.0"> 
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>

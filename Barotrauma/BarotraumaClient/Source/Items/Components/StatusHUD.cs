@@ -115,6 +115,7 @@ namespace Barotrauma.Items.Components
             if (target.IsDead)
             {
                 texts.Add("Deceased");
+                texts.Add("Cause of Death: " + target.CauseOfDeath.ToString());
             }
             else
             {

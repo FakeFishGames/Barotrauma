@@ -371,6 +371,7 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value)) return;
                 if (GameMain.Client != null) return;
+                if (!DoesBleed) return;
 
                 float newBleeding =  MathHelper.Clamp(value, 0.0f, 5.0f);
                 if (newBleeding == bleeding) return;
@@ -1585,8 +1586,11 @@ namespace Barotrauma
 
             if (needsAir) UpdateOxygen(deltaTime);
 
-            Health -= bleeding * deltaTime;
-            Bleeding -= BleedingDecreaseSpeed * deltaTime;
+            if (DoesBleed)
+            {
+                Health -= bleeding * deltaTime;
+                Bleeding -= BleedingDecreaseSpeed * deltaTime;
+            }
 
             if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
 

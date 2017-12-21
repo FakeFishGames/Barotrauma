@@ -190,7 +190,7 @@ namespace Barotrauma
             }
         }
 
-        private bool HasRequiredItems(Entity entity)
+        public virtual bool HasRequiredItems(Entity entity)
         {
             if (requiredItems == null) return true;
             foreach (RelatedItem requiredItem in requiredItems)
@@ -218,7 +218,7 @@ namespace Barotrauma
             List<ISerializableEntity> targets = new List<ISerializableEntity>();
             targets.Add(target);
 
-            Apply(deltaTime, entity, targets);
+            Apply(type, deltaTime, entity, targets);
         }
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
@@ -359,10 +359,7 @@ namespace Barotrauma
 
         public static void UpdateAll(float deltaTime)
         {
-            for (int i = DelayedEffect.List.Count-1; i>= 0; i--)
-            {
-                DelayedEffect.List[i].Update(deltaTime);
-            }
+            DelayedEffect.Update(deltaTime);
         }
 
         public static void StopAll()
