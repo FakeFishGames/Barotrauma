@@ -197,7 +197,7 @@ namespace Barotrauma
         {
             get { return !IsUnconscious && Stun <= 0.0f && !isDead; }
         }
-        
+
         public bool CanInteract
         {
             get { return AllowInput && IsHumanoid && !LockHands; }
@@ -303,11 +303,11 @@ namespace Barotrauma
             get { return needsAir; }
             set { needsAir = value; }
         }
-        
+
         public float Oxygen
         {
             get { return oxygen; }
-            set 
+            set
             {
                 if (!MathUtils.IsValid(value)) return;
                 oxygen = MathHelper.Clamp(value, -100.0f, 100.0f);
@@ -331,7 +331,7 @@ namespace Barotrauma
             {
                 if (GameMain.Client != null) return;
 
-                SetStun(value); 
+                SetStun(value);
             }
         }
 
@@ -358,7 +358,7 @@ namespace Barotrauma
                 }*/
             }
         }
-    
+
         public float MaxHealth
         {
             get { return maxHealth; }
@@ -367,12 +367,12 @@ namespace Barotrauma
         public float Bleeding
         {
             get { return bleeding; }
-            set 
+            set
             {
                 if (!MathUtils.IsValid(value)) return;
                 if (GameMain.Client != null) return;
 
-                float newBleeding =  MathHelper.Clamp(value, 0.0f, 5.0f);
+                float newBleeding = MathHelper.Clamp(value, 0.0f, 5.0f);
                 //if (newBleeding == bleeding) return;
 
                 bleeding = newBleeding;
@@ -381,18 +381,18 @@ namespace Barotrauma
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });*/
             }
         }
-        
+
         public HuskInfection huskInfection;
         public float HuskInfectionState
         {
-            get 
-            { 
-                return huskInfection == null ? 0.0f : huskInfection.IncubationTimer; 
+            get
+            {
+                return huskInfection == null ? 0.0f : huskInfection.IncubationTimer;
             }
             set
             {
                 if (ConfigPath != humanConfigFile) return;
-                
+
                 if (value <= 0.0f)
                 {
                     if (huskInfection != null)
@@ -448,7 +448,7 @@ namespace Barotrauma
             get;
             set;
         }
-        
+
         public Item[] SelectedItems
         {
             get { return selectedItems; }
@@ -463,6 +463,12 @@ namespace Barotrauma
         public Item FocusedItem
         {
             get { return focusedItem; }
+        }
+
+        public Item PickingItem
+        {
+            get;
+            set;
         }
 
         public virtual AIController AIController

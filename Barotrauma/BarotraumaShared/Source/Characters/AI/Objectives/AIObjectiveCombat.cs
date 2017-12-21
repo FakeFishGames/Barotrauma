@@ -33,7 +33,6 @@ namespace Barotrauma
             }
 
             coolDownTimer = CoolDown;
-
         }
 
         protected override void Act(float deltaTime)
@@ -41,17 +40,24 @@ namespace Barotrauma
             coolDownTimer -= deltaTime;
 
             var weapon = character.Inventory.FindItem("weapon");
-            
-            if (weapon==null)
+
+            if (weapon == null)
             {
                 Escape(deltaTime);
             }
             else
             {
+                //TODO: make sure the weapon is ready to use (projectiles/batteries loaded)
                 if (!character.SelectedItems.Contains(weapon))
                 {
-                    character.Inventory.TryPutItem(weapon, 3, false, character);
-                    weapon.Equip(character);
+                    if (character.Inventory.TryPutItem(weapon, 3, false, character))
+                    {
+                        weapon.Equip(character);
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
                 character.CursorPosition = enemy.Position;
                 character.SetInput(InputType.Aim, false, true);
@@ -99,8 +105,13 @@ namespace Barotrauma
             return enemy.IsDead || coolDownTimer <= 0.0f;
         }
 
-        public override float GetPriority(Character character)
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
+
             //clamp the strength to the health of this character
             //(it doesn't make a difference whether the enemy does 200 or 600 damage, it's one hit kill anyway)
 

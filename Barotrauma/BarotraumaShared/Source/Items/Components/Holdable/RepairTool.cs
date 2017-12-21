@@ -103,11 +103,7 @@ namespace Barotrauma.Items.Components
         {
             if (character == null) return false;
             if (!character.IsKeyDown(InputType.Aim)) return false;
-
-            //if (DoesUseFail(Character)) return false;
-
-            //targetPosition = targetPosition.X, -targetPosition.Y);
-
+            
             float degreeOfSuccess = DegreeOfSuccess(character)/100.0f;
 
             if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess)
@@ -241,7 +237,7 @@ namespace Barotrauma.Items.Components
         {
             Gap leak = objective.OperateTarget as Gap;
             if (leak == null) return true;
-
+            
             float dist = Vector2.Distance(leak.WorldPosition, item.WorldPosition);
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
