@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public override void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
-            if (this.type != type) return;
+            if (this.type != type || !HasRequiredItems(entity)) return;
             DelayedListElement element = new DelayedListElement();
             element.Parent = this;
             element.StartTimer = delay;
