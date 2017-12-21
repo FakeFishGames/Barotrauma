@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjectiveRescueAll : AIObjective
+    /*class AIObjectiveRescueAll : AIObjective
     {
         private List<Character> rescueTargets;
         
@@ -44,5 +44,5 @@ namespace Barotrauma
                 AddSubObjective(new AIObjectiveRescue(character, target));
             }
         }
-    }
+    }*/
 }

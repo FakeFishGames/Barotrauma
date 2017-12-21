@@ -4,20 +4,12 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class AIObjective
+    abstract class AIObjective
     {
-        protected List<AIObjective> subObjectives;
-
+        protected readonly List<AIObjective> subObjectives;
         protected float priority;
-
-        protected Character character;
-
+        protected readonly Character character;
         protected string option;
-
-        public virtual bool IsCompleted()
-        {
-            return false;
-        }
 
         public virtual bool CanBeCompleted
         {
@@ -27,15 +19,12 @@ namespace Barotrauma
         public string Option
         {
             get { return option; }
-        }
-            
+        }            
 
         public AIObjective(Character character, string option)
         {
             subObjectives = new List<AIObjective>();
-
             this.character = character;
-
             this.option = option;
 
 #if DEBUG
@@ -60,8 +49,6 @@ namespace Barotrauma
             Act(deltaTime);
         }
 
-        protected virtual void Act(float deltaTime) { }
-
         public void AddSubObjective(AIObjective objective)
         {
             if (subObjectives.Any(o => o.IsDuplicate(objective))) return;
@@ -69,19 +56,20 @@ namespace Barotrauma
             subObjectives.Add(objective);
         }
 
-        public virtual float GetPriority(Character character)
+        public AIObjective GetCurrentSubObjective()
         {
-            return 0.0f;
+            AIObjective currentSubObjective = this;
+            while (currentSubObjective.subObjectives.Count > 0)
+            {
+                currentSubObjective = subObjectives[0];
+            }
+            return currentSubObjective;
         }
 
-        public virtual bool IsDuplicate(AIObjective otherObjective)
-        {
-#if DEBUG
-            throw new NotImplementedException();
-#else
-            return (this.GetType() == otherObjective.GetType());
-#endif
-
-        }
+        protected abstract void Act(float deltaTime);
+        
+        public abstract bool IsCompleted();
+        public abstract float GetPriority(AIObjectiveManager objectiveManager);
+        public abstract bool IsDuplicate(AIObjective otherObjective);
     }
 }

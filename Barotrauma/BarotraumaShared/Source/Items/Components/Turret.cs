@@ -258,9 +258,9 @@ namespace Barotrauma.Items.Components
 
                 if (batteryToLoad == null) return true;
 
-                if (batteryToLoad.RechargeSpeed < batteryToLoad.MaxRechargeSpeed*0.4f)
+                if (batteryToLoad.RechargeSpeed < batteryToLoad.MaxRechargeSpeed * 0.4f)
                 {
-                    objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, ""));
+                    objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, "", false));
                     return false;
                 }
             }
