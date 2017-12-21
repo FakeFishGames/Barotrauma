@@ -64,7 +64,7 @@ namespace Barotrauma
         protected override Vector2 DoSteeringSeek(Vector2 target, float speed = 1)
         {
             //find a new path if one hasn't been found yet or the target is different from the current target
-            if (currentPath == null || Vector2.Distance(target, currentTarget)>1.0f || findPathTimer < -5.0f)
+            if (currentPath == null || Vector2.Distance(target, currentTarget) > 1.0f || findPathTimer < -1.0f)
             {
                 if (findPathTimer > 0.0f) return Vector2.Zero;
 
@@ -73,21 +73,21 @@ namespace Barotrauma
                 if (character != null && character.Submarine == null)
                 {
                     var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
-                    if (targetHull!=null && targetHull.Submarine != null)
+                    if (targetHull != null && targetHull.Submarine != null)
                     {
                         pos -= targetHull.SimPosition;
                     }
-                }   
+                }
 
                 currentPath = pathFinder.FindPath(pos, target);
 
-                findPathTimer = Rand.Range(1.0f,1.2f);
+                findPathTimer = Rand.Range(1.0f, 1.2f);
 
                 return DiffToCurrentNode();
             }
-                        
+
             Vector2 diff = DiffToCurrentNode();
-            
+
             var collider = character.AnimController.Collider;
             //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
             if (!character.AnimController.InWater && 
@@ -104,7 +104,7 @@ namespace Barotrauma
 
         private Vector2 DiffToCurrentNode()
         {
-            if (currentPath == null || currentPath.Finished || currentPath.Unreachable) return Vector2.Zero;
+            if (currentPath == null || currentPath.Unreachable) return Vector2.Zero;
 
             if (currentPath.Finished)
             {
@@ -113,8 +113,8 @@ namespace Barotrauma
                 {
                     //todo: take multiple subs into account
                     pos2 -= CurrentPath.Nodes.Last().Submarine.SimPosition;
-                }   
-                return currentTarget-pos2;
+                }
+                return currentTarget - pos2;
             }
 
             if (canOpenDoors && !character.LockHands) CheckDoorsInPath();

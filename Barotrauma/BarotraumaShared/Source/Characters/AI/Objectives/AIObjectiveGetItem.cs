@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Barotrauma
 {
@@ -24,6 +25,16 @@ namespace Barotrauma
         public override bool CanBeCompleted
         {
             get { return canBeCompleted; }
+        }
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
+        {
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
+
+            return 1.0f;
         }
 
         public AIObjectiveGetItem(Character character, Item targetItem, bool equip = false)

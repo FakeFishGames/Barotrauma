@@ -745,6 +745,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.7.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Data\permissionpresets.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Icon.ico" />
     <Content Include="$(MSBuildThisFileDirectory)Mods\info.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1509,6 +1512,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\BanList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Client.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ClientPermissions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileSender.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameServer.cs" />

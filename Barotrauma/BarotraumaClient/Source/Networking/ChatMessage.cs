@@ -1,9 +1,5 @@
 ﻿using Lidgren.Network;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
@@ -39,6 +35,10 @@ namespace Barotrauma.Networking
                 if (type == ChatMessageType.MessageBox)
                 {
                     new GUIMessageBox("", txt);
+                }
+                else if (type == ChatMessageType.Console)
+                {
+                    DebugConsole.NewMessage(txt, MessageColor[(int)ChatMessageType.Console]);
                 }
                 else
                 {

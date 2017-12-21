@@ -19,20 +19,21 @@ namespace Barotrauma
         {
             this.itemName = itemName;
             this.container = container;
-
-            //check if the container has room for more items
-            //canBeCompleted = false;
-            //foreach (Item contained in container.inventory.Items)
-            //{
-            //    if (contained != null) continue;
-            //    canBeCompleted = true;
-            //    break;
-            //}
         }
 
         public override bool IsCompleted()
         {
             return isCompleted || container.Inventory.FindItem(itemName)!=null;
+        }
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
+        {
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
+
+            return 1.0f;
         }
 
         protected override void Act(float deltaTime)
