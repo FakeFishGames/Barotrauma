@@ -15,22 +15,19 @@
 
       <sound file="fabricator.ogg" type="OnActive" range="1000.0" loop="true"/>
 
-      <fabricableitem name="Harpoon Gun" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="20">
+      <fabricableitem name="Harpoon Gun" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
         <RequiredSkill name="Construction" level="30"/>
-        <Item name="Aluminium" mincondition="0.75"/>
       </fabricableitem>
       <fabricableitem name="Spear" requireditems="Steel Bar" requiredtime="10"/>
       <fabricableitem name="Revolver Round" requireditems="Copper Bar" requiredtime="10">
         <Item name="Aluminium" mincondition="0.5" usecondition="true"/>
       </fabricableitem>
 
-      <fabricableitem name="Plasma Cutter" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="20">
+      <fabricableitem name="Plasma Cutter" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
         <RequiredSkill name="Construction" level="30"/>
-        <Item name="Aluminium" mincondition="0.75"/>
       </fabricableitem>
-      <fabricableitem name="Welding Tool" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="20">
+      <fabricableitem name="Welding Tool" requireditems="Steel Bar, Polycarbonate Bar, Aluminium" requiredtime="20">
         <RequiredSkill name="Construction" level="30"/>
-        <Item name="Aluminium" mincondition="0.75"/>
       </fabricableitem>
 
       <fabricableitem name="Railgun Shell" requireditems="Steel Bar, Steel Bar, Polycarbonate Bar" requiredtime="20">
@@ -42,15 +39,14 @@
       <fabricableitem name="Depth Charge Shell" requireditems="Steel Bar, Steel Bar" requiredtime="20">
         <RequiredSkill name="Construction" level="25"/>
       </fabricableitem>
-      <fabricableitem name="Nuclear Depth Charge Shell" requireditems="Steel Bar, Steel Bar, Uranium Bar" requiredtime="30">
+      <fabricableitem name="Nuclear Depth Charge" requireditems="Steel Bar, Steel Bar, Uranium Bar" requiredtime="30">
         <RequiredSkill name="Construction" level="40"/>
       </fabricableitem>
       <fabricableitem name="Diving Mask" requireditems="Polycarbonate Bar" requiredtime="20">
         <RequiredSkill name="Construction" level="25"/>
       </fabricableitem>
-      <fabricableitem name="Diving Suit" requireditems="Steel Bar, Polycarbonate Bar, Polycarbonate Bar" requiredtime="30">
+      <fabricableitem name="Diving Suit" requireditems="Steel Bar, Polycarbonate Bar, Polycarbonate Bar, Aluminium, Aluminium" requiredtime="30">
         <RequiredSkill name="Construction" level="40"/>
-        <Item name="Aluminium" count="2" mincondition="0.75"/>
       </fabricableitem>
 
       <fabricableitem name="Fire Extinguisher" requireditems="Steel Bar, Polycarbonate Bar" requiredtime="10"/>
