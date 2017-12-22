@@ -111,9 +111,9 @@ namespace Barotrauma.Items.Components
                 if (!inadequateSkills.Any())
                 {
                     text = "Required items:\n";
-                    foreach (Tuple<ItemPrefab, int> ip in targetItem.RequiredItems)
+                    foreach (Tuple<ItemPrefab, int, float, bool> ip in targetItem.RequiredItems)
                     {
-                        text += "   - " + ip.Item1.Name + " x" + ip.Item2 + "\n";
+                        text += "   - " + ip.Item1.Name + " x" + ip.Item2 + (ip.Item3 < 1.0f ? ", " + ip.Item3 * 100 + "% condition\n" : "\n");
                     }
                     text += "Required time: " + targetItem.RequiredTime + " s";
                 }

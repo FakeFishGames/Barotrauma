@@ -4,7 +4,9 @@
     category="Equipment"
     
     tags="smallitem"
-    description="Allows remote communication between the crew.">
+    description="Allows remote communication between the crew."
+    
+    price="10">
 
     <Sprite texture ="headset.png" depth="0.6"/>
 

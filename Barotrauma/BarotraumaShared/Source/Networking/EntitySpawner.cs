@@ -22,24 +22,28 @@ namespace Barotrauma
             public readonly Vector2 Position;
             public readonly Inventory Inventory;
             public readonly Submarine Submarine;
+            public readonly float  Condition;
 
-            public ItemSpawnInfo(ItemPrefab prefab, Vector2 worldPosition)
+            public ItemSpawnInfo(ItemPrefab prefab, Vector2 worldPosition, float? condition = null)
             {
                 Prefab = prefab;
                 Position = worldPosition;
+                Condition = (float)(condition ?? prefab.Health);
             }
 
-            public ItemSpawnInfo(ItemPrefab prefab, Vector2 position, Submarine sub)
+            public ItemSpawnInfo(ItemPrefab prefab, Vector2 position, Submarine sub, float? condition = null)
             {
                 Prefab = prefab;
                 Position = position;
                 Submarine = sub;
+                Condition = (float)(condition ?? prefab.Health);
             }
             
-            public ItemSpawnInfo(ItemPrefab prefab, Inventory inventory)
+            public ItemSpawnInfo(ItemPrefab prefab, Inventory inventory, float? condition = null)
             {
                 Prefab = prefab;
                 Inventory = inventory;
+                Condition = (float)(condition ?? prefab.Health);
             }
 
             public Entity Spawn()
@@ -48,12 +52,12 @@ namespace Barotrauma
 
                 if (Inventory != null)
                 {
-                    spawnedItem = new Item(Prefab, Vector2.Zero, null);
+                    spawnedItem = new Item(Prefab, Vector2.Zero, null, Condition);
                     Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
                 }
                 else
                 {
-                    spawnedItem = new Item(Prefab, Position, Submarine);
+                    spawnedItem = new Item(Prefab, Position, Submarine, Condition);
                 }
 
                 return spawnedItem;
@@ -83,25 +87,25 @@ namespace Barotrauma
             removeQueue = new Queue<Entity>();
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition, float? condition = null)
         {
             if (GameMain.Client != null) return;
             
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition));
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, condition));
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub, float? condition = null)
         {
             if (GameMain.Client != null) return;
 
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub));
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, condition));
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null)
         {
             if (GameMain.Client != null) return;
 
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory));
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, condition));
         }
 
         public void AddToRemoveQueue(Entity entity)

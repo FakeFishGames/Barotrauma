@@ -99,6 +99,11 @@
     price="100"
     description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
 
+    <Deconstruct time="5">
+      <Item name="Copper Bar"/>
+      <Item name="Copper Bar"/>
+    </Deconstruct>
+
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16"/>
 
     <Body width="16" height="16" density="30"/>

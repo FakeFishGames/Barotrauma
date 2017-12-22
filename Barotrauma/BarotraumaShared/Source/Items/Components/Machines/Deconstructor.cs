@@ -57,7 +57,8 @@ namespace Barotrauma.Items.Components
 
                 foreach (DeconstructItem deconstructProduct in targetItem.Prefab.DeconstructItems)
                 {
-                    if (deconstructProduct.RequireFullCondition && targetItem.Condition < targetItem.Prefab.Health) continue;
+                    float percentageHealth = targetItem.Condition / targetItem.Prefab.Health;
+                    if (percentageHealth <= deconstructProduct.MinCondition || percentageHealth > deconstructProduct.MaxCondition) continue;
 
                     var itemPrefab = MapEntityPrefab.Find(deconstructProduct.ItemPrefabName) as ItemPrefab;
                     if (itemPrefab == null)
@@ -69,11 +70,11 @@ namespace Barotrauma.Items.Components
                     //container full, drop the items outside the deconstructor
                     if (containers[1].Inventory.Items.All(i => i != null))
                     {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab, item.Position, item.Submarine);
+                        Entity.Spawner.AddToSpawnQueue(itemPrefab, item.Position, item.Submarine, itemPrefab.Health * deconstructProduct.OutCondition);
                     }
                     else
                     {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab, containers[1].Inventory);
+                        Entity.Spawner.AddToSpawnQueue(itemPrefab, containers[1].Inventory, itemPrefab.Health * deconstructProduct.OutCondition);
                     }
                 }
 

@@ -134,8 +134,9 @@
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
-      <Item name="Copper Bar"/>
       <Item name="Polycarbonate Bar"/>
+      <Item name="Polycarbonate Bar"/>
+      <Item name="FPGA Circuit"/>
     </Deconstruct>
     
     <Sprite texture ="Scooter.png" depth="0.55"/>

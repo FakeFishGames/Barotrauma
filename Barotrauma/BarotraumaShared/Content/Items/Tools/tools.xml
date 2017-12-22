@@ -271,8 +271,10 @@
     tags="smallitem">
 
     <Deconstruct time="10">
-      <Item name="Phosphorus"/>
-      <Item name="Aluminium"/>
+      <Item name="Phosphorus" mincondition="0.9" outcondition="0.25"/>
+      <Item name="Aluminium" mincondition="0.9" outcondition="0.25"/>
+      <Item name="Phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
+      <Item name="Aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
     </Deconstruct>
 
 

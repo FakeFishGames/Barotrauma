@@ -335,18 +335,18 @@ namespace Barotrauma
             }
         }
 
-        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
+        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, float? spawnCondition = null)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.sprite.size.X / 2), 
                 (int)(position.Y + itemPrefab.sprite.size.Y / 2), 
                 (int)itemPrefab.sprite.size.X, 
                 (int)itemPrefab.sprite.size.Y), 
-            itemPrefab, submarine)
+            itemPrefab, submarine, spawnCondition)
         {
 
         }
 
-        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, float? spawnCondition = null)
             : base(itemPrefab, submarine)
         {
             prefab = itemPrefab;
@@ -361,8 +361,8 @@ namespace Barotrauma
                        
             rect = newRect;
                         
-            condition = prefab.Health;
-            lastSentCondition = prefab.Health;
+            condition = (float)(spawnCondition ?? prefab.Health);
+            lastSentCondition = condition;
 
             XElement element = prefab.ConfigElement;
             if (element == null) return;
