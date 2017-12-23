@@ -170,7 +170,7 @@ namespace Barotrauma.Items.Components
                 if (effect.Targets.HasFlag(StatusEffect.TargetType.This))                 
                     effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
                 if (effect.Targets.HasFlag(StatusEffect.TargetType.Contained)) 
-                    effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);               
+                    effect.Apply(ActionType.OnContaining, deltaTime, item, contained.AllPropertyObjects);
             }
         }
 
@@ -192,7 +192,7 @@ namespace Barotrauma.Items.Components
                 return true;
             }
 
-            return false;            
+            return false;
         }
 
         public override void OnMapLoaded()

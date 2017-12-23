@@ -30,6 +30,8 @@ namespace Barotrauma.Items.Components
 
         protected bool canBePicked;
         protected bool canBeSelected;
+        protected bool canBeCombined;
+        protected bool removeOnCombined;
 
         public bool WasUsed;
 
@@ -122,6 +124,22 @@ namespace Barotrauma.Items.Components
         {
             get { return canBeSelected; }
             set { canBeSelected = value; }
+        }
+
+        //Transfer conditions between same prefab items
+        [Serialize(false, false)]
+        public bool CanBeCombined
+        {
+            get { return canBeCombined; }
+            set { canBeCombined = value; }
+        }
+
+        //Remove item if combination results in 0 condition
+        [Serialize(false, false)]
+        public bool RemoveOnCombined
+        {
+            get { return removeOnCombined; }
+            set { removeOnCombined = value; }
         }
 
         public InputType PickKey
@@ -323,6 +341,43 @@ namespace Barotrauma.Items.Components
 
         public virtual bool Combine(Item item) 
         {
+            if (canBeCombined && this.item.Prefab == item.Prefab && item.Condition > 0.0f && this.item.Condition > 0.0f)
+            {
+                float transferAmount = 0.0f;
+                if (this.Item.Condition <= item.Condition)
+                    transferAmount = Math.Min(item.Condition, this.item.Prefab.Health - this.item.Condition);
+                else
+                    transferAmount = -Math.Min(this.item.Condition, item.Prefab.Health - item.Condition);
+
+                if (transferAmount == 0.0f)
+                    return false;
+                this.Item.Condition += transferAmount;
+                item.Condition -= transferAmount;
+                if (removeOnCombined)
+                {
+                    if (item.Condition <= 0.0f)
+                    {
+                        if (item.ParentInventory != null)
+                        {
+                            Character owner = (Character)item.ParentInventory.Owner;
+                            if (owner != null && owner.HasSelectedItem(item)) item.Unequip(owner);
+                            item.ParentInventory.RemoveItem(item);
+                        }
+                        Entity.Spawner.AddToRemoveQueue(item);
+                    }
+                    if (this.Item.Condition <= 0.0f)
+                    {
+                        if (this.Item.ParentInventory != null)
+                        {
+                            Character owner = (Character)this.Item.ParentInventory.Owner;
+                            if (owner != null && owner.HasSelectedItem(this.Item)) this.Item.Unequip(owner);
+                            this.Item.ParentInventory.RemoveItem(this.Item);
+                        }
+                        Entity.Spawner.AddToRemoveQueue(this.Item);
+                    }
+                }
+                return true;
+            }
             return false;
         }
 
