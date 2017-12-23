@@ -13,7 +13,6 @@ namespace Barotrauma.Items.Components
 
         private float pickTimer;
 
-
         public List<InvSlotType> AllowedSlots
         {
             get { return allowedSlots; }
@@ -55,13 +54,15 @@ namespace Barotrauma.Items.Components
         public override bool Pick(Character picker)
         {
             //return if someone is already trying to pick the item
-            if (pickTimer>0.0f) return false;
+            if (pickTimer > 0.0f) return false;
             if (picker == null || picker.Inventory == null) return false;
 
-            if (PickingTime>0.0f)
+            if (PickingTime > 0.0f)
             {
-                CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
-                
+                if (picker.PickingItem == null)
+                {
+                    CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
+                }
                 return false;
             }
             else
@@ -104,6 +105,8 @@ namespace Barotrauma.Items.Components
 
         private IEnumerable<object> WaitForPick(Character picker, float requiredTime)
         {
+            picker.PickingItem = item;
+
             var leftHand = picker.AnimController.GetLimb(LimbType.LeftHand);
             var rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
 
@@ -151,7 +154,8 @@ namespace Barotrauma.Items.Components
         private void StopPicking(Character picker)
         {
             picker.AnimController.Anim = AnimController.Animation.None;
-            pickTimer = 0.0f;         
+            picker.PickingItem = null;
+            pickTimer = 0.0f;
         }
 
         protected void DropConnectedWires(Character character)
