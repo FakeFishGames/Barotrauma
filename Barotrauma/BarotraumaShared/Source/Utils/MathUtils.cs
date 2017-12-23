@@ -508,6 +508,52 @@ namespace Barotrauma
             // Return formatted number with suffix
             return readable.ToString("0.# ") + suffix;
         }
+
+        public static void SplitRectanglesHorizontal(List<Rectangle> rects, Vector2 point)
+        {
+            for (int i = 0; i < rects.Count; i++)
+            {
+                if (point.Y > rects[i].Y && point.Y < rects[i].Y + rects[i].Height)
+                {
+                    Rectangle rect1 = rects[i];
+                    Rectangle rect2 = rects[i];
+
+                    rect1.Height = (int)(point.Y - rects[i].Y);
+
+                    rect2.Height = rects[i].Height - rect1.Height;
+                    rect2.Y = rect1.Y + rect1.Height;
+                    rects[i] = rect1;
+                    rects.Insert(i + 1, rect2); i++;
+                }
+            }
+        }
+
+        public static void SplitRectanglesVertical(List<Rectangle> rects, Vector2 point)
+        {
+            for (int i = 0; i < rects.Count; i++)
+            {
+                if (point.X>rects[i].X && point.X<rects[i].X+rects[i].Width)
+                {
+                    Rectangle rect1 = rects[i];
+                    Rectangle rect2 = rects[i];
+                    
+                    rect1.Width = (int)(point.X-rects[i].X);
+
+                    rect2.Width = rects[i].Width - rect1.Width;
+                    rect2.X = rect1.X + rect1.Width;
+                    rects[i] = rect1;
+                    rects.Insert(i + 1, rect2); i++;
+                }
+            }
+
+            /*for (int i = 0; i < rects.Count; i++)
+            {
+                if (rects[i].Width <= 0 || rects[i].Height <= 0)
+                {
+                    rects.RemoveAt(i); i--;
+                }
+            }*/
+        }
     }
 
     class CompareCCW : IComparer<Vector2>
