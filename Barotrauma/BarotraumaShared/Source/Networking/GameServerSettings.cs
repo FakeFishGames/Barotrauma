@@ -349,9 +349,12 @@ namespace Barotrauma.Networking
         {
             clientPermissions.Clear();
 
-            if (File.Exists("Data/clientpermissions.txt") && !File.Exists(ClientPermissionsFile))
+            if (!File.Exists(ClientPermissionsFile))
             {
-                LoadClientPermissionsOld("Data/clientpermissions.txt");
+                if (File.Exists("Data/clientpermissions.txt"))
+                {
+                    LoadClientPermissionsOld("Data/clientpermissions.txt");
+                }
                 return;
             }
 
