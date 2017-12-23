@@ -142,6 +142,10 @@ namespace Barotrauma
                     {
                         wasPut = character.SelectedCharacter.Inventory.TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots, true);
                     }
+                    else if (character.SelectedBy != null && Character.Controlled == character.SelectedBy && character.SelectedBy.Inventory != null)
+                    {
+                        wasPut = character.SelectedBy.Inventory.TryPutItem(doubleClickedItem, Character.Controlled, doubleClickedItem.AllowedSlots, true);
+                    }
                     else //doubleclicked and no other inventory is selected
                     {
                         //not equipped -> attempt to equip

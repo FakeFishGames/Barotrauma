@@ -49,7 +49,7 @@
 
     <Body width="11" height="16" density="20"/>
 
-    <MeleeWeapon slots="Any,RightHand,LeftHand"
+    <MeleeWeapon canBeCombined="true" slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
       <StatusEffect type="OnUse" target="This, Character" bleeding="-0.1" duration="5.0">
@@ -69,7 +69,7 @@
 
     <Body width="8" height="16" density="40"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-2" duration="10">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -93,7 +93,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
     </ItemComponent>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="0.3" Oxygen="0.3" duration="10">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -111,7 +111,7 @@
 
     <Body width="8" height="17" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-0.1" duration="20.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -135,7 +135,7 @@
 
     <Body width="8" height="7" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -153,7 +153,7 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -171,7 +171,7 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -193,7 +193,7 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" disabledeltatime="true">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -214,7 +214,7 @@
 
     <Body width="8" height="16" density="20"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-0.3" Oxygen="2.0" duration="10">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -239,7 +239,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
     </ItemComponent>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="0.3" Bleeding="-0.2" duration="5.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -265,7 +265,7 @@
       <StatusEffect type="OnUse" target="Character, This" Health="-0.5" duration="10"/>      
     </ItemComponent>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="3.0" duration="5.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -285,7 +285,7 @@
 
     <Body width="8" height="16" density="20"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="0.5" Oxygen="0.5" Bleeding="-0.025" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -304,7 +304,7 @@
 
     <Body width="8" height="16" density="15"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" SpeedMultiplier="1.5" setvalue="true" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -323,7 +323,7 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" HuskInfectionState="-0.2" setvalue="true">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -336,14 +336,13 @@
      spritecolor="0.6,0.8,1.0,1.0"
      Tags="smallitem,chem,medical"
      impacttolerance="8"
-     canuseonself="true"
      description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected.">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
     <Body width="8" height="16" density="20"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-0.5" Oxygen="10.0" duration="60">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -367,7 +366,7 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
       <StatusEffect type="OnFire" target="this" condition="-50"/> 
       <StatusEffect type="OnBroken" target="This" Condition="-100.0">
@@ -388,7 +387,7 @@
 
     <Body width="8" height="17" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" Stun="10" disabledeltatime="true">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -406,7 +405,7 @@
 
     <Body width="8" height="17" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-1.0" duration="30.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -424,7 +423,7 @@
 
     <Body width="8" height="16" density="25"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" bleeding="0.1" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -443,7 +442,7 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -462,7 +461,7 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Health="-5.0" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
@@ -481,7 +480,7 @@
 
     <Body width="25" height="5" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnImpact" target="This" Condition="0.0" setvalue="true"/>
       <StatusEffect type="OnFire" target="This" Condition="-50.0"/>
       
@@ -508,7 +507,7 @@
 
     <Body width="8" height="16" density="10"/>
 
-    <Throwable slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" Oxygen="-15.0" Health="-5.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>

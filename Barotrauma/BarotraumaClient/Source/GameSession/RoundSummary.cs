@@ -26,7 +26,7 @@ namespace Barotrauma
         {
             bool singleplayer = GameMain.NetworkMember == null;
 
-            bool gameOver = gameSession.CrewManager.GetCharacters().All(c => c.IsDead);
+            bool gameOver = gameSession.CrewManager.GetCharacters().All(c => c.IsDead || c.IsUnconscious);
             bool progress = Submarine.MainSub.AtEndPosition;
             
             GUIFrame frame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.8f, null);
@@ -36,15 +36,18 @@ namespace Barotrauma
             
             int y = 0;
             
-            if (singleplayer)
+            if (!singleplayer)
             {
-                string summaryText = InfoTextManager.GetInfoText(gameOver ? "gameover" :
-                    (progress ? "progress" : "return"));
-
-                var infoText = new GUITextBlock(new Rectangle(0, y, 0, 50), summaryText, "", innerFrame, true);
-                y += infoText.Rect.Height;
+                //Game over if everyone dead or didn't progress
+                gameOver = gameOver || !progress;
+                SoundPlayer.OverrideMusicType = gameOver ? "crewdead" : "endround";
             }
 
+            string summaryText = InfoTextManager.GetInfoText(gameOver ? "gameover" :
+                (progress ? "progress" : "return"));
+
+            var infoText = new GUITextBlock(new Rectangle(0, y, 0, 50), summaryText, "", innerFrame, true);
+            y += infoText.Rect.Height;
 
             if (!string.IsNullOrWhiteSpace(endMessage))
             {
