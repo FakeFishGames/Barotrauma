@@ -180,25 +180,17 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
   </ItemGroup>
-  <Choose>
-    <When Condition=" '$(Configuration)'=='ReleaseWindows' Or '$(Configuration)'=='DebugWindows' ">
-      <ItemGroup>
-        <Reference Include="MonoGame.Framework.WindowsDX">
-          <HintPath>..\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
-        </Reference>
-        <Reference Include="SharpDX">
-          <HintPath>..\NuGet\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <When Condition=" '$(Configuration)'=='ReleaseLinux' Or '$(Configuration)'=='DebugLinux' ">
-      <ItemGroup>
-        <Reference Include="MonoGame.Framework.DesktopGL">
-          <HintPath>..\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
+  <ItemGroup>
+    <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="MonoGame.Framework.WindowsDX">
+      <HintPath>..\NuGet\MonoGame.Framework.WindowsDX.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Condition="$(DefineConstants.Contains('WINDOWS'))" Include="SharpDX">
+      <HintPath>..\NuGet\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Condition="$(DefineConstants.Contains('LINUX'))" Include="MonoGame.Framework.DesktopGL">
+      <HintPath>..\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
