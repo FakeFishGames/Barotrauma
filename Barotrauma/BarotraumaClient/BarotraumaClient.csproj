@@ -274,8 +274,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="MonoGame.Framework.dll.config">
-      <DeployService.Deploy>true</DeployService.Deploy>
-      <DeployService.UseProjectRelativePath>true</DeployService.UseProjectRelativePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="OpenTK.dll.config">

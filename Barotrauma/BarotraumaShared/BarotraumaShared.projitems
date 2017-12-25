@@ -19,8 +19,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\BackgroundCreaturePrefabs.xml">
-      <DeployService.Deploy>true</DeployService.Deploy>
-      <DeployService.UseProjectRelativePath>true</DeployService.UseProjectRelativePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\BackgroundSprites\BackgroundSpritePrefabs.xml">
@@ -763,8 +761,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)Content\blurshader.xnb">
-      <DeployService.Deploy>true</DeployService.Deploy>
-      <DeployService.UseProjectRelativePath>true</DeployService.UseProjectRelativePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\alarm1.ogg">
