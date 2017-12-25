@@ -230,20 +230,6 @@
     <Compile Include="Source\Utils\TextureLoader.cs" />
     <Compile Include="Source\Utils\ToolBox.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Libraries\NuGet\OpenTK.2.0.0\lib\net20\OpenTK.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.XML" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="RestSharp">
-      <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <Choose>
     <When Condition=" '$(Configuration)'=='ReleaseWindows' Or '$(Configuration)'=='DebugWindows' ">
       <ItemGroup>
@@ -253,12 +239,36 @@
         <Reference Include="SharpDX">
           <HintPath>..\..\Libraries\NuGet\SharpDX.4.0.1\lib\net45\SharpDX.dll</HintPath>
         </Reference>
+        <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <HintPath>..\..\Libraries\NuGet\OpenTK.2.0.0\lib\net20\OpenTK.dll</HintPath>
+        </Reference>
+        <Reference Include="System" />
+        <Reference Include="System.Drawing" />
+        <Reference Include="System.Windows.Forms" />
+        <Reference Include="System.XML" />
+        <Reference Include="System.Xml.Linq" />
+        <Reference Include="RestSharp">
+          <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
+        </Reference>
       </ItemGroup>
     </When>
     <When Condition=" '$(Configuration)'=='ReleaseLinux' Or '$(Configuration)'=='DebugLinux' ">
       <ItemGroup>
         <Reference Include="MonoGame.Framework.DesktopGL">
           <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.DesktopGL.3.6.0.1625\lib\net40\MonoGame.Framework.dll</HintPath>
+        </Reference>
+        <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <HintPath>..\..\Libraries\NuGet\OpenTK.2.0.0\lib\net20\OpenTK.dll</HintPath>
+        </Reference>
+        <Reference Include="System" />
+        <Reference Include="System.Drawing" />
+        <Reference Include="System.Windows.Forms" />
+        <Reference Include="System.XML" />
+        <Reference Include="System.Xml.Linq" />
+        <Reference Include="RestSharp">
+          <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
         </Reference>
       </ItemGroup>
     </When>
@@ -306,10 +316,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj">
-      <Project>{0aad36e3-51a5-4a07-ab60-5c8a66bd38b7}</Project>
-      <Name>Farseer Physics MonoGame</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.csproj">
       <Project>{3b8f9edb-6e5e-450c-abc2-ec49075d0b50}</Project>
       <Name>Hyper.ComponentModel</Name>
@@ -321,6 +327,10 @@
     <ProjectReference Include="..\..\Libraries\SharpFont\Source\SharpFont\SharpFont.csproj">
       <Project>{c293db32-fa42-486d-b128-5a12522fae4e}</Project>
       <Name>SharpFont</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer Physics MonoGame.csproj">
+      <Project>{0AAD36E3-51A5-4A07-AB60-5C8A66BD38B7}</Project>
+      <Name>Farseer Physics MonoGame</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
