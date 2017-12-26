@@ -178,7 +178,7 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && Character.controlled == this)
             {
-                string chatMessage = InfoTextManager.GetInfoText("Self_CauseOfDeath." + causeOfDeath.ToString());
+                string chatMessage = TextManager.Get("Self_CauseOfDeath." + causeOfDeath.ToString());
                 if (GameMain.Client != null) chatMessage += " Your chat messages will only be visible to other dead players.";
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
