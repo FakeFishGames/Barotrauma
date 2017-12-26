@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -17,8 +17,8 @@ namespace Barotrauma.Lights
         private Color color;
         private float range;
         
-        private Sprite overrideLightTexture;
-        private Texture2D texture;
+        public Sprite overrideLightTexture;
+        public Texture2D texture;
         
         public Sprite LightSprite;
 
@@ -140,7 +140,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public LightSource(Vector2 position, float range, Color color, Submarine submarine)
+        public LightSource(Vector2 position, float range, Color color, Submarine submarine, bool addLight=true)
         {
             hullsInRange = new List<ConvexHullList>();
 
@@ -156,7 +156,7 @@ namespace Barotrauma.Lights
 
             diffToSub = new Dictionary<Submarine, Vector2>();
 
-            GameMain.LightManager.AddLight(this);
+            if (addLight) GameMain.LightManager.AddLight(this);
         }
 
         /*public void DrawShadows(GraphicsDevice graphics, Camera cam, Matrix shadowTransform)
@@ -322,6 +322,7 @@ namespace Barotrauma.Lights
                 hulls.AddRange(chList.List);
             }
 
+            float bounds = range*2;
             //find convexhull segments that are close enough and facing towards the light source
             List<Segment> visibleSegments = new List<Segment>();
             List<SegmentPoint> points = new List<SegmentPoint>();
@@ -336,6 +337,10 @@ namespace Barotrauma.Lights
                 {
                     points.Add(s.Start);
                     points.Add(s.End);
+                    if (Math.Abs(s.Start.WorldPos.X - drawPos.X) > bounds) bounds = Math.Abs(s.Start.WorldPos.X - drawPos.X);
+                    if (Math.Abs(s.Start.WorldPos.Y - drawPos.Y) > bounds) bounds = Math.Abs(s.Start.WorldPos.Y - drawPos.Y);
+                    if (Math.Abs(s.End.WorldPos.X - drawPos.X) > bounds) bounds = Math.Abs(s.End.WorldPos.X - drawPos.X);
+                    if (Math.Abs(s.End.WorldPos.Y - drawPos.Y) > bounds) bounds = Math.Abs(s.End.WorldPos.Y - drawPos.Y);
                 }
             }
 
@@ -344,13 +349,20 @@ namespace Barotrauma.Lights
 
             //(might be more effective to calculate if we actually need these extra points)
             var boundaryCorners = new List<SegmentPoint> {
-                new SegmentPoint(new Vector2(drawPos.X + range*2, drawPos.Y + range*2)),
-                new SegmentPoint(new Vector2(drawPos.X + range*2, drawPos.Y - range*2)),
-                new SegmentPoint(new Vector2(drawPos.X - range*2, drawPos.Y - range*2)),
-                new SegmentPoint(new Vector2(drawPos.X - range*2, drawPos.Y + range*2))
+                new SegmentPoint(new Vector2(drawPos.X + bounds, drawPos.Y + bounds)),
+                new SegmentPoint(new Vector2(drawPos.X + bounds, drawPos.Y - bounds)),
+                new SegmentPoint(new Vector2(drawPos.X - bounds, drawPos.Y - bounds)),
+                new SegmentPoint(new Vector2(drawPos.X - bounds, drawPos.Y + bounds))
             };
 
+            //points.Clear();
             points.AddRange(boundaryCorners);
+
+            //visibleSegments.Clear();
+            for (int i=0;i<4;i++)
+            {
+                visibleSegments.Add(new Segment(boundaryCorners[i], boundaryCorners[(i + 1) % 4]));
+            }
 
             var compareCCW = new CompareSegmentPointCW(drawPos);
             try
@@ -368,14 +380,16 @@ namespace Barotrauma.Lights
             }
             
             List<Vector2> output = new List<Vector2>();
+            //List<Pair<int, Vector2>> preOutput = new List<Pair<int, Vector2>>();
 
             //remove points that are very close to each other
             for (int i = 0; i < points.Count - 1; i++)
             {
-                if (Math.Abs(points[i].WorldPos.X - points[i + 1].WorldPos.X) < 3 &&
-                    Math.Abs(points[i].WorldPos.Y - points[i + 1].WorldPos.Y) < 3)
+                if (Math.Abs(points[i].WorldPos.X - points[i + 1].WorldPos.X) < 6 &&
+                    Math.Abs(points[i].WorldPos.Y - points[i + 1].WorldPos.Y) < 6)
                 {
                     points.RemoveAt(i + 1);
+                    i--;
                 }
             }
 
@@ -385,32 +399,52 @@ namespace Barotrauma.Lights
                 Vector2 dirNormal = new Vector2(-dir.Y, dir.X)*3;
                 
                 //do two slightly offset raycasts to hit the segment itself and whatever's behind it
-                Vector2 intersection1 = RayCast(drawPos, drawPos + dir * range * 2 - dirNormal, visibleSegments);
-                Vector2 intersection2 = RayCast(drawPos, drawPos + dir * range * 2 + dirNormal, visibleSegments);
+                Pair<int,Vector2> intersection1 = RayCast(drawPos, drawPos + dir * bounds * 2 - dirNormal, visibleSegments);
+                Pair<int,Vector2> intersection2 = RayCast(drawPos, drawPos + dir * bounds * 2 + dirNormal, visibleSegments);
 
-                //hit almost the same position -> only add one vertex to output
-                if ((Math.Abs(intersection1.X - intersection2.X) < 5 &&
-                    Math.Abs(intersection1.Y - intersection2.Y) < 5))
+                if (intersection1.First < 0) return new List<Vector2>();
+                if (intersection2.First < 0) return new List<Vector2>();
+                Segment seg1 = visibleSegments[intersection1.First];
+                Segment seg2 = visibleSegments[intersection2.First];
+
+                bool isPoint1 = MathUtils.LineToPointDistance(seg1.Start.WorldPos, seg1.End.WorldPos, p.WorldPos) < 5.0f;
+                bool isPoint2 = MathUtils.LineToPointDistance(seg2.Start.WorldPos, seg2.End.WorldPos, p.WorldPos) < 5.0f;
+
+                //hit at the current segmentpoint -> place the segmentpoint into the list
+                if (isPoint1 && isPoint2)
                 {
-                    output.Add(intersection1);
+                    output.Add(p.WorldPos);
                 }
-                else
+                else if (intersection1.First != intersection2.First)
                 {
-                    output.Add(intersection1);
-                    output.Add(intersection2);
+                    output.Add(isPoint1 ? p.WorldPos : intersection1.Second);
+                    output.Add(isPoint2 ? p.WorldPos : intersection2.Second);
                 }
             }
-            
+
+            //remove points that are very close to each other
+            for (int i = 0; i < output.Count - 1; i++)
+            {
+                if (Math.Abs(output[i].X - output[i + 1].X) < 6 &&
+                    Math.Abs(output[i].Y - output[i + 1].Y) < 6)
+                {
+                    output.RemoveAt(i + 1);
+                    i--;
+                }
+            }
+
             return output;
         }
 
-        private Vector2 RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
+        private Pair<int,Vector2> RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
         {
             float closestDist = 0.0f;
             Vector2? closestIntersection = null;
-            
-            foreach (Segment s in segments)
+            int segment = -1;
+
+            for (int i=0;i<segments.Count;i++)
             {
+                Segment s = segments[i];
                 Vector2? intersection = MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal);
 
                 if (intersection != null)
@@ -420,16 +454,20 @@ namespace Barotrauma.Lights
                     {
                         closestDist = dist;
                         closestIntersection = intersection;
+                        segment = i;
                     }
                 }
-            }            
+            }
 
-            return closestIntersection == null ? rayEnd : (Vector2)closestIntersection;
+            Pair<int,Vector2> retVal = new Pair<int,Vector2>();
+            retVal.Second = closestIntersection == null ? rayEnd : (Vector2)closestIntersection;
+            retVal.First = segment;
+            return retVal;
         }
 
         private void CalculateLightVertices(List<Vector2> rayCastHits)
         {
-            List<VertexPositionTexture> vertices = new List<VertexPositionTexture>();
+            List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
 
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
@@ -446,16 +484,19 @@ namespace Barotrauma.Lights
             }
 
             // Add a vertex for the center of the mesh
-            vertices.Add(new VertexPositionTexture(new Vector3(position.X, position.Y, 0),
-                new Vector2(0.5f, 0.5f) + uvOffset));
+            vertices.Add(new VertexPositionColorTexture(new Vector3(position.X, position.Y, 0),
+                Color.White,new Vector2(0.5f, 0.5f) + uvOffset));
 
             // Add all the other encounter points as vertices
             // storing their world position as UV coordinates
-            foreach (Vector2 vertex in rayCastHits)
+            for (int i = 0; i < rayCastHits.Count; i++)
             {
+                Vector2 vertex = rayCastHits[i];
+                Vector2 prevVertex = rayCastHits[i > 0 ? i - 1 : rayCastHits.Count - 1];
+                Vector2 nextVertex = rayCastHits[i < rayCastHits.Count - 1 ? i + 1 : 0];
                 Vector2 rawDiff = vertex - drawPos;
                 Vector2 diff = rawDiff;
-                diff /= range*2.0f;
+                diff /= range * 2.0f;
                 if (overrideLightTexture != null)
                 {
                     Vector2 originDiff = diff;
@@ -467,22 +508,52 @@ namespace Barotrauma.Lights
                     diff += uvOffset;
                 }
 
-                vertices.Add(new VertexPositionTexture(new Vector3(position.X + rawDiff.X, position.Y + rawDiff.Y, 0),
-                   new Vector2(0.5f, 0.5f) + diff));
+                Vector2 nDiff1 = vertex - nextVertex;
+                float tx = nDiff1.X; nDiff1.X = -nDiff1.Y; nDiff1.Y = tx;
+                nDiff1 /= Math.Max(Math.Abs(nDiff1.X), Math.Abs(nDiff1.Y));
+                Vector2 nDiff2 = prevVertex - vertex;
+                tx = nDiff2.X; nDiff2.X = -nDiff2.Y; nDiff2.Y = tx;
+                nDiff2 /= Math.Max(Math.Abs(nDiff2.X),Math.Abs(nDiff2.Y));
+                Vector2 nDiff = nDiff1 + nDiff2;
+                nDiff /= Math.Max(Math.Abs(nDiff.X), Math.Abs(nDiff.Y));
+                nDiff *= 50.0f;
+                if (Vector2.DistanceSquared(nDiff, rawDiff) > Vector2.DistanceSquared(-nDiff, rawDiff)) nDiff = -nDiff;
+                VertexPositionColorTexture fadeVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X + nDiff.X, position.Y + rawDiff.Y + nDiff.Y, 0),
+                   Color.White * 0.0f, new Vector2(0.5f, 0.5f) + diff);
+
+                vertices.Add(new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X, position.Y + rawDiff.Y, 0),
+                   Color.White, new Vector2(0.5f, 0.5f) + diff));
+                vertices.Add(fadeVert);
             }
 
             // Compute the indices to form triangles
             List<short> indices = new List<short>();
-            for (int i = 0; i < rayCastHits.Count - 1; i++)
+            for (int i = 0; i < rayCastHits.Count-1; i++)
             {
                 indices.Add(0);
-                indices.Add((short)((i + 2) % vertices.Count));
-                indices.Add((short)((i + 1) % vertices.Count));
+                indices.Add((short)((i*2 + 3) % vertices.Count));
+                indices.Add((short)((i*2 + 1) % vertices.Count));
+
+                indices.Add((short)((i*2 + 1) % vertices.Count));
+                indices.Add((short)((i*2 + 3) % vertices.Count));
+                indices.Add((short)((i*2 + 4) % vertices.Count));
+
+                indices.Add((short)((i*2 + 2) % vertices.Count));
+                indices.Add((short)((i*2 + 1) % vertices.Count));
+                indices.Add((short)((i*2 + 4) % vertices.Count));
             }
 
             indices.Add(0);
             indices.Add((short)(1));
-            indices.Add((short)(vertices.Count - 1));
+            indices.Add((short)(vertices.Count - 2));
+
+            indices.Add((short)(1));
+            indices.Add((short)(vertices.Count-1));
+            indices.Add((short)(vertices.Count-2));
+
+            indices.Add((short)(1));
+            indices.Add((short)(2));
+            indices.Add((short)(vertices.Count-1));
 
             vertexCount = vertices.Count;
             indexCount = indices.Count;
@@ -491,19 +562,19 @@ namespace Barotrauma.Lights
             //now we just create a buffer for 64 verts and make it larger if needed
             if (lightVolumeBuffer == null)
             {
-                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionTexture.VertexDeclaration, Math.Max(64, (int)(vertexCount*1.5)), BufferUsage.None);
+                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, Math.Max(64, (int)(vertexCount*1.5)), BufferUsage.None);
                 lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.Instance.GraphicsDevice, typeof(short), Math.Max(64*3, (int)(indexCount * 1.5)), BufferUsage.None);
             }
-            else if (vertexCount > lightVolumeBuffer.VertexCount)
+            else if (vertexCount > lightVolumeBuffer.VertexCount || indexCount > lightVolumeIndexBuffer.IndexCount)
             {
                 lightVolumeBuffer.Dispose();
                 lightVolumeIndexBuffer.Dispose();
 
-                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionTexture.VertexDeclaration, (int)(vertexCount*1.5), BufferUsage.None);
+                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, (int)(vertexCount*1.5), BufferUsage.None);
                 lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.Instance.GraphicsDevice, typeof(short), (int)(indexCount * 1.5), BufferUsage.None);
             }
-                        
-            lightVolumeBuffer.SetData<VertexPositionTexture>(vertices.ToArray());
+            
+            lightVolumeBuffer.SetData<VertexPositionColorTexture>(vertices.ToArray());
             lightVolumeIndexBuffer.SetData<short>(indices.ToArray());
         }     
 
@@ -562,7 +633,7 @@ namespace Barotrauma.Lights
             }
             else
             {
-                lightEffect.Texture = LightTexture;
+                lightEffect.Texture = texture??LightTexture;
             }
             lightEffect.CurrentTechnique.Passes[0].Apply();
 
@@ -571,6 +642,7 @@ namespace Barotrauma.Lights
 
             GameMain.Instance.GraphicsDevice.DrawIndexedPrimitives
             (
+                //PrimitiveType.LineList, 0, 0, indexCount / 2
                 PrimitiveType.TriangleList, 0, 0, indexCount / 3
             );
         }

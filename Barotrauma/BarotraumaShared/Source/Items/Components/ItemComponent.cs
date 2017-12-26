@@ -515,6 +515,7 @@ namespace Barotrauma.Items.Components
                     case "requireditem":
                         if (!overrideRequiredItems) requiredItems.Clear();
                         overrideRequiredItems = true;
+
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
                         
                         if (newRequiredItem == null) continue;

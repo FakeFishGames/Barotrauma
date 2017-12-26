@@ -470,7 +470,7 @@ namespace Barotrauma
             }
             else
             {
-                body.FarseerBody.Enabled = false;
+                body.Enabled = false;
             }
 
             if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 2.0f)

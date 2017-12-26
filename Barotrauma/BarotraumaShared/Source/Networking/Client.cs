@@ -126,7 +126,7 @@ namespace Barotrauma.Networking
 
         public static bool IsValidName(string name)
         {
-            if (name.Contains("\n") || name.Contains("\r\n")) return false;
+            if (name.Contains("\n") || name.Contains("\r")) return false;
 
             return (name.All(c =>
                 c != ';' &&

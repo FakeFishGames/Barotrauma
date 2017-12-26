@@ -12,7 +12,7 @@
       <WeldedSprite texture ="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture ="door.png" sourcerect="133,0,58,208" depth="0.051" origin="0.5,0.0" scale="true"/>
       <sound file="door.ogg" type="OnUse" range="500.0"/>
-      <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="2000.0"/>
+      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
     </Door>
 
     <AiTarget sightrange="500.0"/>

@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,7 +13,11 @@ namespace Barotrauma
 
         public VertexPositionTexture[] vertices = new VertexPositionTexture[DefaultBufferSize];
 
-        private Effect waterEffect;
+        public Effect waterEffect
+        {
+            get;
+            private set;
+        }
         private BasicEffect basicEffect;
 
         public int PositionInBuffer = 0;
@@ -93,7 +97,7 @@ namespace Barotrauma
 
             basicEffect.CurrentTechnique.Passes[0].Apply();
 
-            graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+            graphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
             graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, vertices, 0, vertices.Length / 3);
         }
 

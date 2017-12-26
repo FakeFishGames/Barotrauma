@@ -6,648 +6,648 @@ namespace Microsoft.Xna.Framework.Input
 {
     /// <summary>
     /// Defines the keys on a keyboard.
-    /// </summary>	
-	public enum Keys
-	{
+    /// </summary>    
+    public enum Keys
+    {
         /// <summary>
         /// Reserved.
         /// </summary>
-		None = 0,
+        None = 0,
         /// <summary>
         /// BACKSPACE key.
         /// </summary>
-		Back = 8,
+        Back = 8,
         /// <summary>
         /// TAB key.
         /// </summary>
-		Tab = 9,
+        Tab = 9,
         /// <summary>
         /// ENTER key.
         /// </summary>
-		Enter = 13,
+        Enter = 13,
         /// <summary>
         /// CAPS LOCK key.
         /// </summary>
-		CapsLock = 20,
+        CapsLock = 20,
         /// <summary>
         /// ESC key.
         /// </summary>
-		Escape = 27,
+        Escape = 27,
         /// <summary>
         /// SPACEBAR key.
         /// </summary>
-		Space = 32,
+        Space = 32,
         /// <summary>
         /// PAGE UP key.
         /// </summary>
-		PageUp = 33,
+        PageUp = 33,
         /// <summary>
         /// PAGE DOWN key.
         /// </summary>
-		PageDown = 34,
+        PageDown = 34,
         /// <summary>
         /// END key.
         /// </summary>
-		End = 35,
+        End = 35,
         /// <summary>
         /// HOME key.
         /// </summary>
-		Home = 36,
+        Home = 36,
         /// <summary>
         /// LEFT ARROW key.
         /// </summary>
-		Left = 37,
+        Left = 37,
         /// <summary>
         /// UP ARROW key.
         /// </summary>
-		Up = 38,
+        Up = 38,
         /// <summary>
         /// RIGHT ARROW key.
         /// </summary>
-		Right = 39,
+        Right = 39,
         /// <summary>
         /// DOWN ARROW key.
         /// </summary>
-		Down = 40,
+        Down = 40,
         /// <summary>
         /// SELECT key.
         /// </summary>
-		Select = 41,
+        Select = 41,
         /// <summary>
         /// PRINT key.
         /// </summary>
-		Print = 42,
+        Print = 42,
         /// <summary>
         /// EXECUTE key.
         /// </summary>
-		Execute = 43,
+        Execute = 43,
         /// <summary>
         /// PRINT SCREEN key.
         /// </summary>
-		PrintScreen = 44,
+        PrintScreen = 44,
         /// <summary>
         /// INS key.
         /// </summary>
-		Insert = 45,
+        Insert = 45,
         /// <summary>
         /// DEL key.
         /// </summary>
-		Delete = 46,
+        Delete = 46,
         /// <summary>
         /// HELP key.
         /// </summary>
-		Help = 47,
+        Help = 47,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D0 = 48,
+        D0 = 48,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D1 = 49,
+        D1 = 49,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D2 = 50,
+        D2 = 50,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D3 = 51,
+        D3 = 51,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D4 = 52,
+        D4 = 52,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D5 = 53,
+        D5 = 53,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D6 = 54,
+        D6 = 54,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D7 = 55,
+        D7 = 55,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D8 = 56,
+        D8 = 56,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		D9 = 57,
+        D9 = 57,
         /// <summary>
         /// A key.
         /// </summary>
-		A = 65,
+        A = 65,
         /// <summary>
         /// B key.
         /// </summary>
-		B = 66,
+        B = 66,
         /// <summary>
         /// C key.
         /// </summary>
-		C = 67,
+        C = 67,
         /// <summary>
         /// D key.
         /// </summary>
-		D = 68,
+        D = 68,
         /// <summary>
         /// E key.
         /// </summary>
-		E = 69,
+        E = 69,
         /// <summary>
         /// F key.
         /// </summary>
-		F = 70,
+        F = 70,
         /// <summary>
         /// G key.
         /// </summary>
-		G = 71,
+        G = 71,
         /// <summary>
         /// H key.
         /// </summary>
-		H = 72,
+        H = 72,
         /// <summary>
         /// I key.
         /// </summary>
-		I = 73,
+        I = 73,
         /// <summary>
         /// J key.
         /// </summary>
-		J = 74,
+        J = 74,
         /// <summary>
         /// K key.
         /// </summary>
-		K = 75,
+        K = 75,
         /// <summary>
         /// L key.
         /// </summary>
-		L = 76,
+        L = 76,
         /// <summary>
         /// M key.
         /// </summary>
-		M = 77,
+        M = 77,
         /// <summary>
         /// N key.
         /// </summary>
-		N = 78,
+        N = 78,
         /// <summary>
         /// O key.
         /// </summary>
-		O = 79,
+        O = 79,
         /// <summary>
         /// P key.
         /// </summary>
-		P = 80,
+        P = 80,
         /// <summary>
         /// Q key.
         /// </summary>
-		Q = 81,
+        Q = 81,
         /// <summary>
         /// R key.
         /// </summary>
-		R = 82,
+        R = 82,
         /// <summary>
         /// S key.
         /// </summary>
-		S = 83,
+        S = 83,
         /// <summary>
         /// T key.
         /// </summary>
-		T = 84,
+        T = 84,
         /// <summary>
         /// U key.
         /// </summary>
-		U = 85,
+        U = 85,
         /// <summary>
         /// V key.
         /// </summary>
-		V = 86,
+        V = 86,
         /// <summary>
         /// W key.
         /// </summary>
-		W = 87,
+        W = 87,
         /// <summary>
         /// X key.
         /// </summary>
-		X = 88,
+        X = 88,
         /// <summary>
         /// Y key.
         /// </summary>
-		Y = 89,
+        Y = 89,
         /// <summary>
         /// Z key.
         /// </summary>
-		Z = 90,
+        Z = 90,
         /// <summary>
         /// Left Windows key.
         /// </summary>
-		LeftWindows = 91,
+        LeftWindows = 91,
         /// <summary>
         /// Right Windows key.
         /// </summary>
-		RightWindows = 92,
+        RightWindows = 92,
         /// <summary>
         /// Applications key.
         /// </summary>
-		Apps = 93,
+        Apps = 93,
         /// <summary>
         /// Computer Sleep key.
         /// </summary>
-		Sleep = 95,
+        Sleep = 95,
         /// <summary>
         /// Numeric keypad 0 key.
         /// </summary>
-		NumPad0 = 96,
+        NumPad0 = 96,
         /// <summary>
         /// Numeric keypad 1 key.
         /// </summary>
-		NumPad1 = 97,
+        NumPad1 = 97,
         /// <summary>
         /// Numeric keypad 2 key.
         /// </summary>
-		NumPad2 = 98,
+        NumPad2 = 98,
         /// <summary>
         /// Numeric keypad 3 key.
         /// </summary>
-		NumPad3 = 99,
+        NumPad3 = 99,
         /// <summary>
         /// Numeric keypad 4 key.
         /// </summary>
-		NumPad4 = 100,
+        NumPad4 = 100,
         /// <summary>
         /// Numeric keypad 5 key.
         /// </summary>
-		NumPad5 = 101,
+        NumPad5 = 101,
         /// <summary>
         /// Numeric keypad 6 key.
         /// </summary>
-		NumPad6 = 102,
+        NumPad6 = 102,
         /// <summary>
         /// Numeric keypad 7 key.
         /// </summary>
-		NumPad7 = 103,
+        NumPad7 = 103,
         /// <summary>
         /// Numeric keypad 8 key.
         /// </summary>
-		NumPad8 = 104,
+        NumPad8 = 104,
         /// <summary>
         /// Numeric keypad 9 key.
         /// </summary>
-		NumPad9 = 105,
+        NumPad9 = 105,
         /// <summary>
         /// Multiply key.
         /// </summary>
-		Multiply = 106,
+        Multiply = 106,
         /// <summary>
         /// Add key.
         /// </summary>
-		Add = 107,
+        Add = 107,
         /// <summary>
         /// Separator key.
         /// </summary>
-		Separator = 108,
+        Separator = 108,
         /// <summary>
         /// Subtract key.
         /// </summary>
-		Subtract = 109,
+        Subtract = 109,
         /// <summary>
         /// Decimal key.
         /// </summary>
-		Decimal = 110,
+        Decimal = 110,
         /// <summary>
         /// Divide key.
         /// </summary>
-		Divide = 111,
+        Divide = 111,
         /// <summary>
         /// F1 key.
         /// </summary>
-		F1 = 112,
+        F1 = 112,
         /// <summary>
         /// F2 key.
         /// </summary>
-		F2 = 113,
+        F2 = 113,
         /// <summary>
         /// F3 key.
         /// </summary>
-		F3 = 114,
+        F3 = 114,
         /// <summary>
         /// F4 key.
         /// </summary>
-		F4 = 115,
+        F4 = 115,
         /// <summary>
         /// F5 key.
         /// </summary>
-		F5 = 116,
+        F5 = 116,
         /// <summary>
         /// F6 key.
         /// </summary>
-		F6 = 117,
+        F6 = 117,
         /// <summary>
         /// F7 key.
         /// </summary>
-		F7 = 118,
+        F7 = 118,
         /// <summary>
         /// F8 key.
         /// </summary>
-		F8 = 119,
+        F8 = 119,
         /// <summary>
         /// F9 key.
         /// </summary>
-		F9 = 120,
+        F9 = 120,
         /// <summary>
         /// F10 key.
         /// </summary>
-		F10 = 121,
+        F10 = 121,
         /// <summary>
         /// F11 key.
         /// </summary>
-		F11 = 122,
+        F11 = 122,
         /// <summary>
         /// F12 key.
         /// </summary>
-		F12 = 123,
+        F12 = 123,
         /// <summary>
         /// F13 key.
         /// </summary>
-		F13 = 124,
+        F13 = 124,
         /// <summary>
         /// F14 key.
         /// </summary>
-		F14 = 125,
+        F14 = 125,
         /// <summary>
         /// F15 key.
         /// </summary>
-		F15 = 126,
+        F15 = 126,
         /// <summary>
         /// F16 key.
         /// </summary>
-		F16 = 127,
+        F16 = 127,
         /// <summary>
         /// F17 key.
         /// </summary>
-		F17 = 128,
+        F17 = 128,
         /// <summary>
         /// F18 key.
         /// </summary>
-		F18 = 129,
+        F18 = 129,
         /// <summary>
         /// F19 key.
         /// </summary>
-		F19 = 130,
+        F19 = 130,
         /// <summary>
         /// F20 key.
         /// </summary>
-		F20 = 131,
+        F20 = 131,
         /// <summary>
         /// F21 key.
         /// </summary>
-		F21 = 132,
+        F21 = 132,
         /// <summary>
         /// F22 key.
         /// </summary>
-		F22 = 133,
+        F22 = 133,
         /// <summary>
         /// F23 key.
         /// </summary>
-		F23 = 134,
+        F23 = 134,
         /// <summary>
         /// F24 key.
         /// </summary>
-		F24 = 135,
+        F24 = 135,
         /// <summary>
         /// NUM LOCK key.
         /// </summary>
-		NumLock = 144,
+        NumLock = 144,
         /// <summary>
         /// SCROLL LOCK key.
         /// </summary>
-		Scroll = 145,
+        Scroll = 145,
         /// <summary>
         /// Left SHIFT key.
         /// </summary>
-		LeftShift = 160,
+        LeftShift = 160,
         /// <summary>
         /// Right SHIFT key.
         /// </summary>
-		RightShift = 161,
+        RightShift = 161,
         /// <summary>
         /// Left CONTROL key.
         /// </summary>
-		LeftControl = 162,
+        LeftControl = 162,
         /// <summary>
         /// Right CONTROL key.
         /// </summary>
-		RightControl = 163,
+        RightControl = 163,
         /// <summary>
         /// Left ALT key.
         /// </summary>
-		LeftAlt = 164,
+        LeftAlt = 164,
         /// <summary>
         /// Right ALT key.
         /// </summary>
-		RightAlt = 165,
+        RightAlt = 165,
         /// <summary>
         /// Browser Back key.
         /// </summary>
-		BrowserBack = 166,
+        BrowserBack = 166,
         /// <summary>
         /// Browser Forward key.
         /// </summary>
-		BrowserForward = 167,
+        BrowserForward = 167,
         /// <summary>
         /// Browser Refresh key.
         /// </summary>
-		BrowserRefresh = 168,
+        BrowserRefresh = 168,
         /// <summary>
         /// Browser Stop key.
         /// </summary>
-		BrowserStop = 169,
+        BrowserStop = 169,
         /// <summary>
         /// Browser Search key.
         /// </summary>
-		BrowserSearch = 170,
+        BrowserSearch = 170,
         /// <summary>
         /// Browser Favorites key.
         /// </summary>
-		BrowserFavorites = 171,
+        BrowserFavorites = 171,
         /// <summary>
         /// Browser Start and Home key.
         /// </summary>
-		BrowserHome = 172,
-		/// <summary>
+        BrowserHome = 172,
+        /// <summary>
         /// Volume Mute key.
-		/// </summary>
+        /// </summary>
         VolumeMute = 173,
         /// <summary>
         /// Volume Down key.
         /// </summary>
-		VolumeDown = 174,
+        VolumeDown = 174,
         /// <summary>
         /// Volume Up key.
         /// </summary>
-		VolumeUp = 175,
+        VolumeUp = 175,
         /// <summary>
         /// Next Track key.
         /// </summary>
-		MediaNextTrack = 176,
+        MediaNextTrack = 176,
         /// <summary>
         /// Previous Track key.
         /// </summary>
-		MediaPreviousTrack = 177,
+        MediaPreviousTrack = 177,
         /// <summary>
         /// Stop Media key.
         /// </summary>
-		MediaStop = 178,
+        MediaStop = 178,
         /// <summary>
         /// Play/Pause Media key.
         /// </summary>
-		MediaPlayPause = 179,
+        MediaPlayPause = 179,
         /// <summary>
         /// Start Mail key.
         /// </summary>
-		LaunchMail = 180,
+        LaunchMail = 180,
         /// <summary>
         /// Select Media key.
         /// </summary>
-		SelectMedia = 181,
+        SelectMedia = 181,
         /// <summary>
         /// Start Application 1 key.
         /// </summary>
-		LaunchApplication1 = 182,
+        LaunchApplication1 = 182,
         /// <summary>
         /// Start Application 2 key.
         /// </summary>
-		LaunchApplication2 = 183,
+        LaunchApplication2 = 183,
         /// <summary>
         /// The OEM Semicolon key on a US standard keyboard.
         /// </summary>
-		OemSemicolon = 186,
+        OemSemicolon = 186,
         /// <summary>
         /// For any country/region, the '+' key.
         /// </summary>
-		OemPlus = 187,
+        OemPlus = 187,
         /// <summary>
         /// For any country/region, the ',' key.
         /// </summary>
-		OemComma = 188,
+        OemComma = 188,
         /// <summary>
         /// For any country/region, the '-' key.
         /// </summary>
-		OemMinus = 189,
+        OemMinus = 189,
         /// <summary>
         /// For any country/region, the '.' key.
         /// </summary>
-		OemPeriod = 190,
+        OemPeriod = 190,
         /// <summary>
         /// The OEM question mark key on a US standard keyboard.
         /// </summary>
-		OemQuestion = 191,
+        OemQuestion = 191,
         /// <summary>
         /// The OEM tilde key on a US standard keyboard.
         /// </summary>
-		OemTilde = 192,
+        OemTilde = 192,
         /// <summary>
         /// The OEM open bracket key on a US standard keyboard.
         /// </summary>
-		OemOpenBrackets = 219,
+        OemOpenBrackets = 219,
         /// <summary>
         /// The OEM pipe key on a US standard keyboard.
         /// </summary>
-		OemPipe = 220,
+        OemPipe = 220,
         /// <summary>
         /// The OEM close bracket key on a US standard keyboard.
         /// </summary>
-		OemCloseBrackets = 221,
+        OemCloseBrackets = 221,
         /// <summary>
         /// The OEM singled/double quote key on a US standard keyboard.
         /// </summary>
-		OemQuotes = 222,
+        OemQuotes = 222,
         /// <summary>
         /// Used for miscellaneous characters; it can vary by keyboard.
         /// </summary>
-		Oem8 = 223,
+        Oem8 = 223,
         /// <summary>
         /// The OEM angle bracket or backslash key on the RT 102 key keyboard.
         /// </summary>
-		OemBackslash = 226,
+        OemBackslash = 226,
         /// <summary>
         /// IME PROCESS key.
         /// </summary>
-		ProcessKey = 229,
+        ProcessKey = 229,
         /// <summary>
         /// Attn key.
         /// </summary>
-		Attn = 246,
+        Attn = 246,
         /// <summary>
         /// CrSel key.
         /// </summary>
-		Crsel = 247,
+        Crsel = 247,
         /// <summary>
         /// ExSel key.
         /// </summary>
-		Exsel = 248,
+        Exsel = 248,
         /// <summary>
         /// Erase EOF key.
         /// </summary>
-		EraseEof = 249,
+        EraseEof = 249,
         /// <summary>
         /// Play key.
         /// </summary>
-		Play = 250,
+        Play = 250,
         /// <summary>
         /// Zoom key.
         /// </summary>
-		Zoom = 251,
+        Zoom = 251,
         /// <summary>
         /// PA1 key.
         /// </summary>
-		Pa1 = 253,
+        Pa1 = 253,
         /// <summary>
         /// CLEAR key.
         /// </summary>
-		OemClear = 254,
+        OemClear = 254,
         /// <summary>
         /// Green ChatPad key.
         /// </summary>
-		ChatPadGreen = 0xCA,
+        ChatPadGreen = 0xCA,
         /// <summary>
         /// Orange ChatPad key.
         /// </summary>
-		ChatPadOrange = 0xCB,
+        ChatPadOrange = 0xCB,
         /// <summary>
         /// PAUSE key.
         /// </summary>
-		Pause = 0x13,
+        Pause = 0x13,
         /// <summary>
         /// IME Convert key.
         /// </summary>
-		ImeConvert = 0x1c,
+        ImeConvert = 0x1c,
         /// <summary>
         /// IME NoConvert key.
         /// </summary>
-		ImeNoConvert = 0x1d,
+        ImeNoConvert = 0x1d,
         /// <summary>
         /// Kana key on Japanese keyboards.
         /// </summary>
-		Kana = 0x15,
+        Kana = 0x15,
         /// <summary>
         /// Kanji key on Japanese keyboards.
         /// </summary>
-		Kanji = 0x19,
+        Kanji = 0x19,
         /// <summary>
         /// OEM Auto key.
         /// </summary>
-		OemAuto = 0xf3,
+        OemAuto = 0xf3,
         /// <summary>
         /// OEM Copy key.
         /// </summary>
-		OemCopy = 0xf2,
+        OemCopy = 0xf2,
         /// <summary>
         /// OEM Enlarge Window key.
         /// </summary>
-		OemEnlW = 0xf4
-	}
+        OemEnlW = 0xf4
+    }
 }

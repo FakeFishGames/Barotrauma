@@ -78,7 +78,7 @@ namespace Barotrauma
             }
 
             //re-enable collider
-            if (!Collider.FarseerBody.Enabled)
+            if (!Collider.Enabled)
             {
                 var lowestLimb = FindLowestLimb();
 
@@ -87,7 +87,7 @@ namespace Barotrauma
                     Math.Max(lowestLimb.SimPosition.Y + (Collider.radius + Collider.height / 2), Collider.SimPosition.Y)),
                     0.0f);
 
-                Collider.FarseerBody.Enabled = true;
+                Collider.Enabled = true;
             }
 
             ResetPullJoints();
