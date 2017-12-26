@@ -1,4 +1,4 @@
-﻿using Barotrauma.Lights;
+using Barotrauma.Lights;
 using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
 using System;
@@ -76,9 +76,9 @@ namespace Barotrauma
                 }
             }
 
-            lightSource.Range = Math.Max(size.X, size.Y) * 10.0f / 2.0f;
             lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f);
-            lightSource.Position = position + Vector2.UnitY * 30.0f;
+            if (Math.Abs((lightSource.Range * 0.2f) - Math.Max(size.X, size.Y)) > 1.0f) lightSource.Range = Math.Max(size.X, size.Y) * 5.0f;
+            if (Vector2.DistanceSquared(lightSource.Position,position) > 5.0f) lightSource.Position = position + Vector2.UnitY * 30.0f;
 
             if (size.X > 256.0f)
             {

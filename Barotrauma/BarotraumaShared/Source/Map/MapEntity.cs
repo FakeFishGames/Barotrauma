@@ -89,11 +89,11 @@ namespace Barotrauma
             get { return false; }
         }
 
-        protected bool ResizeHorizontal
+        public bool ResizeHorizontal
         {
             get { return prefab != null && prefab.ResizeHorizontal; }
         }
-        protected bool ResizeVertical
+        public bool ResizeVertical
         {
             get { return prefab != null && prefab.ResizeVertical; }
         }

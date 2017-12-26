@@ -848,6 +848,7 @@ namespace Barotrauma
             {
                 StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
                 bodies.ForEach(b => GameMain.World.RemoveBody(b));
+                bodies.Clear();
 
                 CreateStairBodies();
             }

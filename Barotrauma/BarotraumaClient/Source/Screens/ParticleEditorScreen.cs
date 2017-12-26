@@ -15,10 +15,10 @@ namespace Barotrauma
         class Emitter : ISerializableEntity
         {
             public float EmitTimer;
-            
+
             [Editable(), Serialize("0.0,0.0", false)]
             public Vector2 AngleRange { get; private set; }
-            
+
             [Editable(), Serialize("0.0,0.0", false)]
             public Vector2 VelocityRange { get; private set; }
 
@@ -76,7 +76,7 @@ namespace Barotrauma
             cam = new Camera();
 
             guiRoot = new GUIFrame(Rectangle.Empty, null, null);
-            
+
             leftPanel = new GUIFrame(new Rectangle(0, 0, 150, GameMain.GraphicsHeight), "GUIFrameLeft", guiRoot);
             leftPanel.Padding = new Vector4(10.0f, 20.0f, 10.0f, 20.0f);
 
@@ -150,7 +150,7 @@ namespace Barotrauma
         }
 
         private void SerializeAll()
-        {            
+        {
             XDocument doc = XMLExtensions.TryLoadXml(GameMain.ParticleManager.ConfigFile);
             if (doc == null || doc.Root == null) return;
 
@@ -179,6 +179,7 @@ namespace Barotrauma
 
         private void SerializeToClipboard(ParticlePrefab prefab)
         {
+#if WINDOWS
             if (prefab == null) return;
 
             XmlWriterSettings settings = new XmlWriterSettings();
@@ -197,6 +198,7 @@ namespace Barotrauma
             }
 
             Clipboard.SetText(sb.ToString());
+#endif
         }
 
         public override void Update(double deltaTime)

@@ -28,7 +28,7 @@ namespace Barotrauma
         static GUIFrame frame;
         static GUIListBox listBox;
         static GUITextBox textBox;
-        
+
         public static void Init(GameWindow window)
         {
             int x = 20, y = 20;
@@ -47,7 +47,7 @@ namespace Barotrauma
                     return true;
                 };
 
-            
+
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
             NewMessage("Enter \"help\" for a list of available console commands", Color.Cyan);
 
@@ -111,7 +111,7 @@ namespace Barotrauma
                 {
                     textBox.Text = AutoComplete(textBox.Text);
                 }
-                
+
                 if (PlayerInput.KeyHit(Keys.Enter))
                 {
                     ExecuteCommand(textBox.Text);
@@ -164,7 +164,7 @@ namespace Barotrauma
             {
                 listBox.children.RemoveRange(0, listBox.children.Count - MaxMessages);
             }
-            
+
             Messages.Add(msg);
             if (Messages.Count > MaxMessages)
             {
@@ -190,10 +190,27 @@ namespace Barotrauma
 
         private static void InitProjectSpecific()
         {
+            commands.Add(new Command("autohull", "", (string[] args) =>
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen) return;
+
+                if (MapEntity.mapEntityList.Any(e => e is Hull || e is Gap))
+                {
+                    ShowQuestionPrompt("This submarine already has hulls and/or gaps. This command will delete them. Do you want to continue? Y/N",
+                        (option) => {
+                            if (option.ToLower() == "y") GameMain.SubEditorScreen.AutoHull();
+                        });
+                }
+                else
+                {
+                    GameMain.SubEditorScreen.AutoHull();
+                }
+            }));
+
             commands.Add(new Command("startclient", "", (string[] args) =>
             {
                 if (args.Length == 0) return;
-                
+
                 if (GameMain.Client == null)
                 {
                     GameMain.NetworkMember = new GameClient("Name");
@@ -227,7 +244,7 @@ namespace Barotrauma
                 }
                 GameMain.SubEditorScreen.Select();
             }));
-            
+
             commands.Add(new Command("editcharacter", "", (string[] args) =>
             {
                 GameMain.CharacterEditorScreen.Select();

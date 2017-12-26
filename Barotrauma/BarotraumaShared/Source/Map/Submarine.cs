@@ -1208,9 +1208,9 @@ namespace Barotrauma
                 Item.ItemList.Clear();
             }
 
-            PhysicsBody.RemoveAll();
+            Ragdoll.RemoveAll();
 
-            Ragdoll.list.Clear();
+            PhysicsBody.RemoveAll();
 
             GameMain.World.Clear();
 

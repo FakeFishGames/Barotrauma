@@ -901,7 +901,305 @@ namespace Barotrauma
             previouslyUsedList.RemoveChild(textBlock);
             previouslyUsedList.children.Insert(0, textBlock);
         }
+        
+        public void AutoHull()
+        {
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            {
+                MapEntity h = MapEntity.mapEntityList[i];
+                if (h is Hull || h is Gap)
+                {
+                    h.Remove();
+                    i--;
+                }
+            }
 
+            List<Vector2> wallPoints = new List<Vector2>();
+            Vector2 min = Vector2.Zero;
+            Vector2 max = Vector2.Zero;
+
+            List<MapEntity> mapEntityList = new List<MapEntity>();
+
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (e is Item)
+                {
+                    Item it = e as Item;
+                    Door door = it.GetComponent<Door>();
+                    if (door != null)
+                    {
+                        int halfW = e.WorldRect.Width / 2;
+                        wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y + e.WorldRect.Height));
+                        mapEntityList.Add(it);
+                    }
+                    continue;
+                }
+
+                if (!(e is Structure)) continue;
+                Structure s = e as Structure;
+                if (!s.HasBody) continue;
+                mapEntityList.Add(e);
+
+                if (e.Rect.Width > e.Rect.Height)
+                {
+                    int halfH = e.WorldRect.Height / 2;
+                    wallPoints.Add(new Vector2(e.WorldRect.X, -e.WorldRect.Y + halfH));
+                    wallPoints.Add(new Vector2(e.WorldRect.X + e.WorldRect.Width, -e.WorldRect.Y + halfH));
+                }
+                else
+                {
+                    int halfW = e.WorldRect.Width / 2;
+                    wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y));
+                    wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y + e.WorldRect.Height));
+                }
+            }
+
+            min = wallPoints[0];
+            max = wallPoints[0];
+            for (int i = 0; i < wallPoints.Count; i++)
+            {
+                min.X = Math.Min(min.X, wallPoints[i].X);
+                min.Y = Math.Min(min.Y, wallPoints[i].Y);
+                max.X = Math.Max(max.X, wallPoints[i].X);
+                max.Y = Math.Max(max.Y, wallPoints[i].Y);
+            }
+
+            List<Rectangle> hullRects = new List<Rectangle>();
+            hullRects.Add(new Rectangle((int)min.X, (int)min.Y, (int)(max.X - min.X), (int)(max.Y - min.Y)));
+            foreach (Vector2 point in wallPoints)
+            {
+                MathUtils.SplitRectanglesHorizontal(hullRects, point);
+                MathUtils.SplitRectanglesVertical(hullRects, point);
+            }
+
+            hullRects.Sort((a, b) =>
+            {
+                if (a.Y < b.Y) return -1;
+                if (a.Y > b.Y) return 1;
+                if (a.X < b.X) return -1;
+                if (a.X > b.X) return 1;
+                return 0;
+            });
+
+            for (int i = 0; i < hullRects.Count - 1; i++)
+            {
+                Rectangle rect = hullRects[i];
+                if (hullRects[i + 1].Y > rect.Y) continue;
+
+                Vector2 hullRPoint = new Vector2(rect.X + rect.Width - 8, rect.Y + rect.Height / 2);
+                Vector2 hullLPoint = new Vector2(rect.X, rect.Y + rect.Height / 2);
+
+                MapEntity container = null;
+                foreach (MapEntity e in mapEntityList)
+                {
+                    Rectangle entRect = e.WorldRect;
+                    entRect.Y = -entRect.Y;
+                    if (entRect.Contains(hullRPoint))
+                    {
+                        if (!entRect.Contains(hullLPoint)) container = e;
+                        break;
+                    }
+                }
+                if (container == null)
+                {
+                    rect.Width += hullRects[i + 1].Width;
+                    hullRects[i] = rect;
+                    hullRects.RemoveAt(i + 1);
+                    i--;
+                }
+            }
+            
+            foreach (MapEntity e in mapEntityList)
+            {
+                Rectangle entRect = e.WorldRect;
+                if (entRect.Width < entRect.Height) continue;
+                entRect.Y = -entRect.Y - 16;
+                for (int i = 0; i < hullRects.Count; i++)
+                {
+                    Rectangle hullRect = hullRects[i];
+                    if (entRect.Intersects(hullRect))
+                    {
+                        if (hullRect.Y < entRect.Y)
+                        {
+                            hullRect.Height = Math.Max((entRect.Y + 16 + entRect.Height / 2) - hullRect.Y, hullRect.Height);
+                            hullRects[i] = hullRect;
+                        }
+                        else if (hullRect.Y + hullRect.Height <= entRect.Y + 16 + entRect.Height)
+                        {
+                            hullRects.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+            }
+
+            foreach (MapEntity e in mapEntityList)
+            {
+                Rectangle entRect = e.WorldRect;
+                if (entRect.Width < entRect.Height) continue;
+                entRect.Y = -entRect.Y;
+                for (int i = 0; i < hullRects.Count; i++)
+                {
+                    Rectangle hullRect = hullRects[i];
+                    if (entRect.Intersects(hullRect))
+                    {
+                        if (hullRect.Y >= entRect.Y - 8 && hullRect.Y + hullRect.Height <= entRect.Y + entRect.Height + 8)
+                        {
+                            hullRects.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+            }
+            
+            for (int i = 0; i < hullRects.Count;)
+            {
+                Rectangle hullRect = hullRects[i];
+                Vector2 point = new Vector2(hullRect.X+2, hullRect.Y+hullRect.Height/2);
+                MapEntity container = null;
+                foreach (MapEntity e in mapEntityList)
+                {
+                    Rectangle entRect = e.WorldRect;
+                    entRect.Y = -entRect.Y;
+                    if (entRect.Contains(point))
+                    {
+                        container = e;
+                        break;
+                    }
+                }
+                if (container == null)
+                {
+                    hullRects.RemoveAt(i);
+                    continue;
+                }
+
+                while (hullRects[i].Y <= hullRect.Y)
+                {
+                    i++;
+                    if (i >= hullRects.Count) break;
+                }
+            }
+            
+            for (int i = hullRects.Count-1; i >= 0;)
+            {
+                Rectangle hullRect = hullRects[i];
+                Vector2 point = new Vector2(hullRect.X+hullRect.Width-2, hullRect.Y+hullRect.Height/2);
+                MapEntity container = null;
+                foreach (MapEntity e in mapEntityList)
+                {
+                    Rectangle entRect = e.WorldRect;
+                    entRect.Y = -entRect.Y;
+                    if (entRect.Contains(point))
+                    {
+                        container = e;
+                        break;
+                    }
+                }
+                if (container == null)
+                {
+                    hullRects.RemoveAt(i); i--;
+                    continue;
+                }
+
+                while (hullRects[i].Y >= hullRect.Y)
+                {
+                    i--;
+                    if (i < 0) break;
+                }
+            }
+            
+            hullRects.Sort((a, b) =>
+            {
+                if (a.X < b.X) return -1;
+                if (a.X > b.X) return 1;
+                if (a.Y < b.Y) return -1;
+                if (a.Y > b.Y) return 1;
+                return 0;
+            });
+            
+            for (int i = 0; i < hullRects.Count - 1; i++)
+            {
+                Rectangle rect = hullRects[i];
+                if (hullRects[i + 1].Width != rect.Width) continue;
+                if (hullRects[i + 1].X > rect.X) continue;
+
+                Vector2 hullBPoint = new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height - 8);
+                Vector2 hullUPoint = new Vector2(rect.X + rect.Width / 2, rect.Y);
+
+                MapEntity container = null;
+                foreach (MapEntity e in mapEntityList)
+                {
+                    Rectangle entRect = e.WorldRect;
+                    entRect.Y = -entRect.Y;
+                    if (entRect.Contains(hullBPoint))
+                    {
+                        if (!entRect.Contains(hullUPoint)) container = e;
+                        break;
+                    }
+                }
+                if (container == null)
+                {
+                    rect.Height += hullRects[i + 1].Height;
+                    hullRects[i] = rect;
+                    hullRects.RemoveAt(i + 1);
+                    i--;
+                }
+            }
+            
+            for (int i = 0; i < hullRects.Count;i++)
+            {
+                Rectangle rect = hullRects[i];
+                rect.Y -= 16;
+                rect.Height += 32;
+                hullRects[i] = rect;
+            }
+            
+            hullRects.Sort((a, b) =>
+            {
+                if (a.Y < b.Y) return -1;
+                if (a.Y > b.Y) return 1;
+                if (a.X < b.X) return -1;
+                if (a.X > b.X) return 1;
+                return 0;
+            });
+            
+            for (int i = 0; i < hullRects.Count; i++)
+            {
+                for (int j = i+1; j < hullRects.Count; j++)
+                {
+                    if (hullRects[j].Y <= hullRects[i].Y) continue;
+                    if (hullRects[j].Intersects(hullRects[i]))
+                    {
+                        Rectangle rect = hullRects[i];
+                        rect.Height = hullRects[j].Y - rect.Y;
+                        hullRects[i] = rect;
+                        break;
+                    }
+                }
+            }
+
+            foreach (Rectangle rect in hullRects)
+            {
+                Rectangle hullRect = rect;
+                hullRect.Y = -hullRect.Y;
+                Hull newHull = new Hull(MapEntityPrefab.Find("Hull"),
+                                        hullRect,
+                                        Submarine.MainSub);
+            }
+
+            foreach (MapEntity e in mapEntityList)
+            {
+                if (!(e is Structure)) continue;
+                if (!(e as Structure).IsPlatform) continue;
+
+                Rectangle gapRect = e.WorldRect;
+                gapRect.Y -= 8;
+                gapRect.Height = 16;
+                Gap newGap = new Gap(MapEntityPrefab.Find("Gap"),
+                                        gapRect);
+            }
+        }
+        
         public override void AddToGUIUpdateList()
         {
             if (tutorial != null) tutorial.AddToGUIUpdateList();

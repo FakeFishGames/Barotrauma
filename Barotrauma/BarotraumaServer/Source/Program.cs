@@ -5,14 +5,10 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-#if WINDOWS
-#endif
-
 #endregion
 
 namespace Barotrauma
 {
-#if WINDOWS || LINUX
     /// <summary>
     /// The main class.
     /// </summary>
@@ -86,5 +82,4 @@ namespace Barotrauma
             sw.Close();    
         }
     }
-#endif
 }

@@ -105,7 +105,7 @@ namespace Barotrauma
 
 
             //re-enable collider
-            if (!Collider.FarseerBody.Enabled)
+            if (!Collider.Enabled)
             {
                 var lowestLimb = FindLowestLimb();
                 
@@ -115,7 +115,7 @@ namespace Barotrauma
                     Collider.Rotation);
                 
                 Collider.FarseerBody.ResetDynamics();
-                Collider.FarseerBody.Enabled = true;
+                Collider.Enabled = true;
             }            
 
             if (swimming)

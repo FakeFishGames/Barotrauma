@@ -1120,7 +1120,7 @@ namespace Microsoft.Xna.Framework
         /// </summary>
         /// <param name="value1"><see cref="Vector4"/> instance on the left of the not equal sign.</param>
         /// <param name="value2"><see cref="Vector4"/> instance on the right of the not equal sign.</param>
-        /// <returns><c>true</c> if the instances are not equal; <c>false</c> otherwise.</returns>	
+        /// <returns><c>true</c> if the instances are not equal; <c>false</c> otherwise.</returns>    
         public static bool operator !=(Vector4 value1, Vector4 value2)
         {
             return !(value1 == value2);
