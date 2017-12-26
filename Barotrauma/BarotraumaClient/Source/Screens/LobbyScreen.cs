@@ -44,16 +44,16 @@ namespace Barotrauma
                 Alignment.BottomLeft, Alignment.BottomLeft, topPanel);
             moneyText.TextGetter = GetMoney;
             
-            GUIButton button = new GUIButton(new Rectangle(-240, 0, 100, 30), "Map", null, Alignment.BottomRight, "", topPanel);
+            GUIButton button = new GUIButton(new Rectangle(-240, 0, 100, 30), TextManager.Get("Map"), null, Alignment.BottomRight, "", topPanel);
             button.UserData = CampaignUI.Tab.Map;
             button.OnClicked = SelectTab;
             SelectTab(button, button.UserData);
 
-            button = new GUIButton(new Rectangle(-120, 0, 100, 30), "Crew", null, Alignment.BottomRight, "", topPanel);
+            button = new GUIButton(new Rectangle(-120, 0, 100, 30), TextManager.Get("Crew"), null, Alignment.BottomRight, "", topPanel);
             button.UserData = CampaignUI.Tab.Crew;
             button.OnClicked = SelectTab;
             
-            button = new GUIButton(new Rectangle(0, 0, 100, 30), "Store", null, Alignment.BottomRight, "", topPanel);
+            button = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("Store"), null, Alignment.BottomRight, "", topPanel);
             button.UserData = CampaignUI.Tab.Store;
             button.OnClicked = SelectTab;
    
@@ -80,7 +80,7 @@ namespace Barotrauma
                 return;
             }
 
-            locationTitle.Text = "Location: " + campaign.Map.CurrentLocation.Name;
+            locationTitle.Text = TextManager.Get("Location") + ": " + campaign.Map.CurrentLocation.Name;
 
             bottomPanel.ClearChildren();
             campaignUI = new CampaignUI(campaign, bottomPanel);

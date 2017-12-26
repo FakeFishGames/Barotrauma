@@ -38,7 +38,7 @@ namespace Barotrauma
             
             if (singleplayer)
             {
-                string summaryText = InfoTextManager.GetInfoText(gameOver ? "gameover" :
+                string summaryText = TextManager.Get(gameOver ? "gameover" :
                     (progress ? "progress" : "return"));
 
                 var infoText = new GUITextBlock(new Rectangle(0, y, 0, 50), summaryText, "", innerFrame, true);
@@ -81,7 +81,7 @@ namespace Barotrauma
                 Character character = characterInfo.Character;
                 if (character == null || character.IsDead)
                 {
-                    statusText = InfoTextManager.GetInfoText("CauseOfDeath." + characterInfo.CauseOfDeath.ToString());
+                    statusText = TextManager.Get("CauseOfDeath." + characterInfo.CauseOfDeath.ToString());
                     statusColor = Color.DarkRed;
                 }
                 else

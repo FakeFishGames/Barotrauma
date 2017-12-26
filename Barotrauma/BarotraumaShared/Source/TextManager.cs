@@ -6,18 +6,16 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    static class InfoTextManager
+    static class TextManager
     {
-
         private static Dictionary<string, List<string>> infoTexts;
 
-        static InfoTextManager()
+        static TextManager()
         {
-            LoadInfoTexts(Path.Combine("Content", "InfoTexts.xml"));            
+            Load(Path.Combine("Content", "Texts.xml"));            
         }
 
-
-        private static void LoadInfoTexts(string file)
+        private static void Load(string file)
         {
             infoTexts = new Dictionary<string, List<string>>();
 
@@ -38,20 +36,18 @@ namespace Barotrauma
             }
         }
 
-        public static string GetInfoText(string infoName)
+        public static string Get(string infoName)
         {
             List<string> infoList = null;
             if (!infoTexts.TryGetValue(infoName.ToLowerInvariant(), out infoList) || !infoList.Any())
             {
-#if DEBUG
-                return "Info text \"" + infoName + "\" not found";
-#else
-                return "";
-#endif
+                DebugConsole.ThrowError("Info text \"" + infoName + "\" not found");
+                return infoName;
             }
 
             string text = infoList[Rand.Int(infoList.Count)];
 
+            //todo: get rid of these and only do where needed?
 #if CLIENT
             foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
             {
