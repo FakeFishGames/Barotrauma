@@ -89,6 +89,11 @@ namespace Barotrauma
             get { return prefab.Body; }
         }
 
+        public List<Body> Bodies
+        {
+            get { return bodies; }
+        }
+
         public bool CastShadow
         {
             get { return prefab.CastShadow; }
@@ -651,23 +656,28 @@ namespace Barotrauma
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
 
-            int i = FindSectionIndex(transformedPos);
-            if (i == -1) return new AttackResult(0.0f, 0.0f);
-            
-            float damageAmount = attack.GetStructureDamage(deltaTime);
-
-            AddDamage(i, damageAmount, attacker);
+            float damageAmount = 0.0f;
+            for (int i = 0; i < SectionCount; i++)
+            {
+                if (Vector2.DistanceSquared(SectionPosition(i, true), worldPosition) <= attack.DamageRange * attack.DamageRange)
+                {
+                    damageAmount = attack.GetStructureDamage(deltaTime);
+                    AddDamage(i, damageAmount, attacker);
 
 #if CLIENT
             GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+#endif
+                }
+            }
 
+#if CLIENT
             if (playSound)// && !SectionBodyDisabled(i))
             {
                 DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
                 SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
-            
+
             return new AttackResult(damageAmount, 0.0f);
         }
 
