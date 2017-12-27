@@ -325,8 +325,19 @@
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" HuskInfectionState="-0.2" setvalue="true">
+        <Conditional HuskInfectionState="lt 1.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
+      <StatusEffect type="OnUse" target="Character" Health="-3.0" duration="10.0">
+        <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
+        <Conditional HuskInfectionState="eq 1.0"/>
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+      <!-- This is impossible right now because Conditionals are not allowed to check for non-serializable properties :(
+      <StatusEffect type="OnUse" target="Character" Health="-5.0" duration="10.0">
+        <Conditional SpeciesName="husk"/>
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect> -->
     </Throwable>
   </Item>
 
@@ -444,6 +455,8 @@
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01">
+        <!-- HuskInfectionState must be less than 0.01 so you can't speed up the infection -->
+        <Conditional HuskInfectionState="lt 0.01"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
