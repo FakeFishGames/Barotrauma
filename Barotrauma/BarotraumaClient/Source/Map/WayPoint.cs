@@ -132,10 +132,10 @@ namespace Barotrauma
             string trimmedName = text.ToLowerInvariant().Trim();
             assignedJob = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == trimmedName);
 
-            if (assignedJob != null && trimmedName != "none")
+            if (assignedJob != null && trimmedName != TextManager.Get("None").ToLowerInvariant())
             {
                 textBox.Color = Color.Green;
-                textBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
+                textBox.Text = (assignedJob == null) ? TextManager.Get("None") : assignedJob.Name;
             }
 
             textBox.Deselect();
@@ -162,13 +162,13 @@ namespace Barotrauma
 
             if (spawnType == SpawnType.Path)
             {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing waypoint", "", editingHUD);
-                new GUITextBlock(new Rectangle(0, 20, 100, 20), "Hold space to link to another waypoint", "", editingHUD);
+                new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("Editing")+" " +TextManager.Get("Waypoint"), "", editingHUD);
+                new GUITextBlock(new Rectangle(0, 20, 100, 20), TextManager.Get("LinkWaypoint"), "", editingHUD);
             }
             else
             {
-                new GUITextBlock(new Rectangle(0, 0, 100, 20), "Editing spawnpoint", "", editingHUD);
-                new GUITextBlock(new Rectangle(0, 25, 100, 20), "Spawn type: ", "", editingHUD);
+                new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("Editing") + " " + TextManager.Get("Spawnpoint"), "", editingHUD);
+                new GUITextBlock(new Rectangle(0, 25, 100, 20), TextManager.Get("SpawnType") + ": ", "", editingHUD);
 
                 var spawnTypeText = new GUITextBlock(new Rectangle(0, 25, 200, 20), spawnType.ToString(), "", Alignment.Right, Alignment.TopLeft, editingHUD);
 
@@ -182,33 +182,33 @@ namespace Barotrauma
 
                 y = 40 + 20;
 
-                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card desc:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
+                new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("IDCardDescription"), Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
                 GUITextBox propertyBox = new GUITextBox(new Rectangle(100, y, 350, 20), "", editingHUD);
                 propertyBox.MaxTextLength = 150;
                 propertyBox.Text = idCardDesc;
                 propertyBox.OnEnterPressed = EnterIDCardDesc;
                 propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = "Characters spawning at this spawnpoint will have the specified description added to their ID card. This can be used to describe additional access levels their card has on the sub.";
+                propertyBox.ToolTip = TextManager.Get("IDCardDescriptionTooltip");
 
                 y = y + 30;
 
-                new GUITextBlock(new Rectangle(0, y, 100, 20), "ID Card tags:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
+                new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("IDCardTags"), Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
                 propertyBox = new GUITextBox(new Rectangle(100, y, 350, 20), "", editingHUD);
                 propertyBox.MaxTextLength = 60;
                 propertyBox.Text = string.Join(", ", idCardTags);
                 propertyBox.OnEnterPressed = EnterIDCardTags;
                 propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = "Characters spawning at this spawnpoint will have the specified tags added to their ID card. You can, for example, use these tags to limit access to some parts of the sub.";
+                propertyBox.ToolTip = TextManager.Get("IDCardTagsTooltip");
 
                 y = y + 30;
 
-                new GUITextBlock(new Rectangle(0, y, 100, 20), "Assigned job:", Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
+                new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("SpawnpointJobs"), Color.Transparent, Color.White, Alignment.TopLeft, null, editingHUD);
                 propertyBox = new GUITextBox(new Rectangle(100, y, 350, 20), "", editingHUD);
                 propertyBox.MaxTextLength = 60;
                 propertyBox.Text = (assignedJob == null) ? "None" : assignedJob.Name;
                 propertyBox.OnEnterPressed = EnterAssignedJob;
                 propertyBox.OnTextChanged = TextBoxChanged;
-                propertyBox.ToolTip = "Only characters with the specified job will spawn at this spawnpoint.";
+                propertyBox.ToolTip = TextManager.Get("SpawnpointJobsTooltip");
 
             }
             
