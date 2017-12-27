@@ -97,7 +97,7 @@ namespace Barotrauma
             img.Color = order.Color;
             img.CanBeFocused = false;
 
-            orderListBox.children[characterIndex].ToolTip = "Order: " + order.Name;
+            orderListBox.children[characterIndex].ToolTip = TextManager.Get("Order") + ": " + order.Name;
         }
 
         public bool SelectCharacterOrder(GUIComponent component, object selection)

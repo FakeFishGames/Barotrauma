@@ -298,24 +298,32 @@ namespace Barotrauma
             else if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 serverList.ClearChildren();
-
+                
                 switch (masterServerResponse.StatusCode)
                 {
                     case System.Net.HttpStatusCode.NotFound:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
-                           TextManager.Get("MasterServerError404").Replace("[masterserverurl]", NetConfig.MasterServerUrl));
+                           TextManager.Get("MasterServerError404")
+                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
+                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
+                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
                         break;
                     case System.Net.HttpStatusCode.ServiceUnavailable:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
-                            TextManager.Get("MasterServerErrorUnavailable"));
+                            TextManager.Get("MasterServerErrorUnavailable")
+                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
+                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
+                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
                         break;
                     default:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
                             TextManager.Get("MasterServerError404")
+                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
                                 .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
                                 .Replace("[statusdescription]", masterServerResponse.StatusDescription));
                         break;
                 }
+                
             }
             else
             {

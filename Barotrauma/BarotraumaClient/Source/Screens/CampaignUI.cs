@@ -337,7 +337,7 @@ namespace Barotrauma
 
         public string GetMoney()
         {
-            return TextManager.Get("Credits") + ": " + ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaign.Money)) + " credits";
+            return TextManager.Get("Credits") + ": " + ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaign.Money));
         }
 
         private bool SelectCharacter(GUIComponent component, object selection)

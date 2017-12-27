@@ -54,13 +54,6 @@ namespace Barotrauma
                 text = text.Replace("[" + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
             }
 #endif
-
-            if (Submarine.MainSub != null) text = text.Replace("[sub]", Submarine.MainSub.Name);
-            if (GameMain.GameSession != null && GameMain.GameSession.StartLocation != null)
-            {
-                text = text.Replace("[location]", GameMain.GameSession.StartLocation.Name);
-            }
-
             return text;
         }
     }
