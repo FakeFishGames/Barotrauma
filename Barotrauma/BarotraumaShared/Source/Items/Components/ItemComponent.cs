@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
 
         private string msg;
         
-        [Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false)]
         public float PickingTime
         {
             get;
@@ -105,7 +105,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false)]
+        [Editable, Serialize(false, false)] //Editable for doors to do their magic
         public bool CanBePicked
         {
             get { return canBePicked; }
@@ -171,7 +171,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
 
-        [Serialize("", false)]
+        [Editable, Serialize("", false)]
         public string Msg
         {
             get { return msg; }
