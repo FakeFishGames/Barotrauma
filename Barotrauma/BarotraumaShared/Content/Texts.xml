@@ -154,7 +154,7 @@
   <ServerSettingsButton>Settings</ServerSettingsButton>
   <SpectateButton>Spectate</SpectateButton>
   <Gender>Gender</Gender>
-  <JobPreferences>JobPreferences</JobPreferences>
+  <JobPreferences>Job preferences</JobPreferences>
   <PlayingAsSpectator>Playing as a spectator</PlayingAsSpectator>
   <SubNotFound>Submarine not found in your submarine folder</SubNotFound>
   <SubDoesntMatch>Your version of the submarine doesn't match the servers version</SubDoesntMatch>
@@ -233,6 +233,23 @@
   <SpamFilterKicked>You have been kicked by the spam filter.</SpamFilterKicked>
   <SpamFilterBlocked>You have been blocked by the spam filter. Try again after 10 seconds.</SpamFilterBlocked>
 
+  <!-- Item fixing -->
+  <FixHeader>Attempting to fix [itemname]</FixHeader>
+  <FixButton>Fix</FixButton>
+  
+  <!-- Traitors -->
+  <NewTraitor>New traitor</NewTraitor>
+  <TraitorStartMessage>You are the Traitor! Your secret task is to assassinate [targetname]! Discretion is an utmost concern; sinking the submarine and killing the entire crew will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.</TraitorStartMessage>
+  <TraitorMoreAgentsMessage>It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.\n\nThe code words are: [codewords].\nThe code response is: [coderesponse].</TraitorMoreAgentsMessage>
+  <TraitorStartMessageServer>[traitorname] is the traitor and the target is [targetname].</TraitorStartMessageServer>
+  
+  <TraitorEndMessageSuccess>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task was successful.</TraitorEndMessageSuccess>
+  <TraitorEndMessageSuccessTraitorDead>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor did not make it out alive either.</TraitorEndMessageSuccessTraitorDead>
+  <TraitorEndMessageSuccessTraitorDetained>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor was succesfully detained.</TraitorEndMessageSuccessTraitorDetained>
+  <TraitorEndMessageFailure>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task was unsuccessful.</TraitorEndMessageFailure>
+  <TraitorEndMessageFailureTraitorDead>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname], but [gendernoun] got [gendernounreflexive] killed before completing it.</TraitorEndMessageFailureTraitorDead>
+  <TraitorEndMessageFailureTraitorDetained>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task failed - [gendernoun] was successfully detained.</TraitorEndMessageFailureTraitorDetained>
+  
   <!-- Causes of death -->
   <CauseOfDeath.Damage>Succumbed to their injuries</CauseOfDeath.Damage>
   <CauseOfDeath.Bloodloss>Bled out</CauseOfDeath.Bloodloss>
