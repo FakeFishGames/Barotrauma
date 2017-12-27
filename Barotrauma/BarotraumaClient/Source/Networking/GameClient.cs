@@ -756,12 +756,7 @@ namespace Barotrauma.Networking
             }
             
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
-            
-            if (isTraitor)
-            {
-                TraitorManager.CreateStartPopUp(traitorTargetName);
-            }
-            
+                        
             gameStarted = true;
 
             GameMain.GameScreen.Select();

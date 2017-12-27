@@ -43,6 +43,8 @@ namespace Barotrauma
             : base(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 Color.Black * 0.5f, Alignment.TopLeft, null, parent)
         {
+            int headerHeight = 30;
+
             if (height == 0)
             {
                 string wrappedText = ToolBox.WrapText(text, width, GUI.Font);
@@ -51,18 +53,18 @@ namespace Barotrauma
                 {
                     height += (int)GUI.Font.MeasureString(line).Y;
                 }
-                height += 220;
+                height += string.IsNullOrWhiteSpace(headerText) ? 220 : 220 - headerHeight;
             }
 
             var frame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, "", this);
             GUI.Style.Apply(frame, "", this);
-
-            var header = new GUITextBlock(new Rectangle(0, 0, 0, 30), headerText, null, null, textAlignment, "", frame, true);
-            GUI.Style.Apply(header, "", this);
+            
+            var header = new GUITextBlock(new Rectangle(0, 0, 0, headerHeight), headerText, null, null, textAlignment, "", frame, true);
+            GUI.Style.Apply(header, "", this);            
 
             if (!string.IsNullOrWhiteSpace(text))
             {
-                var textBlock = new GUITextBlock(new Rectangle(0, 30, 0, height - 70), text,
+                var textBlock = new GUITextBlock(new Rectangle(0, string.IsNullOrWhiteSpace(headerText) ? 0 : headerHeight, 0, height - 70), text,
                     null, null, textAlignment, "", frame, true);
                 GUI.Style.Apply(textBlock, "", this);
             }

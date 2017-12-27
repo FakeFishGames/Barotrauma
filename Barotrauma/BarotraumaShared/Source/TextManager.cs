@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     static class TextManager
     {
-        private static Dictionary<string, List<string>> infoTexts;
+        private static Dictionary<string, List<string>> texts;
 
         static TextManager()
         {
@@ -17,7 +17,7 @@ namespace Barotrauma
 
         private static void Load(string file)
         {
-            infoTexts = new Dictionary<string, List<string>>();
+            texts = new Dictionary<string, List<string>>();
 
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null || doc.Root == null) return;            
@@ -26,26 +26,26 @@ namespace Barotrauma
             {
                 string infoName = subElement.Name.ToString().ToLowerInvariant();
                 List<string> infoList = null;
-                if (!infoTexts.TryGetValue(infoName, out infoList))
+                if (!texts.TryGetValue(infoName, out infoList))
                 {
                     infoList = new List<string>();
-                    infoTexts.Add(infoName, infoList);
+                    texts.Add(infoName, infoList);
                 }
 
                 infoList.Add(subElement.ElementInnerText());
             }
         }
 
-        public static string Get(string infoName)
+        public static string Get(string textTag)
         {
-            List<string> infoList = null;
-            if (!infoTexts.TryGetValue(infoName.ToLowerInvariant(), out infoList) || !infoList.Any())
+            List<string> textList = null;
+            if (!texts.TryGetValue(textTag.ToLowerInvariant(), out textList) || !textList.Any())
             {
-                DebugConsole.ThrowError("Info text \"" + infoName + "\" not found");
-                return infoName;
+                DebugConsole.ThrowError("Text \"" + textTag + "\" not found");
+                return textTag;
             }
 
-            string text = infoList[Rand.Int(infoList.Count)];
+            string text = textList[Rand.Int(textList.Count)].Replace(@"\n", "\n");
 
             //todo: get rid of these and only do where needed?
 #if CLIENT
@@ -55,6 +55,28 @@ namespace Barotrauma
             }
 #endif
             return text;
+        }
+
+        public static string ReplaceGenderNouns(string text, Gender gender)
+        {
+            if (gender == Gender.Male)
+            {
+                return text.Replace("[gendernoun]", "he")
+                    .Replace("[gendernounpossessive]", "his")
+                    .Replace("[gendernounreflexive]", "himself")
+                    .Replace("[Gendernoun]", "He")
+                    .Replace("[Gendernounpossessive]", "His")
+                    .Replace("[Gendernounreflexive]", "Himself");
+            }
+            else
+            {
+                return text.Replace("[gendernoun]", "she")
+                    .Replace("[gendernounpossessive]", "her")
+                    .Replace("[gendernounreflexive]", "herself")
+                    .Replace("[Gendernoun]", "She")
+                    .Replace("[Gendernounpossessive]", "Her")
+                    .Replace("[Gendernounreflexive]", "Herself");
+            }
         }
     }
 }

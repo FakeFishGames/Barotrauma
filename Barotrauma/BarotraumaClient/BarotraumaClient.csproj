@@ -103,7 +103,6 @@
     <Compile Include="Source\GameSession\CrewManager.cs" />
     <Compile Include="Source\GameSession\GameMode.cs" />
     <Compile Include="Source\GameSession\GameModes\SinglePlayerCampaign.cs" />
-    <Compile Include="Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\BasicTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\EditorTutorial.cs" />
     <Compile Include="Source\GameSession\GameModes\Tutorials\TutorialMode.cs" />
