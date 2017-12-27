@@ -207,7 +207,8 @@ namespace Barotrauma.Items.Components
         {
             if (item.Condition <= 0.0f) return true; //For repairing
 
-            return base.HasRequiredItems(character, addMessage);
+            //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
+            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage) : canBePicked;
         }
 
         public override bool Pick(Character picker)

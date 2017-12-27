@@ -32,6 +32,8 @@ namespace Barotrauma
         public string[] propertyNames;
         private object[] propertyEffects;
 
+        List<Tuple<string, string, object>> propertyConditionals;
+
         private bool setValue;
         
         private bool disableDeltaTime;
@@ -83,7 +85,8 @@ namespace Barotrauma
 
             IEnumerable<XAttribute> attributes = element.Attributes();            
             List<XAttribute> propertyAttributes = new List<XAttribute>();
-            
+            propertyConditionals = new List<Tuple<string, string, object>>();
+
             foreach (XAttribute attribute in attributes)
             {
                 switch (attribute.Name.ToString())
@@ -138,7 +141,20 @@ namespace Barotrauma
                             " - sounds should be defined as child elements of the StatusEffect, not as attributes.");
                         break;
                     default:
-                        propertyAttributes.Add(attribute);
+                        object attributeObject = XMLExtensions.GetAttributeObject(attribute);
+                        Type type = attributeObject.GetType();
+
+                        string op = ((string)attributeObject).Substring(0, 2);
+                        if (op != "!=" && op != ">=" && op != "<=" && op != "==" && (op.StartsWith(">") || op.StartsWith("<")))
+                            op = op.Substring(0, 1);
+                        
+                        if (op == "!=" || op == ">=" || op == "<=" || op == "==" || op == ">" || op == "<") //Oh shit this is a conditional!
+                        {
+                            attributeObject = ((string)attributeObject).Substring(op.Length, ((string)attributeObject).Length);
+                            propertyConditionals.Add(new Tuple<string, string, object>(attribute.Name.ToString().ToLowerInvariant(), op, attributeObject));
+                        }
+                        else
+                            propertyAttributes.Add(attribute);
                         break;
                 }
             }
@@ -204,6 +220,80 @@ namespace Barotrauma
                 if (character != null)
                 {
                     if (!requiredItem.CheckRequirements(character, null)) return false;
+                }
+            }
+            return true;
+        }
+
+        public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
+        {
+            if (!propertyConditionals.Any()) return true;
+            foreach (ISerializableEntity target in targets)
+            {
+                foreach (Tuple<string, string, object> con in propertyConditionals)
+                {
+                    string name = con.Item1;
+                    string op = con.Item2;
+                    object value = con.Item3;
+
+                    SerializableProperty property;
+
+                    if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(name, out property)) continue;
+
+                    Type type = value.GetType();
+                    float? floatValue = null;
+                    if ((type == typeof(float) || type == typeof(int)) && (property.GetValue() is float || property.GetValue() is int))
+                    {
+                        floatValue = Convert.ToSingle(value);
+                    }
+
+                    switch (op)
+                    {
+                        case "==":
+                            if (!(property == value))
+                                return false;
+                            break;
+                        case "!=":
+                            if (!(property != value))
+                                return false;
+                            break;
+                        case ">":
+                            if (floatValue == null)
+                            {
+                                DebugConsole.ThrowError("Couldn't compare " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                                    + "Make sure the type of the value set in the config files matches the type of the property.");
+                            }
+                            else if (!((float)property.GetValue() > floatValue))
+                                return false;
+                            break;
+                        case "<":
+                            if (floatValue == null)
+                            {
+                                DebugConsole.ThrowError("Couldn't compare " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                                    + "Make sure the type of the value set in the config files matches the type of the property.");
+                            }
+                            else if (!((float)property.GetValue() < floatValue))
+                                return false;
+                            break;
+                        case ">=":
+                            if (floatValue == null)
+                            {
+                                DebugConsole.ThrowError("Couldn't compare " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                                    + "Make sure the type of the value set in the config files matches the type of the property.");
+                            }
+                            else if (!((float)property.GetValue() >= floatValue))
+                                return false;
+                            break;
+                        case "<=":
+                            if (floatValue == null)
+                            {
+                                DebugConsole.ThrowError("Couldn't compare " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                                    + "Make sure the type of the value set in the config files matches the type of the property.");
+                            }
+                            else if (!((float)property.GetValue() <= floatValue))
+                                return false;
+                            break;
+                    }
                 }
             }
             return true;
