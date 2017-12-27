@@ -24,63 +24,65 @@ namespace Barotrauma
 
         public bool Matches(SerializableProperty property)
         {
-            Type type = Value.GetType();
             if (property.GetValue() == null)
             {
-                DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + type + ") to property \"" + property.Name + "- property.GetValue() returns null!!");
+                DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "- property.GetValue() returns null!!");
                 return false;
             }
+            Type type = property.GetValue().GetType();
 
             float? floatValue = null;
-            if ((type == typeof(float) || type == typeof(int)) && (property.GetValue() is float || property.GetValue() is int))
+            float? floatProperty = null;
+            if (type == typeof(float) || type == typeof(int))
             {
                 floatValue = Convert.ToSingle(Value);
+                floatProperty = Convert.ToSingle(property.GetValue());
             }
 
             switch (Operator)
             {
                 case "==":
-                    if (property.GetValue().Equals(Value))
+                    if (property.GetValue().Equals(floatValue == null ? floatValue : Value))
                         return true;
                     break;
                 case "!=":
-                    if (!property.GetValue().Equals(Value))
+                    if (property.GetValue().Equals(floatValue == null ? floatValue : Value))
                         return true;
                     break;
                 case ">":
                     if (floatValue == null)
                     {
-                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
-                    else if ((float)property.GetValue() > floatValue)
+                    else if (floatProperty > floatValue)
                         return true;
                     break;
                 case "<":
                     if (floatValue == null)
                     {
-                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
-                    else if ((float)property.GetValue() < floatValue)
+                    else if (floatProperty < floatValue)
                         return true;
                     break;
                 case ">=":
                     if (floatValue == null)
                     {
-                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
-                    else if ((float)property.GetValue() >= floatValue)
+                    else if (floatProperty >= floatValue)
                         return true;
                     break;
                 case "<=":
                     if (floatValue == null)
                     {
-                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue().GetType() + ")! "
+                        DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
                             + "Make sure the type of the value set in the config files matches the type of the property.");
                     }
-                    else if ((float)property.GetValue() <= floatValue)
+                    else if (floatProperty <= floatValue)
                         return true;
                     break;
             }
@@ -218,22 +220,10 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Error in StatusEffect " + element.Parent.Name.ToString() +
                             " - sounds should be defined as child elements of the StatusEffect, not as attributes.");
                         break;
+                    case "if":
+                        break;
                     default:
-                        object attributeObject = XMLExtensions.GetAttributeObject(attribute);
-                        string attributeString = attributeObject.ToString();
-                        Type type = attributeObject.GetType();
-
-                        string op = attributeString.Substring(0, Math.Min(2, attributeString.Length));
-                        if (op != "!=" && op != ">=" && op != "<=" && op != "==" && (op.StartsWith(">") || op.StartsWith("<")))
-                            op = op.Substring(0, 1);
-                        
-                        if (op == "!=" || op == ">=" || op == "<=" || op == "==" || op == ">" || op == "<") //Oh shit this is a conditional!
-                        {
-                            attributeObject = attributeString.Substring(op.Length, attributeString.Length);
-                            propertyConditionals.Add(new PropertyConditional(attribute.Name.ToString().ToLowerInvariant(), op, attributeObject));
-                        }
-                        else
-                            propertyAttributes.Add(attribute);
+                        propertyAttributes.Add(attribute);
                         break;
                 }
             }
@@ -271,6 +261,66 @@ namespace Barotrauma
                         if (newRequiredItem == null) continue;
                         
                         requiredItems.Add(newRequiredItem);
+                        break;
+                    case "conditional":
+                        IEnumerable<XAttribute> conditionalAttributes = subElement.Attributes();
+                        foreach(XAttribute attribute in conditionalAttributes)
+                        {
+                            string attributeString = XMLExtensions.GetAttributeObject(attribute).ToString();
+                            string atStr = attributeString;
+                            string[] splitString = atStr.Split(' ');
+                            string op = splitString[0];
+                            if (splitString.Length > 0)
+                            {
+                                for (int i=1; i<splitString.Length; i++)
+                                {
+                                    atStr = splitString[i] + (i > 1 && i < splitString.Length ? " " : "");
+                                }
+                            }
+                            //thanks xml for not letting me use < or > in attributes :(
+                            switch (op)
+                            {
+                                case "e":
+                                case "eq":
+                                case "equals":
+                                    op = "==";
+                                    break;
+                                case "ne":
+                                case "neq":
+                                case "notequals":
+                                case "!e":
+                                case "!eq":
+                                case "!equals":
+                                    op = "!=";
+                                    break;
+                                case "gt":
+                                case "greaterthan":
+                                    op = ">";
+                                    break;
+                                case "lt":
+                                case "lessthan":
+                                    op = "<";
+                                    break;
+                                case "gte":
+                                case "gteq":
+                                case "greaterthanequals":
+                                    op = ">=";
+                                    break;
+                                case "lte":
+                                case "lteq":
+                                case "lessthanequals":
+                                    op = "<=";
+                                    break;
+                                default:
+                                    if (op != "==" && op != "!=" && op != ">" && op != "<" && op != ">=" && op != "<=") //Didn't use escape strings or anything
+                                    {
+                                        atStr = attributeString; //We probably don't even have an operator
+                                        op = "==";
+                                    }
+                                    break;
+                            }
+                            propertyConditionals.Add(new PropertyConditional(attribute.Name.ToString().ToLowerInvariant(), op, atStr));
+                        }
                         break;
 #if CLIENT
                     case "particleemitter":
@@ -313,10 +363,9 @@ namespace Barotrauma
                 {
                     string op = pc.Operator;
                     object value = pc.Value;
-
-                    SerializableProperty property;
-
-                    if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(pc.Attribute, out property)) continue;
+                    
+                    //TODO: Somehow check for non-serialized properties like SpeciesName for even more robust conditional conditioning
+                    if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(pc.Attribute, out SerializableProperty property)) continue;
 
                     if (!pc.Matches(property))
                         return false;
