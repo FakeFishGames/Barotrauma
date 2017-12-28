@@ -6,24 +6,29 @@ namespace Barotrauma
 {
     class AIObjectiveContainItem: AIObjective
     {
-        private string itemName;
+        private string[] itemNames;
 
         private ItemContainer container;
         
         bool isCompleted;
 
         public bool IgnoreAlreadyContainedItems;
-        
+
         public AIObjectiveContainItem(Character character, string itemName, ItemContainer container)
+            : this(character, new string[] { itemName }, container)
+        {
+        }
+
+        public AIObjectiveContainItem(Character character, string[] itemNames, ItemContainer container)
             : base (character, "")
         {
-            this.itemName = itemName;
+            this.itemNames = itemNames;
             this.container = container;
         }
 
         public override bool IsCompleted()
         {
-            return isCompleted || container.Inventory.FindItem(itemName)!=null;
+            return isCompleted || itemNames.Any(name => container.Inventory.FindItem(name) != null);
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
@@ -41,10 +46,10 @@ namespace Barotrauma
             if (isCompleted) return;
 
             //get the item that should be contained
-            var itemToContain = character.Inventory.FindItem(itemName);
+            var itemToContain = character.Inventory.FindItem(itemNames);
             if (itemToContain == null)
             {
-                var getItem = new AIObjectiveGetItem(character, itemName);
+                var getItem = new AIObjectiveGetItem(character, itemNames);
                 getItem.IgnoreContainedItems = IgnoreAlreadyContainedItems;
                 AddSubObjective(getItem);
                 return;
@@ -79,8 +84,15 @@ namespace Barotrauma
         {
             AIObjectiveContainItem objective = otherObjective as AIObjectiveContainItem;
             if (objective == null) return false;
+            if (objective.container != container) return false;
+            if (objective.itemNames.Length != itemNames.Length) return false;
 
-            return objective.itemName == itemName && objective.container == container;
+            for (int i = 0; i < itemNames.Length; i++)
+            {
+                if (objective.itemNames[i] != itemNames[i]) return false;
+            }
+
+            return true;
         }
 
     
