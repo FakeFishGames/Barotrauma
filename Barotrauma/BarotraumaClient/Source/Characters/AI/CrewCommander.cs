@@ -61,9 +61,7 @@ namespace Barotrauma
                 ToggleGUIFrame();
                 return false;
             };
-
-            //UpdateCharacters();
-
+            
             int buttonWidth = 130;
             int spacing = 20;
 
@@ -112,10 +110,6 @@ namespace Barotrauma
         {
             var orderButton = new GUIButton(rect, order.Name, null, Alignment.TopCenter, Alignment.Center, "GUITextBox", frame);
             orderButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-            /*orderButton.TextColor = Color.White;
-            orderButton.Color = Color.Black * 0.5f;
-            orderButton.HoverColor = Color.LightGray * 0.5f;
-            orderButton.OutlineColor = Color.LightGray * 0.8f;*/
             orderButton.UserData = order;
             orderButton.OnClicked = SetOrder;
             
@@ -160,24 +154,18 @@ namespace Barotrauma
             foreach (Character character in aliveCharacters)
             {
                 int rowCharacterCount = Math.Min(charactersPerRow, aliveCharacters.Count);
-                //if (i >= aliveCharacters.Count - charactersPerRow && aliveCharacters.Count % charactersPerRow > 0) rowCharacterCount = aliveCharacters.Count % charactersPerRow;
 
-               // rowCharacterCount = Math.Min(rowCharacterCount, aliveCharacters.Count - i);
                 int startX = -(150 * rowCharacterCount + spacing * (rowCharacterCount - 1)) / 2;
-
-
                 int x = startX + (150 + spacing) * (i % Math.Min(charactersPerRow, aliveCharacters.Count));
                 int y = (105 + spacing)*((int)Math.Floor((double)i / charactersPerRow));
 
-                GUIButton characterButton = new GUIButton(new Rectangle(x+75, y, 150, 40), "", null, Alignment.TopCenter, "GUITextBox", frame);
-                
+                GUIFrame characterFrame = new GUIFrame(new Rectangle(x + 75, y, 150, 100), null, Alignment.TopCenter, null, frame);
+                characterFrame.UserData = character;
+
+                GUIButton characterButton = new GUIButton(new Rectangle(0, 0, 0, 40), "", null, Alignment.TopCenter, "GUITextBox", characterFrame);                
                 characterButton.UserData = character;
-                characterButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
-                
+                characterButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);                
                 characterButton.Color = Character.Controlled == character ? Color.Gold : Color.White;
-                /*characterButton.HoverColor = Color.LightGray * 0.5f;
-                characterButton.SelectedColor = Color.Gold * 0.6f;
-                characterButton.OutlineColor = Color.LightGray * 0.8f;*/
 
                 characterFrameBottom = Math.Max(characterFrameBottom, characterButton.Rect.Bottom);
                 
@@ -198,7 +186,7 @@ namespace Barotrauma
                 var humanAi = character.AIController as HumanAIController;
                 if (humanAi != null && humanAi.CurrentOrder != null)
                 {
-                    CreateCharacterOrderFrame(characterButton, humanAi.CurrentOrder, humanAi.CurrentOrderOption);
+                    CreateCharacterOrderFrame(characterFrame, humanAi.CurrentOrder, humanAi.CurrentOrderOption);
                 }
 
                 i++;
@@ -230,15 +218,18 @@ namespace Barotrauma
 
             foreach (GUIComponent child in frame.children)
             {
-                var characterButton = child as GUIButton;
+                Character character = child.UserData as Character;
+                if (character == null) continue;
+
+                var characterButton = child.GetChild<GUIButton>();
                 characterButton.State = GUIComponent.ComponentState.None;
 
                 if (!characterButton.Selected) continue;
                 characterButton.Selected = false;
 
-                CreateCharacterOrderFrame(characterButton, order, "");
+                CreateCharacterOrderFrame(characterButton.Parent, order, "");
 
-                var humanAi = (characterButton.UserData as Character).AIController as HumanAIController;
+                var humanAi = character.AIController as HumanAIController;
 
                 humanAi.SetOrder(order, "");
             }
@@ -258,7 +249,7 @@ namespace Barotrauma
 
             var existingOrder = characterFrame.children.Find(c => c.UserData is Order);
             if (existingOrder != null) characterFrame.RemoveChild(existingOrder);
-
+            
             var orderFrame = new GUIFrame(new Rectangle(-5, characterFrame.Rect.Height, characterFrame.Rect.Width, 30 + order.Options.Length * 15), "InnerFrame", characterFrame);
             /*orderFrame.OutlineColor = Color.LightGray * 0.5f;*/
             orderFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
