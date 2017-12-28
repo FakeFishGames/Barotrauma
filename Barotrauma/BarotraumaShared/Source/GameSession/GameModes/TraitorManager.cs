@@ -178,7 +178,7 @@ namespace Barotrauma
                     }
                 }
 
-                endMessage += (TextManager.ReplaceGenderNouns(TextManager.Get(messageTag), traitorCharacter.Info.Gender) + "\n")
+                endMessage += (TextManager.ReplaceGenderPronouns(TextManager.Get(messageTag), traitorCharacter.Info.Gender) + "\n")
                     .Replace("[traitorname]", traitorCharacter.Name)
                     .Replace("[targetname]", targetCharacter.Name);
             }

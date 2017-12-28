@@ -85,6 +85,14 @@
   <DeleteDialogQuestion>Are you sure you want to delete "[file]"?</DeleteDialogQuestion>
   <DeleteFileError>Could not delete file "[file]"!</DeleteFileError>
 
+  <!-- Pronouns -->
+  <PronounMale>He</PronounMale>
+  <PronounPossessiveMale>His</PronounPossessiveMale>
+  <PronounReflexiveMale>Himself</PronounReflexiveMale>
+  <PronounFemale>She</PronounFemale>
+  <PronounPossessiveFemale>Her</PronounPossessiveFemale>
+  <PronounReflexiveFemale>Herself</PronounReflexiveFemale>
+
   <!-- Mission info -->
   <NoMission>No mission</NoMission>
   <MissionReward>Reward: [reward]</MissionReward>
@@ -243,12 +251,12 @@
   <TraitorMoreAgentsMessage>It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.\n\nThe code words are: [codewords].\nThe code response is: [coderesponse].</TraitorMoreAgentsMessage>
   <TraitorStartMessageServer>[traitorname] is the traitor and the target is [targetname].</TraitorStartMessageServer>
   
-  <TraitorEndMessageSuccess>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task was successful.</TraitorEndMessageSuccess>
-  <TraitorEndMessageSuccessTraitorDead>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor did not make it out alive either.</TraitorEndMessageSuccessTraitorDead>
-  <TraitorEndMessageSuccessTraitorDetained>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor was succesfully detained.</TraitorEndMessageSuccessTraitorDetained>
-  <TraitorEndMessageFailure>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task was unsuccessful.</TraitorEndMessageFailure>
-  <TraitorEndMessageFailureTraitorDead>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname], but [gendernoun] got [gendernounreflexive] killed before completing it.</TraitorEndMessageFailureTraitorDead>
-  <TraitorEndMessageFailureTraitorDetained>[traitorname] was a traitor! [Gendernounpossessive] task was to assassinate [targetname]. The task failed - [gendernoun] was successfully detained.</TraitorEndMessageFailureTraitorDetained>
+  <TraitorEndMessageSuccess>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful.</TraitorEndMessageSuccess>
+  <TraitorEndMessageSuccessTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor did not make it out alive either.</TraitorEndMessageSuccessTraitorDead>
+  <TraitorEndMessageSuccessTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was successful, but the traitor was succesfully detained.</TraitorEndMessageSuccessTraitorDetained>
+  <TraitorEndMessageFailure>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task was unsuccessful.</TraitorEndMessageFailure>
+  <TraitorEndMessageFailureTraitorDead>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname], but [genderpronoun] got [genderpronounreflexive] killed before completing it.</TraitorEndMessageFailureTraitorDead>
+  <TraitorEndMessageFailureTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task failed - [genderpronoun] was successfully detained.</TraitorEndMessageFailureTraitorDetained>
   
   <!-- Causes of death -->
   <CauseOfDeath.Damage>Succumbed to their injuries</CauseOfDeath.Damage>
