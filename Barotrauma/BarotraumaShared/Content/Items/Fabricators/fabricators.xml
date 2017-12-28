@@ -161,6 +161,10 @@
         <RequiredSkill name="Medical" level="50"/>
       </fabricableitem>
 
+      <fabricableitem name="Chloromydride" requireditems="Stabilozine, Erythrozine, Chloral Hydrate" requiredtime="20">
+        <RequiredSkill name="Medical" level="50"/>
+      </fabricableitem>
+
       <fabricableitem name="Flash Powder" requireditems="Aluminium, Potassium" requiredtime="25">
         <RequiredSkill name="Medical" level="40"/>
       </fabricableitem>
