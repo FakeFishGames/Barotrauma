@@ -1,18 +1,26 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using System;
 using System.Linq;
 
 namespace Barotrauma
 {
     class AIObjectiveContainItem: AIObjective
     {
+        public int MinContainedAmount = 1;
+
         private string[] itemNames;
 
         private ItemContainer container;
-        
-        bool isCompleted;
+
+        private bool isCompleted;
 
         public bool IgnoreAlreadyContainedItems;
+
+        public Func<Item, float> GetItemPriority;
+
+        private AIObjectiveGetItem getItemObjective;
+        private AIObjectiveGoTo goToObjective;
 
         public AIObjectiveContainItem(Character character, string itemName, ItemContainer container)
             : this(character, new string[] { itemName }, container)
@@ -28,7 +36,28 @@ namespace Barotrauma
 
         public override bool IsCompleted()
         {
-            return isCompleted || itemNames.Any(name => container.Inventory.FindItem(name) != null);
+            if (isCompleted) return true;
+
+            int containedItemCount = 0;
+            foreach (Item item in container.Inventory.Items)
+            {
+                if (item != null && itemNames.Any(name => item.Prefab.NameMatches(name) || item.HasTag(name))) containedItemCount++;
+            }
+
+            return containedItemCount >= MinContainedAmount;
+        }
+
+        public override bool CanBeCompleted
+        {
+            get
+            {
+                if (goToObjective != null)
+                {
+                    return goToObjective.CanBeCompleted;
+                }
+
+                return getItemObjective == null || !getItemObjective.CanBeCompleted;
+            }
         }
 
         public override float GetPriority(AIObjectiveManager objectiveManager)
@@ -49,9 +78,10 @@ namespace Barotrauma
             var itemToContain = character.Inventory.FindItem(itemNames);
             if (itemToContain == null)
             {
-                var getItem = new AIObjectiveGetItem(character, itemNames);
-                getItem.IgnoreContainedItems = IgnoreAlreadyContainedItems;
-                AddSubObjective(getItem);
+                getItemObjective = new AIObjectiveGetItem(character, itemNames);
+                getItemObjective.GetItemPriority = GetItemPriority;
+                getItemObjective.IgnoreContainedItems = IgnoreAlreadyContainedItems;
+                AddSubObjective(getItemObjective);
                 return;
             }
 
@@ -68,9 +98,10 @@ namespace Barotrauma
             else
             {
                 if (Vector2.Distance(character.Position, container.Item.Position) > container.Item.InteractDistance
-                    && !container.Item.IsInsideTrigger(character.Position))
+                    && !container.Item.IsInsideTrigger(character.WorldPosition))
                 {
-                    AddSubObjective(new AIObjectiveGoTo(container.Item, character));
+                    goToObjective = new AIObjectiveGoTo(container.Item, character);
+                    AddSubObjective(goToObjective);
                     return;
                 }
 

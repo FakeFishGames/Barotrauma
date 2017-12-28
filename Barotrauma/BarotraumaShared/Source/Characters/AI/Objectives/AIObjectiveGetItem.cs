@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,6 +8,8 @@ namespace Barotrauma
 {
     class AIObjectiveGetItem : AIObjective
     {
+        public Func<Item, float> GetItemPriority;
+
         private string[] itemNames;
 
         private Item targetItem, moveToTarget;
@@ -18,6 +21,8 @@ namespace Barotrauma
         public bool IgnoreContainedItems;
 
         private AIObjectiveGoTo goToObjective;
+
+        private float currItemPriority;
 
         private bool equip;
 
@@ -172,8 +177,20 @@ namespace Barotrauma
                     if (owner != null && !owner.IsDead) continue;
                 }
 
-                //ignore if item is further away than the currently targeted item
-                if (moveToTarget != null && Vector2.DistanceSquared((rootContainer ?? item).Position, character.Position) > currDist) continue;
+                float itemPriority = 0.0f;
+                if (GetItemPriority != null)
+                {
+                    //ignore if the item has zero priority
+                    itemPriority = GetItemPriority(item);
+                    if (itemPriority <= 0.0f) continue;
+                }
+
+                itemPriority = itemPriority - Vector2.Distance((rootContainer ?? item).Position, character.Position) * 0.01f;
+
+                //ignore if the item has a lower priority than the currently selected one
+                if (moveToTarget != null && itemPriority < currItemPriority) continue;
+
+                currItemPriority = itemPriority;
 
                 targetItem = item;
                 moveToTarget = rootContainer ?? item;
