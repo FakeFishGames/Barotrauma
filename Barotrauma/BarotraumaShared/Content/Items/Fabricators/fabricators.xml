@@ -181,7 +181,7 @@
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
 
-      <fabricableitem name="Amanitin" requireditems="Erythrozine, Flash Powder, Sulphuric Acid" requiredtime="30">
+      <fabricableitem name="Sufforin" requireditems="Erythrozine, Flash Powder, Sulphuric Acid" requiredtime="30">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
     </Fabricator>
