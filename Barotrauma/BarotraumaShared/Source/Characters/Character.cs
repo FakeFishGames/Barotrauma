@@ -1601,8 +1601,6 @@ namespace Barotrauma
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
-            if (needsAir) UpdateOxygen(deltaTime);
-
             if (DoesBleed)
             {
                 Health -= bleeding * deltaTime;

@@ -45,7 +45,7 @@
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5">
         <RequiredItem type="Contained" name="Oxygen Tank"/>
       </StatusEffect>
-      <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-200.0" Oxygen="-20.0" Condition="-0.5">
+      <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="-100.0" Oxygen="-20.0" Condition="-0.5">
         <RequiredItem type="Contained" name="Welding Fuel Tank"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
@@ -110,7 +110,7 @@
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1500.0" SpeedMultiplier="1.3" Condition="-0.1">
         <RequiredItem type="Contained" name="Oxygenite Shard"/>
       </StatusEffect>
-      <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-200.0"/>
+      <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0"/>
 
       <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.6"/>
       <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.8" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true"/>
