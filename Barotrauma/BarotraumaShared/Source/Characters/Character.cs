@@ -1045,6 +1045,17 @@ namespace Barotrauma
             return !inventory.IsInLimbSlot(item, InvSlotType.Any);
         }
 
+        public bool HasEquippedItem(string itemName)
+        {
+            for (int i = 0; i < inventory.Items.Length; i++)
+            {
+                if (CharacterInventory.limbSlots[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
+                if (inventory.Items[i].Prefab.NameMatches(itemName) || inventory.Items[i].HasTag(itemName)) return true;
+            }
+
+            return false;
+        }
+
         public bool HasSelectedItem(Item item)
         {
             return selectedItems.Contains(item);
