@@ -135,7 +135,8 @@ namespace Barotrauma
 
         public bool Stackable; //Can the same status effect be applied several times to the same targets?
 
-        private readonly bool useItem;
+        private readonly int useItemCount;
+        private readonly int cancelStatusEffect;
 
         public readonly ActionType type;
 
@@ -288,7 +289,14 @@ namespace Barotrauma
                         break;
                     case "use":
                     case "useitem":
-                        useItem = true;
+                        useItemCount++;
+                        break;
+                    case "cancel":
+                    case "cancelstatuseffect":
+                        //This only works if there's a conditional checking for status effect tags. There is no way to cancel *all* status effects atm.
+                        cancelStatusEffect = 1;
+                        if (subElement.GetAttributeBool("all", false) == true)
+                            cancelStatusEffect = 2;
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -324,6 +332,7 @@ namespace Barotrauma
                                 case "ne":
                                 case "neq":
                                 case "notequals":
+                                case "!":
                                 case "!e":
                                 case "!eq":
                                 case "!equals":
@@ -396,14 +405,66 @@ namespace Barotrauma
             foreach (ISerializableEntity target in targets)
             {
                 foreach (PropertyConditional pc in propertyConditionals)
-                {
-                    string op = pc.Operator;
-                    object value = pc.Value;
-                    
-                    //TODO: Somehow check for non-serialized properties like SpeciesName for even more robust conditional conditioning
-                    if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(pc.Attribute, out SerializableProperty property)) continue;
+                {                    
+                    if (target == null || target.SerializableProperties == null) continue;
 
-                    if (!pc.Matches(property))
+                    if (!target.SerializableProperties.TryGetValue(pc.Attribute, out SerializableProperty property))
+                    {
+                        //Do special conditional checks
+
+                        string valStr = pc.Value.ToString();
+                        if (pc.Attribute == "name")
+                            return pc.Operator == "==" ? target.Name == valStr : target.Name != valStr;
+
+                        if (pc.Attribute == "speciesname" && target is Character)
+                            return pc.Operator == "==" ? ((Character)target).SpeciesName == valStr : ((Character)target).SpeciesName != valStr;
+
+                        if ((pc.Attribute == "hastag" || pc.Attribute == "hastags") && target is Item)
+                        {
+                            string[] readTags = valStr.Split(',');
+                            int matches = 0;
+                            foreach (string tag in readTags)
+                                if (((Item)target).HasTag(tag)) matches++;
+
+                            //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
+                            return pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
+                        }
+
+                        List<DurationListElement> durations = DurationList.FindAll(d => d.Targets.Contains(target));
+                        List<DelayedListElement> delays = DelayedEffect.DelayList.FindAll(d => d.Targets.Contains(target));
+
+                        bool success = false;
+                        if (pc.Attribute == "hasstatustag" || pc.Attribute == "hasstatustags" && (durations.Any() || delays.Any()))
+                        {
+                            string[] readTags = valStr.Split(',');
+                            foreach (DurationListElement duration in durations)
+                            {
+                                int matches = 0;
+                                foreach (string tag in readTags)
+                                    if (duration.Parent.HasTag(tag)) matches++;
+
+                                success = pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
+                                if (cancelStatusEffect > 0 && success)
+                                    DurationList.Remove(duration);
+                                if (cancelStatusEffect != 2) //cancelStatusEffect 1 = only cancel once, cancelStatusEffect 2 = cancel all of matching tags
+                                    return success;
+                            }
+                            foreach (DelayedListElement delay in delays)
+                            {
+                                int matches = 0;
+                                foreach (string tag in readTags)
+                                    if (delay.Parent.HasTag(tag)) matches++;
+
+                                success = pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
+                                if (cancelStatusEffect > 0 && success)
+                                    DelayedEffect.DelayList.Remove(delay);
+                                if (cancelStatusEffect != 2) //ditto
+                                    return success;
+                            }
+                        }
+                        return success;
+                    }
+                    else if (!pc.Matches(property))
                         return false;
                 }
             }
@@ -456,11 +517,14 @@ namespace Barotrauma
             }
 #endif
 
-            if (useItem)
+            if (useItemCount > 0)
             {
-                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                for (int i=0; i<useItemCount; i++)
                 {
-                    item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
+                    foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                    {
+                        item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
+                    }
                 }
             }
 

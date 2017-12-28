@@ -55,6 +55,10 @@
       <StatusEffect type="OnUse" target="This, Character" bleeding="-0.1" duration="5.0">
         <Sound file="Content/Items/Medical/bandage.ogg" range="500"/>
       </StatusEffect>
+      <StatusEffect type="OnUse" target="This, Character" health="0.1" duration="5.0" checkconditionalalways="true">
+        <!-- Only give healing effect if their health is more than 50 -->
+        <Conditional Health="gt 50">
+      </StatusEffect>
     </MeleeWeapon>
   </Item>
 
@@ -73,7 +77,7 @@
       <StatusEffect type="OnUse" target="Character" Health="-2" duration="10">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
-    </Throwable>>
+    </Throwable>
   </Item>
 
   <Item
@@ -364,6 +368,26 @@
   </Item>
 
   <Item
+   name="Morbusanide"
+   category="Material"
+   spritecolor="0.0,0.0,0.2,1.0"
+   Tags="smallitem,chem,medical"   
+   description="A morbusine antidote.">
+
+    <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
+
+    <Body width="8" height="16" density="10"/>
+
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnUse" target="Character">
+        <RequiredItem name="Medical Syringe" type="Container"/>
+        <Conditional hasstatustag="morbusine"/>
+        <Cancel/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
+
+  <Item
      name="Liquid Oxygenite"
      category="Material"
      spritecolor="0.6,0.8,1.0,1.0"
@@ -457,7 +481,7 @@
     <Body width="8" height="16" density="25"/>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" bleeding="0.1" duration="60.0">
+      <StatusEffect tags="poison,uranium" type="OnUse" target="Character" bleeding="0.1" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -497,7 +521,7 @@
     <Body width="8" height="16" density="10"/>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" Health="-5.0" duration="60.0">
+      <StatusEffect tags="poison,morbusine" type="OnUse" target="Character" Health="-5.0" duration="60.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
@@ -531,24 +555,21 @@
   </Item>
 
   <Item
-   name="Amanitin"
-   category="Material"
-   spritecolor="1.0,0.3,0.3,1.0"
-   Tags="smallitem,chem,medical"   
-   description="A devious poison with a delayed effect. Requires higher dosage to be lethal.">
-   <!-- price="2000" Should be mixed by traitor medics more than anything -->
-   <!-- Direct counter to Amanitin is Liquid Oxygenite -->
+    name="Sufforin"
+    category="Material"
+    spritecolor="1.0,0.3,0.3,1.0"
+    Tags="smallitem,chem,medical"   
+    description="A devious poison with a delayed effect.">
+    <!-- Can only be crafted. Direct counter to Sufforin is Liquid Oxygenite, though it's not strictly an antidote. -->
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6"/>
 
     <Body width="8" height="16" density="10"/>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" Oxygen="-15.0" Health="-5.0">
+      <StatusEffect type="OnUse" target="Character" Health="-5.0">
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
-      <!-- Here's a problem: if a chemical with delay is injected into more than one person, only the last person will get that delayed effect.
-      Everyone else gets off scott free! Woo!!!..... -->
-      <StatusEffect type="OnUse" target="Character" Oxygen="-10.0" Health="-0.5" duration="60.0" delay="20.0"> 
+      <StatusEffect tags="poison,sufforin" type="OnUse" target="Character" Oxygen="-15.0" Health="-0.5" duration="60.0" delay="20.0"> 
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
     </Throwable>
