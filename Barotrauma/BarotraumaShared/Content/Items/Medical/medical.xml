@@ -82,6 +82,7 @@
      spritecolor="1.0,1.0,0.7,1.0"
      Tags="smallitem,chem,medical"     
      description="A mild stimulant which is used as an ingredient in the manufacture of various medicines."
+     canuseonself="true"
      price="10">
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
@@ -201,6 +202,27 @@
   </Item>
   
   <!-- Helpful chems -->
+  <Item
+     name="Chloromydride"
+     category="Material"
+     spritecolor="0.7,0.9,1,1.0"
+     Tags="smallitem,chem,medical"     
+     description="A strong synaptic stimulant and cardiostimulant which is used as a preventative measure against critical condition. Should be injected once every 30 seconds."
+     price="50">
+
+    <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6" />
+
+    <Body width="8" height="16" density="20"/>
+    
+    <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
+      <StatusEffect type="OnUse" target="Character" bleeding="-0.2" Oxygen="0.5" duration="30" stackable="false" checkconditionalalways="true">
+        <!-- Rapidly removes bleeding and stabilizes oxygen intake so they're "frozen" in a stasis. Doesn't prevent poisons.
+            EXTREMELY useful to follow up with a CPR while keeping them alive long enough. -->
+        <Conditional Health="lte 0.0"/>
+        <RequiredItem name="Medical Syringe" type="Container"/>
+      </StatusEffect>
+    </Throwable>
+  </Item>
   <Item
      name="Erythrozine"
      category="Material"
