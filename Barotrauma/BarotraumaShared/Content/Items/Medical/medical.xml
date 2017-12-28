@@ -57,7 +57,7 @@
       </StatusEffect>
       <StatusEffect type="OnUse" target="This, Character" health="0.1" duration="5.0" checkconditionalalways="true">
         <!-- Only give healing effect if their health is more than 50 -->
-        <Conditional Health="gt 50">
+        <Conditional Health="gt 50"/>
       </StatusEffect>
     </MeleeWeapon>
   </Item>
