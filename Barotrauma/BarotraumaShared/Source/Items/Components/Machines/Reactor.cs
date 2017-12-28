@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -141,6 +142,9 @@ namespace Barotrauma.Items.Components
 
         public float AvailableFuel { get; set; }
 
+        private float availableHeat, availableCooling;
+        private float prevTemperature, temperatureChange;
+
         [Serialize(500.0f, true)]
         public float ShutDownTemp
         {
@@ -191,11 +195,19 @@ namespace Barotrauma.Items.Components
 
             fissionRate = Math.Min(fissionRate, AvailableFuel);
 
-            float heat = 80 * fissionRate * (AvailableFuel / 2000.0f);
-            float heatDissipation = 50 * coolingRate + Math.Max(ExtraCooling, 5.0f);
+            //the amount of cooling is always non-zero, so that the reactor always needs 
+            //to generate some amount of heat to prevent the temperature from dropping
+            availableCooling = Math.Max(ExtraCooling, 5.0f);
+            availableHeat = 80 * (AvailableFuel / 2000.0f);
 
-            float deltaTemp = (((heat - heatDissipation) * 5) - temperature) / 10000.0f;
+            float heat = availableHeat * fissionRate;
+            float heatDissipation = 50 * coolingRate + availableCooling;
+
+            float deltaTemp = (((heat - heatDissipation) * 5) - temperature) / 10000.0f;            
             Temperature = temperature + deltaTemp;
+
+            temperatureChange = Temperature - prevTemperature;
+            prevTemperature = temperature;
 
             if (temperature > fireTemp && temperature - deltaTemp < fireTemp)
             {
@@ -345,37 +357,71 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+            float degreeOfSuccess = DegreeOfSuccess(character);
+
+            //characters with insufficient skill levels don't refuel the reactor
+            if (degreeOfSuccess > 0.2f)
+            {
+                //remove used-up fuel from the reactor
+                var containedItems = item.ContainedItems;
+                foreach (Item item in containedItems)
+                {
+                    if (item != null && item.Condition <= 0.0f)
+                    {
+                        item.Drop();
+                    }
+                }
+
+                //the temperature is too low and not increasing even though the fission rate is high and cooling low
+                // -> we need more fuel
+                if (temperature < load * 0.5f && temperatureChange <= 0.0f && fissionRate > 0.9f && coolingRate < 0.1f)
+                {
+                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "Fuel Rod", "reactorfuel" }, item.GetComponent<ItemContainer>());
+                    containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.NameMatches("Fuel Rod") || i.HasTag("reactorfuel")) + 1;
+                    containFuelObjective.GetItemPriority = (Item fuelItem) =>
+                    {
+                        if (fuelItem.ParentInventory?.Owner is Item)
+                        {
+                            //don't take fuel from other reactors
+                            if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                        }
+                        return 1.0f;
+                    };
+                    objective.AddSubObjective(containFuelObjective);
+
+                    return false;
+                }
+            }
+
+
             switch (objective.Option.ToLowerInvariant())
-             {
-                 case "power up":
-                     float tempDiff = load - temperature;
+            {
+                case "power up":
+                    float tempDiff = load - temperature;
 
-                     shutDownTemp = Math.Min(load + 1000.0f, 7500.0f);
+                    shutDownTemp = Math.Min(load + 1000.0f, 7500.0f);
 
-                     //temperature too high/low
-                     if (Math.Abs(tempDiff)>500.0f)
-                     {
-                         AutoTemp = false;
-                         FissionRate += deltaTime * 100.0f * Math.Sign(tempDiff);
-                         CoolingRate -= deltaTime * 100.0f * Math.Sign(tempDiff);
-                     }
-                     //temperature OK
-                     else
-                     {
-                         AutoTemp = true;
-                     }
+                    //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
+                    if (Math.Abs(tempDiff) < 500.0f || degreeOfSuccess < 0.5f)
+                    {
+                        AutoTemp = true;
+                    }
+                    else
+                    {
+                        AutoTemp = false;
+                        //higher skill levels make the character adjust the temperature faster
+                        FissionRate += deltaTime * 100.0f * Math.Sign(tempDiff) * degreeOfSuccess;
+                        CoolingRate -= deltaTime * 100.0f * Math.Sign(tempDiff) * degreeOfSuccess;
+                    }                    
+                    break;
+                case "shutdown":
+                    shutDownTemp = 0.0f;
+                    break;
+            }
 
-                     break;
-                 case "shutdown":
-
-                     shutDownTemp = 0.0f;
-
-                     break;
-             }
-
-             return false;
+            return false;
         }
-        
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
         {
             switch (connection.Name)

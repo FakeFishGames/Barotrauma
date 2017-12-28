@@ -250,7 +250,7 @@ namespace Barotrauma
             var existingOrder = characterFrame.children.Find(c => c.UserData is Order);
             if (existingOrder != null) characterFrame.RemoveChild(existingOrder);
             
-            var orderFrame = new GUIFrame(new Rectangle(-5, characterFrame.Rect.Height, characterFrame.Rect.Width, 30 + order.Options.Length * 15), "InnerFrame", characterFrame);
+            var orderFrame = new GUIFrame(new Rectangle(-5, 40, characterFrame.Rect.Width, 30 + order.Options.Length * 15), "InnerFrame", characterFrame);
             /*orderFrame.OutlineColor = Color.LightGray * 0.5f;*/
             orderFrame.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
             orderFrame.UserData = order;

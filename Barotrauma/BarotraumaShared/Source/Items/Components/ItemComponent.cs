@@ -399,7 +399,7 @@ namespace Barotrauma.Items.Components
 
             float[] skillSuccess = new float[requiredSkills.Count];
 
-            for (int i = 0; i < requiredSkills.Count; i++ )
+            for (int i = 0; i < requiredSkills.Count; i++)
             {
                 int characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
 
@@ -408,7 +408,7 @@ namespace Barotrauma.Items.Components
 
             float average = skillSuccess.Average();
 
-            return (average+100.0f)/2.0f;        
+            return (average + 100.0f) / 2.0f;
         }
 
         public virtual void FlipX() { }
