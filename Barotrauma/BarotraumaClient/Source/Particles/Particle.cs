@@ -38,6 +38,7 @@ namespace Barotrauma.Particles
         private float lifeTime;
 
         private Vector2 velocityChange;
+        private Vector2 velocityChangeWater;
 
         private Vector2 drawPosition;
         private float drawRotation;
@@ -45,6 +46,8 @@ namespace Barotrauma.Particles
         private Hull currentHull;
 
         private List<Gap> hullGaps;
+
+        private List<ParticleEmitter> subEmitters = new List<ParticleEmitter>();
 
         private float animState;
         private int animFrame;
@@ -71,6 +74,12 @@ namespace Barotrauma.Particles
             set { velocityChange = value; }
         }
 
+        public Vector2 VelocityChangeWater
+        {
+            get { return velocityChangeWater; }
+            set { velocityChangeWater = value; }
+        }
+
         public Vector2 Velocity
         {
             get { return velocity; }
@@ -90,6 +99,8 @@ namespace Barotrauma.Particles
 
             animState = 0;
             animFrame = 0;
+            dragWait = 0;
+            dragVec = Vector2.Zero;
 
             currentHull = Hull.FindHull(position, hullGuess);
 
@@ -121,8 +132,15 @@ namespace Barotrauma.Particles
             alpha = prefab.StartAlpha;
             
             velocityChange = prefab.VelocityChangeDisplay;
+            velocityChangeWater = prefab.VelocityChangeWaterDisplay;
 
             OnChangeHull = null;
+
+            subEmitters.Clear();
+            foreach (ParticleEmitterPrefab emitterPrefab in prefab.SubEmitters)
+            {
+                subEmitters.Add(new ParticleEmitter(emitterPrefab));
+            }
 
             if (prefab.DeleteOnCollision || prefab.CollidesWithWalls)
             {
@@ -158,18 +176,25 @@ namespace Barotrauma.Particles
                 rotation += angularVelocity * deltaTime;
             }
 
-            if (prefab.WaterDrag > 0.0f && 
-                (currentHull == null || (currentHull.Submarine != null && position.Y - currentHull.Submarine.DrawPosition.Y < currentHull.Surface)))
+            bool inWater = (currentHull == null || (currentHull.Submarine != null && position.Y - currentHull.Submarine.DrawPosition.Y < currentHull.Surface));
+            if (inWater)
             {
-                ApplyDrag(prefab.WaterDrag, deltaTime);
+                velocity.X += velocityChangeWater.X * deltaTime;
+                velocity.Y += velocityChangeWater.Y * deltaTime;
+                if (prefab.WaterDrag > 0.0f)
+                {
+                    ApplyDrag(prefab.WaterDrag, deltaTime);
+                }
             }
-            else if (prefab.Drag > 0.0f)
+            else
             {
-                ApplyDrag(prefab.Drag, deltaTime);
+                velocity.X += velocityChange.X * deltaTime;
+                velocity.Y += velocityChange.Y * deltaTime; 
+                if (prefab.Drag > 0.0f)
+                {
+                    ApplyDrag(prefab.Drag, deltaTime);
+                }
             }
-
-            velocity.X += velocityChange.X * deltaTime;
-            velocity.Y += velocityChange.Y * deltaTime; 
 
             size.X += sizeChange.X * deltaTime;
             size.Y += sizeChange.Y * deltaTime;  
@@ -191,6 +216,11 @@ namespace Barotrauma.Particles
             lifeTime -= deltaTime;
             if (lifeTime <= 0.0f || alpha <= 0.0f || size.X <= 0.0f || size.Y <= 0.0f) return false;
 
+            foreach (ParticleEmitter emitter in subEmitters)
+            {
+                emitter.Emit(deltaTime, position, currentHull);
+            }
+
             if (!prefab.DeleteOnCollision && !prefab.CollidesWithWalls) return true;
             
             if (currentHull == null)
@@ -200,8 +230,7 @@ namespace Barotrauma.Particles
                 {
                     if (prefab.DeleteOnCollision) return false;
                     OnWallCollisionOutside(collidedHull);
-                }                   
-
+                }
             }
             else
             {
@@ -280,9 +309,12 @@ namespace Barotrauma.Particles
                 return;
             }
             if (Math.Abs(velocity.X) < 0.0001f && Math.Abs(velocity.Y) < 0.0001f) return;
-
+            
+            //TODO: some better way to handle particle drag
+            //this doesn't work that well because the drag vector is only updated every 0.5 seconds, allowing the particle to accelerate way more than it should
+            //(e.g. a falling particle can freely accelerate for 0.5 seconds before the drag takes effect)
             dragWait--;
-            if (dragWait<=0)
+            if (dragWait <= 0)
             {
                 dragWait = 30;
 

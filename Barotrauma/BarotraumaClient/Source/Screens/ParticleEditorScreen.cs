@@ -16,7 +16,9 @@ namespace Barotrauma
         {
             public float EmitTimer;
 
-            [Editable(), Serialize("0.0,0.0", false)]
+            public float BurstTimer;
+
+            [Editable(), Serialize("0.0,360.0", false)]
             public Vector2 AngleRange { get; private set; }
 
             [Editable(), Serialize("0.0,0.0", false)]
@@ -26,8 +28,12 @@ namespace Barotrauma
             public Vector2 ScaleRange { get; private set; }
 
             [Editable(), Serialize(0, false)]
-            public int ParticleAmount { get; private set; }
-            [Editable(), Serialize(0.0f, false)]
+            public int ParticleBurstAmount { get; private set; }
+
+            [Editable(), Serialize(1.0f, false)]
+            public float ParticleBurstInterval { get; private set; }
+
+            [Editable(), Serialize(1.0f, false)]
             public float ParticlesPerSecond { get; private set; }
 
             public string Name
@@ -46,6 +52,11 @@ namespace Barotrauma
 
             public Emitter()
             {
+                ScaleRange = Vector2.One;
+                AngleRange = new Vector2(0.0f, 360.0f);
+                ParticleBurstAmount = 1;
+                ParticleBurstInterval = 1.0f;
+
                 SerializableProperties = SerializableProperty.GetProperties(this);
             }
         }
@@ -210,6 +221,8 @@ namespace Barotrauma
             if (selectedPrefab != null)
             {
                 emitter.EmitTimer += (float)deltaTime;
+                emitter.BurstTimer += (float)deltaTime;
+
 
                 if (emitter.ParticlesPerSecond > 0)
                 {
@@ -221,10 +234,15 @@ namespace Barotrauma
                     }
                 }
 
-                for (int i = 0; i < emitter.ParticleAmount; i++)
+                if (emitter.BurstTimer > emitter.ParticleBurstInterval)
                 {
-                    Emit(Vector2.Zero);
+                    for (int i = 0; i < emitter.ParticleBurstAmount; i++)
+                    {
+                        Emit(Vector2.Zero);
+                    }
+                    emitter.BurstTimer = 0.0f;
                 }
+
             }
 
             GameMain.ParticleManager.Update((float)deltaTime);

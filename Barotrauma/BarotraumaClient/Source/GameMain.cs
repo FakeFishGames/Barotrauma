@@ -293,6 +293,7 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", GameScreen.Cam);
+            ParticleManager.LoadPrefabs();
             DecalManager = new DecalManager("Content/Particles/DecalPrefabs.xml");
         yield return CoroutineStatus.Running;
 
