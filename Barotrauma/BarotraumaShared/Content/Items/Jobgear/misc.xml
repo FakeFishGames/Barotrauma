@@ -84,9 +84,13 @@
       <sprite texture="clownpants.png" limb="RightLeg" sourcerect="37,0,28,52" origin="0.55,0.5" depth="0.11" hidelimb="true"/>
       <sprite texture="clownpants.png" limb="LeftLeg" sourcerect="37,0,28,52" origin="0.55,0.5" depth="0.15" hidelimb="true"/>
 
-      <sprite texture="clownpants.png" limb="RightFoot" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.11" hidelimb="true"/>
-      <sprite texture="clownpants.png" limb="LeftFoot" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.15" hidelimb="true"/>
+      <sprite texture="clownpants.png" limb="RightFoot" sound="footstep_clown" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.11" hidelimb="true"/>
+      <sprite texture="clownpants.png" limb="LeftFoot" sound="footstep_clown" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.15" hidelimb="true"/>
       
+      <!-- HENK -->
+      <!-- DamageSound isn't played, not even for diving suits/ballistic helmet/armor. Needs looking into.
+      <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="1.2" damagesound="LimbClown"/>
+      <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="1.2" damagesound="LimbClown"/> -->
     </Wearable>
   </Item>
 </Items>

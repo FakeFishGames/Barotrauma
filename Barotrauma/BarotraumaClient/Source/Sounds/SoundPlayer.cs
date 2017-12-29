@@ -271,7 +271,7 @@ namespace Barotrauma
         public static Sound GetSound(string soundTag)
         {
             var matchingSounds = miscSounds[soundTag].ToList();
-            if (matchingSounds.Count == 0) return null;
+            if (matchingSounds.Count == 0) return Sound.Load(soundTag);
 
             return matchingSounds[Rand.Int(matchingSounds.Count)];
         }

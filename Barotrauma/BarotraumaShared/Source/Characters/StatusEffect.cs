@@ -49,11 +49,11 @@ namespace Barotrauma
             switch (Operator)
             {
                 case "==":
-                    if (property.GetValue().Equals(floatValue == null ? floatValue : Value))
+                    if (property.GetValue().Equals(floatValue == null ? Value : floatValue))
                         return true;
                     break;
                 case "!=":
-                    if (property.GetValue().Equals(floatValue == null ? floatValue : Value))
+                    if (property.GetValue().Equals(floatValue == null ? Value : floatValue))
                         return true;
                     break;
                 case ">":
