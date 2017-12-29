@@ -53,11 +53,30 @@
   <PressureInfo>Water pressure increasing!</PressureInfo>
   <Grabbing>Grabbing</Grabbing>
   <Stun>Stun</Stun>
+  
 
   <!-- Status -->
   <StatusOK>OK</StatusOK>
   <Unconscious>Unconscious</Unconscious>
   <Injured>Injured</Injured>
+
+  <!-- Limbs -->
+  <LeftHand>Left hand</LeftHand>
+  <RightHand>Right hand</RightHand>
+  <Hands>Hands</Hands>
+  <LeftArm>Left arm</LeftArm>
+  <RightArm>Right arm</RightArm>
+  <LeftLeg>Left leg</LeftLeg>
+  <RightLeg>Right leg</RightLeg>
+  <LeftFoot>Left foot</LeftFoot>
+  <RightFoot>Right foot</RightFoot>
+  <Head>Head</Head>
+  <Torso>Torso</Torso>
+  <Tail>Tail</Tail>
+  <Legs>Legs</Legs>
+  <RightThigh>Right thigh</RightThigh>
+  <LeftThigh>Left thigh</LeftThigh>
+  <Waist>Waist</Waist>
   
   <!-- Misc -->
   <Yes>Yes</Yes>
