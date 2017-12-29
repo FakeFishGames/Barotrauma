@@ -85,7 +85,7 @@ namespace Barotrauma
         public float TargetForce { get; private set; }
 
         [Serialize(0.0f, false)]
-        public float SeverLimbsProbability { get; private set; }
+        public float SeverLimbsProbability { get; set; }
 
         [Serialize(0.0f, false)]
         public float Priority { get; private set; }
