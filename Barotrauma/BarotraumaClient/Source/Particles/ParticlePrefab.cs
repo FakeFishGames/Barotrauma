@@ -101,6 +101,20 @@ namespace Barotrauma.Particles
             }
         }
 
+        private Vector2 velocityChangeWater;
+        public Vector2 VelocityChangeWaterDisplay { get; private set; }
+
+        [Editable(ToolTip = "How much the velocity of the particle changes per second when in water."), Serialize("0.0,0.0", false)]
+        public Vector2 VelocityChangeWater
+        {
+            get { return velocityChangeWater; }
+            private set
+            {
+                velocityChangeWater = value;
+                VelocityChangeWaterDisplay = ConvertUnits.ToDisplayUnits(value);
+            }
+        }
+
         [Editable(0.0f, 10000.0f, ToolTip = "Drag applied to the particle when it's moving through water."), Serialize(0.0f, false)]
         public float CollisionRadius { get; private set; }
 
@@ -164,6 +178,8 @@ namespace Barotrauma.Particles
 
         //----------------------------------------------------
 
+        public readonly List<ParticleEmitterPrefab> SubEmitters = new List<ParticleEmitterPrefab>();
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
@@ -191,7 +207,18 @@ namespace Barotrauma.Particles
                     case "animatedsprite":
                         Sprites.Add(new SpriteSheet(subElement));
                         break;
+                    case "particleemitter":
+                    case "emitter":
+                    case "subemitter":
+                        SubEmitters.Add(new ParticleEmitterPrefab(subElement));
+                        break;
                 }
+            }
+
+            //if velocity change in water is not given, it defaults to the normal velocity change
+            if (element.Attribute("velocitychangewater") == null)
+            {
+                VelocityChangeWater = VelocityChange;
             }
 
             if (element.Attribute("angularvelocity") != null)
