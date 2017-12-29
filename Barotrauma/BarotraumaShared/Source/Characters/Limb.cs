@@ -534,12 +534,6 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            if (hitSound != null)
-            {                                
-                hitSound.Remove();
-                hitSound = null;
-            }
-
             if (LightSource != null)
             {
                 LightSource.Remove();

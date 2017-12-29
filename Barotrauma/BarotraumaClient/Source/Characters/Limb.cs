@@ -17,9 +17,9 @@ namespace Barotrauma
             private set;
         }
 
-        Sound hitSound;
+        string hitSound;
 
-        public Sound HitSound
+        public string HitSound
         {
             get { return hitSound; }
         }
@@ -34,7 +34,7 @@ namespace Barotrauma
                         LightSource = new LightSource(subElement);
                         break;
                     case "sound":
-                        hitSound = Sound.Load(subElement.GetAttributeString("file", ""));
+                        hitSound = subElement.GetAttributeString("file", "");
                         break;
                 }
             }
