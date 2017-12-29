@@ -205,7 +205,7 @@ namespace Barotrauma
                     {
                         grabHoldButton = new GUIButton(
                             new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(320, -60), new Point(130, 20)),
-                                "Grabbing: " + (character.AnimController.GrabLimb == LimbType.Torso ? "Torso" : "Hands"), "");
+                                TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
 
                         grabHoldButton.OnClicked = (button, userData) =>
                         {
@@ -223,7 +223,7 @@ namespace Barotrauma
                                 GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Control });
                             }
 
-                            grabHoldButton.Text = "Grabbing: " + (Character.Controlled.AnimController.GrabLimb == LimbType.Torso ? "Torso" : "Hands");
+                            grabHoldButton.Text = TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString());
                             return true;
                         };
                     }

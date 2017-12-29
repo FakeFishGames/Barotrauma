@@ -1034,7 +1034,8 @@ namespace Barotrauma
             {
                 Limb targetLimb = target.AnimController.GetLimb(GrabLimb);
 
-                if (targetLimb == null || targetLimb.IsSevered)
+                //grab hands if GrabLimb is not specified (or torso if the character has no hands)
+                if (GrabLimb == LimbType.None || targetLimb.IsSevered)
                 {
                     targetLimb = target.AnimController.GetLimb(LimbType.Torso);
                     if (i == 0)
