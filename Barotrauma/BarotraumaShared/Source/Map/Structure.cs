@@ -277,7 +277,13 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            return new Structure(rect, prefab, Submarine);
+            var clone = new Structure(rect, prefab, Submarine);
+            foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
+            {
+                if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
+                clone.SerializableProperties[property.Key].TrySetValue(property.Value.GetValue());
+            }
+            return clone;
         }
 
         private void CreateStairBodies()
