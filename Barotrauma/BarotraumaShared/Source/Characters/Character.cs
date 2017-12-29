@@ -425,6 +425,12 @@ namespace Barotrauma
             private set;
         }
 
+        public bool UseBloodParticles
+        {
+            get;
+            private set;
+        }
+
         public float BleedingDecreaseSpeed
         {
             get;
@@ -633,6 +639,7 @@ namespace Barotrauma
             health = maxHealth;
 
             DoesBleed = doc.Root.GetAttributeBool("doesbleed", true);
+            UseBloodParticles = doc.Root.GetAttributeBool("usebloodparticles", true);
             BleedingDecreaseSpeed = doc.Root.GetAttributeFloat("bleedingdecreasespeed", 0.05f);
 
             needsAir = doc.Root.GetAttributeBool("needsair", false);

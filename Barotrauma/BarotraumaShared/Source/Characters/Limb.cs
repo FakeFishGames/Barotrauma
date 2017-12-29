@@ -387,23 +387,25 @@ namespace Barotrauma
                 SoundPlayer.PlayDamageSound(damageSoundType, amount, position);
             }
             
-            float bloodParticleAmount = bleedingAmount <= 0.0f ? 0 : (int)Math.Min(amount / 5, 10);
-            float bloodParticleSize = MathHelper.Clamp(amount / 50.0f, 0.1f, 1.0f);
-
-            for (int i = 0; i < bloodParticleAmount; i++)
+            if (character.UseBloodParticles)
             {
-                var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", WorldPosition, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
-                if (blood != null)
+                float bloodParticleAmount = bleedingAmount <= 0.0f ? 0 : (int)Math.Min(amount / 5, 10);
+                float bloodParticleSize = MathHelper.Clamp(amount / 50.0f, 0.1f, 1.0f);
+
+                for (int i = 0; i < bloodParticleAmount; i++)
                 {
-                    blood.Size *= bloodParticleSize;
+                    var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", WorldPosition, Vector2.Zero, 0.0f, character.AnimController.CurrentHull);
+                    if (blood != null)
+                    {
+                        blood.Size *= bloodParticleSize;
+                    }
+                }
+
+                if (bloodParticleAmount > 0 && character.CurrentHull != null)
+                {
+                    character.CurrentHull.AddDecal("blood", WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
                 }
             }
-
-            if (bloodParticleAmount > 0 && character.CurrentHull != null)
-            {
-                character.CurrentHull.AddDecal("blood", WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
-            }
-
 #endif
 
             if (damageType == DamageType.Burn)
