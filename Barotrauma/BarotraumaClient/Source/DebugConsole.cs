@@ -266,6 +266,13 @@ namespace Barotrauma
                 {
                     Character.Controlled = character;
                 }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("shake", "", (string[] args) =>
