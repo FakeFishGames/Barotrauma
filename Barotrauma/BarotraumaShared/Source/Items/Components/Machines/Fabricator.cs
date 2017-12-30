@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
                         string requiredItemName = subElement.GetAttributeString("name", "");
                         float minCondition = subElement.GetAttributeFloat("mincondition", 1.0f);
                         //Substract mincondition from required item's condition or delete it regardless?
-                        bool useCondition = subElement.GetAttributeBool("usecondition", false);
+                        bool useCondition = subElement.GetAttributeBool("usecondition", true);
                         int count = subElement.GetAttributeInt("count", 1);
 
                         if (string.IsNullOrWhiteSpace(requiredItemName)) continue;

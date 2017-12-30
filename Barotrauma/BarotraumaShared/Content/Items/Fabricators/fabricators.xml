@@ -181,6 +181,12 @@
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
 
+      <fabricableitem name="Morbusanide" outcondition="0.25" requiredtime="10">
+        <RequiredSkill name="Medical" level="60"/>
+        <Item name="Morbusine" mincondition="0.25"/>
+        <Item name="Stabilozine" mincondition="0.25"/>
+      </fabricableitem>
+
       <fabricableitem name="Calyxanide" requireditems="Velonaceps Calyx Eggs, Corrigodone" requiredtime="30">
         <RequiredSkill name="Medical" level="60"/>
       </fabricableitem>
