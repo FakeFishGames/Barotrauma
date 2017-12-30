@@ -372,13 +372,13 @@ namespace Barotrauma
 #if CLIENT
             if (playSound)
             {
-                DamageSoundType damageSoundType = (damageType == DamageType.Blunt) ? DamageSoundType.LimbBlunt : DamageSoundType.LimbSlash;
+                string damageSoundType = (damageType == DamageType.Blunt) ? "LimbBlunt" : "LimbSlash";
 
                 foreach (DamageModifier damageModifier in appliedDamageModifiers)
                 {
-                    if (damageModifier.DamageSoundType != DamageSoundType.None)
+                    if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
                     {
-                        damageSoundType = damageModifier.DamageSoundType;
+                        damageSoundType = damageModifier.DamageSound;
                         break;
                     }
                 }

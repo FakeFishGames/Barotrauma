@@ -507,7 +507,7 @@ namespace Barotrauma
                     float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal)*f2.Body.Mass*0.1f;
 
 #if CLIENT
-                    SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact,
+                    SoundPlayer.PlayDamageSound("StructureBlunt", impact,
                         new Vector2(
                             sections[section].rect.X + sections[section].rect.Width / 2,
                             sections[section].rect.Y - sections[section].rect.Height / 2), tags: Tags);
@@ -663,7 +663,7 @@ namespace Barotrauma
 
             if (playSound)// && !SectionBodyDisabled(i))
             {
-                DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
+                string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
                 SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
