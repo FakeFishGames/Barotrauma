@@ -384,7 +384,7 @@ namespace Barotrauma.Items.Components
                     if (Math.Sign(diff) != dir)
                     {
 #if CLIENT
-                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, body);
+                        SoundPlayer.PlayDamageSound("LimbBlunt", 1.0f, body);
 #endif
 
                         if (isHorizontal)

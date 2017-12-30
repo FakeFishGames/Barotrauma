@@ -35,7 +35,7 @@ namespace Barotrauma
                 {
                     if (impact > ImpactTolerance)
                     {
-                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, Collider);
+                        SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
                     }
                 }
 
