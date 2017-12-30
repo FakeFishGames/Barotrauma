@@ -67,6 +67,7 @@ namespace Barotrauma
         }
 
         public static float DamageEffectCutoff;
+        public static Color DamageEffectColor;
 
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
         {
