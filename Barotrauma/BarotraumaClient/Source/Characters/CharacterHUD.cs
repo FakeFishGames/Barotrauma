@@ -124,6 +124,8 @@ namespace Barotrauma
                 {
                     character.SelectedCharacter.Inventory.Update(deltaTime);
                 }
+
+                Inventory.UpdateDragging();
             }
         }
 
@@ -232,6 +234,11 @@ namespace Barotrauma
 
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
                     if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
+                }
+
+                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                {
+                    Inventory.DrawDragging(spriteBatch);
                 }
 
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
