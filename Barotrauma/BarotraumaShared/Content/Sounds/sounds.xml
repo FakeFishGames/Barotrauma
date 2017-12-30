@@ -40,9 +40,9 @@
   <damagesound file="Content/Sounds/Damage/HitArmor3.ogg" damagerange="40.0,100.0" damagesoundtype="LimbArmor"/> 
 
   <damagesound file="Content/Sounds/Damage/HitClown1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbClown"/>
-  <damagesound file="Content/Sounds/Damage/HitClown1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbClown"/>
+  <damagesound file="Content/Sounds/Damage/HitClown2.ogg" damagerange="0.0,40.0" damagesoundtype="LimbClown"/>
   <damagesound file="Content/Sounds/Damage/HitClown3.ogg" damagerange="25.0,75.0" damagesoundtype="LimbClown"/>  
-  <damagesound file="Content/Sounds/Damage/HitClown3.ogg" damagerange="50.0,100.0" damagesoundtype="LimbClown"/>
+  <damagesound file="Content/Sounds/Damage/HitClown4.ogg" damagerange="50.0,100.0" damagesoundtype="LimbClown"/>
 
   <damagesound file="Content/Sounds/Damage/creak1.ogg" damagesoundtype="Pressure"/>
   <damagesound file="Content/Sounds/Damage/creak2.ogg" damagesoundtype="Pressure"/>
