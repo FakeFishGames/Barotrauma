@@ -491,6 +491,22 @@ namespace Barotrauma
             if (contactDot > 0.0f)
             {
                 Body.LinearVelocity -= Vector2.Normalize(Body.LinearVelocity) * contactDot;
+
+                float damageAmount = contactDot * Body.Mass / limb.character.Mass;
+
+                Vector2 n;
+                FixedArray2<Vector2> contactPos;
+                contact.GetWorldManifold(out n, out contactPos);
+                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, DamageType.Blunt, damageAmount, 0.0f, 0.0f, true, 0.0f);
+
+                if (limb.character.IsDead)
+                {
+                    foreach (LimbJoint limbJoint in limb.character.AnimController.LimbJoints)
+                    {
+                        if (limbJoint.IsSevered || (limbJoint.LimbA != limb && limbJoint.LimbB != limb)) continue;
+                        limb.character.AnimController.SeverLimbJoint(limbJoint);
+                    }
+                }
             }
         }
 
