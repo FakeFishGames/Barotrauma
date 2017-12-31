@@ -5,7 +5,7 @@ sampler TextureSampler : register (s0) = sampler_state { Texture = <xTexture>; }
 Texture2D xStencil;
 sampler StencilSampler = sampler_state { Texture = <xStencil>; };
 
-float4 color;
+float4 inColor;
 
 float aCutoff;
 float aMultiplier;
@@ -15,7 +15,7 @@ float cMultiplier;
 
 float4 main(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
-	float4 c = xTexture.Sample(TextureSampler, texCoord) * color;
+	float4 c = xTexture.Sample(TextureSampler, texCoord) * inColor;
 
 	float4 stencilColor = xStencil.Sample(StencilSampler, texCoord);
 
