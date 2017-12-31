@@ -1,8 +1,8 @@
 
-Texture xTexture;
+Texture2D xTexture;
 sampler TextureSampler : register (s0) = sampler_state { Texture = <xTexture>; };
 
-Texture xStencil;
+Texture2D xStencil;
 sampler StencilSampler = sampler_state { Texture = <xStencil>; };
 
 float4 color;
@@ -34,6 +34,6 @@ technique StencilShader
 {
     pass Pass1
     {
-        PixelShader = compile ps_4_0_level_9_1 main();
+        PixelShader = compile ps_2_0 main();
     }
 }
