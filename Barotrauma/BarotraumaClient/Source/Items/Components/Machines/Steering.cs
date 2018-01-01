@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
 
             GuiFrame.Draw(spriteBatch);
 
-            if (voltage < minVoltage && powerConsumption > 0.0f) return;
+            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             //GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
@@ -136,6 +136,8 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character)
         {
             GuiFrame.Update(1.0f / 60.0f);
+            
+            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(GuiFrame.Rect.Center.X, GuiFrame.Rect.Center.Y)) < 200.0f)
             {
