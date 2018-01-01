@@ -43,12 +43,7 @@ namespace Barotrauma
             waterEffect.Parameters["xWaveWidth"].SetValue(0.05f);
             waterEffect.Parameters["xWaveHeight"].SetValue(0.05f);
 
-#if WINDOWS
-            //waterEffect.Parameters["xTexture"].SetValue(waterTexture);
-#endif
-#if LINUX
             waterEffect.Parameters["xWaterBumpMap"].SetValue(waterTexture);
-#endif
 
             if (basicEffect == null)
             {
@@ -68,13 +63,13 @@ namespace Barotrauma
             waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
             //waterEffect.CurrentTechnique.Passes[0].Apply();
             
-#if WINDOWS
+//#if WINDOWS
             waterEffect.Parameters["xTexture"].SetValue(texture);
-            spriteBatch.Draw(waterTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-#elif LINUX
-
             spriteBatch.Draw(texture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-#endif
+//#elif LINUX
+
+//            spriteBatch.Draw(texture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+//#endif
             spriteBatch.End();
         }
 

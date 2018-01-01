@@ -3,7 +3,7 @@
 
 /outputDir:bin/$(Platform)
 /intermediateDir:obj/$(Platform)
-/platform:Windows
+/platform:DesktopGL
 /config:
 /profile:Reach
 /compress:False
@@ -13,29 +13,29 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin watershader.fx
+#begin watershader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:watershader.fx
+/build:watershader_opengl.fx
 
-#begin blurshader.fx
+#begin blurshader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:blurshader.fx
+/build:blurshader_opengl.fx
 
-#begin damageshader.fx
+#begin damageshader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:damageshader.fx
+/build:damageshader_opengl.fx
 
-#begin losshader.fx
+#begin losshader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:losshader.fx
+/build:losshader_opengl.fx
 
 #begin utg_4.mp4
 /importer:H264Importer

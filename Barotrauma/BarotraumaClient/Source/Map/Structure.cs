@@ -152,7 +152,7 @@ namespace Barotrauma
                         {
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
                             damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
-                            damageEffect.Parameters["color"].SetValue(color.ToVector4());
+                            damageEffect.Parameters["inColor"].SetValue(color.ToVector4());
 
 
                             damageEffect.CurrentTechnique.Passes[0].Apply();
