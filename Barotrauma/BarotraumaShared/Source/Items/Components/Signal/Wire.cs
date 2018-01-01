@@ -30,20 +30,12 @@ namespace Barotrauma.Items.Components
         const float nodeDistance = 32.0f;
         const float heightFromFloor = 128.0f;
 
-        static Sprite wireSprite;
-
         private List<Vector2> nodes;
         private List<WireSection> sections;
 
-        Connection[] connections;
+        private Connection[] connections;
 
         private Vector2 newNodePos;
-
-
-
-        private static Wire draggingWire;
-        private static int? selectedNodeIndex;
-        private static int? highlightedNodeIndex;
 
         public bool Hidden, Locked;
 
@@ -55,12 +47,14 @@ namespace Barotrauma.Items.Components
         public Wire(Item item, XElement element)
             : base(item, element)
         {
+#if CLIENT
             if (wireSprite == null)
             {
                 wireSprite = new Sprite("Content/Items/wireHorizontal.png", new Vector2(0.5f, 0.5f));
                 wireSprite.Depth = 0.85f;
             }
-            
+#endif
+
             nodes = new List<Vector2>();
             sections = new List<WireSection>();
 
