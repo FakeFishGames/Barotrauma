@@ -225,7 +225,7 @@ namespace Barotrauma
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
 
-            LightManager = new Lights.LightManager(base.GraphicsDevice);
+            LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
             Hull.renderer = new WaterRenderer(base.GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;

@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -36,6 +37,11 @@ namespace Barotrauma.Lights
         }
 
         BasicEffect lightEffect;
+
+        public Effect losEffect
+        {
+            get; private set;
+        }
         
         private static Texture2D alphaClearTexture;
 
@@ -55,7 +61,7 @@ namespace Barotrauma.Lights
 
         private float ambientLightUpdateTimer;
 
-        public LightManager(GraphicsDevice graphics)
+        public LightManager(GraphicsDevice graphics, ContentManager content)
         {
             lights = new List<LightSource>();
 
@@ -71,11 +77,17 @@ namespace Barotrauma.Lights
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
 
-            losTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth*lightmapScale), (int)(GameMain.GraphicsHeight*lightmapScale), false, SurfaceFormat.Alpha8, DepthFormat.None);
+            losTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth*lightmapScale), (int)(GameMain.GraphicsHeight*lightmapScale), false, SurfaceFormat.Color, DepthFormat.None);
 
             losSource = new LightSource(Vector2.Zero, GameMain.GraphicsWidth, Color.White, null, false);
             losSource.texture = new Texture2D(graphics, 1, 1);
             losSource.texture.SetData(new Color[] { Color.White });// fill the texture with white
+
+#if WINDOWS
+            losEffect = content.Load<Effect>("losshader");
+#else
+            losEffect = content.Load<Effect>("losshader_opengl");
+#endif
 
             if (lightEffect == null)
             {
