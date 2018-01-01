@@ -182,8 +182,8 @@ namespace Barotrauma.Items.Components
                                 GameServer.Log(Character.Controlled.LogName + " connected a wire from " +
                                     Item.Name + " (" + Name + ") to " + otherConnection.item.Name + " (" + otherConnection.Name + ")", ServerLog.MessageType.ItemInteraction);
                             }
-                            
-                            Wires[index] = draggingConnected;
+
+                            AddLink(index, draggingConnected);
                         }
                     }
                 }

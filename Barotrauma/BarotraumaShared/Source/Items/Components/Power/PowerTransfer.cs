@@ -9,9 +9,7 @@ namespace Barotrauma.Items.Components
     {
         static float fullPower;
         static float fullLoad;
-
-        //private bool updated;
-
+        
         private int updateTimer;
         
         const float FireProbability = 0.15f;
@@ -19,11 +17,17 @@ namespace Barotrauma.Items.Components
         //affects how fast changes in power/load are carried over the grid
         static float inertia = 5.0f;
 
-        static HashSet<Powered> connectedList = new HashSet<Powered>();
-
+        private HashSet<PowerTransfer> connectedPoweredList = new HashSet<PowerTransfer>();
         private List<Connection> powerConnections;
+        
+        private Dictionary<Connection, bool> connectionDirty = new Dictionary<Connection, bool>();
+
+        //a list of connections a given connection is connected to, either directly or via other power transfer components
+        private Dictionary<Connection, HashSet<Connection>> connectedRecipients = new Dictionary<Connection, HashSet<Connection>>();
 
         private float powerLoad;
+
+        private bool isBroken;
 
         public float PowerLoad
         {
@@ -31,22 +35,63 @@ namespace Barotrauma.Items.Components
         }
 
         //can the component transfer power
-        public virtual bool CanTransfer
+        private bool canTransfer;
+        public bool CanTransfer
         {
-            get { return IsActive; }
+            get { return canTransfer; }
+            set
+            {
+                if (canTransfer == value) return;
+                canTransfer = value;
+                SetAllConnectionsDirty();
+            }
+        }
+
+        public override bool IsActive
+        {
+            get
+            {
+                return base.IsActive;
+            }
+
+            set
+            {
+                if (base.IsActive != value) SetAllConnectionsDirty();
+                base.IsActive = value;
+            }
         }
 
         public PowerTransfer(Item item, XElement element)
             : base(item, element)
         {
             IsActive = true;
+            canTransfer = true;
 
             powerConnections = new List<Connection>();
+        }
+
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            base.UpdateBroken(deltaTime, cam);
+
+            if (!isBroken)
+            {
+                SetAllConnectionsDirty();
+                isBroken = true;
+            }
         }
 
         public override void Update(float deltaTime, Camera cam) 
         {
             if (!CanTransfer) return;
+
+            if (isBroken)
+            {
+                SetAllConnectionsDirty();
+                isBroken = false;
+            }
+
+            RefreshConnections();
 
             if (updateTimer > 0)
             {
@@ -60,16 +105,13 @@ namespace Barotrauma.Items.Components
             fullPower = 0.0f;
             fullLoad = 0.0f;    
                
-            connectedList.Clear();
+            connectedPoweredList.Clear();
 
-            CheckJunctions(deltaTime);
+            CheckPower(deltaTime);
             updateTimer = 0;
 
-            foreach (Powered p in connectedList)
-            {
-                PowerTransfer pt = p as PowerTransfer;
-                if (pt == null) continue;
-                
+            foreach (PowerTransfer pt in connectedPoweredList)
+            {                
                 pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
                 pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
                 pt.Item.SendSignal(0, "", "power", null, fullPower / Math.Max(fullLoad, 1.0f));
@@ -112,39 +154,99 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
+        private void RefreshConnections()
+        {
+            var connections = item.Connections;
+            foreach (Connection c in connections)
+            {
+                if (!connectionDirty[c]) continue;
+
+                HashSet<Connection> connected = new HashSet<Connection>();
+                if (!connectedRecipients.ContainsKey(c))
+                {
+                    connectedRecipients.Add(c, connected);
+                }
+                else
+                {
+                    //mark all previous recipients as dirty
+                    foreach (Connection recipient in connectedRecipients[c])
+                    {
+                        var pt = recipient.Item.GetComponent<PowerTransfer>();
+                        if (pt != null) pt.connectionDirty[recipient] = true;
+                    }
+                }
+
+                //find all connections that are connected to this one (directly or via another PowerTransfer)
+                connected.Add(c);
+                GetConnected(c, connected);
+                connectedRecipients[c] = connected;
+                
+                //go through all the PowerTransfers and we're connected to and set their connections to match the ones we just calculated
+                //(no need to go through the recursive GetConnected method again)
+                foreach (Connection recipient in connected)
+                {
+                    var recipientPowerTransfer = recipient.Item.GetComponent<PowerTransfer>();
+                    if (recipientPowerTransfer == null) continue;
+
+                    if (!connectedRecipients.ContainsKey(recipient))
+                    {
+                        connectedRecipients.Add(recipient, connected);
+                    }
+
+                    recipientPowerTransfer.connectedRecipients[recipient] = connected;
+                    recipientPowerTransfer.connectionDirty[recipient] = false;
+                }
+            }
+        }
+
+        //Finds all the connections that can receive a signal sent into the given connection and stores them in the hashset.
+        private void GetConnected(Connection c, HashSet<Connection> connected)
+        {            
+            var recipients = c.Recipients;
+
+            foreach (Connection recipient in recipients)
+            {
+                if (recipient == null || connected.Contains(recipient)) continue;
+
+                Item it = recipient.Item;
+                if (it == null || it.Condition <= 0.0f) continue;
+
+                connected.Add(recipient);
+
+                var powerTransfer = it.GetComponent<PowerTransfer>();
+                if (powerTransfer != null && powerTransfer.CanTransfer && powerTransfer.IsActive)
+                {
+                    GetConnected(recipient, connected);
+                }
+            }            
+        }
+
         //a recursive function that goes through all the junctions and adds up
         //all the generated/consumed power of the constructions connected to the grid
-        private void CheckJunctions(float deltaTime)
+        private void CheckPower(float deltaTime)
         {
             updateTimer = 1;
-            connectedList.Add(this);
 
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-            
+            connectedPoweredList.Clear();
+
             foreach (Connection c in powerConnections)
             {
-                var recipients = c.Recipients;
-                               
+                HashSet<Connection> recipients = connectedRecipients[c];
                 foreach (Connection recipient in recipients)
                 {
                     if (recipient == null) continue;
 
                     Item it = recipient.Item;
-                    if (it == null) continue;
-
-                    if (it.Condition <= 0.0f) continue;
+                    if (it == null || it.Condition <= 0.0f) continue;
 
                     foreach (Powered powered in it.GetComponents<Powered>())
                     {
                         if (powered == null || !powered.IsActive) continue;
-
-                        if (connectedList.Contains(powered)) continue;
-
                         PowerTransfer powerTransfer = powered as PowerTransfer;
                         if (powerTransfer != null)
                         {
-                            if (!powerTransfer.CanTransfer) continue;
-                            powerTransfer.CheckJunctions(deltaTime);
+                            connectedPoweredList.Add(powerTransfer);
+                            powerTransfer.updateTimer = 1;
                             continue;
                         }
 
@@ -162,25 +264,38 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
-                            connectedList.Add(powered);
                             //positive power consumption = the construction requires power -> increase load
                             if (powered.CurrPowerConsumption > 0.0f)
                             {
                                 fullLoad += powered.CurrPowerConsumption;
                             }
                             else if (powered.CurrPowerConsumption < 0.0f)
-                            //negative power consumption = the construction is a 
-                            //generator/battery or another junction box
+                            //negative power consumption = the construction is a /generator/battery
                             {
                                 fullPower -= powered.CurrPowerConsumption;
                             }
                         }
                     }
-
                 }
+            }            
+        }
+
+        public void SetAllConnectionsDirty()
+        {
+            if (item.Connections == null) return;
+            foreach (Connection c in item.Connections)
+            {
+                connectionDirty[c] = true;
             }
         }
-        
+
+        public void SetConnectionDirty(Connection connection)
+        {
+            var connections = item.Connections;
+            if (connections == null || !connections.Contains(connection)) return;
+            connectionDirty[connection] = true;
+        }
+
         public override void OnMapLoaded()
         {
             var connections = item.Connections;
@@ -189,18 +304,38 @@ namespace Barotrauma.Items.Components
                 IsActive = false;
                 return;
             }
-
+            
             powerConnections = connections.FindAll(c => c.IsPower);
             if (powerConnections.Count == 0) IsActive = false;
+
+            SetAllConnectionsDirty();
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
         {
             base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
 
+            if (!connectedRecipients.ContainsKey(connection)) return;
+
             if (connection.Name.Length > 5 && connection.Name.Substring(0, 6).ToLowerInvariant() == "signal")
             {
-                connection.SendSignal(stepsTaken, signal, source, sender, 0.0f);
+                foreach (Connection recipient in connectedRecipients[connection])
+                {
+                    if (recipient.Item == item || recipient.Item == source) continue;
+
+                    foreach (ItemComponent ic in recipient.Item.components)
+                    {
+                        //powertransfer components don't need to receive the signal because we relay it straight 
+                        //to the connected items without going through the whole chain of junction boxes
+                        if (ic is PowerTransfer) continue;
+                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f);
+                    }
+
+                    foreach (StatusEffect effect in recipient.effects)
+                    {
+                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
+                    }
+                }
             }
         }
 

@@ -86,14 +86,15 @@ namespace Barotrauma.Items.Components
 
         public void RemoveConnection(Item item)
         {
-            for (int i = 0; i<2; i++)
+            for (int i = 0; i < 2; i++)
             {
-                if (connections[i]==null || connections[i].Item!=item) continue;
-                
-                for (int n = 0; n< connections[i].Wires.Length; n++)
+                if (connections[i] == null || connections[i].Item != item) continue;
+
+                for (int n = 0; n < connections[i].Wires.Length; n++)
                 {
                     if (connections[i].Wires[n] != this) continue;
                     
+                    SetConnectedDirty();
                     connections[i].Wires[n] = null;
                 }
                 connections[i] = null;
@@ -104,6 +105,8 @@ namespace Barotrauma.Items.Components
         {
             if (connection == connections[0]) connections[0] = null;            
             if (connection == connections[1]) connections[1] = null;
+
+            SetConnectedDirty();
         }
 
         public bool Connect(Connection newConnection, bool addNode = true, bool sendNetworkEvent = false)
@@ -137,8 +140,7 @@ namespace Barotrauma.Items.Components
                 if (newConnection.Item.Submarine == null) continue;
 
                 if (nodes.Count > 0 && nodes[0] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
-                if (nodes.Count > 1 && nodes[nodes.Count-1] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
-                               
+                if (nodes.Count > 1 && nodes[nodes.Count - 1] == newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition) break;
 
                 if (i == 0)
                 {
@@ -148,10 +150,11 @@ namespace Barotrauma.Items.Components
                 {
                     nodes.Add(newConnection.Item.Position - newConnection.Item.Submarine.HiddenSubPosition);
                 }
-
                 
                 break;
             }
+
+            SetConnectedDirty();
 
             if (connections[0] != null && connections[1] != null)
             {
@@ -323,6 +326,8 @@ namespace Barotrauma.Items.Components
                         connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
             }
+            
+            SetConnectedDirty();
 
             for (int i = 0; i < 2; i++)
             {
@@ -361,6 +366,18 @@ namespace Barotrauma.Items.Components
             }
 
             return position;
+        }
+
+        public void SetConnectedDirty()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                if (connections[i]?.Item != null)
+                {
+                    var pt = connections[i].Item.GetComponent<PowerTransfer>();
+                    if (pt != null) pt.SetConnectionDirty(connections[i]);
+                }
+            }
         }
 
         private void CleanNodes()
