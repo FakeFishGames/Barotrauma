@@ -336,6 +336,11 @@ namespace Barotrauma
             float xDiff = lineB.X - lineA.X;
             float yDiff = lineB.Y - lineA.Y;
 
+            if (xDiff == 0 && yDiff == 0)
+            {
+                return Vector2.Distance(lineA, point);
+            }
+
             return (float)(Math.Abs(xDiff * (lineA.Y - point.Y) - yDiff * (lineA.X - point.X)) /
                 Math.Sqrt(xDiff * xDiff + yDiff * yDiff));
         } 
