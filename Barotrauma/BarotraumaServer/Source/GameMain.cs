@@ -177,7 +177,7 @@ namespace Barotrauma
             }
         }
 
-        public CoroutineHandle ShowLoadings(IEnumerable<object> loader, bool waitKeyHit = true)
+        public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);
         }
