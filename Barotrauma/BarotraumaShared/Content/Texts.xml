@@ -226,6 +226,7 @@
   <ShowGaps>Gaps</ShowGaps>
   <PreviouslyUsedLabel>Previously used</PreviouslyUsedLabel>
   <SubNameMissingWarning>Name your submarine before saving it.</SubNameMissingWarning>
+  <SubNameIllegalCharsWarning>Illegal symbols in filename ([illegalchar])</SubNameIllegalCharsWarning>  
   <SubSavedNotification>Submarine saved to [filepath].</SubSavedNotification>
   <SaveSubDialogHeader>Save submarine</SaveSubDialogHeader>
   <SaveSubDialogName>Name</SaveSubDialogName>

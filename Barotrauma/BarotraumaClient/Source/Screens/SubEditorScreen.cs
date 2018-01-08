@@ -378,12 +378,15 @@ namespace Barotrauma
                 nameBox.Flash();
                 return false;
             }
-
-            if (nameBox.Text.Contains("../"))
+            
+            foreach (char illegalChar in Path.GetInvalidFileNameChars())
             {
-                DebugConsole.ThrowError("Illegal symbols in filename (../)");
-                nameBox.Flash();
-                return false;
+                if (nameBox.Text.Contains(illegalChar))
+                {
+                    GUI.AddMessage(TextManager.Get("SubNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red, 3.0f);
+                    nameBox.Flash();
+                    return false;
+                }
             }
 
             string savePath = nameBox.Text + ".sub";
