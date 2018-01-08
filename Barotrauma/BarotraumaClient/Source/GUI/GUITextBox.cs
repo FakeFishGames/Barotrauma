@@ -216,8 +216,7 @@ namespace Barotrauma
         {
             textBlock.Flash(color);
         }
-
-        //MouseState previousMouse;
+        
         public override void Update(float deltaTime)
         {
             if (!Visible) return;
@@ -225,7 +224,7 @@ namespace Barotrauma
             if (flashTimer > 0.0f) flashTimer -= deltaTime;
             if (!Enabled) return;
             
-            if (rect.Contains(PlayerInput.MousePosition) && Enabled &&
+            if (MouseRect.Contains(PlayerInput.MousePosition) && Enabled &&
                 (MouseOn == null || MouseOn == this || IsParentOf(MouseOn) || MouseOn.IsParentOf(this)))
             {
                 state = ComponentState.Hover;
