@@ -527,7 +527,7 @@ namespace Barotrauma
 
         public void SeverLimbJoint(LimbJoint limbJoint)
         {
-            if (!limbJoint.CanBeSevered)
+            if (!limbJoint.CanBeSevered || limbJoint.IsSevered)
             {
                 return;
             }
