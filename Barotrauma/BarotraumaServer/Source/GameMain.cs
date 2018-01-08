@@ -3,6 +3,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
@@ -133,24 +134,32 @@ namespace Barotrauma
 
             Timing.Accumulator = 0.0;
 
-            DateTime prevTime = DateTime.Now;
-
+            double frequency = (double)Stopwatch.Frequency;
+            if (frequency <= 1500)
+            {
+                DebugConsole.NewMessage("WARNING: Stopwatch frequency under 1500 ticks per second. Expect significant syncing accuracy issues.", Color.Yellow);
+            }
+            
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            long prevTicks = stopwatch.ElapsedTicks;
             while (ShouldRun)
             {
-                Timing.Accumulator += ((float)(DateTime.Now.Subtract(prevTime).Milliseconds) / 1000.0)/Timing.Step;
-                prevTime = DateTime.Now;
-                while (Timing.Accumulator>0.0)
+                long currTicks = stopwatch.ElapsedTicks;
+                Timing.Accumulator += (double)(currTicks - prevTicks) / frequency;
+                prevTicks = currTicks;
+                while (Timing.Accumulator>=Timing.Step)
                 {
                     DebugConsole.Update();
                     if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
                     Server.Update((float)Timing.Step);
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
-
-                    Timing.Accumulator -= 1.0;
+            
+                    Timing.Accumulator -= Timing.Step;
                 }
-                int frameTime = DateTime.Now.Subtract(prevTime).Milliseconds;
-                Thread.Sleep(Math.Max((int)(Timing.Step * 1000.0) - frameTime/2,0));
+                int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency)*1000.0);
+                Thread.Sleep(Math.Max(((int)(Timing.Step * 1000.0) - frameTime)/2,0));
             }
+            stopwatch.Stop();
 
             CloseServer();
 
@@ -168,7 +177,7 @@ namespace Barotrauma
             }
         }
 
-        public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
+        public CoroutineHandle ShowLoadings(IEnumerable<object> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);
         }
