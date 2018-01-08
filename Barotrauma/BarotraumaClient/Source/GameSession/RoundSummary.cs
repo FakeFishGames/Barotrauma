@@ -41,13 +41,13 @@ namespace Barotrauma
                 string summaryText = TextManager.Get(gameOver ? "RoundSummaryGameOver" :
                     (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"));
 
-                summaryText.Replace("[sub]", Submarine.MainSub.Name);
-                summaryText.Replace("[location]", GameMain.GameSession.StartLocation.Name);
+                summaryText = summaryText
+                    .Replace("[sub]", Submarine.MainSub.Name)
+                    .Replace("[location]", GameMain.GameSession.StartLocation.Name);
 
                 var infoText = new GUITextBlock(new Rectangle(0, y, 0, 50), summaryText, "", innerFrame, true);
                 y += infoText.Rect.Height;
             }
-
 
             if (!string.IsNullOrWhiteSpace(endMessage))
             {
