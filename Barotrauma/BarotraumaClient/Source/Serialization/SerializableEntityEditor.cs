@@ -378,18 +378,18 @@ namespace Barotrauma
             for (int i = 0; i < 4; i++)
             {
                 new GUITextBlock(new Rectangle(140 + i * 70, yPos, 100, 18), colorComponentLabels[i], "", Alignment.TopLeft, Alignment.CenterLeft, parent, false, GUI.SmallFont);
-                GUINumberInput numberInput = new GUINumberInput(new Rectangle(160 + i * 70, yPos, 45, 18), "", GUINumberInput.NumberType.Float, Alignment.Left, parent);
-                numberInput.MinValueFloat = 0.0f;
-                numberInput.MaxValueFloat = 1.0f;
+                GUINumberInput numberInput = new GUINumberInput(new Rectangle(160 + i * 70, yPos, 45, 18), "", GUINumberInput.NumberType.Int, Alignment.Left, parent);
+                numberInput.MinValueInt = 0;
+                numberInput.MaxValueInt = 255;
 
                 if (i == 0)
-                    numberInput.FloatValue = value.R / 255.0f;
+                    numberInput.IntValue = value.R;
                 else if (i == 1)
-                    numberInput.FloatValue = value.G / 255.0f;
+                    numberInput.IntValue = value.G;
                 else if (i == 2)
-                    numberInput.FloatValue = value.B / 255.0f;
+                    numberInput.IntValue = value.B;
                 else
-                    numberInput.FloatValue = value.A / 255.0f;
+                    numberInput.IntValue = value.A;
 
                 numberInput.Font = GUI.SmallFont;
 
@@ -398,13 +398,13 @@ namespace Barotrauma
                 {
                     Color newVal = (Color)property.GetValue();
                     if (comp == 0)
-                        newVal.R = (byte)(numInput.FloatValue * 255);
+                        newVal.R = (byte)(numInput.IntValue);
                     else if (comp == 1)
-                        newVal.G = (byte)(numInput.FloatValue * 255);
+                        newVal.G = (byte)(numInput.IntValue);
                     else if (comp == 2)
-                        newVal.B = (byte)(numInput.FloatValue * 255);
+                        newVal.B = (byte)(numInput.IntValue);
                     else
-                        newVal.A = (byte)(numInput.FloatValue * 255);
+                        newVal.A = (byte)(numInput.IntValue);
 
                     if (property.TrySetValue(newVal))
                     {
