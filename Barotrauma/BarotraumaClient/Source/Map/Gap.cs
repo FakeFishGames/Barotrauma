@@ -78,7 +78,7 @@ namespace Barotrauma
             }
 
             //light dripping
-            if (open < 0.2f)
+            if (open < 0.2f && LerpedFlowForce.LengthSquared() > 100.0f)
             {
                 float particlesPerSec = open * 1000.0f;
                 float emitInterval = 1.0f / particlesPerSec;

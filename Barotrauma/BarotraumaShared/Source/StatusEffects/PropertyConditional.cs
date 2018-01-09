@@ -186,7 +186,7 @@ namespace Barotrauma
 
             if (propertyValue == null)
             {
-                DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "- property.GetValue() returns null!!");
+                DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" - property.GetValue() returns null!");
                 return false;
             }
 
