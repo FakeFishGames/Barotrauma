@@ -210,9 +210,11 @@ namespace Barotrauma.Networking
             {
                 msgBox.Visible = Character.Controlled == null || Character.Controlled.CanSpeak;
 
-                inGameHUD.Update(deltaTime);
-
-                GameMain.GameSession.CrewManager.Update(deltaTime);
+                if (!GUI.DisableHUD)
+                {
+                    inGameHUD.Update(deltaTime);
+                    GameMain.GameSession.CrewManager.Update(deltaTime);
+                }
                 
                 if (Character.Controlled == null || Character.Controlled.IsDead)
                 {
