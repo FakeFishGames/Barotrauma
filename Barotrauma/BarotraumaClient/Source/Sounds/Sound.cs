@@ -87,10 +87,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError("File \"" + file + "\" not found!");
                 return null;
             }
-
-            Sound dupe = Sound.loadedSounds.Find(s => s.filePath == file);
-            if (dupe != null)
-                return dupe;
             
             return new Sound(file, destroyOnGameEnd);
         }
@@ -104,9 +100,6 @@ namespace Barotrauma
             {
                 newSound.baseVolume = element.GetAttributeFloat("volume", 1.0f);
                 newSound.range = element.GetAttributeFloat("range", 1000.0f);
-                Sound dupe = Sound.loadedSounds.Find(s => s.filePath == filePath && s.baseVolume == newSound.baseVolume && s.range == newSound.range);
-                if (dupe != null)
-                    return dupe;
             }
 
             return newSound;
