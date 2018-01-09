@@ -568,7 +568,7 @@ namespace Barotrauma
             return (isHorizontal ? sections[sectionIndex].rect.Width : sections[sectionIndex].rect.Height);
         }
 
-        public void AddDamage(int sectionIndex, float damage, IDamageable attacker=null)
+        public void AddDamage(int sectionIndex, float damage, Character attacker = null)
         {
             if (!prefab.Body || prefab.Platform) return;
 
@@ -689,7 +689,7 @@ namespace Barotrauma
             return new AttackResult(damageAmount, 0.0f);
         }
 
-        private void SetDamage(int sectionIndex, float damage, IDamageable attacker=null)
+        private void SetDamage(int sectionIndex, float damage, Character attacker = null)
         {
             if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.Body) return;
@@ -701,10 +701,26 @@ namespace Barotrauma
                 GameMain.Server.CreateEntityEvent(this);
             }
 
+            bool noGaps = true;
+            for (int i = 0; i < sections.Length; i++)
+            {
+                if (i != sectionIndex && SectionIsLeaking(i))
+                {
+                    noGaps = false;
+                    break;
+                }
+            }
+
             if (damage < prefab.Health * LeakThreshold)
             {
                 if (sections[sectionIndex].gap != null)
                 {
+                    //the structure doesn't have any other gap, log the structure being fixed
+                    if (noGaps && attacker != null)
+                    {
+                        GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
+                    }
+
                     //remove existing gap if damage is below 50%
                     sections[sectionIndex].gap.Remove();
                     sections[sectionIndex].gap = null;
@@ -715,8 +731,10 @@ namespace Barotrauma
             }
             else
             {
+
                 if (sections[sectionIndex].gap == null)
                 {
+
                     Rectangle gapRect = sections[sectionIndex].rect;
                     gapRect.X -= 10;
                     gapRect.Y += 10;
@@ -725,6 +743,12 @@ namespace Barotrauma
                     sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
                     sections[sectionIndex].gap.ConnectedWall = this;
                     //AdjustKarma(attacker, 300);
+
+                    //the structure didn't have any other gaps yet, log the breach
+                    if (noGaps && attacker != null)
+                    {
+                        GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall breached by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
+                    }
 #if CLIENT
                     if (CastShadow) GenerateConvexHull();
 #endif
@@ -744,7 +768,7 @@ namespace Barotrauma
             bool hasHole = SectionBodyDisabled(sectionIndex);
 
             if (hadHole == hasHole) return;
-            //if (hasHole) Explosion.ApplyExplosionForces(sections[sectionIndex].gap.WorldPosition, 500.0f, 5.0f, 0.0f, 0.0f);
+            
             UpdateSections();
         }
 
