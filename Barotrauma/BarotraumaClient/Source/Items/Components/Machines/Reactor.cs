@@ -11,6 +11,15 @@ namespace Barotrauma.Items.Components
     {
         private GUITickBox autoTempTickBox;
         
+        private const int GraphSize = 25;
+        private float graphTimer;
+        private int updateGraphInterval = 500;
+
+        private float[] fissionRateGraph = new float[GraphSize];
+        private float[] coolingRateGraph = new float[GraphSize];
+        private float[] tempGraph = new float[GraphSize];
+        private float[] loadGraph = new float[GraphSize];
+
         partial void InitProjSpecific()
         {
             var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", "", GuiFrame);
