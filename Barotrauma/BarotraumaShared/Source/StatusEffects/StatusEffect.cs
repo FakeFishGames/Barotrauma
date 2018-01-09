@@ -285,7 +285,7 @@ namespace Barotrauma
                             }
                             return false;
                         case PropertyConditional.ConditionType.Name:
-                            return pc.Operator == "==" ? target.Name == valStr : target.Name != valStr;
+                            return (pc.Operator == PropertyConditional.OperatorType.Equals) == (target.Name == valStr);
                         case PropertyConditional.ConditionType.HasTag:
                             {
                                 string[] readTags = valStr.Split(',');
@@ -294,7 +294,7 @@ namespace Barotrauma
                                     if (((Item)target).HasTag(tag)) matches++;
 
                                 //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
-                                return pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
+                                return pc.Operator == PropertyConditional.OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
                             }
                         case PropertyConditional.ConditionType.HasStatusTag:
                             List<DurationListElement> durations = DurationList.FindAll(d => d.Targets.Contains(target));
@@ -310,7 +310,7 @@ namespace Barotrauma
                                     foreach (string tag in readTags)
                                         if (duration.Parent.HasTag(tag)) matches++;
 
-                                    success = pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
+                                    success = pc.Operator == PropertyConditional.OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
                                     if (cancelStatusEffect > 0 && success)
                                         DurationList.Remove(duration);
                                     if (cancelStatusEffect != 2) //cancelStatusEffect 1 = only cancel once, cancelStatusEffect 2 = cancel all of matching tags
@@ -322,7 +322,7 @@ namespace Barotrauma
                                     foreach (string tag in readTags)
                                         if (delay.Parent.HasTag(tag)) matches++;
 
-                                    success = pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
+                                    success = pc.Operator == PropertyConditional.OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
                                     if (cancelStatusEffect > 0 && success)
                                         DelayedEffect.DelayList.Remove(delay);
                                     if (cancelStatusEffect != 2) //ditto
@@ -331,7 +331,7 @@ namespace Barotrauma
                             }
                             return success;
                         case PropertyConditional.ConditionType.SpeciesName:
-                            return pc.Operator == "==" ? ((Character)target).SpeciesName == valStr : ((Character)target).SpeciesName != valStr;
+                            return (pc.Operator == PropertyConditional.OperatorType.Equals) == (((Character)target).SpeciesName == valStr);
                     }
                 }
             }
