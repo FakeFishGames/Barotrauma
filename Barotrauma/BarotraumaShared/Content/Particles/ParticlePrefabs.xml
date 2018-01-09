@@ -30,6 +30,44 @@
     <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
   </mist>
 
+  <waterdrop
+    lifetime="5"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="0"
+    rotatetodirection="True"
+    drag="0"
+    waterdrag="0.3"
+    velocitychange="0,-9.8"
+    velocitychangewater="0,-5"
+    collisionradius="10"
+    collideswithwalls="True"
+    deleteoncollision="True"
+    friction="0.5"
+    restitution="0.2"
+    startsizemin="0.4,0.2"
+    startsizemax="0.4,0.2"
+    sizechangemin="-0.02,-0.02"
+    sizechangemax="-0.02,-0.02"
+    growtime="0.1"
+    startcolor="1,1,1,1"
+    startalpha="0.5"
+    colorchange="0,0,0,-0.3"
+    drawtarget="Air"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True">
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,96,32,32"/>
+  </waterdrop>
+
   <dustcloud
     startsizemin="0.8,0.8" startsizemax="1.0,1.0"
     sizechange="0.0,0.0"

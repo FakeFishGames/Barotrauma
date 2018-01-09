@@ -6,6 +6,8 @@ namespace Barotrauma
 {
     partial class Gap : MapEntity
     {
+        private float particleTimer;
+
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
         {
             if (GameMain.DebugDraw)
@@ -56,6 +58,107 @@ namespace Barotrauma
                     depth,
                     (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
+        }
+
+        partial void EmitParticles(float deltaTime)
+        {
+            if (flowTargetHull == null || flowTargetHull.WaterVolume >= flowTargetHull.Volume) return;
+            
+            particleTimer += deltaTime;
+
+            Vector2 pos = Position;
+            if (IsHorizontal)
+            {
+                pos.X += Math.Sign(flowForce.X);
+                pos.Y = MathHelper.Clamp((higherSurface + lowerSurface) / 2.0f, rect.Y - rect.Height, rect.Y) + 10;
+            }
+            else
+            {
+                pos.Y += Math.Sign(flowForce.Y) * rect.Height / 2.0f;
+            }
+
+            //light dripping
+            if (open < 0.2f)
+            {
+                float particlesPerSec = open * 1000.0f;
+                float emitInterval = 1.0f / particlesPerSec;
+                while (particleTimer > emitInterval)
+                {
+                    Vector2 velocity = flowForce;
+                    if (!IsHorizontal)
+                    {
+                        velocity.X = Rand.Range(-500.0f, 500.0f) * open;
+                    }
+                    else
+                    {
+                        velocity.X *= Rand.Range(1.0f, 3.0f);
+                    }
+
+                    var particle = GameMain.ParticleManager.CreateParticle(
+                        Rand.Range(0.0f, open) < 0.05f ? "waterdrop" : "watersplash",
+                        (Submarine == null ? pos : pos + Submarine.Position),
+                        velocity, 0, flowTargetHull);
+
+                    particleTimer = 0.0f;
+                    particleTimer -= emitInterval;
+                }
+            }
+            //heavy flow -> strong waterfall type of particles
+            else if (LerpedFlowForce.LengthSquared() > 20000.0f)
+            {
+                if (IsHorizontal)
+                {
+                    Vector2 velocity = new Vector2(
+                        MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
+                        flowForce.Y * Rand.Range(0.5f, 0.7f));
+
+                    var particle = GameMain.ParticleManager.CreateParticle(
+                        "watersplash",
+                        (Submarine == null ? pos : pos + Submarine.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
+                        velocity, 0, flowTargetHull);
+
+                    if (particle != null)
+                    {
+                        particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f), 5.0f);
+                    }
+
+                    if (Math.Abs(flowForce.X) > 300.0f)
+                    {
+                        pos.X += Math.Sign(flowForce.X) * 10.0f;
+                        pos.Y = Rand.Range(lowerSurface, rect.Y - rect.Height);
+
+                        GameMain.ParticleManager.CreateParticle(
+                            "bubbles",
+                            Submarine == null ? pos : pos + Submarine.Position,
+                            flowForce / 10.0f, 0, flowTargetHull);
+                    }
+                }
+                else
+                {
+                    if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) return;
+
+                    for (int i = 0; i < rect.Width; i += Rand.Range(80, 100))
+                    {
+                        pos.X = Rand.Range(rect.X, rect.X + rect.Width);
+
+                        Vector2 velocity = new Vector2(
+                            lerpedFlowForce.X * Rand.Range(0.5f, 0.7f),
+                            Math.Max(lerpedFlowForce.Y, -100.0f) * Rand.Range(0.5f, 0.7f));
+
+                        var splash = GameMain.ParticleManager.CreateParticle(
+                            "watersplash",
+                            Submarine == null ? pos : pos + Submarine.Position,
+                            -velocity, 0, FlowTargetHull);
+
+                        if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
+
+                        GameMain.ParticleManager.CreateParticle(
+                            "bubbles",
+                            Submarine == null ? pos : pos + Submarine.Position,
+                            flowForce / 2.0f, 0, FlowTargetHull);
+                    }
+                }
+            }            
         }
     }
 }

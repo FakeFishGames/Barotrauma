@@ -45,6 +45,8 @@ namespace Barotrauma
         public const int WallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
 
+        const float LeakThreshold = 0.1f;
+
         private StructurePrefab prefab;
 
         //farseer physics bodies, separated by gaps
@@ -546,7 +548,7 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
 
-            return (sections[sectionIndex].damage>=prefab.Health);
+            return (sections[sectionIndex].damage >= prefab.Health);
         }
 
         /// <summary>
@@ -556,7 +558,7 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
 
-            return (sections[sectionIndex].damage >= prefab.Health*0.5f);
+            return (sections[sectionIndex].damage >= prefab.Health * LeakThreshold);
         }
 
         public int SectionLength(int sectionIndex)
@@ -694,14 +696,12 @@ namespace Barotrauma
 
             if (!MathUtils.IsValid(damage)) return;
 
-            
-
             if (GameMain.Server != null && damage != sections[sectionIndex].damage)
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
 
-            if (damage < prefab.Health*0.5f)
+            if (damage < prefab.Health * LeakThreshold)
             {
                 if (sections[sectionIndex].gap != null)
                 {
@@ -709,7 +709,7 @@ namespace Barotrauma
                     sections[sectionIndex].gap.Remove();
                     sections[sectionIndex].gap = null;
 #if CLIENT
-                    if(CastShadow) GenerateConvexHull();
+                    if (CastShadow) GenerateConvexHull();
 #endif
                 }
             }
@@ -726,11 +726,12 @@ namespace Barotrauma
                     sections[sectionIndex].gap.ConnectedWall = this;
                     //AdjustKarma(attacker, 300);
 #if CLIENT
-                    if(CastShadow) GenerateConvexHull();
+                    if (CastShadow) GenerateConvexHull();
 #endif
                 }
-
-                sections[sectionIndex].gap.Open = (damage / prefab.Health - 0.5f) * 2.0f;
+                
+                float gapOpen = (damage / prefab.Health - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
+                sections[sectionIndex].gap.Open = gapOpen;
             }
 
             float damageDiff = damage - sections[sectionIndex].damage;
