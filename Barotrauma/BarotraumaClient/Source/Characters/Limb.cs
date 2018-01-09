@@ -17,7 +17,7 @@ namespace Barotrauma
             private set;
         }
 
-        private Sound hitSound;
+        private string hitSound;
 
         public string HitSound
         {
