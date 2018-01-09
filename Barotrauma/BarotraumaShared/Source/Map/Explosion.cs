@@ -23,6 +23,7 @@ namespace Barotrauma
         public Explosion(float range, float force, float damage, float structureDamage)
         {
             attack = new Attack(damage, structureDamage, 0.0f, range);
+            attack.SeverLimbsProbability = 1.0f;
             this.force = force;
             sparks = true;
             shockwave = true;
@@ -118,7 +119,7 @@ namespace Barotrauma
 
                 explosionPos = ConvertUnits.ToSimUnits(explosionPos);
 
-                bool wasDead = c.IsDead;
+                Dictionary<Limb, float> distFactors = new Dictionary<Limb, float>();
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
@@ -134,6 +135,8 @@ namespace Barotrauma
 
                     //solid obstacles between the explosion and the limb reduce the effect of the explosion by 90%
                     if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null) distFactor *= 0.1f;
+                    
+                    distFactors.Add(limb, distFactor);
 
                     c.AddDamage(limb.WorldPosition, DamageType.None,
                         attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 
@@ -143,17 +146,27 @@ namespace Barotrauma
 
                     if (limb.WorldPosition != worldPosition && force > 0.0f)
                     {
-                        limb.body.ApplyLinearImpulse(Vector2.Normalize(limb.WorldPosition - worldPosition) * distFactor * force);
+                        Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
+                        Vector2 impulsePoint = limb.SimPosition - limbDiff * limbRadius;
+                        limb.body.ApplyLinearImpulse(limbDiff * distFactor * force, impulsePoint);
                     }
                 }     
                 
-                if (!wasDead && c.IsDead)
+                //sever joints 
+                if (c.IsDead && attack.SeverLimbsProbability > 0.0f)
                 {
-                    foreach (LimbJoint joint in c.AnimController.LimbJoints)
+                    foreach (Limb limb in c.AnimController.Limbs)
                     {
-                        if (Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
+                        if (!distFactors.ContainsKey(limb)) continue;
+
+                        foreach (LimbJoint joint in c.AnimController.LimbJoints)
                         {
-                            c.AnimController.SeverLimbJoint(joint);
+                            if (joint.IsSevered || (joint.LimbA != limb && joint.LimbB != limb)) continue;
+
+                            if (Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability * distFactors[limb])
+                            {
+                                c.AnimController.SeverLimbJoint(joint);
+                            }
                         }
                     }
                 }          

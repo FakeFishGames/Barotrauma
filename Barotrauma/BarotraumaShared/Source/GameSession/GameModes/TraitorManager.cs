@@ -16,43 +16,39 @@ namespace Barotrauma
 
         public void Greet(GameServer server, string codeWords, string codeResponse)
         {
-            //Greeting messages TODO: Move this to a function in Traitor class
-            string greetingMessage = "You are the Traitor! Your secret task is to assassinate " + TargetCharacter.Name + "! Discretion is an utmost concern; sinking the submarine and killing the entire crew "
-            + "will arouse suspicion amongst the Fleet. If possible, make the death look like an accident.";
-            string moreAgentsMessage = "It is possible that there are other agents on this submarine. You don't know their names, but you do have a method of communication. "
-            + "Use the code words to greet the agent and code response to respond. Disguise such words in a normal-looking phrase so the crew doesn't suspect anything.";
-            moreAgentsMessage += "\nThe code words are: " + codeWords + ".";
-            moreAgentsMessage += "\nThe code response is: " + codeResponse + ".\n";
+            string greetingMessage = TextManager.Get("TraitorStartMessage").Replace("[targetname]", TargetCharacter.Name);
+            string moreAgentsMessage = TextManager.Get("TraitorMoreAgentsMessage")
+                .Replace("[codewords]", codeWords)
+                .Replace("[coderesponse]", codeResponse);
 
             if (server.Character != Character)
             {
-                var chatMsg = ChatMessage.Create(
-                null,
-                greetingMessage + "\n" + moreAgentsMessage,
-                (ChatMessageType)ChatMessageType.Server,
-                null);
+                var greetingChatMsg = ChatMessage.Create(null, greetingMessage, ChatMessageType.Server, null);
+                var moreAgentsChatMsg = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.Server, null);
 
-                var msgBox = ChatMessage.Create(
-                null,
-                "There might be other agents. Use these to communicate with them." +
-                "\nThe code words are: " + codeWords + "." +
-                "\nThe code response is: " + codeResponse + ".",
-                (ChatMessageType)ChatMessageType.MessageBox,
-                null);
-
+                var greetingMsgBox = ChatMessage.Create(null, greetingMessage, ChatMessageType.MessageBox, null);
+                var moreAgentsMsgBox = ChatMessage.Create(null, moreAgentsMessage, ChatMessageType.MessageBox, null);
+                
                 Client client = server.ConnectedClients.Find(c => c.Character == Character);
-                GameMain.Server.SendChatMessage(chatMsg, client);
-                GameMain.Server.SendChatMessage(msgBox, client);
+                GameMain.Server.SendChatMessage(greetingChatMsg, client);
+                GameMain.Server.SendChatMessage(moreAgentsChatMsg, client);
+                GameMain.Server.SendChatMessage(greetingMsgBox, client);
+                GameMain.Server.SendChatMessage(moreAgentsMsgBox, client);
             }
 
 #if CLIENT
             if (server.Character == null)
             {
-                new GUIMessageBox("New traitor", Character.Name + " is the traitor and the target is " + TargetCharacter.Name+".");
+                new GUIMessageBox(
+                    TextManager.Get("NewTraitor"), 
+                    TextManager.Get("TraitorStartMessageServer").Replace("[targetname]", TargetCharacter.Name).Replace("[traitorname]", Character.Name));
             }
             else if (server.Character == Character)
             {
-                TraitorManager.CreateStartPopUp(TargetCharacter.Name);
+                new GUIMessageBox("", greetingMessage);
+                new GUIMessageBox("", moreAgentsMessage);
+
+                GameMain.NetworkMember.AddChatMessage(greetingMessage, ChatMessageType.Server);
                 GameMain.NetworkMember.AddChatMessage(moreAgentsMessage, ChatMessageType.Server);
                 return;
             }
@@ -151,72 +147,43 @@ namespace Barotrauma
             {
                 Character traitorCharacter = traitor.Character;
                 Character targetCharacter = traitor.TargetCharacter;
-                endMessage += traitorCharacter.Name + " was a traitor! ";
-                endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "His" : "Her";
-                endMessage += " task was to assassinate " + targetCharacter.Name;
+                string messageTag;
 
                 if (targetCharacter.IsDead) //Partial or complete mission success
                 {
-                    endMessage += ". The task was successful";
                     if (traitorCharacter.IsDead)
                     {
-                        endMessage += ", but luckily the bastard didn't make it out alive either.";
+                        messageTag = "TraitorEndMessageSuccessTraitorDead";
                     }
                     else if (traitorCharacter.LockHands)
                     {
-                        endMessage += ", but ";
-                        endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
-                        endMessage += " was successfuly detained.";
+                        messageTag = "TraitorEndMessageSuccessTraitorDetained";
                     }
                     else
-                        endMessage += ".";
+                        messageTag = "TraitorEndMessageSuccess";
                 }
                 else //Partial or complete failure
                 {
                     if (traitorCharacter.IsDead)
                     {
-                        endMessage += ", but ";
-                        endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
-                        endMessage += " got " + ((traitorCharacter.Info.Gender == Gender.Male) ? "himself" : "herself");
-                        endMessage += " killed before completing it.";
+                        messageTag = "TraitorEndMessageFailureTraitorDead";
+                    }
+                    else if (traitorCharacter.LockHands)
+                    {
+                        messageTag = "TraitorEndMessageFailureTraitorDetained";
                     }
                     else
                     {
-                        endMessage += ". The task was unsuccessful";
-                        if (traitorCharacter.LockHands)
-                        {
-                            endMessage += " - ";
-                            endMessage += (traitorCharacter.Info.Gender == Gender.Male) ? "he" : "she";
-                            endMessage += " was successfuly detained";
-                        }
-                        if (Submarine.MainSub.AtEndPosition)
-                        {
-                            endMessage += (traitorCharacter.LockHands ? " and " : " - ");
-                            endMessage += "the submarine has reached its destination";
-                        }
-                        endMessage += ".";
+                        messageTag = "TraitorEndMessageFailure";
                     }
                 }
-                endMessage += "\n";
+
+                endMessage += (TextManager.ReplaceGenderPronouns(TextManager.Get(messageTag), traitorCharacter.Info.Gender) + "\n")
+                    .Replace("[traitorname]", traitorCharacter.Name)
+                    .Replace("[targetname]", targetCharacter.Name);
             }
 
-            return endMessage;          
+            return endMessage;
         }
-
-        //public void CharacterLeft(Character character)
-        //{
-        //    if (character != traitorCharacter && character != targetCharacter) return;
-
-        //    if (character == traitorCharacter)
-        //    {
-        //        string endMessage = "The traitor has disconnected from the server.";
-        //        End(endMessage);
-        //    }
-        //    else if (character == targetCharacter)
-        //    {
-        //        string endMessage = "The traitor's target has disconnected from the server.";
-        //        End(endMessage);
-        //    }
-        //}
     }
 }

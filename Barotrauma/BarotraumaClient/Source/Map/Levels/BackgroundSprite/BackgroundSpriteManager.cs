@@ -86,7 +86,7 @@ namespace Barotrauma
                                     break;
                                 }
 
-                                if (visibleSprites[i].Position.Z > sprite.Position.Z)
+                                if (visibleSprites[i].Position.Z < sprite.Position.Z)
                                 {
                                     break;
                                 }

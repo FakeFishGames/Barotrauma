@@ -124,6 +124,8 @@ namespace Barotrauma
                 {
                     character.SelectedCharacter.Inventory.Update(deltaTime);
                 }
+
+                Inventory.UpdateDragging();
             }
         }
 
@@ -205,7 +207,7 @@ namespace Barotrauma
                     {
                         grabHoldButton = new GUIButton(
                             new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(320, -60), new Point(130, 20)),
-                                "Grabbing: " + (character.AnimController.GrabLimb == LimbType.Torso ? "Torso" : "Hands"), "");
+                                TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
 
                         grabHoldButton.OnClicked = (button, userData) =>
                         {
@@ -223,7 +225,7 @@ namespace Barotrauma
                                 GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Control });
                             }
 
-                            grabHoldButton.Text = "Grabbing: " + (Character.Controlled.AnimController.GrabLimb == LimbType.Torso ? "Torso" : "Hands");
+                            grabHoldButton.Text = TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString());
                             return true;
                         };
                     }
@@ -232,6 +234,11 @@ namespace Barotrauma
 
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
                     if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
+                }
+
+                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                {
+                    Inventory.DrawDragging(spriteBatch);
                 }
 
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
@@ -309,12 +316,10 @@ namespace Barotrauma
                 if (suicideButton == null)
                 {
                     suicideButton = new GUIButton(
-                        new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), "Give in", "");
+                        new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), TextManager.Get("GiveInButton"), "");
 
-                    
-                    suicideButton.ToolTip = GameMain.NetworkMember == null ?
-                        "The character can no longer be revived if you give in." :
-                        "Let go of your character and enter spectator mode (other players will no longer be able to revive you)";
+
+                    suicideButton.ToolTip = TextManager.Get(GameMain.NetworkMember == null ? "GiveInHelpSingleplayer" : "GiveInHelpMultiplayer");
 
                     suicideButton.OnClicked = (button, userData) =>
                     {
@@ -344,7 +349,7 @@ namespace Barotrauma
         {
             if (GameMain.DebugDraw)
             {
-                GUI.DrawString(spriteBatch, new Vector2(30, GameMain.GraphicsHeight - 260), "Stun: "+character.Stun, Color.White);
+                GUI.DrawString(spriteBatch, new Vector2(30, GameMain.GraphicsHeight - 260), TextManager.Get("Stun") + ": " + character.Stun, Color.White);
             }
 
             if (oxygenBar == null)
@@ -364,7 +369,7 @@ namespace Barotrauma
                 oxygenBar.Draw(spriteBatch);
                 if (!oxyMsgShown)
                 {
-                    GUI.AddMessage(InfoTextManager.GetInfoText("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Y), Alignment.Left, Color.White, 5.0f);
+                    GUI.AddMessage(TextManager.Get("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Y), Alignment.Left, Color.White, 5.0f);
                     oxyMsgShown = true;
                 }
             }
@@ -394,7 +399,7 @@ namespace Barotrauma
                 
                 if (pressureMsgTimer > 0.5f && !pressureMsgShown)
                 {
-                    GUI.AddMessage(InfoTextManager.GetInfoText("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 60.0f), Alignment.Left, Color.White, 5.0f);
+                    GUI.AddMessage(TextManager.Get("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 60.0f), Alignment.Left, Color.White, 5.0f);
                     pressureMsgShown = true;                    
                 }
 

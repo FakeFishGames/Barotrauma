@@ -145,6 +145,10 @@ namespace Barotrauma
 
                     float rotation = msg.ReadFloat();
 
+                    ReadStatus(msg);
+
+                    msg.ReadPadBits();
+
                     int index = 0;
                     if (GameMain.NetworkMember.Character == this)
                     {
@@ -192,9 +196,6 @@ namespace Barotrauma
                                 controlled = null;
                                 IsRemotePlayer = ownerID > 0;
                             }
-                            break;
-                        case 2:
-                            ReadStatus(msg);
                             break;
                     }
 

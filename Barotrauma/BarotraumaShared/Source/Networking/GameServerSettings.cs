@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
     {
         No = 0, Maybe = 1, Yes = 2
     }
-    
+
     partial class GameServer : NetworkMember, ISerializableEntity
     {
         private class SavedClientPermission
@@ -48,7 +48,7 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
         public Dictionary<string, int> extraCargo;
 
         public bool ShowNetStats;
@@ -57,24 +57,24 @@ namespace Barotrauma.Networking
         private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
 
         private SelectionMode subSelectionMode, modeSelectionMode;
-        
+
         private bool registeredToMaster;
 
         private WhiteList whitelist;
         private BanList banList;
 
         private string password;
-        
+
         public float AutoRestartTimer;
-        
+
         private bool autoRestart;
 
         private bool isPublic;
 
         private int maxPlayers;
-        
+
         private List<SavedClientPermission> clientPermissions = new List<SavedClientPermission>();
-        
+
         [Serialize(true, true)]
         public bool RandomizeSeed
         {
@@ -170,7 +170,7 @@ namespace Barotrauma.Networking
                 AutoRestartTimer = autoRestart ? AutoRestartInterval : 0.0f;
             }
         }
-        
+
         [Serialize(true, true)]
         public bool AllowRespawn
         {
@@ -193,7 +193,7 @@ namespace Barotrauma.Networking
         {
             get { return modeSelectionMode; }
         }
-        
+
         public BanList BanList
         {
             get { return banList; }
@@ -234,7 +234,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(false,true)]
+        [Serialize(false, true)]
         public bool KarmaEnabled
         {
             get;
@@ -246,7 +246,7 @@ namespace Barotrauma.Networking
             XDocument doc = new XDocument(new XElement("serversettings"));
 
             SerializableProperty.SerializeProperties(this, doc.Root, true);
-            
+
             doc.Root.SetAttributeValue("name", name);
             doc.Root.SetAttributeValue("public", isPublic);
             doc.Root.SetAttributeValue("port", config.Port);
@@ -257,7 +257,7 @@ namespace Barotrauma.Networking
 
             doc.Root.SetAttributeValue("SubSelection", subSelectionMode.ToString());
             doc.Root.SetAttributeValue("ModeSelection", modeSelectionMode.ToString());
-            
+
             doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
 
 #if SERVER
@@ -272,7 +272,7 @@ namespace Barotrauma.Networking
             {
                 doc.Root.SetAttributeValue("ServerMessage", GameMain.NetLobbyScreen.ServerMessageText);
             }
-                
+
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Indent = true;
             settings.NewLineOnAttributes = true;
@@ -289,7 +289,7 @@ namespace Barotrauma.Networking
             if (File.Exists(SettingsFile))
             {
                 doc = XMLExtensions.TryLoadXml(SettingsFile);
-            }           
+            }
 
             if (doc == null || doc.Root == null)
             {
@@ -318,13 +318,16 @@ namespace Barotrauma.Networking
             Enum.TryParse<YesNoMaybe>(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
             TraitorsEnabled = traitorsEnabled;
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
-            
+
             if (GameMain.NetLobbyScreen != null
 #if CLIENT
                 && GameMain.NetLobbyScreen.ServerMessage != null
 #endif
                 )
             {
+#if SERVER
+                GameMain.NetLobbyScreen.ServerName = doc.Root.GetAttributeString("name", "");
+#endif
                 GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             }
 
@@ -349,9 +352,12 @@ namespace Barotrauma.Networking
         {
             clientPermissions.Clear();
 
-            if (File.Exists("Data/clientpermissions.txt") && !File.Exists(ClientPermissionsFile))
+            if (!File.Exists(ClientPermissionsFile))
             {
-                LoadClientPermissionsOld("Data/clientpermissions.txt");
+                if (File.Exists("Data/clientpermissions.txt"))
+                {
+                    LoadClientPermissionsOld("Data/clientpermissions.txt");
+                }
                 return;
             }
 

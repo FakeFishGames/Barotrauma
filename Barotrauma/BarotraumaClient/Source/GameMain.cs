@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+using Barotrauma.Networking;
 using Barotrauma.Particles;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -14,6 +14,7 @@ namespace Barotrauma
 {
     class GameMain : Game
     {
+        public static bool ShowFPS = true;
         public static bool DebugDraw;
         
         public static FrameCounter FrameCounter;
@@ -224,7 +225,7 @@ namespace Barotrauma
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
 
-            LightManager = new Lights.LightManager(base.GraphicsDevice);
+            LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
             Hull.renderer = new WaterRenderer(base.GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
@@ -292,6 +293,7 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", GameScreen.Cam);
+            ParticleManager.LoadPrefabs();
             DecalManager = new DecalManager("Content/Particles/DecalPrefabs.xml");
         yield return CoroutineStatus.Running;
 

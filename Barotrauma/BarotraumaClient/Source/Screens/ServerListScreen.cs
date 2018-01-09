@@ -57,12 +57,12 @@ namespace Barotrauma
             menu = new GUIFrame(panelRect, null, Alignment.Center, "");
             menu.Padding = new Vector4(40.0f, 40.0f, 40.0f, 20.0f);
 
-            new GUITextBlock(new Rectangle(0, -25, 0, 30), "Join Server", "", Alignment.CenterX, Alignment.CenterX, menu, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, -25, 0, 30), TextManager.Get("JoinServer"), "", Alignment.CenterX, Alignment.CenterX, menu, false, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 30, 0, 30), "Your Name:", "", menu);
+            new GUITextBlock(new Rectangle(0, 30, 0, 30), TextManager.Get("YourName"), "", menu);
             clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), "", menu);
 
-            new GUITextBlock(new Rectangle(0, 100, 0, 30), "Server IP:", "", menu);
+            new GUITextBlock(new Rectangle(0, 100, 0, 30), TextManager.Get("ServerIP"), "", menu);
             ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), "", menu);
 
             int middleX = (int)(width * 0.35f);
@@ -80,35 +80,35 @@ namespace Barotrauma
 
             ScalableFont font = GUI.SmallFont; // serverList.Rect.Width < 400 ? GUI.SmallFont : GUI.Font;
 
-            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), "Password", "", menu).Font = font;
+            new GUITextBlock(new Rectangle(middleX, 30, 0, 30), TextManager.Get("Password"), "", menu).Font = font;
 
-            new GUITextBlock(new Rectangle(middleX + columnX[0], 30, 0, 30), "Name", "", menu).Font = font;
-            new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), "Players", "", menu).Font = font;
-            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), "Round started", "", menu).Font = font;
+            new GUITextBlock(new Rectangle(middleX + columnX[0], 30, 0, 30), TextManager.Get("ServerListName"), "", menu).Font = font;
+            new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), TextManager.Get("ServerListPlayers"), "", menu).Font = font;
+            new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), TextManager.Get("ServerListRoundStarted"), "", menu).Font = font;
 
-            joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), "Refresh", Alignment.BottomRight, "", menu);
+            joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), TextManager.Get("ServerListRefresh"), Alignment.BottomRight, "", menu);
             joinButton.OnClicked = RefreshServers;
 
-            joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join", Alignment.BottomRight, "", menu);
+            joinButton = new GUIButton(new Rectangle(0,0,150,30), TextManager.Get("ServerListJoin"), Alignment.BottomRight, "", menu);
             joinButton.OnClicked = JoinServer;
 
             //--------------------------------------------------------
 
             int y = 180;
 
-            new GUITextBlock(new Rectangle(0, y, 200, 30), "Filter servers:", "", menu);
+            new GUITextBlock(new Rectangle(0, y, 200, 30), TextManager.Get("FilterServers"), "", menu);
             searchBox = new GUITextBox(new Rectangle(0, y + 30, 200, 30), "", menu);
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
-            filterPassword = new GUITickBox(new Rectangle(0, y + 60, 30, 30), "No password required", Alignment.TopLeft, menu);
+            filterPassword = new GUITickBox(new Rectangle(0, y + 60, 30, 30), TextManager.Get("FilterPassword"), Alignment.TopLeft, menu);
             filterPassword.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterFull = new GUITickBox(new Rectangle(0, y + 90, 30, 30), "Hide full servers", Alignment.TopLeft, menu);
+            filterFull = new GUITickBox(new Rectangle(0, y + 90, 30, 30), TextManager.Get("FilterFullServers"), Alignment.TopLeft, menu);
             filterFull.OnSelected += (tickBox) => { FilterServers(); return true; };
-            filterEmpty = new GUITickBox(new Rectangle(0, y + 120, 30, 30), "Hide empty servers", Alignment.TopLeft, menu);
+            filterEmpty = new GUITickBox(new Rectangle(0, y + 120, 30, 30), TextManager.Get("FilterEmptyServers"), Alignment.TopLeft, menu);
             filterEmpty.OnSelected += (tickBox) => { FilterServers(); return true; };
 
             //--------------------------------------------------------
 
-            GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), "Back", Alignment.TopLeft, "", menu);
+            GUIButton button = new GUIButton(new Rectangle(-20, -20, 100, 30), TextManager.Get("Back"), Alignment.TopLeft, "", menu);
             button.OnClicked = GameMain.MainMenuScreen.SelectTab;
             button.SelectedColor = button.Color;
 
@@ -139,7 +139,7 @@ namespace Barotrauma
 
             if (serverList.children.All(c => !c.Visible))
             {
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), "No matching servers found.", "", serverList).UserData = "noresults";
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("NoMatchingServers"), "", serverList).UserData = "noresults";
             }
         }
 
@@ -165,7 +165,7 @@ namespace Barotrauma
             if (waitingForRefresh) return false;
             serverList.ClearChildren();
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 20), "Refreshing server list...", "", serverList);
+            new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("RefreshingServerList"), "", serverList);
             
             CoroutineManager.StartCoroutine(WaitForRefresh());
 
@@ -192,16 +192,16 @@ namespace Barotrauma
         private void UpdateServerList(string masterServerData)
         {
             serverList.ClearChildren();
-            
+
             if (string.IsNullOrWhiteSpace(masterServerData))
             {
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), "Couldn't find any servers", "", serverList);
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("NoServers"), "", serverList);
                 return;
             }
 
             if (masterServerData.Substring(0, 5).ToLowerInvariant() == "error")
             {
-                DebugConsole.ThrowError("Error while connecting to master server ("+masterServerData+")!");
+                DebugConsole.ThrowError("Error while connecting to master server (" + masterServerData + ")!");
 
                 return;
             }
@@ -284,7 +284,7 @@ namespace Barotrauma
                 {
                     serverList.ClearChildren();
                     restRequestHandle.Abort();
-                    new GUIMessageBox("Connection error", "Couldn't connect to master server (request timed out).");
+                    new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.Get("MasterServerTimeOutError"));
                     yield return CoroutineStatus.Success;
                 }
                 yield return CoroutineStatus.Running;
@@ -293,28 +293,37 @@ namespace Barotrauma
             if (masterServerResponse.ErrorException != null)
             {
                 serverList.ClearChildren();
-                new GUIMessageBox("Connection error", "Error while connecting to master server {" + masterServerResponse.ErrorException + "}");
+                new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.Get("MasterServerErrorException").Replace("[error]", masterServerResponse.ErrorException.ToString()));
             }
             else if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 serverList.ClearChildren();
-
+                
                 switch (masterServerResponse.StatusCode)
                 {
                     case System.Net.HttpStatusCode.NotFound:
-                        new GUIMessageBox("Connection error",
-                            "Error while connecting to master server (404 - \"" + NetConfig.MasterServerUrl + "\" not found)");
+                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
+                           TextManager.Get("MasterServerError404")
+                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
+                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
+                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
                         break;
                     case System.Net.HttpStatusCode.ServiceUnavailable:
-                        new GUIMessageBox("Connection error",
-                            "Error while connecting to master server (505 - Service Unavailable) " +
-                            "The master server may be down for maintenance or temporarily overloaded. Please try again after in a few moments.");
+                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
+                            TextManager.Get("MasterServerErrorUnavailable")
+                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
+                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
+                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
                         break;
                     default:
-                        new GUIMessageBox("Connection error",
-                            "Error while connecting to master server (" + masterServerResponse.StatusCode + ": " + masterServerResponse.StatusDescription + ")");
+                        new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
+                            TextManager.Get("MasterServerError404")
+                                .Replace("[masterserverurl]", NetConfig.MasterServerUrl)
+                                .Replace("[statuscode]", masterServerResponse.StatusCode.ToString())
+                                .Replace("[statusdescription]", masterServerResponse.StatusDescription));
                         break;
                 }
+                
             }
             else
             {
@@ -353,10 +362,10 @@ namespace Barotrauma
             return true;
         }
 
-        public void JoinServer(string ip, bool hasPassword, string msg = "Password required")
+        /*public void JoinServer(string ip, bool hasPassword, string msg = "Password required")
         {
             CoroutineManager.StartCoroutine(ConnectToServer(ip));
-        }
+        }*/
 
         private IEnumerable<object> ConnectToServer(string ip)
         {

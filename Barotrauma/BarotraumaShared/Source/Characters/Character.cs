@@ -344,18 +344,18 @@ namespace Barotrauma
                 if (GameMain.Client != null) return;
 
                 float newHealth = MathHelper.Clamp(value, minHealth, maxHealth);
-                if (newHealth == health) return;
+                //if (newHealth == health) return;
 
                 health = newHealth;
 
-                if (GameMain.Server != null)
+                /*if (GameMain.Server != null)
                 {
                     if (Math.Abs(health - lastSentHealth) > (maxHealth - minHealth) / 255.0f || Math.Sign(health) != Math.Sign(lastSentHealth))
                     {
                         GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                         lastSentHealth = health;
                     }
-                }
+                }*/
             }
         }
 
@@ -374,12 +374,12 @@ namespace Barotrauma
                 if (!DoesBleed) return;
 
                 float newBleeding = MathHelper.Clamp(value, 0.0f, 5.0f);
-                if (newBleeding == bleeding) return;
+                //if (newBleeding == bleeding) return;
 
                 bleeding = newBleeding;
-
-                if (GameMain.Server != null)
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                
+                /*if (GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });*/
             }
         }
 
@@ -421,6 +421,12 @@ namespace Barotrauma
         }
 
         public bool DoesBleed
+        {
+            get;
+            private set;
+        }
+
+        public bool UseBloodParticles
         {
             get;
             private set;
@@ -634,6 +640,7 @@ namespace Barotrauma
             health = maxHealth;
 
             DoesBleed = doc.Root.GetAttributeBool("doesbleed", true);
+            UseBloodParticles = doc.Root.GetAttributeBool("usebloodparticles", true);
             BleedingDecreaseSpeed = doc.Root.GetAttributeFloat("bleedingdecreasespeed", 0.05f);
 
             needsAir = doc.Root.GetAttributeBool("needsair", false);
@@ -1044,6 +1051,17 @@ namespace Barotrauma
         public bool HasEquippedItem(Item item)
         {
             return !inventory.IsInLimbSlot(item, InvSlotType.Any);
+        }
+
+        public bool HasEquippedItem(string itemName)
+        {
+            for (int i = 0; i < inventory.Items.Length; i++)
+            {
+                if (CharacterInventory.limbSlots[i] == InvSlotType.Any || inventory.Items[i] == null) continue;
+                if (inventory.Items[i].Prefab.NameMatches(itemName) || inventory.Items[i].HasTag(itemName)) return true;
+            }
+
+            return false;
         }
 
         public bool HasSelectedItem(Item item)
@@ -1541,11 +1559,11 @@ namespace Barotrauma
             if (stunTimer > 0.0f)
             {
                 stunTimer -= deltaTime;
-                if (stunTimer < 0.0f && GameMain.Server != null)
+                /*if (stunTimer < 0.0f && GameMain.Server != null)
                 {
                     //stun ended -> notify clients
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                }                
+                } */
             }
 
             //Skip health effects as critical health handles it differently
@@ -1575,8 +1593,8 @@ namespace Barotrauma
             if (IsRagdolled)
             {
                 if (AnimController is HumanoidAnimController) ((HumanoidAnimController)AnimController).Crouching = false;
-                if(GameMain.Server != null)
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                /*if(GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });*/
                 AnimController.ResetPullJoints();
                 selectedConstruction = null;
                 return;
@@ -1831,11 +1849,11 @@ namespace Barotrauma
 
             if ((newStun <= stunTimer && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
 
-            if (GameMain.Server != null &&
+            /*if (GameMain.Server != null &&
                 (Math.Sign(newStun) != Math.Sign(stunTimer) || Math.Abs(newStun - stunTimer) > 0.1f))
             {
                 GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-            }
+            }*/
 
             if (Math.Sign(newStun) != Math.Sign(stunTimer)) AnimController.ResetPullJoints();
 
@@ -1894,11 +1912,11 @@ namespace Barotrauma
                 return;
             }
 
-            if (GameMain.NetworkMember != null)
+            /*if (GameMain.NetworkMember != null)
             {
                 if (GameMain.Server != null)
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-            }
+            }*/
 
             AnimController.Frozen = false;
 

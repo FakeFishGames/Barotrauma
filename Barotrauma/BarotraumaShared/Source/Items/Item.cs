@@ -1207,7 +1207,7 @@ namespace Barotrauma
                 Color color = Color.Red;
                 if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
 
-                texts.Add(new ColoredText(ic.Msg, color));
+                texts.Add(new ColoredText(ic.Msg, color, false));
             }
 
             return texts;
@@ -1608,7 +1608,7 @@ namespace Barotrauma
             msg.Write(body.FarseerBody.Awake);
             if (body.FarseerBody.Awake)
             {
-                body.FarseerBody.Enabled = true;
+                body.Enabled = true;
                 msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
                 msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
             }

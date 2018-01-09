@@ -332,6 +332,7 @@ namespace Barotrauma
                             inventory.ServerRead(type, msg, c);
                             break;
                         case 1:
+                            bool doingCPR = msg.ReadBoolean();
                             if (c.Character != this)
                             {
 #if DEBUG
@@ -340,7 +341,6 @@ namespace Barotrauma
                                 return;
                             }
 
-                            bool doingCPR = msg.ReadBoolean();
                             AnimController.Anim = doingCPR ? AnimController.Animation.CPR : AnimController.Animation.None;
                             break;
                         case 2:
@@ -358,7 +358,15 @@ namespace Barotrauma
                             }
                             break;
                         case 3:
-                            AnimController.GrabLimb = (LimbType)msg.ReadUInt16();
+                            LimbType grabLimb = (LimbType)msg.ReadUInt16();
+                            if (c.Character != this)
+                            {
+#if DEBUG
+                                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+#endif
+                                return;
+                            }
+                            AnimController.GrabLimb = grabLimb;
                             break;
                     }
                     break;
@@ -383,10 +391,6 @@ namespace Barotrauma
                         msg.WriteRangedInteger(0, 2, 1);
                         Client owner = ((Client)extraData[1]);
                         msg.Write(owner == null ? (byte)0 : owner.ID);
-                        break;
-                    case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(0, 2, 2);
-                        WriteStatus(msg);
                         break;
                 }
                 msg.WritePadBits();
@@ -473,6 +477,8 @@ namespace Barotrauma
                 tempBuffer.Write(SimPosition.X);
                 tempBuffer.Write(SimPosition.Y);
                 tempBuffer.Write(AnimController.Collider.Rotation);
+
+                WriteStatus(tempBuffer);
 
                 tempBuffer.WritePadBits();
 

@@ -90,14 +90,26 @@ namespace Barotrauma.Items.Components
             GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 Color.Green * 0.1f, true);
 
+            Character closestCharacter = null;
+            float closestDist = float.PositiveInfinity;
+
             foreach (Character c in visibleCharacters)
             {
                 if (c == character) continue;
 
-                float dist = Vector2.Distance(character.WorldPosition, c.WorldPosition);
-                DrawCharacterInfo(spriteBatch, c, 1.0f - MathHelper.Max((dist - (Range - FadeOutRange)) / FadeOutRange, 0.0f));                
+                float dist = Vector2.DistanceSquared(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), c.WorldPosition);
+                if (dist < closestDist)
+                {
+                    closestCharacter = c;
+                    closestDist = dist;
+                }              
             }
 
+            if (closestCharacter != null)
+            {
+                float dist = Vector2.Distance(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), closestCharacter.WorldPosition);
+                DrawCharacterInfo(spriteBatch, closestCharacter, 1.0f - MathHelper.Max((dist - (Range - FadeOutRange)) / FadeOutRange, 0.0f));
+            }
         }
 
         private void DrawCharacterInfo(SpriteBatch spriteBatch, Character target, float alpha = 1.0f)

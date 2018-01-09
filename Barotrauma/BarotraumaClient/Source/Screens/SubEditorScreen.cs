@@ -59,17 +59,17 @@ namespace Barotrauma
 
         private string GetItemCount()
         {
-            return "Items: " +Item.ItemList.Count;
+            return TextManager.Get("Items") + ": " + Item.ItemList.Count;
         }
 
         private string GetStructureCount()
         {
-            return "Structures: " + (MapEntity.mapEntityList.Count - Item.ItemList.Count);
+            return TextManager.Get("Structures") + ": " + (MapEntity.mapEntityList.Count - Item.ItemList.Count);
         }
 
         private string GetTotalHullVolume()
         {
-            return "Total Hull Volume:\n" + Hull.hullList.Sum(h => h.Volume);
+            return TextManager.Get("TotalHullVolume") + ":\n" + Hull.hullList.Sum(h => h.Volume);
         }
 
         private string GetSelectedHullVolume()
@@ -86,16 +86,16 @@ namespace Barotrauma
                 }
             });
             buoyancyVol *= neutralPercentage;
-            string retVal = "Selected Hull Volume:\n" + selectedVol;
+            string retVal = TextManager.Get("SelectedHullVolume") + ":\n" + selectedVol;
             if (selectedVol > 0.0f && buoyancyVol > 0.0f)
             {
                 if (buoyancyVol / selectedVol < 1.0f)
                 {
-                    retVal += " (optimal NeutralBallastLevel is " + (buoyancyVol / selectedVol).ToString("0.00") + ")";
+                    retVal += " (" + TextManager.Get("OptimalBallastLevel").Replace("[value]", (buoyancyVol / selectedVol).ToString("0.00")) + ")";
                 }
                 else
                 {
-                    retVal += " (insufficient volume for buoyancy control)";
+                    retVal += " (" + TextManager.Get("InsufficientBallast") + ")";
                 }
             }
             return retVal;
@@ -103,7 +103,7 @@ namespace Barotrauma
 
         private string GetPhysicsBodyCount()
         {
-            return "Physics bodies: " + GameMain.World.BodyList.Count;
+            return TextManager.Get("PhysicsBodies") + ": " + GameMain.World.BodyList.Count;
         }
 
         public bool CharacterMode
@@ -137,7 +137,7 @@ namespace Barotrauma
             GUITextBlock selectedHullVolume = new GUITextBlock(new Rectangle(0, 30, 0, 20), "", "", hullVolumeFrame, GUI.SmallFont);
             selectedHullVolume.TextGetter = GetSelectedHullVolume;
             
-            var button = new GUIButton(new Rectangle(0, 0, 70, 20), "Open...", "", topPanel);
+            var button = new GUIButton(new Rectangle(0, 0, 70, 20), TextManager.Get("OpenSubButton"), "", topPanel);
             button.OnClicked = (GUIButton btn, object data) =>
             {
                 saveFrame = null;
@@ -147,7 +147,7 @@ namespace Barotrauma
                 return true;
             };
 
-            button = new GUIButton(new Rectangle(80,0,70,20), "Save", "", topPanel);
+            button = new GUIButton(new Rectangle(80,0,70,20), TextManager.Get("SaveSubButton"), "", topPanel);
             button.OnClicked = (GUIButton btn, object data) =>
             {
                 loadFrame = null;
@@ -160,11 +160,8 @@ namespace Barotrauma
             var nameLabel = new GUITextBlock(new Rectangle(170, 0, 150, 20), "", "", Alignment.TopLeft, Alignment.CenterLeft, topPanel, false, GUI.LargeFont);
             nameLabel.TextGetter = GetSubName;
 
-            linkedSubBox = new GUIDropDown(new Rectangle(750, 0, 200, 20), "Add submarine", "", topPanel);
-            linkedSubBox.ToolTip =
-                "Places another submarine into the current submarine file. " +
-                "Can be used for adding things such as smaller vessels, " +
-                "escape pods or detachable sections into the main submarine.";
+            linkedSubBox = new GUIDropDown(new Rectangle(750, 0, 200, 20), TextManager.Get("AddSubButton"), "", topPanel);
+            linkedSubBox.ToolTip = TextManager.Get("AddSubToolTip");
 
             foreach (Submarine sub in Submarine.SavedSubmarines)
             {
@@ -196,7 +193,7 @@ namespace Barotrauma
                 GUItabs[i] = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "");
                 GUItabs[i].Padding = new Vector4(10.0f, 30.0f, 10.0f, 20.0f);
 
-                new GUITextBlock(new Rectangle(-200, 0, 100, 15), "Filter", "", Alignment.TopRight, Alignment.CenterRight, GUItabs[i], false, GUI.SmallFont);
+                new GUITextBlock(new Rectangle(-200, 0, 100, 15), TextManager.Get("FilterMapEntities"), "", Alignment.TopRight, Alignment.CenterRight, GUItabs[i], false, GUI.SmallFont);
 
                 GUITextBox searchBox = new GUITextBox(new Rectangle(-20, 0, 180, 15), null,null, Alignment.TopRight, Alignment.CenterLeft, "", GUItabs[i]);
                 searchBox.Font = GUI.SmallFont;
@@ -244,37 +241,37 @@ namespace Barotrauma
             }
 
             y += 10;
-            button = new GUIButton(new Rectangle(0, y, 0, 20), "Character mode", Alignment.Left, "", leftPanel);
-            button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
+            button = new GUIButton(new Rectangle(0, y, 0, 20), TextManager.Get("CharacterModeButton"), Alignment.Left, "", leftPanel);
+            button.ToolTip = TextManager.Get("CharacterModeToolTip");
             button.OnClicked = ToggleCharacterMode;
 
             y += 25;
-            button = new GUIButton(new Rectangle(0, y, 0, 20), "Wiring mode", Alignment.Left, "", leftPanel);
-            //button.ToolTip = "Allows you to pick up and use items. Useful for things such as placing items inside closets, turning devices on/off and doing the wiring.";
+            button = new GUIButton(new Rectangle(0, y, 0, 20), TextManager.Get("WiringModeButton"), Alignment.Left, "", leftPanel);
+            button.ToolTip = TextManager.Get("WiringModeToolTip");
             button.OnClicked = ToggleWiringMode;
 
             y += 35;
-            button = new GUIButton(new Rectangle(0, y, 0, 20), "Generate waypoints", Alignment.Left, "", leftPanel);
-            button.ToolTip = "AI controlled crew members require waypoints to navigate around the sub.";
+            button = new GUIButton(new Rectangle(0, y, 0, 20), TextManager.Get("GenerateWaypointsButton"), Alignment.Left, "", leftPanel);
+            button.ToolTip = TextManager.Get("GenerateWaypointsToolTip");
             button.OnClicked = GenerateWaypoints;
 
             y += 30;
 
-            new GUITextBlock(new Rectangle(0, y, 0, 20), "Show:", "", leftPanel);
+            new GUITextBlock(new Rectangle(0, y, 0, 20), TextManager.Get("ShowEntitiesLabel"), "", leftPanel);
             
-            var tickBox = new GUITickBox(new Rectangle(0,y+20,20,20), "Waypoints", Alignment.TopLeft, leftPanel);
+            var tickBox = new GUITickBox(new Rectangle(0,y+20,20,20), TextManager.Get("ShowWaypoints"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = !WayPoint.ShowWayPoints; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 45, 20, 20), "Spawnpoints", Alignment.TopLeft, leftPanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 45, 20, 20), TextManager.Get("ShowSpawnpoints"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = !WayPoint.ShowSpawnPoints; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 70, 20, 20), "Links", Alignment.TopLeft, leftPanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 70, 20, 20), TextManager.Get("ShowLinks"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { Item.ShowLinks = !Item.ShowLinks; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 95, 20, 20), "Hulls", Alignment.TopLeft, leftPanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 95, 20, 20), TextManager.Get("ShowHulls"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { Hull.ShowHulls = !Hull.ShowHulls; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 120, 20, 20), "Gaps", Alignment.TopLeft, leftPanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 120, 20, 20), TextManager.Get("ShowGaps"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { Gap.ShowGaps = !Gap.ShowGaps; return true; };
             tickBox.Selected = true;
 
@@ -282,7 +279,7 @@ namespace Barotrauma
 
             if (y < GameMain.GraphicsHeight - 100)
             {
-                new GUITextBlock(new Rectangle(0, y, 0, 15), "Previously used:", "", leftPanel);
+                new GUITextBlock(new Rectangle(0, y, 0, 15), TextManager.Get("PreviouslyUsedLabel"), "", leftPanel);
 
                 previouslyUsedList = new GUIListBox(new Rectangle(0, y + 20, 0, Math.Min(GameMain.GraphicsHeight - y - 80, 150)), "", leftPanel);
                 previouslyUsedList.OnSelected = SelectPrefab;
@@ -376,17 +373,20 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text))
             {
-                GUI.AddMessage("Name your submarine before saving it", Color.Red, 3.0f);
+                GUI.AddMessage(TextManager.Get("SubNameMissingWarning"), Color.Red, 3.0f);
 
                 nameBox.Flash();
                 return false;
             }
-
-            if (nameBox.Text.Contains("../"))
+            
+            foreach (char illegalChar in Path.GetInvalidFileNameChars())
             {
-                DebugConsole.ThrowError("Illegal symbols in filename (../)");
-                nameBox.Flash();
-                return false;
+                if (nameBox.Text.Contains(illegalChar))
+                {
+                    GUI.AddMessage(TextManager.Get("SubNameIllegalCharsWarning").Replace("[illegalchar]", illegalChar.ToString()), Color.Red, 3.0f);
+                    nameBox.Flash();
+                    return false;
+                }
             }
 
             string savePath = nameBox.Text + ".sub";
@@ -403,7 +403,7 @@ namespace Barotrauma
             Submarine.SaveCurrent(savePath);
             Submarine.MainSub.CheckForErrors();
 
-            GUI.AddMessage("Submarine saved to " + Submarine.MainSub.FilePath, Color.Green, 3.0f);
+            GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green, 3.0f);
 
             Submarine.RefreshSavedSubs();
             linkedSubBox.ClearChildren();
@@ -429,11 +429,11 @@ namespace Barotrauma
             saveFrame = new GUIFrame(new Rectangle(GameMain.GraphicsWidth / 2 - width / 2, GameMain.GraphicsHeight / 2 - height / 2, width, height), "", null);
             saveFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            new GUITextBlock(new Rectangle(0,0,200,30), "Save submarine", "", saveFrame, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0,0,200,30), TextManager.Get("SaveSubDialogHeader"), "", saveFrame, GUI.LargeFont);
 
             y += 30;
 
-            new GUITextBlock(new Rectangle(0,y,150,20), "Name:", "", saveFrame);
+            new GUITextBlock(new Rectangle(0,y,150,20), TextManager.Get("SaveSubDialogName"), "", saveFrame);
             y += 20;
 
             nameBox = new GUITextBox(new Rectangle(5, y, 250, 20), "", saveFrame);
@@ -442,7 +442,7 @@ namespace Barotrauma
 
             y += 30;
             
-            new GUITextBlock(new Rectangle(0, y, 150, 20), "Description:", "", saveFrame);
+            new GUITextBlock(new Rectangle(0, y, 150, 20), TextManager.Get("SaveSubDialogDescription"), "", saveFrame);
             y += 20;
 
             var descriptionBox = new GUITextBox(new Rectangle(5, y, 0, 100), null, null, Alignment.TopLeft,
@@ -452,7 +452,7 @@ namespace Barotrauma
             descriptionBox.OnTextChanged = ChangeSubDescription;
 
             y += descriptionBox.Rect.Height + 15;
-            new GUITextBlock(new Rectangle(0, y, 150, 20), "Settings:", "", saveFrame);
+            new GUITextBlock(new Rectangle(0, y, 150, 20), TextManager.Get("SaveSubDialogSettings"), "", saveFrame);
 
             y += 20;
 
@@ -492,10 +492,10 @@ namespace Barotrauma
                 }
             }
             
-            var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), "Save", Alignment.Right | Alignment.Bottom, "", saveFrame);
+            var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), TextManager.Get("SaveSubButton"), Alignment.Right | Alignment.Bottom, "", saveFrame);
             saveButton.OnClicked = SaveSub;
 
-            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Cancel", Alignment.Right | Alignment.Bottom, "", saveFrame);
+            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Cancel"), Alignment.Right | Alignment.Bottom, "", saveFrame);
             cancelButton.OnClicked = (GUIButton btn, object userdata) =>
             {
                 saveFrame = null;
@@ -537,13 +537,13 @@ namespace Barotrauma
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
-                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", "", Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
+                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
                     shuttleText.TextColor = textBlock.TextColor * 0.8f;
                     shuttleText.ToolTip = textBlock.ToolTip;
                 }
             }
 
-            var deleteButton = new GUIButton(new Rectangle(0, 0, 70, 20), "Delete", Alignment.BottomLeft, "", loadFrame);
+            var deleteButton = new GUIButton(new Rectangle(0, 0, 70, 20), TextManager.Get("Delete"), Alignment.BottomLeft, "", loadFrame);
             deleteButton.Enabled = false;
             deleteButton.UserData = "delete";
             deleteButton.OnClicked = (btn, userdata) =>
@@ -558,10 +558,10 @@ namespace Barotrauma
                 return true;
             };
 
-            var loadButton = new GUIButton(new Rectangle(-90, 0, 80, 20), "Load", Alignment.Right | Alignment.Bottom, "", loadFrame);
+            var loadButton = new GUIButton(new Rectangle(-90, 0, 80, 20), TextManager.Get("Load"), Alignment.Right | Alignment.Bottom, "", loadFrame);
             loadButton.OnClicked = LoadSub;
 
-            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Cancel", Alignment.Right | Alignment.Bottom, "", loadFrame);
+            var cancelButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Cancel"), Alignment.Right | Alignment.Bottom, "", loadFrame);
             cancelButton.OnClicked = (GUIButton btn, object userdata) =>
                 {
                     loadFrame = null;
@@ -595,7 +595,10 @@ namespace Barotrauma
         {
             if (sub == null) return;
             
-            var msgBox = new GUIMessageBox("Delete file?", "Are you sure you want to delete \"" + sub.Name + "\"", new string[] { "OK", "Cancel" });
+            var msgBox = new GUIMessageBox(
+                TextManager.Get("DeleteDialogLabel"),
+                TextManager.Get("DeleteDialogQuestion").Replace("[file]", sub.Name), 
+                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
             msgBox.Buttons[0].OnClicked += (btn, userData) => 
             {
                 try
@@ -606,7 +609,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Couldn't delete file \"" + sub.FilePath + "\"!", e);
+                    DebugConsole.ThrowError(TextManager.Get("DeleteFileError").Replace("[file]", sub.FilePath), e);
                 }
                 return true;
             };
@@ -901,7 +904,305 @@ namespace Barotrauma
             previouslyUsedList.RemoveChild(textBlock);
             previouslyUsedList.children.Insert(0, textBlock);
         }
+        
+        public void AutoHull()
+        {
+            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            {
+                MapEntity h = MapEntity.mapEntityList[i];
+                if (h is Hull || h is Gap)
+                {
+                    h.Remove();
+                    i--;
+                }
+            }
 
+            List<Vector2> wallPoints = new List<Vector2>();
+            Vector2 min = Vector2.Zero;
+            Vector2 max = Vector2.Zero;
+
+            List<MapEntity> mapEntityList = new List<MapEntity>();
+
+            foreach (MapEntity e in MapEntity.mapEntityList)
+            {
+                if (e is Item)
+                {
+                    Item it = e as Item;
+                    Door door = it.GetComponent<Door>();
+                    if (door != null)
+                    {
+                        int halfW = e.WorldRect.Width / 2;
+                        wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y + e.WorldRect.Height));
+                        mapEntityList.Add(it);
+                    }
+                    continue;
+                }
+
+                if (!(e is Structure)) continue;
+                Structure s = e as Structure;
+                if (!s.HasBody) continue;
+                mapEntityList.Add(e);
+
+                if (e.Rect.Width > e.Rect.Height)
+                {
+                    int halfH = e.WorldRect.Height / 2;
+                    wallPoints.Add(new Vector2(e.WorldRect.X, -e.WorldRect.Y + halfH));
+                    wallPoints.Add(new Vector2(e.WorldRect.X + e.WorldRect.Width, -e.WorldRect.Y + halfH));
+                }
+                else
+                {
+                    int halfW = e.WorldRect.Width / 2;
+                    wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y));
+                    wallPoints.Add(new Vector2(e.WorldRect.X + halfW, -e.WorldRect.Y + e.WorldRect.Height));
+                }
+            }
+
+            min = wallPoints[0];
+            max = wallPoints[0];
+            for (int i = 0; i < wallPoints.Count; i++)
+            {
+                min.X = Math.Min(min.X, wallPoints[i].X);
+                min.Y = Math.Min(min.Y, wallPoints[i].Y);
+                max.X = Math.Max(max.X, wallPoints[i].X);
+                max.Y = Math.Max(max.Y, wallPoints[i].Y);
+            }
+
+            List<Rectangle> hullRects = new List<Rectangle>();
+            hullRects.Add(new Rectangle((int)min.X, (int)min.Y, (int)(max.X - min.X), (int)(max.Y - min.Y)));
+            foreach (Vector2 point in wallPoints)
+            {
+                MathUtils.SplitRectanglesHorizontal(hullRects, point);
+                MathUtils.SplitRectanglesVertical(hullRects, point);
+            }
+
+            hullRects.Sort((a, b) =>
+            {
+                if (a.Y < b.Y) return -1;
+                if (a.Y > b.Y) return 1;
+                if (a.X < b.X) return -1;
+                if (a.X > b.X) return 1;
+                return 0;
+            });
+
+            for (int i = 0; i < hullRects.Count - 1; i++)
+            {
+                Rectangle rect = hullRects[i];
+                if (hullRects[i + 1].Y > rect.Y) continue;
+
+                Vector2 hullRPoint = new Vector2(rect.X + rect.Width - 8, rect.Y + rect.Height / 2);
+                Vector2 hullLPoint = new Vector2(rect.X, rect.Y + rect.Height / 2);
+
+                MapEntity container = null;
+                foreach (MapEntity e in mapEntityList)
+                {
+                    Rectangle entRect = e.WorldRect;
+                    entRect.Y = -entRect.Y;
+                    if (entRect.Contains(hullRPoint))
+                    {
+                        if (!entRect.Contains(hullLPoint)) container = e;
+                        break;
+                    }
+                }
+                if (container == null)
+                {
+                    rect.Width += hullRects[i + 1].Width;
+                    hullRects[i] = rect;
+                    hullRects.RemoveAt(i + 1);
+                    i--;
+                }
+            }
+            
+            foreach (MapEntity e in mapEntityList)
+            {
+                Rectangle entRect = e.WorldRect;
+                if (entRect.Width < entRect.Height) continue;
+                entRect.Y = -entRect.Y - 16;
+                for (int i = 0; i < hullRects.Count; i++)
+                {
+                    Rectangle hullRect = hullRects[i];
+                    if (entRect.Intersects(hullRect))
+                    {
+                        if (hullRect.Y < entRect.Y)
+                        {
+                            hullRect.Height = Math.Max((entRect.Y + 16 + entRect.Height / 2) - hullRect.Y, hullRect.Height);
+                            hullRects[i] = hullRect;
+                        }
+                        else if (hullRect.Y + hullRect.Height <= entRect.Y + 16 + entRect.Height)
+                        {
+                            hullRects.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+            }
+
+            foreach (MapEntity e in mapEntityList)
+            {
+                Rectangle entRect = e.WorldRect;
+                if (entRect.Width < entRect.Height) continue;
+                entRect.Y = -entRect.Y;
+                for (int i = 0; i < hullRects.Count; i++)
+                {
+                    Rectangle hullRect = hullRects[i];
+                    if (entRect.Intersects(hullRect))
+                    {
+                        if (hullRect.Y >= entRect.Y - 8 && hullRect.Y + hullRect.Height <= entRect.Y + entRect.Height + 8)
+                        {
+                            hullRects.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+            }
+            
+            for (int i = 0; i < hullRects.Count;)
+            {
+                Rectangle hullRect = hullRects[i];
+                Vector2 point = new Vector2(hullRect.X+2, hullRect.Y+hullRect.Height/2);
+                MapEntity container = null;
+                foreach (MapEntity e in mapEntityList)
+                {
+                    Rectangle entRect = e.WorldRect;
+                    entRect.Y = -entRect.Y;
+                    if (entRect.Contains(point))
+                    {
+                        container = e;
+                        break;
+                    }
+                }
+                if (container == null)
+                {
+                    hullRects.RemoveAt(i);
+                    continue;
+                }
+
+                while (hullRects[i].Y <= hullRect.Y)
+                {
+                    i++;
+                    if (i >= hullRects.Count) break;
+                }
+            }
+            
+            for (int i = hullRects.Count-1; i >= 0;)
+            {
+                Rectangle hullRect = hullRects[i];
+                Vector2 point = new Vector2(hullRect.X+hullRect.Width-2, hullRect.Y+hullRect.Height/2);
+                MapEntity container = null;
+                foreach (MapEntity e in mapEntityList)
+                {
+                    Rectangle entRect = e.WorldRect;
+                    entRect.Y = -entRect.Y;
+                    if (entRect.Contains(point))
+                    {
+                        container = e;
+                        break;
+                    }
+                }
+                if (container == null)
+                {
+                    hullRects.RemoveAt(i); i--;
+                    continue;
+                }
+
+                while (hullRects[i].Y >= hullRect.Y)
+                {
+                    i--;
+                    if (i < 0) break;
+                }
+            }
+            
+            hullRects.Sort((a, b) =>
+            {
+                if (a.X < b.X) return -1;
+                if (a.X > b.X) return 1;
+                if (a.Y < b.Y) return -1;
+                if (a.Y > b.Y) return 1;
+                return 0;
+            });
+            
+            for (int i = 0; i < hullRects.Count - 1; i++)
+            {
+                Rectangle rect = hullRects[i];
+                if (hullRects[i + 1].Width != rect.Width) continue;
+                if (hullRects[i + 1].X > rect.X) continue;
+
+                Vector2 hullBPoint = new Vector2(rect.X + rect.Width / 2, rect.Y + rect.Height - 8);
+                Vector2 hullUPoint = new Vector2(rect.X + rect.Width / 2, rect.Y);
+
+                MapEntity container = null;
+                foreach (MapEntity e in mapEntityList)
+                {
+                    Rectangle entRect = e.WorldRect;
+                    entRect.Y = -entRect.Y;
+                    if (entRect.Contains(hullBPoint))
+                    {
+                        if (!entRect.Contains(hullUPoint)) container = e;
+                        break;
+                    }
+                }
+                if (container == null)
+                {
+                    rect.Height += hullRects[i + 1].Height;
+                    hullRects[i] = rect;
+                    hullRects.RemoveAt(i + 1);
+                    i--;
+                }
+            }
+            
+            for (int i = 0; i < hullRects.Count;i++)
+            {
+                Rectangle rect = hullRects[i];
+                rect.Y -= 16;
+                rect.Height += 32;
+                hullRects[i] = rect;
+            }
+            
+            hullRects.Sort((a, b) =>
+            {
+                if (a.Y < b.Y) return -1;
+                if (a.Y > b.Y) return 1;
+                if (a.X < b.X) return -1;
+                if (a.X > b.X) return 1;
+                return 0;
+            });
+            
+            for (int i = 0; i < hullRects.Count; i++)
+            {
+                for (int j = i+1; j < hullRects.Count; j++)
+                {
+                    if (hullRects[j].Y <= hullRects[i].Y) continue;
+                    if (hullRects[j].Intersects(hullRects[i]))
+                    {
+                        Rectangle rect = hullRects[i];
+                        rect.Height = hullRects[j].Y - rect.Y;
+                        hullRects[i] = rect;
+                        break;
+                    }
+                }
+            }
+
+            foreach (Rectangle rect in hullRects)
+            {
+                Rectangle hullRect = rect;
+                hullRect.Y = -hullRect.Y;
+                Hull newHull = new Hull(MapEntityPrefab.Find("Hull"),
+                                        hullRect,
+                                        Submarine.MainSub);
+            }
+
+            foreach (MapEntity e in mapEntityList)
+            {
+                if (!(e is Structure)) continue;
+                if (!(e as Structure).IsPlatform) continue;
+
+                Rectangle gapRect = e.WorldRect;
+                gapRect.Y -= 8;
+                gapRect.Height = 16;
+                Gap newGap = new Gap(MapEntityPrefab.Find("Gap"),
+                                        gapRect);
+            }
+        }
+        
         public override void AddToGUIUpdateList()
         {
             if (tutorial != null) tutorial.AddToGUIUpdateList();

@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
 using Color = Microsoft.Xna.Framework.Color;
@@ -44,7 +44,7 @@ namespace Barotrauma
             try
             {
 
-			    using (Stream fileStream = File.OpenRead(path))
+                using (Stream fileStream = File.OpenRead(path))
                 {
                     var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
                     texture = PreMultiplyAlpha(texture);

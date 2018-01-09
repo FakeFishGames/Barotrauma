@@ -67,6 +67,7 @@ namespace Barotrauma
         }
 
         public static float DamageEffectCutoff;
+        public static Color DamageEffectColor;
 
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
         {
@@ -105,15 +106,13 @@ namespace Barotrauma
 
         public static bool SaveCurrent(string filePath)
         {
-            if (Submarine.MainSub == null)
+            if (MainSub == null)
             {
-                Submarine.MainSub = new Submarine(filePath);
-                // return;
+                MainSub = new Submarine(filePath);
             }
 
-            Submarine.MainSub.filePath = filePath;
-
-            return Submarine.MainSub.SaveAs(filePath);
+            MainSub.filePath = filePath;
+            return MainSub.SaveAs(filePath);
         }
 
         public void CheckForErrors()
@@ -122,7 +121,7 @@ namespace Barotrauma
 
             if (!Hull.hullList.Any())
             {
-                errorMsgs.Add("No hulls found in the submarine. Hulls determine the \"borders\" of an individual room and are required for water and air distribution to work correctly.");
+                errorMsgs.Add(TextManager.Get("NoHullsWarning"));
             }
 
             foreach (Item item in Item.ItemList)
@@ -131,25 +130,24 @@ namespace Barotrauma
 
                 if (!item.linkedTo.Any())
                 {
-                    errorMsgs.Add("The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.");
+                    errorMsgs.Add(TextManager.Get("DisconnectedVentsWarning"));
                     break;
                 }
             }
 
             if (WayPoint.WayPointList.Find(wp => !wp.MoveWithLevel && wp.SpawnType == SpawnType.Path) == null)
             {
-                errorMsgs.Add("No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.");
+                errorMsgs.Add(TextManager.Get("NoWaypointsWarning"));
             }
 
             if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)
             {
-                errorMsgs.Add("The submarine doesn't have spawnpoints for cargo (which are used for determining where to place bought items). "
-                     + "To fix this, create a new spawnpoint and change its \"spawn type\" parameter to \"cargo\".");
+                errorMsgs.Add(TextManager.Get("NoCargoSpawnpointWarning"));
             }
 
             if (errorMsgs.Any())
             {
-                new GUIMessageBox("Warning", string.Join("\n\n", errorMsgs), 400, 0);
+                new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), 400, 0);
             }
 
             foreach (MapEntity e in MapEntity.mapEntityList)
@@ -157,9 +155,9 @@ namespace Barotrauma
                 if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
                 {
                     var msgBox = new GUIMessageBox(
-                        "Warning",
-                        "One or more structures have been placed very far from the submarine. Show the structures?",
-                        new string[] { "Yes", "No" });
+                        TextManager.Get("Warning"),
+                        TextManager.Get("FarAwayEntitiesWarning"),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                     msgBox.Buttons[0].OnClicked += (btn, obj) =>
                     {

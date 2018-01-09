@@ -94,24 +94,23 @@ namespace Barotrauma
             editingHUD.Padding = new Vector4(10, 10, 0, 0);
             editingHUD.UserData = this;
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Linked submarine", "",
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("LinkedSub"), "",
                 Alignment.TopLeft, Alignment.TopLeft, editingHUD, false, GUI.LargeFont);
 
             var pathBox = new GUITextBox(new Rectangle(10, 30, 300, 20), "", editingHUD);
             pathBox.Font = GUI.SmallFont;
             pathBox.Text = filePath;
 
-            var reloadButton = new GUIButton(new Rectangle(320, 30, 80, 20), "Refresh", "", editingHUD);
+            var reloadButton = new GUIButton(new Rectangle(320, 30, 80, 20), TextManager.Get("ReloadLinkedSub"), "", editingHUD);
             reloadButton.OnClicked = Reload;
             reloadButton.UserData = pathBox;
-
-            reloadButton.ToolTip = "Reload the linked submarine from the specified file";
+            reloadButton.ToolTip = TextManager.Get("ReloadLinkedSubTooltip");
 
             y += 20;
 
             if (!inGame)
             {
-                new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to a docking port",
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), TextManager.Get("LinkLinkedSub"),
                     "", Alignment.TopRight, Alignment.TopRight, editingHUD, false, GUI.SmallFont);
                 y += 25;
 
@@ -125,7 +124,7 @@ namespace Barotrauma
 
             if (!File.Exists(pathBox.Text))
             {
-                new GUIMessageBox("Error", "Submarine file \"" + pathBox.Text + "\" not found!");
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("ReloadLinkedSubError").Replace("[file]", pathBox.Text));
                 pathBox.Flash(Color.Red);
                 pathBox.Text = filePath;
                 return false;
