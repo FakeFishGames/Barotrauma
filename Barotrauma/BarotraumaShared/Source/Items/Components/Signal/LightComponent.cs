@@ -28,6 +28,9 @@ namespace Barotrauma.Items.Components
             set
             {
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
+#if CLIENT
+                if (light != null) light.Range = range;
+#endif
             }
         }
 
@@ -72,7 +75,13 @@ namespace Barotrauma.Items.Components
         public Color LightColor
         {
             get { return lightColor; }
-            set { lightColor = value; }
+            set
+            {
+                lightColor = value;
+#if CLIENT
+                if (light != null) light.Color = lightColor;
+#endif
+            }
         }
 
         public override void Move(Vector2 amount)

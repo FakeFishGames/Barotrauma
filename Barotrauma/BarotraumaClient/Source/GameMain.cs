@@ -286,7 +286,7 @@ namespace Barotrauma
             
             ServerListScreen        =   new ServerListScreen();
 
-            SubEditorScreen         =   new SubEditorScreen();
+            SubEditorScreen         =   new SubEditorScreen(Content);
             CharacterEditorScreen   =   new CharacterEditorScreen();
             ParticleEditorScreen    =   new ParticleEditorScreen();
 
