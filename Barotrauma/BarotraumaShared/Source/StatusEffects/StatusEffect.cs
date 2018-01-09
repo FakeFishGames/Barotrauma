@@ -274,64 +274,65 @@ namespace Barotrauma
                 {                    
                     if (target == null || target.SerializableProperties == null) continue;
 
-                    if (!target.SerializableProperties.TryGetValue(pc.Attribute, out SerializableProperty property))
+                    string valStr = pc.Value.ToString();
+
+                    switch (pc.Type)
                     {
-                        //Do special conditional checks
-
-                        string valStr = pc.Value.ToString();
-                        if (pc.Attribute == "name")
+                        case PropertyConditional.ConditionType.PropertyValue:
+                            if (target.SerializableProperties.TryGetValue(pc.PropertyName.ToLowerInvariant(), out SerializableProperty property))
+                            {
+                                return pc.Matches(property);
+                            }
+                            return false;
+                        case PropertyConditional.ConditionType.Name:
                             return pc.Operator == "==" ? target.Name == valStr : target.Name != valStr;
+                        case PropertyConditional.ConditionType.HasTag:
+                            {
+                                string[] readTags = valStr.Split(',');
+                                int matches = 0;
+                                foreach (string tag in readTags)
+                                    if (((Item)target).HasTag(tag)) matches++;
 
-                        if (pc.Attribute == "speciesname" && target is Character)
+                                //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
+                                return pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
+                            }
+                        case PropertyConditional.ConditionType.HasStatusTag:
+                            List<DurationListElement> durations = DurationList.FindAll(d => d.Targets.Contains(target));
+                            List<DelayedListElement> delays = DelayedEffect.DelayList.FindAll(d => d.Targets.Contains(target));
+
+                            bool success = false;
+                            if (durations.Any() || delays.Any())
+                            {
+                                string[] readTags = valStr.Split(',');
+                                foreach (DurationListElement duration in durations)
+                                {
+                                    int matches = 0;
+                                    foreach (string tag in readTags)
+                                        if (duration.Parent.HasTag(tag)) matches++;
+
+                                    success = pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
+                                    if (cancelStatusEffect > 0 && success)
+                                        DurationList.Remove(duration);
+                                    if (cancelStatusEffect != 2) //cancelStatusEffect 1 = only cancel once, cancelStatusEffect 2 = cancel all of matching tags
+                                        return success;
+                                }
+                                foreach (DelayedListElement delay in delays)
+                                {
+                                    int matches = 0;
+                                    foreach (string tag in readTags)
+                                        if (delay.Parent.HasTag(tag)) matches++;
+
+                                    success = pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
+                                    if (cancelStatusEffect > 0 && success)
+                                        DelayedEffect.DelayList.Remove(delay);
+                                    if (cancelStatusEffect != 2) //ditto
+                                        return success;
+                                }
+                            }
+                            return success;
+                        case PropertyConditional.ConditionType.SpeciesName:
                             return pc.Operator == "==" ? ((Character)target).SpeciesName == valStr : ((Character)target).SpeciesName != valStr;
-
-                        if ((pc.Attribute == "hastag" || pc.Attribute == "hastags") && target is Item)
-                        {
-                            string[] readTags = valStr.Split(',');
-                            int matches = 0;
-                            foreach (string tag in readTags)
-                                if (((Item)target).HasTag(tag)) matches++;
-
-                            //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
-                            return pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
-                        }
-
-                        List<DurationListElement> durations = DurationList.FindAll(d => d.Targets.Contains(target));
-                        List<DelayedListElement> delays = DelayedEffect.DelayList.FindAll(d => d.Targets.Contains(target));
-
-                        bool success = false;
-                        if (pc.Attribute == "hasstatustag" || pc.Attribute == "hasstatustags" && (durations.Any() || delays.Any()))
-                        {
-                            string[] readTags = valStr.Split(',');
-                            foreach (DurationListElement duration in durations)
-                            {
-                                int matches = 0;
-                                foreach (string tag in readTags)
-                                    if (duration.Parent.HasTag(tag)) matches++;
-
-                                success = pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
-                                if (cancelStatusEffect > 0 && success)
-                                    DurationList.Remove(duration);
-                                if (cancelStatusEffect != 2) //cancelStatusEffect 1 = only cancel once, cancelStatusEffect 2 = cancel all of matching tags
-                                    return success;
-                            }
-                            foreach (DelayedListElement delay in delays)
-                            {
-                                int matches = 0;
-                                foreach (string tag in readTags)
-                                    if (delay.Parent.HasTag(tag)) matches++;
-
-                                success = pc.Operator == "==" ? matches >= readTags.Length : matches <= 0;
-                                if (cancelStatusEffect > 0 && success)
-                                    DelayedEffect.DelayList.Remove(delay);
-                                if (cancelStatusEffect != 2) //ditto
-                                    return success;
-                            }
-                        }
-                        return success;
                     }
-                    else if (!pc.Matches(property))
-                        return false;
                 }
             }
             return true;
