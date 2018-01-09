@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,9 @@ namespace Barotrauma
     class SubEditorScreen : Screen
     {
         private Camera cam;
+        private BlurEffect lightBlur;
+
+        private bool lightingEnabled;
 
         public GUIComponent topPanel, leftPanel;
 
@@ -117,10 +121,15 @@ namespace Barotrauma
         }
 
 
-        public SubEditorScreen()
+        public SubEditorScreen(ContentManager content)
         {
-            cam = new Camera(); 
-            //cam.Translate(new Vector2(-10.0f, 50.0f));
+            cam = new Camera();
+#if LINUX
+            var blurEffect = content.Load<Effect>("blurshader_opengl");
+#else
+            var blurEffect = content.Load<Effect>("blurshader");
+#endif
+            lightBlur = new BlurEffect(blurEffect, 0.001f, 0.001f);
 
             selectedTab = -1;
 
@@ -258,24 +267,26 @@ namespace Barotrauma
             y += 30;
 
             new GUITextBlock(new Rectangle(0, y, 0, 20), TextManager.Get("ShowEntitiesLabel"), "", leftPanel);
-            
-            var tickBox = new GUITickBox(new Rectangle(0,y+20,20,20), TextManager.Get("ShowWaypoints"), Alignment.TopLeft, leftPanel);
+
+            var tickBox = new GUITickBox(new Rectangle(0, y + 20, 20, 20), TextManager.Get("ShowLighting"), Alignment.TopLeft, leftPanel);
+            tickBox.OnSelected = (GUITickBox obj) => { lightingEnabled = !lightingEnabled; return true; };
+            tickBox = new GUITickBox(new Rectangle(0, y + 45, 20, 20), TextManager.Get("ShowWaypoints"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowWayPoints = !WayPoint.ShowWayPoints; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 45, 20, 20), TextManager.Get("ShowSpawnpoints"), Alignment.TopLeft, leftPanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 70, 20, 20), TextManager.Get("ShowSpawnpoints"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { WayPoint.ShowSpawnPoints = !WayPoint.ShowSpawnPoints; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 70, 20, 20), TextManager.Get("ShowLinks"), Alignment.TopLeft, leftPanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 95, 20, 20), TextManager.Get("ShowLinks"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { Item.ShowLinks = !Item.ShowLinks; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 95, 20, 20), TextManager.Get("ShowHulls"), Alignment.TopLeft, leftPanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 120, 20, 20), TextManager.Get("ShowHulls"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { Hull.ShowHulls = !Hull.ShowHulls; return true; };
             tickBox.Selected = true;
-            tickBox = new GUITickBox(new Rectangle(0, y + 120, 20, 20), TextManager.Get("ShowGaps"), Alignment.TopLeft, leftPanel);
+            tickBox = new GUITickBox(new Rectangle(0, y + 145, 20, 20), TextManager.Get("ShowGaps"), Alignment.TopLeft, leftPanel);
             tickBox.OnSelected = (GUITickBox obj) => { Gap.ShowGaps = !Gap.ShowGaps; return true; };
             tickBox.Selected = true;
 
-            y+=150;
+            y += 170;
 
             if (y < GameMain.GraphicsHeight - 100)
             {
@@ -1382,6 +1393,10 @@ namespace Barotrauma
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             cam.UpdateTransform();
+            if (lightingEnabled)
+            {
+                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam, lightBlur.Effect);
+            }
 
             spriteBatch.Begin(SpriteSortMode.BackToFront,
                 BlendState.AlphaBlend,
@@ -1400,12 +1415,16 @@ namespace Barotrauma
             if (!characterMode && !wiringMode)
             {
                 if (MapEntityPrefab.Selected != null) MapEntityPrefab.Selected.DrawPlacing(spriteBatch,cam);
-
                 MapEntity.DrawSelecting(spriteBatch, cam);
             }
-
-
             spriteBatch.End();
+
+            if (GameMain.LightManager.LightingEnabled && lightingEnabled)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None, null, null, null);
+                spriteBatch.Draw(GameMain.LightManager.lightMap, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+                spriteBatch.End();
+            }
 
             //-------------------- HUD -----------------------------
 
