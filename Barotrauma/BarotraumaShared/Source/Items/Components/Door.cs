@@ -203,8 +203,23 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
+        public override bool HasRequiredItems(Character character, bool addMessage)
+        {
+            if (item.Condition <= 0.0f) return true; //For repairing
+
+            //this is a bit pointless atm because if canBePicked is false it won't allow you to do Pick() anyway, however it's still good for future-proofing.
+            return requiredItems.Any() ? base.HasRequiredItems(character, addMessage) : canBePicked;
+        }
+
+        public override bool Pick(Character picker)
+        {
+            return item.Condition <= 0.0f ? true : base.Pick(picker);
+        }
+
         public override bool OnPicked(Character picker)
         {
+            if (item.Condition <= 0.0f) return true; //repairs
+
             SetState(predictedState == null ? !isOpen : !predictedState.Value, false, true); //crowbar function
 #if CLIENT
             PlaySound(ActionType.OnPicked, item.WorldPosition);
@@ -369,7 +384,7 @@ namespace Barotrauma.Items.Components
                     if (Math.Sign(diff) != dir)
                     {
 #if CLIENT
-                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 1.0f, body);
+                        SoundPlayer.PlayDamageSound("LimbBlunt", 1.0f, body);
 #endif
 
                         if (isHorizontal)

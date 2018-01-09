@@ -1000,7 +1000,7 @@ namespace Barotrauma
                         {
                             target.AddDamage(CauseOfDeath.Bloodloss, 1.0f, character);
 #if CLIENT
-                            SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, 25.0f, targetTorso.body);
+                            SoundPlayer.PlayDamageSound("LimbBlunt", 25.0f, targetTorso.body);
 
                             for (int i = 0; i < 4; i++)
                             {

@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
@@ -20,7 +21,12 @@ namespace Barotrauma
                 if (impact > 3.0f && limb.HitSound != null && limb.SoundTimer <= 0.0f)
                 {
                     limb.SoundTimer = Limb.SoundInterval;
-                    limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
+                    SoundPlayer.PlaySound(limb.HitSound, volume, impact * 100.0f, limb.WorldPosition);
+                    foreach(WearableSprite wearable in limb.WearingItems)
+                    {
+                        if (limb.type == wearable.Limb && wearable.Sound != null)
+                            SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition);
+                    }
                 }
             }
             else if (body.UserData is Limb || body == Collider.FarseerBody)
@@ -29,7 +35,7 @@ namespace Barotrauma
                 {
                     if (impact > ImpactTolerance)
                     {
-                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, Collider);
+                        SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
                     }
                 }
 

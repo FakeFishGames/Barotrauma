@@ -10,26 +10,19 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public enum DamageSoundType 
-    { 
-        None, 
-        StructureBlunt, StructureSlash, 
-        LimbBlunt, LimbSlash, LimbArmor
-    }
-
     public struct DamageSound
     {
         //the range of inflicted damage where the sound can be played
         //(10.0f, 30.0f) would be played when the inflicted damage is between 10 and 30
         public readonly Vector2 damageRange;
 
-        public readonly DamageSoundType damageType;
+        public readonly string damageType;
 
         public readonly Sound sound;
 
         public readonly string requiredTag;
 
-        public DamageSound(Sound sound, Vector2 damageRange, DamageSoundType damageType, string requiredTag = "")
+        public DamageSound(Sound sound, Vector2 damageRange, string damageType, string requiredTag = "")
         {
             this.sound = sound;
             this.damageRange = damageRange;
@@ -161,8 +154,7 @@ namespace Barotrauma
                         Sound damageSound = Sound.Load(subElement.GetAttributeString("file", ""), false);
                         if (damageSound == null) continue;
                     
-                        DamageSoundType damageSoundType = DamageSoundType.None;
-                        Enum.TryParse<DamageSoundType>(subElement.GetAttributeString("damagesoundtype", "None"), false, out damageSoundType);
+                        string damageSoundType = subElement.GetAttributeString("damagesoundtype", "None");
 
                         damageSounds.Add(new DamageSound(
                             damageSound, 
@@ -271,7 +263,7 @@ namespace Barotrauma
         public static Sound GetSound(string soundTag)
         {
             var matchingSounds = miscSounds[soundTag].ToList();
-            if (matchingSounds.Count == 0) return null;
+            if (matchingSounds.Count == 0) return Sound.Load(soundTag);
 
             return matchingSounds[Rand.Int(matchingSounds.Count)];
         }
@@ -442,14 +434,14 @@ namespace Barotrauma
             SplashSounds[splashIndex].Play(1.0f, 800.0f, worldPosition);
         }
 
-        public static void PlayDamageSound(DamageSoundType damageType, float damage, PhysicsBody body)
+        public static void PlayDamageSound(string damageType, float damage, PhysicsBody body)
         {
             Vector2 bodyPosition = body.DrawPosition;
 
             PlayDamageSound(damageType, damage, bodyPosition, 800.0f);
         }
 
-        public static void PlayDamageSound(DamageSoundType damageType, float damage, Vector2 position, float range = 2000.0f, List<string> tags = null)
+        public static void PlayDamageSound(string damageType, float damage, Vector2 position, float range = 2000.0f, List<string> tags = null)
         {
             damage = MathHelper.Clamp(damage+Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
             var sounds = damageSounds.FindAll(s => 
