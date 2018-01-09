@@ -1468,14 +1468,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DamageModifier.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DelayedEffect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HuskInfection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\JobPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Skill.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\SkillPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Limb.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\StatusEffect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\PropertyConditional.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\StatusEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ContentPackage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\CoroutineManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\DebugConsole.cs" />
