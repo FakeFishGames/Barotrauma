@@ -380,8 +380,9 @@
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect type="OnUse" target="Character">
         <RequiredItem name="Medical Syringe" type="Container"/>
-        <Conditional hasstatustag="morbusine"/>
-        <Cancel/>
+        <Conditional hasstatustag="morbusine">
+          <CancelStatusEffect/>
+        </Conditional>
       </StatusEffect>
     </Throwable>
   </Item>
