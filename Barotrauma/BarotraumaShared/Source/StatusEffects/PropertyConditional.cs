@@ -1,13 +1,24 @@
 ﻿using System;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
     class PropertyConditional
     {
-        public readonly string Attribute;
+        public enum ConditionType
+        {
+            PropertyValue,
+            Name,
+            SpeciesName,
+            HasTag,
+            HasStatusTag
+        }
+
+        public readonly ConditionType Type;
+        public readonly string PropertyName;
         public readonly string Operator;
-        public readonly object Value;
+        public readonly string Value;
 
         public PropertyConditional(XAttribute attribute)
         {
@@ -66,45 +77,58 @@ namespace Barotrauma
                     break;
             }
 
-            Attribute = attribute.Name.ToString().ToLowerInvariant();
+            if (!Enum.TryParse(attribute.Name.ToString(), true, out Type))
+            {
+                PropertyName = attribute.Name.ToString();
+                Type = ConditionType.PropertyValue;
+            }
+
             Operator = op;
             Value = atStr;            
         }
-
-        public PropertyConditional(string Attribute, string Operator, object Value)
-        {
-            this.Attribute = Attribute;
-            this.Operator = Operator;
-            this.Value = Value;
-        }
-
+        
         public bool Matches(SerializableProperty property)
         {
-            if (property.GetValue() == null)
+            object propertyValue = property.GetValue();
+
+            if (propertyValue == null)
             {
                 DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "- property.GetValue() returns null!!");
                 return false;
             }
-            Type type = property.GetValue().GetType();
 
+            Type type = propertyValue.GetType();
             float? floatValue = null;
             float? floatProperty = null;
             if (type == typeof(float) || type == typeof(int))
             {
-                floatValue = Convert.ToSingle(Value);
-                floatProperty = Convert.ToSingle(property.GetValue());
+                if (Single.TryParse(Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedFloat))
+                {
+                    floatValue = parsedFloat;
+                }
+                floatProperty = (float)propertyValue;
             }
 
             switch (Operator)
             {
                 case "==":
-                    if (property.GetValue().Equals(floatValue == null ? Value : floatValue))
-                        return true;
-                    break;
+                    if (floatValue == null)
+                    {
+                        return property.GetValue().Equals(floatValue);
+                    }
+                    else
+                    {
+                        return property.GetValue().Equals(Value);
+                    }
                 case "!=":
-                    if (property.GetValue().Equals(floatValue == null ? Value : floatValue))
-                        return true;
-                    break;
+                    if (floatValue == null)
+                    {
+                        return !property.GetValue().Equals(floatValue);
+                    }
+                    else
+                    {
+                        return !property.GetValue().Equals(Value);
+                    }
                 case ">":
                     if (floatValue == null)
                     {
