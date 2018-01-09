@@ -23,6 +23,7 @@
 
     <Reactor canbeselected = "true">
       <GuiFrame rect="0,0,760,460" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Construction" level="30"/>
       <StatusEffect type="InWater" target="This" Temperature="-500.0"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="Fuel Rod, Heat Absorber, Temperature Control Circuit" Condition="-0.1" />
       <sound file="reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>
@@ -55,8 +56,7 @@
 
   <Item
     name="Fuel Rod"
-    Tags="smallitem"
-    
+    Tags="smallitem,reactorfuel"    
     price="200">
 
     <Deconstruct time="10">
@@ -75,8 +75,7 @@
 
   <Item
     name="Incendium Fuel Rod"
-    Tags="smallitem"
-    
+    Tags="smallitem,reactorfuel"    
     spritecolor="0.5,0.0,0.0,1.0">
 
     <Deconstruct time="10">

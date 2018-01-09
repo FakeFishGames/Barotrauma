@@ -56,12 +56,12 @@ namespace Barotrauma
 
             int crewColumnWidth = Math.Min(300, (container.Rect.Width - 40) / 2);
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 20), "Crew:", "", tabs[(int)Tab.Crew], GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, 0, 100, 20), TextManager.Get("Crew") + ":", "", tabs[(int)Tab.Crew], GUI.LargeFont);
             characterList = new GUIListBox(new Rectangle(0, 40, crewColumnWidth, 0), "", tabs[(int)Tab.Crew]);
             characterList.OnSelected = SelectCharacter;
 
             hireList = new GUIListBox(new Rectangle(0, 40, 300, 0), "", Alignment.Right, tabs[(int)Tab.Crew]);
-            new GUITextBlock(new Rectangle(0, 0, 300, 20), "Hire:", "", Alignment.Right, Alignment.Left, tabs[(int)Tab.Crew], false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, 0, 300, 20), TextManager.Get("Hire") + ":", "", Alignment.Right, Alignment.Left, tabs[(int)Tab.Crew], false, GUI.LargeFont);
             hireList.OnSelected = SelectCharacter;
 
             //---------------------------------------
@@ -71,7 +71,7 @@ namespace Barotrauma
 
             if (GameMain.Client == null)
             {
-                startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start",
+                startButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartCampaignButton"),
                     Alignment.BottomRight, "", tabs[(int)Tab.Map]);
                 startButton.OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; };
                 startButton.Enabled = false;
@@ -132,7 +132,7 @@ namespace Barotrauma
                 hireList.ClearChildren();
                 hireList.Enabled = false;
 
-                new GUITextBlock(new Rectangle(0, 0, 0, 0), "No-one available for hire", Color.Transparent, Color.LightGray, Alignment.Center, Alignment.Center, "", hireList);
+                new GUITextBlock(new Rectangle(0, 0, 0, 0), TextManager.Get("HireUnavailable"), Color.Transparent, Color.LightGray, Alignment.Center, Alignment.Center, "", hireList);
                 return;
             }
 
@@ -204,8 +204,8 @@ namespace Barotrauma
             {
                 var mission = GameMain.GameSession.Map.SelectedConnection.Mission;
 
-                new GUITextBlock(new Rectangle(0, titleText.Rect.Height + 20, 0, 20), "Mission: " + mission.Name, "", locationPanel);
-                new GUITextBlock(new Rectangle(0, titleText.Rect.Height + 40, 0, 20), "Reward: " + mission.Reward + " credits", "", locationPanel);
+                new GUITextBlock(new Rectangle(0, titleText.Rect.Height + 20, 0, 20), TextManager.Get("Mission") + ": " + mission.Name, "", locationPanel);
+                new GUITextBlock(new Rectangle(0, titleText.Rect.Height + 40, 0, 20), TextManager.Get("Reward") + ": " + mission.Reward + " " + TextManager.Get("Credits"), "", locationPanel);
                 new GUITextBlock(new Rectangle(0, titleText.Rect.Height + 70, 0, 0), mission.Description, "", Alignment.TopLeft, Alignment.TopLeft, locationPanel, true, GUI.SmallFont);
             }
 
@@ -337,7 +337,7 @@ namespace Barotrauma
 
         public string GetMoney()
         {
-            return "Money: " + ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaign.Money)) + " credits";
+            return TextManager.Get("Credits") + ": " + ((GameMain.GameSession == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaign.Money));
         }
 
         private bool SelectCharacter(GUIComponent component, object selection)
@@ -375,7 +375,7 @@ namespace Barotrauma
 
             if (component.Parent == hireList)
             {
-                GUIButton hireButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Hire", Alignment.BottomCenter, "", characterPreviewFrame);
+                GUIButton hireButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("HireButton"), Alignment.BottomCenter, "", characterPreviewFrame);
                 hireButton.Enabled = campaign.Money >= characterInfo.Salary;
                 hireButton.UserData = characterInfo;
                 hireButton.OnClicked = HireCharacter;

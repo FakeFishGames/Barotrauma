@@ -91,9 +91,8 @@
 
   <Item
     name="Oxygenite Shard"
-    category="Alien"
-    
-    tags="alien,smallitem"
+    category="Alien"    
+    tags="alien,smallitem,oxygensource"
     impacttolerance="8">
 
     <Deconstruct time="20">

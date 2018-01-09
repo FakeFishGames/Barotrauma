@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -94,6 +95,13 @@ namespace Barotrauma
                     }
                 }
                 NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    GameModePreset.list.Select(gm => gm.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("mission", "mission [name]/[index]: Select the mission type for the next round. The parameter can either be the name or the index number of the mission type (0 = first mission type, 1 = second mission type, etc).", (string[] args) =>
@@ -108,6 +116,13 @@ namespace Barotrauma
                     GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
                 }
                 NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Mission.MissionTypes.ToArray()
+                };
             }));
 
             commands.Add(new Command("sub|submarine", "submarine [name]: Select the submarine for the next round.", (string[] args) =>
@@ -120,6 +135,13 @@ namespace Barotrauma
                 }
                 sub = GameMain.NetLobbyScreen.SelectedSub;
                 NewMessage("Selected sub: " + sub.Name + (sub.HasTag(SubmarineTag.Shuttle) ? " (shuttle)" : ""), Color.Cyan);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Submarine.Loaded.Select(s => s.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("shuttle", "shuttle [name]: Select the specified submarine as the respawn shuttle for the next round.", (string[] args) =>
@@ -132,6 +154,13 @@ namespace Barotrauma
                 }
                 shuttle = GameMain.NetLobbyScreen.SelectedShuttle;
                 NewMessage("Selected shuttle: " + shuttle.Name + (shuttle.HasTag(SubmarineTag.Shuttle) ? "" : " (not shuttle)"), Color.Cyan);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Submarine.Loaded.Select(s => s.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("startgame|startround|start", "start/startgame/startround: Start a new round.", (string[] args) =>

@@ -756,12 +756,7 @@ namespace Barotrauma.Networking
             }
             
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
-            
-            if (isTraitor)
-            {
-                TraitorManager.CreateStartPopUp(traitorTargetName);
-            }
-            
+                        
             gameStarted = true;
 
             GameMain.GameScreen.Select();
@@ -974,7 +969,13 @@ namespace Barotrauma.Networking
 
         private void ReadIngameUpdate(NetIncomingMessage inc)
         {
+            List<IServerSerializable> entities = new List<IServerSerializable>();
+
             float sendingTime = inc.ReadFloat() - inc.SenderConnection.RemoteTimeOffset;
+
+            ServerNetObject? prevObjHeader = null;
+            long prevBitPos = 0;
+            long prevBytePos = 0;
 
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
@@ -1004,15 +1005,51 @@ namespace Barotrauma.Networking
                         break;
                     case ServerNetObject.ENTITY_EVENT:
                     case ServerNetObject.ENTITY_EVENT_INITIAL:
-                        entityEventManager.Read(objHeader, inc, sendingTime);
+                        entityEventManager.Read(objHeader, inc, sendingTime, entities);
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
                         break;
                     default:
                         DebugConsole.ThrowError("Error while reading update from server (unknown object header \""+objHeader+"\"!)");
+                        if (prevObjHeader != null)
+                        {
+                            DebugConsole.ThrowError("Previous object type: " + prevObjHeader.ToString());
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError("Error occurred on the very first object!");
+                        }
+                        DebugConsole.ThrowError("Previous object was " + (inc.Position - prevBitPos) + " bits long (" + (inc.PositionInBytes - prevBytePos) + " bytes)");
+                        if (prevObjHeader == ServerNetObject.ENTITY_EVENT || prevObjHeader == ServerNetObject.ENTITY_EVENT_INITIAL)
+                        {
+                            foreach (IServerSerializable ent in entities)
+                            {
+                                if (ent == null)
+                                {
+                                    DebugConsole.ThrowError(" - NULL");
+                                    continue;
+                                }
+                                Entity e = ent as Entity;
+                                DebugConsole.ThrowError(" - "+e.ToString());
+                            }
+                        }
+                        DebugConsole.ThrowError("Writing object data to \"crashreport_object.bin\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
+
+                        FileStream fl = File.Open("crashreport_object.bin", FileMode.Create);
+                        BinaryWriter sw = new BinaryWriter(fl);
+
+                        sw.Write(inc.Data, (int)prevBytePos, (int)(inc.LengthBytes - prevBytePos));
+
+                        sw.Close();
+                        fl.Close();
+
+                        throw new Exception("Error while reading update from server: please send us \"crashreport_object.bin\"!");
                         break;
                 }
+                prevObjHeader = objHeader;
+                prevBitPos = inc.Position;
+                prevBytePos = inc.PositionInBytes;
             }
         }
 

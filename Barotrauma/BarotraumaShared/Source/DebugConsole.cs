@@ -13,13 +13,15 @@ namespace Barotrauma
     {
         public string Text;
         public Color Color;
+		public bool IsCommand;
 
         public readonly string Time;
 
-        public ColoredText(string text, Color color)
+        public ColoredText(string text, Color color, bool isCommand)
         {
             this.Text = text;
             this.Color = color;
+			this.IsCommand = isCommand;
 
             Time = DateTime.Now.ToString();
         }
@@ -44,6 +46,8 @@ namespace Barotrauma
             /// </summary>
             private Action<Client, Vector2, string[]> onClientRequestExecute;
 
+            public Func<string[][]> GetValidArgs;
+
             public bool RelayToServer
             {
                 get { return onClientExecute == null; }
@@ -54,7 +58,7 @@ namespace Barotrauma
             /// <param name="onExecute">The default action when executing the command.</param>
             /// <param name="onClientExecute">The action when a client attempts to execute the command. If null, the command is relayed to the server as-is.</param>
             /// <param name="onClientRequestExecute">The server-side action when a client requests executing the command. If null, the default action is executed.</param>
-            public Command(string name, string help, Action<string[]> onExecute, Action<string[]> onClientExecute, Action<Client, Vector2, string[]> onClientRequestExecute)
+            public Command(string name, string help, Action<string[]> onExecute, Action<string[]> onClientExecute, Action<Client, Vector2, string[]> onClientRequestExecute, Func<string[][]> getValidArgs = null)
             {
                 names = name.Split('|');
                 this.help = help;
@@ -62,19 +66,23 @@ namespace Barotrauma
                 this.onExecute = onExecute;
                 this.onClientExecute = onClientExecute;
                 this.onClientRequestExecute = onClientRequestExecute;
+
+                this.GetValidArgs = getValidArgs;
             }
             
 
             /// <summary>
             /// Use this constructor to create a command that executes the same action regardless of whether it's executed by a client or the server.
             /// </summary>
-            public Command(string name, string help, Action<string[]> onExecute)
+            public Command(string name, string help, Action<string[]> onExecute, Func<string[][]> getValidArgs = null)
             {
                 names = name.Split('|');
                 this.help = help;
 
                 this.onExecute = onExecute;
                 this.onClientExecute = onExecute;
+
+                this.GetValidArgs = getValidArgs;
             }
 
             public void Execute(string[] args)
@@ -194,7 +202,7 @@ namespace Barotrauma
                 UpdaterUtil.SaveFileList("filelist.xml");
             }));
 
-            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename] [near/inside/outside]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine).", (string[] args) =>
+            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename] [near/inside/outside/cursor]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine).", (string[] args) =>
             {
                 string errorMsg;
                 SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), out errorMsg);
@@ -212,6 +220,20 @@ namespace Barotrauma
                 {
                     ThrowError(errorMsg);
                 }
+            },
+            () => 
+            {
+                List<string> characterFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
+                for (int i = 0; i < characterFiles.Count; i++)
+                {
+                    characterFiles[i] = Path.GetFileNameWithoutExtension(characterFiles[i]).ToLowerInvariant();
+                }
+
+                return new string[][]
+                {
+                    characterFiles.ToArray(),
+                    new string[] { "near", "inside", "outside", "cursor" }
+                };
             }));
 
             commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory]: Spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted.",
@@ -233,6 +255,21 @@ namespace Barotrauma
                 {
                     ThrowError(errorMsg);
                 }
+            }, 
+            () =>
+            {
+                List<string> itemNames = new List<string>();
+                foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
+                {
+                    ItemPrefab itemPrefab = prefab as ItemPrefab;
+                    if (itemPrefab != null) itemNames.Add(itemPrefab.Name);
+                }
+
+                return new string[][]
+                {
+                    itemNames.ToArray(),
+                    new string[] { "cursor", "inventory" }
+                };
             }));
 
             commands.Add(new Command("disablecrewai", "disablecrewai: Disable the AI of the NPCs in the crew.", (string[] args) =>
@@ -570,6 +607,15 @@ namespace Barotrauma
                 {
                     GameMain.NetworkMember.KickPlayer(playerName, reason);
                 });                
+            },
+            () =>
+            {
+                if (GameMain.NetworkMember == null) return null;
+
+                return new string[][]
+                {
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("kickid", "kickid [id]: Kick the player with the specified client ID out of the server.", (string[] args) =>
@@ -615,6 +661,15 @@ namespace Barotrauma
                         GameMain.NetworkMember.BanPlayer(clientName, reason, false, banDuration);
                     });
                 });                
+            },
+            () =>
+            {
+                if (GameMain.NetworkMember == null) return null;
+
+                return new string[][]
+                {
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("banid", "banid [id]: Kick and ban the player with the specified client ID from the server.", (string[] args) =>
@@ -728,6 +783,13 @@ namespace Barotrauma
                 tpCharacter.Submarine = null;
                 tpCharacter.AnimController.SetPosition(ConvertUnits.ToSimUnits(cursorWorldPos));
                 tpCharacter.AnimController.FindHull(cursorWorldPos, true);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("godmode", "godmode: Toggle submarine godmode. Makes the main submarine invulnerable to damage.", (string[] args) =>
@@ -810,6 +872,13 @@ namespace Barotrauma
                     healedCharacter.Bleeding = 0.0f;
                     healedCharacter.SetStun(0.0f, true);
                 }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("revive", "revive [character name]: Bring the specified character back from the dead. If the name parameter is omitted, the controlled character will be revived.", (string[] args) =>
@@ -866,6 +935,13 @@ namespace Barotrauma
                         break;
                     }
                 }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("freeze", "", (string[] args) =>
@@ -894,6 +970,13 @@ namespace Barotrauma
                 {
                     ragdolledCharacter.IsForceRagdolled = !ragdolledCharacter.IsForceRagdolled;
                 }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("freecamera|freecam", "freecam: Detach the camera from the controlled character.", (string[] args) =>
@@ -1067,6 +1150,16 @@ namespace Barotrauma
 
                 var character = FindMatchingCharacter(argsRight, false);
                 GameMain.Server.SetClientCharacter(client, character);
+            },
+            () =>
+            {
+                if (GameMain.NetworkMember == null) return null;
+
+                return new string[][]
+                {
+                    GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("campaigninfo|campaignstatus", "campaigninfo: Display information about the state of the currently active campaign.", (string[] args) =>
@@ -1267,28 +1360,80 @@ namespace Barotrauma
 
         public static string AutoComplete(string command)
         {
-            if (string.IsNullOrWhiteSpace(currentAutoCompletedCommand))
-            {
-                currentAutoCompletedCommand = command;
-            }
+            string[] splitCommand = SplitCommand(command);
+            string[] args = splitCommand.Skip(1).ToArray();
 
-            List<string> matchingCommands = new List<string>();
-            foreach (Command c in commands)
+            //if an argument is given or the last character is a space, attempt to autocomplete the argument
+            if (args.Length > 0 || (command.Length > 0 && command.Last() == ' '))
             {
-                foreach (string name in c.names)
+                Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0]));
+                if (matchingCommand == null || matchingCommand.GetValidArgs == null) return command;
+
+                int autoCompletedArgIndex = args.Length > 0 && command.Last() != ' ' ? args.Length - 1 : args.Length;
+
+                //get all valid arguments for the given command
+                string[][] allArgs = matchingCommand.GetValidArgs();
+                if (allArgs == null || allArgs.GetLength(0) < autoCompletedArgIndex + 1) return command;
+
+                if (string.IsNullOrEmpty(currentAutoCompletedCommand))
                 {
-                    if (currentAutoCompletedCommand.Length > name.Length) continue;
-                    if (currentAutoCompletedCommand == name.Substring(0, currentAutoCompletedCommand.Length))
+                    currentAutoCompletedCommand = autoCompletedArgIndex > args.Length - 1 ? " " : args.Last();
+                }
+
+                //find all valid autocompletions for the given argument
+                string[] validArgs = allArgs[autoCompletedArgIndex].Where(arg => 
+                    currentAutoCompletedCommand.Trim().Length <= arg.Length && 
+                    arg.Substring(0, currentAutoCompletedCommand.Trim().Length).ToLower() == currentAutoCompletedCommand.Trim().ToLower()).ToArray();
+
+                if (validArgs.Length == 0) return command;
+
+                currentAutoCompletedIndex = currentAutoCompletedIndex % validArgs.Length;
+                string autoCompletedArg = validArgs[currentAutoCompletedIndex++];
+
+                //add quotation marks to args that contain spaces
+                if (autoCompletedArg.Contains(' ')) autoCompletedArg = '"' + autoCompletedArg + '"';
+                for (int i = 0; i < splitCommand.Length; i++)
+                {
+                    if (splitCommand[i].Contains(' ')) splitCommand[i] = '"' + splitCommand[i] + '"';
+                }
+
+                return string.Join(" ", autoCompletedArgIndex >= args.Length ? splitCommand : splitCommand.Take(splitCommand.Length - 1)) + " " + autoCompletedArg;
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(currentAutoCompletedCommand))
+                {
+                    currentAutoCompletedCommand = command;
+                }
+
+                List<string> matchingCommands = new List<string>();
+                foreach (Command c in commands)
+                {
+                    foreach (string name in c.names)
                     {
-                        matchingCommands.Add(name);
+                        if (currentAutoCompletedCommand.Length > name.Length) continue;
+                        if (currentAutoCompletedCommand == name.Substring(0, currentAutoCompletedCommand.Length))
+                        {
+                            matchingCommands.Add(name);
+                        }
                     }
                 }
+
+                if (matchingCommands.Count == 0) return command;
+
+                currentAutoCompletedIndex = currentAutoCompletedIndex % matchingCommands.Count;
+                return matchingCommands[currentAutoCompletedIndex++];
             }
+        }
 
-            if (matchingCommands.Count == 0) return command;
-
-            currentAutoCompletedIndex = currentAutoCompletedIndex % matchingCommands.Count;
-            return matchingCommands[currentAutoCompletedIndex++];
+        private static string AutoCompleteStr(string str, IEnumerable<string> validStrings)
+        {
+            if (string.IsNullOrEmpty(str)) return str;
+            foreach (string validStr in validStrings)
+            {
+                if (validStr.Length > str.Length && validStr.Substring(0, str.Length) == str) return validStr;
+            }
+            return str;
         }
 
         public static void ResetAutoComplete()
@@ -1303,9 +1448,14 @@ namespace Barotrauma
 
             direction = MathHelper.Clamp(direction, -1, 1);
 
-            selectedIndex += direction;
-            if (selectedIndex < 0) selectedIndex = Messages.Count - 1;
-            selectedIndex = selectedIndex % Messages.Count;
+			int i = 0;
+			do
+			{
+				selectedIndex += direction;
+				if (selectedIndex < 0) selectedIndex = Messages.Count - 1;
+				selectedIndex = selectedIndex % Messages.Count;
+				if (++i >= Messages.Count) break;
+			} while (!Messages[selectedIndex].IsCommand);
 
             return Messages[selectedIndex].Text;            
         }
@@ -1317,7 +1467,7 @@ namespace Barotrauma
 #if CLIENT
                 activeQuestionText = null;
 #endif
-                NewMessage(command, Color.White);
+                NewMessage(command, Color.White, true);
                 //reset the variable before invoking the delegate because the method may need to activate another question
                 var temp = activeQuestionCallback;
                 activeQuestionCallback = null;
@@ -1331,7 +1481,7 @@ namespace Barotrauma
             
             if (!splitCommand[0].ToLowerInvariant().Equals("admin"))
             {
-                NewMessage(command, Color.White);
+                NewMessage(command, Color.White, true);
             }
 
 #if CLIENT
@@ -1611,12 +1761,12 @@ namespace Barotrauma
             }
         }
 
-        public static void NewMessage(string msg, Color color)
+        public static void NewMessage(string msg, Color color, bool isCommand = false)
         {
             if (string.IsNullOrEmpty((msg))) return;
 
 #if SERVER
-            Messages.Add(new ColoredText(msg, color));
+            Messages.Add(new ColoredText(msg, color, isCommand));
 
             //TODO: REMOVE
             Console.ForegroundColor = XnaToConsoleColor.Convert(color);
@@ -1631,7 +1781,7 @@ namespace Barotrauma
 #elif CLIENT
             lock (queuedMessages)
             {
-                queuedMessages.Enqueue(new ColoredText(msg, color));
+                queuedMessages.Enqueue(new ColoredText(msg, color, isCommand));
             }
 #endif
         }

@@ -264,8 +264,8 @@ namespace Barotrauma
 
             Vector2 nodeInterval = generationParams.MainPathNodeIntervalRange;
 
-            for (float  x = startPosition.X + Rand.Range(nodeInterval.X, nodeInterval.Y, Rand.RandSync.Server);
-                        x < endPosition.X   - Rand.Range(nodeInterval.X, nodeInterval.Y, Rand.RandSync.Server);
+            for (float  x = startPosition.X + nodeInterval.X;
+                        x < endPosition.X   - nodeInterval.X;
                         x += Rand.Range(nodeInterval.X, nodeInterval.Y, Rand.RandSync.Server))
             {
                 pathNodes.Add(new Vector2(x, Rand.Range(pathBorders.Y, pathBorders.Bottom, Rand.RandSync.Server)));
@@ -275,7 +275,7 @@ namespace Barotrauma
             
             if (pathNodes.Count <= 2)
             {
-                pathNodes.Add((startPosition + endPosition) / 2);
+                pathNodes.Insert(1, borders.Center.ToVector2());
             }
 
             GenerateTunnels(pathNodes, minWidth);

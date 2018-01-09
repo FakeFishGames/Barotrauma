@@ -31,21 +31,14 @@ namespace Barotrauma.Items.Components
             set
             {
                 isOn = value;
+                CanTransfer = value;
                 if (!isOn)
                 {
                     currPowerConsumption = 0.0f;
                 }
             }
         }
-
-        public override bool CanTransfer
-        {
-            get
-            {
-                return isOn;
-            }
-        }
-
+        
         public RelayComponent(Item item, XElement element)
             : base (item, element)
         {

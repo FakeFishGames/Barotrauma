@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -119,7 +120,7 @@ namespace Barotrauma
         }
 
 
-        public override void Update(float deltaTime, bool subInventory = false)
+        public override void Update(float deltaTime, bool isSubInventory = false)
         {
             base.Update(deltaTime);
 
@@ -161,19 +162,39 @@ namespace Barotrauma
                     }
                 }
 
+                draggingItem = null;
                 GUI.PlayUISound(wasPut ? GUISoundType.PickItem : GUISoundType.PickItemFail);
             }
 
-            if (selectedSlot > -1)
+
+            if (highlightedSubInventorySlot != null)
             {
-                UpdateSubInventory(deltaTime, selectedSlot);
+                UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex);
+                if (highlightedSubInventory.slots == null || 
+                    (!highlightedSubInventorySlot.Slot.InteractRect.Contains(PlayerInput.MousePosition) && !highlightedSubInventory.slots.Any(s => s.InteractRect.Contains(PlayerInput.MousePosition))))
+                {
+                    highlightedSubInventory = null;
+                    highlightedSubInventorySlot = null;
+                }
             }
-            
+            else
+            {
+                if (selectedSlot?.Inventory == this)
+                {
+                    var subInventory = GetSubInventory(selectedSlot.SlotIndex);
+                    if (subInventory != null)
+                    {
+                        highlightedSubInventory = subInventory;
+                        highlightedSubInventorySlot = selectedSlot;
+                    }
+                }
+            }
+
             if (character == Character.Controlled)
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (selectedSlot != i &&
+                    if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
                         Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
                     {
                         //-3 because selected items are in slots 3 and 4 (hands)
@@ -224,7 +245,7 @@ namespace Barotrauma
                 }
             }
 
-            selectedSlot = -1;
+            selectedSlot = null;
         }
 
         public void DrawOwn(SpriteBatch spriteBatch)
@@ -274,7 +295,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (selectedSlot != i &&
+                    if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
                         Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
                     {
                         useOnSelfButton[i - 3].Draw(spriteBatch);
@@ -282,15 +303,11 @@ namespace Barotrauma
                 }
             }
 
-            if (selectedSlot > -1)
+            for (int i = 0; i < capacity; i++)
             {
-                DrawSubInventory(spriteBatch, selectedSlot);
-
-                if (selectedSlot > -1 &&
-                    !slots[selectedSlot].IsHighlighted &&
-                    (draggingItem == null || draggingItem.Container != Items[selectedSlot]))
+                if (slots[i].IsHighlighted)
                 {
-                    selectedSlot = -1;
+                    DrawSubInventory(spriteBatch, i);
                 }
             }
         }

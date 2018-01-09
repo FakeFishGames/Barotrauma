@@ -31,7 +31,7 @@ namespace Barotrauma
                 var skills = Job.Skills;
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 
-                new GUITextBlock(new Rectangle(x, y, 200, 20), "Skills:", "", frame, font);
+                new GUITextBlock(new Rectangle(x, y, 200, 20), TextManager.Get("Skills") + ":", "", frame, font);
                 y += 20;
                 foreach (Skill skill in skills)
                 {

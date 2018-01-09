@@ -283,7 +283,7 @@ namespace Barotrauma
         {
             get
             {
-                return rect;
+                return ClampRect(rect);
             }
         }
 

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="carrier" humanoid="false" health="1000" doesbleed="false">
+<Character name="carrier" humanoid="false" health="1000" doesbleed="false" usebloodparticles="false">
   
   <sound file="Content/Characters/Carrier/alarm1.ogg" state="Attack" range="2000"/>
   <sound file="Content/Characters/Carrier/carrier1.ogg" state="Attack" range="2000"/>

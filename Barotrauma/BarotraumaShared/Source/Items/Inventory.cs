@@ -143,8 +143,19 @@ namespace Barotrauma
         public Item FindItem(string itemName)
         {
             if (itemName == null) return null;
-
             return Items.FirstOrDefault(i => i != null && (i.Prefab.NameMatches(itemName) || i.HasTag(itemName)));
+        }
+
+        public Item FindItem(string[] itemNames)
+        {
+            if (itemNames == null) return null;
+
+            foreach (string itemName in itemNames)
+            {
+                var item = FindItem(itemName);
+                if (item != null) return item;
+            }
+            return null;
         }
 
         public virtual void RemoveItem(Item item)

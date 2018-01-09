@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -149,14 +148,17 @@ namespace Barotrauma
                     {
                         float newCutoff = Math.Min((sections[i].damage / prefab.Health), 0.65f);
 
-                        if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f)
+                        if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
                         {
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
                             damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
+                            damageEffect.Parameters["inColor"].SetValue(color.ToVector4());
+
 
                             damageEffect.CurrentTechnique.Passes[0].Apply();
 
                             Submarine.DamageEffectCutoff = newCutoff;
+                            Submarine.DamageEffectColor = color;
                         }
                     }
 

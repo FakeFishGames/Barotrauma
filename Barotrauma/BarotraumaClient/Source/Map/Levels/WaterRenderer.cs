@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,7 +13,11 @@ namespace Barotrauma
 
         public VertexPositionTexture[] vertices = new VertexPositionTexture[DefaultBufferSize];
 
-        private Effect waterEffect;
+        public Effect waterEffect
+        {
+            get;
+            private set;
+        }
         private BasicEffect basicEffect;
 
         public int PositionInBuffer = 0;
@@ -39,12 +43,7 @@ namespace Barotrauma
             waterEffect.Parameters["xWaveWidth"].SetValue(0.05f);
             waterEffect.Parameters["xWaveHeight"].SetValue(0.05f);
 
-#if WINDOWS
-            //waterEffect.Parameters["xTexture"].SetValue(waterTexture);
-#endif
-#if LINUX
             waterEffect.Parameters["xWaterBumpMap"].SetValue(waterTexture);
-#endif
 
             if (basicEffect == null)
             {
@@ -64,13 +63,13 @@ namespace Barotrauma
             waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
             //waterEffect.CurrentTechnique.Passes[0].Apply();
             
-#if WINDOWS
+//#if WINDOWS
             waterEffect.Parameters["xTexture"].SetValue(texture);
-            spriteBatch.Draw(waterTexture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-#elif LINUX
-
             spriteBatch.Draw(texture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-#endif
+//#elif LINUX
+
+//            spriteBatch.Draw(texture, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+//#endif
             spriteBatch.End();
         }
 
@@ -93,7 +92,7 @@ namespace Barotrauma
 
             basicEffect.CurrentTechnique.Passes[0].Apply();
 
-            graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+            graphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
             graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, vertices, 0, vertices.Length / 3);
         }
 

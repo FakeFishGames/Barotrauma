@@ -166,11 +166,11 @@ namespace Barotrauma.Networking
                 if (c.ChatSpamCount > 3)
                 {
                     //kick for spamming too much
-                    GameMain.Server.KickClient(c, "You have been kicked by the spam filter.");
+                    GameMain.Server.KickClient(c, TextManager.Get("SpamFilterKicked"));
                 }
                 else
                 {
-                    ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                    ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked"), ChatMessageType.Server, null);
                     c.ChatSpamTimer = 10.0f;
                     GameMain.Server.SendChatMessage(denyMsg, c);
                 }
@@ -181,7 +181,7 @@ namespace Barotrauma.Networking
 
             if (c.ChatSpamTimer > 0.0f)
             {
-                ChatMessage denyMsg = ChatMessage.Create("", "You have been blocked by the spam filter. Try again after 10 seconds.", ChatMessageType.Server, null);
+                ChatMessage denyMsg = Create("", TextManager.Get("SpamFilterBlocked"), ChatMessageType.Server, null);
                 c.ChatSpamTimer = 10.0f;
                 GameMain.Server.SendChatMessage(denyMsg, c);
                 return;

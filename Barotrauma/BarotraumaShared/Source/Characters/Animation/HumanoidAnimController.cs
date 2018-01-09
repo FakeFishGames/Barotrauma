@@ -105,7 +105,7 @@ namespace Barotrauma
 
 
             //re-enable collider
-            if (!Collider.FarseerBody.Enabled)
+            if (!Collider.Enabled)
             {
                 var lowestLimb = FindLowestLimb();
                 
@@ -115,7 +115,7 @@ namespace Barotrauma
                     Collider.Rotation);
                 
                 Collider.FarseerBody.ResetDynamics();
-                Collider.FarseerBody.Enabled = true;
+                Collider.Enabled = true;
             }            
 
             if (swimming)
@@ -1034,7 +1034,8 @@ namespace Barotrauma
             {
                 Limb targetLimb = target.AnimController.GetLimb(GrabLimb);
 
-                if (targetLimb == null || targetLimb.IsSevered)
+                //grab hands if GrabLimb is not specified (or torso if the character has no hands)
+                if (GrabLimb == LimbType.None || targetLimb.IsSevered)
                 {
                     targetLimb = target.AnimController.GetLimb(LimbType.Torso);
                     if (i == 0)

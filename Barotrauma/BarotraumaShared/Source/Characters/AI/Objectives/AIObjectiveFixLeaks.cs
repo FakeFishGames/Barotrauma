@@ -106,6 +106,9 @@ namespace Barotrauma
                 if (gap.ConnectedWall == null) continue;
                 if (gap.ConnectedDoor != null || gap.Open <= 0.0f) continue;
 
+                //TODO: prevent the AI characters from fixing leaks in the enemy sub in sub-vs-sub missions if/when multiplayer bots are implemented
+                if (gap.Submarine == null) continue;
+
                 float gapPriority = GetGapFixPriority(gap);
 
                 int index = 0;

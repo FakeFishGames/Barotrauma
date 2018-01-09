@@ -9,7 +9,7 @@ namespace Microsoft.Xna.Framework.Input
     /// <summary>
     /// Holds the state of keystrokes by a keyboard.
     /// </summary>
-	public struct KeyboardState
+    public struct KeyboardState
     {
         // Used for the common situation where GetPressedKeys will return an empty array
         static Keys[] empty = new Keys[0];

@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
 
         private static Wire draggingConnected;
 
-        private List<StatusEffect> effects;
+        public readonly List<StatusEffect> effects;
 
         public readonly ushort[] wireId;
 
@@ -167,8 +167,6 @@ namespace Barotrauma.Items.Components
 
                 foreach (StatusEffect effect in recipient.effects)
                 {
-
-                    //effect.Apply(ActionType.OnUse, 1.0f, recipient.item, recipient.item);
                     recipient.item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
                 }
             }

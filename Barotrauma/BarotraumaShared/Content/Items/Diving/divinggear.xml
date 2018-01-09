@@ -3,7 +3,7 @@
   <Item
     name="Oxygen Tank"
     category="Equipment,Misc"
-    Tags="smallitem"
+    Tags="smallitem,oxygensource"
     
     price="50">
 
