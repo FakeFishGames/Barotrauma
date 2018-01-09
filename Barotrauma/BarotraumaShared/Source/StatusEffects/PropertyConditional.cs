@@ -119,7 +119,8 @@ namespace Barotrauma
             switch (Type)
             {
                 case ConditionType.PropertyValue:
-                    if (target.SerializableProperties.TryGetValue(PropertyName.ToLowerInvariant(), out SerializableProperty property))
+                    SerializableProperty property;
+                    if (target.SerializableProperties.TryGetValue(PropertyName.ToLowerInvariant(), out property))
                     {
                         return Matches(property);
                     }
@@ -194,7 +195,8 @@ namespace Barotrauma
             float? floatProperty = null;
             if (type == typeof(float) || type == typeof(int))
             {
-                if (Single.TryParse(Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedFloat))
+                float parsedFloat;
+                if (Single.TryParse(Value, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedFloat))
                 {
                     floatValue = parsedFloat;
                 }
