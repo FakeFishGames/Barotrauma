@@ -516,15 +516,12 @@ namespace Barotrauma
                 }
             }
 #endif
-
-            if (useItemCount > 0)
+            
+            for (int i = 0; i < useItemCount; i++)
             {
-                for (int i=0; i<useItemCount; i++)
+                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
                 {
-                    foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
-                    {
-                        item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
-                    }
+                    item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
                 }
             }
 

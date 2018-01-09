@@ -305,7 +305,7 @@ namespace Barotrauma.Items.Components
         //returns true if the item was used succesfully (not out of ammo, reloading, etc)
         public virtual bool Use(float deltaTime, Character character = null) 
         {
-            return false;
+            return characterUsable || character == null;
         }
 
         //called when the item is equipped and right mouse button is pressed
