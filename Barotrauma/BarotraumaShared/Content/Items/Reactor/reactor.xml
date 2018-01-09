@@ -39,6 +39,7 @@
       <output name="power_out"/>
       <output name="temperature_out"/>
       <input name="shutdown"/>
+      <output name="meltdown_warning"/>
     </ConnectionPanel>
 
     <ItemContainer capacity="5" canbeselected="true">

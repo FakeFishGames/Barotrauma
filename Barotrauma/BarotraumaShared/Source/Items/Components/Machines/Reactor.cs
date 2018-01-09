@@ -32,21 +32,12 @@ namespace Barotrauma.Items.Components
         //turned down and cooling increased
         private float shutDownTemp;
 
-        private float fireTemp, meltDownTemp;
+        private float fireTemp, meltDownTemp, meltDownDelay;
+
+        private float meltDownTimer;
 
         //how much power is provided to the grid per 1 temperature unit
         private float powerPerTemp;
-
-        private int graphSize = 25;
-
-        private float graphTimer;
-
-        private int updateGraphInterval = 500;
-
-        private float[] fissionRateGraph;
-        private float[] coolingRateGraph;
-        private float[] tempGraph;
-        private float[] loadGraph;
 
         private float load;
         
@@ -65,6 +56,13 @@ namespace Barotrauma.Items.Components
             {
                 meltDownTemp = Math.Max(0.0f, value);
             }
+        }
+
+        [Serialize(30.0f, true)]
+        public float MeltdownDelay
+        {
+            get { return meltDownDelay; }
+            set { meltDownDelay = Math.Max(value, 0.0f); }
         }
 
         [Editable(ToolTip = "The temperature at which the reactor catches fire."), Serialize(9000.0f, true)]
@@ -155,17 +153,9 @@ namespace Barotrauma.Items.Components
         public Reactor(Item item, XElement element)
             : base(item, element)
         {
-            fissionRateGraph    = new float[graphSize];
-            coolingRateGraph    = new float[graphSize];
-            tempGraph           = new float[graphSize];
-            loadGraph           = new float[graphSize];
-
             shutDownTemp = 500.0f;
-
-            powerPerTemp = 1.0f;
-            
+            powerPerTemp = 1.0f;            
             IsActive = true;
-
             InitProjSpecific();
         }
 
@@ -227,8 +217,19 @@ namespace Barotrauma.Items.Components
 
             if (temperature > meltDownTemp)
             {
-                MeltDown();
-                return;
+                item.SendSignal(0, "1", "meltdown_warning", null);
+                meltDownTimer += deltaTime;
+
+                if (meltDownTimer > MeltdownDelay)
+                {
+                    MeltDown();
+                    return;
+                }
+            }
+            else
+            {
+                item.SendSignal(0, "0", "meltdown_warning", null);
+                meltDownTimer = Math.Max(0.0f, meltDownTimer - deltaTime);
             }
 
             load = 0.0f;
@@ -326,28 +327,26 @@ namespace Barotrauma.Items.Components
 
         private void MeltDown()
         {
-            if (item.Condition <= 0.0f) return;
+            if (item.Condition <= 0.0f || GameMain.Client != null) return;
 
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.ItemInteraction);
- 
+
             item.Condition = 0.0f;
 
             var containedItems = item.ContainedItems;
-            if (containedItems == null) return;
-            
-            foreach (Item containedItem in item.ContainedItems)
+            if (containedItems != null)
             {
-                if (containedItem == null) continue;
-                containedItem.Condition = 0.0f;
-            }
-
-            if (GameMain.Server != null)
-            {
-                if (GameMain.Server.ConnectedClients.Contains(BlameOnBroken))
+                foreach (Item containedItem in containedItems)
                 {
-                    BlameOnBroken.Karma = 0.0f;
+                    if (containedItem == null) continue;
+                    containedItem.Condition = 0.0f;
                 }
             }
+            
+            if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(BlameOnBroken))
+            {
+                BlameOnBroken.Karma = 0.0f;
+            }            
         }
 
         public override bool Pick(Character picker)
