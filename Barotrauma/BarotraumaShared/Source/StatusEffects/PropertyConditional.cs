@@ -15,9 +15,19 @@ namespace Barotrauma
             HasStatusTag
         }
 
+        public enum OperatorType
+        {
+            Equals,
+            NotEquals,
+            LessThan,
+            LessThanEquals,
+            GreaterThan,
+            GreaterThanEquals
+        }
+
         public readonly ConditionType Type;
         public readonly string PropertyName;
-        public readonly string Operator;
+        public readonly OperatorType Operator;
         public readonly string Value;
 
         public PropertyConditional(XAttribute attribute)
@@ -25,7 +35,6 @@ namespace Barotrauma
             string attributeString = attribute.Value.ToString();
             string atStr = attributeString;
             string[] splitString = atStr.Split(' ');
-            string op = splitString[0];
             if (splitString.Length > 0)
             {
                 for (int i = 1; i < splitString.Length; i++)
@@ -34,12 +43,13 @@ namespace Barotrauma
                 }
             }
             //thanks xml for not letting me use < or > in attributes :(
+            string op = splitString[0];
             switch (op)
             {
                 case "e":
                 case "eq":
                 case "equals":
-                    op = "==";
+                    Operator = OperatorType.Equals;
                     break;
                 case "ne":
                 case "neq":
@@ -48,31 +58,31 @@ namespace Barotrauma
                 case "!e":
                 case "!eq":
                 case "!equals":
-                    op = "!=";
+                    Operator = OperatorType.NotEquals;
                     break;
                 case "gt":
                 case "greaterthan":
-                    op = ">";
+                    Operator = OperatorType.GreaterThan;
                     break;
                 case "lt":
                 case "lessthan":
-                    op = "<";
+                    Operator = OperatorType.LessThan;
                     break;
                 case "gte":
                 case "gteq":
                 case "greaterthanequals":
-                    op = ">=";
+                    Operator = OperatorType.GreaterThanEquals;
                     break;
                 case "lte":
                 case "lteq":
                 case "lessthanequals":
-                    op = "<=";
+                    Operator = OperatorType.LessThanEquals;
                     break;
                 default:
                     if (op != "==" && op != "!=" && op != ">" && op != "<" && op != ">=" && op != "<=") //Didn't use escape strings or anything
                     {
-                        atStr = attributeString; //We probably don't even have an operator
-                        op = "==";
+                        atStr = attributeString; //We probably don't even have an operator                        
+                        DebugConsole.ThrowError("Error in property conditional - \"" + op + "\" is not a valid operator.");
                     }
                     break;
             }
@@ -82,8 +92,7 @@ namespace Barotrauma
                 PropertyName = attribute.Name.ToString();
                 Type = ConditionType.PropertyValue;
             }
-
-            Operator = op;
+            
             Value = atStr;            
         }
         
@@ -111,7 +120,7 @@ namespace Barotrauma
 
             switch (Operator)
             {
-                case "==":
+                case OperatorType.Equals:
                     if (floatValue == null)
                     {
                         return property.GetValue().Equals(floatValue);
@@ -120,7 +129,7 @@ namespace Barotrauma
                     {
                         return property.GetValue().Equals(Value);
                     }
-                case "!=":
+                case OperatorType.NotEquals:
                     if (floatValue == null)
                     {
                         return !property.GetValue().Equals(floatValue);
@@ -129,7 +138,7 @@ namespace Barotrauma
                     {
                         return !property.GetValue().Equals(Value);
                     }
-                case ">":
+                case OperatorType.GreaterThan:
                     if (floatValue == null)
                     {
                         DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
@@ -138,7 +147,7 @@ namespace Barotrauma
                     else if (floatProperty > floatValue)
                         return true;
                     break;
-                case "<":
+                case OperatorType.LessThan:
                     if (floatValue == null)
                     {
                         DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
@@ -147,7 +156,7 @@ namespace Barotrauma
                     else if (floatProperty < floatValue)
                         return true;
                     break;
-                case ">=":
+                case OperatorType.GreaterThanEquals:
                     if (floatValue == null)
                     {
                         DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
@@ -156,7 +165,7 @@ namespace Barotrauma
                     else if (floatProperty >= floatValue)
                         return true;
                     break;
-                case "<=":
+                case OperatorType.LessThanEquals:
                     if (floatValue == null)
                     {
                         DebugConsole.ThrowError("Couldn't compare " + Value.ToString() + " (" + Value.GetType() + ") to property \"" + property.Name + "\" (" + type + ")! "
