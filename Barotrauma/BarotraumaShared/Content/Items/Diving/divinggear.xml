@@ -68,6 +68,14 @@
     fireproof="true"
     description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
 
+    <Deconstruct time="30">
+      <Item name="Steel Bar"/>
+      <Item name="Aluminium"/>
+      <Item name="Aluminium"/>
+      <Item name="Polycarbonate Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="DivingSuit.png" sourcerect="85,0,43,128" depth="0.55"/>
 
     <Body width="37" height="113" density="15"/>
@@ -89,8 +97,8 @@
       <sprite texture="DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" origin="0.5,0.55" hidelimb="true"/>
       <sprite texture="DivingSuit.png" limb="LeftLeg" sourcerect="17,47,21,51" origin="0.5,0.55" hidelimb="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightFoot" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftFoot" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="RightFoot" sound="footstep_armor" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftFoot" sound="footstep_armor" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
 
       <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character"  OxygenAvailable="1000.0" Condition="-0.5">
@@ -126,8 +134,9 @@
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
-      <Item name="Copper Bar"/>
       <Item name="Polycarbonate Bar"/>
+      <Item name="Polycarbonate Bar"/>
+      <Item name="FPGA Circuit"/>
     </Deconstruct>
     
     <Sprite texture ="Scooter.png" depth="0.55"/>

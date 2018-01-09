@@ -38,7 +38,11 @@
   <damagesound file="Content/Sounds/Damage/HitArmor1.ogg" damagerange="5.0,80.0" damagesoundtype="LimbArmor"/>
   <damagesound file="Content/Sounds/Damage/HitArmor2.ogg" damagerange="5.0,80.0" damagesoundtype="LimbArmor"/>
   <damagesound file="Content/Sounds/Damage/HitArmor3.ogg" damagerange="40.0,100.0" damagesoundtype="LimbArmor"/> 
-  
+
+  <damagesound file="Content/Sounds/Damage/HitClown1.ogg" damagerange="0.0,40.0" damagesoundtype="LimbClown"/>
+  <damagesound file="Content/Sounds/Damage/HitClown2.ogg" damagerange="0.0,40.0" damagesoundtype="LimbClown"/>
+  <damagesound file="Content/Sounds/Damage/HitClown3.ogg" damagerange="25.0,75.0" damagesoundtype="LimbClown"/>  
+  <damagesound file="Content/Sounds/Damage/HitClown4.ogg" damagerange="50.0,100.0" damagesoundtype="LimbClown"/>
 
   <damagesound file="Content/Sounds/Damage/creak1.ogg" damagesoundtype="Pressure"/>
   <damagesound file="Content/Sounds/Damage/creak2.ogg" damagesoundtype="Pressure"/>
@@ -51,6 +55,22 @@
   <drown file="Content/Sounds/Water/Drown2.ogg"/>
   <drown file="Content/Sounds/Water/Drown3.ogg"/>
   <drown file="Content/Sounds/Water/Drown4.ogg"/>
+
+  <footstep file="Content/Sounds/Footsteps/step.ogg"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-01.ogg"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-02.ogg"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-03.ogg"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-04.ogg"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-05.ogg"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-06.ogg"/>
+  <footstep_metal file="Content/Sounds/Footsteps/Metal/metal-07.ogg"/>
+
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/armor-01.ogg"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/armor-02.ogg"/>
+  <footstep_armor file="Content/Sounds/Footsteps/Armor/armor-03.ogg"/>
+
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/clown-01.ogg"/>
+  <footstep_clown file="Content/Sounds/Footsteps/Clown/clown-02.ogg"/>
 
   <ambient file="Content/Sounds/Ambient/Ambient1.ogg"/>
   <ambient file="Content/Sounds/Ambient/Ambient2.ogg"/>

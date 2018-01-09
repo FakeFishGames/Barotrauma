@@ -371,6 +371,7 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value)) return;
                 if (GameMain.Client != null) return;
+                if (!DoesBleed) return;
 
                 float newBleeding = MathHelper.Clamp(value, 0.0f, 5.0f);
                 //if (newBleeding == bleeding) return;
@@ -1618,6 +1619,15 @@ namespace Barotrauma
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
+            if (DoesBleed)
+            {
+                Health -= bleeding * deltaTime;
+                Bleeding -= BleedingDecreaseSpeed * deltaTime;
+            }
+
+            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
+
+            if (!IsDead) LockHands = false;
             //CPR stuff is handled in the UpdateCPR function in HumanoidAnimController
         }
 

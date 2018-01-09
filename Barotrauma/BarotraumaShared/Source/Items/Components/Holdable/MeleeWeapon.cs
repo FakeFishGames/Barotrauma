@@ -215,6 +215,7 @@ namespace Barotrauma.Items.Components
         {
             Character targetCharacter = null;
             Limb targetLimb = null;
+            Structure targetStructure = null;
 
             if (f2.Body.UserData is Limb)
             {
@@ -224,8 +225,12 @@ namespace Barotrauma.Items.Components
             }
             else if (f2.Body.UserData is Character)
             {
-
                 targetCharacter = (Character)f2.Body.UserData;
+                targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
+            }
+            else if (f2.Body.UserData is Structure)
+            {
+                targetStructure = (Structure)f2.Body.UserData;
             }
             else
             {
@@ -236,13 +241,21 @@ namespace Barotrauma.Items.Components
 
             if (attack != null)
             {
-                if (targetLimb == null)
+                if (targetLimb != null)
                 {
                     attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
                 }
-                else
+                else if (targetCharacter != null)
                 {
                     attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
+                }
+                else if (targetStructure != null)
+                {
+                    attack.DoDamage(user, targetStructure, item.WorldPosition, 1.0f);
+                }
+                else
+                {
+                    return false;
                 }
             }
 
@@ -251,7 +264,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.Client != null) return true;
 
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, targetCharacter.ID });
 
@@ -263,8 +276,9 @@ namespace Barotrauma.Items.Components
                 logStr += " on " + targetCharacter.LogName + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
             }
-
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, targetLimb.character);
+            
+            if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter != null ? targetCharacter : null);
 
             return true;
         }

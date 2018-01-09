@@ -335,18 +335,18 @@ namespace Barotrauma
             }
         }
 
-        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
+        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, float? spawnCondition = null)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.sprite.size.X / 2), 
                 (int)(position.Y + itemPrefab.sprite.size.Y / 2), 
                 (int)itemPrefab.sprite.size.X, 
                 (int)itemPrefab.sprite.size.Y), 
-            itemPrefab, submarine)
+            itemPrefab, submarine, spawnCondition)
         {
 
         }
 
-        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, float? spawnCondition = null)
             : base(itemPrefab, submarine)
         {
             prefab = itemPrefab;
@@ -361,8 +361,8 @@ namespace Barotrauma
                        
             rect = newRect;
                         
-            condition = prefab.Health;
-            lastSentCondition = prefab.Health;
+            condition = (float)(spawnCondition ?? prefab.Health);
+            lastSentCondition = condition;
 
             XElement element = prefab.ConfigElement;
             if (element == null) return;
@@ -781,7 +781,7 @@ namespace Barotrauma
             
             float surfaceY = CurrentHull.Surface;
 
-            return Position.Y < surfaceY;            
+            return CurrentHull.WaterVolume > 0.0f && Position.Y < surfaceY;
         }
 
 
@@ -826,44 +826,46 @@ namespace Barotrauma
                 }
             }
             
-            inWater = IsInWater();
-            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
-            
-            if (body == null || !body.Enabled) return;
-
-            System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
-
-            if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
+            if (body != null && body.Enabled)
             {
-                Submarine prevSub = Submarine;
+                System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
 
-                FindHull();
+                if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
+                {
+                    Submarine prevSub = Submarine;
 
-                if (Submarine == null && prevSub != null)
-                {
-                    body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
-                }
-                else if (Submarine != null && prevSub == null)
-                {
-                    body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
-                }
-                
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-                rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-                rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+                    FindHull();
 
-                if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
-                {
-                    body.LinearVelocity = new Vector2(
-                        MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
-                        MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                    if (Submarine == null && prevSub != null)
+                    {
+                        body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
+                    }
+                    else if (Submarine != null && prevSub == null)
+                    {
+                        body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
+                    }
+                    
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+                    rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+                    rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+                    if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+                    {
+                        body.LinearVelocity = new Vector2(
+                            MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
+                            MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                    }
                 }
+
+                UpdateNetPosition();
             }
 
-            UpdateNetPosition();
-            
-            if (!inWater || ParentInventory != null) return;
-            
+            inWater = IsInWater();
+
+            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
+
+            if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
+
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
         }
@@ -1104,8 +1106,6 @@ namespace Barotrauma
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 
 #if CLIENT
-                    ic.PlaySound(ActionType.OnPicked, picker.WorldPosition);
-
                     if (picker == Character.Controlled) GUIComponent.ForceMouseOn(null);
 #endif
 

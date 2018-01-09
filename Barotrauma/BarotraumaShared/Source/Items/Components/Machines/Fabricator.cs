@@ -12,9 +12,11 @@ namespace Barotrauma.Items.Components
     {
         public readonly ItemPrefab TargetItem;
 
-        public readonly List<Tuple<ItemPrefab, int>> RequiredItems;
+        public readonly List<Tuple<ItemPrefab, int, float, bool>> RequiredItems;
 
         public readonly float RequiredTime;
+
+        public readonly float OutCondition; //Percentage-based from 0 to 1
 
         public readonly List<Skill> RequiredSkills;
 
@@ -31,8 +33,9 @@ namespace Barotrauma.Items.Components
 
             RequiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
-            RequiredItems = new List<Tuple<ItemPrefab, int>>();
-            
+            OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
+            RequiredItems = new List<Tuple<ItemPrefab, int, float, bool>>();
+            //Backwards compatibility for string lists
             string[] requiredItemNames = element.GetAttributeString("requireditems", "").Split(',');
             foreach (string requiredItemName in requiredItemNames)
             {
@@ -48,12 +51,12 @@ namespace Barotrauma.Items.Components
                 var existing = RequiredItems.Find(r => r.Item1 == requiredItem);
                 if (existing == null)
                 {
-                    RequiredItems.Add(new Tuple<ItemPrefab, int>(requiredItem, 1));
+                    RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, 1, 1.0f, false));
                 }
                 else
                 {
                     RequiredItems.Remove(existing);
-                    RequiredItems.Add(new Tuple<ItemPrefab, int>(requiredItem, existing.Item2 + 1));
+                    RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, existing.Item2 + 1, 1.0f, false));
                 }
             }
 
@@ -65,6 +68,34 @@ namespace Barotrauma.Items.Components
                         RequiredSkills.Add(new Skill(
                             subElement.GetAttributeString("name", ""), 
                             subElement.GetAttributeInt("level", 0)));
+                        break;
+                    case "item": //New system allowing for setting minimal item condition
+                        string requiredItemName = subElement.GetAttributeString("name", "");
+                        float minCondition = subElement.GetAttributeFloat("mincondition", 1.0f);
+                        //Substract mincondition from required item's condition or delete it regardless?
+                        bool useCondition = subElement.GetAttributeBool("usecondition", true);
+                        int count = subElement.GetAttributeInt("count", 1);
+
+                        if (string.IsNullOrWhiteSpace(requiredItemName)) continue;
+
+                        ItemPrefab requiredItem = MapEntityPrefab.Find(requiredItemName.Trim()) as ItemPrefab;
+                        if (requiredItem == null)
+                        {
+                            DebugConsole.ThrowError("Error in fabricable item " + name + "! Required item \"" + requiredItemName + "\" not found.");
+                            continue;
+                        }
+
+                        var existing = RequiredItems.Find(r => r.Item1 == requiredItem);
+                        if (existing == null)
+                        {
+                            RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, count, minCondition, useCondition));
+                        }
+                        else
+                        {
+                            RequiredItems.Remove(existing);
+                            RequiredItems.Add(new Tuple<ItemPrefab, int, float, bool>(requiredItem, existing.Item2 + count, minCondition, useCondition));
+                        }
+
                         break;
                 }
             }
@@ -236,25 +267,32 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            foreach (Tuple<ItemPrefab, int> ip in fabricatedItem.RequiredItems)
+            foreach (Tuple<ItemPrefab, int, float, bool> ip in fabricatedItem.RequiredItems)
             {
                 for (int i = 0; i < ip.Item2; i++)
                 {
-                    var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1);
+                    var requiredItem = containers[0].Inventory.Items.FirstOrDefault(it => it != null && it.Prefab == ip.Item1 && it.Condition >= ip.Item1.Health * ip.Item3);
                     if (requiredItem == null) continue;
-
+                    
+                    //Item4 = use condition bool
+                    if (ip.Item4 && requiredItem.Condition - ip.Item1.Health * ip.Item3 > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
+                    {
+                        requiredItem.Condition -= ip.Item1.Health * ip.Item3;
+                        continue;
+                    }
                     Entity.Spawner.AddToRemoveQueue(requiredItem);
                     containers[0].Inventory.RemoveItem(requiredItem);
                 }
             }
 
+            //TODO: apply OutCondition
             if (containers[1].Inventory.Items.All(i => i != null))
             {
-                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine);
+                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
             }
             else
             {
-                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory);
+                Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, containers[1].Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
             }
 
             CancelFabricating(null);
@@ -269,11 +307,10 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
-
             ItemContainer container = item.GetComponent<ItemContainer>();
-            foreach (Tuple<ItemPrefab, int> ip in fabricableItem.RequiredItems)
+            foreach (Tuple<ItemPrefab, int, float, bool> ip in fabricableItem.RequiredItems)
             {
-                if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1).Length < ip.Item2) return false;
+                if (Array.FindAll(container.Inventory.Items, it => it != null && it.Prefab == ip.Item1 && it.Condition >= ip.Item1.Health * ip.Item3).Length < ip.Item2) return false;
             }
 
             return true;

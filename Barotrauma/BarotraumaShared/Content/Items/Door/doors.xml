@@ -6,13 +6,16 @@
 
     <Sprite texture ="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
-    <Door canbeselected="true" selectkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
+    <Door canbeselected="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
       <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture ="door.png" sourcerect="80,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture ="door.png" sourcerect="99,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture ="door.png" sourcerect="133,0,58,208" depth="0.051" origin="0.5,0.0" scale="true"/>
       <sound file="door.ogg" type="OnUse" range="500.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
+      </StatusEffect>
     </Door>
 
     <AiTarget sightrange="500.0"/>
@@ -37,13 +40,16 @@
 
     <Sprite texture="door.png" sourcerect="1,0,48,208" depth="0.01" origin="0.5,0.5"/>
 
-    <Door window="0,-32,10,75" canbeselected="true" selectkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
+    <Door window="0,-32,10,75" canbeselected="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
       <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture="door.png" sourcerect="56,0,19,208" depth="0.05" origin="0.5,0.0"/>
       <WeldedSprite texture="door.png" sourcerect="9,0,32,188" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="door.png" sourcerect="192,0,40,208" depth="0.051" origin="0.5,0.0" scale="true"/>
       <sound file="door.ogg" type="OnUse" range="500.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/doorBreak1.ogg" range="3000"/>
+      </StatusEffect>
     </Door>
 
     <AiTarget sightrange="500.0"/>
@@ -68,13 +74,16 @@
 
     <Sprite texture="hatch.png" sourcerect="0,0,128,46" depth="0.01" origin="0.5,0.5"/>
 
-    <Door canbeselected="true" horizontal="true" selectkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
+    <Door canbeselected="true" horizontal="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="10.0">
       <requireditem name="Crowbar" type="Equipped"/>
       <Sprite texture="hatch.png" sourcerect="128,0,128,19" depth="0.05" origin="0.0,0.5"/>
       <WeldedSprite texture="hatch.png" sourcerect="0,56,108,33" depth="0.0" origin="0.5,0.5"/>
       <BrokenSprite texture="hatch.png" sourcerect="128,21,128,58" depth="0.051" origin="0.0,0.5" scale="true"/>
       <sound file="door.ogg" type="OnUse" range="500.0"/>
       <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="2000.0"/>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/doorBreak1.ogg" range="3000"/>
+      </StatusEffect>
     </Door>
 
     <AiTarget sightrange="500.0"/>
@@ -103,6 +112,9 @@
       <Sprite texture ="dockingport.png" sourcerect="127,0,112,144" depth="0.05" origin="0.5,0.5"/>
       <sound file="dockingport1.ogg" type="OnUse" range="1000.0"/>
       <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
+      </StatusEffect>
     </DockingPort>
 
     <PowerTransfer/>
@@ -134,6 +146,9 @@
       <Sprite texture ="dockingport.png" sourcerect="127,144,48,112" depth="0.05" origin="0.5,0.5"/>
       <sound file="dockingport1.ogg" type="OnUse" range="1000.0"/>
       <sound file="dockingport2.ogg" type="OnSecondaryUse" range="1000.0"/>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/doorBreak2.ogg" range="3000"/>
+      </StatusEffect>
     </DockingPort>
 
     <fixrequirement name="Electrical repairs">
@@ -158,5 +173,39 @@
       <output name="state_out"/>
       <output name="proximity_sensor"/>
     </ConnectionPanel>
-  </Item> 
+  </Item>
+  
+  <Item
+    name="Duct Block"
+    linkable="true"
+    >
+
+    <Sprite texture ="duct.png" sourcerect="0,0,33,33" depth="0.01" origin="0.5,0.5"/>
+
+    <Door canbeselected="true" pickkey="Action" msg="Force Open [Crowbar]" PickingTime="3.0">
+      <requireditem name="Crowbar" type="Equipped"/>
+      <Sprite texture ="duct.png" sourcerect="66,0,19,19" depth="0.05" origin="-0.4,0.5"/>
+      <WeldedSprite texture ="duct.png" sourcerect="33,0,33,33" depth="0.0" origin="0.5,0.5"/>
+      <BrokenSprite texture="duct.png" sourcerect="0,34,52,52" depth="0.051" origin="0.2,0.5" scale="true"/>
+      <sound file="duct.ogg" type="OnUse" range="300"/>
+      <sound file="Content/Items/Tools/crowbar.ogg" type="OnPicked" range="500.0"/>
+      <StatusEffect type="OnBroken" target="This">
+        <sound file="Content/Items/Door/ductBreak.ogg" range="2000"/>
+      </StatusEffect>
+    </Door>
+
+    <AiTarget sightrange="500.0"/>
+
+    <fixrequirement name="Mechanical repairs">
+      <skill name="Construction" level="30"/>
+      <item name="Welding Tool"/>
+    </fixrequirement>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver" type="Equipped"/>
+      <input name="toggle"/>
+      <input name="set_state"/>
+      <output name="state_out"/>
+    </ConnectionPanel>
+  </Item>
 </Items>

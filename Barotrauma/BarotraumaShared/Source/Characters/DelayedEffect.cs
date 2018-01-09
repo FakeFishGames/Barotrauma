@@ -3,22 +3,18 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    class DelayedListElement
+    {
+        public DelayedEffect Parent;
+        public Entity Entity;
+        public List<ISerializableEntity> Targets;
+        public float StartTimer;
+    }
     class DelayedEffect : StatusEffect
     {
-        public static List<DelayedEffect> List = new List<DelayedEffect>();
+        public static List<DelayedListElement> DelayList = new List<DelayedListElement>();
 
         private float delay;
-
-        private float startTimer;
-
-        private Entity entity;
-
-        private List<ISerializableEntity> targets;
-        
-        public float StartTimer
-        {
-            get { return startTimer; }
-        }
 
         public DelayedEffect(XElement element)
             : base(element)
@@ -28,25 +24,36 @@ namespace Barotrauma
 
         public override void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
-            if (this.type != type) return;
-            
-            startTimer = delay;
-            this.entity = entity;
+            if (this.type != type || !HasRequiredItems(entity)) return;
+            if (!base.Stackable && DelayList.Find(d => d.Parent == this && d.Entity == entity && d.Targets == targets) != null) return;
 
-            this.targets = targets;
+            DelayedListElement element = new DelayedListElement();
+            element.Parent = this;
+            element.StartTimer = delay;
+            element.Entity = entity;
+            element.Targets = targets;
 
-            List.Add(this);
+            DelayList.Add(element);
         }
 
-        public void Update(float deltaTime)
+        public static void Update(float deltaTime)
         {
-            startTimer -= deltaTime;
+            for (int i = DelayList.Count - 1; i >= 0; i--)
+            {
+                DelayedListElement element = DelayList[i];
+                if (element.Parent.CheckConditionalAlways && !element.Parent.HasRequiredConditions(element.Targets))
+                {
+                    DelayList.Remove(element);
+                    continue;
+                }
 
-            if (startTimer > 0.0f) return;
+                element.StartTimer -= deltaTime;
 
-            base.Apply(1.0f, entity, targets);
-            List.Remove(this);
+                if (element.StartTimer > 0.0f) continue;
+
+                element.Parent.Apply(1.0f, element.Entity, element.Targets);
+                DelayList.Remove(element);
+            }
         }
-
     }
 }

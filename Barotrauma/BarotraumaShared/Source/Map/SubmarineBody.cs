@@ -681,7 +681,7 @@ namespace Barotrauma
             if (maxDamageStructure != null)
             {
                 SoundPlayer.PlayDamageSound(
-                    DamageSoundType.StructureBlunt,
+                    "StructureBlunt",
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(lastContactPoint),
                     MathHelper.Clamp(maxDamage * 4.0f, 1000.0f, 4000.0f),

@@ -181,7 +181,7 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
           aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
-      <Attack damage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack damage="5" structuredamage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 
@@ -198,7 +198,7 @@
 
     <MeleeWeapon slots="RightHand+LeftHand,Any"
           controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
-      <Attack damage="20" stun="0.6" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack damage="20" structuredamage="10" stun="0.6" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 
@@ -271,8 +271,10 @@
     tags="smallitem">
 
     <Deconstruct time="10">
-      <Item name="Phosphorus"/>
-      <Item name="Aluminium"/>
+      <Item name="Phosphorus" mincondition="0.9" outcondition="0.25"/>
+      <Item name="Aluminium" mincondition="0.9" outcondition="0.25"/>
+      <Item name="Phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
+      <Item name="Aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
     </Deconstruct>
 
 

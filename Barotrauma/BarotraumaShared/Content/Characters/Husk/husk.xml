@@ -76,7 +76,7 @@
     </limb>
     <limb id = "8" radius="5" height="13" mass = "2" type ="LeftFoot" flip="true" pullpos="-5.0,0.0">
       <sprite texture="Content/Characters/Husk/legs.png" sourcerect="35,53,16,25" depth="0.14" origin="0.5,0.5"/>
-      <sound file ="Content/step.ogg"/>
+      <sound file ="footstep_armor"/>
     </limb>
   
     <!-- right leg -->
@@ -88,7 +88,7 @@
     </limb>
     <limb id = "11" radius="5" height="13" mass = "2" type ="RightFoot" flip="true" pullpos="-5.0,0.0">
       <sprite texture="Content/Characters/Husk/legs.png" sourcerect="35,53,16,25" origin="0.5,0.5"/>
-      <sound file ="Content/step.ogg"/>
+      <sound file ="footstep_armor"/>
     </limb> 
 
     <!-- head to body -->

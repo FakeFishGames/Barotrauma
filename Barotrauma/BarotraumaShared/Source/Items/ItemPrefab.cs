@@ -10,12 +10,16 @@ namespace Barotrauma
     struct DeconstructItem
     {
         public readonly string ItemPrefabName;
-        public readonly bool RequireFullCondition;
+        public readonly float MinCondition;
+        public readonly float MaxCondition;
+        public readonly float OutCondition;
 
-        public DeconstructItem(string itemPrefabName, bool requireFullCondition)
+        public DeconstructItem(string itemPrefabName, float minCondition, float maxCondition, float outCondition)
         {
             ItemPrefabName = itemPrefabName;
-            RequireFullCondition = requireFullCondition;
+            MinCondition = minCondition;
+            MaxCondition = maxCondition;
+            OutCondition = outCondition;
         }
     }
 
@@ -301,9 +305,14 @@ namespace Barotrauma
                         {
 
                             string deconstructItemName = deconstructItem.GetAttributeString("name", "not found");
-                            bool requireFullCondition = deconstructItem.GetAttributeBool("requirefullcondition", false);
+                            //minCondition does <= check, meaning that below or equeal to min condition will be skipped.
+                            float minCondition = deconstructItem.GetAttributeFloat("mincondition", -0.1f);
+                            //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
+                            float maxCondition = deconstructItem.GetAttributeFloat("maxcondition", 1.0f);
+                            //Condition of item on creation
+                            float outCondition = deconstructItem.GetAttributeFloat("outcondition", 1.0f);
 
-                            DeconstructItems.Add(new DeconstructItem(deconstructItemName, requireFullCondition));
+                            DeconstructItems.Add(new DeconstructItem(deconstructItemName, minCondition, maxCondition, outCondition));
 
                         }
 
