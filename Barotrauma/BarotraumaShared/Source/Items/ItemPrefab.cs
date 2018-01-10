@@ -145,6 +145,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize("", false)]
+        public string CargoContainerName
+        {
+            get;
+            private set;
+        }
+
         public bool CanSpriteFlipX
         {
             get { return canSpriteFlipX; }
