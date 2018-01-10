@@ -247,6 +247,11 @@ namespace Barotrauma
                 subInventory.slots[i].InteractRect = subRect;
                 subInventory.slots[i].InteractRect.Inflate(5, 5);
 
+                if (subRect.Y < GameMain.GraphicsHeight * 0.4f)
+                {
+                    subRect = slot.Rect;
+                    subRect.X = subInventory.slots[i].Rect.Right + 10;
+                }
             }
 
             subInventory.isSubInventory = true;
@@ -297,7 +302,7 @@ namespace Barotrauma
                                     idJob = s[1];
                             }
                             if (idName != null)
-                                description = "This belongs to " + idName + (idJob != null ? ", the " + idJob + ".\n" : ".\n") + description;
+                                description = "This belongs to " + idName + (idJob != null ? ", the " + idJob + "." : ".") + description;
                         }
                         toolTip = string.IsNullOrEmpty(description) ?
                             Items[i].Name :
@@ -319,9 +324,9 @@ namespace Barotrauma
             Vector2 textSize = GUI.Font.MeasureString(toolTip);
             Vector2 rectSize = textSize * 1.2f;
 
-            Vector2 pos = new Vector2(highlightedSlot.Right, highlightedSlot.Y - rectSize.Y);
+            Vector2 pos = new Vector2(highlightedSlot.Right, highlightedSlot.Y);
             pos.X = (int)(pos.X + 3);
-            pos.Y = (int)pos.Y;
+            pos.Y = (int)pos.Y - Math.Max((pos.Y + rectSize.Y) - GameMain.GraphicsHeight, 0);
 
             GUI.DrawRectangle(spriteBatch, pos, rectSize, Color.Black * 0.8f, true);
             GUI.Font.DrawString(spriteBatch, toolTip,
@@ -351,14 +356,16 @@ namespace Barotrauma
 #endif
 
             var slot = slots[slotIndex];
-            Rectangle containerRect = new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
-                    slot.Rect.Width + 10, slot.Rect.Height + (40 + 10) * itemCapacity + 10);
+            Rectangle containerRect = container.Inventory.slots[0].InteractRect;
+            for (int i = 1; i< container.Inventory.slots.Length; i++)
+            {
+                containerRect = Rectangle.Union(containerRect, container.Inventory.slots[i].InteractRect);
+            }
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(containerRect.X, containerRect.Y, containerRect.Width, containerRect.Height - slot.Rect.Height - 5), Color.Black * 0.8f, true);
             GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
 
             container.Inventory.Draw(spriteBatch, true);
-
         }
 
         public static void UpdateDragging()
