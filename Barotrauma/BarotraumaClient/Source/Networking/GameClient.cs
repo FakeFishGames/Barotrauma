@@ -1380,7 +1380,7 @@ namespace Barotrauma.Networking
 
         public bool VoteForKick(GUIButton button, object userdata)
         {
-            var votedClient = otherClients.Find(c => c.Character == userdata);
+            var votedClient = userdata is Client ? (Client)userdata : otherClients.Find(c => c.Character == userdata);
             if (votedClient == null) return false;
 
             votedClient.AddKickVote(new Client(name, ID));
