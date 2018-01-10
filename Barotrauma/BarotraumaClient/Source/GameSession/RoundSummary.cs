@@ -48,7 +48,7 @@ namespace Barotrauma
 
             summaryText = summaryText
                 .Replace("[sub]", Submarine.MainSub.Name)
-                .Replace("[location]", GameMain.GameSession.StartLocation.Name);
+                .Replace("[location]", progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name);
 
             var infoText = new GUITextBlock(new Rectangle(0, y, 0, 50), summaryText, "", innerFrame, true);
             y += infoText.Rect.Height;
