@@ -132,7 +132,7 @@ namespace Barotrauma
 
         protected Rectangle ClampRect(Rectangle r)
         {
-            if (parent == null) return r;
+            if (parent == null || !ClampMouseRectToParent) return r;
             Rectangle parentRect = parent.ClampRect(parent.rect);
             if (parentRect.Width <= 0 || parentRect.Height <= 0) return Rectangle.Empty;
             if (parentRect.X > r.X)
@@ -190,10 +190,15 @@ namespace Barotrauma
                 }            
             }
         }
-        
+
+        public bool ClampMouseRectToParent = true;
         public virtual Rectangle MouseRect
         {
-            get { return CanBeFocused ? ClampRect(rect) : Rectangle.Empty; }
+            get
+            {
+                if (!CanBeFocused) return Rectangle.Empty;
+                return ClampMouseRectToParent ? ClampRect(rect) : rect;
+            }
         }
 
         public Dictionary<ComponentState, List<UISprite>> sprites;

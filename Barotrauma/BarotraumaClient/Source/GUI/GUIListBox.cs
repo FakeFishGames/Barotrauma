@@ -296,7 +296,7 @@ namespace Barotrauma
         {
             get
             {
-                return ClampRect(rect);
+                return ClampMouseRectToParent ? ClampRect(rect) : rect;
             }
         }
 

@@ -187,6 +187,7 @@ namespace Barotrauma.Networking
             monsterButton.Enabled = !GameStarted;
             var monsterFrame = new GUIListBox(new Rectangle(-290, 60, 280, 250), "", settingsTabs[0]);
             monsterFrame.Visible = false;
+            monsterFrame.ClampMouseRectToParent = false;
             monsterButton.UserData = monsterFrame;
             monsterButton.OnClicked = (button, obj) =>
             {
@@ -231,6 +232,7 @@ namespace Barotrauma.Networking
 
             var cargoFrame = new GUIListBox(new Rectangle(300, 60, 280, 250), "", settingsTabs[0]);
             cargoFrame.Visible = false;
+            cargoFrame.ClampMouseRectToParent = false;
             cargoButton.UserData = cargoFrame;
             cargoButton.OnClicked = (button, obj) =>
             {
