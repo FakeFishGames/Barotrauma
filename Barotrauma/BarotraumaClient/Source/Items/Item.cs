@@ -470,7 +470,18 @@ namespace Barotrauma
             }
             else
             {
-                body.Enabled = false;
+                try
+                {
+                    body.FarseerBody.Enabled = false;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Exception in PhysicsBody.Enabled = false (" + body.PhysEnabled + ")", e);
+                    if (body.UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + body.UserData.GetType().ToString(), Color.Red);
+                    if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", Color.Red);
+                    else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", Color.Red);
+                    if (body.FarseerBody.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", Color.Red);
+                }
             }
 
             if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 2.0f)
