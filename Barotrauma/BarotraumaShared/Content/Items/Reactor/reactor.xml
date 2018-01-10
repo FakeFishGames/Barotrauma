@@ -57,7 +57,8 @@
 
   <Item
     name="Fuel Rod"
-    Tags="smallitem,reactorfuel"    
+    Tags="smallitem,reactorfuel"
+    cargocontainername="Metal Crate"
     price="200">
 
     <Deconstruct time="10">
@@ -77,6 +78,7 @@
   <Item
     name="Incendium Fuel Rod"
     Tags="smallitem,reactorfuel"    
+    cargocontainername="Metal Crate"
     spritecolor="0.5,0.0,0.0,1.0">
 
     <Deconstruct time="10">
@@ -95,6 +97,7 @@
   <Item
     name="Heat Absorber"
     Tags="smallitem"
+    cargocontainername="Metal Crate"
     price="50">
 
     <Sprite texture ="heatabsorber.png"/>

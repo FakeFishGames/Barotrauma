@@ -1,11 +1,10 @@
 ﻿<Items>
   <Item
     name="Headset"
-    category="Equipment"
-    
+    category="Equipment"    
     tags="smallitem"
     description="Allows remote communication between the crew."
-    
+    cargocontainername="Metal Crate"    
     price="10">
 
     <Sprite texture ="headset.png" depth="0.6"/>
@@ -33,7 +32,7 @@
   <Item
     name="Clown Mask"
     category="Equipment"
-    
+    cargocontainername="Metal Crate"    
     tags="smallitem"
     description="Praise the honkmother.">
 
@@ -54,7 +53,7 @@
   <Item
     name="Clown Costume"
     category="Equipment"
-    
+    cargocontainername="Metal Crate"    
     tags="smallitem"
     description="Praise the honkmother.">
 

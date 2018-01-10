@@ -5,7 +5,8 @@
     name="Spear"
     category="Equipment"
     interactthroughwalls="true"
-    price="50">
+    price="50"
+    cargocontainername="Metal Crate">
 
     <Deconstruct time="5">
       <Item name="Steel Bar"/>
@@ -24,8 +25,8 @@
   <Item
     name="Harpoon Gun"
     category="Equipment"
-    
     price="500"
+    cargocontainername="Metal Crate"
     tags="weapon">
 
     <Deconstruct time="10">      
@@ -59,8 +60,8 @@
   <Item
     name="Syringe Gun"
     category="Equipment"
-    
     price="700"
+    cargocontainername="Metal Crate"
     tags="weapon">
 
     <Deconstruct time="10">      
@@ -93,6 +94,7 @@
     category="Equipment"
     interactthroughwalls="true"
     price="10"
+    cargocontainername="Metal Crate"
     tags="smallitem">
 
     <Sprite texture="weapons.png" sourcerect="52,99,8,3" depth="0.55"/>
@@ -107,8 +109,9 @@
   
   <Item
     name="Revolver"
-    category="Equipment"    
+    category="Equipment"
     price="700"
+    cargocontainername="Metal Crate"
     tags="smallitem,weapon">
 
     <Deconstruct time="10">
@@ -140,8 +143,9 @@
 
   <Item
     name="Stun Grenade"
-    category="Equipment"    
+    category="Equipment"
     price="200"
+    cargocontainername="Explosive Crate"
     tags="smallitem,weapon,explosive">
 
     <Deconstruct time="10">
@@ -173,6 +177,7 @@
   <Item
     name="Incendium Grenade"
     category="Equipment"    
+    cargocontainername="Explosive Crate"
     tags="smallitem,weapon,explosive">
 
     <Deconstruct time="10">
@@ -205,9 +210,9 @@
   <Item
     name="Stun Baton"
     category="Equipment"
-    Tags="smallitem,weapon"
-    
+    Tags="smallitem,weapon"    
     price="100"
+    cargocontainername="Metal Crate"
     description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
 
     <Deconstruct time="10">
@@ -242,10 +247,10 @@
 
   <Item
     name="Battery Cell"
-    category="Equipment,Electrical"
-    
+    category="Equipment,Electrical"    
     tags="smallitem,loadable"
     price="50"
+    cargocontainername="Metal Crate"
     description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
 
     <Deconstruct time="10">
@@ -264,8 +269,8 @@
   <Item
     name="Fulgurium Battery Cell"
     category="Equipment,Electrical"
-    
     tags="smallitem,loadable"
+    cargocontainername="Metal Crate"
     description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
 
     <Deconstruct time="10">
@@ -284,8 +289,8 @@
   <Item
     name="Bike Horn"
     category="Equipment"
-    
     tags="weapon,smallitem"
+    cargocontainername="Metal Crate"
     description="HONK">
 
     <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.55"/>

@@ -4,7 +4,7 @@
     name="Oxygen Tank"
     category="Equipment,Misc"
     Tags="smallitem,oxygensource"
-    
+    cargocontainername="Metal Crate"    
     price="50">
 
     <Deconstruct time="10">
@@ -27,7 +27,7 @@
     name="Diving Mask"
     category="Equipment"
     Tags="smallitem,diving"
-    
+    cargocontainername="Metal Crate"    
     price="50"
     description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
 
@@ -128,7 +128,7 @@
     name="Underwater Scooter"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="50"
     description="A battery-powered underwater propulsion device.">
 

@@ -7,6 +7,7 @@
     Tags="smallitem,medical"    
     price="50"
     canuseonself="true"
+    cargocontainername="Chemical Crate"
     description="Injection is often a much more effective method of administering drugs than taking them orally.">
 
     <Sprite texture ="med.png" sourcerect="0,0,25,5" depth="0.6"/>
@@ -43,6 +44,7 @@
     Tags="smallitem,medical"    
     canuseonself="true"
     price="20"
+    cargocontainername="Chemical Crate"
     description="Treated with a hemostatic agent that quickly seals most minor wounds.">
 
     <Sprite texture ="med.png" sourcerect="0,16,11,16" depth="0.6"/>
@@ -66,7 +68,8 @@
   <Item
     name="Iron Powder"
     category="Material"
-    Tags="smallitem,chem"    
+    Tags="smallitem,chem"
+    cargocontainername="Chemical Crate"
     price="5">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" color="0.2,0.2,0.2,1.0"/>
@@ -84,7 +87,8 @@
      name="Stabilozine"
      category="Material"
      spritecolor="1.0,1.0,0.7,1.0"
-     Tags="smallitem,chem,medical"     
+     Tags="smallitem,chem,medical"  
+     cargocontainername="Chemical Crate"   
      description="A mild stimulant which is used as an ingredient in the manufacture of various medicines."
      canuseonself="true"
      price="10">
@@ -109,6 +113,7 @@
     name="Chlorine"
     category="Material"
     spritecolor="1.0,1.0,1.0,0.6"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"    
     price="20">
 
@@ -127,6 +132,7 @@
     name="Ethanol"
     category="Material"
     spritecolor="0.0,0.9,0.1,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"
     canuseonself="true"    
     price="20">
@@ -151,6 +157,7 @@
     name="Aluminium"
     category="Material"
     spritecolor="0.7,0.7,0.7,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"    
     price="20">
 
@@ -169,6 +176,7 @@
     name="Potassium"
     category="Material"
     spritecolor="0.8,0.8,0.8,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"    
     price="20">
 
@@ -191,6 +199,7 @@
     name="Phosphorus"
     category="Material"
     spritecolor="0.5,0.0,0.0,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"    
     price="20">
 
@@ -210,6 +219,7 @@
      name="Chloromydride"
      category="Material"
      spritecolor="0.7,0.9,1.0,1.0"
+     cargocontainername="Chemical Crate"
      Tags="smallitem,chem,medical"     
      description="A strong synaptic stimulant and cardiostimulant which is used as a preventative measure against critical condition. Should only be injected once every 30 seconds."
      price="50">
@@ -227,10 +237,12 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item
      name="Erythrozine"
      category="Material"
      spritecolor="0.5,0.5,1.0,1.0"
+     cargocontainername="Chemical Crate"
      Tags="smallitem,chem,medical"     
      canuseonself="true"
      description="Most commonly used for treating oxygen deprivation."
@@ -251,6 +263,7 @@
     name="Fibrinozine"
     category="Material"
     spritecolor="0.6,0.4,0.2,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"    
     canuseonself="true"
     description="A hemostatic agent that slows down bleeding."
@@ -276,6 +289,7 @@
     name="Corrigodone"
     category="Material"
     spritecolor="0.8,0.0,0.0,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"
     
     canuseonself="true"
@@ -302,6 +316,7 @@
     name="Auxiliorizine"
     category="Material"
     spritecolor="1.0,1.0,0.0,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"
     
     description="A highly potent corrigodone-based stimulant."
@@ -322,6 +337,7 @@
    name="Hyperzine"
    category="Material"
    spritecolor="0.8,0.3,0.8,1.0"
+   cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
    description="A potent muscle stimulant."
    price="50">
@@ -341,6 +357,7 @@
    name="Calyxanide"
    category="Material"
    spritecolor="0.0,0.0,0.0,1.0"
+   cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
    description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages."
    price="300">
@@ -370,6 +387,7 @@
    name="Morbusanide"
    category="Material"
    spritecolor="0.0,0.0,0.2,1.0"
+   cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
    description="A morbusine antidote.">
 
@@ -388,12 +406,13 @@
   </Item>
 
   <Item
-     name="Liquid Oxygenite"
-     category="Material"
-     spritecolor="0.6,0.8,1.0,1.0"
-     Tags="smallitem,chem,medical"
-     impacttolerance="8"
-     description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected.">
+    name="Liquid Oxygenite"
+    category="Material"
+    spritecolor="0.6,0.8,1.0,1.0"
+    cargocontainername="Chemical Crate"
+    Tags="smallitem,chem,medical"
+    impacttolerance="8"
+    description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected.">
 
     <Sprite texture ="med.png" sourcerect="24,16,8,16" depth="0.6" />
 
@@ -415,6 +434,7 @@
     name="Flash Powder"
     category="Material"
     spritecolor="0.1,0.1,0.1,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,explosive"
     impacttolerance="8"
     price="50">
@@ -437,6 +457,7 @@
     name="Chloral Hydrate"
     category="Material"
     spritecolor="1.0,1.0,1.0,0.8"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"    
     price="20">
 
@@ -455,6 +476,7 @@
     name="Sulphuric Acid"
     category="Material"
     spritecolor="0.5,0.0,0.0,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"    
     price="50">
 
@@ -473,6 +495,7 @@
     name="Uranium Powder"
     category="Material"
     spritecolor="0.2,0.35,0.06,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"
     price="50">
 
@@ -491,6 +514,7 @@
    name="Velonaceps Calyx Eggs"
    category="Material"
    spritecolor="0.0,0.0,0.0,1.0"
+   cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
    description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'."
    price="2000">
@@ -512,6 +536,7 @@
    name="Morbusine"
    category="Material"
    spritecolor="0.0,0.0,0.0,1.0"
+   cargocontainername="Chemical Crate"
    Tags="smallitem,chem,medical"   
    description="A highly potent neurotoxin."
    price="1000">
@@ -532,6 +557,7 @@
     category="Material"
     description="A highly unstable liquid that may explode when subjected to heat or physical shock."
     spritecolor="1.0,1.0,1.0,1.0"
+    cargocontainername="Explosive Crate"
     Tags="smallitem,chem,medical"    
     impacttolerance="4">
 
@@ -558,6 +584,7 @@
     name="Sufforin"
     category="Material"
     spritecolor="1.0,0.3,0.3,1.0"
+    cargocontainername="Chemical Crate"
     Tags="smallitem,chem,medical"   
     description="A devious poison with a delayed effect.">
     <!-- Can only be crafted. Direct counter to Sufforin is Liquid Oxygenite, though it's not strictly an antidote.

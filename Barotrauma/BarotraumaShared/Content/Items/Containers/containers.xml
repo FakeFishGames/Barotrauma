@@ -3,7 +3,7 @@
     name="Steel Cabinet"
     linkable="true"
     pickdistance ="150">
-    
+
     <Sprite texture ="locker.png" depth="0.84"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
@@ -42,6 +42,12 @@
     linkable="true"
     pickdistance ="150">
 
+    <Deconstruct time="20">
+      <Item name="Steel Bar"/>
+      <Item name="Steel Bar"/>
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="crates.png" depth="0.54" sourcerect="0,0,79,35"/>
 
     <Body width="77" height="34" density="50"/>
@@ -49,7 +55,7 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-30,14" handle2="30,14" aimable="false"/>
 
     <ItemContainer capacity="20" canbeselected="true" hideitems="true">
-      <Containable name="smallitem"/>
+      <Containable name="smallitem,Spear"/>
     </ItemContainer>
   </Item>
 
@@ -58,10 +64,15 @@
    linkable="true"
    pickdistance ="150">
 
+    <Deconstruct time="20">
+      <Item name="Steel Bar"/>
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="crates.png" depth="0.54" sourcerect="81,0,47,42"/>
 
     <Body width="45" height="41" density="50"/>
-    
+
     <Holdable slots="RightHand+LeftHand" holdpos="0,-80" handle1="-20,14" handle2="20,14" aimable="false"/>
 
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
@@ -74,6 +85,11 @@
    linkable="true"
    pickdistance ="150">
 
+    <Deconstruct time="20">
+      <Item name="Steel Bar"/>
+      <Item name="Steel Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="crates.png" depth="0.54" sourcerect="1,36,47,42"/>
 
     <Body width="45" height="41" density="50"/>
@@ -83,7 +99,7 @@
     <ItemContainer capacity="10" canbeselected="true" hideitems="true">
       <Containable name="smallitem"/>
     </ItemContainer>
-  </Item> 
-  
+  </Item>
+
 </Items>
 

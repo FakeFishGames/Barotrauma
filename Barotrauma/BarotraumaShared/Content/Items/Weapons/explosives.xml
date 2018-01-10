@@ -4,7 +4,7 @@
     name="C-4 Block"
     category="Equipment"
     Tags="smallitem,explosive"
-    
+    cargocontainername="Explosive Crate"    
     price="100">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
@@ -22,8 +22,8 @@
     name="Compound N"
     category="Equipment"
     Tags="smallitem,explosive"
-    spritecolor="1.0,0.5,1.0,1.0"
-    >
+    cargocontainername="Explosive Crate"
+    spritecolor="1.0,0.5,1.0,1.0">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
@@ -41,8 +41,8 @@
     name="Volatile Compound N"
     category="Equipment"
     Tags="smallitem,explosive"
-    spritecolor="1.0,0.5,1.0,1.0"
-    >
+    spritecolor="1.0,0.5,1.0,1.0"    
+    cargocontainername="Explosive Crate">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
@@ -62,8 +62,8 @@
     description="A compound made of C-4 and incendium."
     category="Equipment"
     Tags="smallitem,explosive"
-    spritecolor="1.0,0.0,0.0,1.0"
-    >
+    cargocontainername="Explosive Crate"
+    spritecolor="1.0,0.0,0.0,1.0">
 
     <Sprite texture="weapons.png" depth="0.8" sourcerect="0,97,24,8"/>
     <Body width="24" height="8"/>
@@ -83,7 +83,8 @@
     description="A device that detonates any contained explosive when receiving a signal."
     category="Equipment"
     Tags="smallitem"    
-    price="50">
+    price="50"
+    cargocontainername="Explosive Crate">
 
     <Sprite texture="weapons.png"  depth="0.8" sourcerect="0,107,14,12"/>
 

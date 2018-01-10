@@ -4,7 +4,7 @@
     name="Welding Tool"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="100"
     description="One of the most crucial tools on board the submarine. Also works underwater.">
 
@@ -60,7 +60,7 @@
     name="Plasma Cutter"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="100"
     description="Cuts through various materials using a jet of ionized oxygen.">
 
@@ -105,7 +105,7 @@
     name="Welding Fuel Tank"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="50">
 
     <Deconstruct time="10">
@@ -128,7 +128,7 @@
     name="Fire Extinguisher"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="100"
     description="A handheld carbon dioxide extinguisher.">
 
@@ -157,7 +157,7 @@
     name="Screwdriver"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="10">
        
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.55"/>
@@ -172,7 +172,7 @@
     name="Wrench"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="10">
 
     <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
@@ -189,7 +189,7 @@
     name="Crowbar"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="15">
 
     <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
@@ -206,7 +206,7 @@
     name="Handheld Sonar"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="10">
 
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
@@ -235,7 +235,8 @@
   <Item
     name="Flashlight"
     category="Equipment"
-    Tags="smallitem"    
+    Tags="smallitem"
+    cargocontainername="Metal Crate"
     price="10">
 
     <Deconstruct time="15">
@@ -265,7 +266,7 @@
   <Item
     name="Flare"
     category="Equipment"
-    
+    cargocontainername="Metal Crate"    
     price="5"
     spritecolor="1.0,0.0,0.0,1.0"
     tags="smallitem">
