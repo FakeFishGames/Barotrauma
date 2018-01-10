@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,6 +56,11 @@ namespace Barotrauma
 
         public void CreateItems()
         {
+            CreateItems(purchasedItems);
+        }
+
+        public static void CreateItems(List<ItemPrefab> itemsToSpawn)
+        {
             WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
 
             if (wp == null)
@@ -71,24 +77,82 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (ItemPrefab prefab in purchasedItems)
+            Dictionary<ItemContainer, int> availableContainers = new Dictionary<ItemContainer, int>();
+            foreach (ItemPrefab prefab in itemsToSpawn)
             {
                 Vector2 position = new Vector2(
                     Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20),
-                    cargoRoom.Rect.Y - cargoRoom.Rect.Height + prefab.Size.Y/2);
+                    cargoRoom.Rect.Y - cargoRoom.Rect.Height + prefab.Size.Y / 2);
 
-                if (GameMain.Server != null)
+                ItemContainer itemContainer = null;
+                if (!string.IsNullOrEmpty(prefab.CargoContainerName))
                 {
-                    Entity.Spawner.AddToSpawnQueue(prefab, position, wp.Submarine);
+                    itemContainer = availableContainers.Keys.ToList().Find(ac => 
+                        ac.Item.Prefab.NameMatches(prefab.CargoContainerName) || 
+                        ac.Item.Prefab.Tags.Contains(prefab.CargoContainerName.ToLowerInvariant()));
+
+                    if (itemContainer == null)
+                    {
+                        var containerPrefab = MapEntityPrefab.List.Find(ep => 
+                            ep.NameMatches(prefab.CargoContainerName) || 
+                            (ep.Tags != null && ep.Tags.Contains(prefab.CargoContainerName.ToLowerInvariant()))) as ItemPrefab;
+
+                        if (containerPrefab == null)
+                        {
+                            DebugConsole.ThrowError("Cargo spawning failed - could not find the item prefab for container \"" + containerPrefab.Name + "\"!");
+                            continue;
+                        }
+
+                        Item containerItem = new Item(containerPrefab, position, wp.Submarine);
+                        itemContainer = containerItem.GetComponent<ItemContainer>();
+                        if (itemContainer == null)
+                        {
+                            DebugConsole.ThrowError("Cargo spawning failed - container \"" + containerItem.Name + "\" does not have an ItemContainer component!");
+                            continue;
+                        }
+                        availableContainers.Add(itemContainer, itemContainer.Capacity);
+                        if (GameMain.Server != null)
+                        {
+                            Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
+                        }
+                    }                    
+                }
+
+                if (itemContainer == null)
+                {
+                    //no container, place at the waypoint
+                    if (GameMain.Server != null)
+                    {
+                        Entity.Spawner.AddToSpawnQueue(prefab, position, wp.Submarine);
+                    }
+                    else
+                    {
+                        new Item(prefab, position, wp.Submarine);
+                    }
                 }
                 else
                 {
-                    new Item(prefab, position, wp.Submarine);
-                }
+                    //place in the container
+                    if (GameMain.Server != null)
+                    {
+                        Entity.Spawner.AddToSpawnQueue(prefab, itemContainer.Inventory);
+                    }
+                    else
+                    {
+                        var item = new Item(prefab, position, wp.Submarine);
+                        itemContainer.Inventory.TryPutItem(item, null);
+                    }
 
+                    //reduce the number of available slots in the container
+                    availableContainers[itemContainer]--;
+                    if (availableContainers[itemContainer] <= 0)
+                    {
+                        availableContainers.Remove(itemContainer);
+                    }
+                }
             }
 
-            purchasedItems.Clear();
+            itemsToSpawn.Clear();
         }
     }
 }

@@ -49,7 +49,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public Dictionary<string, int> extraCargo;
+        public Dictionary<ItemPrefab, int> extraCargo;
 
         public bool ShowNetStats;
 
@@ -345,7 +345,7 @@ namespace Barotrauma.Networking
             {
                 monsterEnabled.Add(s, true);
             }
-            extraCargo = new Dictionary<string, int>();
+            extraCargo = new Dictionary<ItemPrefab, int>();
         }
 
         public void LoadClientPermissions()

@@ -245,30 +245,31 @@ namespace Barotrauma.Networking
                 ((GUIComponent)obj).Visible = !((GUIComponent)obj).Visible;
                 return true;
             };
-
-
+            
             foreach (MapEntityPrefab pf in MapEntityPrefab.List)
             {
-                if (!(pf is ItemPrefab) || (pf.Price <= 0.0f && !pf.Tags.Contains("smallitem"))) continue;
+                ItemPrefab ip = pf as ItemPrefab;
 
+                if (ip == null || (ip.Price <= 0.0f && !ip.Tags.Contains("smallitem"))) continue;
+                
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 260, 25),
-                    pf.Name, "",
+                    ip.Name, "",
                     Alignment.Left, Alignment.CenterLeft, cargoFrame, false, GUI.SmallFont);
                 textBlock.Padding = new Vector4(40.0f, 3.0f, 0.0f, 0.0f);
                 textBlock.UserData = cargoFrame;
                 textBlock.CanBeFocused = false;
 
-                if (pf.sprite != null)
+                if (ip.sprite != null)
                 {
-                    float scale = Math.Min(Math.Min(30.0f / pf.sprite.SourceRect.Width, 30.0f / pf.sprite.SourceRect.Height), 1.0f);
-                    GUIImage img = new GUIImage(new Rectangle(-20 - (int)(pf.sprite.SourceRect.Width * scale * 0.5f), 12 - (int)(pf.sprite.SourceRect.Height * scale * 0.5f), 40, 40), pf.sprite, Alignment.Left, textBlock);
-                    img.Color = pf.SpriteColor;
+                    float scale = Math.Min(Math.Min(30.0f / ip.sprite.SourceRect.Width, 30.0f / ip.sprite.SourceRect.Height), 1.0f);
+                    GUIImage img = new GUIImage(new Rectangle(-20 - (int)(ip.sprite.SourceRect.Width * scale * 0.5f), 12 - (int)(ip.sprite.SourceRect.Height * scale * 0.5f), 40, 40), ip.sprite, Alignment.Left, textBlock);
+                    img.Color = ip.SpriteColor;
                     img.Scale = scale;
                 }
 
                 int cargoVal = 0;
-                extraCargo.TryGetValue(pf.Name, out cargoVal);
+                extraCargo.TryGetValue(ip, out cargoVal);
                 var amountInput = new GUINumberInput(new Rectangle(160, 0, 50, 20), "", GUINumberInput.NumberType.Int, textBlock);
                 amountInput.MinValueInt = 0;
                 amountInput.MaxValueInt = 100;
@@ -276,13 +277,13 @@ namespace Barotrauma.Networking
 
                 amountInput.OnValueChanged += (numberInput) =>
                 {
-                    if (extraCargo.ContainsKey(pf.Name))
+                    if (extraCargo.ContainsKey(ip))
                     {
-                        extraCargo[pf.Name] = numberInput.IntValue;
+                        extraCargo[ip] = numberInput.IntValue;
                     }
                     else
                     {
-                        extraCargo.Add(pf.Name, numberInput.IntValue);
+                        extraCargo.Add(ip, numberInput.IntValue);
                     }
                 };                
             }

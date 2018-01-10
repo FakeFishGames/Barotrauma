@@ -1303,29 +1303,16 @@ namespace Barotrauma.Networking
             {
                 if (sub == null) continue;
 
-                WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, sub);
-
-                if (cargoSpawnPos?.CurrentHull == null)
+                List<ItemPrefab> spawnList = new List<ItemPrefab>();
+                foreach (KeyValuePair<ItemPrefab, int> kvp in extraCargo)
                 {
-                    DebugConsole.ThrowError("Couldn't spawn additional cargo (no cargo spawnpoint inside any of the hulls)");
-                    continue;
-                }
-
-                var cargoRoom = cargoSpawnPos.CurrentHull;
-                Vector2 position = new Vector2(
-                    cargoSpawnPos.Position.X,
-                    cargoRoom.Rect.Y - cargoRoom.Rect.Height);
-
-                foreach (string s in extraCargo.Keys)
-                {
-                    ItemPrefab itemPrefab = MapEntityPrefab.Find(s) as ItemPrefab;
-                    if (itemPrefab == null) continue;
-
-                    for (int i = 0; i < extraCargo[s]; i++)
+                    for (int i = 0; i < kvp.Value; i++)
                     {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab,  position + new Vector2(Rand.Range(-20.0f, 20.0f), itemPrefab.Size.Y / 2), sub);
+                        spawnList.Add(kvp.Key);
                     }
                 }
+
+                CargoManager.CreateItems(spawnList);
             }
 
             TraitorManager = null;
