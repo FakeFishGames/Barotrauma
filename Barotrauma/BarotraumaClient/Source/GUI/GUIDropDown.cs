@@ -6,9 +6,9 @@ namespace Barotrauma
 {
     public class GUIDropDown : GUIComponent
     {
-
         public delegate bool OnSelectedHandler(GUIComponent selected, object obj = null);
         public OnSelectedHandler OnSelected;
+        public OnSelectedHandler OnDropped;
 
         private GUIButton button;
         private GUIListBox listBox;
@@ -135,7 +135,7 @@ namespace Barotrauma
         private bool SelectItem(GUIComponent component, object obj)
         {
             GUITextBlock textBlock = component as GUITextBlock;
-            if (textBlock==null) return false;
+            if (textBlock == null) return false;
             button.Text = textBlock.Text;
 
             Dropped = false;
@@ -171,10 +171,14 @@ namespace Barotrauma
             wasOpened = true;
             Dropped = !Dropped;
 
-            if (Dropped && parent.children[parent.children.Count-1]!=this)
+            if (Dropped)
             {
-                parent.children.Remove(this);
-                parent.children.Add(this);
+                OnDropped?.Invoke(this, userData);
+                if (parent.children[parent.children.Count - 1] != this)
+                {
+                    parent.children.Remove(this);
+                    parent.children.Add(this);
+                }
             }
 
             return true;
@@ -219,7 +223,6 @@ namespace Barotrauma
             button.Draw(spriteBatch);
 
             if (!Dropped) return;
-
             listBox.Draw(spriteBatch);
         }
     }

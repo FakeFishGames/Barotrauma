@@ -177,6 +177,11 @@ namespace Barotrauma
                 linkedSubBox.AddItem(sub.Name, sub);
             }
             linkedSubBox.OnSelected += SelectLinkedSub;
+            linkedSubBox.OnDropped += (component, obj) =>
+            {
+                MapEntity.SelectedList.Clear();
+                return true;
+            };
 
             leftPanel = new GUIFrame(new Rectangle(0, 0, 150, GameMain.GraphicsHeight), "GUIFrameLeft");
             leftPanel.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);

@@ -87,6 +87,19 @@ namespace Barotrauma
             }
         }
 
+        public override Rectangle Rect
+        {
+            get
+            {
+                return rect;
+            }
+            set
+            {
+                base.Rect = value;
+                frame.Rect = value;
+            }
+        }
+
         public override Color Color
         {
             get
