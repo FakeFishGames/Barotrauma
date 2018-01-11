@@ -15,7 +15,7 @@ namespace Barotrauma
     {
         public override Sprite Sprite
         {
-            get { return prefab.sprite; }
+            get { return prefab.GetActiveSprite(condition); }
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
@@ -24,22 +24,24 @@ namespace Barotrauma
             Color color = (IsSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
 
-            SpriteEffects oldEffects = prefab.sprite.effects;
-            prefab.sprite.effects ^= SpriteEffects;
+            Sprite selectedSprite = prefab.GetActiveSprite(condition);
 
-            if (prefab.sprite != null)
+            if (selectedSprite != null)
             {
+                SpriteEffects oldEffects = selectedSprite.effects;
+                selectedSprite.effects ^= SpriteEffects;
+
                 float depth = GetDrawDepth();
 
                 if (body == null)
                 {
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
                     {
-                        prefab.sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color);
+                        selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color);
                     }
                     else
                     {
-                        prefab.sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, 1.0f, SpriteEffects.None, depth);
+                        selectedSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, 1.0f, SpriteEffects.None, depth);
                     }
 
                 }
@@ -57,16 +59,17 @@ namespace Barotrauma
                             depth = holdable.Picker.AnimController.GetLimb(LimbType.LeftArm).sprite.Depth - 0.000001f;
                         }
 
-                        body.Draw(spriteBatch, prefab.sprite, color, depth);
+                        body.Draw(spriteBatch, selectedSprite, color, depth);
                     }
                     else
                     {
-                        body.Draw(spriteBatch, prefab.sprite, color, depth);
+                        body.Draw(spriteBatch, selectedSprite, color, depth);
                     }
                 }
+
+                selectedSprite.effects = oldEffects;
             }
 
-            prefab.sprite.effects = oldEffects;
 
             List<IDrawableComponent> staticDrawableComponents = new List<IDrawableComponent>(drawableComponents); //static list to compensate for drawable toggling
             for (int i = 0; i < staticDrawableComponents.Count; i++)
