@@ -120,14 +120,6 @@ namespace Barotrauma.Items.Components
 #endif
 
             IsActive = IsOn;
-
-            //foreach (XElement subElement in element.Elements())
-            //{
-            //    if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
-
-            //    light.LightSprite = new Sprite(subElement);
-            //    break;
-            //}
         }
         
         public override void Update(float deltaTime, Camera cam)

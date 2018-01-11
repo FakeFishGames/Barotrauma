@@ -20,7 +20,15 @@ namespace Barotrauma.Lights
         public Sprite overrideLightTexture;
         public Texture2D texture;
         
+        //Additional sprite drawn on top of the lightsource. Ignores shadows.
+        //Can be used to make lamp sprites glow for example.
         public Sprite LightSprite;
+
+        //Override the alpha value of the light sprite (if not set, the alpha of the light color is used)
+        //Can be used to make lamp sprites glow at full brightness even if the light itself is dim.
+        public float? OverrideLightSpriteAlpha;
+
+        public SpriteEffects LightSpriteEffect;
 
         public Submarine ParentSub;
 
@@ -125,6 +133,7 @@ namespace Barotrauma.Lights
             color = new Color(element.GetAttributeVector4("color", Vector4.One));
 
             CastShadows = element.GetAttributeBool("castshadows", true);
+
             
             foreach (XElement subElement in element.Elements())
             {
@@ -132,6 +141,12 @@ namespace Barotrauma.Lights
                 {
                     case "sprite":
                         LightSprite = new Sprite(subElement);
+
+                        float spriteAlpha = subElement.GetAttributeFloat("alpha", -1.0f);
+                        if (spriteAlpha >= 0.0f)
+                        {
+                            OverrideLightSpriteAlpha = spriteAlpha;
+                        }
                         break;
                     case "lighttexture":
                         overrideLightTexture = new Sprite(subElement);
@@ -158,34 +173,6 @@ namespace Barotrauma.Lights
 
             if (addLight) GameMain.LightManager.AddLight(this);
         }
-
-        /*public void DrawShadows(GraphicsDevice graphics, Camera cam, Matrix shadowTransform)
-        {
-            if (!CastShadows) return;
-            if (range < 1.0f || color.A < 0.01f) return;
-
-            foreach (Submarine sub in Submarine.Loaded)
-            {
-                var hulls = GetHullsInRange(sub);
-
-                if (hulls == null) continue;
-
-                foreach ( ConvexHull ch in hulls)
-                {
-                    ch.DrawShadows(graphics, cam, this, shadowTransform, false);
-                }                
-            }
-
-            var outsideHulls = GetHullsInRange(null);
-
-            NeedsHullUpdate = false;
-
-            if (outsideHulls == null) return;
-            foreach (ConvexHull ch in outsideHulls)
-            {
-                ch.DrawShadows(graphics, cam, this, shadowTransform, false);
-            }
-        }*/
         
         /// <summary>
         /// Update the contents of ConvexHullList and check if we need to recalculate vertices
@@ -310,7 +297,10 @@ namespace Barotrauma.Lights
 
         private List<Vector2> FindRaycastHits()
         {
-            if (!CastShadows) return null;
+            if (!CastShadows)
+            {
+                return null;
+            }
             if (range < 1.0f || color.A < 0.01f) return null;
 
             Vector2 drawPos = position;
@@ -359,7 +349,7 @@ namespace Barotrauma.Lights
             points.AddRange(boundaryCorners);
 
             //visibleSegments.Clear();
-            for (int i=0;i<4;i++)
+            for (int i = 0; i < 4; i++)
             {
                 visibleSegments.Add(new Segment(boundaryCorners[i], boundaryCorners[(i + 1) % 4]));
             }
@@ -396,8 +386,8 @@ namespace Barotrauma.Lights
             foreach (SegmentPoint p in points)
             {
                 Vector2 dir = Vector2.Normalize(p.WorldPos - drawPos);
-                Vector2 dirNormal = new Vector2(-dir.Y, dir.X)*3;
-                
+                Vector2 dirNormal = new Vector2(-dir.Y, dir.X) * 3;
+
                 //do two slightly offset raycasts to hit the segment itself and whatever's behind it
                 Pair<int,Vector2> intersection1 = RayCast(drawPos, drawPos + dir * bounds * 2 - dirNormal, visibleSegments);
                 Pair<int,Vector2> intersection2 = RayCast(drawPos, drawPos + dir * bounds * 2 + dirNormal, visibleSegments);
@@ -580,7 +570,10 @@ namespace Barotrauma.Lights
 
         public void Draw(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
         {
-            CheckHullsInRange();
+            if (CastShadows)
+            {
+                CheckHullsInRange();
+            }
 
             Vector3 offset = ParentSub == null ? Vector3.Zero :
             new Vector3(ParentSub.DrawPosition.X, ParentSub.DrawPosition.Y, 0.0f);
@@ -592,28 +585,31 @@ namespace Barotrauma.Lights
 
             drawPos.Y = -drawPos.Y;
             
-            /*if (range > 1.0f)
-            {
-                if (overrideLightTexture == null)
-                {
-                    Vector2 center = new Vector2(LightTexture.Width / 2, LightTexture.Height / 2);
-                    float scale = range / (lightTexture.Width / 2.0f);
-
-                    spriteBatch.Draw(lightTexture, drawPos, null, color * (color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
-                }
-                else
-                {
-                    overrideLightTexture.Draw(spriteBatch,
-                        drawPos, color * (color.A / 255.0f),
-                        overrideLightTexture.Origin, -Rotation,
-                        new Vector2(overrideLightTexture.size.X / overrideLightTexture.SourceRect.Width, overrideLightTexture.size.Y / overrideLightTexture.SourceRect.Height));
-                }
-            }
-
             if (LightSprite != null)
             {
-                LightSprite.Draw(spriteBatch, drawPos, Color, LightSprite.Origin, -Rotation, 1);
-            }*/
+                Vector2 origin = LightSprite.Origin;
+                if (LightSpriteEffect == SpriteEffects.FlipHorizontally) origin.X = LightSprite.SourceRect.Width - origin.X;
+                if (LightSpriteEffect == SpriteEffects.FlipVertically) origin.Y = LightSprite.SourceRect.Height - origin.Y;
+                
+                LightSprite.Draw(
+                    spriteBatch, drawPos, 
+                    new Color(Color, OverrideLightSpriteAlpha ?? Color.A / 255.0f),
+                    origin, -Rotation, 1, LightSpriteEffect);
+            }
+
+            //if the light doesn't cast shadows, we can simply render the texture without having to calculate the light volume
+            if (!CastShadows)
+            {
+                Texture2D currentTexture = texture ?? LightTexture;
+                if (overrideLightTexture != null) currentTexture = overrideLightTexture.Texture;                
+
+                Vector2 center = new Vector2(currentTexture.Width / 2, currentTexture.Height / 2);
+                float scale = range / (currentTexture.Width / 2.0f);
+
+                spriteBatch.Draw(currentTexture, drawPos, null, color * (color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
+
+                return;
+            }
 
             if (NeedsRecalculation)
             {
@@ -626,14 +622,14 @@ namespace Barotrauma.Lights
             
             if (vertexCount == 0) return;
 
-            lightEffect.DiffuseColor = (new Vector3(color.R, color.G, color.B) * (color.A / 255.0f)) / 255.0f;// color.ToVector3();
+            lightEffect.DiffuseColor = (new Vector3(color.R, color.G, color.B) * (color.A / 255.0f)) / 255.0f;
             if (overrideLightTexture != null)
             {
                 lightEffect.Texture = overrideLightTexture.Texture;
             }
             else
             {
-                lightEffect.Texture = texture??LightTexture;
+                lightEffect.Texture = texture ?? LightTexture;
             }
             lightEffect.CurrentTechnique.Passes[0].Apply();
 
@@ -642,28 +638,10 @@ namespace Barotrauma.Lights
 
             GameMain.Instance.GraphicsDevice.DrawIndexedPrimitives
             (
-                //PrimitiveType.LineList, 0, 0, indexCount / 2
                 PrimitiveType.TriangleList, 0, 0, indexCount / 3
             );
         }
-
-        /*public void FlipX()
-        {
-            if (LightSprite != null)
-            {
-                Vector2 lightOrigin = LightSprite.Origin;
-                lightOrigin.X = LightSprite.SourceRect.Width - lightOrigin.X;
-                LightSprite.Origin = lightOrigin;
-            }
-
-            if (overrideLightTexture != null)
-            {
-                Vector2 lightOrigin = overrideLightTexture.Origin;
-                lightOrigin.X = overrideLightTexture.SourceRect.Width - lightOrigin.X;
-                overrideLightTexture.Origin = lightOrigin;
-            }
-        }*/
-
+        
         public void Remove()
         {
             if (LightSprite != null) LightSprite.Remove();
