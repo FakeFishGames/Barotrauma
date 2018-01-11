@@ -63,7 +63,7 @@ namespace Barotrauma.Lights
                 if (position == value) return;
                 position = value;
 
-                if (Vector2.Distance(prevCalculatedPosition, position) < 5.0f) return;
+                if (Vector2.DistanceSquared(prevCalculatedPosition, position) < 5.0f * 5.0f) return;
 
                 NeedsHullCheck = true;
                 NeedsRecalculation = true;

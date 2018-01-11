@@ -128,20 +128,17 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             light.ParentSub = item.Submarine;
-#endif
-            
-#if CLIENT
             if (item.Container != null)
             {
                 light.Color = Color.Transparent;
                 return;
             }
+            light.Position = item.Position;
 #endif
 
             if (item.body != null)
             {
 #if CLIENT
-                light.Position = item.Position;
                 light.Rotation = item.body.Dir > 0.0f ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
 #endif
                 if (!item.body.Enabled)
@@ -181,19 +178,17 @@ namespace Barotrauma.Items.Components
 
             voltage = 0.0f;
         }
-        
-        public override bool Use(float deltaTime, Character character = null)
-        {
-            return true;
-        }
 
+#if CLIENT
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
-
-#if CLIENT
             light.Remove();
+        }
 #endif
+        public override bool Use(float deltaTime, Character character = null)
+        {
+            return true;
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)
