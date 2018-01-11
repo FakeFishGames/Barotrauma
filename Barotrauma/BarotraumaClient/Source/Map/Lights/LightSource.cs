@@ -607,7 +607,6 @@ namespace Barotrauma.Lights
                 float scale = range / (currentTexture.Width / 2.0f);
 
                 spriteBatch.Draw(currentTexture, drawPos, null, color * (color.A / 255.0f), 0, center, scale, SpriteEffects.None, 1);
-
                 return;
             }
 

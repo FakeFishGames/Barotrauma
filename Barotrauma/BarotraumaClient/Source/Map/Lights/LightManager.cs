@@ -179,7 +179,7 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in lights)
             {
-                if (light.Color.A < 1 || light.Range < 1.0f || !light.CastShadows || !light.Enabled) continue;
+                if (light.Color.A < 1 || light.Range < 1.0f || !light.Enabled) continue;
                 if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
 
                 light.Draw(spriteBatch, lightEffect, transform);
@@ -188,20 +188,6 @@ namespace Barotrauma.Lights
             lightEffect.World = Matrix.CreateTranslation(offset) * transform;
             
             GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
-
-            if (Character.Controlled != null)
-            {
-                if (Character.Controlled.FocusedItem != null)
-                {
-                    Character.Controlled.FocusedItem.IsHighlighted = true;
-                    Character.Controlled.FocusedItem.Draw(spriteBatch, false, true);
-                    Character.Controlled.FocusedItem.IsHighlighted = true;
-                }
-                else if (Character.Controlled.FocusedCharacter != null)
-                {
-                    Character.Controlled.FocusedCharacter.Draw(spriteBatch);
-                }
-            }
 
             foreach (Hull hull in smoothedHullAmbientLights.Keys)
             {
@@ -215,14 +201,31 @@ namespace Barotrauma.Lights
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X, -drawRect.Y),
                     new Vector2(hull.Rect.Width, hull.Rect.Height),
-                    smoothedHullAmbientLights[hull] * 0.5f, true);
+                    smoothedHullAmbientLights[hull], true);
             }
 
+            if (Character.Controlled != null)
+            {
+                if (Character.Controlled.FocusedItem != null)
+                {
+                    Character.Controlled.FocusedItem.IsHighlighted = true;
+                    Character.Controlled.FocusedItem.Draw(spriteBatch, false, true);
+                    Character.Controlled.FocusedItem.IsHighlighted = true;
+                }
+                else if (Character.Controlled.FocusedCharacter != null)
+                {
+                    Character.Controlled.FocusedCharacter.Draw(spriteBatch);
+                }
+
+                Vector2 drawPos = Character.Controlled.DrawPosition;
+                drawPos.Y = -drawPos.Y;
+
+                spriteBatch.Draw(
+                    LightSource.LightTexture, drawPos, null, Color.White * 0.3f, 0.0f,
+                    new Vector2(LightSource.LightTexture.Width / 2, LightSource.LightTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
+            }
             spriteBatch.End();
-
-            //clear alpha, to avoid messing stuff up later
-            //ClearAlphaToOne(graphics, spriteBatch);
-
+            
             graphics.SetRenderTarget(null);
             graphics.BlendState = BlendState.AlphaBlend;
         }
@@ -308,7 +311,7 @@ namespace Barotrauma.Lights
             var hull = Hull.FindHull(light.WorldPosition);
             if (hull == null) return hullAmbientLight;
 
-            return AmbientLightHulls(hull, hullAmbientLight, light.Color * (light.Range/2000.0f));
+            return AmbientLightHulls(hull, hullAmbientLight, light.Color * (light.Range / 2000.0f));
         }
 
         /// <summary>
