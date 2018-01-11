@@ -77,6 +77,7 @@ namespace Barotrauma.Items.Components
             if (!isBroken)
             {
                 SetAllConnectionsDirty();
+                RefreshConnections();
                 isBroken = true;
             }
         }
@@ -110,6 +111,7 @@ namespace Barotrauma.Items.Components
             CheckPower(deltaTime);
             updateTimer = 0;
 
+            int n = 0;
             foreach (PowerTransfer pt in connectedPoweredList)
             {                
                 pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
@@ -120,10 +122,17 @@ namespace Barotrauma.Items.Components
                 //damage the item if voltage is too high 
                 //(except if running as a client)
                 if (GameMain.Client != null) continue;
-                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.9f,2.1f), 200.0f)) continue;
-                                
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(1.9f, 2.1f), 200.0f)) continue;
+
                 float prevCondition = pt.item.Condition;
-                pt.item.Condition -= deltaTime * 10.0f;
+
+                //deterioration rate is directly proportional to the ratio between the available power and the load (up to a max of 10x)
+                float conditionDeteriorationSpeed = MathHelper.Clamp(-pt.currPowerConsumption / Math.Max(pt.powerLoad, 1.0f), 0.0f, 10.0f);
+
+                //make the deterioration speed vary between items to prevent every junction box breaking at the same time
+                conditionDeteriorationSpeed += ((n + (float)Timing.TotalTime / 60.0f) % 10) * 0.5f;
+
+                pt.item.Condition -= deltaTime * conditionDeteriorationSpeed;
 
                 if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
@@ -145,7 +154,7 @@ namespace Barotrauma.Items.Components
                         new FireSource(pt.item.WorldPosition);
                     }
                 }
-                  
+                n++;
             }
         }
 
