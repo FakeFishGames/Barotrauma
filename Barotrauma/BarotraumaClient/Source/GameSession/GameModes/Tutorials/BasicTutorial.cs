@@ -10,7 +10,7 @@ namespace Barotrauma.Tutorials
     class BasicTutorial : TutorialType
     {
         public BasicTutorial(string name)
-            :base (name)
+            : base(name)
         {
 
         }
@@ -29,6 +29,13 @@ namespace Barotrauma.Tutorials
                 }
             }
 
+            //remove all characters except the controlled one to prevent any unintended monster attacks
+            var existingCharacters = Character.CharacterList.FindAll(c => c != Controlled);
+            foreach (Character c in existingCharacters)
+            {
+                c.Remove();
+            }
+            
             yield return new WaitForSeconds(4.0f);
 
             infoBox = CreateInfoFrame("Use WASD to move and the mouse to look around");
