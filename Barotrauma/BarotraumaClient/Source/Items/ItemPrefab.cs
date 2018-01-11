@@ -10,11 +10,13 @@ namespace Barotrauma
         //sprite will be rendered if the condition of the item is below this
         public readonly float MaxCondition;
         public readonly Sprite Sprite;
+        public readonly bool FadeIn;
 
-        public BrokenItemSprite(Sprite sprite, float maxCondition)
+        public BrokenItemSprite(Sprite sprite, float maxCondition, bool fadeIn)
         {
             Sprite = sprite;
-            MaxCondition = maxCondition;
+            MaxCondition = MathHelper.Clamp(maxCondition, 0.0f, 100.0f);
+            FadeIn = fadeIn;
         }
     }
 

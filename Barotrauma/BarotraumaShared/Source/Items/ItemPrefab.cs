@@ -311,7 +311,11 @@ namespace Barotrauma
                             brokenSpriteFolder = Path.GetDirectoryName(filePath);
                         }
 
-                        var brokenSprite = new BrokenItemSprite(new Sprite(subElement, brokenSpriteFolder), subElement.GetAttributeFloat("maxcondition", 0.0f));
+                        var brokenSprite = new BrokenItemSprite(
+                            new Sprite(subElement, brokenSpriteFolder), 
+                            subElement.GetAttributeFloat("maxcondition", 0.0f),
+                            subElement.GetAttributeBool("fadein", false));
+
                         int spriteIndex = 0;
                         for (int i = 0; i < BrokenSprites.Count && BrokenSprites[i].MaxCondition < brokenSprite.MaxCondition; i++)
                         {
