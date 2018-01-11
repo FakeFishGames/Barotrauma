@@ -209,12 +209,18 @@ namespace Barotrauma.Lights
                 if (Character.Controlled.FocusedItem != null)
                 {
                     Character.Controlled.FocusedItem.IsHighlighted = true;
-                    Character.Controlled.FocusedItem.Draw(spriteBatch, false, true);
-                    Character.Controlled.FocusedItem.IsHighlighted = true;
                 }
-                else if (Character.Controlled.FocusedCharacter != null)
+                if (Character.Controlled.FocusedCharacter != null)
                 {
                     Character.Controlled.FocusedCharacter.Draw(spriteBatch);
+                }
+
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.IsHighlighted)
+                    {
+                        item.Draw(spriteBatch, false, true);
+                    }
                 }
 
                 Vector2 drawPos = Character.Controlled.DrawPosition;
