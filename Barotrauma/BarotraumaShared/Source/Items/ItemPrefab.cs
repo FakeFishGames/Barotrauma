@@ -25,8 +25,6 @@ namespace Barotrauma
 
     partial class ItemPrefab : MapEntityPrefab
     {
-        //static string contentFolder = "Content/Items/";
-
         private readonly string configFile;
         
         //default size
@@ -305,12 +303,28 @@ namespace Barotrauma
                         sprite = new Sprite(subElement, spriteFolder);
                         size = sprite.size;
                         break;
+#if CLIENT
+                    case "brokensprite":
+                        string brokenSpriteFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            brokenSpriteFolder = Path.GetDirectoryName(filePath);
+                        }
+
+                        var brokenSprite = new BrokenItemSprite(new Sprite(subElement, brokenSpriteFolder), subElement.GetAttributeFloat("maxcondition", 0.0f));
+                        int spriteIndex = 0;
+                        for (int i = 0; i < BrokenSprites.Count && BrokenSprites[i].MaxCondition < brokenSprite.MaxCondition; i++)
+                        {
+                            spriteIndex = i;
+                        }
+                        BrokenSprites.Insert(spriteIndex, brokenSprite);
+                        break;
+#endif
                     case "deconstruct":
                         DeconstructTime = subElement.GetAttributeFloat("time", 10.0f);
 
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
-
                             string deconstructItemName = deconstructItem.GetAttributeString("name", "not found");
                             //minCondition does <= check, meaning that below or equeal to min condition will be skipped.
                             float minCondition = deconstructItem.GetAttributeFloat("mincondition", -0.1f);
