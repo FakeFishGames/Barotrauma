@@ -275,6 +275,7 @@ namespace Barotrauma
 
             foreach (PathNode node in nodes)
             {
+                node.Parent = null;
                 node.state = 0;
                 node.F = 0.0f;
                 node.G = 0.0f;
@@ -306,30 +307,39 @@ namespace Barotrauma
                     PathNode nextNode = currNode.connections[i];
                     
                     //a node that hasn't been searched yet
-                    if (nextNode.state==0)
+                    if (nextNode.state == 0)
                     {
-                        nextNode.H = Vector2.Distance(nextNode.Position,end.Position);
+                        nextNode.H = Vector2.Distance(nextNode.Position, end.Position);
 
+                        float penalty = 0.0f;
                         if (GetNodePenalty != null)
                         {
-                            float? nodePenalty =GetNodePenalty(currNode, nextNode);
+                            float? nodePenalty = GetNodePenalty(currNode, nextNode);
                             if (nodePenalty == null)
                             {
                                 nextNode.state = -1;
                                 continue;
                             }
-                            nextNode.H += (float)nodePenalty;
+                            penalty = nodePenalty.Value;
                         }
 
-                        nextNode.G = currNode.G + currNode.distances[i];
+                        nextNode.G = currNode.G + currNode.distances[i] + penalty;
                         nextNode.F = nextNode.G + nextNode.H;
                         nextNode.Parent = currNode;
                         nextNode.state = 1;
                     }
                     //node that has been searched
-                    else if (nextNode.state==1)
+                    else if (nextNode.state == 1 || nextNode.state == -1)
                     {
                         float tempG = currNode.G + currNode.distances[i];
+                        
+                        if (GetNodePenalty != null)
+                        {
+                            float? nodePenalty = GetNodePenalty(currNode, nextNode);
+                            if (nodePenalty == null) continue;
+                            tempG += nodePenalty.Value;
+                        }
+
                         //only use if this new route is better than the 
                         //route the node was a part of
                         if (tempG < nextNode.G)
@@ -337,6 +347,7 @@ namespace Barotrauma
                             nextNode.G = tempG;
                             nextNode.F = nextNode.G + nextNode.H;
                             nextNode.Parent = currNode;
+                            nextNode.state = 1;
                         }
                     }
                 }
@@ -356,8 +367,10 @@ namespace Barotrauma
             {
                 finalPath.Add(pathNode.Waypoint);
 
-                //there was one bug report that seems to have been caused by this loop never terminating:
-                //couldn't reproduce or figure out what caused it, but here's a workaround that prevents the game from crashing in case it happens again
+                //(there was one bug report that seems to have been caused by this loop never terminating:
+                //couldn't reproduce or figure out what caused it, but here's a workaround that prevents the game from crashing in case it happens again)
+
+                //should be fixed now, was most likely caused by the parent fields of the nodes not being cleared before starting the pathfinding
                 if (finalPath.Count > nodes.Count)
                 {
                     DebugConsole.ThrowError("Pathfinding error: constructing final path failed");
