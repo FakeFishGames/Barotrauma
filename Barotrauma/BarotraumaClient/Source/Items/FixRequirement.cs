@@ -60,7 +60,7 @@ namespace Barotrauma
                 reqFrame.UserData = requirement;
 
 
-                var fixButton = new GUIButton(new Rectangle(0, 0, 50, 20), TextManager.Get("Fix"), "", reqFrame);
+                var fixButton = new GUIButton(new Rectangle(0, 0, 50, 20), TextManager.Get("FixButton"), "", reqFrame);
                 fixButton.OnClicked = FixButtonPressed;
                 fixButton.UserData = requirement;
 
