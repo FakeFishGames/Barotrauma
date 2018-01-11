@@ -356,19 +356,22 @@ namespace Barotrauma
                     (joint.LowerLimit + joint.UpperLimit) / 2.0f);
             }
 
+            //make sure every character gets drawn at a distinct "layer" 
+            //(instead of having some of the limbs appear behind and some in front of other characters)
             float startDepth = 0.1f;
             float increment = 0.001f;
-
             foreach (Character otherCharacter in Character.CharacterList)
             {
-                if (otherCharacter==character) continue;
-                startDepth+=increment;
+                if (otherCharacter == character) continue;
+                startDepth += increment;
             }
 
+            //make sure each limb has a distinct depth value 
+            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.sprite == null ? 0.0f : l.sprite.Depth).ToList();
             foreach (Limb limb in Limbs)
             {
                 if (limb.sprite != null)
-                    limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
+                    limb.sprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
             }
 
             Limb torso = GetLimb(LimbType.Torso);
