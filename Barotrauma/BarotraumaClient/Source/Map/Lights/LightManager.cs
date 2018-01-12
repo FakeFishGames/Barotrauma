@@ -370,6 +370,7 @@ namespace Barotrauma.Lights
         public void ClearLights()
         {
             lights.Clear();
+            losSource.Reset();
         }
     }
 
