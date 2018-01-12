@@ -711,7 +711,7 @@ namespace Barotrauma
             {
                 if (GameMain.Server == null || args.Length == 0) return;
                 
-                ShowQuestionPrompt("Reason for banning the ip \"" + commands[1] + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
                 {
                     ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
                     {
@@ -727,14 +727,17 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
                         
-                        var client = GameMain.Server.ConnectedClients.Find(c => c.Connection.RemoteEndPoint.Address.ToString() == args[0]);
-                        if (client == null)
+                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.Connection.RemoteEndPoint.Address.ToString() == args[0]);
+                        if (clients.Count == 0)
                         {
                             GameMain.Server.BanList.BanPlayer("Unnamed", args[0], reason, banDuration);
                         }
                         else
                         {
-                            GameMain.Server.KickClient(client, reason);
+                            foreach (Client cl in clients)
+                            {
+                                GameMain.Server.BanClient(cl, reason, false, banDuration);
+                            }
                         }
                     });
                 });
