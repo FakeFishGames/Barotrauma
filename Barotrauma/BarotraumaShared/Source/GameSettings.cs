@@ -105,6 +105,23 @@ namespace Barotrauma
         public bool     AutoCheckUpdates { get; set; }
         public bool     WasGameUpdated { get; set; }
 
+        private string defaultPlayerName;
+        public string   DefaultPlayerName
+        {
+            get
+            {
+                return defaultPlayerName;
+            }
+            set
+            {
+                if (defaultPlayerName != value)
+                {
+                    defaultPlayerName = value;
+                    Save("config.xml");
+                }
+            }
+        }
+
         public static bool VerboseLogging { get; set; }
 
         public GameSettings(string filePath)
@@ -217,6 +234,9 @@ namespace Barotrauma
                             JobNamePreferences.Add(ele.GetAttributeString("name", ""));
                         }
                         break;
+                    case "player":
+                        defaultPlayerName = subElement.GetAttributeString("name", "");
+                        break;
                 }
             }
 
@@ -310,20 +330,20 @@ namespace Barotrauma
                 {
                     keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].MouseButton));
                 }
-
-
             }
 
             var gameplay = new XElement("gameplay");
-
             var jobPreferences = new XElement("jobpreferences");
             foreach (string jobName in JobNamePreferences)
             {
                 jobPreferences.Add(new XElement("job", new XAttribute("name", jobName)));
             }
-
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
+
+            var playerElement = new XElement("player");
+            playerElement.Add(new XAttribute("name", defaultPlayerName));
+            doc.Root.Add(playerElement);
 
             doc.Save(filePath);
         }

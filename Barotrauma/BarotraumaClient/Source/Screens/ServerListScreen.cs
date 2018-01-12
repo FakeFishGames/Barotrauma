@@ -61,6 +61,7 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(0, 30, 0, 30), TextManager.Get("YourName"), "", menu);
             clientNameBox = new GUITextBox(new Rectangle(0, 60, 200, 30), "", menu);
+            clientNameBox.Text = GameMain.Config.DefaultPlayerName;
 
             new GUITextBlock(new Rectangle(0, 100, 0, 30), TextManager.Get("ServerIP"), "", menu);
             ipBox = new GUITextBox(new Rectangle(0, 130, 200, 30), "", menu);
@@ -348,6 +349,8 @@ namespace Barotrauma
                 return false;
             }
 
+            GameMain.Config.DefaultPlayerName = clientNameBox.Text;
+
             string ip = ipBox.Text;
 
             if (string.IsNullOrWhiteSpace(ip))
@@ -357,7 +360,6 @@ namespace Barotrauma
             }
 
             CoroutineManager.StartCoroutine(ConnectToServer(ip));
-
 
             return true;
         }
