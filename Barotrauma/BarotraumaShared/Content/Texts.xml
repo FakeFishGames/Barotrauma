@@ -52,8 +52,7 @@
   <OxygenBarInfo>Running out of oxygen!</OxygenBarInfo>
   <PressureInfo>Water pressure increasing!</PressureInfo>
   <Grabbing>Grabbing</Grabbing>
-  <Stun>Stun</Stun>
-  
+  <Stun>Stun</Stun>  
 
   <!-- Status -->
   <StatusOK>OK</StatusOK>
@@ -135,6 +134,7 @@
   <Crew>Crew</Crew>
   <Store>Store</Store>
   <Hire>Hire</Hire>
+  <HireButton>Hire</HireButton>
   <Location>Location</Location>
   <HireUnavailable>No-one available for hire.</HireUnavailable>
   <Mission>Mission</Mission>
@@ -280,28 +280,61 @@
   <TraitorEndMessageFailureTraitorDetained>[traitorname] was a traitor! [Genderpronounpossessive] task was to assassinate [targetname]. The task failed - [genderpronoun] was successfully detained.</TraitorEndMessageFailureTraitorDetained>
   
   <!-- Causes of death -->
-  <CauseOfDeath.Damage>Succumbed to their injuries</CauseOfDeath.Damage>
-  <CauseOfDeath.Bloodloss>Bled out</CauseOfDeath.Bloodloss>
-  <CauseOfDeath.Drowning>Drowned</CauseOfDeath.Drowning>
-  <CauseOfDeath.Suffocation>Suffocated</CauseOfDeath.Suffocation>
-  <CauseOfDeath.Pressure>Crushed by water pressure</CauseOfDeath.Pressure>
-  <CauseOfDeath.Burn>Burned to death</CauseOfDeath.Burn>
-  <CauseOfDeath.Husk>Taken over by a parasite</CauseOfDeath.Husk>
-  <CauseOfDeath.Disconnected>Disconnected</CauseOfDeath.Disconnected>
+  <CauseOfDeath>Cause of death</CauseOfDeath>
+  <CauseOfDeath.Damage>Damage</CauseOfDeath.Damage>
+  <CauseOfDeath.Bloodloss>Bloodloss</CauseOfDeath.Bloodloss>
+  <CauseOfDeath.Drowning>Drowning</CauseOfDeath.Drowning>
+  <CauseOfDeath.Suffocation>Suffocation</CauseOfDeath.Suffocation>
+  <CauseOfDeath.Pressure>Pressure</CauseOfDeath.Pressure>
+  <CauseOfDeath.Burn>Burn</CauseOfDeath.Burn>
+  <CauseOfDeath.Husk>Husk infection</CauseOfDeath.Husk>
+  <CauseOfDeath.Disconnected>Braindead</CauseOfDeath.Disconnected>
+  
+  <CauseOfDeathDescription.Damage>Succumbed to their injuries</CauseOfDeathDescription.Damage>
+  <CauseOfDeathDescription.Bloodloss>Bled out</CauseOfDeathDescription.Bloodloss>
+  <CauseOfDeathDescription.Drowning>Drowned</CauseOfDeathDescription.Drowning>
+  <CauseOfDeathDescription.Suffocation>Suffocated</CauseOfDeathDescription.Suffocation>
+  <CauseOfDeathDescription.Pressure>Crushed by water pressure</CauseOfDeathDescription.Pressure>
+  <CauseOfDeathDescription.Burn>Burned to death</CauseOfDeathDescription.Burn>
+  <CauseOfDeathDescription.Husk>Taken over by a parasite</CauseOfDeathDescription.Husk>
+  <CauseOfDeathDescription.Disconnected>Disconnected</CauseOfDeathDescription.Disconnected>
 
-  <Self_CauseOfDeath.Damage>You have succumbed to your injuries.</Self_CauseOfDeath.Damage>
-  <Self_CauseOfDeath.Bloodloss>You have bled out.</Self_CauseOfDeath.Bloodloss>
-  <Self_CauseOfDeath.Drowning>You have drowned.</Self_CauseOfDeath.Drowning>
-  <Self_CauseOfDeath.Suffocation>You have suffocated.</Self_CauseOfDeath.Suffocation>
-  <Self_CauseOfDeath.Pressure>You have been crushed by water pressure.</Self_CauseOfDeath.Pressure>
-  <Self_CauseOfDeath.Burn>You have burned to death.</Self_CauseOfDeath.Burn>
-  <Self_CauseOfDeath.Husk>The parasite has taken over your body.</Self_CauseOfDeath.Husk>
-  <Self_CauseOfDeath.Disconnected>You were disconnected from the server.</Self_CauseOfDeath.Disconnected>
+  <Self_CauseOfDeathDescription.Damage>You have succumbed to your injuries.</Self_CauseOfDeathDescription.Damage>
+  <Self_CauseOfDeathDescription.Bloodloss>You have bled out.</Self_CauseOfDeathDescription.Bloodloss>
+  <Self_CauseOfDeathDescription.Drowning>You have drowned.</Self_CauseOfDeathDescription.Drowning>
+  <Self_CauseOfDeathDescription.Suffocation>You have suffocated.</Self_CauseOfDeathDescription.Suffocation>
+  <Self_CauseOfDeathDescription.Pressure>You have been crushed by water pressure.</Self_CauseOfDeathDescription.Pressure>
+  <Self_CauseOfDeathDescription.Burn>You have burned to death.</Self_CauseOfDeathDescription.Burn>
+  <Self_CauseOfDeathDescription.Husk>The parasite has taken over your body.</Self_CauseOfDeathDescription.Husk>
+  <Self_CauseOfDeathDescription.Disconnected>You were disconnected from the server.</Self_CauseOfDeathDescription.Disconnected>
 
   <GiveInButton>Give in</GiveInButton>
   <GiveInHelpMultiplayer>Let go of your character and enter spectator mode (other players will no longer be able to revive you)</GiveInHelpMultiplayer>
   <GiveInHelpSingleplayer>"The character can no longer be revived if you give in."</GiveInHelpSingleplayer>
 
+  <!-- Status -->  
+  <Deceased>Deceased</Deceased>
+  <Unconscious>Unconscious</Unconscious>
+  <Stunned>Stunned</Stunned>
+  <HuskInfectionTransition>Velonaceps calyx infection</HuskInfectionTransition>
+  <HuskInfectionActive>Advanced Velonaceps calyx infection</HuskInfectionActive>
+
+  <MinorBleeding>Minor bleeding</MinorBleeding>
+  <Bleeding>Bleeding</Bleeding>
+  <HeavyBleeding>Heavy bleeding</HeavyBleeding>
+  <CatastrophicBleeding>Catastrophic bleeding</CatastrophicBleeding>
+
+  <NoInjuries>No visible injuries</NoInjuries>
+  <MinorInjuries>Minor injuries</MinorInjuries>
+  <Injuries>Injured</Injuries>
+  <MajorInjuries>Major injuries</MajorInjuries>
+  <CriticalInjuries>Critically injured</CriticalInjuries>
+
+  <OxygenNormal>Oxygen level normal</OxygenNormal>
+  <OxygenReduced>Gasping for air</OxygenReduced>
+  <OxygenLow>Signs of oxygen deprivation</OxygenLow>
+  <NotBreathing>Not breathing</NotBreathing>
+  
   <!-- Huskification -->
   <HuskDormant>Your throat feels sore</HuskDormant>
   <HuskDormant>Your feel feverish</HuskDormant>
