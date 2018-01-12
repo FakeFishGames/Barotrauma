@@ -8,11 +8,30 @@ namespace Barotrauma.Items.Components
 {
     partial class StatusHUD : ItemComponent
     {
-        private static readonly string[] BleedingTexts = { "Minor bleeding", "Bleeding", "Bleeding heavily", "Catastrophic Bleeding" };
+        private static readonly string[] BleedingTexts = 
+        {
+            TextManager.Get("MinorBleeding"),
+            TextManager.Get("Bleeding"),
+            TextManager.Get("HeavyBleeding"),
+            TextManager.Get("CatastrophicBleeding")
+        };
 
-        private static readonly string[] HealthTexts = { "No visible injuries", "Minor injuries", "Injured", "Major injuries", "Critically injured" };
+        private static readonly string[] HealthTexts = 
+        {
+            TextManager.Get("NoInjuries"),
+            TextManager.Get("MinorInjuries"),
+            TextManager.Get("Injuries"),
+            TextManager.Get("MajorInjuries"),
+            TextManager.Get("CriticalInjuries")
+        };
 
-        private static readonly string[] OxygenTexts = { "Oxygen level normal", "Gasping for air", "Signs of oxygen deprivation", "Not breathing" };
+        private static readonly string[] OxygenTexts = 
+        {
+            TextManager.Get("OxygenNormal"),
+            TextManager.Get("OxygenReduced"),
+            TextManager.Get("OxygenLow"),
+            TextManager.Get("NotBreathing")
+        };
 
         [Serialize(500.0f, false)]
         public float Range
@@ -126,20 +145,20 @@ namespace Barotrauma.Items.Components
 
             if (target.IsDead)
             {
-                texts.Add("Deceased");
-                texts.Add("Cause of Death: " + target.CauseOfDeath.ToString());
+                texts.Add(TextManager.Get("Deceased"));
+                texts.Add(TextManager.Get("CauseOfDeath") + ": " + TextManager.Get("CauseOfDeath." + target.CauseOfDeath.ToString()));
             }
             else
             {
-                if (target.IsUnconscious) texts.Add("Unconscious");
-                if (target.Stun > 0.01f) texts.Add("Stunned");
+                if (target.IsUnconscious) texts.Add(TextManager.Get("Unconscious"));
+                if (target.Stun > 0.01f) texts.Add(TextManager.Get("Stunned"));
 
                 int healthTextIndex = target.Health > 95.0f ? 0 :
                     MathHelper.Clamp((int)Math.Ceiling((1.0f - (target.Health / 200.0f + 0.5f)) * HealthTexts.Length), 0, HealthTexts.Length - 1);
 
                 texts.Add(HealthTexts[healthTextIndex]);
 
-                int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 200.0f + 0.5f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
+                int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 100.0f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
                 texts.Add(OxygenTexts[oxygenTextIndex]);
 
                 if (target.Bleeding > 0.0f)
@@ -150,13 +169,13 @@ namespace Barotrauma.Items.Components
 
                 if (target.huskInfection != null)
                 {
-                    if (target.huskInfection.State != HuskInfection.InfectionState.Transition)
+                    if (target.huskInfection.State == HuskInfection.InfectionState.Transition)
                     {
-                        texts.Add("Velonaceps calyx infection");
+                        texts.Add(TextManager.Get("HuskInfectionTransition"));
                     }
-                    else if (target.huskInfection.State != HuskInfection.InfectionState.Active)
+                    else if (target.huskInfection.State == HuskInfection.InfectionState.Active)
                     {
-                        texts.Add("Advanced Velonaceps calyx infection");
+                        texts.Add(TextManager.Get("HuskInfectionActive"));
                     }
                 }
             }

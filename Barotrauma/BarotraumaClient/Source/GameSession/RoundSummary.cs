@@ -88,7 +88,7 @@ namespace Barotrauma
                 Character character = characterInfo.Character;
                 if (character == null || character.IsDead)
                 {
-                    statusText = TextManager.Get("CauseOfDeath." + characterInfo.CauseOfDeath.ToString());
+                    statusText = TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.ToString());
                     statusColor = Color.DarkRed;
                 }
                 else
