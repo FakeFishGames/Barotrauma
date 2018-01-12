@@ -146,15 +146,15 @@ namespace Barotrauma
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = Math.Min((sections[i].damage / prefab.Health), 0.65f);
+                        float newCutoff = sections[i].damage > 0 ? 
+                            MathHelper.Lerp(0.2f, 0.65f, sections[i].damage / prefab.Health) : 0.0f;
 
                         if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
                         {
                             damageEffect.Parameters["aCutoff"].SetValue(newCutoff);
                             damageEffect.Parameters["cCutoff"].SetValue(newCutoff * 1.2f);
                             damageEffect.Parameters["inColor"].SetValue(color.ToVector4());
-
-
+                            
                             damageEffect.CurrentTechnique.Passes[0].Apply();
 
                             Submarine.DamageEffectCutoff = newCutoff;
