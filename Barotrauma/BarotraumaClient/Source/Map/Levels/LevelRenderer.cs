@@ -136,16 +136,17 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
                 cam.Transform);
             
-            Vector2 origin = new Vector2(cam.WorldView.X, -cam.WorldView.Y);
-            Vector2 offset = -origin + dustOffset;
-            while (offset.X <= -1024.0f) offset.X += 1024.0f;
-            while (offset.X > 0.0f) offset.X -= 1024.0f;
-            while (offset.Y <= -1024.0f) offset.Y += 1024.0f;
-            while (offset.Y > 0.0f) offset.Y -= 1024.0f;
 
             if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam);
             if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
 
+            Rectangle srcRect = new Rectangle(0, 0, 2048, 2048);
+            Vector2 origin = new Vector2(cam.WorldView.X, -cam.WorldView.Y);
+            Vector2 offset = -origin + dustOffset;
+            while (offset.X <= -srcRect.Width) offset.X += srcRect.Width;
+            while (offset.X > 0.0f) offset.X -= srcRect.Width;
+            while (offset.Y <= -srcRect.Height) offset.Y += srcRect.Height;
+            while (offset.Y > 0.0f) offset.Y -= srcRect.Height;
             for (int i = 0; i < 4; i++)
             {
                 float scale = 1.0f - i * 0.2f;
@@ -156,12 +157,11 @@ namespace Barotrauma
                 if (alpha <= 0.0f) continue;
 
                 Vector2 offsetS = offset * scale + new Vector2(cam.WorldView.Width, cam.WorldView.Height) * (1.0f - scale) * 0.5f - new Vector2(256.0f * i);
-                while (offsetS.X <= -1024.0f*scale) offsetS.X += 1024.0f*scale;
-                while (offsetS.X > 0.0f) offsetS.X -= 1024.0f*scale;
-                while (offsetS.Y <= -1024.0f*scale) offsetS.Y += 1024.0f*scale;
-                while (offsetS.Y > 0.0f) offsetS.Y -= 1024.0f*scale;
+                while (offsetS.X <= -srcRect.Width * scale) offsetS.X += srcRect.Width * scale;
+                while (offsetS.X > 0.0f) offsetS.X -= srcRect.Width * scale;
+                while (offsetS.Y <= -srcRect.Height * scale) offsetS.Y += srcRect.Height * scale;
+                while (offsetS.Y > 0.0f) offsetS.Y -= srcRect.Height * scale;
 
-                Rectangle srcRect = new Rectangle(0, 0, 2048, 2048);
                 dustParticles.DrawTiled(spriteBatch, origin + offsetS, new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), Vector2.Zero, srcRect, Color.White * alpha, new Vector2(scale));
             }
 
