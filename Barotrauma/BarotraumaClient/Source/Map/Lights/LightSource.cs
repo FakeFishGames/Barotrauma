@@ -641,6 +641,28 @@ namespace Barotrauma.Lights
             );
         }
         
+        public void Reset()
+        {
+            hullsInRange.Clear();
+            diffToSub.Clear();
+            NeedsHullCheck = true;
+            NeedsRecalculation = true;
+
+            vertexCount = 0;
+            if (lightVolumeBuffer != null)
+            {
+                lightVolumeBuffer.Dispose();
+                lightVolumeBuffer = null;
+            }
+
+            indexCount = 0;
+            if (lightVolumeIndexBuffer != null)
+            {
+                lightVolumeIndexBuffer.Dispose();
+                lightVolumeIndexBuffer = null;
+            }
+        }
+
         public void Remove()
         {
             if (LightSprite != null) LightSprite.Remove();
