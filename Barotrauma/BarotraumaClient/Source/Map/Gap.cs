@@ -62,7 +62,7 @@ namespace Barotrauma
 
         partial void EmitParticles(float deltaTime)
         {
-            if (flowTargetHull == null || flowTargetHull.WaterVolume >= flowTargetHull.Volume) return;
+            if (flowTargetHull == null) return;
             
             particleTimer += deltaTime;
 
@@ -94,8 +94,16 @@ namespace Barotrauma
                         velocity.X *= Rand.Range(1.0f, 3.0f);
                     }
 
-                    var particle = GameMain.ParticleManager.CreateParticle(
-                        Rand.Range(0.0f, open) < 0.05f ? "waterdrop" : "watersplash",
+                    if (flowTargetHull.WaterVolume < flowTargetHull.Volume)
+                    {
+                        GameMain.ParticleManager.CreateParticle(
+                            Rand.Range(0.0f, open) < 0.05f ? "waterdrop" : "watersplash",
+                            (Submarine == null ? pos : pos + Submarine.Position),
+                            velocity, 0, flowTargetHull);
+                    }
+
+                    GameMain.ParticleManager.CreateParticle(
+                        "bubbles",
                         (Submarine == null ? pos : pos + Submarine.Position),
                         velocity, 0, flowTargetHull);
 
@@ -112,14 +120,17 @@ namespace Barotrauma
                         MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
                         flowForce.Y * Rand.Range(0.5f, 0.7f));
 
-                    var particle = GameMain.ParticleManager.CreateParticle(
-                        "watersplash",
-                        (Submarine == null ? pos : pos + Submarine.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
-                        velocity, 0, flowTargetHull);
-
-                    if (particle != null)
+                    if (flowTargetHull.WaterVolume < flowTargetHull.Volume)
                     {
-                        particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f), 5.0f);
+                        var particle = GameMain.ParticleManager.CreateParticle(
+                            "watersplash",
+                            (Submarine == null ? pos : pos + Submarine.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
+                            velocity, 0, flowTargetHull);
+
+                        if (particle != null)
+                        {
+                            particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f), 5.0f);
+                        }
                     }
 
                     if (Math.Abs(flowForce.X) > 300.0f)
@@ -143,12 +154,12 @@ namespace Barotrauma
 
                         Vector2 velocity = new Vector2(
                             lerpedFlowForce.X * Rand.Range(0.5f, 0.7f),
-                            Math.Max(lerpedFlowForce.Y, -100.0f) * Rand.Range(0.5f, 0.7f));
+                            MathHelper.Clamp(lerpedFlowForce.Y, -500.0f, 1000.0f) * Rand.Range(0.5f, 0.7f));
 
                         var splash = GameMain.ParticleManager.CreateParticle(
                             "watersplash",
                             Submarine == null ? pos : pos + Submarine.Position,
-                            -velocity, 0, FlowTargetHull);
+                            velocity, 0, FlowTargetHull);
 
                         if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
 
