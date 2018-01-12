@@ -16,7 +16,7 @@ namespace Barotrauma
     class SubmarineBody
     {
         public const float DamageDepth = -30000.0f;
-        private const float DamageMultiplier = 50.0f;
+        private const float ImpactDamageMultiplier = 10.0f;
 
         private const float Friction = 0.2f, Restitution = 0.0f;
 
@@ -663,7 +663,7 @@ namespace Barotrauma
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse);                
             }
 
-            var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * DamageMultiplier);
+            var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * ImpactDamageMultiplier);
 
 #if CLIENT
             //play a damage sound for the structure that took the most damage
