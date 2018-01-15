@@ -12,7 +12,6 @@
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,0,64,64"/>
   </Order>
 
-
   <Order name="Operate Reactor" doingtext="Operating Reactor" targetitemtype="Reactor" options="Power up, Shutdown" color="1.0,0.78,0.05,1.0">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,0,64,64"/>
   </Order>
@@ -24,4 +23,21 @@
   <Order name="Fix Leaks" doingtext="Fixing Leaks" color="0.6,0.85,1.0,1.0">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>    
   </Order>
+
+  <Order name="Charge Batteries" doingtext="Charging Batteries" options="Charge, Stop charging" color="0.6,0.85,1.0,1.0">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,0,64,64"/>
+  </Order>
+
+  <Order name="Pump Water" doingtext="Charging Batteries" options="Pump out, Stop pumping" color="0.0,0.0,1.0,1.0">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>
+  </Order>
+  
+  <Order name="Rescue" doingtext="Rescuing Characters" color="0.6,0.5,1.0,1.0">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
+  </Order>
+
+  <Order name="Repair Damaged Systems" doingtext="Repairing damaged systems" color="0.6,0.1,1.0,1.0">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
+  </Order>
+  
 </Orders>

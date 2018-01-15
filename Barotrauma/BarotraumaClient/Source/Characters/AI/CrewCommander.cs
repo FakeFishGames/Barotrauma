@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -66,44 +67,45 @@ namespace Barotrauma
             int spacing = 20;
 
             int y = 50;
+            
+            List<Order> orders = Order.PrefabList;
 
-            for (int n = 0; n<2; n++)
-            {                                      
-                List<Order> orders = (n==0) ? 
-                    Order.PrefabList.FindAll(o => o.ItemComponentType == null && string.IsNullOrEmpty(o.ItemName)) : 
-                    Order.PrefabList.FindAll(o => o.ItemComponentType != null || !string.IsNullOrEmpty(o.ItemName));
+            int ordersPerRow = Math.Min(orders.Count, 5);
+            int startX = -(buttonWidth * ordersPerRow + spacing * (orders.Count - 1)) / 2;
 
-                int startX = -(buttonWidth * orders.Count + spacing * (orders.Count - 1)) / 2;
-                
-                int i=0;
-                foreach (Order order in orders)
+            int i = 0;
+            foreach (Order order in orders)
+            {
+                int x = startX + (buttonWidth + spacing) * (i % ordersPerRow);
+
+                if (order.ItemComponentType != null || !string.IsNullOrEmpty(order.ItemName))
                 {
-                    int x = startX + (buttonWidth + spacing) * (i % orders.Count);
+                    List<Item> matchingItems = !string.IsNullOrEmpty(order.ItemName) ?
+                        Item.ItemList.FindAll(it => it.Name == order.ItemName) :
+                        Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
 
-                    if (order.ItemComponentType!=null || !string.IsNullOrEmpty(order.ItemName))
+                    int y2 = y;
+                    foreach (Item it in matchingItems)
                     {
-                        List<Item> matchingItems = !string.IsNullOrEmpty(order.ItemName) ?
-                            Item.ItemList.FindAll(it => it.Name == order.ItemName) :
-                            Item.ItemList.FindAll(it => it.components.Any(ic => ic.GetType() == order.ItemComponentType));
+                        var newOrder = new Order(order, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
 
-                        int y2 = y;
-                        foreach (Item it in matchingItems)
-                        {
-                            var newOrder = new Order(order, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
-
-                            CreateOrderButton(new Rectangle(x + buttonWidth / 2, y2, buttonWidth, 20), newOrder, y2==y);
-                            y2 += 25;
-                        }
+                        CreateOrderButton(new Rectangle(x + buttonWidth / 2, y2, buttonWidth, 20), newOrder, y2 == y);
+                        y2 += 25;
                     }
-                    else
-                    {
-                        CreateOrderButton(new Rectangle(x + buttonWidth / 2, y, buttonWidth, 20), order);
-                    }
-                    i++;
                 }
-
-                y += 100;
+                else
+                {
+                    CreateOrderButton(new Rectangle(x + buttonWidth / 2, y, buttonWidth, 20), order);
+                }
+                i++;
+                if (i >= ordersPerRow)
+                {
+                    i = 0;
+                    y += 100;
+                }
             }
+
+            
         }
 
         private GUIButton CreateOrderButton(Rectangle rect, Order order, bool createSymbol = true)
@@ -181,12 +183,35 @@ namespace Barotrauma
                 textBlock.Font = GUI.SmallFont;
                 textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-                new GUIImage(new Rectangle(-5, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
+                var characterPortrait = new GUIImage(new Rectangle(-5, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
 
-                var humanAi = character.AIController as HumanAIController;
-                if (humanAi != null && humanAi.CurrentOrder != null)
+                bool hasHeadset = false;
+                var radio = character.Inventory.Items.FirstOrDefault(it => it != null && it.GetComponent<WifiComponent>() != null);
+                if (radio != null && character.HasEquippedItem(radio))
                 {
-                    CreateCharacterOrderFrame(characterFrame, humanAi.CurrentOrder, humanAi.CurrentOrderOption);
+                    var characterRadio = radio.GetComponent<WifiComponent>();
+                    if (characterRadio.CanTransmit())
+                    {
+                        hasHeadset = true;
+                    }
+                }
+
+                if (!hasHeadset)
+                {
+                    characterButton.Enabled = false;
+                    characterButton.ToolTip = "Not wearing a headset.";
+                    textBlock.ToolTip = characterButton.ToolTip;
+                    characterPortrait.ToolTip = characterButton.ToolTip;
+                    characterPortrait.Color *= 0.5f;
+                    textBlock.TextColor *= 0.5f;
+                }
+                else
+                {
+                    var humanAi = character.AIController as HumanAIController;
+                    if (humanAi != null && humanAi.CurrentOrder != null)
+                    {
+                        CreateCharacterOrderFrame(characterFrame, humanAi.CurrentOrder, humanAi.CurrentOrderOption);
+                    }
                 }
 
                 i++;

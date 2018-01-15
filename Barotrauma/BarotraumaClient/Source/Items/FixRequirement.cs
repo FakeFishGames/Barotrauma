@@ -138,7 +138,6 @@ namespace Barotrauma
                 {
                     bool canBeFixed = requirement.CanBeFixed(character, child);
                     unfixedFound = true;
-                    //child.GetChild<GUITickBox>().Selected = canBeFixed;
                     GUITickBox tickBox = child.GetChild<GUITickBox>();
                     if (tickBox.Selected)
                     {
@@ -147,7 +146,6 @@ namespace Barotrauma
 
                     }
                     child.Color = Color.Red * 0.2f;
-                    //tickBox.State = GUIComponent.ComponentState.None;
                 }
             }
             if (!unfixedFound)

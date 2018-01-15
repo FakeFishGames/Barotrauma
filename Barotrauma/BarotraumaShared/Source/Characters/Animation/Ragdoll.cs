@@ -847,7 +847,8 @@ namespace Barotrauma
                 else
                 {
                     float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
-                    if (Collider.SimPosition.Y < waterSurface && waterSurface - GetFloorY() > HeadPosition * 0.95f)
+                    floorY = GetFloorY();
+                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > HeadPosition * 0.95f)
                     {
                         inWater = true;
                     }
