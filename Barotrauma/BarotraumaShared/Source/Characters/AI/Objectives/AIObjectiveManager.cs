@@ -102,11 +102,23 @@ namespace Barotrauma
                 case "fix leaks":
                     currentOrder = new AIObjectiveFixLeaks(character);
                     break;
+                case "charge batteries":
+                case "chargebatteries":
+                    currentOrder = new AIObjectiveChargeBatteries(character, option);
+                    break;
+                case "rescue":
+                    currentOrder = new AIObjectiveRescueAll(character);
+                    break;
+                case "repairsystems":
+                case "repair damaged systems":
+                    currentOrder = new AIObjectiveRepairItems(character);
+                    break;
+                case "pump water":
+                    currentOrder = new AIObjectivePumpWater(character, option);
+                    break;
                 default:
                     if (order.TargetItem == null) return;
-
                     currentOrder = new AIObjectiveOperateItem(order.TargetItem, character, option, false, null, order.UseController);
-
                     break;
             }
         }

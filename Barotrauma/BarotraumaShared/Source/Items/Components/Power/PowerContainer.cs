@@ -175,7 +175,14 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            RechargeSpeed = maxRechargeSpeed * 0.5f;
+            if (objective.Option.ToLowerInvariant() == "charge")
+            {
+                RechargeSpeed = maxRechargeSpeed * 0.5f;
+            }
+            else
+            {
+                RechargeSpeed = 0.0f;
+            }
 
             return true;
         }
@@ -193,7 +200,7 @@ namespace Barotrauma.Items.Components
                 outputVoltage = power;
             }
         }
-        
+                
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
             float newRechargeSpeed = msg.ReadRangedInteger(0,10) / 10.0f * maxRechargeSpeed;
