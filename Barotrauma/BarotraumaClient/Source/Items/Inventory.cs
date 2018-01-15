@@ -186,7 +186,7 @@ namespace Barotrauma
             
             if (mouseOn &&
                 (draggingItem != null || selectedSlot == null || selectedSlot.Slot == slot) &&
-                (highlightedSubInventory == null || highlightedSubInventory == this || highlightedSubInventorySlot?.Slot == slot))
+                (highlightedSubInventory == null || highlightedSubInventory == this || highlightedSubInventorySlot?.Slot == slot || highlightedSubInventory.Owner == item))
             {
                 slot.State = GUIComponent.ComponentState.Hover;
 
