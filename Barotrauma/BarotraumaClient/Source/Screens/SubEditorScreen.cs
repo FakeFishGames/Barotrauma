@@ -136,7 +136,7 @@ namespace Barotrauma
             topPanel = new GUIFrame(new Rectangle(0, 0, 0, 35), "GUIFrameTop");
             topPanel.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
 
-            hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 280, 70), "", topPanel);
+            hullVolumeFrame = new GUIFrame(new Rectangle(145, 26, 300, 90), "InnerFrame", topPanel);
             hullVolumeFrame.Visible = false;
             hullVolumeFrame.Padding = new Vector4(3.0f, 3.0f, 3.0f, 3.0f);
 
