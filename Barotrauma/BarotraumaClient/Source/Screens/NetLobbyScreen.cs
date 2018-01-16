@@ -871,17 +871,20 @@ namespace Barotrauma
 
         private bool SelectPlayer(GUIComponent component, object obj)
         {
+            var selectedClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.Name == obj.ToString());
+            if (selectedClient == null) return false;
+
             if (GameMain.Client != null)
             {
+                if (selectedClient.ID == GameMain.Client.ID) return false;
+
                 if (!GameMain.Client.HasPermission(ClientPermissions.Ban) &&
                     !GameMain.Client.HasPermission(ClientPermissions.Kick) && 
                     !GameMain.Client.Voting.AllowVoteKick)
                 {
                     return false;
                 }
-            }
-            
-            var selectedClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.Name == obj.ToString());
+            }            
 
             playerFrame = new GUIFrame(new Rectangle(0, 0, 0, 0), Color.Black * 0.6f);
 
@@ -1030,7 +1033,7 @@ namespace Barotrauma
             
             if (GameMain.Client != null && GameMain.Client.Voting.AllowVoteKick && selectedClient != null)
             {
-                var kickVoteButton = new GUIButton(new Rectangle(0, -30, 120, 20), "Vote to Kick", Alignment.BottomLeft, "", playerFrameInner);
+                var kickVoteButton = new GUIButton(new Rectangle(0, -30, 120, 20), TextManager.Get("VoteToKick"), Alignment.BottomLeft, "", playerFrameInner);
                 kickVoteButton.Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID);
                 kickVoteButton.UserData = selectedClient;
                 kickVoteButton.OnClicked += GameMain.Client.VoteForKick;

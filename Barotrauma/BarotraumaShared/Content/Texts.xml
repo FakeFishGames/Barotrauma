@@ -190,6 +190,7 @@
   <Permissions>Permissions</Permissions>
   <PermittedConsoleCommands>Permitted console commands</PermittedConsoleCommands>
   <Kick>Kick</Kick>
+  <VoteToKick>Vote to kick</VoteToKick>
   <Ban>Ban</Ban>
   <BanRange>Ban range</BanRange>
   <PrivateMessageTag>[PM]</PrivateMessageTag>
