@@ -68,7 +68,22 @@ namespace Barotrauma
                 var pump = item.GetComponent<Pump>();
                 if (pump == null) continue;
 
-                //TODO: figure out if the pump is a ballast pump
+                if (item.HasTag("ballast")) continue;
+                
+                //if the pump is connected to an item with a steering component, it must be a ballast pump
+                //(This may not work correctly if the signals are passed through some fancy circuit or a wifi component,
+                //which is why sub creators are encouraged to tag the ballast pumps)
+                bool connectedToSteering = false;
+                foreach (Connection c in item.Connections)
+                {
+                    if (c.IsPower) continue;
+                    if (item.GetConnectedComponentsRecursive<Steering>(c).Count > 0)
+                    {
+                        connectedToSteering = true;
+                        break;
+                    }
+                }
+                if (connectedToSteering) continue;
 
                 if (orderOption.ToLowerInvariant() == "stop pumping")
                 {
