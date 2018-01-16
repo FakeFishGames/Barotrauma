@@ -1045,7 +1045,6 @@ namespace Barotrauma.Networking
                         fl.Close();
 
                         throw new Exception("Error while reading update from server: please send us \"crashreport_object.bin\"!");
-                        break;
                 }
                 prevObjHeader = objHeader;
                 prevBitPos = inc.Position;

@@ -197,8 +197,12 @@ namespace Barotrauma
                                 IsRemotePlayer = ownerID > 0;
                             }
                             break;
-                    }
+                        case 2:
+                            ReadStatus(msg);
+                            break;
 
+                    }
+                    msg.ReadPadBits();
                     break;
             }
         }
