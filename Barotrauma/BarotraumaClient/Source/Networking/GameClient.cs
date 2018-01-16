@@ -195,6 +195,7 @@ namespace Barotrauma.Networking
 
             Submarine.Unload();
             GameMain.NetworkMember = null;
+            GameMain.GameSession = null;
             GameMain.ServerListScreen.Select();
             
             return true;
