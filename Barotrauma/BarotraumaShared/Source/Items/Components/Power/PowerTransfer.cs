@@ -56,8 +56,15 @@ namespace Barotrauma.Items.Components
 
             set
             {
-                if (base.IsActive != value) SetAllConnectionsDirty();
+                if (base.IsActive == value) return;
                 base.IsActive = value;
+
+                SetAllConnectionsDirty();
+                if (!base.IsActive)
+                {
+                    //we need to refresh the connections here because Update won't be called on inactive components
+                    RefreshConnections();
+                }
             }
         }
 
@@ -84,6 +91,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam) 
         {
+            RefreshConnections();
             if (!CanTransfer) return;
 
             if (isBroken)
@@ -91,8 +99,6 @@ namespace Barotrauma.Items.Components
                 SetAllConnectionsDirty();
                 isBroken = false;
             }
-
-            RefreshConnections();
 
             if (updateTimer > 0)
             {
