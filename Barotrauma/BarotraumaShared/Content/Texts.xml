@@ -91,6 +91,7 @@
   <Editing>Editing</Editing>
   <Error>Error</Error>
   <Warning>Warning</Warning>
+  <Unknown>Unknown</Unknown>
   <None>None</None>
   <Close>Close</Close>
   <Cancel>Cancel</Cancel>
@@ -239,6 +240,17 @@
   <NoWaypointsWarning>No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.</NoWaypointsWarning>
   <NoCargoSpawnpointWarning>"The submarine does not have spawnpoints for cargo (which are used for determining where to place bought items). To fix this, create a new spawnpoint and change its "spawn type" parameter to "cargo".</NoCargoSpawnpointWarning>
   <FarAwayEntitiesWarning>One or more structures have been placed very far from the submarine. Show the structures?</FarAwayEntitiesWarning>
+  
+  
+  <!-- Sub description -->
+  <Dimensions>Dimensions</Dimensions>
+  <DimensionsFormat>[width]x[height] m</DimensionsFormat>
+  <SubPreviewImageNotFound>Preview image not found</SubPreviewImageNotFound>
+  <RecommendedCrewSize>Recommended crew size</RecommendedCrewSize>
+  <RecommendedCrewExperience>Recommended crew experience</RecommendedCrewExperience>
+  <CrewExperienceLow>Beginner</CrewExperienceLow>
+  <CrewExperienceMid>Intermediate</CrewExperienceMid>
+  <CrewExperienceHigh>Experienced</CrewExperienceHigh>
   
   <!-- Waypoints -->
   <Waypoint>Waypoint</Waypoint>

@@ -20,7 +20,7 @@ namespace Barotrauma
         public static FrameCounter FrameCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-
+        
         public static GameScreen            GameScreen;
         public static MainMenuScreen        MainMenuScreen;
         public static LobbyScreen           LobbyScreen;
@@ -59,6 +59,8 @@ namespace Barotrauma
         private GameTime fixedTime;
 
         private static SpriteBatch spriteBatch;
+
+        private Viewport defaultViewport;
 
         public static GameMain Instance
         {
@@ -169,6 +171,13 @@ namespace Barotrauma
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
 
             GraphicsDeviceManager.ApplyChanges();
+
+            defaultViewport = GraphicsDevice.Viewport;
+        }
+
+        public void ResetViewPort()
+        {
+            GraphicsDevice.Viewport = defaultViewport;
         }
 
         /// <summary>

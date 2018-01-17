@@ -109,10 +109,19 @@ namespace Barotrauma
                 {
                     textBlock.TextColor = textBlock.TextColor * 0.85f;
 
-                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
+                    var shuttleText = new GUITextBlock(new Rectangle(-20, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.CenterRight, Alignment.CenterRight, textBlock, false, GUI.SmallFont);
                     shuttleText.TextColor = textBlock.TextColor * 0.8f;
                     shuttleText.ToolTip = textBlock.ToolTip;
                 }
+
+                GUIButton infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterRight, "", textBlock);
+                infoButton.UserData = sub;
+                infoButton.OnClicked += (component, userdata) =>
+                {
+                    var msgBox = new GUIMessageBox("", "", 550, 350);
+                    ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                    return true;
+                };
             }
             if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
         }

@@ -13,6 +13,13 @@ namespace Barotrauma
 {
     class SubEditorScreen : Screen
     {
+        private static string[] crewExperienceLevels = new string[] 
+        {
+            TextManager.Get("CrewExperienceLow"),
+            TextManager.Get("CrewExperienceMid"),
+            TextManager.Get("CrewExperienceHigh")
+        };
+
         private Camera cam;
         private BlurEffect lightBlur;
 
@@ -406,7 +413,6 @@ namespace Barotrauma
             }
 
             string savePath = nameBox.Text + ".sub";
-
             if (Submarine.MainSub != null)
             {
                 savePath = Path.Combine(Path.GetDirectoryName(Submarine.MainSub.FilePath), savePath);
@@ -416,9 +422,12 @@ namespace Barotrauma
                 savePath = Path.Combine(Submarine.SavePath, savePath);
             }
 
-            Submarine.SaveCurrent(savePath);
+            MemoryStream imgStream = new MemoryStream();
+            CreateImage(256, 128, imgStream);
+            
+            Submarine.SaveCurrent(savePath, imgStream);
             Submarine.MainSub.CheckForErrors();
-
+            
             GUI.AddMessage(TextManager.Get("SubSavedNotification").Replace("[filepath]", Submarine.MainSub.FilePath), Color.Green, 3.0f);
 
             Submarine.RefreshSavedSubs();
@@ -467,7 +476,7 @@ namespace Barotrauma
             descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
             descriptionBox.OnTextChanged = ChangeSubDescription;
 
-            y += descriptionBox.Rect.Height + 15;
+            y += descriptionBox.Rect.Height;
             new GUITextBlock(new Rectangle(0, y, 150, 20), TextManager.Get("SaveSubDialogSettings"), "", saveFrame);
 
             y += 20;
@@ -480,7 +489,7 @@ namespace Barotrauma
 
                 string tagStr = attributes.Length > 0 ? attributes[0].Description : "";
 
-                var tagTickBox = new GUITickBox(new Rectangle(tagX, y+ tagY, 20, 20), tagStr, Alignment.TopLeft, saveFrame);
+                var tagTickBox = new GUITickBox(new Rectangle(tagX, y + tagY, 20, 20), tagStr, Alignment.TopLeft, saveFrame);
                 tagTickBox.Selected = Submarine.MainSub == null ? false : Submarine.MainSub.HasTag(tag);
                 tagTickBox.UserData = tag;
 
@@ -507,7 +516,74 @@ namespace Barotrauma
                     tagX += 200;
                 }
             }
-            
+
+            y += tagY;
+
+            new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("RecommendedCrewSize"), "", Alignment.TopLeft, Alignment.CenterLeft, saveFrame);
+
+            var crewSizeMin = new GUINumberInput(new Rectangle(230, y, 50, 20), "", GUINumberInput.NumberType.Int, saveFrame);
+            crewSizeMin.MinValueInt = 1;
+            crewSizeMin.MaxValueInt = 128;
+
+
+            new GUITextBlock(new Rectangle(285, y, 10, 20), "-", "", Alignment.TopLeft, Alignment.Center, saveFrame);
+
+            var crewSizeMax = new GUINumberInput(new Rectangle(300, y, 50, 20), "", GUINumberInput.NumberType.Int, saveFrame);
+            crewSizeMax.MinValueInt = 1;
+            crewSizeMax.MaxValueInt = 128;
+
+            crewSizeMin.OnValueChanged += (numberInput) =>
+            {
+                crewSizeMax.IntValue = Math.Max(crewSizeMax.IntValue, numberInput.IntValue);
+                Submarine.MainSub.RecommendedCrewSizeMin = crewSizeMin.IntValue;
+                Submarine.MainSub.RecommendedCrewSizeMax = crewSizeMax.IntValue;
+            };
+
+            crewSizeMax.OnValueChanged += (numberInput) =>
+            {
+                crewSizeMin.IntValue = Math.Min(crewSizeMin.IntValue, numberInput.IntValue);
+                Submarine.MainSub.RecommendedCrewSizeMin = crewSizeMin.IntValue;
+                Submarine.MainSub.RecommendedCrewSizeMax = crewSizeMax.IntValue;
+            };
+
+            y += 20;
+
+            new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("RecommendedCrewExperience"), "", Alignment.TopLeft, Alignment.CenterLeft, saveFrame);
+
+            var toggleExpLeft = new GUIButton(new Rectangle(230, y, 20, 20), "<", "", saveFrame);
+            var toggleExpRight = new GUIButton(new Rectangle(350, y, 20, 20), ">", "", saveFrame);
+            var experienceText = new GUITextBlock(new Rectangle(250, y, 100, 20), crewExperienceLevels[0], "", Alignment.TopLeft, Alignment.Center, saveFrame);
+
+            toggleExpLeft.OnClicked += (btn, userData) =>
+            {
+                int currentIndex = Array.IndexOf(crewExperienceLevels, experienceText.Text);
+                currentIndex--;
+                if (currentIndex < 0) currentIndex = crewExperienceLevels.Length - 1;
+                experienceText.Text = crewExperienceLevels[currentIndex];
+                Submarine.MainSub.RecommendedCrewExperience = experienceText.Text;
+                return true;
+            };
+
+            toggleExpRight.OnClicked += (btn, userData) =>
+            {
+                int currentIndex = Array.IndexOf(crewExperienceLevels, experienceText.Text);
+                currentIndex++;
+                if (currentIndex >= crewExperienceLevels.Length) currentIndex = 0;
+                experienceText.Text = crewExperienceLevels[currentIndex];
+                Submarine.MainSub.RecommendedCrewExperience = experienceText.Text;
+                return true;
+            };
+
+            if (Submarine.MainSub != null)
+            {
+                int min =  Submarine.MainSub.RecommendedCrewSizeMin;
+                int max = Submarine.MainSub.RecommendedCrewSizeMax;
+                crewSizeMin.IntValue = min;
+                crewSizeMax.IntValue = max;
+                experienceText.Text = string.IsNullOrEmpty(Submarine.MainSub.RecommendedCrewExperience) ?
+                    crewExperienceLevels[0] : Submarine.MainSub.RecommendedCrewExperience;
+            }
+
             var saveButton = new GUIButton(new Rectangle(-90, 0, 80, 20), TextManager.Get("SaveSubButton"), Alignment.Right | Alignment.Bottom, "", saveFrame);
             saveButton.OnClicked = SaveSub;
 
@@ -1273,6 +1349,11 @@ namespace Barotrauma
         /// </summary>
         public override void Update(double deltaTime)
         {
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.T))
+            {
+                SaveScreenShot(256, 128, "screenshottest.png");
+            }
+
             if (tutorial != null) tutorial.Update((float)deltaTime);
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
@@ -1481,6 +1562,55 @@ namespace Barotrauma
             if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
                                               
             spriteBatch.End();
+        }
+
+        private void CreateImage(int width, int height, Stream stream)
+        {
+            MapEntity.SelectedList.Clear();
+
+            RenderTarget2D rt = new RenderTarget2D(
+                GameMain.Instance.GraphicsDevice, 
+                width, height, false, SurfaceFormat.Color, DepthFormat.None);
+
+            var prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
+
+            Rectangle subDimensions = Submarine.MainSub.CalculateDimensions(false);
+            Vector2 viewPos = subDimensions.Center.ToVector2();            
+            float scale = Math.Min(width / (float)subDimensions.Width, height / (float)subDimensions.Height);
+
+            var viewMatrix = Matrix.CreateTranslation(new Vector3(width / 2.0f, height / 2.0f, 0));
+            var transform = Matrix.CreateTranslation(
+                new Vector3(-viewPos.X, viewPos.Y, 0)) *
+                Matrix.CreateScale(new Vector3(scale, scale, 1)) *
+                viewMatrix;
+
+            GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
+            SpriteBatch spriteBatch = new SpriteBatch(GameMain.Instance.GraphicsDevice);
+
+            spriteBatch.Begin();
+            LevelRenderer.BackgroundTop.Draw(spriteBatch, Vector2.Zero, new Color(0.025f, 0.075f, 0.131f, 1.0f));
+            spriteBatch.End();
+            
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, null, null, null, transform);            
+            Submarine.Draw(spriteBatch, false);
+            Submarine.DrawFront(spriteBatch);
+            Submarine.DrawDamageable(spriteBatch, null);            
+            spriteBatch.End();
+
+            GameMain.Instance.GraphicsDevice.SetRenderTarget(null);
+            rt.SaveAsPng(stream, width, height);            
+            rt.Dispose();
+
+            //for some reason setting the rendertarget changes the size of the viewport 
+            //but it doesn't change back to default when setting it back to null
+            GameMain.Instance.ResetViewPort();
+        }
+
+        public void SaveScreenShot(int width, int height, string filePath)
+        {
+            Stream stream = File.OpenWrite(filePath);
+            CreateImage(width, height, stream);
+            stream.Dispose();
         }
     }
 }
