@@ -755,8 +755,7 @@ namespace Barotrauma
                 ToolTip = sub.Description,
                 UserData = sub
             };
-
-
+            
             var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
             if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name);
 
@@ -776,11 +775,20 @@ namespace Barotrauma
                 {
                     subTextBlock.TextColor = new Color(subTextBlock.TextColor, sub.HasTag(SubmarineTag.Shuttle) ? 1.0f : 0.6f);
                 }
+
+                GUIButton infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterRight, "", subTextBlock);
+                infoButton.UserData = sub;
+                infoButton.OnClicked += (component, userdata) =>
+                {
+                    var msgBox = new GUIMessageBox("", "", 550, 350);
+                    ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                    return true;
+                };
             }
 
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
-                var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.Left, Alignment.CenterY | Alignment.Right, subTextBlock, false, GUI.SmallFont);
+                var shuttleText = new GUITextBlock(new Rectangle(-20, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.CenterRight, Alignment.CenterRight, subTextBlock, false, GUI.SmallFont);
                 shuttleText.TextColor = subTextBlock.TextColor * 0.8f;
                 shuttleText.ToolTip = subTextBlock.ToolTip;
             }
