@@ -1631,19 +1631,19 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void SendChatMessage(string txt, Client recipient)
+        public void SendDirectChatMessage(string txt, Client recipient)
         {
             ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Server, null);
-            SendChatMessage(msg, recipient);
+            SendDirectChatMessage(msg, recipient);
         }
 
         public void SendConsoleMessage(string txt, Client recipient)
         {
             ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Console, null);
-            SendChatMessage(msg, recipient);
+            SendDirectChatMessage(msg, recipient);
         }
 
-        public void SendChatMessage(ChatMessage msg, Client recipient)
+        public void SendDirectChatMessage(ChatMessage msg, Client recipient)
         {
             msg.NetStateID = recipient.ChatMsgQueue.Count > 0 ?
                 (ushort)(recipient.ChatMsgQueue.Last().NetStateID + 1) :
@@ -1652,7 +1652,7 @@ namespace Barotrauma.Networking
             recipient.ChatMsgQueue.Add(msg);
             recipient.LastChatMsgQueueID = msg.NetStateID;
         }
-
+        
         /// <summary>
         /// Add the message to the chatbox and pass it to all clients who can receive it
         /// </summary>
@@ -1662,8 +1662,8 @@ namespace Barotrauma.Networking
             string senderName = "";
 
             Client targetClient = null;
-            
-            if (type==null)
+
+            if (type == null)
             {
                 string tempStr;
                 string command = ChatMessage.GetChatMessageCommand(message, out tempStr);
@@ -1772,14 +1772,15 @@ namespace Barotrauma.Networking
             switch (type)
             {
                 case ChatMessageType.Radio:
+                case ChatMessageType.Order:
                     if (senderCharacter == null) return;
 
                     //return if senderCharacter doesn't have a working radio
                     var radio = senderCharacter.Inventory.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
-                    if (radio == null) return;
+                    if (radio == null || !senderCharacter.HasEquippedItem(radio)) return;
 
                     senderRadio = radio.GetComponent<WifiComponent>();
-                    if (!senderRadio.CanTransmit()) return;
+                    if (!senderRadio.CanTransmit()) return;                    
                     break;
                 case ChatMessageType.Dead:
                     //character still alive -> not allowed
@@ -1805,6 +1806,7 @@ namespace Barotrauma.Networking
                 {
                     case ChatMessageType.Default:
                     case ChatMessageType.Radio:
+                    case ChatMessageType.Order:
                         if (senderCharacter != null && 
                             client.Character != null && !client.Character.IsDead)
                         {
@@ -1830,7 +1832,7 @@ namespace Barotrauma.Networking
                     (ChatMessageType)type,
                     senderCharacter);
 
-                SendChatMessage(chatMsg, client);
+                SendDirectChatMessage(chatMsg, client);
             }
 
             string myReceivedMessage = message;
@@ -1844,6 +1846,43 @@ namespace Barotrauma.Networking
             {
                 AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderCharacter); 
             }       
+        }
+        
+        public void SendOrderChatMessage(OrderChatMessage message, Client senderClient = null)
+        {
+            if (message.Sender == null || !message.Sender.CanSpeak) return;            
+
+            //check which clients can receive the message and apply distance effects
+            foreach (Client client in ConnectedClients)
+            {
+                string modifiedMessage = message.Text;
+                
+                if (message.Sender != null &&
+                    client.Character != null && !client.Character.IsDead)
+                {
+                    modifiedMessage = ApplyChatMsgDistanceEffects(message.Text, ChatMessageType.Radio, message.Sender, client.Character);
+
+                    //too far to hear the msg -> don't send
+                    if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
+                }
+
+                var modifiedChatMsg = new OrderChatMessage(
+                    message.Order, message.OrderOption, 
+                    message.TargetItem, message.TargetCharacter, message.Sender);
+                    
+                SendDirectChatMessage(modifiedChatMsg, client);
+            }
+
+            string myReceivedMessage = message.Text;
+            if (gameStarted && myCharacter != null)
+            {
+                myReceivedMessage = ApplyChatMsgDistanceEffects(message.Text, ChatMessageType.Radio, message.Sender, myCharacter);
+            }
+
+            if (!string.IsNullOrWhiteSpace(myReceivedMessage))
+            {
+                AddChatMessage(myReceivedMessage, ChatMessageType.Order, message.SenderName, message.Sender);
+            }
         }
 
         private string ApplyChatMsgDistanceEffects(string message, ChatMessageType type, Character sender, Character receiver)
@@ -1859,14 +1898,15 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ChatMessageType.Radio:
+                case ChatMessageType.Order:
                     if (!receiver.IsDead)
                     {
                         var receiverItem = receiver.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
                         //client doesn't have a radio -> don't send
-                        if (receiverItem == null) return "";
+                        if (receiverItem == null || !receiver.HasEquippedItem(receiverItem)) return "";
 
                         var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                        if (senderItem == null) return "";
+                        if (senderItem == null || !sender.HasEquippedItem(senderItem)) return "";
 
                         var receiverRadio   = receiverItem.GetComponent<WifiComponent>();
                         var senderRadio     = senderItem.GetComponent<WifiComponent>();

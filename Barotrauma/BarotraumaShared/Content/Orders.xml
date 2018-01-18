@@ -2,42 +2,73 @@
 <Orders>
   <Order name="Follow" doingtext="Following" color="1.0,0.5,0.1,1.0">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,0,64,64"/>
+    <ChatMessage msg="[name], follow me!"/>
   </Order>
 
   <Order name="Wait" doingtext="Waiting" color="1.0,0.0,0.0,1.0">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,0,64,64"/>
+    <ChatMessage msg="[name], wait there!"/>
+    <ChatMessage msg="[name], stay where you are!"/>
   </Order>
   
   <Order name="Dismissed" doingtext="Dismissed" color="0.0,1.0,0.0,1.0">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,0,64,64"/>
+    <ChatMessage msg="[name], you are dismissed!"/>
   </Order>
 
-  <Order name="Operate Reactor" doingtext="Operating Reactor" targetitemtype="Reactor" options="Power up, Shutdown" color="1.0,0.78,0.05,1.0">
+  <Order name="Operate Reactor" doingtext="Operating Reactor" targetitemtype="Reactor" options="Power up, Shutdown" color="1.0,0.78,0.05,1.0"
+         appropriatejobs="Mechanic,Engineer">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,0,64,64"/>
+    <ChatMessage msg="[name], operate the reactor!"/>
+    <ChatMessage msg="[name], man the reactor!"/>
+    <ChatMessage option="Power up" msg="[name], power up the reactor!"/>
+    <ChatMessage option="Shutdown" msg="[name], shut down the reactor!"/>
   </Order>
 
-  <Order name="Operate Railgun" doingtext="Operating Railgun" targetitemname="Railgun" targetitemtype="Turret" usecontroller="true" options="Fire at will, Hold fire" color="0.12,0.3,0.5,1.0">
+  <Order name="Operate Railgun" doingtext="Operating Railgun" targetitemname="Railgun" targetitemtype="Turret" usecontroller="true" options="Fire at will, Hold fire" color="0.12,0.3,0.5,1.0"
+         appropriatejobs="Security Officer">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
+    <ChatMessage msg="[name], operate the railgun!"/>
+    <ChatMessage msg="[name], man the railgun!"/>
+    <ChatMessage option="Fire at will" msg="[name], fire at will!"/>
+    <ChatMessage option="Hold fire" msg="[name], hold fire!"/>
   </Order>
 
-  <Order name="Fix Leaks" doingtext="Fixing Leaks" color="0.6,0.85,1.0,1.0">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>    
-  </Order>
-
-  <Order name="Charge Batteries" doingtext="Charging Batteries" options="Charge, Stop charging" color="0.6,0.85,1.0,1.0">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,0,64,64"/>
-  </Order>
-
-  <Order name="Pump Water" doingtext="Charging Batteries" options="Pump out, Stop pumping" color="0.0,0.0,1.0,1.0">
+  <Order name="Fix Leaks" doingtext="Fixing Leaks" color="0.6,0.85,1.0,1.0"
+         appropriatejobs="Mechanic">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>
+    <ChatMessage msg="[name], start fixing leaks!"/>
+  </Order>
+
+  <Order name="Charge Batteries" doingtext="Charging Batteries" options="Charge, Stop charging" color="0.6,0.85,1.0,1.0"
+         appropriatejobs="Engineer">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,0,64,64"/>
+    <ChatMessage msg="[name], operate the batteries!"/>
+    <ChatMessage option="Charge" msg="[name], charge the batteries!"/>
+    <ChatMessage option="Charge" msg="[name], make sure all batteries are charged!"/>
+    <ChatMessage option="Stop charging"  msg="[name], stop charging the batteries!"/>
+  </Order>
+
+  <Order name="Pump Water" doingtext="Charging Batteries" options="Pump out, Stop pumping" color="0.0,0.0,1.0,1.0"
+         appropriatejobs="Mechanic">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>
+    <ChatMessage msg="[name], start pumping out water!"/>
+    <ChatMessage option="Pump out" msg="[name], start pumping out water!"/>
+    <ChatMessage option="Stop pumping" msg="[name], shut down the pumps!"/>
+    <ChatMessage option="Stop pumping" msg="[name], stop the pumps!"/>
   </Order>
   
-  <Order name="Rescue" doingtext="Rescuing Characters" color="0.6,0.5,1.0,1.0">
+  <Order name="Rescue" doingtext="Rescuing Characters" color="0.6,0.5,1.0,1.0"
+         appropriatejobs="Medical Doctor">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
+    <ChatMessage msg="[name], rescue anyone in distress!"/>
+    <ChatMessage msg="[name], give medical aid to anyone in need!"/>
   </Order>
 
-  <Order name="Repair Damaged Systems" doingtext="Repairing damaged systems" color="0.6,0.1,1.0,1.0">
+  <Order name="Repair Damaged Systems" doingtext="Repairing damaged systems" color="0.6,0.1,1.0,1.0"
+         appropriatejobs="Mechanic,Engineer">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
+    <ChatMessage msg="[name], repair all damaged systems!"/>
   </Order>
   
 </Orders>

@@ -19,12 +19,14 @@ namespace Barotrauma
         
         private CrewCommander commander;
 
+        private bool isSinglePlayer;
+
         public CrewCommander CrewCommander
         {
             get { return commander; }
         }
-        
-        public CrewManager()
+                
+        public CrewManager(bool isSinglePlayer)
         {
             characters = new List<Character>();
             characterInfos = new List<CharacterInfo>();
@@ -35,16 +37,18 @@ namespace Barotrauma
             listBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
             listBox.ScrollBarEnabled = false;
             listBox.OnSelected = SelectCharacter;
+            listBox.Visible = isSinglePlayer;
 
             orderListBox = new GUIListBox(new Rectangle(5, 30, 30, 0), Color.Transparent, null, guiFrame);
             orderListBox.ScrollBarEnabled = false;
             orderListBox.OnSelected = SelectCharacterOrder;
+            orderListBox.Visible = isSinglePlayer;
 
             commander = new CrewCommander(this);
         }
 
-        public CrewManager(XElement element)
-            : this()
+        public CrewManager(XElement element, bool isSinglePlayer)
+            : this(isSinglePlayer)
         {
             foreach (XElement subElement in element.Elements())
             {
@@ -126,9 +130,7 @@ namespace Barotrauma
             if (character is AICharacter)
             {
                 commander.UpdateCharacters();
-
                 character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
-
                 GUIFrame orderFrame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, "ListBoxElement", orderListBox);
                 orderFrame.UserData = character;
 
@@ -151,7 +153,7 @@ namespace Barotrauma
         {
             if (characterInfos.Contains(characterInfo))
             {
-                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" +Environment.StackTrace);
+                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
                 return;
             }
 
@@ -168,9 +170,7 @@ namespace Barotrauma
         {
             guiFrame.Update(deltaTime);
             
-            //TODO: implement AI commands in multiplayer?
-            if (GameMain.NetworkMember == null &&
-                GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
+            if (GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
             {
                 //deselect construction unless it's the ladders the character is climbing
                 if (!commander.IsOpen && Character.Controlled != null && 
@@ -179,9 +179,8 @@ namespace Barotrauma
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }
-
-                //only allow opening the command UI if there are AICharacters in the crew
-                if (commander.IsOpen || characters.Any(c => c is AICharacter)) commander.ToggleGUIFrame();                
+                
+                commander.ToggleGUIFrame();                
             }
 
             if (commander.Frame != null) commander.Frame.Update(deltaTime);

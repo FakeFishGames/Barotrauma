@@ -192,6 +192,7 @@
     <Compile Include="Source\Networking\NetEntityEvent\NetEntityEvent.cs" />
     <Compile Include="Source\Networking\NetStats.cs" />
     <Compile Include="Source\Networking\NetworkMember.cs" />
+    <Compile Include="Source\Networking\OrderChatMessage.cs" />
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />

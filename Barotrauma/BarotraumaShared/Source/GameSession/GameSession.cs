@@ -102,7 +102,7 @@ namespace Barotrauma
             this.savePath = savePath;
 
 #if CLIENT
-            CrewManager = new CrewManager();
+            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
 
             infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
@@ -119,9 +119,7 @@ namespace Barotrauma
 
             GameMain.GameSession = this;
             selectedSub.Name = doc.Root.GetAttributeString("submarine", selectedSub.Name);
-#if CLIENT
-            CrewManager = new CrewManager();
-#endif
+
 
             foreach (XElement subElement in doc.Root.Elements())
             {
@@ -135,9 +133,13 @@ namespace Barotrauma
 #endif
                     case "multiplayercampaign":
                         GameMode = MultiplayerCampaign.LoadNew(subElement);
+#if CLIENT
+                        CrewManager = new CrewManager(false);
+#endif
                         break;
                 }
             }
+
         }
 
         private void CreateDummyLocations()
