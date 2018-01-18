@@ -416,7 +416,7 @@ namespace Barotrauma
         {
             get
             {
-                return !IsUnconscious && Stun <= 0.0f && (huskInfection == null || huskInfection.CanSpeak);
+                return !IsDead && !IsUnconscious && Stun <= 0.0f && (huskInfection == null || huskInfection.CanSpeak);
             }
         }
 

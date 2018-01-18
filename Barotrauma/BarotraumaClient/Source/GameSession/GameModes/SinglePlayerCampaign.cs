@@ -326,7 +326,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "crew":
-                        GameMain.GameSession.CrewManager = new CrewManager(subElement);
+                        GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
                         break;
                     case "map":
                         campaign.map = Map.LoadNew(subElement);
