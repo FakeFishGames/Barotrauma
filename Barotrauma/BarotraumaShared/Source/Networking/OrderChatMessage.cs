@@ -12,21 +12,21 @@ namespace Barotrauma.Networking
         //who was this order given to
         public readonly Character TargetCharacter;
 
-        //which item is this order referring to (reactor, railgun controller, etc)
-        public readonly Item TargetItem;
+        //which entity is this order referring to (hull, reactor, railgun controller, etc)
+        public readonly Entity TargetEntity;
 
         //additional instructions (power up, fire at will, etc)
         public readonly string OrderOption;
 
-        public OrderChatMessage(Order order, string orderOption, Item targetItem, Character targetCharacter, Character sender)
+        public OrderChatMessage(Order order, string orderOption, Entity targetEntity, Character targetCharacter, Character sender)
             : base (sender.Name, 
-                  order.GetChatMessage(targetCharacter?.Name, orderOption),
+                  order.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.RoomName, orderOption),
                   ChatMessageType.Order, sender)
         {
             Order = order;
             OrderOption = orderOption;
             TargetCharacter = targetCharacter;
-            TargetItem = targetItem;
+            TargetEntity = targetEntity;
         }
         
         public override void ServerWrite(NetOutgoingMessage msg, Client c)
@@ -43,8 +43,8 @@ namespace Barotrauma.Networking
             }
 
             msg.Write((byte)Order.PrefabList.IndexOf(Order.Prefab));
-            msg.Write(TargetCharacter.ID);
-            msg.Write(TargetItem == null ? (UInt16)0 : TargetItem.ID);
+            msg.Write(TargetCharacter == null ? (UInt16)0 : TargetCharacter.ID);
+            msg.Write(TargetEntity == null ? (UInt16)0 : TargetEntity.ID);
             msg.Write((byte)Array.IndexOf(Order.Prefab.Options, OrderOption));
         }
     }

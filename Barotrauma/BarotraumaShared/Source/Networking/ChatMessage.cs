@@ -140,13 +140,13 @@ namespace Barotrauma.Networking
 
             int orderIndex = -1;
             Character orderTargetCharacter = null;
-            Item orderTargetItem = null;
+            Entity orderTargetEntity = null;
             int orderOptionIndex = -1;
             if (type == ChatMessageType.Order)
             {
                 orderIndex = msg.ReadByte();
                 orderTargetCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
-                orderTargetItem = Entity.FindEntityByID(msg.ReadUInt16()) as Item;
+                orderTargetEntity = Entity.FindEntityByID(msg.ReadUInt16()) as Entity;
                 orderOptionIndex = msg.ReadByte();
             }
             else
@@ -217,9 +217,21 @@ namespace Barotrauma.Networking
                 Order order = Order.PrefabList[orderIndex];
                 string orderOption = orderOptionIndex < 0 || orderOptionIndex >= order.Options.Length ? "" : order.Options[orderOptionIndex];
                 
-                orderTargetCharacter?.SetOrder(new Order(order.Prefab, orderTargetItem.GetComponent<Items.Components.ItemComponent>()), orderOption);
-                
-                var orderMsg = new OrderChatMessage(order, orderOption, orderTargetItem, orderTargetCharacter, c.Character);
+                if (order.TargetAllCharacters)
+                {
+#if CLIENT
+                    GameMain.GameSession?.CrewManager?.AddOrder(
+                        new Order(order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()),
+                        order.Prefab.FadeOutTime);
+#endif
+                }
+                else
+                {
+                    orderTargetCharacter?.SetOrder(
+                        new Order(order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), orderOption);
+                }
+
+                var orderMsg = new OrderChatMessage(order, orderOption, orderTargetEntity, orderTargetCharacter, c.Character);
                 GameMain.Server.SendOrderChatMessage(orderMsg, c);
             }
             else

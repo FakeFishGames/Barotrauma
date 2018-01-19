@@ -12,6 +12,9 @@ namespace Barotrauma
         private List<CharacterInfo> characterInfos;
         private List<Character> characters;
 
+        //orders that have not been issued to a specific character
+        private List<Pair<Order, float>> activeOrders = new List<Pair<Order, float>>();
+
         public int WinningTeam = 1;
         
         private GUIFrame guiFrame;
@@ -24,6 +27,11 @@ namespace Barotrauma
         public CrewCommander CrewCommander
         {
             get { return commander; }
+        }
+
+        public List<Pair<Order, float>> ActiveOrders
+        {
+            get { return activeOrders; }
         }
                 
         public CrewManager(bool isSinglePlayer)
@@ -84,18 +92,34 @@ namespace Barotrauma
             return false;
         }
 
+        public void AddOrder(Order order, float fadeOutTime)
+        {
+            Pair<Order, float> existingOrder = activeOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity);
+            if (existingOrder != null)
+            {
+                existingOrder.Second = fadeOutTime;
+            }
+            else
+            {
+                activeOrders.Add(new Pair<Order, float>() { First = order, Second = fadeOutTime });
+            }
+        }
+
+        public void RemoveOrder(Order order)
+        {
+            activeOrders.RemoveAll(o => o.First == order);
+        }
+
         public void SetCharacterOrder(Character character, Order order)
         {
-            if (order == null) return;
-
             var characterFrame = listBox.FindChild(character);
-
             if (characterFrame == null) return;
 
             int characterIndex = listBox.children.IndexOf(characterFrame);
-
             orderListBox.children[characterIndex].ClearChildren();
             
+            if (order == null) return;
+
             var img = new GUIImage(new Rectangle(0, 0, 30, 30), order.SymbolSprite, Alignment.Center, orderListBox.children[characterIndex]);
             img.Scale = 30.0f / img.SourceRect.Width;
             img.Color = order.Color;
@@ -182,6 +206,12 @@ namespace Barotrauma
                 
                 commander.ToggleGUIFrame();                
             }
+
+            foreach (Pair<Order, float> order in activeOrders)
+            {
+                order.Second -= deltaTime;
+            }
+            activeOrders.RemoveAll(o => o.Second <= 0.0f);
 
             if (commander.Frame != null) commander.Frame.Update(deltaTime);
         }

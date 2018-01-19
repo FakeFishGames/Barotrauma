@@ -3,6 +3,8 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -17,6 +19,8 @@ namespace Barotrauma
         private static GUIButton grabHoldButton;
 
         private static GUIButton suicideButton;
+
+        //private static GUIListBox orderList;
 
         private static GUIProgressBar oxygenBar, healthBar;
 
@@ -46,10 +50,11 @@ namespace Barotrauma
             if (grabHoldButton != null && cprButton.Visible) grabHoldButton.AddToGUIUpdateList();
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.AddToGUIUpdateList();
+
+            //if (orderList != null && orderList.Visible && orderList.CountChildren > 0) orderList.AddToGUIUpdateList();
             
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-
                 if (character.Inventory != null)
                 {
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
@@ -96,6 +101,8 @@ namespace Barotrauma
             if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
+
+            //if (orderList != null && orderList.Visible && orderList.children.Count > 0) orderList.Update(deltaTime);
 
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
 
@@ -148,14 +155,52 @@ namespace Barotrauma
 
             if (GUI.DisableHUD) return;
 
-            if (character.CurrentOrder?.TargetItem != null)
+            if (GameMain.GameSession?.CrewManager != null)
             {
-                Item target = character.CurrentOrder.ConnectedController != null ? 
-                    character.CurrentOrder.ConnectedController.Item : character.CurrentOrder.TargetItem.Item;
+                foreach (Pair<Order, float> timedOrder in GameMain.GameSession.CrewManager.ActiveOrders)
+                {
+                    DrawOrderIndicator(spriteBatch, cam, character, timedOrder.First, MathHelper.Clamp(timedOrder.Second / 10.0f, 0.2f, 1.0f));
+                }
 
-                GUI.DrawIndicator(
-                    spriteBatch, target.WorldPosition,
-                    cam, 300.0f, character.CurrentOrder.SymbolSprite, character.CurrentOrder.Color);
+                if (character.CurrentOrder != null)
+                {
+                    DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);
+                }
+
+                /*//recreate order list if it doesn't exist, is for some other character, 
+                //if there are new orders, or if the list contains orders that don't exist anymore
+                if (orderList == null || orderList.UserData != character ||
+                    currentOrders.Any(o => orderList.FindChild(o) == null) ||
+                    orderList.children.Any(c => !currentOrders.Contains(c.UserData as Order)))
+                {
+                    orderList = new GUIListBox(new Rectangle(GameMain.GraphicsWidth - 150, 50, 150, 500), Color.Transparent, null);
+                    orderList.UserData = character;
+
+                    foreach (Order order in currentOrders)
+                    {
+                        var orderFrame = new GUITextBlock(
+                            new Rectangle(0, 0, 0, 50), order.Name, "ListBoxElement", 
+                            Alignment.TopLeft, Alignment.TopRight, orderList, false, GUI.SmallFont);
+                        orderFrame.UserData = order;
+
+                        var dismissButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Dismiss", Alignment.BottomRight, "", orderFrame);
+                        //dismissButton.Font = GUI.SmallFont;
+                        dismissButton.UserData = order;
+                        dismissButton.OnClicked += (btn, userdata) =>
+                        {
+                            Order dismissedOrder = userdata as Order;
+                            GameMain.GameSession.CrewManager.RemoveOrder(dismissedOrder);
+                            if (dismissedOrder == character.CurrentOrder)
+                            {
+                                character.SetOrder(null, "");
+                            }
+                            return true;
+                        };
+                    }
+                }
+
+                orderList.Draw(spriteBatch);*/
+
             }
 
             if (character.Inventory != null)
@@ -353,6 +398,18 @@ namespace Barotrauma
                 suicideButton.Visible = true;
                 suicideButton.Draw(spriteBatch);                
             }
+        }
+
+        private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)
+        {
+            if (order.TargetAllCharacters && !order.HasAppropriateJob(character)) return;
+
+            Entity target = order.ConnectedController != null ?
+                order.ConnectedController.Item : order.TargetEntity;
+
+            GUI.DrawIndicator(
+                spriteBatch, target.WorldPosition,
+                cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);
         }
 
         private static void DrawStatusIcons(SpriteBatch spriteBatch, Character character)

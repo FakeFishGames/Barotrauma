@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -35,7 +36,7 @@ namespace Barotrauma
                 return true;
             }
         }
-
+        
         public override bool IsMouseOn(Vector2 position)
         {
             if (!GameMain.DebugDraw && !ShowHulls) return false;
@@ -57,9 +58,37 @@ namespace Barotrauma
 
             return decal;
         }
+        
+        private GUIComponent CreateEditingHUD(bool inGame = false)
+        {
+            int width = 450;
+            int height = 150;
+            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
+
+            editingHUD = new GUIListBox(new Rectangle(x, y, width, height), "");
+            editingHUD.UserData = this;
+
+            new SerializableEntityEditor(this, inGame, editingHUD, true);
+
+            editingHUD.SetDimensions(new Point(editingHUD.Rect.Width, MathHelper.Clamp(editingHUD.children.Sum(c => c.Rect.Height), 50, editingHUD.Rect.Height)));
+
+            return editingHUD;
+        }
+
+        public override void DrawEditing(SpriteBatch spriteBatch, Camera cam)
+        {
+            if (editingHUD != null && editingHUD.UserData == this) editingHUD.Draw(spriteBatch);
+        }
 
         public override void UpdateEditing(Camera cam)
         {
+            if (editingHUD == null || editingHUD.UserData as Hull != this)
+            {
+                editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
+            }
+
+            editingHUD.Update((float)Timing.Step);
+
             if (!PlayerInput.KeyDown(Keys.Space)) return;
             bool lClick = PlayerInput.LeftButtonClicked();
             bool rClick = PlayerInput.RightButtonClicked();

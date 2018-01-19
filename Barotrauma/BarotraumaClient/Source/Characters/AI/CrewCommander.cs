@@ -56,8 +56,19 @@ namespace Barotrauma
 
         private void CreateGUIFrame()
         {
-            frame = new GUIFrame(Rectangle.Empty, Color.Black * 0.6f, null);
+            frame = new GUIFrame(new Rectangle(200,0,0,0), Color.Black * 0.6f, null);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
+
+            var generalOrderFrame = new GUIFrame(new Rectangle(-400, 0, 200, 0), Color.Black * 0.6f, null, frame);
+            generalOrderFrame.ClampMouseRectToParent = false;
+            int y = 0;
+            foreach (Order order in Order.PrefabList)
+            {
+                if (!order.TargetAllCharacters) continue;
+                CreateOrderButton(new Rectangle(0,y,0,20), order, generalOrderFrame);
+
+                y += 80;
+            }
 
             GUIButton closeButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Close", Alignment.BottomCenter, "", frame);
             closeButton.OnClicked = (GUIButton button, object userData) =>
@@ -88,8 +99,8 @@ namespace Barotrauma
             }
             
             List<Order> orders = requireAppropriateJob ?
-                Order.PrefabList.FindAll(o => o.HasAppropriateJob(character)) :
-                Order.PrefabList;
+                Order.PrefabList.FindAll(o => !o.TargetAllCharacters && o.HasAppropriateJob(character)) :
+                Order.PrefabList.FindAll(o => !o.TargetAllCharacters);
 
             float scaleRatio = MathHelper.Lerp(0.3f, 1.2f, orders.Count / 10.0f);
 
@@ -126,22 +137,22 @@ namespace Barotrauma
                     int y2 = y;
                     foreach (Item it in matchingItems)
                     {
-                        var newOrder = new Order(order, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
+                        var newOrder = new Order(order, it, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
 
-                        CreateOrderButton(new Rectangle(x, y2, buttonWidth, 20), newOrder, y2 == y);
+                        CreateOrderButton(new Rectangle(x, y2, buttonWidth, 20), newOrder, frame, y2 == y);
                         y2 += 25;
                     }
                 }
                 else
                 {
-                    CreateOrderButton(new Rectangle(x, y, buttonWidth, 20), order);
+                    CreateOrderButton(new Rectangle(x, y, buttonWidth, 20), order, frame);
                 }
             }            
         }
 
-        private GUIButton CreateOrderButton(Rectangle rect, Order order, bool createSymbol = true)
+        private GUIButton CreateOrderButton(Rectangle rect, Order order, GUIComponent parent, bool createSymbol = true)
         {
-            var orderButton = new GUIButton(rect, order.Name, null, Alignment.TopCenter, Alignment.Center, "GUITextBox", frame);
+            var orderButton = new GUIButton(rect, order.Name, null, Alignment.TopCenter, Alignment.Center, "GUITextBox", parent);
             orderButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);
             orderButton.UserData = order;
             orderButton.OnClicked = SetOrder;
@@ -290,6 +301,23 @@ namespace Barotrauma
         private bool SetOrder(GUIButton button, object userData)
         {
             Order order = userData as Order;
+            if (order.TargetAllCharacters)
+            {
+                if (Character.Controlled == null) return false;
+                crewManager.AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
+                OrderChatMessage msg = new OrderChatMessage(order, "", Character.Controlled.CurrentHull, null, Character.Controlled);
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.SendChatMessage(msg);
+                }
+                else if (GameMain.Server != null)
+                {
+                    GameMain.Server.SendOrderChatMessage(msg, null);
+                }
+
+                return true;
+            }
+
             foreach (GUIComponent child in frame.children)
             {
                 Character character = child.UserData as Character;
@@ -300,7 +328,7 @@ namespace Barotrauma
 
                 CreateCharacterOrderFrame(characterButton, order, "");
                 character.SetOrder(order, "");                
-                OrderChatMessage msg = new OrderChatMessage(order, "", order.TargetItem?.Item, character, Character.Controlled);
+                OrderChatMessage msg = new OrderChatMessage(order, "", order.TargetItemComponent?.Item, character, Character.Controlled);
                 if (GameMain.Client != null)
                 {
                     GameMain.Client.SendChatMessage(msg);
@@ -361,7 +389,7 @@ namespace Barotrauma
 
             character.SetOrder(order, option);
 
-            OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItem?.Item, character, Character.Controlled);
+            OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, Character.Controlled);
             if (GameMain.Client != null)
             {
                 GameMain.Client.SendChatMessage(msg);
