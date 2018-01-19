@@ -27,6 +27,8 @@ namespace Barotrauma
         public readonly Type ItemComponentType;
         public readonly string ItemName;
 
+        public readonly string AITag;
+
         public readonly Color Color;
 
         //if true, the order is issued to all available characters
@@ -82,6 +84,7 @@ namespace Barotrauma
                 }
             }
 
+            AITag = orderElement.GetAttributeString("aitag", "");
             ItemName = orderElement.GetAttributeString("targetitemname", "");
             Color = orderElement.GetAttributeColor("color", Color.White);
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
@@ -146,12 +149,14 @@ namespace Barotrauma
             Prefab = prefab;
 
             Name                = prefab.Name;
+            AITag               = prefab.AITag;
             DoingText           = prefab.DoingText;
             ItemComponentType   = prefab.ItemComponentType;
             Options             = prefab.Options;
             SymbolSprite        = prefab.SymbolSprite;
             Color               = prefab.Color;
             UseController       = prefab.UseController;
+            TargetAllCharacters = prefab.TargetAllCharacters;
             AppropriateJobs     = prefab.AppropriateJobs;
             chatMessages        = prefab.chatMessages;
 

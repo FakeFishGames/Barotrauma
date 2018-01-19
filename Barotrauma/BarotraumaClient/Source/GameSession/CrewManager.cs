@@ -92,16 +92,18 @@ namespace Barotrauma
             return false;
         }
 
-        public void AddOrder(Order order, float fadeOutTime)
+        public bool AddOrder(Order order, float fadeOutTime)
         {
             Pair<Order, float> existingOrder = activeOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity);
             if (existingOrder != null)
             {
                 existingOrder.Second = fadeOutTime;
+                return false;
             }
             else
             {
                 activeOrders.Add(new Pair<Order, float>() { First = order, Second = fadeOutTime });
+                return true;
             }
         }
 

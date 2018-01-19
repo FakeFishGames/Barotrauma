@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -46,10 +47,8 @@ namespace Barotrauma
             if (DisableCrewAI || Character.IsUnconscious) return;
 
             Character.ClearInputs();
-
-            //steeringManager = Character.AnimController.CurrentHull == null ? outdoorsSteeringManager : indoorsSteeringManager;
-
-            if (updateObjectiveTimer>0.0f)
+            
+            if (updateObjectiveTimer > 0.0f)
             {
                 updateObjectiveTimer -= deltaTime;
             }
@@ -58,6 +57,8 @@ namespace Barotrauma
                 objectiveManager.UpdateObjectives();
                 updateObjectiveTimer = UpdateObjectiveInterval;
             }
+
+            ReportProblems();
 
             objectiveManager.DoCurrentObjective(deltaTime);
          
@@ -134,6 +135,40 @@ namespace Barotrauma
             else if (Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
             {
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
+            }
+        }
+
+        private void ReportProblems()
+        {
+            if (Character.CurrentHull != null)
+            {
+                if (Character.CurrentHull.FireSources.Count > 0)
+                {
+#if CLIENT
+                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
+                    GameMain.GameSession?.CrewManager.AddOrder(new Order(orderPrefab, Character.CurrentHull, null), orderPrefab.FadeOutTime);
+#endif
+                }
+
+                if (Character.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor == null && g.Open > 0.0f))
+                {
+#if CLIENT
+                    var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
+                    GameMain.GameSession?.CrewManager.AddOrder(new Order(orderPrefab, Character.CurrentHull, null), orderPrefab.FadeOutTime);                    
+#endif
+                }
+
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
+                        (c.AIController is EnemyAIController || c.TeamID != Character.TeamID))
+                    {
+#if CLIENT
+                        var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
+                        GameMain.GameSession?.CrewManager.AddOrder(new Order(orderPrefab, Character.CurrentHull, null), orderPrefab.FadeOutTime);                   
+#endif
+                    }
+                }
             }
         }
 
