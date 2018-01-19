@@ -89,7 +89,7 @@ namespace Barotrauma
             currentOrder = null;
             if (order == null) return;
 
-            switch (order.Name.ToLowerInvariant())
+            switch (order.AITag.ToLowerInvariant())
             {
                 case "follow":
                     currentOrder = new AIObjectiveGoTo(Character.Controlled, character, true);
@@ -98,10 +98,8 @@ namespace Barotrauma
                     currentOrder = new AIObjectiveGoTo(character, character, true);
                     break;
                 case "fixleaks":
-                case "fix leaks":
                     currentOrder = new AIObjectiveFixLeaks(character);
                     break;
-                case "charge batteries":
                 case "chargebatteries":
                     currentOrder = new AIObjectiveChargeBatteries(character, option);
                     break;
@@ -109,10 +107,9 @@ namespace Barotrauma
                     currentOrder = new AIObjectiveRescueAll(character);
                     break;
                 case "repairsystems":
-                case "repair damaged systems":
                     currentOrder = new AIObjectiveRepairItems(character);
                     break;
-                case "pump water":
+                case "pumpwater":
                     currentOrder = new AIObjectivePumpWater(character, option);
                     break;
                 default:
