@@ -148,6 +148,16 @@ namespace Barotrauma
 
             if (GUI.DisableHUD) return;
 
+            if (character.CurrentOrder?.TargetItem != null)
+            {
+                Item target = character.CurrentOrder.ConnectedController != null ? 
+                    character.CurrentOrder.ConnectedController.Item : character.CurrentOrder.TargetItem.Item;
+
+                GUI.DrawIndicator(
+                    spriteBatch, target.WorldPosition,
+                    cam, 300.0f, character.CurrentOrder.SymbolSprite, character.CurrentOrder.Color);
+            }
+
             if (character.Inventory != null)
             {
                 for (int i = 0; i < character.Inventory.Items.Length - 1; i++)

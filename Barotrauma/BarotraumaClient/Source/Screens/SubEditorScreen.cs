@@ -1437,7 +1437,10 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null)
             {
-                DrawSubmarineIndicator(spriteBatch, Submarine.MainSub, Color.LightBlue * 0.5f);
+                GUI.DrawIndicator(
+                    spriteBatch, Submarine.MainSub.WorldPosition, cam,
+                    Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height),
+                    GUI.SubmarineIcon, Color.LightBlue * 0.5f);
             }
 
             leftPanel.Draw(spriteBatch);

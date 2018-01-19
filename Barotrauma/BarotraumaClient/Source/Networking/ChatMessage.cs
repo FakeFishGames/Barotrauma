@@ -60,6 +60,11 @@ namespace Barotrauma.Networking
                 }
                 txt = order.GetChatMessage(targetCharacter?.Name, orderOption);
 
+                if (targetCharacter != null)
+                {
+                    targetCharacter.SetOrder(new Order(order.Prefab, targetItem.GetComponent<Items.Components.ItemComponent>()), orderOption);
+                }
+
                 if (NetIdUtils.IdMoreRecent(ID, LastID))
                 {
                     GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);

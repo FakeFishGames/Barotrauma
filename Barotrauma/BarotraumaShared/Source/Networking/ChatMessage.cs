@@ -216,6 +216,9 @@ namespace Barotrauma.Networking
 
                 Order order = Order.PrefabList[orderIndex];
                 string orderOption = orderOptionIndex < 0 || orderOptionIndex >= order.Options.Length ? "" : order.Options[orderOptionIndex];
+                
+                orderTargetCharacter?.SetOrder(new Order(order.Prefab, orderTargetItem.GetComponent<Items.Components.ItemComponent>()), orderOption);
+                
                 var orderMsg = new OrderChatMessage(order, orderOption, orderTargetItem, orderTargetCharacter, c.Character);
                 GameMain.Server.SendOrderChatMessage(orderMsg, c);
             }
