@@ -175,7 +175,7 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (objective.Option.ToLowerInvariant() == "charge")
+            if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
             {
                 RechargeSpeed = maxRechargeSpeed * 0.5f;
             }

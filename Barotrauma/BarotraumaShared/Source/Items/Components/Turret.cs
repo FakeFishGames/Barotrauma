@@ -221,8 +221,30 @@ namespace Barotrauma.Items.Components
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             var projectiles = GetLoadedProjectiles();
+            if (GetAvailablePower() < powerConsumption)
+            {
+                var batteries = item.GetConnectedComponents<PowerContainer>();
 
-            if (projectiles.Count == 0 || (projectiles.Count == 1 && objective.Option.ToLowerInvariant() != "fire at will"))
+                float lowestCharge = 0.0f;
+                PowerContainer batteryToLoad = null;
+                foreach (PowerContainer battery in batteries)
+                {
+                    if (batteryToLoad == null || battery.Charge < lowestCharge)
+                    {
+                        batteryToLoad = battery;
+                        lowestCharge = battery.Charge;
+                    }
+                }
+
+                if (batteryToLoad == null) return true;
+
+                if (batteryToLoad.RechargeSpeed < batteryToLoad.MaxRechargeSpeed * 0.4f)
+                {
+                    objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, "", false));
+                    return false;
+                }
+            }
+            else if (projectiles.Count == 0 || (projectiles.Count == 1 && objective.Option.ToLowerInvariant() != "fire at will"))
             {
                 ItemContainer container = null;
                 foreach (MapEntity e in item.linkedTo)
@@ -237,32 +259,10 @@ namespace Barotrauma.Items.Components
                 if (container == null || container.ContainableItems.Count==0) return true;
 
                 var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Names[0], container);
+                containShellObjective.MinContainedAmount = projectiles.Count + 1;
                 containShellObjective.IgnoreAlreadyContainedItems = true;
                 objective.AddSubObjective(containShellObjective);
                 return false;
-            }
-            else if (GetAvailablePower() < powerConsumption)
-            {
-                var batteries = item.GetConnectedComponents<PowerContainer>();
-
-                float lowestCharge = 0.0f;
-                PowerContainer batteryToLoad = null;
-                foreach (PowerContainer battery in batteries)
-                {
-                    if (batteryToLoad == null || battery.Charge < lowestCharge)
-                    {
-                        batteryToLoad = battery;
-                        lowestCharge = battery.Charge;
-                    }                    
-                }
-
-                if (batteryToLoad == null) return true;
-
-                if (batteryToLoad.RechargeSpeed < batteryToLoad.MaxRechargeSpeed * 0.4f)
-                {
-                    objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, "", false));
-                    return false;
-                }
             }
 
             //enough shells and power
