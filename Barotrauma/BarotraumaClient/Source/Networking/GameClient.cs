@@ -195,6 +195,7 @@ namespace Barotrauma.Networking
 
             Submarine.Unload();
             GameMain.NetworkMember = null;
+            GameMain.GameSession = null;
             GameMain.ServerListScreen.Select();
             
             return true;
@@ -1045,7 +1046,6 @@ namespace Barotrauma.Networking
                         fl.Close();
 
                         throw new Exception("Error while reading update from server: please send us \"crashreport_object.bin\"!");
-                        break;
                 }
                 prevObjHeader = objHeader;
                 prevBitPos = inc.Position;
@@ -1340,31 +1340,31 @@ namespace Barotrauma.Networking
         public override bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
         {
             if (character == null) return false;
-            
+
             if (character != myCharacter)
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
                 if (client == null) return false;
-                
+
                 if (HasPermission(ClientPermissions.Ban))
                 {
-                    var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Ban", Alignment.BottomRight, "", characterFrame);
+                    var banButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Ban"), Alignment.BottomRight, "", characterFrame);
                     banButton.UserData = character.Name;
-                    banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;                    
+                    banButton.OnClicked += GameMain.NetLobbyScreen.BanPlayer;
                 }
                 if (HasPermission(ClientPermissions.Kick))
                 {
-                    var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Kick", Alignment.BottomLeft, "", characterFrame);
+                    var kickButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Kick"), Alignment.BottomLeft, "", characterFrame);
                     kickButton.UserData = character.Name;
                     kickButton.OnClicked += GameMain.NetLobbyScreen.KickPlayer;
                 }
                 else if (Voting.AllowVoteKick)
                 {
-                    var kickVoteButton = new GUIButton(new Rectangle(0, 0, 120, 20), "Vote to Kick", Alignment.BottomLeft, "", characterFrame);
-                
+                    var kickVoteButton = new GUIButton(new Rectangle(0, 0, 120, 20), TextManager.Get("VoteToKick"), Alignment.BottomLeft, "", characterFrame);
+
                     if (GameMain.NetworkMember.ConnectedClients != null)
                     {
-                        kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);                        
+                        kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);
                     }
 
                     kickVoteButton.UserData = character;

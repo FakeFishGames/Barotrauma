@@ -19,20 +19,32 @@ namespace Barotrauma
         private Level level;
 
         private VertexBuffer wallVertices, bodyVertices;
-        
-        //public VertexPositionTexture[] WallVertices;
-        //public VertexPositionColor[] BodyVertices;
-        
+
+        public static Sprite Background
+        {
+            get
+            {
+                if (background == null) background = new Sprite("Content/Map/background2.png", Vector2.Zero);
+                return background;
+            }
+        }
+
+        public static Sprite BackgroundTop
+        {
+            get
+            {
+                if (backgroundTop == null) backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
+                return backgroundTop;
+            }
+        }
+
         public LevelRenderer(Level level)
         {
             if (shaftTexture == null) shaftTexture = TextureLoader.FromFile("Content/Map/iceWall.png");
 
-            if (background==null)
-            {
-                background = new Sprite("Content/Map/background2.png", Vector2.Zero);
-                backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
-                dustParticles = new Sprite("Content/Map/dustparticles.png", Vector2.Zero);
-            }
+            if (background == null) background = new Sprite("Content/Map/background2.png", Vector2.Zero);
+            if (backgroundTop == null) backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
+            if (dustParticles == null) dustParticles = new Sprite("Content/Map/dustparticles.png", Vector2.Zero);
 
             if (wallEdgeEffect == null)
             {

@@ -379,8 +379,7 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
 
             if (extraData != null)
-            {
-                
+            {                
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
@@ -391,6 +390,13 @@ namespace Barotrauma
                         msg.WriteRangedInteger(0, 2, 1);
                         Client owner = ((Client)extraData[1]);
                         msg.Write(owner == null ? (byte)0 : owner.ID);
+                        break;
+                    case NetEntityEvent.Type.Status:
+                        msg.WriteRangedInteger(0, 2, 2);
+                        WriteStatus(msg);
+                        break;
+                    default:
+                        DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");
                         break;
                 }
                 msg.WritePadBits();
