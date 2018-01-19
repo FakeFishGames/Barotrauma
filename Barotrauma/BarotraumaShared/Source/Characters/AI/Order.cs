@@ -12,7 +12,7 @@ namespace Barotrauma
         private static string ConfigFile = Path.Combine("Content", "Orders.xml");
 
         public static List<Order> PrefabList;
-
+        
         public Order Prefab
         {
             get;
@@ -29,10 +29,15 @@ namespace Barotrauma
 
         public readonly Color Color;
 
-        public readonly bool UseController;
-        public Controller ConnectedController;
+        //if true, the order is issued to all available characters
+        public bool TargetAllCharacters;
 
-        public ItemComponent TargetItem;
+        public readonly float FadeOutTime;
+
+        public Entity TargetEntity; 
+        public ItemComponent TargetItemComponent;
+        public readonly bool UseController;
+        public Controller ConnectedController; 
         
         //key = the given option ("" if no option is given)
         //value = a list of chatmessages sent when the order is issued
@@ -78,11 +83,10 @@ namespace Barotrauma
             }
 
             ItemName = orderElement.GetAttributeString("targetitemname", "");
-
-            Color = new Color(orderElement.GetAttributeVector4("color", new Vector4(1.0f, 1.0f, 1.0f, 1.0f)));
-
+            Color = orderElement.GetAttributeColor("color", Color.White);
+            FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);
-
+            TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             string appropriateJobsStr = orderElement.GetAttributeString("appropriatejobs", "");
             if (!string.IsNullOrWhiteSpace(appropriateJobsStr))
             {
@@ -137,7 +141,7 @@ namespace Barotrauma
             Options = parameters == null ? new string[0] : parameters;
         }
 
-        public Order(Order prefab, ItemComponent targetItem)
+        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem)
         {
             Prefab = prefab;
 
@@ -151,13 +155,17 @@ namespace Barotrauma
             AppropriateJobs     = prefab.AppropriateJobs;
             chatMessages        = prefab.chatMessages;
 
-            if (UseController && targetItem != null)
+            TargetEntity = targetEntity;
+            if (targetItem != null)
             {
-                var controllers = targetItem.Item.GetConnectedComponents<Controller>();
-                if (controllers.Count > 0) ConnectedController = controllers[0];                
+                if (UseController)
+                {
+                    var controllers = targetItem.Item.GetConnectedComponents<Controller>();
+                    if (controllers.Count > 0) ConnectedController = controllers[0]; 
+                }
+                TargetEntity = targetItem.Item;
+                TargetItemComponent = targetItem;               
             }
-
-            TargetItem = targetItem;
         }
 
         private Order(string name, string doingText, string[] parameters = null)
@@ -176,7 +184,7 @@ namespace Barotrauma
             return false;
         }
 
-        public string GetChatMessage(string targetCharacterName, string orderOption = "")
+        public string GetChatMessage(string targetCharacterName, string targetRoomName, string orderOption = "")
         {
             if (!chatMessages.ContainsKey(orderOption))
             {
@@ -184,7 +192,8 @@ namespace Barotrauma
             }
             string message = chatMessages[orderOption].Count > 0 ? chatMessages[orderOption][Rand.Range(0, chatMessages[orderOption].Count)] : "";
             if (targetCharacterName == null) targetCharacterName = "";
-            return message.Replace("[name]", targetCharacterName);
+            if (targetRoomName == null) targetRoomName = "";            
+            return message.Replace("[name]", targetCharacterName).Replace("[roomname]", targetRoomName);
         }
     }
 

@@ -49,7 +49,7 @@
     <ChatMessage option="Stop charging"  msg="[name], stop charging the batteries!"/>
   </Order>
 
-  <Order name="Pump Water" doingtext="Charging Batteries" options="Pump out, Stop pumping" color="0.0,0.0,1.0,1.0"
+  <Order name="Pump Water" doingtext="Operating pumps" options="Pump out, Stop pumping" color="0.2,0.4,1.0,1.0"
          appropriatejobs="Mechanic">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>
     <ChatMessage msg="[name], start pumping out water!"/>
@@ -60,15 +60,31 @@
   
   <Order name="Rescue" doingtext="Rescuing Characters" color="0.6,0.5,1.0,1.0"
          appropriatejobs="Medical Doctor">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,128,64,64"/>
     <ChatMessage msg="[name], rescue anyone in distress!"/>
     <ChatMessage msg="[name], give medical aid to anyone in need!"/>
   </Order>
 
   <Order name="Repair Damaged Systems" doingtext="Repairing damaged systems" color="0.6,0.1,1.0,1.0"
          appropriatejobs="Mechanic,Engineer">
-    <Sprite texture="Content/UI/uiIcons.png" sourcerect="0,64,64,64"/>
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,64,64,64"/>
     <ChatMessage msg="[name], repair all damaged systems!"/>
   </Order>
+
+  <Order name="Report Fire" color="1.0,0.0,0.0,1.0" targetallcharacters="true" fadeouttime="20">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,64,64,64"/>
+    <ChatMessage msg="Fire in [roomname]!"/>
+  </Order>
+
+  <Order name="Report Breach" color="0.6,0.85,1.0,1.0" targetallcharacters="true" fadeouttime="20">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="64,64,64,64"/>
+    <ChatMessage msg="Hull breach in [roomname]!"/>
+    <ChatMessage msg="Leak in [roomname]!"/>
+  </Order>
   
+  <Order name="Request First Aid" color="1.0,0.0,0.0,1.0" targetallcharacters="true"
+         appropriatejobs="Medical Doctor" fadeouttime="20">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,128,64,64"/>
+    <ChatMessage msg="Need a medic in [roomname]!"/>
+  </Order>
 </Orders>

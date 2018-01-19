@@ -226,20 +226,25 @@ namespace Barotrauma
             if (dist > hideDist)
             {
                 float alpha = Math.Min((dist - hideDist) / 100.0f, 1.0f);
+                Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);                
+                float screenDist = Vector2.Distance(cam.WorldToScreen(cam.WorldViewCenter), targetScreenPos);
+                float angle = MathUtils.VectorToAngle(diff);
 
-                bool outsideView = Math.Abs(diff.X) > cam.WorldView.Width / 2 || Math.Abs(diff.Y) > cam.WorldView.Height / 2;
+                Vector2 unclampedDiff = new Vector2(
+                    (float)Math.Cos(angle) * screenDist,
+                    (float)-Math.Sin(angle) * screenDist);
 
-                Vector2 iconPos = cam.WorldToScreen(worldPosition);
-                iconPos.X = MathHelper.Clamp(iconPos.X, GameMain.GraphicsWidth * 0.1f, GameMain.GraphicsWidth * 0.9f);
-                iconPos.Y = MathHelper.Clamp(iconPos.Y, GameMain.GraphicsHeight * 0.1f, GameMain.GraphicsHeight * 0.9f);
+                Vector2 iconDiff = new Vector2(
+                    (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist),
+                    (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist));
 
+                Vector2 iconPos = cam.WorldToScreen(cam.WorldViewCenter) + iconDiff;
                 sprite.Draw(spriteBatch, iconPos, color * alpha);
 
-                if (outsideView)
+                if (unclampedDiff.Length() - 10 > iconDiff.Length())
                 {
-                    Vector2 normalizedDiff = diff / dist;
+                    Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
                     Vector2 arrowOffset = normalizedDiff * sprite.size.X * 0.7f;
-                    arrowOffset.Y = -arrowOffset.Y;
                     Arrow.Draw(spriteBatch, iconPos + arrowOffset, color * alpha, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
                 }
             }

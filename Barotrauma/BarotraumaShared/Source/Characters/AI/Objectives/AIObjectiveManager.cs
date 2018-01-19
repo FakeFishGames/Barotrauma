@@ -86,9 +86,8 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string option)
         {
-            if (order == null) return;
-
             currentOrder = null;
+            if (order == null) return;
 
             switch (order.Name.ToLowerInvariant())
             {
@@ -117,8 +116,8 @@ namespace Barotrauma
                     currentOrder = new AIObjectivePumpWater(character, option);
                     break;
                 default:
-                    if (order.TargetItem == null) return;
-                    currentOrder = new AIObjectiveOperateItem(order.TargetItem, character, option, false, null, order.UseController);
+                    if (order.TargetItemComponent == null) return;
+                    currentOrder = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController);
                     break;
             }
         }

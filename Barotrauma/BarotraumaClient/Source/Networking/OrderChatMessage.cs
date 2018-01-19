@@ -12,8 +12,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)ChatMessageType.Order);
             msg.Write((byte)Order.PrefabList.IndexOf(Order.Prefab));
 
-            msg.Write(TargetCharacter.ID);
-            msg.Write(TargetItem == null ? (UInt16)0 : TargetItem.ID);
+            msg.Write(TargetCharacter == null ? (UInt16)0 : TargetCharacter.ID);
+            msg.Write(TargetEntity == null ? (UInt16)0 : TargetEntity.ID);
             msg.Write((byte)Array.IndexOf(Order.Prefab.Options, OrderOption));
         }
     }

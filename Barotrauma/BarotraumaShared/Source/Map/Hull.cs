@@ -76,6 +76,13 @@ namespace Barotrauma
                 return "Hull";
             }
         }
+        
+        [Editable, Serialize("", true)]
+        public string RoomName
+        {
+            get;
+            set;
+        }
 
         public override Rectangle Rect
         {
@@ -637,6 +644,50 @@ namespace Barotrauma
                 return structures.Any(st => !(st as Structure).CastShadow);
             }
             return false;
+        }
+        
+        public string CreateRoomName()
+        {
+            List<string> roomItems = new List<string>();
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.CurrentHull != this) continue;
+                if (item.GetComponent<Items.Components.Reactor>() != null) roomItems.Add("reactor");
+                if (item.GetComponent<Items.Components.Engine>() != null) roomItems.Add("engine");
+                if (item.GetComponent<Items.Components.Steering>() != null) roomItems.Add("steering");
+                if (item.GetComponent<Items.Components.Radar>() != null) roomItems.Add("sonar");
+            }
+
+            if (roomItems.Contains("reactor"))
+                return TextManager.Get("ReactorRoom");
+            else if (roomItems.Contains("engine"))
+                return TextManager.Get("EngineRoom");
+            else if (roomItems.Contains("steering") && roomItems.Contains("sonar"))
+                return TextManager.Get("CommandRoom");
+
+            if (ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor != null))
+            {
+                return TextManager.Get("Airlock");
+            }
+
+            Rectangle subRect = Submarine.CalculateDimensions();
+
+            Alignment roomPos;
+            if (rect.Y - rect.Height / 2 > subRect.Y + subRect.Height * 0.66f)
+                roomPos = Alignment.Top;
+            else if (rect.Y - rect.Height / 2 > subRect.Y + subRect.Height * 0.33f)
+                roomPos = Alignment.CenterY;
+            else
+                roomPos = Alignment.Bottom;
+            
+            if (rect.Center.X < subRect.X + subRect.Width * 0.33f)
+                roomPos |= Alignment.Left;
+            else if (rect.Center.X < subRect.X + subRect.Width * 0.66f)
+                roomPos |= Alignment.CenterX;
+            else
+                roomPos |= Alignment.Right;
+
+            return TextManager.Get("Sub" + roomPos.ToString());
         }
 
         public void ServerWrite(NetBuffer message, Client c, object[] extraData = null)

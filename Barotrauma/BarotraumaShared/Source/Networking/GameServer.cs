@@ -1868,7 +1868,7 @@ namespace Barotrauma.Networking
 
                 var modifiedChatMsg = new OrderChatMessage(
                     message.Order, message.OrderOption, 
-                    message.TargetItem, message.TargetCharacter, message.Sender);
+                    message.TargetEntity, message.TargetCharacter, message.Sender);
                     
                 SendDirectChatMessage(modifiedChatMsg, client);
             }

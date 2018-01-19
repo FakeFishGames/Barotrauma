@@ -49,8 +49,9 @@ namespace Barotrauma.Networking
                     order = Order.PrefabList[orderIndex];
                 }
 
-                Character targetCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
-                Item targetItem =  Entity.FindEntityByID(msg.ReadUInt16()) as Item;
+                UInt16 targetCharacterID = msg.ReadUInt16();
+                Character targetCharacter = Entity.FindEntityByID(targetCharacterID) as Character;
+                Entity targetEntity =  Entity.FindEntityByID(msg.ReadUInt16());
 
                 int optionIndex = msg.ReadByte();
                 string orderOption = "";
@@ -58,11 +59,18 @@ namespace Barotrauma.Networking
                 {
                     orderOption = order.Options[optionIndex];
                 }
-                txt = order.GetChatMessage(targetCharacter?.Name, orderOption);
+                txt = order.GetChatMessage(targetCharacter?.Name, senderCharacter?.CurrentHull?.RoomName, orderOption);
 
-                if (targetCharacter != null)
+                if (order.TargetAllCharacters)
                 {
-                    targetCharacter.SetOrder(new Order(order.Prefab, targetItem.GetComponent<Items.Components.ItemComponent>()), orderOption);
+                    GameMain.GameSession?.CrewManager?.AddOrder(
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), 
+                        order.Prefab.FadeOutTime);
+                }
+                else if (targetCharacter != null)
+                {
+                    targetCharacter.SetOrder(
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), orderOption);
                 }
 
                 if (NetIdUtils.IdMoreRecent(ID, LastID))
