@@ -30,6 +30,7 @@ namespace Barotrauma
         public readonly Color Color;
 
         public readonly bool UseController;
+        public Controller ConnectedController;
 
         public ItemComponent TargetItem;
         
@@ -149,6 +150,12 @@ namespace Barotrauma
             UseController       = prefab.UseController;
             AppropriateJobs     = prefab.AppropriateJobs;
             chatMessages        = prefab.chatMessages;
+
+            if (UseController && targetItem != null)
+            {
+                var controllers = targetItem.Item.GetConnectedComponents<Controller>();
+                if (controllers.Count > 0) ConnectedController = controllers[0];                
+            }
 
             TargetItem = targetItem;
         }

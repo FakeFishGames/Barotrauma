@@ -214,9 +214,35 @@ namespace Barotrauma
             GameMain.GameSession = null;
 
             GameMain.MainMenuScreen.Select();
-            //Game1.MainMenuScreen.SelectTab(null, (int)MainMenuScreen.Tabs.Main);
 
             return true;
+        }
+
+        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color)
+        {
+            Vector2 diff = worldPosition - cam.WorldViewCenter;
+            float dist = diff.Length();
+
+            if (dist > hideDist)
+            {
+                float alpha = Math.Min((dist - hideDist) / 100.0f, 1.0f);
+
+                bool outsideView = Math.Abs(diff.X) > cam.WorldView.Width / 2 || Math.Abs(diff.Y) > cam.WorldView.Height / 2;
+
+                Vector2 iconPos = cam.WorldToScreen(worldPosition);
+                iconPos.X = MathHelper.Clamp(iconPos.X, GameMain.GraphicsWidth * 0.1f, GameMain.GraphicsWidth * 0.9f);
+                iconPos.Y = MathHelper.Clamp(iconPos.Y, GameMain.GraphicsHeight * 0.1f, GameMain.GraphicsHeight * 0.9f);
+
+                sprite.Draw(spriteBatch, iconPos, color * alpha);
+
+                if (outsideView)
+                {
+                    Vector2 normalizedDiff = diff / dist;
+                    Vector2 arrowOffset = normalizedDiff * sprite.size.X * 0.7f;
+                    arrowOffset.Y = -arrowOffset.Y;
+                    Arrow.Draw(spriteBatch, iconPos + arrowOffset, color * alpha, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2);
+                }
+            }
         }
 
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)

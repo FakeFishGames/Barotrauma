@@ -112,8 +112,6 @@ namespace Barotrauma
 
             foreach (Order order in orders)
             {
-                //int x = startX + (buttonWidth + spacing) * (i % ordersPerRow);
-
                 int x = (int)(Math.Cos(angle)* archWidth);
                 int y = (int)(100 + (float)Math.Sin(angle) * archHeight);
 
@@ -130,7 +128,7 @@ namespace Barotrauma
                     {
                         var newOrder = new Order(order, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
 
-                        CreateOrderButton(new Rectangle(x, y, buttonWidth, 20), newOrder, y2 == y);
+                        CreateOrderButton(new Rectangle(x, y2, buttonWidth, 20), newOrder, y2 == y);
                         y2 += 25;
                     }
                 }
@@ -138,12 +136,6 @@ namespace Barotrauma
                 {
                     CreateOrderButton(new Rectangle(x, y, buttonWidth, 20), order);
                 }
-                /*i++;
-                if (i >= ordersPerRow)
-                {
-                    i = 0;
-                    y += 100;
-                }*/
             }            
         }
 
@@ -307,9 +299,7 @@ namespace Barotrauma
                 if (!characterButton.Selected) continue;
 
                 CreateCharacterOrderFrame(characterButton, order, "");
-                var humanAi = character.AIController as HumanAIController;
-                humanAi?.SetOrder(order, "");
-                
+                character.SetOrder(order, "");                
                 OrderChatMessage msg = new OrderChatMessage(order, "", order.TargetItem?.Item, character, Character.Controlled);
                 if (GameMain.Client != null)
                 {
@@ -369,11 +359,7 @@ namespace Barotrauma
             Order order = component.Parent.UserData as Order;
             Character character = component.Parent.Parent.Parent.UserData as Character;
 
-            var humanAi = character.AIController as HumanAIController;
-            if (humanAi != null)
-            {
-                humanAi.SetOrder(order, option);
-            }
+            character.SetOrder(order, option);
 
             OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItem?.Item, character, Character.Controlled);
             if (GameMain.Client != null)

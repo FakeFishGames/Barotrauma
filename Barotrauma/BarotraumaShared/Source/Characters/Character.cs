@@ -110,6 +110,14 @@ namespace Barotrauma
 
         private float attackCoolDown;
 
+        private Order currentOrder;
+        public Order CurrentOrder
+        {
+            get { return currentOrder; }
+        }
+
+        private string currentOrderOption;
+
         public Entity ViewTarget
         {
             get;
@@ -1688,6 +1696,15 @@ namespace Barotrauma
             aiTarget.SightRange = Mass*100.0f + AnimController.Collider.LinearVelocity.Length()*500.0f;
         }
         
+        public void SetOrder(Order order, string orderOption)
+        {
+            HumanAIController humanAI = AIController as HumanAIController;
+            humanAI?.SetOrder(order, orderOption);
+
+            currentOrder = order;
+            currentOrderOption = orderOption;
+        }
+
         public void ShowSpeechBubble(float duration, Color color)
         {
             speechBubbleTimer = Math.Max(speechBubbleTimer, duration);

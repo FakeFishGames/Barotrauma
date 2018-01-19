@@ -86,7 +86,10 @@ namespace Barotrauma
                     if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) continue;
                     
                     Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : Color.Red * 0.5f;
-                    DrawSubmarineIndicator(spriteBatch, Submarine.MainSubs[i], indicatorColor);                    
+                    GUI.DrawIndicator(
+                        spriteBatch, Submarine.MainSubs[i].WorldPosition, cam, 
+                        Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
+                        GUI.SubmarineIcon, indicatorColor); 
                 }
             }
 
