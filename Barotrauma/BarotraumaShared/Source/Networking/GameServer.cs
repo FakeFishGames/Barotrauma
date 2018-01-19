@@ -1861,19 +1861,26 @@ namespace Barotrauma.Networking
                 case ChatMessageType.Radio:
                     if (!receiver.IsDead)
                     {
-                        var receiverItem = receiver.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                        //client doesn't have a radio -> don't send
-                        if (receiverItem == null) return "";
+                        if (receiver.Inventory != null)
+                        {
+                            var receiverItem = receiver.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                            //client doesn't have a radio -> don't send
+                            if (receiverItem == null) return "";
 
-                        var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                        if (senderItem == null) return "";
+                            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                            if (senderItem == null) return "";
 
-                        var receiverRadio   = receiverItem.GetComponent<WifiComponent>();
-                        var senderRadio     = senderItem.GetComponent<WifiComponent>();
+                            var receiverRadio = receiverItem.GetComponent<WifiComponent>();
+                            var senderRadio = senderItem.GetComponent<WifiComponent>();
 
-                        if (!receiverRadio.CanReceive(senderRadio)) return "";
+                            if (!receiverRadio.CanReceive(senderRadio)) return "";
 
-                        return ChatMessage.ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
+                            return ChatMessage.ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
+                        }
+                        else
+                        {
+                            return ChatMessage.ApplyDistanceEffect(receiver, sender, message, ChatMessage.SpeakRange, 3.0f);
+                        }
                     }
                     break;
             }
