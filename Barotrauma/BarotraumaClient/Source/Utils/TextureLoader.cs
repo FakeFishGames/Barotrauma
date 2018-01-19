@@ -43,7 +43,6 @@ namespace Barotrauma
         {
             try
             {
-
                 using (Stream fileStream = File.OpenRead(path))
                 {
                     var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
@@ -54,10 +53,24 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Loading texture \""+path+"\" failed!", e);
+                DebugConsole.ThrowError("Loading texture \"" + path + "\" failed!", e);
                 return null;
             }
+        }
 
+        public static Texture2D FromStream(Stream fileStream, bool preMultiplyAlpha = true)
+        {
+            try
+            {
+                var texture = Texture2D.FromStream(_graphicsDevice, fileStream);
+                texture = PreMultiplyAlpha(texture);
+                return texture;
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Loading texture from stream failed!", e);
+                return null;
+            }
         }
 
         private static Texture2D PreMultiplyAlpha(Texture2D texture)

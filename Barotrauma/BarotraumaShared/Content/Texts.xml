@@ -91,6 +91,7 @@
   <Editing>Editing</Editing>
   <Error>Error</Error>
   <Warning>Warning</Warning>
+  <Unknown>Unknown</Unknown>
   <None>None</None>
   <Close>Close</Close>
   <Cancel>Cancel</Cancel>
@@ -190,6 +191,7 @@
   <Permissions>Permissions</Permissions>
   <PermittedConsoleCommands>Permitted console commands</PermittedConsoleCommands>
   <Kick>Kick</Kick>
+  <VoteToKick>Vote to kick</VoteToKick>
   <Ban>Ban</Ban>
   <BanRange>Ban range</BanRange>
   <PrivateMessageTag>[PM]</PrivateMessageTag>
@@ -239,6 +241,17 @@
   <NoCargoSpawnpointWarning>"The submarine does not have spawnpoints for cargo (which are used for determining where to place bought items). To fix this, create a new spawnpoint and change its "spawn type" parameter to "cargo".</NoCargoSpawnpointWarning>
   <FarAwayEntitiesWarning>One or more structures have been placed very far from the submarine. Show the structures?</FarAwayEntitiesWarning>
   <NoBallastTagsWarning>You should add the tag "ballast" to the ballast pumps to allow AI characters to identify which pumps are used for controlling the buoyancy of the submarine.</NoBallastTagsWarning>
+  
+  
+  <!-- Sub description -->
+  <Dimensions>Dimensions</Dimensions>
+  <DimensionsFormat>[width]x[height] m</DimensionsFormat>
+  <SubPreviewImageNotFound>Preview image not found</SubPreviewImageNotFound>
+  <RecommendedCrewSize>Recommended crew size</RecommendedCrewSize>
+  <RecommendedCrewExperience>Recommended crew experience</RecommendedCrewExperience>
+  <CrewExperienceLow>Beginner</CrewExperienceLow>
+  <CrewExperienceMid>Intermediate</CrewExperienceMid>
+  <CrewExperienceHigh>Experienced</CrewExperienceHigh>
   
   <!-- Waypoints -->
   <Waypoint>Waypoint</Waypoint>

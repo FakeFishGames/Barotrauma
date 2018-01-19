@@ -4,13 +4,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class Submarine : Entity, IServerSerializable
     {
+        public Sprite PreviewImage;
+
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
@@ -104,7 +106,7 @@ namespace Barotrauma
             }
         }
 
-        public static bool SaveCurrent(string filePath)
+        public static bool SaveCurrent(string filePath, MemoryStream previewImage = null)
         {
             if (MainSub == null)
             {
@@ -112,7 +114,42 @@ namespace Barotrauma
             }
 
             MainSub.filePath = filePath;
-            return MainSub.SaveAs(filePath);
+            return MainSub.SaveAs(filePath, previewImage);
+        }
+
+        public void CreatePreviewWindow(GUIComponent frame)
+        {
+            new GUITextBlock(new Rectangle(0, 0, 0, 20), Name, "", Alignment.TopCenter, Alignment.TopCenter, frame, true, GUI.LargeFont);
+
+            if (PreviewImage == null)
+            {
+                var txtBlock = new GUITextBlock(new Rectangle(-10, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
+                txtBlock.OutlineColor = txtBlock.TextColor;
+            }
+            else
+            {
+                new GUIImage(new Rectangle(-10, 60, 256, 128), PreviewImage, Alignment.TopLeft, frame);
+            }
+
+            Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
+            string dimensionsStr = realWorldDimensions == Vector2.Zero ?
+                TextManager.Get("Unknown") :
+                TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
+
+            new GUITextBlock(new Rectangle(256, 60, 100, 20),
+                TextManager.Get("Dimensions") + ": " + dimensionsStr,
+                "", frame, GUI.SmallFont);
+
+            new GUITextBlock(new Rectangle(256, 80, 100, 20),
+                TextManager.Get("RecommendedCrewSize") + ": " + (RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax),
+                "", frame, GUI.SmallFont);
+
+            new GUITextBlock(new Rectangle(256, 100, 100, 20),
+                TextManager.Get("RecommendedCrewExperience") + ": " + (string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : RecommendedCrewExperience),
+                "", frame, GUI.SmallFont);
+
+            var descr = new GUITextBlock(new Rectangle(0, 200, 0, 100), Description, "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+            descr.CanBeFocused = false;
         }
 
         public void CheckForErrors()
