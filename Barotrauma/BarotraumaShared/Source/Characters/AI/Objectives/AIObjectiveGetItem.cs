@@ -48,7 +48,7 @@ namespace Barotrauma
 
             this.equip = equip;
 
-            currSearchIndex = 0;
+            currSearchIndex = -1;
 
             this.targetItem = targetItem;
         }
@@ -65,7 +65,7 @@ namespace Barotrauma
 
             this.equip = equip;
 
-            currSearchIndex = 0;
+            currSearchIndex = -1;
 
             this.itemNames = itemNames;
         }
@@ -152,7 +152,7 @@ namespace Barotrauma
 
             float currDist = moveToTarget == null ? 0.0f : Vector2.DistanceSquared(moveToTarget.Position, character.Position);
 
-            for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 2; i++)
+            for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 1; i++)
             {
                 currSearchIndex++;
 
@@ -194,10 +194,11 @@ namespace Barotrauma
 
                 targetItem = item;
                 moveToTarget = rootContainer ?? item;
+
             }
 
             //if searched through all the items and a target wasn't found, can't be completed
-            if (currSearchIndex >= Item.ItemList.Count && targetItem == null) canBeCompleted = false;
+            if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null) canBeCompleted = false;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)
