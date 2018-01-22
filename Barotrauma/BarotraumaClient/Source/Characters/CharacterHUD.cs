@@ -407,6 +407,8 @@ namespace Barotrauma
             Entity target = order.ConnectedController != null ?
                 order.ConnectedController.Item : order.TargetEntity;
 
+            if (target == null) return;
+
             GUI.DrawIndicator(
                 spriteBatch, target.WorldPosition,
                 cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);

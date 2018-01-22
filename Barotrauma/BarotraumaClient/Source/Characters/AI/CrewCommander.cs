@@ -65,7 +65,7 @@ namespace Barotrauma
             foreach (Order order in Order.PrefabList)
             {
                 if (!order.TargetAllCharacters) continue;
-                CreateOrderButton(new Rectangle(0,y,0,20), order, generalOrderFrame);
+                CreateOrderButton(new Rectangle(0, y, 0, 20), order, generalOrderFrame);
 
                 y += 80;
             }
@@ -300,24 +300,34 @@ namespace Barotrauma
 
         private bool SetOrder(GUIButton button, object userData)
         {
+            //order targeted to all characters
             Order order = userData as Order;
             if (order.TargetAllCharacters)
             {
-                if (Character.Controlled == null) return false;
+                if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
                 crewManager.AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
-                OrderChatMessage msg = new OrderChatMessage(order, "", Character.Controlled.CurrentHull, null, Character.Controlled);
-                if (GameMain.Client != null)
+
+                if (crewManager.IsSinglePlayer)
                 {
-                    GameMain.Client.SendChatMessage(msg);
+                    crewManager.AddSinglePlayerChatMessage(Character.Controlled, order.GetChatMessage("", Character.Controlled.CurrentHull?.RoomName));
                 }
-                else if (GameMain.Server != null)
+                else
                 {
-                    GameMain.Server.SendOrderChatMessage(msg, null);
+                    OrderChatMessage msg = new OrderChatMessage(order, "", Character.Controlled.CurrentHull, null, Character.Controlled);
+                    if (GameMain.Client != null)
+                    {
+                        GameMain.Client.SendChatMessage(msg);
+                    }
+                    else if (GameMain.Server != null)
+                    {
+                        GameMain.Server.SendOrderChatMessage(msg, null);
+                    }
                 }
 
                 return true;
             }
 
+            //order targeted to a specific character
             foreach (GUIComponent child in frame.children)
             {
                 Character character = child.UserData as Character;
@@ -327,16 +337,24 @@ namespace Barotrauma
                 if (!characterButton.Selected) continue;
 
                 CreateCharacterOrderFrame(characterButton, order, "");
-                character.SetOrder(order, "");                
-                OrderChatMessage msg = new OrderChatMessage(order, "", order.TargetItemComponent?.Item, character, Character.Controlled);
-                if (GameMain.Client != null)
+                character.SetOrder(order, "");        
+                
+                if (crewManager.IsSinglePlayer)
                 {
-                    GameMain.Client.SendChatMessage(msg);
+                    crewManager.AddSinglePlayerChatMessage(Character.Controlled, order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName));
                 }
-                else if (GameMain.Server != null)
+                else
                 {
-                    GameMain.Server.SendOrderChatMessage(msg, null);
-                }                
+                    OrderChatMessage msg = new OrderChatMessage(order, "", order.TargetItemComponent?.Item, character, Character.Controlled);
+                    if (GameMain.Client != null)
+                    {
+                        GameMain.Client.SendChatMessage(msg);
+                    }
+                    else if (GameMain.Server != null)
+                    {
+                        GameMain.Server.SendOrderChatMessage(msg, null);
+                    }     
+                }
             }
             
             return true;
@@ -389,14 +407,21 @@ namespace Barotrauma
 
             character.SetOrder(order, option);
 
-            OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, Character.Controlled);
-            if (GameMain.Client != null)
+            if (crewManager.IsSinglePlayer)
             {
-                GameMain.Client.SendChatMessage(msg);
+                crewManager.AddSinglePlayerChatMessage(Character.Controlled, order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName, option));
             }
-            else if (GameMain.Server != null)
+            else
             {
-                GameMain.Server.SendOrderChatMessage(msg, null);
+                OrderChatMessage msg = new OrderChatMessage(order, option, order.TargetItemComponent?.Item, character, Character.Controlled);
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.SendChatMessage(msg);
+                }
+                else if (GameMain.Server != null)
+                {
+                    GameMain.Server.SendOrderChatMessage(msg, null);
+                }
             }
 
             return true;

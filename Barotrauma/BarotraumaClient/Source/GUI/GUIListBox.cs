@@ -407,7 +407,7 @@ namespace Barotrauma
             
             frame.Draw(spriteBatch);
 
-            if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
+            if (!scrollBarHidden && scrollBarEnabled) scrollBar.Draw(spriteBatch);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = frame.Rect;
