@@ -43,6 +43,11 @@
     <ChatMessage msg="[name], start fixing leaks!"/>
   </Order>
 
+  <Order name="Extinguish Fires" aitag="extinguishfires" color="1.0,0.0,0.0,1.0">
+    <Sprite texture="Content/UI/uiIcons.png" sourcerect="128,64,64,64"/>
+    <ChatMessage msg="[name], extinguish the fire!"/>
+  </Order>
+  
   <Order name="Charge Batteries" aitag="chargebatteries" doingtext="Charging Batteries" options="Charge, Stop charging" color="0.6,0.85,1.0,1.0"
          appropriatejobs="Engineer">
     <Sprite texture="Content/UI/uiIcons.png" sourcerect="192,0,64,64"/>

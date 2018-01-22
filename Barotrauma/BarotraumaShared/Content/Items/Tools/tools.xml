@@ -127,7 +127,7 @@
   <Item
     name="Fire Extinguisher"
     category="Equipment"
-    Tags="smallitem"
+    Tags="smallitem,extinguisher"
     cargocontainername="Metal Crate"    
     price="100"
     description="A handheld carbon dioxide extinguisher.">
@@ -137,14 +137,14 @@
       <Item name="Steel Bar"/>
     </Deconstruct>
 
-    <Sprite texture ="extinguisher.png"  depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
+    <Sprite texture ="extinguisher.png" depth="0.55" sourcerect="0,0,34,64" origin="0.4,0.5"/>
 
     <Body radius="10" height="45" density="5"/>
 
     <Holdable slots="Any,RightHand+LeftHand" controlpose="false"
               aimpos="40,-20" handle1="-2,30"/>
 
-    <RepairTool extinquishamount="30.0" range="300" barrelpos="21,25" particles="extinguisher" particlespeed="650.0">
+    <RepairTool extinquishamount="60.0" range="500" barrelpos="21,25" particles="extinguisher" particlespeed="650.0">
       <StatusEffect type="OnUse" target="This" Condition="-2.0"/>
       <sound file="extinguisher.ogg" type="OnUse" range="500.0" loop="true"/>
     </RepairTool>
