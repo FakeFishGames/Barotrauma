@@ -180,8 +180,9 @@ namespace Barotrauma
 #if CLIENT
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
-                    GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(Character, 
-                        newOrder.GetChatMessage(Character.Name, Character.Controlled.CurrentHull?.RoomName));   
+                    Character.Speak(
+                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), 
+                        ChatMessage.MessageColor[(int)ChatMessageType.Order]); 
                 }             
 #endif
                 if (GameMain.Server != null)

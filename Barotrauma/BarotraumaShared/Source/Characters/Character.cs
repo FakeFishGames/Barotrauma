@@ -1705,6 +1705,22 @@ namespace Barotrauma
             currentOrderOption = orderOption;
         }
 
+        public void Speak(string message, Color color)
+        {
+#if CLIENT
+            if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
+            {
+                GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(this, message, color);
+            }
+#endif
+            if (GameMain.Server != null)
+            {
+                GameMain.Server.SendChatMessage(message, ChatMessageType.Default, null, this);
+            }
+            ShowSpeechBubble(2.0f, color);
+        }
+
+
         public void ShowSpeechBubble(float duration, Color color)
         {
             speechBubbleTimer = Math.Max(speechBubbleTimer, duration);
