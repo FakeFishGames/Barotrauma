@@ -9,6 +9,8 @@ namespace Barotrauma
 {
     class CrewManager
     {
+        const float ChatMessageFadeTime = 10.0f;
+
         private List<CharacterInfo> characterInfos;
         private List<Character> characters;
 
@@ -18,8 +20,10 @@ namespace Barotrauma
         public int WinningTeam = 1;
         
         private GUIFrame guiFrame;
-        private GUIListBox listBox, orderListBox;
-        
+        private GUIListBox characterListBox, orderListBox;
+
+        private GUIListBox chatBox;
+
         private CrewCommander commander;
 
         private bool isSinglePlayer;
@@ -29,6 +33,11 @@ namespace Barotrauma
             get { return commander; }
         }
 
+        public bool IsSinglePlayer
+        {
+            get { return isSinglePlayer; }
+        }
+
         public List<Pair<Order, float>> ActiveOrders
         {
             get { return activeOrders; }
@@ -36,21 +45,36 @@ namespace Barotrauma
                 
         public CrewManager(bool isSinglePlayer)
         {
+            this.isSinglePlayer = isSinglePlayer;
             characters = new List<Character>();
             characterInfos = new List<CharacterInfo>();
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
             guiFrame.Padding = Vector4.One * 5.0f;
 
-            listBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
-            listBox.ScrollBarEnabled = false;
-            listBox.OnSelected = SelectCharacter;
-            listBox.Visible = isSinglePlayer;
+            characterListBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
+            characterListBox.ScrollBarEnabled = false;
+            characterListBox.OnSelected = SelectCharacter;
+            characterListBox.Visible = isSinglePlayer;
 
             orderListBox = new GUIListBox(new Rectangle(5, 30, 30, 0), Color.Transparent, null, guiFrame);
             orderListBox.ScrollBarEnabled = false;
             orderListBox.OnSelected = SelectCharacterOrder;
             orderListBox.Visible = isSinglePlayer;
+
+            if (isSinglePlayer)
+            {
+                int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
+                int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.2f, 150, 250);
+
+                chatBox = new GUIListBox(new Rectangle(
+                    GameMain.GraphicsWidth - width,
+                    GameMain.GraphicsHeight - 40 - 25 - height,
+                    width, height),
+                    Color.White * 0.5f, null, guiFrame);
+                chatBox.Padding = Vector4.Zero;
+                chatBox.ScrollBarEnabled = false;
+            }
 
             commander = new CrewCommander(this);
         }
@@ -92,8 +116,36 @@ namespace Barotrauma
             return false;
         }
 
+        public void AddSinglePlayerChatMessage(Character sender, string message)
+        {
+            while (chatBox.CountChildren < 10)
+            {
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), "", "", chatBox).UserData = 0.0f;
+            }
+
+            while (chatBox.CountChildren > 10)
+            {
+                chatBox.RemoveChild(chatBox.children[1]);
+            }
+
+            string displayedText = sender.Name + ": " + message;
+            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 0), displayedText,
+                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, Color.White,
+                Alignment.Left, Alignment.CenterRight, "", null, true, GUI.Font);
+            msg.UserData = msg.TextColor.A / 255.0f;
+            
+            chatBox.AddChild(msg);
+            chatBox.BarScroll = 1.0f;
+        }
+
         public bool AddOrder(Order order, float fadeOutTime)
         {
+            if (order.TargetEntity == null)
+            {
+                DebugConsole.ThrowError("Attempted to add an order with no target entity to CrewManager!\n" + Environment.StackTrace);
+                return false;
+            }
+
             Pair<Order, float> existingOrder = activeOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity);
             if (existingOrder != null)
             {
@@ -114,10 +166,10 @@ namespace Barotrauma
 
         public void SetCharacterOrder(Character character, Order order)
         {
-            var characterFrame = listBox.FindChild(character);
+            var characterFrame = characterListBox.FindChild(character);
             if (characterFrame == null) return;
 
-            int characterIndex = listBox.children.IndexOf(characterFrame);
+            int characterIndex = characterListBox.children.IndexOf(characterFrame);
             orderListBox.children[characterIndex].ClearChildren();
             
             if (order == null) return;
@@ -135,9 +187,9 @@ namespace Barotrauma
             commander.ToggleGUIFrame();
 
             int orderIndex = orderListBox.children.IndexOf(component);
-            if (orderIndex < 0 || orderIndex >= listBox.children.Count) return false;
+            if (orderIndex < 0 || orderIndex >= characterListBox.children.Count) return false;
 
-            var characterFrame = listBox.children[orderIndex];
+            var characterFrame = characterListBox.children[orderIndex];
             if (characterFrame == null) return false;
 
             commander.SelectCharacter(characterFrame.UserData as Character);
@@ -156,7 +208,7 @@ namespace Barotrauma
             if (character is AICharacter)
             {
                 commander.UpdateCharacters();
-                character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
+                character.Info.CreateCharacterFrame(characterListBox, character.Info.Name.Replace(' ', '\n'), character);
                 GUIFrame orderFrame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, "ListBoxElement", orderListBox);
                 orderFrame.UserData = character;
 
@@ -216,11 +268,22 @@ namespace Barotrauma
             activeOrders.RemoveAll(o => o.Second <= 0.0f);
 
             if (commander.Frame != null) commander.Frame.Update(deltaTime);
+
+
+            for (int i = chatBox.children.Count - 1; i >= 0; i--)
+            {
+                var textBlock = chatBox.children[i] as GUITextBlock;
+                if (textBlock == null) continue;
+
+                float alpha = (float)textBlock.UserData - (1.0f / ChatMessageFadeTime * deltaTime);
+                textBlock.UserData = alpha;
+                textBlock.TextColor = new Color(textBlock.TextColor, alpha);
+            }
         }
 
         public void ReviveCharacter(Character revivedCharacter)
         {
-            GUIComponent characterBlock = listBox.GetChild(revivedCharacter) as GUIComponent;
+            GUIComponent characterBlock = characterListBox.GetChild(revivedCharacter) as GUIComponent;
             if (characterBlock != null) characterBlock.Color = Color.Transparent;
 
             if (revivedCharacter is AICharacter)
@@ -231,7 +294,7 @@ namespace Barotrauma
 
         public void KillCharacter(Character killedCharacter)
         {
-            GUIComponent characterBlock = listBox.GetChild(killedCharacter) as GUIComponent;
+            GUIComponent characterBlock = characterListBox.GetChild(killedCharacter) as GUIComponent;
             if (characterBlock != null) characterBlock.Color = Color.DarkRed * 0.5f;
 
             if (killedCharacter is AICharacter)
@@ -309,7 +372,7 @@ namespace Barotrauma
 
         public void StartRound()
         {
-            listBox.ClearChildren();
+            characterListBox.ClearChildren();
             characters.Clear();
 
             WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub, false);
@@ -339,7 +402,7 @@ namespace Barotrauma
                 AddCharacter(character);
             }
 
-            if (characters.Any()) listBox.Select(0);// SelectCharacter(null, characters[0]);
+            if (characters.Any()) characterListBox.Select(0);// SelectCharacter(null, characters[0]);
         }
 
         public void EndRound()
@@ -360,7 +423,7 @@ namespace Barotrauma
             characterInfos.RemoveAll(c => c.Character == null);
             
             characters.Clear();
-            listBox.ClearChildren();
+            characterListBox.ClearChildren();
             orderListBox.ClearChildren();
         }
 
@@ -368,7 +431,7 @@ namespace Barotrauma
         {
             characters.Clear();
             characterInfos.Clear();
-            listBox.ClearChildren();
+            characterListBox.ClearChildren();
             orderListBox.ClearChildren();
         }
 
@@ -377,6 +440,7 @@ namespace Barotrauma
             if (commander.IsOpen)
             {
                 commander.Draw(spriteBatch);
+                chatBox.Draw(spriteBatch);
             }
             else
             {

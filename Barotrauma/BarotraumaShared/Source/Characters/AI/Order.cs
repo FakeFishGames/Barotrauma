@@ -159,6 +159,7 @@ namespace Barotrauma
             TargetAllCharacters = prefab.TargetAllCharacters;
             AppropriateJobs     = prefab.AppropriateJobs;
             chatMessages        = prefab.chatMessages;
+            FadeOutTime         = prefab.FadeOutTime;
 
             TargetEntity = targetEntity;
             if (targetItem != null)
@@ -166,15 +167,15 @@ namespace Barotrauma
                 if (UseController)
                 {
                     var controllers = targetItem.Item.GetConnectedComponents<Controller>();
-                    if (controllers.Count > 0) ConnectedController = controllers[0]; 
+                    if (controllers.Count > 0) ConnectedController = controllers[0];
                 }
                 TargetEntity = targetItem.Item;
-                TargetItemComponent = targetItem;               
+                TargetItemComponent = targetItem;
             }
         }
 
         private Order(string name, string doingText, string[] parameters = null)
-            :this (name,doingText, null, parameters)
+            : this(name, doingText, null, parameters)
         {
         }
 

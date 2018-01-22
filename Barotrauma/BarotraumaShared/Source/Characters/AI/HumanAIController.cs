@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 
@@ -140,22 +141,21 @@ namespace Barotrauma
 
         private void ReportProblems()
         {
+            if (GameMain.Client != null) return;
+
+            Order newOrder = null;
             if (Character.CurrentHull != null)
             {
                 if (Character.CurrentHull.FireSources.Count > 0)
                 {
-#if CLIENT
                     var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportfire");
-                    GameMain.GameSession?.CrewManager.AddOrder(new Order(orderPrefab, Character.CurrentHull, null), orderPrefab.FadeOutTime);
-#endif
+                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
                 }
 
                 if (Character.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor == null && g.Open > 0.0f))
                 {
-#if CLIENT
                     var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportbreach");
-                    GameMain.GameSession?.CrewManager.AddOrder(new Order(orderPrefab, Character.CurrentHull, null), orderPrefab.FadeOutTime);                    
-#endif
+                    newOrder = new Order(orderPrefab, Character.CurrentHull, null);
                 }
 
                 foreach (Character c in Character.CharacterList)
@@ -163,11 +163,31 @@ namespace Barotrauma
                     if (c.CurrentHull == Character.CurrentHull && !c.IsDead &&
                         (c.AIController is EnemyAIController || c.TeamID != Character.TeamID))
                     {
-#if CLIENT
                         var orderPrefab = Order.PrefabList.Find(o => o.AITag == "reportintruders");
-                        GameMain.GameSession?.CrewManager.AddOrder(new Order(orderPrefab, Character.CurrentHull, null), orderPrefab.FadeOutTime);                   
-#endif
+                        newOrder = new Order(orderPrefab, Character.CurrentHull, null);
                     }
+                }
+            }
+
+            if (Character.Bleeding > 1.0f || Character.Health < Character.MaxHealth * 0.1f)
+            {
+                var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
+                newOrder = new Order(orderPrefab, Character.CurrentHull, null);
+            }
+
+            if (newOrder != null)
+            {
+#if CLIENT
+                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
+                {
+                    GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(Character, 
+                        newOrder.GetChatMessage(Character.Name, Character.Controlled.CurrentHull?.RoomName));   
+                }             
+#endif
+                if (GameMain.Server != null)
+                {
+                    OrderChatMessage msg = new OrderChatMessage(newOrder, "", Character.Controlled.CurrentHull, null, Character.Controlled);
+                    GameMain.Server.SendOrderChatMessage(msg, null);
                 }
             }
         }
