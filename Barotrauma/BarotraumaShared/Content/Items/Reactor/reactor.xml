@@ -93,19 +93,5 @@
     <Holdable handle1="0,0" slots="Any,RightHand,LeftHand"/>
   </Item>
   
-
-  <Item
-    name="Heat Absorber"
-    Tags="smallitem"
-    cargocontainername="Metal Crate"
-    price="50">
-
-    <Sprite texture ="heatabsorber.png"/>
-
-    <Body radius="6" height="22" density="5"/>
-
-    <Holdable handle1="0,0" slots="Any"/>
-  </Item>
-
 </Items>
 
