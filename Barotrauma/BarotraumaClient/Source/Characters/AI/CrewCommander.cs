@@ -310,8 +310,7 @@ namespace Barotrauma
                 if (crewManager.IsSinglePlayer)
                 {
                     Character.Controlled.Speak(
-                        order.GetChatMessage("", Character.Controlled.CurrentHull?.RoomName), 
-                        ChatMessage.MessageColor[(int)ChatMessageType.Order]);
+                        order.GetChatMessage("", Character.Controlled.CurrentHull?.RoomName), ChatMessageType.Order);
                 }
                 else
                 {
@@ -344,8 +343,7 @@ namespace Barotrauma
                 if (crewManager.IsSinglePlayer)
                 {
                     Character.Controlled.Speak(
-                        order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName),
-                        ChatMessage.MessageColor[(int)ChatMessageType.Order]);
+                        order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName), ChatMessageType.Order);
                 }
                 else
                 {
@@ -409,13 +407,10 @@ namespace Barotrauma
             Order order = component.Parent.UserData as Order;
             Character character = component.Parent.Parent.Parent.UserData as Character;
 
-            character.SetOrder(order, option);
-
             if (crewManager.IsSinglePlayer)
             {
                 Character.Controlled.Speak(
-                    order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName),
-                    ChatMessage.MessageColor[(int)ChatMessageType.Order]);
+                    order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName), ChatMessageType.Order);
             }
             else
             {
@@ -429,6 +424,8 @@ namespace Barotrauma
                     GameMain.Server.SendOrderChatMessage(msg, null);
                 }
             }
+
+            character.SetOrder(order, option);
 
             return true;
         }

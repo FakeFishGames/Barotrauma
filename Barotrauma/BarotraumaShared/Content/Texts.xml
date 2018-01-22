@@ -341,6 +341,10 @@
   <GiveInHelpMultiplayer>Let go of your character and enter spectator mode (other players will no longer be able to revive you)</GiveInHelpMultiplayer>
   <GiveInHelpSingleplayer>"The character can no longer be revived if you give in."</GiveInHelpSingleplayer>
 
+  <!-- Character dialogue -->
+  <DialogAffirmative>Aye aye!</DialogAffirmative>
+  <DialogAffirmative>Yes, sir!</DialogAffirmative>
+    
   <!-- Status -->  
   <Deceased>Deceased</Deceased>
   <Unconscious>Unconscious</Unconscious>
@@ -371,7 +375,5 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
-
-
 
 </infotexts>

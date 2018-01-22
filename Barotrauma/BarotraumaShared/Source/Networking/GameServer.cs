@@ -1823,7 +1823,7 @@ namespace Barotrauma.Networking
                         if (senderCharacter != null && 
                             client.Character != null && !client.Character.IsDead)
                         {
-                            modifiedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, client.Character);
+                            modifiedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, client.Character);
 
                             //too far to hear the msg -> don't send
                             if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
@@ -1851,7 +1851,7 @@ namespace Barotrauma.Networking
             string myReceivedMessage = message;
             if (gameStarted && myCharacter != null && senderCharacter != null)
             {
-                myReceivedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, myCharacter);
+                myReceivedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, myCharacter);
             }
 
             if (!string.IsNullOrWhiteSpace(myReceivedMessage) && 
@@ -1873,7 +1873,7 @@ namespace Barotrauma.Networking
                 if (message.Sender != null &&
                     client.Character != null && !client.Character.IsDead)
                 {
-                    modifiedMessage = ApplyChatMsgDistanceEffects(message.Text, ChatMessageType.Radio, message.Sender, client.Character);
+                    modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Text, ChatMessageType.Radio, message.Sender, client.Character);
 
                     //too far to hear the msg -> don't send
                     if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
@@ -1889,49 +1889,13 @@ namespace Barotrauma.Networking
             string myReceivedMessage = message.Text;
             if (gameStarted && myCharacter != null)
             {
-                myReceivedMessage = ApplyChatMsgDistanceEffects(message.Text, ChatMessageType.Radio, message.Sender, myCharacter);
+                myReceivedMessage = ChatMessage.ApplyDistanceEffect(message.Text, ChatMessageType.Radio, message.Sender, myCharacter);
             }
 
             if (!string.IsNullOrWhiteSpace(myReceivedMessage))
             {
                 AddChatMessage(myReceivedMessage, ChatMessageType.Order, message.SenderName, message.Sender);
             }
-        }
-
-        private string ApplyChatMsgDistanceEffects(string message, ChatMessageType type, Character sender, Character receiver)
-        {
-            if (sender == null) return "";
-
-            switch (type)
-            {
-                case ChatMessageType.Default:
-                    if (!receiver.IsDead)
-                    {
-                        return ChatMessage.ApplyDistanceEffect(receiver, sender, message, ChatMessage.SpeakRange, 3.0f);
-                    }
-                    break;
-                case ChatMessageType.Radio:
-                case ChatMessageType.Order:
-                    if (!receiver.IsDead)
-                    {
-                        var receiverItem = receiver.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                        //client doesn't have a radio -> don't send
-                        if (receiverItem == null || !receiver.HasEquippedItem(receiverItem)) return "";
-
-                        var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                        if (senderItem == null || !sender.HasEquippedItem(senderItem)) return "";
-
-                        var receiverRadio   = receiverItem.GetComponent<WifiComponent>();
-                        var senderRadio     = senderItem.GetComponent<WifiComponent>();
-
-                        if (!receiverRadio.CanReceive(senderRadio)) return "";
-
-                        return ChatMessage.ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
-                    }
-                    break;
-            }
-
-            return message;
         }
 
         private void FileTransferChanged(FileSender.FileTransferOut transfer)

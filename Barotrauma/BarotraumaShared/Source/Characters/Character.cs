@@ -1705,19 +1705,33 @@ namespace Barotrauma
             currentOrderOption = orderOption;
         }
 
-        public void Speak(string message, Color color)
+        public void Speak(string message, ChatMessageType? messageType)
         {
+            if (GameMain.Client != null) return;
+
+            if (messageType == null)
+            {
+                messageType = ChatMessageType.Default;
+                var senderItem = Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                if (senderItem != null && HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit())
+                {
+                    messageType = ChatMessageType.Radio;
+                }
+            }
+
+
 #if CLIENT
             if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
             {
-                GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(this, message, color);
+                string modifiedMessage = ChatMessage.ApplyDistanceEffect(message, messageType.Value, this, Controlled);
+                GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(this, modifiedMessage, ChatMessage.MessageColor[(int)messageType]);
             }
 #endif
             if (GameMain.Server != null)
             {
-                GameMain.Server.SendChatMessage(message, ChatMessageType.Default, null, this);
+                GameMain.Server.SendChatMessage(message, messageType, null, this);
             }
-            ShowSpeechBubble(2.0f, color);
+            ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)messageType]);
         }
 
 
