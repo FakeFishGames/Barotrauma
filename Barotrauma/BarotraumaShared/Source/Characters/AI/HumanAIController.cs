@@ -181,8 +181,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
                     Character.Speak(
-                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), 
-                        ChatMessage.MessageColor[(int)ChatMessageType.Order]); 
+                        newOrder.GetChatMessage("", Character.CurrentHull?.RoomName), ChatMessageType.Order); 
                 }             
 #endif
                 if (GameMain.Server != null)
@@ -213,6 +212,10 @@ namespace Barotrauma
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option);
+            
+            CoroutineManager.InvokeAfter(
+                () => Character.Speak(TextManager.Get("DialogAffirmative"), null),
+                Rand.Range(1.0f, 2.0f));
 
             SetOrderProjSpecific(order);
         }

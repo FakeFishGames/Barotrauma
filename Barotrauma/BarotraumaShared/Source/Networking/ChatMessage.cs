@@ -1,6 +1,8 @@
-﻿using Lidgren.Network;
+﻿using Barotrauma.Items.Components;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace Barotrauma.Networking
@@ -130,6 +132,43 @@ namespace Barotrauma.Networking
             }
 
             return sb.ToString();
+        }
+
+        public static string ApplyDistanceEffect(string message, ChatMessageType type, Character sender, Character receiver)
+        {
+            if (sender == null) return "";
+
+            switch (type)
+            {
+                case ChatMessageType.Default:
+                    if (receiver != null && !receiver.IsDead)
+                    {
+                        return ApplyDistanceEffect(receiver, sender, message, SpeakRange, 3.0f);
+                    }
+                    break;
+                case ChatMessageType.Radio:
+                case ChatMessageType.Order:
+                    if (receiver != null && !receiver.IsDead)
+                    {
+                        var receiverItem = receiver.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                        //character doesn't have a radio -> don't send
+                        if (receiverItem == null || !receiver.HasEquippedItem(receiverItem)) return "";
+
+                        var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                        if (senderItem == null || !sender.HasEquippedItem(senderItem)) return "";
+
+                        var receiverRadio = receiverItem.GetComponent<WifiComponent>();
+                        var senderRadio = senderItem.GetComponent<WifiComponent>();
+
+                        if (!receiverRadio.CanReceive(senderRadio)) return "";
+
+                        return ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
+                    }
+
+                    break;
+            }
+
+            return message;
         }
 
         public static void ServerRead(NetIncomingMessage msg, Client c)
