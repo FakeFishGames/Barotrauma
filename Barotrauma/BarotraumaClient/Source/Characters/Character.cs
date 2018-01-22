@@ -271,7 +271,7 @@ namespace Barotrauma
                 if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
             
-            if (this == controlled || GUI.DisableHUD) return;
+            if (GUI.DisableHUD) return;
 
             Vector2 pos = DrawPosition;
             pos.Y = -pos.Y;

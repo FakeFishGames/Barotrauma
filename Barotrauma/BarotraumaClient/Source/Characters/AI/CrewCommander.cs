@@ -309,7 +309,9 @@ namespace Barotrauma
 
                 if (crewManager.IsSinglePlayer)
                 {
-                    crewManager.AddSinglePlayerChatMessage(Character.Controlled, order.GetChatMessage("", Character.Controlled.CurrentHull?.RoomName));
+                    Character.Controlled.Speak(
+                        order.GetChatMessage("", Character.Controlled.CurrentHull?.RoomName), 
+                        ChatMessage.MessageColor[(int)ChatMessageType.Order]);
                 }
                 else
                 {
@@ -341,7 +343,9 @@ namespace Barotrauma
                 
                 if (crewManager.IsSinglePlayer)
                 {
-                    crewManager.AddSinglePlayerChatMessage(Character.Controlled, order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName));
+                    Character.Controlled.Speak(
+                        order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName),
+                        ChatMessage.MessageColor[(int)ChatMessageType.Order]);
                 }
                 else
                 {
@@ -409,7 +413,9 @@ namespace Barotrauma
 
             if (crewManager.IsSinglePlayer)
             {
-                crewManager.AddSinglePlayerChatMessage(Character.Controlled, order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName, option));
+                Character.Controlled.Speak(
+                    order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName),
+                    ChatMessage.MessageColor[(int)ChatMessageType.Order]);
             }
             else
             {

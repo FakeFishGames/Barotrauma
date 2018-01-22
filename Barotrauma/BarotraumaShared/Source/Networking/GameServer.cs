@@ -1656,9 +1656,8 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Add the message to the chatbox and pass it to all clients who can receive it
         /// </summary>
-        public void SendChatMessage(string message, ChatMessageType? type = null, Client senderClient = null)
+        public void SendChatMessage(string message, ChatMessageType? type = null, Client senderClient = null, Character senderCharacter = null)
         {
-            Character senderCharacter = null;
             string senderName = "";
 
             Client targetClient = null;
@@ -1728,11 +1727,18 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                //msg sent by the server
                 if (senderClient == null)
                 {
-                    senderCharacter = myCharacter;
-                    senderName = myCharacter == null ? name : myCharacter.Name;
+                    //msg sent by the server
+                    if (senderCharacter == null)
+                    {
+                        senderCharacter = myCharacter;
+                        senderName = myCharacter == null ? name : myCharacter.Name;
+                    }
+                    else //msg sent by an AI character
+                    {
+                        senderName = senderCharacter.Name;
+                    }
                 }                
                 else //msg sent by a client
                 {
@@ -1754,10 +1760,17 @@ namespace Barotrauma.Networking
             }
             else
             {
-                //msg sent by the server
                 if (senderClient == null)
                 {
-                    senderName = name;
+                    //msg sent by the server
+                    if (senderCharacter == null)
+                    {
+                        senderName = name;
+                    }
+                    else //sent by an AI character, not allowed when the game is not running
+                    {
+                        return;
+                    }
                 }                
                 else //msg sent by a client          
                 {

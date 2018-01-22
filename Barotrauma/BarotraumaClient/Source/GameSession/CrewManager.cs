@@ -116,8 +116,14 @@ namespace Barotrauma
             return false;
         }
 
-        public void AddSinglePlayerChatMessage(Character sender, string message)
+        public void AddSinglePlayerChatMessage(Character sender, string message, Color color)
         {
+            if (!isSinglePlayer)
+            {
+                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
+                return;
+            }
+
             while (chatBox.CountChildren < 10)
             {
                 new GUITextBlock(new Rectangle(0, 0, 0, 20), "", "", chatBox).UserData = 0.0f;
@@ -130,7 +136,7 @@ namespace Barotrauma
 
             string displayedText = sender.Name + ": " + message;
             GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 0), displayedText,
-                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, Color.White,
+                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, color,
                 Alignment.Left, Alignment.CenterRight, "", null, true, GUI.Font);
             msg.UserData = msg.TextColor.A / 255.0f;
             
@@ -248,7 +254,8 @@ namespace Barotrauma
         {
             guiFrame.Update(deltaTime);
             
-            if (GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
+            if (GUIComponent.KeyboardDispatcher.Subscriber == null && 
+                GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
             {
                 //deselect construction unless it's the ladders the character is climbing
                 if (!commander.IsOpen && Character.Controlled != null && 
@@ -269,15 +276,17 @@ namespace Barotrauma
 
             if (commander.Frame != null) commander.Frame.Update(deltaTime);
 
-
-            for (int i = chatBox.children.Count - 1; i >= 0; i--)
+            if (isSinglePlayer)
             {
-                var textBlock = chatBox.children[i] as GUITextBlock;
-                if (textBlock == null) continue;
+                for (int i = chatBox.children.Count - 1; i >= 0; i--)
+                {
+                    var textBlock = chatBox.children[i] as GUITextBlock;
+                    if (textBlock == null) continue;
 
-                float alpha = (float)textBlock.UserData - (1.0f / ChatMessageFadeTime * deltaTime);
-                textBlock.UserData = alpha;
-                textBlock.TextColor = new Color(textBlock.TextColor, alpha);
+                    float alpha = (float)textBlock.UserData - (1.0f / ChatMessageFadeTime * deltaTime);
+                    textBlock.UserData = alpha;
+                    textBlock.TextColor = new Color(textBlock.TextColor, alpha);
+                }
             }
         }
 
@@ -440,7 +449,10 @@ namespace Barotrauma
             if (commander.IsOpen)
             {
                 commander.Draw(spriteBatch);
-                chatBox.Draw(spriteBatch);
+                if (isSinglePlayer)
+                {
+                    chatBox.Draw(spriteBatch);
+                }
             }
             else
             {
