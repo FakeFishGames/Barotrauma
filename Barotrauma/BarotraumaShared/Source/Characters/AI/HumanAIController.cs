@@ -212,10 +212,7 @@ namespace Barotrauma
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option);
-            
-            CoroutineManager.InvokeAfter(
-                () => Character.Speak(TextManager.Get("DialogAffirmative"), null),
-                Rand.Range(1.0f, 2.0f));
+            Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
 
             SetOrderProjSpecific(order);
         }

@@ -388,6 +388,8 @@ namespace Barotrauma.Items.Components
                     };
                     objective.AddSubObjective(containFuelObjective);
 
+                    character?.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
+
                     return false;
                 }
             }

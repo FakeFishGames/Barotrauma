@@ -1501,13 +1501,12 @@ namespace Barotrauma
 
             PreviousHull = CurrentHull;
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull, true);
-            //if (PreviousHull != CurrentHull && Character.Controlled == this) Hull.DetectItemVisibility(this); //WIP item culling
 
             speechBubbleTimer = Math.Max(0.0f, speechBubbleTimer - deltaTime);
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
-            
-            if (inventory!=null)
+
+            if (inventory != null)
             {
                 foreach (Item item in inventory.Items)
                 {
@@ -1519,7 +1518,7 @@ namespace Barotrauma
             }
 
             HideFace = false;
-                        
+
             if (isDead) return;
 
             if (huskInfection != null) huskInfection.Update(deltaTime, this);
@@ -1581,6 +1580,8 @@ namespace Barotrauma
                 UpdateUnconscious(deltaTime);
                 return;
             }
+
+            UpdateAIChatMessages(deltaTime);
 
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
             if (IsForceRagdolled)
@@ -1706,33 +1707,73 @@ namespace Barotrauma
             currentOrderOption = orderOption;
         }
 
-        public void Speak(string message, ChatMessageType? messageType)
+        private List<AIChatMessage> aiChatMessageQueue = new List<AIChatMessage>();
+        private List<AIChatMessage> prevAiChatMessages = new List<AIChatMessage>();
+
+        public void Speak(string message, ChatMessageType? messageType, float delay = 0.0f, string identifier = "", float minDurationBetweenSimilar = 0.0f)
         {
             if (GameMain.Client != null) return;
 
-            if (messageType == null)
+            //already sent a similar message a moment ago
+            if (!string.IsNullOrEmpty(identifier) && minDurationBetweenSimilar > 0.0f &&
+                (aiChatMessageQueue.Any(m => m.Identifier == identifier) ||
+                prevAiChatMessages.Any(m => m.Identifier == identifier && m.SendTime > Timing.TotalTime - minDurationBetweenSimilar)))
             {
-                messageType = ChatMessageType.Default;
-                var senderItem = Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                if (senderItem != null && HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit())
+                return;
+            }
+
+            aiChatMessageQueue.Add(new AIChatMessage(message, messageType, identifier, delay));
+        }
+
+        private void UpdateAIChatMessages(float deltaTime)
+        {
+            if (GameMain.Client != null) return;
+
+            List<AIChatMessage> sentMessages = new List<AIChatMessage>();
+            foreach (AIChatMessage message in aiChatMessageQueue)
+            {
+                message.SendDelay -= deltaTime;
+                if (message.SendDelay > 0.0f) continue;
+
+                if (message.MessageType == null)
                 {
-                    messageType = ChatMessageType.Radio;
+                    message.MessageType = ChatMessageType.Default;
+                    var senderItem = Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
+                    if (senderItem != null && HasEquippedItem(senderItem) && senderItem.GetComponent<WifiComponent>().CanTransmit())
+                    {
+                        message.MessageType = ChatMessageType.Radio;
+                    }
+                }
+#if CLIENT
+                if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
+                {
+                    string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
+                    GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(this, modifiedMessage, ChatMessage.MessageColor[(int)message.MessageType.Value]);
+                }
+ #endif
+                if (GameMain.Server != null)
+                {
+                    GameMain.Server.SendChatMessage(message.Message, message.MessageType.Value, null, this);
+                }
+                ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.MessageType.Value]);
+                sentMessages.Add(message);
+            }
+
+            foreach (AIChatMessage sent in sentMessages)
+            {
+                sent.SendTime = Timing.TotalTime;
+                aiChatMessageQueue.Remove(sent);
+                prevAiChatMessages.Add(sent);
+            }
+
+            for (int i = prevAiChatMessages.Count - 1; i >= 0; i--)
+            {
+                if (prevAiChatMessages[i].SendTime < Timing.TotalTime - 60.0f)
+                {
+                    prevAiChatMessages.RemoveRange(0, i + 1);
+                    break;
                 }
             }
-
-
-#if CLIENT
-            if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
-            {
-                string modifiedMessage = ChatMessage.ApplyDistanceEffect(message, messageType.Value, this, Controlled);
-                GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(this, modifiedMessage, ChatMessage.MessageColor[(int)messageType]);
-            }
-#endif
-            if (GameMain.Server != null)
-            {
-                GameMain.Server.SendChatMessage(message, messageType, null, this);
-            }
-            ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)messageType]);
         }
 
 

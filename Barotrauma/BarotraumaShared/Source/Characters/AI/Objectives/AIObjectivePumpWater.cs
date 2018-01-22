@@ -52,10 +52,6 @@ namespace Barotrauma
             }
 
             FindPumps();
-            foreach (Pump pump in pumps)
-            {
-                AddSubObjective(new AIObjectiveOperateItem(pump, character, orderOption, false));
-            }
         }
 
         private void FindPumps()
@@ -96,6 +92,12 @@ namespace Barotrauma
                 }
 
                 pumps.Add(pump);
+            }
+
+
+            foreach (Pump pump in pumps)
+            {
+                AddSubObjective(new AIObjectiveOperateItem(pump, character, orderOption, false));
             }
         }
     }

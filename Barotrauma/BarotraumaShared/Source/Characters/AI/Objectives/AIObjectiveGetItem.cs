@@ -45,12 +45,11 @@ namespace Barotrauma
             : base(character, "")
         {
             canBeCompleted = true;
-
-            this.equip = equip;
-
             currSearchIndex = -1;
-
+            this.equip = equip;
             this.targetItem = targetItem;
+
+            CheckInventory();
         }
 
         public AIObjectiveGetItem(Character character, string itemName, bool equip = false)
@@ -62,12 +61,23 @@ namespace Barotrauma
             : base(character, "")
         {
             canBeCompleted = true;
-
-            this.equip = equip;
-
             currSearchIndex = -1;
-
+            this.equip = equip;
             this.itemNames = itemNames;
+
+            CheckInventory();
+        }
+
+        private void CheckInventory()
+        {
+            for (int i = 0; i < character.Inventory.Items.Length; i++)
+            {
+                if (character.Inventory.Items[i] == null) continue;
+                if (!itemNames.Any(name => character.Inventory.Items[i].Prefab.NameMatches(name) || character.Inventory.Items[i].HasTag(name))) continue;
+
+                targetItem = character.Inventory.Items[i];
+                currItemPriority = 100.0f;
+            }
         }
 
         protected override void Act(float deltaTime)

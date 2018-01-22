@@ -177,11 +177,25 @@ namespace Barotrauma.Items.Components
         {
             if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
             {
-                RechargeSpeed = maxRechargeSpeed * 0.5f;
+                if (Math.Abs(rechargeSpeed - maxRechargeSpeed * 0.5f) > 0.05f)
+                {
+                    RechargeSpeed = maxRechargeSpeed * 0.5f;
+                    character.Speak(TextManager.Get("DialogChargeBatteries")
+                        .Replace("[itemname]", item.Name)
+                        .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
+                }
             }
             else
             {
-                RechargeSpeed = 0.0f;
+                if (rechargeSpeed > 0.0f)
+                {
+                    RechargeSpeed = 0.0f;
+
+                    RechargeSpeed = maxRechargeSpeed * 0.5f;
+                    character.Speak(TextManager.Get("DialogStopChargingBatteries")
+                        .Replace("[itemname]", item.Name)
+                        .Replace("[rate]", ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString()), null, 1.0f, "chargebattery", 10.0f);
+                }
             }
 
             return true;
@@ -203,12 +217,12 @@ namespace Barotrauma.Items.Components
                 
         public void ServerRead(ClientNetObject type, NetBuffer msg, Client c)
         {
-            float newRechargeSpeed = msg.ReadRangedInteger(0,10) / 10.0f * maxRechargeSpeed;
+            float newRechargeSpeed = msg.ReadRangedInteger(0, 10) / 10.0f * maxRechargeSpeed;
 
             if (item.CanClientAccess(c))
             {
                 RechargeSpeed = newRechargeSpeed;
-                GameServer.Log(c.Character.LogName + " set the recharge speed of "+item.Name+" to "+ (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(c.Character.LogName + " set the recharge speed of " + item.Name + " to " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
             }
 
             item.CreateServerEvent(this);
