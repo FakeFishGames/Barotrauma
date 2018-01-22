@@ -322,16 +322,63 @@ namespace Barotrauma.Lights
                 
                 var visibleHullSegments = hull.GetVisibleSegments(drawPos);
                 visibleSegments.AddRange(visibleHullSegments);
-
-                foreach (Segment s in visibleHullSegments)
+            }
+            
+            //Generate new points at the intersections between segments
+            //This is necessary for the light volume to generate properly on some subs
+            for (int i = 0; i < visibleSegments.Count; i++)
+            {
+                for (int j = 0; j < visibleSegments.Count; j++)
                 {
-                    points.Add(s.Start);
-                    points.Add(s.End);
-                    if (Math.Abs(s.Start.WorldPos.X - drawPos.X) > bounds) bounds = Math.Abs(s.Start.WorldPos.X - drawPos.X);
-                    if (Math.Abs(s.Start.WorldPos.Y - drawPos.Y) > bounds) bounds = Math.Abs(s.Start.WorldPos.Y - drawPos.Y);
-                    if (Math.Abs(s.End.WorldPos.X - drawPos.X) > bounds) bounds = Math.Abs(s.End.WorldPos.X - drawPos.X);
-                    if (Math.Abs(s.End.WorldPos.Y - drawPos.Y) > bounds) bounds = Math.Abs(s.End.WorldPos.Y - drawPos.Y);
+                    if (j == i) continue;
+                    Vector2 p1a = visibleSegments[i].Start.WorldPos;
+                    Vector2 p1b = visibleSegments[i].End.WorldPos;
+                    Vector2 p2a = visibleSegments[j].Start.WorldPos;
+                    Vector2 p2b = visibleSegments[j].End.WorldPos;
+
+                    if (Vector2.DistanceSquared(p1a, p2a) < 5.0f ||
+                        Vector2.DistanceSquared(p1a, p2b) < 5.0f ||
+                        Vector2.DistanceSquared(p1b, p2a) < 5.0f ||
+                        Vector2.DistanceSquared(p1b, p2b) < 5.0f)
+                    {
+                        continue;
+                    }
+
+                    Vector2? intersection = MathUtils.GetLineIntersection(visibleSegments[i].Start.WorldPos,
+                                                                          visibleSegments[i].End.WorldPos,
+                                                                          visibleSegments[j].Start.WorldPos,
+                                                                          visibleSegments[j].End.WorldPos);
+
+                    if (intersection != null)
+                    {
+                        Vector2 intersectionVal = intersection.Value;
+
+                        SegmentPoint start = visibleSegments[i].Start;
+                        SegmentPoint end = visibleSegments[i].End;
+                        SegmentPoint mid = new SegmentPoint(intersectionVal);
+
+                        if (Vector2.DistanceSquared(start.WorldPos, mid.WorldPos) < 5.0f ||
+                            Vector2.DistanceSquared(end.WorldPos, mid.WorldPos) < 5.0f)
+                        {
+                            continue;
+                        }
+
+                        visibleSegments[i] = new Segment(start, mid);
+                        visibleSegments.Insert(i + 1, new Segment(mid, end));
+                        i--;
+                        break;
+                    }
                 }
+            }
+
+            foreach (Segment s in visibleSegments)
+            {
+                points.Add(s.Start);
+                points.Add(s.End);
+                if (Math.Abs(s.Start.WorldPos.X - drawPos.X) > bounds) bounds = Math.Abs(s.Start.WorldPos.X - drawPos.X);
+                if (Math.Abs(s.Start.WorldPos.Y - drawPos.Y) > bounds) bounds = Math.Abs(s.Start.WorldPos.Y - drawPos.Y);
+                if (Math.Abs(s.End.WorldPos.X - drawPos.X) > bounds) bounds = Math.Abs(s.End.WorldPos.X - drawPos.X);
+                if (Math.Abs(s.End.WorldPos.Y - drawPos.Y) > bounds) bounds = Math.Abs(s.End.WorldPos.Y - drawPos.Y);
             }
 
             //add a square-shaped boundary to make sure we've got something to construct the triangles from
@@ -345,15 +392,13 @@ namespace Barotrauma.Lights
                 new SegmentPoint(new Vector2(drawPos.X - bounds, drawPos.Y + bounds))
             };
 
-            //points.Clear();
             points.AddRange(boundaryCorners);
 
-            //visibleSegments.Clear();
             for (int i = 0; i < 4; i++)
             {
                 visibleSegments.Add(new Segment(boundaryCorners[i], boundaryCorners[(i + 1) % 4]));
             }
-
+            
             var compareCCW = new CompareSegmentPointCW(drawPos);
             try
             {
@@ -396,20 +441,25 @@ namespace Barotrauma.Lights
                 if (intersection2.First < 0) return new List<Vector2>();
                 Segment seg1 = visibleSegments[intersection1.First];
                 Segment seg2 = visibleSegments[intersection2.First];
-
+                
                 bool isPoint1 = MathUtils.LineToPointDistance(seg1.Start.WorldPos, seg1.End.WorldPos, p.WorldPos) < 5.0f;
                 bool isPoint2 = MathUtils.LineToPointDistance(seg2.Start.WorldPos, seg2.End.WorldPos, p.WorldPos) < 5.0f;
 
-                //hit at the current segmentpoint -> place the segmentpoint into the list
                 if (isPoint1 && isPoint2)
                 {
+                    //hit at the current segmentpoint -> place the segmentpoint into the list
                     output.Add(p.WorldPos);
                 }
                 else if (intersection1.First != intersection2.First)
                 {
+                    //the raycasts landed on different segments
+                    //we definitely want to generate new geometry here
                     output.Add(isPoint1 ? p.WorldPos : intersection1.Second);
                     output.Add(isPoint2 ? p.WorldPos : intersection2.Second);
                 }
+                //if neither of the conditions above are met, we just assume
+                //that the raycasts both resulted on the same segment
+                //and creating geometry here would be wasteful
             }
 
             //remove points that are very close to each other
@@ -482,13 +532,19 @@ namespace Barotrauma.Lights
             for (int i = 0; i < rayCastHits.Count; i++)
             {
                 Vector2 vertex = rayCastHits[i];
+                
+                //we'll use the previous and next vertices to calculate the normals
+                //of the two segments this vertex belongs to
+                //so we can add new vertices based on these normals
                 Vector2 prevVertex = rayCastHits[i > 0 ? i - 1 : rayCastHits.Count - 1];
                 Vector2 nextVertex = rayCastHits[i < rayCastHits.Count - 1 ? i + 1 : 0];
+                
                 Vector2 rawDiff = vertex - drawPos;
                 Vector2 diff = rawDiff;
                 diff /= range * 2.0f;
                 if (overrideLightTexture != null)
                 {
+                    //calculate texture coordinates based on the light's rotation
                     Vector2 originDiff = diff;
 
                     diff.X = originDiff.X * cosAngle - originDiff.Y * sinAngle;
@@ -497,22 +553,36 @@ namespace Barotrauma.Lights
 
                     diff += uvOffset;
                 }
-
+                
+                //calculate normal of first segment
                 Vector2 nDiff1 = vertex - nextVertex;
                 float tx = nDiff1.X; nDiff1.X = -nDiff1.Y; nDiff1.Y = tx;
                 nDiff1 /= Math.Max(Math.Abs(nDiff1.X), Math.Abs(nDiff1.Y));
+                //if the normal is pointing towards the light origin
+                //rather than away from it, invert it
+                if (Vector2.DistanceSquared(nDiff1, rawDiff) > Vector2.DistanceSquared(-nDiff1, rawDiff)) nDiff1 = -nDiff1;
+                
+                //calculate normal of second segment
                 Vector2 nDiff2 = prevVertex - vertex;
                 tx = nDiff2.X; nDiff2.X = -nDiff2.Y; nDiff2.Y = tx;
                 nDiff2 /= Math.Max(Math.Abs(nDiff2.X),Math.Abs(nDiff2.Y));
+                //if the normal is pointing towards the light origin
+                //rather than away from it, invert it
+                if (Vector2.DistanceSquared(nDiff2, rawDiff) > Vector2.DistanceSquared(-nDiff2, rawDiff)) nDiff2 = -nDiff2;
+                
+                //add the normals together and use some magic numbers to create
+                //a somewhat useful/good-looking blur
                 Vector2 nDiff = nDiff1 + nDiff2;
                 nDiff /= Math.Max(Math.Abs(nDiff.X), Math.Abs(nDiff.Y));
                 nDiff *= 50.0f;
-                if (Vector2.DistanceSquared(nDiff, rawDiff) > Vector2.DistanceSquared(-nDiff, rawDiff)) nDiff = -nDiff;
+
+                //finally, create the vertices
+                VertexPositionColorTexture fullVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X, position.Y + rawDiff.Y, 0),
+                   Color.White, new Vector2(0.5f, 0.5f) + diff);
                 VertexPositionColorTexture fadeVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X + nDiff.X, position.Y + rawDiff.Y + nDiff.Y, 0),
                    Color.White * 0.0f, new Vector2(0.5f, 0.5f) + diff);
 
-                vertices.Add(new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X, position.Y + rawDiff.Y, 0),
-                   Color.White, new Vector2(0.5f, 0.5f) + diff));
+                vertices.Add(fullVert);
                 vertices.Add(fadeVert);
             }
 
@@ -520,10 +590,12 @@ namespace Barotrauma.Lights
             List<short> indices = new List<short>();
             for (int i = 0; i < rayCastHits.Count-1; i++)
             {
+                //main light body
                 indices.Add(0);
                 indices.Add((short)((i*2 + 3) % vertices.Count));
                 indices.Add((short)((i*2 + 1) % vertices.Count));
-
+                
+                //faded light
                 indices.Add((short)((i*2 + 1) % vertices.Count));
                 indices.Add((short)((i*2 + 3) % vertices.Count));
                 indices.Add((short)((i*2 + 4) % vertices.Count));
@@ -532,11 +604,13 @@ namespace Barotrauma.Lights
                 indices.Add((short)((i*2 + 1) % vertices.Count));
                 indices.Add((short)((i*2 + 4) % vertices.Count));
             }
-
+            
+            //main light body
             indices.Add(0);
             indices.Add((short)(1));
             indices.Add((short)(vertices.Count - 2));
-
+            
+            //faded light
             indices.Add((short)(1));
             indices.Add((short)(vertices.Count-1));
             indices.Add((short)(vertices.Count-2));
