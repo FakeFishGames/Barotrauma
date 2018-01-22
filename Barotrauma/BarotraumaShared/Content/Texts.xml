@@ -344,7 +344,21 @@
   <!-- Character dialogue -->
   <DialogAffirmative>Aye aye!</DialogAffirmative>
   <DialogAffirmative>Yes, sir!</DialogAffirmative>
-    
+  <DialogReactorFuel>Loading more fuel to the reactor!</DialogReactorFuel>
+  <DialogLoadTurret>Loading ammunition to the [itemname]!</DialogLoadTurret>
+  <DialogFireTurret>Firing!</DialogFireTurret>
+  <DialogChargeBatteries>Charging [itemname] at [rate] %!</DialogChargeBatteries>
+  <DialogChargeBatteries>[itemname] now charging at [rate] %!</DialogChargeBatteries>
+  <StopChargingBatteries>Stopped charging [itemname]!</StopChargingBatteries>
+  <DialogLeakFixed>One leak fixed in [roomname]!</DialogLeakFixed>
+  <DialogLeakFixed>Repairing [roomname], a few more holes to go!</DialogLeakFixed>
+  <DialogLeaksFixed>All leaks repaired in [roomname]!</DialogLeaksFixed>
+  <DialogItemFixed>[itemname] repaired!</DialogItemFixed>
+  <DialogItemFixed>[itemname] back in order!</DialogItemFixed>
+  <DialogGetDivingGear>Need to find a diving suit!</DialogGetDivingGear>
+  <DialogGetDivingGear>I need diving gear!</DialogGetDivingGear>
+  <DialogGetOxygenTank>Need to find an oxygen tank!</DialogGetOxygenTank>
+  
   <!-- Status -->  
   <Deceased>Deceased</Deceased>
   <Unconscious>Unconscious</Unconscious>
@@ -375,5 +389,9 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
+
+
+
+
 
 </infotexts>

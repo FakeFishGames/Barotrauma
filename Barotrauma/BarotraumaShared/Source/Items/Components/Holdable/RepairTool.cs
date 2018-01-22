@@ -3,6 +3,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -272,7 +273,22 @@ namespace Barotrauma.Items.Components
 
             Use(deltaTime, character);
 
-            return leak.Open <= 0.0f;
+            bool leakFixed = leak.Open <= 0.0f || leak.Removed;
+
+            if (leakFixed && leak.FlowTargetHull != null)
+            {
+                if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
+                {
+                    character.Speak(TextManager.Get("DialogLeaksFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leaksfixed", 10.0f);
+                }
+                else
+                {
+                    character.Speak(TextManager.Get("DialogLeakFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leakfixed", 10.0f);
+                }
+
+            }
+
+            return leakFixed;
         }
     }
 }

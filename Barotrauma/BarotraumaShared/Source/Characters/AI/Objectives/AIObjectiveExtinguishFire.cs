@@ -65,7 +65,7 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (FireSource fs in targetHull.FireSources)
+            foreach (FireSource fs in targetHull.FireSources.ToList())
             {
                 if (fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange, extinguisher.Range * 0.5f, extinguisher.Range)))
                 {           

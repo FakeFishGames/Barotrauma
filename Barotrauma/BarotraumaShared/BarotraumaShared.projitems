@@ -1435,6 +1435,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AICharacter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AIChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\AIController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\AITarget.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\EnemyAIController.cs" />
