@@ -59,7 +59,8 @@ namespace Barotrauma
             frame = new GUIFrame(new Rectangle(200,0,0,0), Color.Black * 0.6f, null);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
 
-            var generalOrderFrame = new GUIFrame(new Rectangle(-400, 0, 200, 0), Color.Black * 0.6f, null, frame);
+            var generalOrderFrame = new GUIFrame(new Rectangle(-(int)(frame.Padding.X + frame.Rect.X), -(int)frame.Padding.Y, 200, GameMain.GraphicsHeight), Color.Black * 0.6f, null, frame);
+            generalOrderFrame.Padding = new Vector4(10.0f, 100.0f, 10.0f, 100.0f);
             generalOrderFrame.ClampMouseRectToParent = false;
             int y = 0;
             foreach (Order order in Order.PrefabList)
@@ -118,7 +119,7 @@ namespace Barotrauma
             int i = 0;
             float angle = startAngle;
 
-            float archWidth = GameMain.GraphicsWidth * 0.35f * scaleRatio;
+            float archWidth = frame.Rect.Width * 0.35f * scaleRatio;
             float archHeight = GameMain.GraphicsHeight * 0.35f * scaleRatio;
 
             foreach (Order order in orders)
@@ -410,7 +411,7 @@ namespace Barotrauma
             if (crewManager.IsSinglePlayer)
             {
                 Character.Controlled.Speak(
-                    order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName), ChatMessageType.Order);
+                    order.GetChatMessage(character.Name, Character.Controlled.CurrentHull?.RoomName, option), ChatMessageType.Order);
             }
             else
             {
