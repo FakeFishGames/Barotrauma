@@ -112,6 +112,9 @@ namespace Barotrauma
                 case "pumpwater":
                     currentOrder = new AIObjectivePumpWater(character, option);
                     break;
+                case "extinguishfires":
+                    currentOrder = new AIObjectiveExtinguishFires(character);
+                    break;
                 default:
                     if (order.TargetItemComponent == null) return;
                     currentOrder = new AIObjectiveOperateItem(order.TargetItemComponent, character, option, false, null, order.UseController);

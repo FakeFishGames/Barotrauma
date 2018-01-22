@@ -148,10 +148,7 @@ namespace Barotrauma
                 foreach (FireSource fireSource in hull.FireSources)
                 {
                     //increase priority if almost within damage range of a fire
-                    if (character.Position.X > fireSource.Position.X - fireSource.DamageRange * 2 &&
-                        character.Position.X < fireSource.Position.X + fireSource.Size.X + fireSource.DamageRange * 2 &&
-                        character.Position.Y > hull.Rect.Y - hull.Rect.Height &&
-                        character.Position.Y < hull.Rect.Y)
+                    if (fireSource.IsInDamageRange(character, fireSource.DamageRange * 1.25f))
                     {
                         priority += Math.Max(fireSource.Size.X, 50.0f);
                     }
@@ -197,10 +194,7 @@ namespace Barotrauma
                 foreach (FireSource fireSource in hull2.FireSources)
                 {
                     //increase priority if almost within damage range of a fire
-                    if (character.Position.X > fireSource.Position.X - fireSource.DamageRange * 2 &&
-                        character.Position.X < fireSource.Position.X + fireSource.Size.X + fireSource.DamageRange * 2 &&
-                        character.Position.Y > hull2.Rect.Y - hull2.Rect.Height &&
-                        character.Position.Y < hull2.Rect.Y)
+                    if (fireSource.IsInDamageRange(character, fireSource.DamageRange * 1.25f))
                     {
                         fireAmount += Math.Max(fireSource.Size.X, 50.0f);
                     }
