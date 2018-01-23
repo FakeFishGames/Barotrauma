@@ -1789,7 +1789,7 @@ namespace Barotrauma.Networking
                     if (senderCharacter == null) return;
 
                     //return if senderCharacter doesn't have a working radio
-                    var radio = senderCharacter.Inventory.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
+                    var radio = senderCharacter.Inventory?.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
                     if (radio == null || !senderCharacter.HasEquippedItem(radio)) return;
 
                     senderRadio = radio.GetComponent<WifiComponent>();
