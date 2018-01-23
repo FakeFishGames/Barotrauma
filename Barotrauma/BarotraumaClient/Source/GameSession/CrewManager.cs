@@ -274,8 +274,8 @@ namespace Barotrauma
             }
             activeOrders.RemoveAll(o => o.Second <= 0.0f);
 
-            if (commander.Frame != null) commander.Frame.Update(deltaTime);
-
+            commander.Update(deltaTime);
+            
             if (isSinglePlayer)
             {
                 for (int i = chatBox.children.Count - 1; i >= 0; i--)
