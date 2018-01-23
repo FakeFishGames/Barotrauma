@@ -438,7 +438,7 @@ namespace Barotrauma
                 oxygenBar.Draw(spriteBatch);
                 if (!oxyMsgShown)
                 {
-                    GUI.AddMessage(TextManager.Get("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Y), Alignment.Left, Color.White, 5.0f);
+                    GUI.AddMessage(TextManager.Get("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Center.Y), Alignment.CenterLeft, Color.White, 5.0f);
                     oxyMsgShown = true;
                 }
             }
@@ -468,7 +468,7 @@ namespace Barotrauma
                 
                 if (pressureMsgTimer > 0.5f && !pressureMsgShown)
                 {
-                    GUI.AddMessage(TextManager.Get("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 60.0f), Alignment.Left, Color.White, 5.0f);
+                    GUI.AddMessage(TextManager.Get("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 75.0f), Alignment.CenterLeft, Color.White, 5.0f);
                     pressureMsgShown = true;                    
                 }
 
