@@ -38,7 +38,7 @@ namespace Barotrauma
         {
             healthBar.Flash();
 
-            damageOverlayTimer = MathHelper.Clamp(amount * 0.1f, 0.2f, 5.0f);
+            damageOverlayTimer = MathHelper.Clamp(amount * 0.05f, 0.2f, 1.0f);
         }
 
         public static void AddToGUIUpdateList(Character character)
