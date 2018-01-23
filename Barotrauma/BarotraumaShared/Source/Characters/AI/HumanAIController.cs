@@ -59,7 +59,11 @@ namespace Barotrauma
                 updateObjectiveTimer = UpdateObjectiveInterval;
             }
 
-            ReportProblems();
+            if (Character.CanSpeak)
+            {
+                ReportProblems();
+                UpdateSpeaking();
+            }
 
             objectiveManager.DoCurrentObjective(deltaTime);
          
@@ -192,14 +196,31 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateSpeaking()
+        {
+            if (Character.Oxygen < 20.0f)
+            {
+                Character.Speak(TextManager.Get("DialogLowOxygen"), null, 0, "lowoxygen", 30.0f);
+            }
+
+            if (Character.Bleeding > 2.0f)
+            {
+                Character.Speak(TextManager.Get("DialogBleeding"), null, 0, "bleeding", 30.0f);
+            }
+
+            if (Character.PressureTimer > 50.0f && Character.CurrentHull != null)
+            {
+                Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.RoomName), null, 0, "pressure", 30.0f);
+            }
+        }
+
         public override void OnAttacked(Character attacker, float amount)
         {
             if (amount <= 0.0f) return;
+            
+            if (attacker == null || attacker == Character) return;
 
-            var enemy = attacker as Character;
-            if (enemy == null || enemy == Character) return;
-
-            objectiveManager.AddObjective(new AIObjectiveCombat(Character, enemy));
+            objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
 
             //the objective in the manager is not necessarily the same as the one we just instantiated,
             //because the objective isn't added if there's already an identical objective in the manager

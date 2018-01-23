@@ -358,8 +358,16 @@
   <DialogGetDivingGear>Need to find a diving suit!</DialogGetDivingGear>
   <DialogGetDivingGear>I need diving gear!</DialogGetDivingGear>
   <DialogGetOxygenTank>Need to find an oxygen tank!</DialogGetOxygenTank>
-  
-  <!-- Status -->  
+  <DialogLowOxygen>I'm passing out!</DialogLowOxygen>
+  <DialogLowOxygen>Can't breathe!</DialogLowOxygen>
+  <DialogLowOxygen>*gasping*</DialogLowOxygen>
+  <DialogBleeding>Help, I'm bleeding!</DialogBleeding>
+  <DialogBleeding>I'm bleeding out!</DialogBleeding>
+  <DialogPressure>Pressure rising in [roomname]!</DialogPressure>
+  <DialogPressure>Dangerous pressure in [roomname]!</DialogPressure>
+  <DialogPressure>Pressure level dangerously high in [roomname]!</DialogPressure>  
+
+  <!-- Status -->
   <Deceased>Deceased</Deceased>
   <Unconscious>Unconscious</Unconscious>
   <Stunned>Stunned</Stunned>
@@ -381,7 +389,7 @@
   <OxygenReduced>Gasping for air</OxygenReduced>
   <OxygenLow>Signs of oxygen deprivation</OxygenLow>
   <NotBreathing>Not breathing</NotBreathing>
-  
+
   <!-- Huskification -->
   <HuskDormant>Your throat feels sore</HuskDormant>
   <HuskDormant>Your feel feverish</HuskDormant>
@@ -389,6 +397,7 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
+
 
 
 

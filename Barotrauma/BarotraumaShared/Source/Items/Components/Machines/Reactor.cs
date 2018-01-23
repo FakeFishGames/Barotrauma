@@ -142,6 +142,7 @@ namespace Barotrauma.Items.Components
 
         private float availableHeat, availableCooling;
         private float prevTemperature, temperatureChange;
+        private float prevAvailableFuel;
 
         [Serialize(500.0f, true)]
         public float ShutDownTemp
@@ -183,6 +184,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
+            prevAvailableFuel = AvailableFuel;
             fissionRate = Math.Min(fissionRate, AvailableFuel);
 
             //the amount of cooling is always non-zero, so that the reactor always needs 
@@ -371,9 +373,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                //the temperature is too low and not increasing even though the fission rate is high and cooling low
-                // -> we need more fuel
-                if (temperature < load * 0.5f && temperatureChange <= 0.0f && fissionRate > 0.9f && coolingRate < 0.1f)
+                //we need more fuel
+                if (temperature < load * 0.5f && temperatureChange <= 0.0f && prevAvailableFuel <= 0.0f)
                 {
                     var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "Fuel Rod", "reactorfuel" }, item.GetComponent<ItemContainer>());
                     containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.NameMatches("Fuel Rod") || i.HasTag("reactorfuel")) + 1;

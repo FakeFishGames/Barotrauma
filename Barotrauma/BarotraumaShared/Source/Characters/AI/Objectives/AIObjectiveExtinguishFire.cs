@@ -61,7 +61,7 @@ namespace Barotrauma
             var extinguisher = extinguisherItem.GetComponent<RepairTool>();
             if (extinguisher == null)
             {
-                DebugConsole.ThrowError("AIObjectiveExtinguishFire failed - the item \n" + extinguisherItem + " has no RepairTool component but is tagged as an extinguisher");
+                DebugConsole.ThrowError("AIObjectiveExtinguishFire failed - the item \"" + extinguisherItem + "\" has no RepairTool component but is tagged as an extinguisher");
                 return;
             }
 

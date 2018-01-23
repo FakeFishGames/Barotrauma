@@ -135,7 +135,7 @@ namespace Barotrauma
             }
 
             string displayedText = sender.Name + ": " + message;
-            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, 0, 0), displayedText,
+            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 20, 0), displayedText,
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, color,
                 Alignment.Left, Alignment.CenterRight, "", null, true, GUI.Font);
             msg.UserData = msg.TextColor.A / 255.0f;
