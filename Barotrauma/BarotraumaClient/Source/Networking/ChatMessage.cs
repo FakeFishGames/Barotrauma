@@ -39,23 +39,24 @@ namespace Barotrauma.Networking
             if (type == ChatMessageType.Order)
             {
                 int orderIndex = msg.ReadByte();
+                UInt16 targetCharacterID = msg.ReadUInt16();
+                Character targetCharacter = Entity.FindEntityByID(targetCharacterID) as Character;
+                Entity targetEntity =  Entity.FindEntityByID(msg.ReadUInt16());
+                int optionIndex = msg.ReadByte();
+
                 Order order = null;
                 if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
                 {
                     DebugConsole.ThrowError("Invalid order message - order index out of bounds.");
+                    if (NetIdUtils.IdMoreRecent(ID, LastID)) LastID = ID;
+                    return;
                 }
                 else
                 {
                     order = Order.PrefabList[orderIndex];
                 }
-
-                UInt16 targetCharacterID = msg.ReadUInt16();
-                Character targetCharacter = Entity.FindEntityByID(targetCharacterID) as Character;
-                Entity targetEntity =  Entity.FindEntityByID(msg.ReadUInt16());
-
-                int optionIndex = msg.ReadByte();
                 string orderOption = "";
-                if (order != null && optionIndex >= 0 && optionIndex < order.Options.Length)
+                if (optionIndex >= 0 && optionIndex < order.Options.Length)
                 {
                     orderOption = order.Options[optionIndex];
                 }

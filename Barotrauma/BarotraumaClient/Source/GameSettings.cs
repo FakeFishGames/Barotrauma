@@ -194,8 +194,8 @@ namespace Barotrauma
         {
             yield return CoroutineStatus.Running;
 
-            while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length == 0
-                && !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked())
+            while (keyBox.Selected && PlayerInput.GetKeyboardState.GetPressedKeys().Length == 0 && 
+                !PlayerInput.LeftButtonClicked() && !PlayerInput.RightButtonClicked() && !PlayerInput.MidButtonClicked())
             {
                 if (Screen.Selected != GameMain.MainMenuScreen && !GUI.SettingsMenuOpen) yield return CoroutineStatus.Success;
 
@@ -215,6 +215,11 @@ namespace Barotrauma
             {
                 keyMapping[keyIndex] = new KeyOrMouse(1);
                 keyBox.Text = "Mouse2";
+            }
+            else if (PlayerInput.MidButtonClicked())
+            {
+                keyMapping[keyIndex] = new KeyOrMouse(2);
+                keyBox.Text = "Mouse3";
             }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {

@@ -251,6 +251,7 @@ namespace Barotrauma.Networking
                 if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
                 {
                     DebugConsole.ThrowError("Invalid order message from client \"" + c.Name + "\" - order index out of bounds.");
+                    return;
                 }
 
                 Order order = Order.PrefabList[orderIndex];
