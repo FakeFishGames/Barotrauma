@@ -210,6 +210,8 @@ namespace Barotrauma
             UpdateScrollBarSize();
         }
 
+        private bool dragging;
+
         private void UpdateChildrenRect(float deltaTime)
         {
             int x = rect.X, y = rect.Y;
@@ -226,6 +228,27 @@ namespace Barotrauma
                 }
             }
 
+            if (PlayerInput.LeftButtonHeld())
+            {
+                if (MouseOn == this || (MouseOn != null && IsParentOf(MouseOn)))
+                {
+                    if (PlayerInput.MouseSpeed.LengthSquared() > 5.0f)
+                    {
+                        dragging = true;
+                    }
+                    if (dragging)
+                    {
+                        scrollBar.MoveButton(-PlayerInput.MouseSpeed);
+                    }
+                }
+            }
+            else if (dragging)
+            {
+                ForceMouseOn(null);
+                dragging = false;
+                return;
+            }
+
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
@@ -240,10 +263,10 @@ namespace Barotrauma
                 {
                     y += child.Rect.Height + spacing;
                 }
-                
-                if (deltaTime>0.0f) child.Update(deltaTime);
-                if (enabled && child.CanBeFocused &&
-                    (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
+
+                if (deltaTime > 0.0f) child.Update(deltaTime);
+                if (!dragging && enabled && child.CanBeFocused &&
+                    (MouseOn == this || (MouseOn != null && IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())

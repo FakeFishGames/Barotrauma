@@ -16,9 +16,13 @@ namespace Barotrauma
 
         private GUIButton showAllButton;
 
+        private GUIListBox characterList;
+
         private bool infoTextShown;
 
         private int characterFrameBottom;
+
+        private bool autoScrolling;
 
         public GUIFrame Frame
         {
@@ -71,18 +75,22 @@ namespace Barotrauma
                 y += 80;
             }
 
-            GUIButton closeButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Close", Alignment.BottomCenter, "", frame);
+            characterList = new GUIListBox(new Rectangle(0, 0, 0, 130), Color.Transparent, Alignment.TopCenter, "", frame, true);
+            characterList.Color = Color.Transparent;
+            characterList.BarScroll = 0.5f;
+
+            GUIButton closeButton = new GUIButton(new Rectangle(0, 50, 100, 30), "Close", Alignment.BottomCenter, "", frame);
             closeButton.OnClicked = (GUIButton button, object userData) =>
             {
                 ToggleGUIFrame();
                 return false;
             };
 
-            showAllButton = new GUIButton(new Rectangle(0, 50, 200, 40), "Show all commands", Alignment.BottomCenter, "", frame);
+            showAllButton = new GUIButton(new Rectangle(0, 0, 200, 40), "Show all commands", Alignment.BottomCenter, "", frame);
             showAllButton.Visible = false;
             showAllButton.OnClicked = (GUIButton button, object userData) =>
             {
-                var selectedButton = frame.children.Find(c => c.UserData is Character && c is GUIButton && ((GUIButton)c).Selected);
+                var selectedButton = characterList.children.Find(c => c.UserData is Character && c is GUIButton && ((GUIButton)c).Selected);
                 if (selectedButton != null)
                 {
                     CreateOrderButtons(selectedButton.UserData as Character, false);
@@ -107,9 +115,8 @@ namespace Barotrauma
 
             float arc = MathHelper.Pi * 0.7f * scaleRatio;
             float angleStep = arc / (orders.Count - 1);
-            float startAngle = (MathHelper.Pi - arc) / 2;
-
-            //int y = 250;
+            float startAngle = MathHelper.Pi - ((MathHelper.Pi - arc) / 2);
+            
             int buttonWidth = 130;
             int spacing = 20;
             
@@ -119,15 +126,15 @@ namespace Barotrauma
             int i = 0;
             float angle = startAngle;
 
-            float archWidth = frame.Rect.Width * 0.35f * scaleRatio;
+            float archWidth = frame.Rect.Width * 0.35f * Math.Min(scaleRatio, 1.0f);
             float archHeight = GameMain.GraphicsHeight * 0.35f * scaleRatio;
 
             foreach (Order order in orders)
             {
                 int x = (int)(Math.Cos(angle)* archWidth);
-                int y = (int)(100 + (float)Math.Sin(angle) * archHeight);
+                int y = (int)(120 + (float)Math.Sin(angle) * archHeight);
 
-                angle += angleStep;
+                angle -= angleStep;
 
                 if (order.ItemComponentType != null || !string.IsNullOrEmpty(order.ItemName))
                 {
@@ -140,15 +147,35 @@ namespace Barotrauma
                     {
                         var newOrder = new Order(order, it, it.components.Find(ic => ic.GetType() == order.ItemComponentType));
 
-                        CreateOrderButton(new Rectangle(x, y2, buttonWidth, 20), newOrder, frame, y2 == y);
+                        var btn = CreateOrderButton(new Rectangle(x, y2, buttonWidth, 20), newOrder, frame, y2 == y);
+                        CoroutineManager.StartCoroutine(MoveGUIComponent(btn, characterList.Rect.Center - new Point(btn.Rect.Width / 2, 0), btn.Rect.Location, 0.5f));
                         y2 += 25;
                     }
                 }
                 else
                 {
-                    CreateOrderButton(new Rectangle(x, y, buttonWidth, 20), order, frame);
+                    var btn = CreateOrderButton(new Rectangle(x, y, buttonWidth, 20), order, frame);
+                    CoroutineManager.StartCoroutine(MoveGUIComponent(btn, characterList.Rect.Center - new Point(btn.Rect.Width / 2, 0), btn.Rect.Location, 0.5f));
                 }
-            }            
+            }
+        }
+
+        private IEnumerable<object> MoveGUIComponent(GUIComponent component, Point from, Point to, float duration)
+        {
+            float t = 0.0f;
+            while (t < duration)
+            {
+                component.Rect = new Rectangle(new Point(
+                    (int)MathHelper.Lerp(from.X, to.X, t / duration),
+                    (int)MathHelper.Lerp(from.Y, to.Y, t / duration)), component.Rect.Size);
+
+                t += CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            component.Rect = new Rectangle(to, component.Rect.Size);
+
+            yield return CoroutineStatus.Success;
         }
 
         private GUIButton CreateOrderButton(Rectangle rect, Order order, GUIComponent parent, bool createSymbol = true)
@@ -174,24 +201,13 @@ namespace Barotrauma
         {
             CreateGUIFrame();
 
-            List<GUIComponent> prevCharacterFrames = new List<GUIComponent>();
-            foreach (GUIComponent child in frame.children)
-            {
-                if (!(child.UserData is Character)) continue;
-
-                prevCharacterFrames.Add(child);
-            }
-            
-            foreach (GUIComponent child in prevCharacterFrames)
-            {
-                frame.RemoveChild(child);
-            }
+            characterList.ClearChildren();
+            new GUIFrame(new Rectangle(0, 0, characterList.Rect.Width / 2, 0), null, characterList);
             
             List<Character> aliveCharacters = crewManager.GetCharacters().FindAll(c => !c.IsDead);
 
             characterFrameBottom = 0;
             int charactersPerRow = 4;
-            int spacing = 5;
 
             int i = 0;
             foreach (Character character in aliveCharacters)
@@ -200,14 +216,10 @@ namespace Barotrauma
                 if (Character.Controlled?.TeamID != character.TeamID) continue;
 
                 int rowCharacterCount = Math.Min(charactersPerRow, aliveCharacters.Count);
-
-                int startX = -(150 * rowCharacterCount + spacing * (rowCharacterCount - 1)) / 2;
-                int x = startX + (150 + spacing) * (i % Math.Min(charactersPerRow, aliveCharacters.Count));
-                int y = (105 + spacing)*((int)Math.Floor((double)i / charactersPerRow));
                 
-                GUIButton characterButton = new GUIButton(new Rectangle(x + 75, y, 150, 60), "", null, Alignment.TopCenter, "GUITextBox", frame);                
+                GUIButton characterButton = new GUIButton(new Rectangle(0, 0, 150, 45), "", null, Alignment.TopCenter, "GUITextBox", characterList);                
                 characterButton.UserData = character;
-                characterButton.Padding = new Vector4(5.0f, 5.0f, 5.0f, 5.0f);                
+                characterButton.Padding = new Vector4(5.0f, 10.0f, 5.0f, 5.0f);                
                 characterButton.Color = Character.Controlled == character ? Color.Gold : Color.White;
                 characterButton.SelectedColor = Color.White;
                 characterButton.OnClicked += (btn, userdata) =>
@@ -233,7 +245,7 @@ namespace Barotrauma
                 textBlock.Font = GUI.SmallFont;
                 textBlock.Padding = new Vector4(5.0f, 0.0f, 5.0f, 0.0f);
 
-                var characterPortrait = new GUIImage(new Rectangle(-5, -5, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
+                var characterPortrait = new GUIImage(new Rectangle(0, 0, 0, 0), character.AnimController.Limbs[0].sprite, Alignment.Left, characterButton);
 
                 bool hasHeadset = false;
                 bool headSetInRange = false;
@@ -276,26 +288,22 @@ namespace Barotrauma
 
                 i++;
             }
+            
+            new GUIFrame(new Rectangle(0, 0, characterList.Rect.Width / 2, 0), null, characterList);
 
-            foreach (GUIComponent child in frame.children)
-            {
-                if (!(child.UserData is Order)) continue;
-
-                Rectangle rect = child.Rect;
-                rect.Y += characterFrameBottom;
-
-                child.Rect = rect;
-            }
+            characterList.BarScroll = 0.5f;
         }
 
         public void SelectCharacter(Character character)
         {
-            foreach (GUIComponent child in frame.children)
+            foreach (GUIComponent child in characterList.children)
             {
                 GUIButton button = child as GUIButton;
                 if (button == null) continue;
+
                 Character buttonCharacter = child.UserData as Character;
                 button.Selected = buttonCharacter == character;
+                if (button.Selected) autoScrolling = true;
             }
         }
 
@@ -330,7 +338,7 @@ namespace Barotrauma
             }
 
             //order targeted to a specific character
-            foreach (GUIComponent child in frame.children)
+            foreach (GUIComponent child in characterList.children)
             {
                 Character character = child.UserData as Character;
                 if (character == null) continue;
@@ -431,10 +439,23 @@ namespace Barotrauma
             return true;
         }
 
+        public void Update(float deltaTime)
+        {
+            if (frame == null || !IsOpen) return;
+
+            frame.Update(deltaTime);
+            if (characterList.Selected != null && autoScrolling)
+            {
+                float xDiff = frame.Rect.Center.X - characterList.Selected.Rect.Center.X;
+                characterList.BarScroll -= MathHelper.Clamp(xDiff * 0.01f, -10.0f, 10.0f) * deltaTime;
+
+                if (Math.Abs(xDiff) < 5.0f) autoScrolling = false;
+            }
+        }
+
         public void Draw(SpriteBatch spriteBatch)
         {
             if (!IsOpen) return;
-
             frame.Draw(spriteBatch);
         }
     }
