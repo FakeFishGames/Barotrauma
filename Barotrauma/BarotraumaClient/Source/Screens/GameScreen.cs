@@ -236,10 +236,12 @@ namespace Barotrauma
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, null, null);
 			if (GameMain.LightManager.LosEnabled && Character.Controlled!=null)
 			{
-				float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
-				spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-				                 Color.Lerp(GameMain.LightManager.AmbientLight * 0.5f, Color.Red, r));
-				spriteBatch.End();
+                float red = GameMain.LightManager.AmbientLight.R + GameMain.LightManager.AmbientLight.G + GameMain.LightManager.AmbientLight.B;
+                float redStrength = MathHelper.Clamp(CharacterHUD.damageOverlayTimer, 0.0f, 1.0f);
+
+                spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+                                 Color.Lerp(GameMain.LightManager.AmbientLight, new Color(red / 255.0f, 0.0f, 0.0f, 1.0f), redStrength));
+                spriteBatch.End();
                 GameMain.LightManager.losEffect.CurrentTechnique = GameMain.LightManager.losEffect.Techniques["LosShader"];
                 GameMain.LightManager.losEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
                 GameMain.LightManager.losEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.losTexture);
