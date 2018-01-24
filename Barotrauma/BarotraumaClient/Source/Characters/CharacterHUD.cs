@@ -136,6 +136,8 @@ namespace Barotrauma
             }
         }
 
+        private static Dictionary<Entity, int> orderIndicatorCount = new Dictionary<Entity, int>();
+
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
             if (statusIcons == null)
@@ -157,6 +159,7 @@ namespace Barotrauma
 
             if (GameMain.GameSession?.CrewManager != null)
             {
+                orderIndicatorCount.Clear();
                 foreach (Pair<Order, float> timedOrder in GameMain.GameSession.CrewManager.ActiveOrders)
                 {
                     DrawOrderIndicator(spriteBatch, cam, character, timedOrder.First, MathHelper.Clamp(timedOrder.Second / 10.0f, 0.2f, 1.0f));
@@ -164,7 +167,7 @@ namespace Barotrauma
 
                 if (character.CurrentOrder != null)
                 {
-                    DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);
+                    DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);                    
                 }
 
                 /*//recreate order list if it doesn't exist, is for some other character, 
@@ -404,14 +407,15 @@ namespace Barotrauma
         {
             if (order.TargetAllCharacters && !order.HasAppropriateJob(character)) return;
 
-            Entity target = order.ConnectedController != null ?
-                order.ConnectedController.Item : order.TargetEntity;
-
+            Entity target = order.ConnectedController != null ? order.ConnectedController.Item : order.TargetEntity;
             if (target == null) return;
 
-            GUI.DrawIndicator(
-                spriteBatch, target.WorldPosition,
-                cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);
+            if (!orderIndicatorCount.ContainsKey(target)) orderIndicatorCount.Add(target, 0);
+            
+            Vector2 drawPos = target.WorldPosition + Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
+            GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);
+
+            orderIndicatorCount[target] = orderIndicatorCount[target] + 1;
         }
 
         private static void DrawStatusIcons(SpriteBatch spriteBatch, Character character)
