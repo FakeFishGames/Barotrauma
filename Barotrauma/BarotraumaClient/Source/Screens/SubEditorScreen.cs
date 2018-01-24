@@ -1349,11 +1349,6 @@ namespace Barotrauma
         /// </summary>
         public override void Update(double deltaTime)
         {
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.T))
-            {
-                SaveScreenShot(256, 128, "screenshottest.png");
-            }
-
             if (tutorial != null) tutorial.Update((float)deltaTime);
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
