@@ -312,42 +312,40 @@ namespace Barotrauma.Lights
                 hulls.AddRange(chList.List);
             }
 
-            float bounds = range*2;
+            float bounds = range * 2;
             //find convexhull segments that are close enough and facing towards the light source
             List<Segment> visibleSegments = new List<Segment>();
             List<SegmentPoint> points = new List<SegmentPoint>();
             foreach (ConvexHull hull in hulls)
             {
                 hull.RefreshWorldPositions();
-                
+
                 var visibleHullSegments = hull.GetVisibleSegments(drawPos);
                 visibleSegments.AddRange(visibleHullSegments);
             }
-            
+
             //Generate new points at the intersections between segments
             //This is necessary for the light volume to generate properly on some subs
             for (int i = 0; i < visibleSegments.Count; i++)
             {
+                Vector2 p1a = visibleSegments[i].Start.WorldPos;
+                Vector2 p1b = visibleSegments[i].End.WorldPos;
+
                 for (int j = 0; j < visibleSegments.Count; j++)
                 {
                     if (j == i) continue;
-                    Vector2 p1a = visibleSegments[i].Start.WorldPos;
-                    Vector2 p1b = visibleSegments[i].End.WorldPos;
                     Vector2 p2a = visibleSegments[j].Start.WorldPos;
                     Vector2 p2b = visibleSegments[j].End.WorldPos;
 
-                    if (Vector2.DistanceSquared(p1a, p2a) < 5.0f ||
-                        Vector2.DistanceSquared(p1a, p2b) < 5.0f ||
-                        Vector2.DistanceSquared(p1b, p2a) < 5.0f ||
-                        Vector2.DistanceSquared(p1b, p2b) < 5.0f)
+                    if (Vector2.DistanceSquared(p1a, p2a) < 25.0f ||
+                        Vector2.DistanceSquared(p1a, p2b) < 25.0f ||
+                        Vector2.DistanceSquared(p1b, p2a) < 25.0f ||
+                        Vector2.DistanceSquared(p1b, p2b) < 25.0f)
                     {
                         continue;
                     }
 
-                    Vector2? intersection = MathUtils.GetLineIntersection(visibleSegments[i].Start.WorldPos,
-                                                                          visibleSegments[i].End.WorldPos,
-                                                                          visibleSegments[j].Start.WorldPos,
-                                                                          visibleSegments[j].End.WorldPos);
+                    Vector2? intersection = MathUtils.GetLineIntersection(p1a, p1b, p2a, p2b);
 
                     if (intersection != null)
                     {
@@ -357,14 +355,16 @@ namespace Barotrauma.Lights
                         SegmentPoint end = visibleSegments[i].End;
                         SegmentPoint mid = new SegmentPoint(intersectionVal);
 
-                        if (Vector2.DistanceSquared(start.WorldPos, mid.WorldPos) < 5.0f ||
-                            Vector2.DistanceSquared(end.WorldPos, mid.WorldPos) < 5.0f)
+                        if (Vector2.DistanceSquared(start.WorldPos, mid.WorldPos) < 25.0f ||
+                            Vector2.DistanceSquared(end.WorldPos, mid.WorldPos) < 25.0f)
                         {
                             continue;
                         }
 
-                        visibleSegments[i] = new Segment(start, mid);
-                        visibleSegments.Insert(i + 1, new Segment(mid, end));
+                        Segment seg1 = new Segment(start, mid); seg1.IsHorizontal = visibleSegments[i].IsHorizontal;
+                        Segment seg2 = new Segment(mid, end); seg2.IsHorizontal = visibleSegments[i].IsHorizontal;
+                        visibleSegments[i] = seg1;
+                        visibleSegments.Insert(i+1,seg2);
                         i--;
                         break;
                     }
