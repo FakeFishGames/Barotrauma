@@ -1874,7 +1874,7 @@ namespace Barotrauma
             Health = minHealth;
 
             BreakJoints();
-
+            
             Kill(CauseOfDeath.Pressure, isNetworkMessage);
         }
 
@@ -1888,8 +1888,7 @@ namespace Barotrauma
 
                 Vector2 diff = centerOfMass - limb.SimPosition;
                 if (diff == Vector2.Zero) continue;
-                limb.body.ApplyLinearImpulse(diff * 10.0f);
-                // limb.Damage = 100.0f;
+                limb.body.ApplyLinearImpulse(diff * 50.0f);
             }
 
             ImplodeFX();
@@ -1901,7 +1900,7 @@ namespace Barotrauma
         }
 
         partial void ImplodeFX();
-        
+
         public void Kill(CauseOfDeath causeOfDeath, bool isNetworkMessage = false)
         {
             if (isDead) return;
