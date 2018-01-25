@@ -30,6 +30,8 @@ namespace Barotrauma
 
         public bool SelectMultiple;
 
+        public bool HideChildrenOutsideFrame = true;
+
         public GUIComponent Selected
         {
             get
@@ -86,7 +88,7 @@ namespace Barotrauma
                 scrollBar.Enabled = value;
             }
         }
-
+        
         public override Rectangle Rect
         {
             get
@@ -433,7 +435,10 @@ namespace Barotrauma
             if (!scrollBarHidden && scrollBarEnabled) scrollBar.Draw(spriteBatch);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            spriteBatch.GraphicsDevice.ScissorRectangle = frame.Rect;
+            if (HideChildrenOutsideFrame)
+            {
+                spriteBatch.GraphicsDevice.ScissorRectangle = frame.Rect;
+            }
 
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
@@ -451,7 +456,10 @@ namespace Barotrauma
                 child.Draw(spriteBatch);
             }
 
-            spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            if (HideChildrenOutsideFrame)
+            {
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            }
         }
 
         private bool IsChildVisible(GUIComponent child)
