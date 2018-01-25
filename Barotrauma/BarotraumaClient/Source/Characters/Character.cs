@@ -373,6 +373,19 @@ namespace Barotrauma
                 GameMain.ParticleManager.CreateParticle("bubbles",
                     ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(5.0f),
                     new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f, 50f)));
+
+                GameMain.ParticleManager.CreateParticle("gib",
+                    WorldPosition + Rand.Vector(Rand.Range(0.0f, 50.0f)),
+                    Rand.Range(0.0f, MathHelper.TwoPi),
+                    Rand.Range(200.0f, 700.0f), null);
+            }
+
+            for (int i = 0; i < 30; i++)
+            {
+                GameMain.ParticleManager.CreateParticle("heavygib",
+                    WorldPosition + Rand.Vector(Rand.Range(0.0f, 50.0f)),
+                    Rand.Range(0.0f, MathHelper.TwoPi),
+                    Rand.Range(50.0f, 500.0f), null);
             }
         }
     }
