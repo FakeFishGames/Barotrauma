@@ -161,7 +161,7 @@ namespace Barotrauma
             GraphicsDeviceManager.PreferMultiSampling = false;
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = Config.VSyncEnabled;
 
-            if (Config.WindowMode == Barotrauma.WindowMode.Windowed)
+            if (Config.WindowMode == WindowMode.Windowed)
             {
                 //for whatever reason, window isn't centered automatically
                 //since MonoGame 3.6 (nuget package might be broken), so

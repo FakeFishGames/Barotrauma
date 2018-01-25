@@ -164,14 +164,7 @@ namespace Barotrauma
             textBox.Text = "";
             CoroutineManager.StartCoroutine(WaitForKeyPress(textBox));
         }
-
-        private bool MarkUnappliedChanges(GUIButton button, object obj)
-        {
-            UnsavedSettings = true;
-
-            return true;
-        }
-
+        
         private bool SelectResolution(GUIComponent selected, object userData)
         {
             DisplayMode mode = selected.UserData as DisplayMode;
@@ -187,7 +180,7 @@ namespace Barotrauma
             return true;
         }
 
-        private bool SelectContentPackage(GUIComponent select,object userData)
+        private bool SelectContentPackage(GUIComponent select, object userData)
         {
             GameMain.Config.SelectedContentPackage = (ContentPackage)userData;
             UnsavedSettings = true;
