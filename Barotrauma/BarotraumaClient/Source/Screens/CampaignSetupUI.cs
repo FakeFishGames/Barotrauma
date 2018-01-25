@@ -54,24 +54,46 @@ namespace Barotrauma
                     saveNameBox.Flash(Color.Red);
                     return false;
                 }
-
+                
                 Submarine selectedSub = subList.SelectedData as Submarine;
-                if (selectedSub != null && selectedSub.HasTag(SubmarineTag.Shuttle))
+                if (selectedSub == null) return false;
+
+                string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
+                if (selectedSub.HasTag(SubmarineTag.Shuttle) || GameMain.SelectedPackage.Name != selectedSub.ContentPackage)
                 {
-                    var msgBox = new GUIMessageBox(TextManager.Get("ShuttleSelected"),
-                        TextManager.Get("ShuttleWarning"),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    if (GameMain.SelectedPackage.Name != selectedSub.ContentPackage)
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
+                            TextManager.Get("ContentPackageMismatchWarning")
+                                .Replace("[subcontentpackage]", selectedSub.ContentPackage)
+                                .Replace("[selectedcontentpackage]", GameMain.SelectedPackage.Name),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
-                    string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
-                    msgBox.Buttons[0].OnClicked = (button, obj) => { StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text); return true; };
-                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[0].OnClicked = msgBox.Close;
+                        msgBox.Buttons[0].OnClicked += (button, obj) => 
+                        {
+                            if (GUIMessageBox.MessageBoxes.Count == 0) StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                            return true;
+                        };
 
-                    msgBox.Buttons[1].OnClicked = msgBox.Close;
-                    return false;
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    }
+
+                    if (selectedSub.HasTag(SubmarineTag.Shuttle))
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("ShuttleSelected"),
+                            TextManager.Get("ShuttleWarning"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                        msgBox.Buttons[0].OnClicked = (button, obj) => { StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text); return true; };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                        return false;
+                    }
                 }
                 else
                 {
-                    string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
                     StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
                 }
 
