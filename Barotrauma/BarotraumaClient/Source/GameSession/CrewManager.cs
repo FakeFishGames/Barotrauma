@@ -247,7 +247,7 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             guiFrame.AddToGUIUpdateList();
-            if (commander.Frame != null) commander.Frame.AddToGUIUpdateList();
+            commander.AddToGUIUpdateList();
         }
 
         public void Update(float deltaTime)
@@ -446,9 +446,9 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            commander.Draw(spriteBatch);
             if (commander.IsOpen)
             {
-                commander.Draw(spriteBatch);
                 if (isSinglePlayer)
                 {
                     chatBox.Draw(spriteBatch);

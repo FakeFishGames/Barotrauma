@@ -14,6 +14,13 @@ namespace Barotrauma
 
         private GUIFrame frame;
 
+        //container for order buttons that are targeted for the whole crew
+        private GUIFrame generalOrderFrame;
+
+        //listbox for report buttons that appear at the corner of the screen 
+        //when there's something to report in the hull the character is currently in
+        private GUIListBox reportButtonContainer;
+
         private GUIButton showAllButton;
 
         private GUIListBox characterList;
@@ -23,12 +30,7 @@ namespace Barotrauma
         private int characterFrameBottom;
 
         private bool autoScrolling;
-
-        public GUIFrame Frame
-        {
-            get { return IsOpen ? frame : null; }
-        }
-
+        
         public bool IsOpen
         {
             get;
@@ -63,7 +65,12 @@ namespace Barotrauma
             frame = new GUIFrame(new Rectangle(200,0,0,0), Color.Black * 0.6f, null);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
 
-            var generalOrderFrame = new GUIFrame(new Rectangle(-(int)(frame.Padding.X + frame.Rect.X), -(int)frame.Padding.Y, 200, GameMain.GraphicsHeight), Color.Black * 0.6f, null, frame);
+            reportButtonContainer = new GUIListBox(new Rectangle(GameMain.GraphicsWidth - 180, 200, 180, GameMain.GraphicsHeight), null, Alignment.TopRight, null);
+            reportButtonContainer.Color = Color.Transparent;
+            reportButtonContainer.Spacing = 50;
+            reportButtonContainer.HideChildrenOutsideFrame = false;
+
+            generalOrderFrame = new GUIFrame(new Rectangle(-(int)(frame.Padding.X + frame.Rect.X), -(int)frame.Padding.Y, 200, GameMain.GraphicsHeight), Color.Black * 0.6f, null, frame);
             generalOrderFrame.Padding = new Vector4(10.0f, 100.0f, 10.0f, 100.0f);
             generalOrderFrame.ClampMouseRectToParent = false;
             int y = 0;
@@ -439,9 +446,50 @@ namespace Barotrauma
             return true;
         }
 
+        public void AddToGUIUpdateList()
+        {
+            if (IsOpen && frame != null) frame.AddToGUIUpdateList();
+
+            if (reportButtonContainer.CountChildren > 0)
+            {
+                reportButtonContainer.AddToGUIUpdateList();
+            }
+        }
+
         public void Update(float deltaTime)
         {
+            if (Character.Controlled?.CurrentHull != null)
+            {
+                bool hasFires = Character.Controlled.CurrentHull.FireSources.Count > 0;
+                ToggleReportButton("reportfire", hasFires);
+
+                bool hasLeaks = Character.Controlled.CurrentHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f);
+                ToggleReportButton("reportbreach", hasLeaks);
+
+                bool hasIntruders = Character.CharacterList.Any(c => 
+                    c.CurrentHull == Character.Controlled.CurrentHull && !c.IsDead &&
+                    (c.AIController is EnemyAIController || c.TeamID != Character.Controlled.TeamID));
+                ToggleReportButton("reportintruders", hasIntruders);
+
+                if (reportButtonContainer.CountChildren > 0)
+                {
+                    reportButtonContainer.Update(deltaTime);
+                }
+            }
+            else
+            {
+                reportButtonContainer.ClearChildren();
+            }
+
             if (frame == null || !IsOpen) return;
+
+            foreach (GUIComponent child in generalOrderFrame.children)
+            {
+                GUIButton orderButton = child as GUIButton;
+                if (orderButton != null) orderButton.Enabled = Character.Controlled?.CurrentHull != null;
+            }
+
+
 
             frame.Update(deltaTime);
             if (characterList.Selected != null && autoScrolling)
@@ -451,10 +499,42 @@ namespace Barotrauma
 
                 if (Math.Abs(xDiff) < 5.0f) autoScrolling = false;
             }
+
+        }
+
+        private void ToggleReportButton(string orderAiTag, bool enabled)
+        {
+            Order order = Order.PrefabList.Find(o => o.AITag == orderAiTag);
+            var existingButton = reportButtonContainer.GetChild(order);
+
+            //already reported, disable the button
+            if (GameMain.GameSession.CrewManager.ActiveOrders.Any(o => 
+                o.First.TargetEntity == Character.Controlled.CurrentHull && 
+                o.First.AITag == orderAiTag))
+            {
+                enabled = false;
+            }
+
+            if (enabled)
+            {
+                if (existingButton == null)
+                {
+                    CreateOrderButton(new Rectangle(0,0,0,20), order, reportButtonContainer, true);
+                }
+            }
+            else
+            {
+                if (existingButton != null) reportButtonContainer.RemoveChild(existingButton);
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            if (reportButtonContainer.CountChildren > 0)
+            {
+                reportButtonContainer.Draw(spriteBatch);
+            }
+
             if (!IsOpen) return;
             frame.Draw(spriteBatch);
         }
