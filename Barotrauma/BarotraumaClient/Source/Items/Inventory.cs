@@ -68,7 +68,7 @@ namespace Barotrauma
 
     partial class Inventory
     {
-        protected class SlotReference
+        public class SlotReference
         {
             public readonly Inventory Inventory;
             public readonly InventorySlot Slot;
@@ -133,6 +133,10 @@ namespace Barotrauma
             }
         }
 
+        public static SlotReference SelectedSlot
+        {
+            get { return selectedSlot; }
+        }
 
         protected virtual void CreateSlots()
         {
