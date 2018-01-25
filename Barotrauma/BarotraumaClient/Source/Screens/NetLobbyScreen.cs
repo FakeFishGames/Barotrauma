@@ -500,14 +500,6 @@ namespace Barotrauma
                 if (GameModePreset.list.Count > 0 && modeList.Selected == null) modeList.Select(0);
 
                 GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
-
-                if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
-                if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
-                {
-                    var nonShuttles = subList.children.FindAll(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
-                    subList.Select(nonShuttles[Rand.Range(0, nonShuttles.Count)].UserData);
-                }
-                if (GameMain.Server.ModeSelectionMode == SelectionMode.Random) modeList.Select(Rand.Range(0, modeList.CountChildren));
             }
             else if (GameMain.Client != null)
             {
@@ -525,6 +517,23 @@ namespace Barotrauma
             GameMain.NetworkMember.EndVoteMax = 1;
 
             base.Select();
+        }
+
+        public void RandomizeSettings()
+        {
+            if (GameMain.Server == null) return;
+
+            if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
+            if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
+            {
+                var nonShuttles = subList.children.FindAll(c => c.UserData is Submarine && !((Submarine)c.UserData).HasTag(SubmarineTag.Shuttle));
+                subList.Select(nonShuttles[Rand.Range(0, nonShuttles.Count)].UserData);
+            }
+            if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
+            {
+                var allowedGameModes = GameModePreset.list.FindAll(m => !m.IsSinglePlayer && m.Name != "Campaign");
+                modeList.Select(allowedGameModes[Rand.Range(0, allowedGameModes.Count)]);
+            }
         }
         
         public void ShowSpectateButton()
