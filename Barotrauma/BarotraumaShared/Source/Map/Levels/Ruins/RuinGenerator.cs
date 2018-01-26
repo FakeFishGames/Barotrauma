@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using FarseerPhysics.Factories;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -344,6 +346,15 @@ namespace Barotrauma.RuinGeneration
                 Rectangle backgroundRect = new Rectangle(leaf.Rect.X, leaf.Rect.Y + leaf.Rect.Height, leaf.Rect.Width, leaf.Rect.Height);
 
                 new Structure(backgroundRect, (background.Prefab as StructurePrefab), null).MoveWithLevel = true;
+
+                var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World, 
+                    ConvertUnits.ToSimUnits(leaf.Rect.Width),
+                    ConvertUnits.ToSimUnits(leaf.Rect.Height), 
+                    1, ConvertUnits.ToSimUnits(leaf.Center));
+
+                submarineBlocker.IsStatic = true;
+                submarineBlocker.CollisionCategories = Physics.CollisionWall;
+                submarineBlocker.CollidesWith = Physics.CollisionWall;
             }
 
             List<RuinShape> doorlessRooms = new List<RuinShape>(shapes);
@@ -407,7 +418,7 @@ namespace Barotrauma.RuinGeneration
 
 
             //generate props --------------------------------------------------------------
-            for (int i = 0; i < shapes.Count*2; i++ )
+            for (int i = 0; i < shapes.Count * 2; i++)
             {
                 Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
 
@@ -416,14 +427,14 @@ namespace Barotrauma.RuinGeneration
                 Vector2 size = (prop.Prefab is StructurePrefab) ? ((StructurePrefab)prop.Prefab).Size : Vector2.Zero;
 
                 //if the prop is placed at the center of the room, we have to use a room without a door (because they're also placed at the center)
-                var shape = prop.Alignment.HasFlag(Alignment.Center) ? 
-                    doorlessRooms[Rand.Int(doorlessRooms.Count, Rand.RandSync.Server)] : 
+                var shape = prop.Alignment.HasFlag(Alignment.Center) ?
+                    doorlessRooms[Rand.Int(doorlessRooms.Count, Rand.RandSync.Server)] :
                     shapes[Rand.Int(shapes.Count, Rand.RandSync.Server)];
 
                 Vector2 position = shape.Rect.Center.ToVector2();
                 if (prop.Alignment.HasFlag(Alignment.Top))
                 {
-                    position = new Vector2(Rand.Range(shape.Rect.X+size.X, shape.Rect.Right - size.X, Rand.RandSync.Server), shape.Rect.Bottom - 64);
+                    position = new Vector2(Rand.Range(shape.Rect.X + size.X, shape.Rect.Right - size.X, Rand.RandSync.Server), shape.Rect.Bottom - 64);
                 }
                 else if (prop.Alignment.HasFlag(Alignment.Bottom))
                 {
