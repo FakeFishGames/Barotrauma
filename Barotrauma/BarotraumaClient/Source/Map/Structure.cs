@@ -180,6 +180,19 @@ namespace Barotrauma
                 }
             }
 
+            if (GameMain.DebugDraw)
+            {
+                if (prefab.BodyRotation != 0.0f)
+
+                GUI.DrawRectangle(spriteBatch, 
+                    new Vector2(rect.Center.X+ drawOffset.X, -(rect.Y - rect.Height / 2+ drawOffset.Y)), 
+                    prefab.BodyWidth > 0.0f ? prefab.BodyWidth : rect.Width,
+                    prefab.BodyHeight > 0.0f ? prefab.BodyHeight : rect.Height, 
+                    prefab.BodyRotation, Color.White);
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle(0,0,5000,5000), Color.White, true);
+            }
+
             prefab.sprite.effects = oldEffects;
         }
     }

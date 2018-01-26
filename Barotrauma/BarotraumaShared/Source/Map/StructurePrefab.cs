@@ -23,6 +23,30 @@ namespace Barotrauma
             private set;
         }
 
+        //rotation of the physics body in degrees
+        [Serialize(0.0f, false)]
+        public float BodyRotation
+        {
+            get;
+            private set;
+        }
+        
+        //in display units
+        [Serialize(0.0f, false)]
+        public float BodyWidth
+        {
+            get;
+            private set;
+        }
+
+        //in display units
+        [Serialize(0.0f, false)]
+        public float BodyHeight
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool Platform
         {
