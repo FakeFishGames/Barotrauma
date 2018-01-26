@@ -34,8 +34,8 @@ namespace Barotrauma
                     int width = isHorizontal ? section.rect.Width : (int)BodyWidth;
                     int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
                     mergedSections.Add(new WallSection(new Rectangle(
-                        section.rect.Center.X - width / 2, 
-                        section.rect.Center.Y - height / 2, 
+                        section.rect.Center.X - width / 2,
+                        section.rect.Y - section.rect.Height / 2 + height / 2,
                         width, height)));
 
                     GenerateMergedHull(mergedSections);
@@ -53,7 +53,7 @@ namespace Barotrauma
                     int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
                     mergedSections.Add(new WallSection(new Rectangle(
                         section.rect.Center.X - width / 2,
-                        section.rect.Center.Y - height / 2,
+                        section.rect.Y - section.rect.Height / 2 + height / 2,
                         width, height)));
                 }
             }
