@@ -253,4 +253,14 @@
     <sprite  texture="Content/Map/ruins2.png" sourcerect="512,517,126,270" depth ="0.97"/>
   </RuinClaw>
 
+  <SlopedTopWallHeavy description="test"
+    width="480" height="192" body="true" bodyheight="96" bodyrotation="10" castshadow="true" health="1000">
+    <sprite texture="Content/Map/slopetest.png" sourcerect="0,0,480,192" depth ="0.06" />
+  </SlopedTopWallHeavy>
+
+  <SlopedWindow description="test"
+    width="224" height="224" body="true" bodywidth="250" bodyheight="64" bodyrotation="45"  castshadow="false" health="1000">
+    <sprite texture="Content/Map/slopetest.png" sourcerect="0,192,224,224" depth ="0.06" />
+  </SlopedWindow>
+  
 </prefabs>

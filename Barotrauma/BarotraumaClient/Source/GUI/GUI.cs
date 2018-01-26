@@ -283,6 +283,23 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawRectangle(SpriteBatch sb, Vector2 center, float width, float height, float rotation, Color clr, float depth = 0.0f, int thickness = 1)
+        {
+            Matrix rotate = Matrix.CreateRotationZ(MathHelper.ToRadians(rotation));
+
+            width *= 0.5f;
+            height *= 0.5f;
+            Vector2 topLeft = center + Vector2.Transform(new Vector2(-width, -height), rotate);
+            Vector2 topRight = center + Vector2.Transform(new Vector2(width, -height), rotate);
+            Vector2 bottomLeft = center + Vector2.Transform(new Vector2(-width, height), rotate);
+            Vector2 bottomRight = center + Vector2.Transform(new Vector2(width, height), rotate);
+
+            DrawLine(sb, topLeft, topRight, clr, depth, thickness);
+            DrawLine(sb, topRight, bottomRight, clr, depth, thickness);
+            DrawLine(sb, bottomRight, bottomLeft, clr, depth, thickness);
+            DrawLine(sb, bottomLeft, topLeft, clr, depth, thickness);
+        }
+
         public static void DrawProgressBar(SpriteBatch sb, Vector2 start, Vector2 size, float progress, Color clr, float depth = 0.0f)
         {
             DrawProgressBar(sb, start, size, progress, clr, new Color(0.5f, 0.57f, 0.6f, 1.0f), depth);

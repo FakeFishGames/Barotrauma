@@ -39,6 +39,14 @@ namespace FarseerPhysics.Factories
             return body.CreateFixture(rectangleShape, userData);
         }
 
+        public static Fixture AttachRectangle(float width, float height, float density, float angle, Vector2 offset, Body body, object userData = null)
+        {
+            Vertices rectangleVertices = PolygonTools.CreateRectangle(width / 2, height / 2, Vector2.Zero, angle);
+            rectangleVertices.Translate(ref offset);
+            PolygonShape rectangleShape = new PolygonShape(rectangleVertices, density);
+            return body.CreateFixture(rectangleShape, userData);
+        }
+
         public static Fixture AttachCircle(float radius, float density, Body body, object userData = null)
         {
             if (radius <= 0)
