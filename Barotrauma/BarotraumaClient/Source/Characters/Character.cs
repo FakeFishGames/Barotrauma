@@ -121,18 +121,24 @@ namespace Barotrauma
             }
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-
-            if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+            if (moveCam)
             {
-                Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
-                Structure structure = null;
-                if (body != null) structure = body.UserData as Structure;
-                if (structure != null)
+                if (DebugConsole.IsOpen || GUI.PauseMenuOpen || DisableControls ||
+                    (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
                 {
-                    if (!structure.CastShadow && moveCam)
+                    if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
+                }
+                else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+                {
+                    Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
+                    Structure structure = body == null ? null : body.UserData as Structure;
+
+                    float sightDist = Submarine.LastPickedFraction;
+                    if (body?.UserData is Structure && !((Structure)body.UserData).CastShadow)
                     {
-                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 500.0f, 0.05f);
+                        sightDist = 1.0f;
                     }
+                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, Math.Max(250.0f, sightDist * 500.0f), 0.05f);
                 }
             }
 
@@ -271,7 +277,7 @@ namespace Barotrauma
                 if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
             
-            if (this == controlled || GUI.DisableHUD) return;
+            if (GUI.DisableHUD) return;
 
             Vector2 pos = DrawPosition;
             pos.Y = -pos.Y;
