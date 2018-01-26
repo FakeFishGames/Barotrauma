@@ -484,8 +484,15 @@ namespace Barotrauma.Lights
 
             for (int i=0;i<segments.Count;i++)
             {
+
                 Segment s = segments[i];
-                Vector2? intersection = MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal);
+                if (!(s.Start.WorldPos.X == s.End.WorldPos.X || s.Start.WorldPos.Y == s.End.WorldPos.Y))
+                {
+                    int adsfsdf = 1;
+                }
+                Vector2? intersection = (s.Start.WorldPos.X == s.End.WorldPos.X || s.Start.WorldPos.Y == s.End.WorldPos.Y) ?
+                    MathUtils.GetAxisAlignedLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos, s.IsHorizontal) :
+                    MathUtils.GetLineIntersection(rayStart, rayEnd, s.Start.WorldPos, s.End.WorldPos);
 
                 if (intersection != null)
                 {
