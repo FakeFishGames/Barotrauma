@@ -83,7 +83,7 @@ namespace Barotrauma
             set
             {
                 enabled = value;
-                scrollBar.Enabled = value;
+                //scrollBar.Enabled = value;
             }
         }
 

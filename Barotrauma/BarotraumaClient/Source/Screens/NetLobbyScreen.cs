@@ -756,27 +756,31 @@ namespace Barotrauma
 
         public void AddSubmarine(GUIComponent subList, Submarine sub)
         {
-            var subTextBlock = new GUITextBlock(
-                new Rectangle(0, 0, 0, 25), ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "ListBoxElement",
-                Alignment.TopLeft, Alignment.CenterLeft, subList)
+            var frame = new GUIFrame(new Rectangle(0, 0, 0, 25), "ListBoxElement", subList)
             {
-                Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f),
                 ToolTip = sub.Description,
                 UserData = sub
             };
-            
+
+            var subTextBlock = new GUITextBlock(
+                new Rectangle(20, 0, 0, 0), ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), "",
+                Alignment.TopLeft, Alignment.CenterLeft, frame)
+            {
+                CanBeFocused = false
+            };
+
             var matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name && s.MD5Hash.Hash == sub.MD5Hash.Hash);
             if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.Find(s => s.Name == sub.Name);
 
             if (matchingSub == null)
             {
                 subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
-                subTextBlock.ToolTip = TextManager.Get("SubNotFound");
+                frame.ToolTip = TextManager.Get("SubNotFound");
             }
             else if (matchingSub.MD5Hash.Hash != sub.MD5Hash.Hash)
             {
                 subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
-                subTextBlock.ToolTip = TextManager.Get("SubDoesntMatch");
+                frame.ToolTip = TextManager.Get("SubDoesntMatch");
             }
             else
             {
@@ -785,7 +789,7 @@ namespace Barotrauma
                     subTextBlock.TextColor = new Color(subTextBlock.TextColor, sub.HasTag(SubmarineTag.Shuttle) ? 1.0f : 0.6f);
                 }
 
-                GUIButton infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterRight, "", subTextBlock);
+                GUIButton infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterLeft, "", frame);
                 infoButton.UserData = sub;
                 infoButton.OnClicked += (component, userdata) =>
                 {
@@ -797,9 +801,12 @@ namespace Barotrauma
 
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
-                var shuttleText = new GUITextBlock(new Rectangle(-20, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.CenterRight, Alignment.CenterRight, subTextBlock, false, GUI.SmallFont);
-                shuttleText.TextColor = subTextBlock.TextColor * 0.8f;
-                shuttleText.ToolTip = subTextBlock.ToolTip;
+                new GUITextBlock(new Rectangle(-20, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.CenterRight, Alignment.CenterRight, subTextBlock, false, GUI.SmallFont)
+                {
+                    TextColor = subTextBlock.TextColor * 0.8f,
+                    ToolTip = subTextBlock.ToolTip,
+                    CanBeFocused = false
+                };
             }
         }
 
