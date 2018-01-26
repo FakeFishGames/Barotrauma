@@ -31,7 +31,13 @@ namespace Barotrauma
             {
                 if (mergedSections.Count > 5)
                 {
-                    mergedSections.Add(section);
+                    int width = isHorizontal ? section.rect.Width : (int)BodyWidth;
+                    int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
+                    mergedSections.Add(new WallSection(new Rectangle(
+                        section.rect.Center.X - width / 2, 
+                        section.rect.Center.Y - height / 2, 
+                        width, height)));
+
                     GenerateMergedHull(mergedSections);
                     continue;
                 }
@@ -43,7 +49,12 @@ namespace Barotrauma
                 }
                 else
                 {
-                    mergedSections.Add(section);
+                    int width = isHorizontal ? section.rect.Width : (int)BodyWidth;
+                    int height = isHorizontal ? (int)BodyHeight : section.rect.Height;
+                    mergedSections.Add(new WallSection(new Rectangle(
+                        section.rect.Center.X - width / 2,
+                        section.rect.Center.Y - height / 2,
+                        width, height)));
                 }
             }
 
@@ -60,6 +71,12 @@ namespace Barotrauma
             Rectangle mergedRect = GenerateMergedRect(mergedSections);
 
             var h = new ConvexHull(CalculateExtremes(mergedRect), Color.Black, this);
+            
+            if (BodyRotation != 0.0f)
+            {
+                h.Rotate(Position, MathHelper.ToRadians(-BodyRotation));
+            }
+
             mergedSections.ForEach(x => x.hull = h);
             convexHulls.Add(h);
             mergedSections.Clear();
