@@ -135,9 +135,13 @@ namespace Barotrauma
         private bool SelectItem(GUIComponent component, object obj)
         {
             GUITextBlock textBlock = component as GUITextBlock;
-            if (textBlock == null) return false;
-            button.Text = textBlock.Text;
+            if (textBlock == null)
+            {
+                textBlock = component.GetChild<GUITextBlock>();
+                if (textBlock == null) return false;
+            }
 
+            button.Text = textBlock.Text;
             Dropped = false;
 
             if (OnSelected != null) OnSelected(component, component.UserData);
