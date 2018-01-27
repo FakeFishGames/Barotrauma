@@ -194,6 +194,7 @@ namespace Barotrauma
                     writer.Write(doc.ToString());
                     writer.Flush();
 
+                    memoryStream.Position = 0;
                     return md5.ComputeHash(memoryStream);
                 }
             }
