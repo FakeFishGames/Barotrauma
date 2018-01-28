@@ -666,6 +666,8 @@ namespace Barotrauma.Networking
         private IEnumerable<object> StartGame(NetIncomingMessage inc)
         {
             if (Character != null) Character.Remove();
+            
+            GameMain.LightManager.LightingEnabled = true;
 
             //enable spectate button in case we fail to start the round now
             //(for example, due to a missing sub file or an error)
