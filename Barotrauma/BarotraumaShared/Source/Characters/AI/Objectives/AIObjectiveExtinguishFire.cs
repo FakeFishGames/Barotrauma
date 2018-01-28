@@ -14,6 +14,8 @@ namespace Barotrauma
 
         private AIObjectiveGoTo gotoObjective;
 
+        private float useExtinquisherTimer;
+
         public AIObjectiveExtinguishFire(Character character, Hull targetHull) :
             base(character, "")
         {
@@ -67,8 +69,11 @@ namespace Barotrauma
 
             foreach (FireSource fs in targetHull.FireSources.ToList())
             {
-                if (fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange, extinguisher.Range * 0.5f, extinguisher.Range)))
-                {           
+                if (fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range)) || useExtinquisherTimer > 0.0f)
+                {
+                    useExtinquisherTimer += deltaTime;
+                    if (useExtinquisherTimer > 2.0f) useExtinquisherTimer = 0.0f;
+
                     character.CursorPosition = fs.Position;
                     character.SetInput(InputType.Aim, false, true);
                     character.AIController.SteeringManager.Reset();

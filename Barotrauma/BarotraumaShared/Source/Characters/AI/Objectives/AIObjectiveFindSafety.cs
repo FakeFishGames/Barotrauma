@@ -63,15 +63,57 @@ namespace Barotrauma
 
             if (goToObjective != null)
             {
+                goToObjective.TryComplete(deltaTime);
+
                 var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
                 if (pathSteering != null && pathSteering.CurrentPath != null &&
                     pathSteering.CurrentPath.Unreachable && !unreachable.Contains(goToObjective.Target))
                 {
                     unreachable.Add(goToObjective.Target as Hull);
+                    goToObjective = null;
+                }
+            }
+            //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
+            // -> attempt to manually steer away from hazards
+            else if (currentHull != null)
+            {
+                Vector2 escapeVel = Vector2.Zero;
+                foreach (FireSource fireSource in currentHull.FireSources)
+                {
+                    int dir = Math.Sign(character.Position.X - fireSource.Position.X);
+                    
+                    float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
+                    escapeVel += new Vector2(dir * distMultiplier, 0.0f);                                      
                 }
 
+               foreach (Character enemy in Character.CharacterList)
+                {
+                    if (enemy.CurrentHull == currentHull && !enemy.IsDead && !enemy.IsUnconscious && 
+                        (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
+                    {
+                        float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(enemy.Position, character.Position), 0.1f, 10.0f);
+                        escapeVel += new Vector2(Math.Sign(character.Position.X - enemy.Position.X) * distMultiplier, 0.0f);
+                    }
+                }
 
-                goToObjective.TryComplete(deltaTime);
+                if (escapeVel != Vector2.Zero)
+                {
+                    //only move if we haven't reached the edge of the room
+                    if ((escapeVel.X < 0 && character.Position.X > currentHull.Rect.X + 50) ||
+                        (escapeVel.X > 0 && character.Position.X < currentHull.Rect.Right - 50))
+                    {
+                        character.AIController.SteeringManager.SteeringManual(deltaTime, escapeVel);
+                    }
+                    else
+                    {
+                        character.AnimController.TargetDir = escapeVel.X < 0.0f ? Direction.Right : Direction.Left;
+                        character.AIController.SteeringManager.Reset();
+                    }
+                }
+                else
+                {
+                    character.AIController.SteeringManager.Reset();
+                }
             }
         }
 
@@ -137,23 +179,30 @@ namespace Barotrauma
                 return 150.0f - character.Oxygen;
             }
             
-            if (character.AnimController.CurrentHull == null) return 5.0f;
-            currenthullSafety = GetHullSafety(character.AnimController.CurrentHull, character);
+            if (character.CurrentHull == null) return 5.0f;
+            currenthullSafety = GetHullSafety(character.CurrentHull, character);
             priority = 100.0f - currenthullSafety;
 
-            var nearbyHulls = character.AnimController.CurrentHull.GetConnectedHulls(3);
+            //var nearbyHulls = character.CurrentHull.GetConnectedHulls(3);
 
-            foreach (Hull hull in nearbyHulls)
+            //increase priority slightly if there's a fire in the room
+            //(will increase more heavily if near the damage range of the fire)
+            if (character.CurrentHull.FireSources.Count > 0)
+            {
+                priority += 5.0f;
+            }
+
+            /*foreach (Hull hull in nearbyHulls)
             {
                 foreach (FireSource fireSource in hull.FireSources)
                 {
-                    //increase priority if almost within damage range of a fire
+                    //heavily increase priority if almost within damage range of a fire
                     if (fireSource.IsInDamageRange(character, fireSource.DamageRange * 1.25f))
                     {
                         priority += Math.Max(fireSource.Size.X, 50.0f);
                     }
                 }
-            }
+            }*/
             
             if (NeedsDivingGear())
             {
@@ -202,6 +251,15 @@ namespace Barotrauma
             }
             safety -= fireAmount;
 
+            foreach (Character enemy in Character.CharacterList)
+            {
+                if (enemy.CurrentHull == hull && !enemy.IsDead && !enemy.IsUnconscious &&
+                   (enemy.AIController is EnemyAIController || enemy.TeamID != character.TeamID))
+                {
+                    safety -= 10.0f;
+                }
+            }
+            
             return MathHelper.Clamp(safety, 0.0f, 100.0f);
         }
     }
