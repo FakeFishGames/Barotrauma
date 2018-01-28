@@ -167,11 +167,14 @@ namespace Barotrauma.Items.Components
                     displayPos += item.CurrentHull.Submarine.Position;
 
                     Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
-                    foreach (FireSource fs in hull.FireSources)
+                    if (hull != null)
                     {
-                        if (fs.IsInDamageRange(displayPos, 100.0f) && !fireSourcesInRange.Contains(fs))
+                        foreach (FireSource fs in hull.FireSources)
                         {
-                            fireSourcesInRange.Add(fs);
+                            if (fs.IsInDamageRange(displayPos, 100.0f) && !fireSourcesInRange.Contains(fs))
+                            {
+                                fireSourcesInRange.Add(fs);
+                            }
                         }
                     }
                 }
