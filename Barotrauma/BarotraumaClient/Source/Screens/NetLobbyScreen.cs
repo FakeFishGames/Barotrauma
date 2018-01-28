@@ -1434,7 +1434,7 @@ namespace Barotrauma
             Submarine sub = Submarine.SavedSubmarines.Find(m => m.Name == subName && m.MD5Hash.Hash == md5Hash);
             if (sub == null) sub = Submarine.SavedSubmarines.Find(m => m.Name == subName);
 
-            var matchingListSub = subList.children.Find(c => c.UserData == sub) as GUITextBlock;
+            var matchingListSub = subList.children.Find(c => c.UserData == sub);
             if (matchingListSub != null)
             {
                 subList.OnSelected -= VotableClicked;
@@ -1452,7 +1452,7 @@ namespace Barotrauma
                 else if (sub.MD5Hash.Hash == null)
                 {
                     errorMsg = TextManager.Get("SubLoadError").Replace("[subname]", subName) + " ";
-                    if (matchingListSub != null) matchingListSub.TextColor = Color.Red;
+                    if (matchingListSub != null) matchingListSub.GetChild<GUITextBox>().TextColor = Color.Red;
                 }
                 else
                 {
