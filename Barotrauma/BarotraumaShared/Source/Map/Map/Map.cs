@@ -385,13 +385,48 @@ namespace Barotrauma
             foreach (Location location in locations)
             {
                 if (!location.Discovered) continue;
-                
-                var allowedTypeChanges = location.Type.CanChangeTo.FindAll(c => location.TypeChangeTimer >= c.RequiredDuration);
 
-                float probabilitySum = allowedTypeChanges.Sum(m => m.Probability);
+                //find which types of locations this one can change to
+                List<LocationTypeChange> allowedTypeChanges = new List<LocationTypeChange>();
+                List<LocationTypeChange> readyTypeChanges = new List<LocationTypeChange>();
+                foreach (LocationTypeChange typeChange in location.Type.CanChangeTo)
+                {
+                    //check if there are any adjacent locations that would prevent the change
+                    bool disallowedFound = false;
+                    foreach (string disallowedLocationName in typeChange.DisallowedAdjacentLocations)
+                    {
+                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Name.ToLowerInvariant() == disallowedLocationName.ToLowerInvariant()))
+                        {
+                            disallowedFound = true;
+                            break;
+                        }
+                    }
+                    if (disallowedFound) continue;
+
+                    //check that there's a required adjacent location present
+                    bool requiredFound = false;
+                    foreach (string requiredLocationName in typeChange.RequiredAdjacentLocations)
+                    {
+                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Name.ToLowerInvariant() == requiredLocationName.ToLowerInvariant()))
+                        {
+                            requiredFound = true;
+                            break;
+                        }
+                    }
+                    if (!requiredFound && typeChange.RequiredAdjacentLocations.Count > 0) continue;
+
+                    allowedTypeChanges.Add(typeChange);
+
+                    if (location.TypeChangeTimer >= typeChange.RequiredDuration)
+                    {
+                        readyTypeChanges.Add(typeChange);
+                    }
+                }
+
+                float probabilitySum = readyTypeChanges.Sum(m => m.Probability);
                 float randomNumber = Rand.Range(0.0f, 1.0f);
 
-                foreach (LocationTypeChange typeChange in allowedTypeChanges)
+                foreach (LocationTypeChange typeChange in readyTypeChanges)
                 {
                     if (randomNumber <= typeChange.Probability)
                     {
@@ -401,9 +436,16 @@ namespace Barotrauma
                     }
 
                     randomNumber -= typeChange.Probability;
-                }
+                } 
 
-                location.TypeChangeTimer++;
+                if (allowedTypeChanges.Count > 0)
+                {
+                    location.TypeChangeTimer++;
+                }
+                else
+                {
+                    location.TypeChangeTimer = 0;
+                }
             }
         }
 

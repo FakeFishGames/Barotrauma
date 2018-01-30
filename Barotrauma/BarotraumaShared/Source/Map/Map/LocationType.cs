@@ -7,20 +7,6 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class LocationTypeChange
-    {
-        public readonly string ChangeTo;
-        public readonly float Probability;
-        public readonly int RequiredDuration;
-
-        public LocationTypeChange(XElement element)
-        {
-            ChangeTo = element.GetAttributeString("type", "");
-            Probability = element.GetAttributeFloat("probability", 1.0f);
-            RequiredDuration = element.GetAttributeInt("requiredduration", 0);
-        }
-    }
-
     class LocationType
     {
         public static readonly List<LocationType> List = new List<LocationType>();
@@ -83,18 +69,7 @@ namespace Barotrauma
 
             HaloColor = element.GetAttributeColor("halo", Color.Transparent);
 
-            string allowedZonesStr = element.GetAttributeString("allowedzones", "1,2,3,4,5,6,7,8,9");
-            string[] zoneIndices = allowedZonesStr.Split(',');
-            for (int i = 0; i < zoneIndices.Length; i++)
-            {
-                int zoneIndex = -1;
-                if (!int.TryParse(zoneIndices[i].Trim(), out zoneIndex))
-                {
-                    DebugConsole.ThrowError("Error in locationtype config \"" + Name + "\" - \"" + zoneIndices[i] + "\" is not a valid zone index.");
-                    continue;
-                }
-                AllowedZones.Add(zoneIndex);
-            }
+            AllowedZones = element.GetAttributeIntArray("allowedzones", new int[] { 1,2,3,4,5,6,7,8,9 }).ToList();
 
             hireableJobs = new List<Tuple<JobPrefab, float>>();
             foreach (XElement subElement in element.Elements())
