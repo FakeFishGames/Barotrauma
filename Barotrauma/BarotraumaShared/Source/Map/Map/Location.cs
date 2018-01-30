@@ -13,6 +13,13 @@ namespace Barotrauma
 
         public List<LocationConnection> Connections;
 
+        private string baseName;
+        private int nameFormatIndex;
+
+        public bool Discovered;
+
+        public int TypeChangeTimer;
+
         public string Name
         {
             get { return name; }
@@ -22,8 +29,6 @@ namespace Barotrauma
         {
             get { return mapPosition; }
         }
-
-        public bool Discovered;
         
         public LocationType Type
         {
@@ -52,11 +57,27 @@ namespace Barotrauma
             return new Location(position, zone);        
         }
 
+        public void ChangeType(LocationType newType)
+        {
+            if (newType == type) return;
+
+            type = newType;
+            name = type.NameFormats[nameFormatIndex % type.NameFormats.Count].Replace("[name]", baseName);
+
+#if CLIENT
+            if (type.HasHireableCharacters)
+            {
+                hireManager = new HireManager();
+                hireManager.GenerateCharacters(this, HireManager.MaxAvailableCharacters);
+            }
+#endif
+        }
+
         private string RandomName(LocationType type)
         {
-            string randomName = ToolBox.GetRandomLine("Content/Map/locationNames.txt");
-            int nameFormatIndex = Rand.Int(type.NameFormats.Count, Rand.RandSync.Server);
-            return type.NameFormats[nameFormatIndex].Replace("[name]", randomName);
+            baseName = ToolBox.GetRandomLine("Content/Map/locationNames.txt");
+            nameFormatIndex = Rand.Int(type.NameFormats.Count, Rand.RandSync.Server);
+            return type.NameFormats[nameFormatIndex].Replace("[name]", baseName);
         }
     }
 }

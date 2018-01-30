@@ -204,6 +204,7 @@ namespace Barotrauma
                 {
                     Map.MoveToNextLocation();
                 }
+                Map.ProgressWorld();
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }

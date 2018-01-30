@@ -7,11 +7,23 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    class LocationTypeChange
+    {
+        public readonly string ChangeTo;
+        public readonly float Probability;
+        public readonly int RequiredDuration;
+
+        public LocationTypeChange(XElement element)
+        {
+            ChangeTo = element.GetAttributeString("type", "");
+            Probability = element.GetAttributeFloat("probability", 1.0f);
+            RequiredDuration = element.GetAttributeInt("requiredduration", 0);
+        }
+    }
+
     class LocationType
     {
-        private static List<LocationType> list = new List<LocationType>();
-        //sum of the commonness-values of each location type
-        private static int totalWeight;
+        public static readonly List<LocationType> List = new List<LocationType>();
         
         private int commonness;
 
@@ -33,6 +45,8 @@ namespace Barotrauma
         public readonly string Name;
 
         public readonly string DisplayName;
+
+        public readonly List<LocationTypeChange> CanChangeTo = new List<LocationTypeChange>();
         
         public List<string> NameFormats
         {
@@ -60,7 +74,6 @@ namespace Barotrauma
             DisplayName = element.GetAttributeString("name", "Name");
 
             commonness = element.GetAttributeInt("commonness", 1);
-            totalWeight += commonness;
 
             nameFormats = new List<string>();
             foreach (XAttribute nameFormat in element.Element("nameformats").Attributes())
@@ -104,6 +117,9 @@ namespace Barotrauma
                     case "symbol":
                         symbolSprite = new Sprite(subElement);
                         break;
+                    case "changeto":
+                        CanChangeTo.Add(new LocationTypeChange(subElement));
+                        break;
                 }
             }
 
@@ -126,14 +142,14 @@ namespace Barotrauma
 
         public static LocationType Random(string seed = "", int? zone = null)
         {
-            Debug.Assert(list.Count > 0, "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
+            Debug.Assert(List.Count > 0, "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
 
             if (!string.IsNullOrWhiteSpace(seed))
             {
                 Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
             }
 
-            List<LocationType> allowedLocationTypes = zone.HasValue ? list.FindAll(lt => lt.AllowedZones.Contains(zone.Value)) : list;
+            List<LocationType> allowedLocationTypes = zone.HasValue ? List.FindAll(lt => lt.AllowedZones.Contains(zone.Value)) : List;
 
             if (allowedLocationTypes.Count == 0)
             {
@@ -153,12 +169,12 @@ namespace Barotrauma
         public static void Init()
         {
             var locationTypeFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.LocationTypes);
-            
+
             foreach (string file in locationTypeFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file);
 
-                if (doc==null)
+                if (doc == null)
                 {
                     return;
                 }
@@ -166,7 +182,7 @@ namespace Barotrauma
                 foreach (XElement element in doc.Root.Elements())
                 {
                     LocationType locationType = new LocationType(element);
-                    list.Add(locationType);
+                    List.Add(locationType);
                 }
             }
 

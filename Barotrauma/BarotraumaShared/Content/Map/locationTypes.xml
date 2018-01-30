@@ -9,12 +9,9 @@
 
     <Symbol texture="Content/Map/beaconSymbol.png"/>
     
-    <AfterClaimed>
-      <ChangeTo type="Outpost" probability="0.5"/>
-      <ChangeTo type="Military" probability="0.25"/>
-      <ChangeTo type="Research" probability="0.25"/>
-    </AfterClaimed>
-
+    <ChangeTo type="Outpost" probability="0.5" requiredduration="3"/>
+    <ChangeTo type="Military" probability="0.25" requiredduration="3"/>
+    <ChangeTo type="Research" probability="0.25" requiredduration="3"/>
   </None>
 
   <City
@@ -55,9 +52,7 @@
     <Hireable name="Security Officer" commonness="1"/>
     <Hireable name="Captain" commonness="1"/>
 
-    <AfterClaimed>
-      <ChangeTo type="City" probability="0.5"/>
-    </AfterClaimed>
+    <ChangeTo type="City" probability="0.1" requiredduration="5"/>
 
     <nameformats
       f0="[name] Habitation Outpost"
@@ -124,9 +119,7 @@
       f1="[name] Reef"
       f2="The Hives of [name]"/>
 
-    <AfterClaimed>
-      <ChangeTo type="None" probability="1.0"/>
-    </AfterClaimed>
+    <ChangeTo type="None" probability="1.0"/>
   </Lair>
 
   <Ruins
@@ -141,10 +134,8 @@
     <nameformats
       f0="[name] Ruins"/>
 
-    <AfterClaimed>
-      <ChangeTo type="Research" probability="0.8"/>
-      <ChangeTo type="Outpost" probability="0.1"/>
-      <ChangeTo type="Military" probability="0.1"/>
-    </AfterClaimed>
+    <ChangeTo type="Research" probability="0.4" requiredduration="3"/>
+    <ChangeTo type="Outpost" probability="0.05" requiredduration="3"/>
+    <ChangeTo type="Military" probability="0.05" requiredduration="3"/>
   </Ruins>
 </locationtypes>

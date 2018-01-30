@@ -57,15 +57,23 @@ namespace Barotrauma
                         }
                     }
                 }
+            }
 
 #if DEBUG
-                if (PlayerInput.DoubleClicked() && highlightedLocation != null)
+            if (PlayerInput.DoubleClicked() && highlightedLocation != null)
+            {
+                var passedConnection = currentLocation.Connections.Find(c => c.OtherLocation(currentLocation) == highlightedLocation);
+                if (passedConnection != null)
                 {
-                    currentLocation = highlightedLocation;
-                    OnLocationChanged?.Invoke(currentLocation);
+                    passedConnection.Passed = true;
                 }
-#endif
+
+                currentLocation = highlightedLocation;
+                CurrentLocation.Discovered = true;
+                OnLocationChanged?.Invoke(currentLocation);
+                ProgressWorld();
             }
+#endif
         }
 
         public void Draw(SpriteBatch spriteBatch, Rectangle rect, float scale = 1.0f)
@@ -94,7 +102,7 @@ namespace Barotrauma
 
             foreach (LocationConnection connection in connections)
             {
-                Color crackColor = Color.White * Math.Max(connection.Difficulty / 100.0f, 1.5f);
+                Color crackColor = Color.White;
                 
                 if (selectedLocation != currentLocation &&
                     (connection.Locations.Contains(selectedLocation) && connection.Locations.Contains(currentLocation)))
