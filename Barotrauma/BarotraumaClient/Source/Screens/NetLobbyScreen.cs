@@ -684,9 +684,9 @@ namespace Barotrauma
 
         public void SetMissionType(int missionTypeIndex)
         {
-            if (missionTypeIndex < 0 || missionTypeIndex >= Mission.MissionTypes.Count) return;
+            if (missionTypeIndex < 0 || missionTypeIndex >= MissionPrefab.MissionTypes.Count) return;
 
-            missionTypeBlock.GetChild<GUITextBlock>().Text = Mission.MissionTypes[missionTypeIndex];
+            missionTypeBlock.GetChild<GUITextBlock>().Text = MissionPrefab.MissionTypes[missionTypeIndex];
             missionTypeBlock.UserData = missionTypeIndex;
         }
 
@@ -697,8 +697,8 @@ namespace Barotrauma
             int missionTypeIndex = (int)missionTypeBlock.UserData;
             missionTypeIndex += (int)userData;
 
-            if (missionTypeIndex < 0) missionTypeIndex = Mission.MissionTypes.Count - 1;
-            if (missionTypeIndex >= Mission.MissionTypes.Count) missionTypeIndex = 0;
+            if (missionTypeIndex < 0) missionTypeIndex = MissionPrefab.MissionTypes.Count - 1;
+            if (missionTypeIndex >= MissionPrefab.MissionTypes.Count) missionTypeIndex = 0;
 
             SetMissionType(missionTypeIndex);
 

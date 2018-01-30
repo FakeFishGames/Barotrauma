@@ -1,19 +1,30 @@
 ﻿<locationtypes>
   <None
-    commonness="3"
-    symbol="Content/Map/beaconSymbol.png"
-    background="Content/Map/beaconbackground.jpg">
-    <nameformats
-      f0="[name]"
-      f1="[name]"
-      f2="[name]"
-      f3="[name] Outpost"/>
+    name="Natural Formation"
+    commonness="5"
+    background="Content/Map/beaconbackground.jpg"
+    allowedzones="1,2,3,4,5,6,7,8,9">
+    
+    <nameformats f0="[name]"/>
+
+    <Symbol texture="Content/Map/beaconSymbol.png"/>
+    
+    <AfterClaimed>
+      <ChangeTo type="Outpost" probability="0.5"/>
+      <ChangeTo type="Military" probability="0.25"/>
+      <ChangeTo type="Research" probability="0.25"/>
+    </AfterClaimed>
+
   </None>
 
   <City
-    commonness="3"
-    symbol="Content/Map/citySymbol.png"
-    background="Content/Map/citybackground.jpg">
+    name="Colony"
+    commonness="5"
+    background="Content/Map/citybackground.jpg"
+    allowedzones="1,2"
+    halo="0,1,0,0.3">
+
+    <Symbol texture="Content/Map/citySymbol.png"/>
 
     <Hireable name="Assistant" commonness="10"/>
     <Hireable name="Engineer" commonness="3"/>
@@ -25,15 +36,43 @@
     <nameformats
       f0="The City of [name]"
       f1="[name] City"
-      f2="[name] Outpost"
       f3="[name] Station"/>
   </City>
 
-  <Military
-    commonness="1"
-    symbol="Content/Map/militarySymbol.png"
-    background="Content/Map/militarybackground.jpg">
+  <Outpost
+    name="Habitation Outpost"
+    commonness="5"
+    background="Content/Map/beaconbackground.jpg"
+    allowedzones="1,2,3"
+    halo="0,1,0,0.2">
 
+    <Symbol texture="Content/Map/citySymbol.png"/>
+    
+    <Hireable name="Assistant" commonness="10"/>
+    <Hireable name="Engineer" commonness="3"/>
+    <Hireable name="Mechanic" commonness="3"/>
+    <Hireable name="Medical Doctor" commonness="1"/>
+    <Hireable name="Security Officer" commonness="1"/>
+    <Hireable name="Captain" commonness="1"/>
+
+    <AfterClaimed>
+      <ChangeTo type="City" probability="0.5"/>
+    </AfterClaimed>
+
+    <nameformats
+      f0="[name] Habitation Outpost"
+      f1="[name] Outpost"/>
+  </Outpost>
+  
+  <Military
+    name="Military Outpost"
+    commonness="3"
+    background="Content/Map/militarybackground.jpg"
+    allowedzones="1,2,3,4"
+    halo="0,1,0,0.4">
+
+    <Symbol texture="Content/Map/militarySymbol.png"/>
+    
     <Hireable name="Security Officer" commonness="10"/>
     <Hireable name="Captain" commonness="3"/>
     <Hireable name="Assistant" commonness="2"/>
@@ -49,9 +88,13 @@
   </Military>
 
   <Research
-    commonness="1"
-    symbol="Content/Map/researchSymbol.png"
-    background="Content/Map/researchbackground.jpg">
+    name="Research Outpost"
+    commonness="3"
+    background="Content/Map/researchbackground.jpg"
+    allowedzones="1,2,3"
+    halo="0,1,0,0.2">
+
+    <Symbol texture="Content/Map/researchSymbol.png"/>
     
     <Hireable name="Engineer" commonness="5"/>
     <Hireable name="Mechanic" commonness="5"/>
@@ -66,4 +109,42 @@
       f2="[name] Institute of Astrobiology"
       f3="[name] Biomedical Research Center"/>
   </Research>
+
+  <Lair
+    name="Breeding Grounds"
+    commonness="2"
+    background="Content/Map/beaconbackground.jpg"
+    allowedzones="1,2,3,4,5,6,7,8,9"
+    halo="1,0,0,0.4">
+
+    <Symbol texture="Content/Map/beaconSymbol.png"/>
+
+    <nameformats
+      f0="[name] Breeding Grounds"
+      f1="[name] Reef"
+      f2="The Hives of [name]"/>
+
+    <AfterClaimed>
+      <ChangeTo type="None" probability="1.0"/>
+    </AfterClaimed>
+  </Lair>
+
+  <Ruins
+    name="Alien Ruins"
+    commonness="3"
+    background="Content/Map/beaconbackground.jpg"
+    allowedzones="3,4,5,6,7,8,9"
+    halo="1,0,0,0.2">
+
+    <Symbol texture="Content/Map/beaconSymbol.png"/>
+    
+    <nameformats
+      f0="[name] Ruins"/>
+
+    <AfterClaimed>
+      <ChangeTo type="Research" probability="0.8"/>
+      <ChangeTo type="Outpost" probability="0.1"/>
+      <ChangeTo type="Military" probability="0.1"/>
+    </AfterClaimed>
+  </Ruins>
 </locationtypes>

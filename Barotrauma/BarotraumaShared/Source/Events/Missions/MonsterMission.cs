@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -18,11 +17,10 @@ namespace Barotrauma
             get { return monster != null && !monster.IsDead ? radarPosition : Vector2.Zero; }
         }
 
-        public MonsterMission(XElement element, Location[] locations)
-            : base(element, locations)
+        public MonsterMission(MissionPrefab prefab, Location[] locations)
+            : base(prefab, locations)
         {
-            monsterFile = element.GetAttributeString("monsterfile", "");
-
+            monsterFile = prefab.XmlConfig.GetAttributeString("monsterfile", "");
         }
         
         public override void Start(Level level)

@@ -7,10 +7,12 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public enum Gender { None, Male, Female };        
-
+    public enum Gender { None, Male, Female };
+    
     partial class CharacterInfo
     {
+        private static Dictionary<string, XDocument> cachedConfigs = new Dictionary<string, XDocument>();
+
         public string Name;
         public string DisplayName
         {
@@ -133,15 +135,21 @@ namespace Barotrauma
             this.File = file;
 
             headSpriteRange = new Vector2[2];
-
             pickedItems = new List<ushort>();
-
             SpriteTags = new List<string>();
 
-            //ID = -1;
+            XDocument doc = null;
+            if (cachedConfigs.ContainsKey(file))
+            {
+                doc = cachedConfigs[file];
+            }
+            else
+            {
+                doc = XMLExtensions.TryLoadXml(file);
+                if (doc == null) return;
 
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null) return;
+                cachedConfigs.Add(file, doc);
+            }
 
             if (doc.Root.GetAttributeBool("genders", false))
             {

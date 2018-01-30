@@ -12,9 +12,7 @@ namespace Barotrauma
         private static List<LocationType> list = new List<LocationType>();
         //sum of the commonness-values of each location type
         private static int totalWeight;
-
-        private string name;
-
+        
         private int commonness;
 
         private List<string> nameFormats;
@@ -26,11 +24,15 @@ namespace Barotrauma
         //<name, commonness>
         private List<Tuple<JobPrefab, float>> hireableJobs;
         private float totalHireableWeight;
-        
-        public string Name
-        {
-            get { return name; }
-        }
+
+        //placeholder
+        public readonly Color HaloColor;
+
+        public List<int> AllowedZones = new List<int>();
+
+        public readonly string Name;
+
+        public readonly string DisplayName;
         
         public List<string> NameFormats
         {
@@ -54,7 +56,8 @@ namespace Barotrauma
 
         private LocationType(XElement element)
         {
-            name = element.Name.ToString();
+            Name = element.Name.ToString();
+            DisplayName = element.GetAttributeString("name", "Name");
 
             commonness = element.GetAttributeInt("commonness", 1);
             totalWeight += commonness;
@@ -65,29 +68,44 @@ namespace Barotrauma
                 nameFormats.Add(nameFormat.Value);
             }
 
+            HaloColor = element.GetAttributeColor("halo", Color.Transparent);
+
+            string allowedZonesStr = element.GetAttributeString("allowedzones", "1,2,3,4,5,6,7,8,9");
+            string[] zoneIndices = allowedZonesStr.Split(',');
+            for (int i = 0; i < zoneIndices.Length; i++)
+            {
+                int zoneIndex = -1;
+                if (!int.TryParse(zoneIndices[i].Trim(), out zoneIndex))
+                {
+                    DebugConsole.ThrowError("Error in locationtype config \"" + Name + "\" - \"" + zoneIndices[i] + "\" is not a valid zone index.");
+                    continue;
+                }
+                AllowedZones.Add(zoneIndex);
+            }
+
             hireableJobs = new List<Tuple<JobPrefab, float>>();
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "hireable") continue;
-
-                string jobName = subElement.GetAttributeString("name", "");
-
-                JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName.ToLowerInvariant());
-                if (jobPrefab==null)
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    DebugConsole.ThrowError("Invalid job name ("+jobName+") in location type "+name);
+                    case "hireable":
+                        string jobName = subElement.GetAttributeString("name", "");
+                        JobPrefab jobPrefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobName.ToLowerInvariant());
+                        if (jobPrefab == null)
+                        {
+                            DebugConsole.ThrowError("Invalid job name (" + jobName + ") in location type " + Name);
+                            continue;
+                        }
+                        float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
+                        totalHireableWeight += jobCommonness;
+                        Tuple<JobPrefab, float> hireableJob = new Tuple<JobPrefab, float>(jobPrefab, jobCommonness);
+                        hireableJobs.Add(hireableJob);
+                        break;
+                    case "symbol":
+                        symbolSprite = new Sprite(subElement);
+                        break;
                 }
-
-                float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
-                totalHireableWeight += jobCommonness;
-
-                Tuple<JobPrefab, float> hireableJob = new Tuple<JobPrefab, float>(jobPrefab, jobCommonness);
-
-                hireableJobs.Add(hireableJob);
             }
-
-            string spritePath = element.GetAttributeString("symbol", "Content/Map/beaconSymbol.png");
-            symbolSprite = new Sprite(spritePath, new Vector2(0.5f, 0.5f));
 
             string backgroundPath = element.GetAttributeString("background", "");
             backGround = new Sprite(backgroundPath, Vector2.Zero);
@@ -106,7 +124,7 @@ namespace Barotrauma
             return null;
         }
 
-        public static LocationType Random(string seed = "")
+        public static LocationType Random(string seed = "", int? zone = null)
         {
             Debug.Assert(list.Count > 0, "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
 
@@ -115,9 +133,15 @@ namespace Barotrauma
                 Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
             }
 
-            int randInt = Rand.Int(totalWeight, Rand.RandSync.Server);
+            List<LocationType> allowedLocationTypes = zone.HasValue ? list.FindAll(lt => lt.AllowedZones.Contains(zone.Value)) : list;
 
-            foreach (LocationType type in list)
+            if (allowedLocationTypes.Count == 0)
+            {
+                DebugConsole.ThrowError("Could not generate a random location type - no location types for the zone " + zone + " found!");
+            }
+
+            int randInt = Rand.Int(allowedLocationTypes.Sum(lt => lt.commonness), Rand.RandSync.Server);
+            foreach (LocationType type in allowedLocationTypes)
             {
                 if (randInt < type.commonness) return type;
                 randInt -= type.commonness;

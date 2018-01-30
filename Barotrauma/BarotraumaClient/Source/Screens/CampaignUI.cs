@@ -153,8 +153,11 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
-            mapZoom = MathHelper.Clamp(mapZoom, 1.0f, 4.0f);
+            if (selectedTab == Tab.Map)
+            {
+                mapZoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
+                mapZoom = MathHelper.Clamp(mapZoom, 0.1f, 4.0f);
+            }
             
             if (GameMain.GameSession?.Map != null)
             {

@@ -13,19 +13,18 @@ namespace Barotrauma
 
         private int requiredDeliveryAmount;
 
-        public CargoMission(XElement element, Location[] locations)
-            : base(element, locations)
+        public CargoMission(MissionPrefab prefab, Location[] locations)
+            : base(prefab, locations)
         {
-            itemConfig = element.Element("Items");
-
-            requiredDeliveryAmount = element.GetAttributeInt("requireddeliveryamount", 0);
+            itemConfig = prefab.XmlConfig.Element("Items");
+            requiredDeliveryAmount = prefab.XmlConfig.GetAttributeInt("requireddeliveryamount", 0);
         }
 
         private void InitItems()
         {
             items = new List<Item>();
 
-            if (itemConfig==null)
+            if (itemConfig == null)
             {
                 DebugConsole.ThrowError("Failed to initialize items for cargo mission (itemConfig == null)");
                 return;
