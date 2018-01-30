@@ -384,6 +384,7 @@ namespace Barotrauma
                     case "sprite":
                     case "deconstruct":
                     case "brokensprite":
+                    case "price":
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this);

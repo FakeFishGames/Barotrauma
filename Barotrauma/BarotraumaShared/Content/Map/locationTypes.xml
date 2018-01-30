@@ -9,9 +9,19 @@
 
     <Symbol texture="Content/Map/beaconSymbol.png"/>
     
-    <ChangeTo type="Outpost" probability="0.5" requiredduration="3"/>
-    <ChangeTo type="Military" probability="0.25" requiredduration="3"/>
-    <ChangeTo type="Research" probability="0.25" requiredduration="3"/>
+    <!-- can only become inhabited if there's an adjacent inhabited location AND there are no adjacent lairs -->
+    
+    <ChangeTo type="Outpost" probability="0.5" requiredduration="3" 
+              requiredadjacentlocations="Outpost,Military,Research,City"
+              disallowedadjacentlocations="Lair"/>
+    
+    <ChangeTo type="Military" probability="0.25" requiredduration="3" 
+              requiredadjacentlocations="Outpost,Military,Research,City"
+              disallowedadjacentlocations="Lair"/>
+    
+    <ChangeTo type="Research" probability="0.25" requiredduration="3" 
+              requiredadjacentlocations="Outpost,Military,Research,City"
+              disallowedadjacentlocations="Lair"/>
   </None>
 
   <City
@@ -52,7 +62,8 @@
     <Hireable name="Security Officer" commonness="1"/>
     <Hireable name="Captain" commonness="1"/>
 
-    <ChangeTo type="City" probability="0.1" requiredduration="5"/>
+    <!-- can become a city if there are no adjacent lairs -->    
+    <ChangeTo type="City" probability="0.1" requiredduration="5" disallowedadjacentlocations="Lair"/>
 
     <nameformats
       f0="[name] Habitation Outpost"
@@ -119,6 +130,7 @@
       f1="[name] Reef"
       f2="The Hives of [name]"/>
 
+    <!-- becomes an empty natural formation after being discovered (todo: require killing the monster(s) in the location) -->
     <ChangeTo type="None" probability="1.0"/>
   </Lair>
 
@@ -134,8 +146,8 @@
     <nameformats
       f0="[name] Ruins"/>
 
-    <ChangeTo type="Research" probability="0.4" requiredduration="3"/>
-    <ChangeTo type="Outpost" probability="0.05" requiredduration="3"/>
-    <ChangeTo type="Military" probability="0.05" requiredduration="3"/>
+    <ChangeTo type="Research" probability="0.4" requiredduration="3" disallowedadjacentlocations="Lair"/>    
+    <ChangeTo type="Outpost" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
+    <ChangeTo type="Military" probability="0.05" requiredduration="3" disallowedadjacentlocations="Lair"/>
   </Ruins>
 </locationtypes>
