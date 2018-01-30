@@ -10,7 +10,7 @@ namespace Barotrauma
     partial class Map
     {
         const int DifficultyZones = 9;
-
+        
         public const int DefaultSize = 2000;
 
         Vector2 difficultyIncrease = new Vector2(5.0f, 10.0f);
@@ -380,6 +380,33 @@ namespace Barotrauma
             }
         }
 
+        public void ProgressWorld()
+        {
+            foreach (Location location in locations)
+            {
+                if (!location.Discovered) continue;
+                
+                var allowedTypeChanges = location.Type.CanChangeTo.FindAll(c => location.TypeChangeTimer >= c.RequiredDuration);
+
+                float probabilitySum = allowedTypeChanges.Sum(m => m.Probability);
+                float randomNumber = Rand.Range(0.0f, 1.0f);
+
+                foreach (LocationTypeChange typeChange in allowedTypeChanges)
+                {
+                    if (randomNumber <= typeChange.Probability)
+                    {
+                        location.ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == typeChange.ChangeTo.ToLowerInvariant()));
+                        location.TypeChangeTimer = -1;
+                        break;
+                    }
+
+                    randomNumber -= typeChange.Probability;
+                }
+
+                location.TypeChangeTimer++;
+            }
+        }
+
         public static Map LoadNew(XElement element)
         {
             string mapSeed = element.GetAttributeString("seed", "a");
@@ -395,21 +422,34 @@ namespace Barotrauma
         {
             SetLocation(element.GetAttributeInt("currentlocation", 0));
 
-            string discoveredStr = element.GetAttributeString("discovered", "");
-
-            string[] discoveredStrs = discoveredStr.Split(',');
-            for (int i = 0; i < discoveredStrs.Length; i++)
+            Version saveVersion;
+            if (!Version.TryParse(element.GetAttributeString("version", ""), out saveVersion))
             {
-                int index = -1;
-                if (int.TryParse(discoveredStrs[i], out index)) locations[index].Discovered = true;
+                DebugConsole.ThrowError("Incompatible map save file, loading the game failed.");
+                return;
             }
 
-            string passedStr = element.GetAttributeString("passed", "");
-            string[] passedStrs = passedStr.Split(',');
-            for (int i = 0; i < passedStrs.Length; i++)
+            foreach (XElement subElement in element.Elements())
             {
-                int index = -1;
-                if (int.TryParse(passedStrs[i], out index)) connections[index].Passed = true;
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "location":
+                        string locationType = subElement.GetAttributeString("type", "");
+                        int locationIndex = subElement.GetAttributeInt("i", 0);
+                        int typeChangeTimer = subElement.GetAttributeInt("changetimer", 0);
+
+                        locations[locationIndex].Discovered = true;
+                        locations[locationIndex].ChangeType(LocationType.List.Find(lt => lt.Name.ToLowerInvariant() == locationType.ToLowerInvariant()));
+                        locations[locationIndex].TypeChangeTimer = typeChangeTimer;
+                        break;
+                    case "connection":
+                        int connectionIndex = subElement.GetAttributeInt("i", 0);
+                        int missionsCompleted = subElement.GetAttributeInt("missionscompleted", 0);
+
+                        connections[connectionIndex].Passed = true;
+                        connections[connectionIndex].MissionsCompleted = missionsCompleted;
+                        break;
+                }
             }
         }
 
@@ -417,109 +457,42 @@ namespace Barotrauma
         {
             XElement mapElement = new XElement("map");
 
+            mapElement.Add(new XAttribute("version", GameMain.Version.ToString()));
             mapElement.Add(new XAttribute("currentlocation", CurrentLocationIndex));
             mapElement.Add(new XAttribute("seed", Seed));
             mapElement.Add(new XAttribute("size", size));
 
-            List<int> discoveredLocations = new List<int>();
             for (int i = 0; i < locations.Count; i++)
             {
-                if (locations[i].Discovered) discoveredLocations.Add(i);
-            }
-            mapElement.Add(new XAttribute("discovered", string.Join(",", discoveredLocations)));
+                var location = locations[i];
+                if (!location.Discovered) continue;
 
-            List<int> passedConnections = new List<int>();
-            for (int i = 0; i < connections.Count; i++)
-            {
-                if (connections[i].Passed) passedConnections.Add(i);
-            }
-            mapElement.Add(new XAttribute("passed", string.Join(",", passedConnections)));
+                var locationElement = new XElement("location", new XAttribute("i", i));
+                locationElement.Add(new XAttribute("type", location.Type.Name));
 
-            element.Add(mapElement);
-        }
-    }
-
-
-    class LocationConnection
-    {
-        private Location[] locations;
-        private Level level;
-
-        public Biome Biome;
-
-        public float Difficulty;
-
-        public List<Vector2[]> CrackSegments;
-
-        public bool Passed;
-
-        private int missionsCompleted;
-
-        private Mission mission;
-        public Mission Mission
-        {
-            get 
-            {
-                if (mission == null || mission.Completed)
+                if (location.TypeChangeTimer > 0)
                 {
-                    if (mission != null && mission.Completed) missionsCompleted++;
-
-                    long seed = (long)locations[0].MapPosition.X + (long)locations[0].MapPosition.Y * 100;
-                    seed += (long)locations[1].MapPosition.X * 10000 + (long)locations[1].MapPosition.Y * 1000000;
-
-                    MTRandom rand = new MTRandom((int)((seed + missionsCompleted) % int.MaxValue));
-                    
-                    mission = Mission.CreateRandom(locations, rand, true, "", true);
-                    if (GameSettings.VerboseLogging && mission != null)
-                    {
-                        DebugConsole.NewMessage("Generated a new mission for a location connection (seed: " + seed + ", type: " + mission.Name + ")", Color.White);
-                    }
+                    locationElement.Add(new XAttribute("changetimer", location.TypeChangeTimer));
                 }
 
-                return mission;
+                mapElement.Add(locationElement);
             }
-        }
 
-        public Location[] Locations
-        {
-            get { return locations; }
-        }
-        
-        public Level Level
-        {
-            get { return level; }
-            set { level = value; }
-        }
+            for (int i = 0; i < connections.Count; i++)
+            {
+                var connection = connections[i];
+                if (!connection.Passed) continue;
 
-        public Vector2 CenterPos
-        {
-            get
-            {
-                return (locations[0].MapPosition + locations[1].MapPosition) / 2.0f;
-            }
-        }
-        
-        public LocationConnection(Location location1, Location location2)
-        {
-            locations = new Location[] { location1, location2 };
+                var connectionElement = new XElement("connection", new XAttribute("i", i));
+                if (connection.MissionsCompleted > 0)
+                {
+                    connectionElement.Add(new XAttribute("missionscompleted", connection.MissionsCompleted));
+                }
 
-            missionsCompleted = 0;
-        }
+                mapElement.Add(connectionElement);
+            }
 
-        public Location OtherLocation(Location location)
-        {
-            if (locations[0] == location)
-            {
-                return locations[1];
-            }
-            else if (locations[1] == location)
-            {
-                return locations[0];
-            }
-            else
-            {
-                return null;
-            }
+            element.Add(mapElement);
         }
     }
 }

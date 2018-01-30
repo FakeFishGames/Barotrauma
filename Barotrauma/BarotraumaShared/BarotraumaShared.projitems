@@ -1466,6 +1466,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HuskInfection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />

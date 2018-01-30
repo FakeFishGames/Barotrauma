@@ -247,12 +247,13 @@ namespace Barotrauma
 
                 if (atEndPosition)
                 {
-                    Map.MoveToNextLocation();
+                    map.MoveToNextLocation();
 
                     //select a random location to make sure we've got some destination
                     //to head towards even if the host/clients don't select anything
                     map.SelectRandomLocation(true);
                 }
+                map.ProgressWorld();
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
