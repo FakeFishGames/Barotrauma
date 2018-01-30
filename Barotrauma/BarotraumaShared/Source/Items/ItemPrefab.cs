@@ -28,13 +28,17 @@ namespace Barotrauma
         private readonly string configFile;
         
         //default size
-        protected Vector2 size;
-                
+        protected Vector2 size;                
+
+        private float impactTolerance;
+
+        private bool canSpriteFlipX;
+        
+        private Dictionary<string, PriceInfo> prices;
+
         //an area next to the construction
         //the construction can be Activated() by a Character inside the area
         public List<Rectangle> Triggers;
-
-        private float impactTolerance;
 
         public string ConfigFile
         {
@@ -46,8 +50,6 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        private bool canSpriteFlipX;
 
         public List<DeconstructItem> DeconstructItems
         {
@@ -158,6 +160,11 @@ namespace Barotrauma
         public Vector2 Size
         {
             get { return size; }
+        }
+
+        public bool CanBeBought
+        {
+            get { return prices != null && prices.Count > 0; }
         }
 
         public override void UpdatePlacing(Camera cam)
@@ -303,6 +310,11 @@ namespace Barotrauma
                         sprite = new Sprite(subElement, spriteFolder);
                         size = sprite.size;
                         break;
+                    case "price":
+                        string locationType = subElement.GetAttributeString("locationtype", "");
+                        if (prices == null) prices = new Dictionary<string, PriceInfo>();
+                        prices[locationType.ToLowerInvariant()] = new PriceInfo(subElement);
+                        break;
 #if CLIENT
                     case "brokensprite":
                         string brokenSpriteFolder = "";
@@ -358,6 +370,12 @@ namespace Barotrauma
             }
 
             List.Add(this);
+        }
+
+        public PriceInfo GetPrice(Location location)
+        {
+            if (prices == null || !prices.ContainsKey(location.Type.Name.ToLowerInvariant())) return null;
+            return prices[location.Type.Name.ToLowerInvariant()];
         }
     }
 }

@@ -8,8 +8,12 @@
     Tags="smallitem,wire"    
     linkable="true"
     canbepicked="true"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
       <Item name="Copper Bar"/>
@@ -31,8 +35,12 @@
     spritecolor="1.0,0.0,0.0,1.0"
     linkable="true"
     canbepicked="true"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
       <Item name="Copper Bar"/>
@@ -53,8 +61,12 @@
     spritecolor="0.0,0.6,1.0,1.0"    
     linkable="true"
     canbepicked="true"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
       <Item name="Copper Bar"/>
@@ -75,8 +87,12 @@
     spritecolor="1.0,0.5,0.0,1.0"    
     linkable="true"
     canbepicked="true"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="City" buyprice="10"/>
+    <Price locationtype="Outpost" buyprice="10"/>
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="Military" buyprice="10"/>
 
     <Deconstruct time="5">
       <Item name="Copper Bar"/>
@@ -96,9 +112,13 @@
     Tags="smallitem"    
     linkable="true"    
     cargocontainername="Metal Crate"
-    price="100"
     description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
 
+    <Price locationtype="Research" buyprice="80"/>
+    <Price locationtype="City" buyprice="100"/>
+    <Price locationtype="Outpost" buyprice="100"/>
+    <Price locationtype="Military" buyprice="100"/>
+    
     <Deconstruct time="5">
       <Item name="Copper Bar"/>
       <Item name="Copper Bar"/>
@@ -117,9 +137,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Sends a signal when both inputs receive a signal within a set period of each other.">
 
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/> 
@@ -135,7 +159,6 @@
               aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem name="Wrench" type="Equipped"/>
     </Holdable>
-
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
       <requireditem name="Screwdriver,Wire" type="Equipped"/>
@@ -152,9 +175,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Sends a signal if either of the inputs receive a signal.">
 
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -186,9 +213,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Sends a signal when the input is NOT receiving a signal.">
 
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -218,8 +249,12 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="When switched on, forwards all received signals from the input connections to the outputs.">
+
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -265,9 +300,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Delays all received signals for a specific amount of time.">
 
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -296,9 +335,13 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
 
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -332,8 +375,12 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Sends out a value between 0-100 depending on the quality of the surrounding air.">
+
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -363,9 +410,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Sends out a signal when the detector is submerged.">
 
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -394,9 +445,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Sends out a signal when it detects movement.">
-   
+
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -425,9 +480,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Sends a signal when a signal matching a specific value is received.">
 
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -459,9 +518,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Sends a signal if the received signal matches a specific regular expression pattern.">
 
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -492,9 +555,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="10"
     description="Sends out a periodic, oscillating signal.">
 
+    <Price locationtype="Research" buyprice="10"/>
+    <Price locationtype="City" buyprice="20"/>
+    <Price locationtype="Outpost" buyprice="20"/>
+    <Price locationtype="Military" buyprice="20"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -525,9 +592,13 @@
     Tags="smallitem"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="20"
     description="Allows remote communication between other Wifi Components that are using the same channel.">
 
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="FPGA Circuit"/>
@@ -556,8 +627,12 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -589,8 +664,12 @@
     category="Electrical"
     Tags="smallitem"
     linkable="true"
-    cargocontainername="Metal Crate"
-    price="10">
+    cargocontainername="Metal Crate">
+
+    <Price locationtype="Research" buyprice="20"/>
+    <Price locationtype="City" buyprice="40"/>
+    <Price locationtype="Outpost" buyprice="40"/>
+    <Price locationtype="Military" buyprice="40"/>
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -625,7 +704,6 @@
     offsetonselected="500"
     linkable="true"
     cargocontainername="Metal Crate"
-    price="50"
     description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
 
     <Deconstruct time="10">

@@ -23,8 +23,7 @@
   <Item
     name="Depth Charge Loader"
     category="Machine"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture="railgunetc.png" depth="0.8" sourcerect="0,160,61,96"/>
 
@@ -36,9 +35,7 @@
 
   <Item
     name="Depth Charge Shell"
-    category="Misc"
-    
-    price="200">
+    category="Misc">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -64,9 +61,7 @@
 
   <Item
     name="Nuclear Depth Charge"
-    category="Misc"
-    
-    price="500">
+    category="Misc">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>

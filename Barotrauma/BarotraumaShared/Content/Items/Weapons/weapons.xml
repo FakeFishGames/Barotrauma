@@ -5,8 +5,11 @@
     name="Spear"
     category="Equipment"
     interactthroughwalls="true"
-    price="50"
     cargocontainername="Metal Crate">
+
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="50"/>
 
     <Deconstruct time="5">
       <Item name="Steel Bar"/>
@@ -25,10 +28,12 @@
   <Item
     name="Harpoon Gun"
     category="Equipment"
-    price="500"
     cargocontainername="Metal Crate"
     tags="weapon">
 
+    <Price locationtype="Military" buyprice="400"/>
+    <Price locationtype="City" buyprice="500"/>
+    
     <Deconstruct time="10">      
       <Item name="Steel Bar"/>
       <Item name="Aluminium"/>      
@@ -60,10 +65,13 @@
   <Item
     name="Syringe Gun"
     category="Equipment"
-    price="700"
     cargocontainername="Metal Crate"
     tags="weapon">
 
+    <Price locationtype="Research" buyprice="700"/>
+    <Price locationtype="Military" buyprice="800"/>
+    <Price locationtype="City" buyprice="1000"/>
+    
     <Deconstruct time="10">      
       <Item name="Steel Bar"/>
       <Item name="Aluminium"/>      
@@ -93,10 +101,13 @@
     name="Revolver Round"
     category="Equipment"
     interactthroughwalls="true"
-    price="10"
     cargocontainername="Metal Crate"
     tags="smallitem">
 
+    <Price locationtype="Military" buyprice="30"/>
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="80"/>
+    
     <Sprite texture="weapons.png" sourcerect="52,99,8,3" depth="0.55"/>
 
     <Body width="8" height="3" density="40"/>
@@ -110,10 +121,12 @@
   <Item
     name="Revolver"
     category="Equipment"
-    price="700"
     cargocontainername="Metal Crate"
     tags="smallitem,weapon">
 
+    <Price locationtype="Military" buyprice="800"/>
+    <Price locationtype="City" buyprice="1000"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="Aluminium"/>
@@ -144,10 +157,13 @@
   <Item
     name="Stun Grenade"
     category="Equipment"
-    price="200"
     cargocontainername="Explosive Crate"
     tags="smallitem,weapon,explosive">
 
+    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="City" buyprice="250"/>
+    <Price locationtype="Outpost" buyprice="300"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="Flash Powder" mincondition="0.9"/>
@@ -210,11 +226,14 @@
   <Item
     name="Stun Baton"
     category="Equipment"
-    Tags="smallitem,weapon"    
-    price="100"
+    Tags="smallitem,weapon"
     cargocontainername="Metal Crate"
     description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
 
+    <Price locationtype="Military" buyprice="200"/>
+    <Price locationtype="City" buyprice="500"/>
+    <Price locationtype="Outpost" buyprice="500"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="Polycarbonate Bar"/>
@@ -249,10 +268,14 @@
     name="Battery Cell"
     category="Equipment,Electrical"    
     tags="smallitem,loadable"
-    price="50"
     cargocontainername="Metal Crate"
     description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
 
+    <Price locationtype="City" buyprice="50"/>
+    <Price locationtype="Outpost" buyprice="50"/>
+    <Price locationtype="Military" buyprice="50"/>
+    <Price locationtype="Research" buyprice="50"/>
+    
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
       <Item name="Copper Bar" mincondition="0.5"/>
