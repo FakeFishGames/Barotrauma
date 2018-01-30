@@ -749,7 +749,7 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
-                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, Mission.MissionTypes[missionTypeIndex]);
+                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.MissionTypes[missionTypeIndex]);
                 GameMain.GameSession.StartRound(levelSeed, loadSecondSub);
             }
             else
@@ -882,7 +882,7 @@ namespace Barotrauma.Networking
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
-                            int missionTypeIndex        = inc.ReadRangedInteger(0, Mission.MissionTypes.Count - 1);
+                            int missionTypeIndex        = inc.ReadRangedInteger(0, MissionPrefab.MissionTypes.Count - 1);
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();

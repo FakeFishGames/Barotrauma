@@ -30,12 +30,10 @@ namespace Barotrauma
             get { return type; }
         }
 
-        public Location(Vector2 mapPosition)
+        public Location(Vector2 mapPosition, int? zone)
         {
-            this.type = LocationType.Random();
-
+            this.type = LocationType.Random("", zone);
             this.name = RandomName(type);
-
             this.mapPosition = mapPosition;
 
 #if CLIENT
@@ -49,9 +47,9 @@ namespace Barotrauma
             Connections = new List<LocationConnection>();
         }
 
-        public static Location CreateRandom(Vector2 position)
+        public static Location CreateRandom(Vector2 position, int? zone)
         {
-            return new Location(position);        
+            return new Location(position, zone);        
         }
 
         private string RandomName(LocationType type)

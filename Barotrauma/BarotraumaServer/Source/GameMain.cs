@@ -77,7 +77,7 @@ namespace Barotrauma
 
         public void Init()
         {
-            Mission.Init();
+            MissionPrefab.Init();
             MapEntityPrefab.Init();
             LevelGenerationParams.LoadPresets();
 

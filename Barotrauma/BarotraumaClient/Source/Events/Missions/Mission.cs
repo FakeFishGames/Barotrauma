@@ -6,10 +6,10 @@ namespace Barotrauma
     {
         public void ShowMessage(int index)
         {
-            if (index >= headers.Count && index >= messages.Count) return;
+            if (index >= Headers.Count && index >= Messages.Count) return;
 
-            string header = index < headers.Count ? headers[index] : "";
-            string message = index < messages.Count ? messages[index] : "";
+            string header = index < Headers.Count ? Headers[index] : "";
+            string message = index < Messages.Count ? Messages[index] : "";
 
             GameServer.Log("Mission info: " + header + " - " + message, ServerLog.MessageType.ServerMessage);
 
