@@ -182,10 +182,10 @@ namespace Barotrauma
 
         partial void KillProjSpecific()
         {
-            if (GameMain.NetworkMember != null && Character.controlled == this)
+            if (GameMain.NetworkMember != null && controlled == this)
             {
                 string chatMessage = TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.ToString());
-                if (GameMain.Client != null) chatMessage += " Your chat messages will only be visible to other dead players.";
+                if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
@@ -290,11 +290,11 @@ namespace Barotrauma
             }
 
             if (this == controlled) return;
-            
+
             if (nameVisible && info != null)
             {
                 string name = Info.DisplayName;
-                if (controlled == null && name != Info.Name) name += " (Disguised)";
+                if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");
 
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
             	Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
