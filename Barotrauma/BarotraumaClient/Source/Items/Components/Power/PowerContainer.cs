@@ -72,10 +72,10 @@ namespace Barotrauma.Items.Components
             //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
 
             GUI.Font.DrawString(spriteBatch,
-                "Charge: " + (int)charge + "/" + (int)capacity + " kWm (" + (int)((charge / capacity) * 100.0f) + " %)",
+                TextManager.Get("PowerContainerCharge").Replace("[charge]", (int)charge + "/" + (int)capacity).Replace("[percentage]", ((int)((charge / capacity) * 100.0f)).ToString()),
                 new Vector2(x + 30, y + 30), Color.White);
 
-            GUI.Font.DrawString(spriteBatch, "Recharge rate: " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
+            GUI.Font.DrawString(spriteBatch, TextManager.Get("RechargeRate") + ": " + (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", new Vector2(x + 30, y + 95), Color.White);
         }
 
         public override void AddToGUIUpdateList()
