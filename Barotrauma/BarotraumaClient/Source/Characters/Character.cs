@@ -123,7 +123,7 @@ namespace Barotrauma
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
             if (moveCam)
             {
-                if (DebugConsole.IsOpen || GUI.PauseMenuOpen || DisableControls ||
+                if (DebugConsole.IsOpen || GUI.PauseMenuOpen || IsUnconscious ||
                     (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
                 {
                     if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
