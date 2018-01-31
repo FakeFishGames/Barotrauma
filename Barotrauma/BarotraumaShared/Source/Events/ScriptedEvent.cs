@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Linq;
@@ -50,6 +51,22 @@ namespace Barotrauma
         public override string ToString()
         {
             return "ScriptedEvent (" + name + ")";
+        }
+
+        public virtual Vector2 DebugDrawPos
+        {
+            get
+            {
+                return Vector2.Zero;
+            }
+        }
+
+        public virtual string DebugDrawText
+        {
+            get
+            {
+                return "";
+            }
         }
 
         protected ScriptedEvent(XElement element)
@@ -176,76 +193,5 @@ namespace Barotrauma
 
             return events;
         }
-
-
-        /*public static ScriptedEvent Load(ScriptedEvent scriptedEvent)
-        {
-            if (prefabs == null)
-            {
-                LoadPrefabs();
-            }
-
-            if (prefabs.Count == 0) return null;
-
-            int eventCount = prefabs.Count;
-            float[] eventProbability = new float[eventCount];
-            float probabilitySum = 0.0f;
-
-            int i = 0;
-            foreach (ScriptedEvent scriptedEvent in prefabs)
-            {
-                eventProbability[i] = scriptedEvent.commonness;
-                if (level != null)
-                {
-                    scriptedEvent.OverrideCommonness.TryGetValue(level.GenerationParams.Name, out eventProbability[i]);
-                }
-                probabilitySum += eventProbability[i];
-                i++;
-            }
-
-            float randomNumber = (float)rand.NextDouble() * probabilitySum;
-
-            i = 0;
-            foreach (ScriptedEvent scriptedEvent in prefabs)
-            {
-                if (randomNumber <= eventProbability[i])
-                {
-                    Type t;
-
-                    try
-                    {
-                        t = Type.GetType("Barotrauma." + scriptedEvent.configElement.Name, true, true);
-                        if (t == null)
-                        {
-                            DebugConsole.ThrowError("Could not find an event class of the type \"" + scriptedEvent.configElement.Name + "\".");
-                            continue;
-                        }
-                    }
-                    catch
-                    {
-                        DebugConsole.ThrowError("Could not find an event class of the type \"" + scriptedEvent.configElement.Name + "\".");
-                        continue;
-                    }
-
-                    ConstructorInfo constructor = t.GetConstructor(new[] { typeof(XElement) });
-                    object instance = null;
-                    try
-                    {
-                        instance = constructor.Invoke(new object[] { scriptedEvent.configElement });
-                    }
-                    catch (Exception ex)
-                    {
-                        DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString());
-                    }
-
-                    return (ScriptedEvent)instance;
-                }
-
-                randomNumber -= eventProbability[i];
-                i++;
-            }
-
-            return null;
-        }*/
     }
 }
