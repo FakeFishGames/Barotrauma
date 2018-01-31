@@ -12,6 +12,18 @@ namespace Barotrauma
 
         private int state;
 
+        private Vector2 spawnPos;
+
+        public override Vector2 DebugDrawPos
+        {
+            get { return spawnPos; }
+        }
+
+        public override string DebugDrawText
+        {
+            get { return "ArtifactEvent (" + itemPrefab.Name + ")"; }
+        }
+
         public override string ToString()
         {
             return "ScriptedEvent (" + (itemPrefab == null ? "null" : itemPrefab.Name) + ")";
@@ -33,10 +45,11 @@ namespace Barotrauma
         {
             base.Init();
 
-            Vector2 position = Level.Loaded.GetRandomItemPos(
-                Level.PositionType.Cave | Level.PositionType.MainPath | Level.PositionType.Ruin, 500.0f, 10000.0f, 30.0f);
+            spawnPos = Level.Loaded.GetRandomItemPos(
+                (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.5f) ? Level.PositionType.MainPath : Level.PositionType.Cave | Level.PositionType.Ruin,
+                500.0f, 10000.0f, 30.0f);
 
-            item = new Item(itemPrefab, position, null);
+            item = new Item(itemPrefab, spawnPos, null);
             item.MoveWithLevel = true;
             item.body.FarseerBody.IsKinematic = true;
 

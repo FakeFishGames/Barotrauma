@@ -22,6 +22,18 @@ namespace Barotrauma
         
         private Level.PositionType spawnPosType;
 
+        private Vector2 spawnPos;
+
+        public override Vector2 DebugDrawPos
+        {
+            get { return spawnPos; }
+        }
+
+        public override string DebugDrawText
+        {
+            get { return "MonsterEvent (" + characterFile + ")"; }
+        }
+
         public override string ToString()
         {
             return "ScriptedEvent (" + characterFile + ")";
@@ -84,7 +96,6 @@ namespace Barotrauma
         {
             if (disallowed) return null;
             
-            Vector2 spawnPos;
             float minDist = spawnPosType == Level.PositionType.Ruin ? 0.0f : 20000.0f;
             if (!Level.Loaded.TryGetInterestingPosition(true, spawnPosType, minDist, out spawnPos))
             {

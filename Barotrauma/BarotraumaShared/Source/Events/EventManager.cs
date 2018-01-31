@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class EventManager
+    partial class EventManager
     {
         const float CriticalPriority = 50.0f;
 
@@ -56,6 +56,14 @@ namespace Barotrauma
                 {
                     ev.Update(deltaTime);
                 }
+            }
+        }
+
+        private void CalculateCurrentIntensity()
+        {
+            foreach (Hull hull in Hull.hullList)
+            {
+             
             }
         }
     }
