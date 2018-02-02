@@ -283,8 +283,13 @@ namespace Barotrauma.Networking
 
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc.Root);
 
-            AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
+#if SERVER
+            AutoRestart = doc.Root.GetAttributeBool("autorestart", true);
+#endif
+
 #if CLIENT
+            AutoRestart = doc.Root.GetAttributeBool("autorestart", false);
+
             if (autoRestart)
             {
                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestart, AutoRestartInterval);
@@ -380,6 +385,28 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Saving client permissions to " + ClientPermissionsFile + " failed", e);
+            }
+        }
+
+        public void StateServerInfo()
+        {
+            DebugConsole.NewMessage("Server is hosted on: " + GameMain.NilMod.ExternalIP + ":" + Port, Color.Cyan);
+            DebugConsole.NewMessage((isPublic ? @"Publicly Under the name: """ + name + @"""" : @"Privately Under the name: """ + name + @"""") + " with UPNP " + (config.EnableUPnP ? "enabled." : "disabled."), Color.Cyan);
+            DebugConsole.NewMessage("With max players: " + maxPlayers + ".", Color.Cyan);
+            
+            DebugConsole.NewMessage(" ", Color.Cyan);
+
+            if(password != "")
+            {
+                DebugConsole.NewMessage(@"Server is using the password """ + password + (whitelist.Enabled ? @""" and has an active white list with " + whitelist.WhiteListedPlayers.Count() + " whitelisted players." : "with its whitelist disabled."), Color.Cyan);
+            }
+            else if(whitelist.Enabled)
+            {
+                DebugConsole.NewMessage("Server is not using a password but has an active white list with " + whitelist.WhiteListedPlayers.Count() + " whitelisted players.", Color.Cyan);
+            }
+            else
+            {
+                DebugConsole.NewMessage("Server has no active password or whitelist.", Color.Cyan);
             }
         }
     }

@@ -70,6 +70,7 @@
     <Compile Include="Source\Characters\AI\HumanAIController.cs" />
     <Compile Include="Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="Source\Characters\Attack.cs" />
+    <Compile Include="Source\GUI\GUIImageButton.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreature.cs" />
     <Compile Include="Source\Map\Levels\BackgroundSprite\BackgroundCreatureManager.cs" />
@@ -186,6 +187,8 @@
     <Compile Include="Source\Networking\ServerLog.cs" />
     <Compile Include="Source\Networking\Voting.cs" />
     <Compile Include="Source\Networking\WhiteList.cs" />
+    <Compile Include="Source\NilModification\ClientLog.cs" />
+    <Compile Include="Source\NilModification\InGameInfo.cs" />
     <Compile Include="Source\NilModification\LagDiagnostics.cs" />
     <Compile Include="Source\Particles\Decal.cs" />
     <Compile Include="Source\Particles\DecalManager.cs" />

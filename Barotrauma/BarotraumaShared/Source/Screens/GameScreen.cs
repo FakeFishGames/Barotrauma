@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 #if DEBUG && CLIENT
 using Microsoft.Xna.Framework.Input;
 #endif
@@ -55,6 +56,27 @@ namespace Barotrauma
         /// </summary>
         public override void Update(double deltaTime)
         {
+#if CLIENT
+            if(Character.Spied != null)
+            {
+                if ((PlayerInput.KeyDown(InputType.Up) || PlayerInput.KeyDown(InputType.Down) || PlayerInput.KeyDown(InputType.Left) || PlayerInput.KeyDown(InputType.Right)) && !DebugConsole.IsOpen)
+                {
+                    if (GameMain.NetworkMember != null && !GameMain.NetworkMember.chatMsgBox.Selected)
+                    {
+                        if (Character.Controlled != null)
+                        {
+                            cam.Position = Character.Controlled.WorldPosition;
+                        }
+                        else
+                        {
+                            cam.Position = Character.Spied.WorldPosition;
+                        }
+                        Character.Spied = null;
+                        cam.UpdateTransform(true);
+                    }
+                }
+            }
+#endif
 
 #if DEBUG && CLIENT
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
@@ -129,6 +151,27 @@ namespace Barotrauma
             Character.UpdateAll((float)deltaTime, cam);
 
 #if CLIENT
+            //NilMod spy Code
+            if(Character.Spied != null)
+            {
+                Character.ViewSpied((float)deltaTime, Cam, true);
+                Lights.LightManager.ViewTarget = Character.Spied;
+                CharacterHUD.Update((float)deltaTime, Character.Spied);
+
+                foreach (HUDProgressBar progressBar in Character.Spied.HUDProgressBars.Values)
+                {
+                    progressBar.Update((float)deltaTime);
+                }
+
+                foreach(var pb in Character.Spied.HUDProgressBars)
+                {
+                    if(pb.Value.FadeTimer <= 0.0f)
+                    {
+                        Character.Spied.HUDProgressBars.Remove(pb.Key);
+                    }
+                }
+            }
+
             GameMain.NilModProfiler.SWCharacterUpdate.Stop();
             GameMain.NilModProfiler.RecordCharacterUpdate();
             GameMain.NilModProfiler.SWStatusEffect.Start();
@@ -137,7 +180,7 @@ namespace Barotrauma
 
 #if CLIENT
             GameMain.NilModProfiler.RecordStatusEffect();
-            if (Character.Controlled != null && Lights.LightManager.ViewTarget != null)
+            if (Character.Controlled != null && Lights.LightManager.ViewTarget != null || Character.Spied != null && Lights.LightManager.ViewTarget != null)
             {
                 cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
             }
@@ -184,51 +227,6 @@ namespace Barotrauma
             GameMain.NilModProfiler.RecordSubmarineUpdate();
             GameMain.NilModProfiler.SWCharacterUpdate.Start();
 #endif
-            //Process this updates character information
-            if (GameMain.NilMod.UseCharStatOptimisation)
-            {
-                for (int z = GameMain.NilMod.ModifiedCharacterValues.Count - 1; z >= 0; z--)
-                {
-                    if (GameMain.NilMod.ModifiedCharacterValues[z].character != null && !GameMain.NilMod.ModifiedCharacterValues[z].character.Removed)
-                    {
-                        Character chartoupdate = GameMain.NilMod.ModifiedCharacterValues[z].character;
-
-                        if(GameMain.NilMod.ModifiedCharacterValues[z].UpdateHealth)
-                        {
-                            chartoupdate.SetHealth(GameMain.NilMod.ModifiedCharacterValues[z].newhealth);
-                        }
-                        if (GameMain.NilMod.ModifiedCharacterValues[z].UpdateBleed)
-                        {
-                            chartoupdate.SetBleed(GameMain.NilMod.ModifiedCharacterValues[z].newbleed);
-                        }
-                        if (GameMain.NilMod.ModifiedCharacterValues[z].UpdateOxygen)
-                        {
-                            chartoupdate.SetOxygen(GameMain.NilMod.ModifiedCharacterValues[z].newoxygen);
-                        }
-
-                        GameMain.NilMod.ModifiedCharacterValues.RemoveAt(z);
-
-                        if (GameMain.Server != null)
-                        {
-                            if (Math.Abs(chartoupdate.Health - chartoupdate.lastSentHealth) > (chartoupdate.MaxHealth - chartoupdate.MinHealth) / 255.0f || Math.Sign(chartoupdate.Health) != Math.Sign(chartoupdate.lastSentHealth))
-                            {
-                                GameMain.Server.CreateEntityEvent(chartoupdate, new object[] { Networking.NetEntityEvent.Type.Status });
-                                chartoupdate.lastSentHealth = chartoupdate.Health;
-                            }
-                            else if (Math.Abs(chartoupdate.Oxygen - chartoupdate.lastSentOxygen) > (100f - -100f) / 255.0f || Math.Sign(chartoupdate.Oxygen) != Math.Sign(chartoupdate.lastSentOxygen))
-                            {
-                                GameMain.Server.CreateEntityEvent(chartoupdate, new object[] { Networking.NetEntityEvent.Type.Status });
-                                chartoupdate.lastSentOxygen = chartoupdate.Oxygen;
-                            }
-                            else if (chartoupdate.Bleeding > 0f)
-                            {
-                                GameMain.Server.CreateEntityEvent(chartoupdate, new object[] { Networking.NetEntityEvent.Type.Status });
-                            }
-                        }
-                    }
-                }
-            }
-
 
 #if CLIENT
             GameMain.NilModProfiler.RecordCharacterUpdate();
@@ -244,6 +242,128 @@ namespace Barotrauma
                 Inventory.draggingItem = null;
             }
 #endif
+        }
+
+        public void RunIngameCommand(string Command, Object[] Arguments)
+        {
+            Vector2 WorldCoordinate = new Vector2(0,0);
+            Character character = null;
+
+            //Server Commands
+            if (GameMain.Server != null)
+            {
+                switch (Command)
+                {
+                    case "spawncreature":
+                        //ARG0 = Character, ARG1 = WorldPosX, ARG2 = WorldPosY
+                        WorldCoordinate = new Vector2(float.Parse((string)Arguments[1]), float.Parse((string)Arguments[2]));
+
+                        if (Arguments[0].ToString().ToLowerInvariant() == "human")
+                        {
+                            character = Character.Create(Character.HumanConfigFile, WorldCoordinate);
+                        }
+                        else
+                        {
+                            character = Character.Create(
+                            "Content/Characters/"
+                            + Arguments[0].ToString().ToUpper().First() + Arguments[0].ToString().Substring(1)
+                            + "/" + Arguments[0].ToString().ToLower() + ".xml", WorldCoordinate);
+                        }
+                        break;
+
+                    case "heal":
+                        //ARG0 = Character
+                        character = (Character)Arguments[0];
+                        character.Heal();
+                        break;
+
+                    case "revive":
+                        //ARG0 = Character
+                        character = (Character)Arguments[0];
+                        character.Revive(true);
+                        break;
+
+                    case "kill":
+                        //ARG0 = Character
+                        character = (Character)Arguments[0];
+                        character.Kill(CauseOfDeath.Disconnected, true);
+                        break;
+
+                    case "removecorpse":
+                        //ARG0 = Character
+                        character = (Character)Arguments[0];
+                        GameMain.NilMod.HideCharacter(character);
+                        break;
+
+                    case "teleportsub":
+                        //ARG0 = SUBID, ARG1 = WorldPosX, ARG2 = WorldPosY
+                        WorldCoordinate = new Vector2(float.Parse((string)Arguments[1]), float.Parse((string)Arguments[2]));
+                        GameMain.Server.MoveSub(int.Parse(Arguments[0].ToString()), WorldCoordinate);
+                        break;
+
+                    case "relocate":
+                        //ARG0 = Character, ARG1 = WorldPosX, ARG2 = WorldPosY
+
+                        character = (Character)Arguments[0];
+                        WorldCoordinate = new Vector2(float.Parse((string)Arguments[1]), float.Parse((string)Arguments[2]));
+
+                        Character.Controlled.AnimController.CurrentHull = null;
+                        Character.Controlled.Submarine = null;
+                        Character.Controlled.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(WorldCoordinate));
+                        Character.Controlled.AnimController.FindHull(WorldCoordinate, true);
+                        break;
+
+                    //case "handcuff":
+                        //ARG0 = Character
+                        //break;
+
+                    case "freeze":
+                        //ARG0 = Character
+
+                        character = (Character)Arguments[0];
+
+                        if (GameMain.NilMod.FrozenCharacters.Find(c => c == character) != null)
+                        {
+                            GameMain.NilMod.FrozenCharacters.Remove(character);
+
+                            if (GameMain.Server.ConnectedClients.Find(c => c.Character == character) != null)
+                            {
+                                var chatMsg = Barotrauma.Networking.ChatMessage.Create(
+                                "Server Message",
+                                ("You have been frozen by the server\n\nYou may now move again and perform actions."),
+                                (Barotrauma.Networking.ChatMessageType)Barotrauma.Networking.ChatMessageType.MessageBox,
+                                null);
+
+                                GameMain.Server.SendChatMessage(chatMsg, GameMain.Server.ConnectedClients.Find(c => c.Character == character));
+                            }
+                        }
+                        else
+                        {
+                            GameMain.NilMod.FrozenCharacters.Add(character);
+
+                            if (GameMain.Server.ConnectedClients.Find(c => c.Character == character) != null)
+                            {
+                                var chatMsg = Barotrauma.Networking.ChatMessage.Create(
+                                "Server Message",
+                                ("You have been frozen by the server\n\nYou may still talk if able, but no longer perform any actions or movements."),
+                                (Barotrauma.Networking.ChatMessageType)Barotrauma.Networking.ChatMessageType.MessageBox,
+                                null);
+
+                                GameMain.Server.SendChatMessage(chatMsg, GameMain.Server.ConnectedClients.Find(c => c.Character == character));
+                            }
+                        }
+                        break;
+
+                    case "setclientcharacter":
+                        //ARG0 = Client, ARG1 = Character
+                        GameMain.Server.SetClientCharacter((Barotrauma.Networking.Client)Arguments[0], (Character)Arguments[1]);
+                        break;
+
+                    default:
+                        DebugConsole.ThrowError(@"NILMOD Error: Unrecognized Command Execution: """ + Command + @"""");
+                        break;
+                }
+            }
         }
     }
 }

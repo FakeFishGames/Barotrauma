@@ -22,7 +22,7 @@ namespace Barotrauma.Networking
         //is the server running
         private bool started;
 
-        private NetServer server;
+        public NetServer server;
         private NetPeerConfiguration config;
        
         private DateTime refreshMasterTimer;
@@ -228,7 +228,7 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.DefaultServerStartupSubSelect();
 #endif
 
-            GameMain.NilMod.ServerInitialize(true);
+            GameMain.NilMod.GameInitialize(true);
 
             started = true;
             yield return CoroutineStatus.Success;
@@ -240,12 +240,15 @@ namespace Barotrauma.Networking
             {
                 restClient = new RestClient(NetConfig.MasterServerUrl);            
             }
-                
+
+            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) == true).Count, GameMain.NilMod.MaxAdminSlots);
+            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly == true).Count, GameMain.NilMod.MaxSpectatorSlots);
+
             var request = new RestRequest("masterserver3.php", Method.GET);            
             request.AddParameter("action", "addserver");
             request.AddParameter("servername", name);
             request.AddParameter("serverport", Port);
-            request.AddParameter("currplayers", connectedClients.Count);
+            request.AddParameter("currplayers", (connectedClients.Count - GameMain.NilMod.Admins - GameMain.NilMod.Spectators));
             request.AddParameter("maxplayers", maxPlayers);
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
             request.AddParameter("version", GameMain.Version.ToString());
@@ -296,11 +299,14 @@ namespace Barotrauma.Networking
                 restClient = new RestClient(NetConfig.MasterServerUrl);
             }
 
+            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) == true).Count, GameMain.NilMod.MaxAdminSlots);
+            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly == true).Count, GameMain.NilMod.MaxSpectatorSlots);
+
             var request = new RestRequest("masterserver3.php", Method.GET);
             request.AddParameter("action", "refreshserver");
             request.AddParameter("serverport", Port);
             request.AddParameter("gamestarted", gameStarted ? 1 : 0);
-            request.AddParameter("currplayers", connectedClients.Count);
+            request.AddParameter("currplayers", (connectedClients.Count - GameMain.NilMod.Admins - GameMain.NilMod.Spectators));
             request.AddParameter("maxplayers", maxPlayers);
 
             if (GameMain.NilMod.ShowMasterServerSuccess)
@@ -535,6 +541,14 @@ namespace Barotrauma.Networking
             // if 30ms has passed
             if (updateTimer < DateTime.Now)
             {
+                for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
+                {
+                    //Don't check status updates of temp removed characters
+                    if (GameMain.NilMod.convertinghusklist.Find(ch => ch.character == Character.CharacterList[i]) != null) continue;
+                    Character.CharacterList[i].CheckForStatusEvent();
+                }
+
+
                 if (server.ConnectionsCount > 0)
                 {
                     foreach (Client c in ConnectedClients)
@@ -547,6 +561,13 @@ namespace Barotrauma.Networking
                         {
                             DebugConsole.ThrowError("Failed to write a network message for the client \""+c.Name+"\"!", e);
                         }
+                    }
+
+
+                    //Reset the send timer
+                    if(GameMain.NilMod.SyncResendTimer <= 0f)
+                    {
+                        GameMain.NilMod.SyncResendTimer = NilMod.SyncResendInterval;
                     }
 
                     foreach (Item item in Item.ItemList)
@@ -715,6 +736,36 @@ namespace Barotrauma.Networking
                         }
                         fileSender.ReadFileRequest(inc);
                     }
+                    break;
+                case ClientPacketHeader.NILMODSYNCRECEIVED:
+                    var syncreceivedclient = connectedClients.Find(c => c.Connection == inc.SenderConnection);
+                    Byte NilModSyncState = inc.ReadByte();
+
+                    //Version is Correct
+                    if(NilModSyncState == 0)
+                    {
+                        if (syncreceivedclient != null)
+                        {
+                            syncreceivedclient.RequiresNilModSync = false;
+                        }
+                    }
+                    //Version is Earlier
+                    else if(NilModSyncState == 1)
+                    {
+                        if (syncreceivedclient != null)
+                        {
+                            syncreceivedclient.IsNilModClient = false;
+                            syncreceivedclient.RequiresNilModSync = false;
+                        }
+                    }
+                    //Version is later
+                    else if(NilModSyncState == 2)
+                    {
+                        syncreceivedclient.IsNilModClient = false;
+                        syncreceivedclient.RequiresNilModSync = false;
+                    }
+                    
+                    inc.ReadPadBits();
                     break;
             }            
         }
@@ -965,6 +1016,13 @@ namespace Barotrauma.Networking
 
         private void ClientWrite(Client c)
         {
+            //Send a packet
+            if(c.NilModSyncResendTimer >= 0f && c.RequiresNilModSync)
+            {
+                GameMain.NilMod.ServerSyncWrite(c);
+                c.NilModSyncResendTimer = NilMod.SyncResendInterval;
+            }
+
             if (gameStarted && c.InGame)
             {
                 if(GameMain.NilMod.UseAlternativeNetworking)
@@ -1025,6 +1083,13 @@ namespace Barotrauma.Networking
                 outmsg.Write(subList[i].Name);
                 outmsg.Write(subList[i].MD5Hash.ToString());
             }
+
+            //Nilmod Sync joining client code
+            //if(c.IsNilModClient)
+            //{
+            //    c.RequiresNilModSync = true;
+            //    c.SyncResendTimer = 4f;
+            //}
 
             outmsg.Write(GameStarted);
             outmsg.Write(AllowSpectating);
@@ -1400,7 +1465,9 @@ namespace Barotrauma.Networking
                     }
                 }
             }
-
+#if CLIENT
+            LoadingScreen.loadType = LoadType.Server;
+#endif
             startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(selectedSub, selectedShuttle, selectedMode), false);
 
             yield return CoroutineStatus.Success;
@@ -1453,7 +1520,7 @@ namespace Barotrauma.Networking
             }
 
             //Initialize server defaults
-            GameMain.NilMod.ServerInitialize(false);
+            GameMain.NilMod.GameInitialize(false);
 
             if (campaign != null)
             {
@@ -1532,6 +1599,9 @@ namespace Barotrauma.Networking
                     spawnedCharacter.TeamID = (byte)teamID;
 
                     teamClients[i].Character = spawnedCharacter;
+#if CLIENT
+                    GameSession.inGameInfo.UpdateClientCharacter(teamClients[i], spawnedCharacter, false);
+#endif
 
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
@@ -1554,6 +1624,8 @@ namespace Barotrauma.Networking
                     myCharacter.TeamID = (byte)teamID;
 
                     Character.Controlled = myCharacter;
+
+                    GameSession.inGameInfo.AddNoneClientCharacter(myCharacter, true);
 
                     GameMain.GameSession.CrewManager.AddCharacter(myCharacter);
                 }
@@ -1675,6 +1747,10 @@ namespace Barotrauma.Networking
                 NilMod.NilModEventChatter.SendHostMessages();
             }
 
+#if CLIENT
+            GameSession.inGameInfo.UpdateGameInfoGUIList();
+#endif
+
             GameServer.Log("Debug: Round start complete.", ServerLog.MessageType.ServerMessage);
 
             yield return CoroutineStatus.Success;
@@ -1748,6 +1824,7 @@ namespace Barotrauma.Networking
 
 #if CLIENT
             ClearClickCommand();
+            GameSession.inGameInfo.ResetGUIListData();
 #endif
 
             if (TraitorManager != null)
@@ -2042,11 +2119,11 @@ namespace Barotrauma.Networking
             connectedClients.Remove(client);
 
 #if CLIENT
+            GameSession.inGameInfo.RemoveClient(client);
             GameMain.NetLobbyScreen.RemovePlayer(client.Name);
             Voting.UpdateVoteTexts(connectedClients, VoteType.Sub);
             Voting.UpdateVoteTexts(connectedClients, VoteType.Mode);
 #endif
-            connectedClients.Remove(client);
 
             UpdateVoteStatus();
 
@@ -2088,13 +2165,14 @@ namespace Barotrauma.Networking
             Log(msg, ServerLog.MessageType.ServerMessage);
 
             client.Connection.Disconnect(targetmsg);
+            connectedClients.Remove(client);
 
 #if CLIENT
             GameMain.NetLobbyScreen.RemovePlayer(client.Name);
             Voting.UpdateVoteTexts(connectedClients, VoteType.Sub);
             Voting.UpdateVoteTexts(connectedClients, VoteType.Mode);
+            GameSession.inGameInfo.RemoveClient(client);
 #endif
-            connectedClients.Remove(client);
 
             UpdateVoteStatus();
 
@@ -2541,7 +2619,9 @@ namespace Barotrauma.Networking
         
         public void AssignJobs(List<Client> unassigned, bool assignHost)
         {
-            unassigned = new List<Client>(unassigned);
+            unassigned = GameMain.NilMod.RandomizeClientOrder(unassigned);
+
+
 
             Dictionary<JobPrefab, int> assignedClientCount = new Dictionary<JobPrefab, int>();
             foreach (JobPrefab jp in JobPrefab.List)
@@ -2790,11 +2870,13 @@ namespace Barotrauma.Networking
                 {
                     if (RemoveNetPlayers)
                     {
-                        Entity.Spawner.AddToRemoveQueue(Character.CharacterList[i]);
+                        if (GameMain.NilMod.convertinghusklist.Find(ch => ch.character == Character.CharacterList[i]) != null) continue;
+                        GameMain.NilMod.HideCharacter(Character.CharacterList[i]);
                     }
                     else if(!Character.CharacterList[i].IsRemotePlayer)
                     {
-                        Entity.Spawner.AddToRemoveQueue(Character.CharacterList[i]);
+                        if (GameMain.NilMod.convertinghusklist.Find(ch => ch.character == Character.CharacterList[i]) != null) continue;
+                        GameMain.NilMod.HideCharacter(Character.CharacterList[i]);
                     }
                 }
             }
@@ -2931,27 +3013,15 @@ namespace Barotrauma.Networking
                         ClickCommandDescription.Text = "SPAWNCREATURE - Spawning: " + GameMain.NilMod.ClickArgs[0].ToLowerInvariant() + " countleft: " + GameMain.NilMod.ClickArgs[2] + " - Left click to spawn creatures, Right click to cancel.";
                         if (PlayerInput.LeftButtonClicked())
                         {
-
                             if (Convert.ToInt16(GameMain.NilMod.ClickArgs[2]) > 0)
                             {
                                 GameMain.NilMod.ClickArgs[2] = Convert.ToString(Convert.ToInt16(GameMain.NilMod.ClickArgs[2]) - 1);
                                 GameMain.NilMod.ClickCooldown = NilMod.ClickCooldownPeriod;
-                                Character spawnedCharacter = null;
 
-                                if (GameMain.NilMod.ClickArgs[0].ToLowerInvariant() == "human")
-                                {
-                                    //for (int i = 0; i < Convert.ToInt16(GameMain.NilMod.ClickArgs[2]); i++)
-                                    //{
-                                        spawnedCharacter = Character.Create(Character.HumanConfigFile, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
-                                    //}
-                                }
-                                else
-                                {
-                                    spawnedCharacter = Character.Create(
-                                    "Content/Characters/"
-                                    + GameMain.NilMod.ClickArgs[0].ToUpper().First() + GameMain.NilMod.ClickArgs[0].Substring(1)
-                                    + "/" + GameMain.NilMod.ClickArgs[0].ToLower() + ".xml", GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
-                                }
+                                GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { GameMain.NilMod.ClickArgs[0],
+                                    GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition).X.ToString(),
+                                    GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition).Y.ToString(),
+                                    GameMain.NilMod.ClickArgs[3]});
                             }
                             if (Convert.ToInt16(GameMain.NilMod.ClickArgs[2]) == 0)
                             {
@@ -2981,16 +3051,22 @@ namespace Barotrauma.Networking
                             }
                             if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && Character.Controlled != null && !PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
                             {
-                                Character.Controlled.Heal();
+                                GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { Character.Controlled });
+
+                                //Character.Controlled.Heal();
                                 ClearClickCommand();
                             }
                             else if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && Character.Controlled != null && PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
                             {
-                                Character.Controlled.Heal();
+                                GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { Character.Controlled });
+
+                                //Character.Controlled.Heal();
                             }
                             else if (closestDistChar != null)
                             {
-                                closestDistChar.Heal();
+                                GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { closestDistChar });
+
+                                //closestDistChar.Heal();
                                 if (!PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
                                 {
                                     ClearClickCommand();
@@ -3061,9 +3137,12 @@ namespace Barotrauma.Networking
                                                 if (MatchedClient != null)
                                                 {
                                                     //They do not have a living character but they are the correct client - allow it.
-                                                    closestDistChar.Revive(true);
+                                                    GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { closestDistChar });
+                                                    //closestDistChar.Revive(true);
+
                                                     //clients stop controlling the character when it dies, force control back
-                                                    GameMain.Server.SetClientCharacter(c, closestDistChar);
+                                                    //GameMain.Server.SetClientCharacter(c, closestDistChar);
+                                                    GameMain.GameScreen.RunIngameCommand("setclientcharacter", new object[] { c, closestDistChar });
                                                 }
                                                 break;
                                             }
@@ -3079,8 +3158,10 @@ namespace Barotrauma.Networking
                                 else if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && !closestDistChar.IsRemotePlayer)
                                 {
                                     Character.Controlled = closestDistChar;
-                                    Character.Controlled.Revive(true);
-                                    Character.Controlled.Heal();
+                                    GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { Character.Controlled });
+                                    GameMain.GameScreen.RunIngameCommand("heal", new object[] { Character.Controlled });
+                                    //Character.Controlled.Revive(true);
+                                    //Character.Controlled.Heal();
                                     ClearClickCommand();
                                 }
                                 else
@@ -3120,9 +3201,12 @@ namespace Barotrauma.Networking
                                                 if (MatchedClient != null)
                                                 {
                                                     //They do not have a living character but they are the correct client - allow it.
-                                                    closestDistChar.Revive(true);
+                                                    GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { closestDistChar });
+                                                    //closestDistChar.Revive(true);
+
                                                     //clients stop controlling the character when it dies, force control back
-                                                    GameMain.Server.SetClientCharacter(c, closestDistChar);
+                                                    //GameMain.Server.SetClientCharacter(c, closestDistChar);
+                                                    GameMain.GameScreen.RunIngameCommand("setclientcharacter", new object[] { c, closestDistChar });
                                                 }
                                                 break;
                                             }
@@ -3130,7 +3214,8 @@ namespace Barotrauma.Networking
                                     }
                                     else
                                     {
-                                        closestDistChar.Revive(true);
+                                        GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { closestDistChar });
+                                        //closestDistChar.Revive(true);
                                     }
                                     GameMain.NilMod.ClickCooldown = NilMod.ClickCooldownPeriod;
                                 }
@@ -3180,6 +3265,8 @@ namespace Barotrauma.Networking
                             float closestDist = GameMain.NilMod.ClickFindSelectionDistance;
                             foreach (Character c in Character.CharacterList)
                             {
+                                if (GameMain.NilMod.convertinghusklist.Find(ch => ch.character == c) != null) continue;
+
                                 if (c.IsDead)
                                 {
                                     float dist = Vector2.Distance(c.WorldPosition, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
@@ -3193,7 +3280,9 @@ namespace Barotrauma.Networking
                             }
                             if (closestDistChar != null)
                             {
-                                Entity.Spawner.AddToRemoveQueue(closestDistChar);
+                                //GameMain.NilMod.HideCharacter(closestDistChar);
+
+                                GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { closestDistChar });
                                 if (!PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
                                 {
                                     ClearClickCommand();
@@ -3228,7 +3317,11 @@ namespace Barotrauma.Networking
                                     if (Submarine.MainSubs[subtotp] != null)
                                     {
                                         var cam = GameMain.GameScreen.Cam;
-                                        GameMain.Server.MoveSub(subtotp, cam.ScreenToWorld(PlayerInput.MousePosition));
+                                        //GameMain.Server.MoveSub(subtotp, cam.ScreenToWorld(PlayerInput.MousePosition));
+                                        GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType,
+                                            new object[] { subtotp.ToString(),
+                                                cam.ScreenToWorld(PlayerInput.MousePosition).X.ToString(),
+                                                cam.ScreenToWorld(PlayerInput.MousePosition).Y.ToString() });
                                     }
                                     else
                                     {
@@ -3268,10 +3361,12 @@ namespace Barotrauma.Networking
                                 {
                                     GameMain.NilMod.RelocateTarget = null;
 
-                                    Character.Controlled.AnimController.CurrentHull = null;
-                                    Character.Controlled.Submarine = null;
-                                    Character.Controlled.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)));
-                                    Character.Controlled.AnimController.FindHull(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), true);
+                                    //Character.Controlled.AnimController.CurrentHull = null;
+                                    //Character.Controlled.Submarine = null;
+                                    //Character.Controlled.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)));
+                                    //Character.Controlled.AnimController.FindHull(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), true);
+
+                                    GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { Character.Controlled, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition).X, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition).Y });
 
                                     if (!PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
                                     {
@@ -3301,10 +3396,16 @@ namespace Barotrauma.Networking
                             }
                             else
                             {
-                                GameMain.NilMod.RelocateTarget.AnimController.CurrentHull = null;
-                                GameMain.NilMod.RelocateTarget.Submarine = null;
-                                GameMain.NilMod.RelocateTarget.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)));
-                                GameMain.NilMod.RelocateTarget.AnimController.FindHull(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), true);
+                                //GameMain.NilMod.RelocateTarget.AnimController.CurrentHull = null;
+                                //GameMain.NilMod.RelocateTarget.Submarine = null;
+                                //GameMain.NilMod.RelocateTarget.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition)));
+                                //GameMain.NilMod.RelocateTarget.AnimController.FindHull(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), true);
+
+                                GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType,
+                                    new object[] { GameMain.NilMod.RelocateTarget,
+                                    GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition).X,
+                                    GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition).Y });
+
                                 GameMain.NilMod.RelocateTarget = null;
 
                                 if (!PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
@@ -3320,10 +3421,12 @@ namespace Barotrauma.Networking
 
                         }
                         break;
+                        /*
                     case "handcuff":
                         ClickCommandFrame.Visible = true;
                         ClickCommandDescription.Text = "HANDCUFF - Left click to spawn and add handcuffs to the players hands dropping their tools - Right click to drop handcuffs if present in hands - shift to repeat - ctrl click to delete handcuffs from hands - right click to cancel.";
                         break;
+                        */
                     case "freeze":
                         ClickCommandFrame.Visible = true;
                         ClickCommandDescription.Text = "FREEZE - Left click a player to freeze their movements - Left click again to unfreeze - hold only shift to repeat - hold ctrl shift and left click to freeze all - hold ctrl and left click to unfreeze everyone - Right click to cancel - Players may still talk if concious.";
@@ -3347,36 +3450,7 @@ namespace Barotrauma.Networking
                             //Standard Left click
                             if (closestDistChar != null && !(PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift)))
                             {
-                                if (GameMain.NilMod.FrozenCharacters.Find(c => c == closestDistChar) != null)
-                                {
-                                    GameMain.NilMod.FrozenCharacters.Remove(closestDistChar);
-
-                                    if(ConnectedClients.Find(c => c.Character == closestDistChar) != null)
-                                    {
-                                        var chatMsg = ChatMessage.Create(
-                                        "Server Message",
-                                        ("You have been frozen by the server\n\nYou may now move again and perform actions."),
-                                        (ChatMessageType)ChatMessageType.MessageBox,
-                                        null);
-
-                                        GameMain.Server.SendChatMessage(chatMsg, ConnectedClients.Find(c => c.Character == closestDistChar));
-                                    }
-                                }
-                                else
-                                {
-                                    GameMain.NilMod.FrozenCharacters.Add(closestDistChar);
-
-                                    if (ConnectedClients.Find(c => c.Character == closestDistChar) != null)
-                                    {
-                                        var chatMsg = ChatMessage.Create(
-                                        "Server Message",
-                                        ("You have been frozen by the server\n\nYou may still talk if able, but no longer perform any actions or movements."),
-                                        (ChatMessageType)ChatMessageType.MessageBox,
-                                        null);
-
-                                        GameMain.Server.SendChatMessage(chatMsg, ConnectedClients.Find(c => c.Character == closestDistChar));
-                                    }
-                                }
+                                GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { closestDistChar });
 
                                 if (!PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
                                 {

@@ -23,7 +23,7 @@ namespace Barotrauma.Networking
 
         protected GUIFrame inGameHUD;
         protected GUIListBox chatBox;
-        protected GUITextBox chatMsgBox;
+        public GUITextBox chatMsgBox;
 
         public GUIFrame InGameHUD
         {

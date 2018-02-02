@@ -423,6 +423,13 @@ namespace Barotrauma
                         return "monster";
                     }
                 }
+                else if (Character.Spied != null)
+                {
+                    if (Vector2.DistanceSquared(character.WorldPosition, Character.Spied.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
+                    {
+                        return "monster";
+                    }
+                }
                 else if (Character.Controlled != null)
                 {
                     if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold)

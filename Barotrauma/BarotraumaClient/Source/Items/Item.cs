@@ -13,6 +13,8 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        private Boolean PositionError = false;
+
         public override Sprite Sprite
         {
             get { return prefab.sprite; }
@@ -458,7 +460,15 @@ namespace Barotrauma
 
             if (body == null)
             {
-                DebugConsole.ThrowError("Received a position update for an item with no physics body (" + Name + ")");
+                if(PositionError)
+                {
+                    DebugConsole.NewMessage(@"Received a position update for an item with no physics body """ + Name + @"""" + " (Server Item Position: X" + newPosition.X + " Y" + newPosition.Y + " - Client Item Position: X" + Position.X + " Y" + Position.Y, Color.Red);
+                }
+                else
+                {
+                    DebugConsole.ThrowError(@"Received a position update for an item with no physics body """ + Name + @"""" + " (Server Item Position: X" + newPosition.X + " Y" + newPosition.Y + " - Client Item Position: X" + Position.X + " Y" + Position.Y);
+                    PositionError = true;
+                }
                 return;
             }
 

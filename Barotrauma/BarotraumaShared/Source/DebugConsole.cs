@@ -285,6 +285,17 @@ namespace Barotrauma
                 if (args[0].ToLowerInvariant() == "human")
                 {
                     spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
+                    //Custom NilMod Humans Code
+                    spawnedCharacter.TeamID = 1;
+                    //TODO - fix this for other translations where it may break?
+                    spawnedCharacter.Info = new CharacterInfo(Character.HumanConfigFile, spawnedCharacter.Name, Gender.None, JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == "mechanic" || jp.Name.ToLowerInvariant() != "captain" && (jp.Skills.Find(s => s.Name.ToLowerInvariant() == "construction")?.LevelRange.X >= 40)));
+                    spawnedCharacter.Info.TeamID = 1;
+                    HumanAIController humanai = (HumanAIController)spawnedCharacter.AIController;
+                    //Give the Fckr a use and make them run around being useful
+                    //Scratch that they turn into complete idiots usually
+                    //humanai.SetOrder(Order.PrefabList.Find(o => o.Name == "Fix Leaks"),"");
+
+                    spawnedCharacter.GiveJobItems(WayPoint.GetRandom(SpawnType.Human, spawnedCharacter.Info.Job));
 
 #if CLIENT
                     if (GameMain.GameSession != null)
@@ -307,7 +318,15 @@ namespace Barotrauma
                     {
                         if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == args[0].ToLowerInvariant())
                         {
-                            Character.Create(characterFile, spawnPosition);
+                            spawnedCharacter = Character.Create(characterFile, spawnPosition);
+
+#if CLIENT
+                            if (GameMain.Server != null)
+                            {
+                                GameSession.inGameInfo.AddNoneClientCharacter(spawnedCharacter);
+                                GameSession.inGameInfo.UpdateGameInfoGUIList();
+                            }
+#endif
                             return;
                         }
                     }
@@ -318,8 +337,16 @@ namespace Barotrauma
                     string configPath = "Content/Characters/"
                         + args[0].First().ToString().ToUpper() + args[0].Substring(1)
                         + "/" + args[0].ToLower() + ".xml";
-                    Character.Create(configPath, spawnPosition);
+                    spawnedCharacter = Character.Create(configPath, spawnPosition);
                 }
+#if CLIENT
+                if (spawnedCharacter != null && GameMain.Server != null)
+                {
+                    GameSession.inGameInfo.AddNoneClientCharacter(spawnedCharacter);
+                    GameSession.inGameInfo.UpdateGameInfoGUIList();
+                }
+#endif
+
             }));
 
             commands.Add(new Command("spawnitem", CommandType.Spawning, "spawnitem [itemname] [cursor/inventory]: Spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted.", (string[] args) =>
@@ -338,7 +365,15 @@ namespace Barotrauma
                         break;
                     case "inventory":
                         extraParams = 1;
-                        spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
+                        //Allow the spied characters inventory to have items spawned into it instead of the controlled character
+                        if(Character.Spied != null)
+                        {
+                            spawnInventory = Character.Spied.Inventory;
+                        }
+                        else
+                        {
+                            spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
+                        }
                         break;
                     default:
                         extraParams = 0;
@@ -841,31 +876,36 @@ namespace Barotrauma
 
                 if(GameMain.NilMod.FrozenCharacters.Find(c => c == frozenCharacter) != null)
                 {
-                    if (GameMain.Server.ConnectedClients.Find(c => c.Character == frozenCharacter) != null)
+                    if (GameMain.Server != null)
                     {
-                        var chatMsg = ChatMessage.Create(
-                        "Server Message",
-                        ("You have been unfrozen by the server\n\nYou may now move again and perform actions."),
-                        (ChatMessageType)ChatMessageType.MessageBox,
-                        null);
+                        if (GameMain.Server.ConnectedClients.Find(c => c.Character == frozenCharacter) != null)
+                        {
+                            var chatMsg = ChatMessage.Create(
+                            "Server Message",
+                            ("You have been unfrozen by the server\n\nYou may now move again and perform actions."),
+                            (ChatMessageType)ChatMessageType.MessageBox,
+                            null);
 
-                        GameMain.Server.SendChatMessage(chatMsg, GameMain.Server.ConnectedClients.Find(c => c.Character == frozenCharacter));
+                            GameMain.Server.SendChatMessage(chatMsg, GameMain.Server.ConnectedClients.Find(c => c.Character == frozenCharacter));
+                        }
                     }
                     GameMain.NilMod.FrozenCharacters.Remove(frozenCharacter);
                 }
                 else
                 {
                     GameMain.NilMod.FrozenCharacters.Add(frozenCharacter);
-
-                    if (GameMain.Server.ConnectedClients.Find(c => c.Character == frozenCharacter) != null)
+                    if (GameMain.Server != null)
                     {
-                        var chatMsg = ChatMessage.Create(
-                        "Server Message",
-                        ("You have been frozen by the server\n\nYou may still talk if able, but no longer perform any actions or movements."),
-                        (ChatMessageType)ChatMessageType.MessageBox,
-                        null);
+                        if (GameMain.Server.ConnectedClients.Find(c => c.Character == frozenCharacter) != null)
+                        {
+                            var chatMsg = ChatMessage.Create(
+                            "Server Message",
+                            ("You have been frozen by the server\n\nYou may still talk if able, but no longer perform any actions or movements."),
+                            (ChatMessageType)ChatMessageType.MessageBox,
+                            null);
 
-                        GameMain.Server.SendChatMessage(chatMsg, GameMain.Server.ConnectedClients.Find(c => c.Character == frozenCharacter));
+                            GameMain.Server.SendChatMessage(chatMsg, GameMain.Server.ConnectedClients.Find(c => c.Character == frozenCharacter));
+                        }
                     }
                 }
 
@@ -875,6 +915,7 @@ namespace Barotrauma
 
             commands.Add(new Command("freecamera|freecam", CommandType.Render, "freecam: Detach the camera from the controlled character.", (string[] args) =>
             {
+                Character.Spied = null;
                 Character.Controlled = null;
                 GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             }));
@@ -1348,7 +1389,8 @@ namespace Barotrauma
                 characterIndex = -1;
             }
 
-            var matchingCharacters = Character.CharacterList.FindAll(c => (!ignoreRemotePlayers || !c.IsRemotePlayer) && c.Name.ToLowerInvariant() == characterName);
+            
+            var matchingCharacters = Character.CharacterList.FindAll(c => ((!ignoreRemotePlayers || !c.IsRemotePlayer) && c.Name.ToLowerInvariant() == characterName) && GameMain.NilMod.convertinghusklist.Find(ch => ch.character == c) == null);
 
             if (!matchingCharacters.Any())
             {
@@ -1689,7 +1731,50 @@ namespace Barotrauma
 #endif
             commands.Add(new Command("nilmodreload", CommandType.Generic, "nilmodreload: Reloads NilMod Settings during runtime, good for tweaking mid-round!", (string[] args) =>
             {
-                GameMain.NilMod.Load();
+                //If this is a client
+                if (GameMain.Client != null)
+                {
+                    //DebugConsole.NewMessage("Clients may not use this command even if the server allows its usage.", Color.Red);
+                    return;
+                }
+
+                //Single player or server
+                GameMain.NilMod.Load(false);
+
+                //If this is a server
+                if(GameMain.Server != null)
+                {
+                    if(GameMain.Server.ConnectedClients.Count > 0)
+                    {
+                        int nilModClientCounter = 0;
+                        for (int i = 0; i < GameMain.Server.ConnectedClients.Count - 1; i++)
+                        {
+                            if(GameMain.Server.ConnectedClients[i].IsNilModClient)
+                            {
+                                GameMain.Server.ConnectedClients[i].RequiresNilModSync = true;
+                                //Have the packets to send out not all in the same update for each nilmodclient
+                                GameMain.Server.ConnectedClients[i].NilModSyncResendTimer = NilMod.SyncResendInterval + (nilModClientCounter * 0.03f);
+                                nilModClientCounter += 1;
+                            }
+                        }
+                    }
+                }
+            }));
+
+            commands.Add(new Command("nilmodreset", CommandType.Generic, "nilmodreset: Resets NilMod Settings during runtime (Does not save), used to get default barotrauma setup.", (string[] args) =>
+            {
+                //This is a client
+                if (GameMain.Client != null) return;
+
+                GameMain.NilMod.ResetToDefault();
+            }));
+
+            commands.Add(new Command("nilmodsave", CommandType.Generic, "nilmodreset: Resets NilMod Settings during runtime (Does not save), used to get default barotrauma setup.", (string[] args) =>
+            {
+                //This is a client
+                if (GameMain.Client != null) return;
+
+                GameMain.NilMod.Save();
             }));
 
             commands.Add(new Command("listcreatures", CommandType.Character, "listcreatures: A command that displays all living none-player controlled creatures on the map, dead or alive.", (string[] args) =>
@@ -1755,11 +1840,6 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("getinventory", CommandType.DebugHide, "getinventory [Player Name]: Gets the Items in a players inventory as a list.", (string[] args) =>
-            {
-                //Code
-            }));
-
             commands.Add(new Command("finditem", CommandType.Spawning, "finditem [Partial Item Name]: Searches all possible spawnable items based off what you type, leave blank to list everything.", (string[] args) =>
             {
                 List<string> FoundItems = new List<string>();
@@ -1790,12 +1870,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("findcreature", CommandType.DebugHide, "finditem: Description", (string[] args) =>
-            {
-                //Code
-            }));
-
-            commands.Add(new Command("debugarmor|debugarmour", CommandType.Debug, "debugarmor|debugarmour [Armour Value]: Shows a series of damage calculations for the armour value using nilmod/Vanilla armour calculation!", (string[] args) =>
+            commands.Add(new Command("debugarmor|debugarmour", CommandType.Debug, "debugarmor|debugarmour [Armour Value]: Shows a series of damage estimations for a lone modifier using nilmod/Vanilla armour calculation! - 1.0 by default is no damage and 0.5 is half (Configure nilmodsettings.xml to change behaviour!)", (string[] args) =>
             {
                 float armouramount;
 
@@ -1806,11 +1881,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (args[0].All(Char.IsDigit))
+                    if (float.TryParse(args[0], out armouramount))
                     {
                         if (Convert.ToSingle(args[0]) >= 0f)
                         {
-                            armouramount = Convert.ToSingle(args[0]);
                             GameMain.NilMod.TestArmour(armouramount);
                         }
                         else
@@ -1848,6 +1922,8 @@ namespace Barotrauma
 
             commands.Add(new Command("togglecrush|toggleabyss", CommandType.GamePower, "togglecrush: Toggles the games abyss damage for all submarines.", (string[] args) =>
             {
+                if (GameMain.Client != null) return;
+
                 GameMain.NilMod.DisableCrushDamage = !GameMain.NilMod.DisableCrushDamage;
 #if CLIENT
                 if (GameMain.Server != null)

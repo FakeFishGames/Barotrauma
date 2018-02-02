@@ -23,6 +23,24 @@ namespace Barotrauma
         //the Character that the player is currently controlling
         private static Character controlled;
 
+        private static Character spied;
+
+        public static Character Spied
+        {
+            get { return spied; }
+            set
+            {
+                if (spied == value) return;
+                spied = value;
+                CharacterHUD.Reset();
+
+                if (controlled != null)
+                {
+                    controlled.Enabled = true;
+                }
+            }
+        }
+
         public static Character Controlled
         {
             get { return controlled; }
@@ -69,6 +87,133 @@ namespace Barotrauma
         }
 
 
+        public static void ViewSpied(float deltaTime, Camera cam, bool moveCam = true)
+        {
+            /*
+            if (!DisableControls)
+            {
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    keys[i].SetState();
+                }
+            }
+            else
+            {
+                foreach (Key key in keys)
+                {
+                    if (key == null) continue;
+                    key.Reset();
+                }
+            }
+            */
+
+            if (moveCam)
+            {
+                if (Spied.needsAir &&
+                    Spied.pressureProtection < 80.0f &&
+                    (Spied.AnimController.CurrentHull == null || Spied.AnimController.CurrentHull.LethalPressure > 50.0f))
+                {
+                    float pressure = Spied.AnimController.CurrentHull == null ? 100.0f : Spied.AnimController.CurrentHull.LethalPressure;
+
+                    cam.Zoom = MathHelper.Lerp(cam.Zoom,
+                        (pressure / 50.0f) * Rand.Range(1.0f, 1.05f),
+                        (pressure - 50.0f) / 50.0f);
+                }
+
+                if (Spied.IsHumanoid)
+                {
+                    if (!(Spied.SpeciesName.ToLowerInvariant() == "human") && GameMain.NilMod.UseCreatureZoomBoost)
+                    {
+                        cam.ZoomModifier = -0.10f;
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp((300.0f * GameMain.NilMod.CreatureZoomMultiplier), 300f, 500f), deltaTime);
+                    }
+                    else
+                    {
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
+                    }
+                }
+                else
+                {
+                    float tempmass = Spied.Mass;
+                    if (GameMain.NilMod.UseCreatureZoomBoost)
+                    {
+                        //increased visibility range when controlling large a non-humanoid
+                        if ((tempmass) >= 1000)
+                        {
+                            tempmass = 1200f;
+                            cam.ZoomModifier = -1f;
+                        }
+                        else if ((tempmass) >= 800)
+                        {
+                            tempmass = 1000f;
+                            cam.ZoomModifier = -1f;
+                        }
+                        else if ((tempmass) >= 600)
+                        {
+                            tempmass = 800f;
+                            cam.ZoomModifier = -1f;
+                        }
+                        else if ((tempmass) >= 400)
+                        {
+                            tempmass = 600f;
+                            cam.ZoomModifier = -0.5f;
+                        }
+                        else if ((tempmass) >= 300)
+                        {
+                            tempmass = 500f;
+                            cam.ZoomModifier = -0.4f;
+                        }
+                        else if ((tempmass) >= 200)
+                        {
+                            tempmass = 450f;
+                            cam.ZoomModifier = -0.3f;
+                        }
+                        else if ((tempmass) >= 150)
+                        {
+                            tempmass = 400f;
+                            cam.ZoomModifier = -0.3f;
+                        }
+                        else if ((tempmass) >= 100)
+                        {
+                            tempmass = 350f;
+                            cam.ZoomModifier = -0.3f;
+                        }
+                        else if ((tempmass) >= 0)
+                        {
+                            tempmass = 300f;
+                            cam.ZoomModifier = -0.3f;
+                        }
+                    }
+                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp((tempmass * GameMain.NilMod.CreatureZoomMultiplier), 250.0f, 1600.0f), deltaTime);
+                }
+            }
+
+            /*
+            Spied.cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
+            if (Spied.AnimController.CurrentHull != null && Spied.AnimController.CurrentHull.Submarine != null)
+            {
+                Spied.cursorPosition -= Spied.AnimController.CurrentHull.Submarine.Position;
+            }
+
+            Vector2 mouseSimPos = ConvertUnits.ToSimUnits(Spied.cursorPosition);
+            
+
+            if (Lights.LightManager.ViewTarget == Spied && Vector2.DistanceSquared(Spied.AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+            {
+                Body body = Submarine.PickBody(Spied.AnimController.Limbs[0].SimPosition, mouseSimPos);
+                Structure structure = null;
+                if (body != null) structure = body.UserData as Structure;
+                if (structure != null)
+                {
+                    if (!structure.CastShadow && moveCam)
+                    {
+                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 500.0f, 0.05f);
+                    }
+                }
+            }
+            */
+        }
+
         /// <summary>
         /// Control the Character according to player input
         /// </summary>
@@ -114,8 +259,6 @@ namespace Barotrauma
                     {
                         cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 250.0f, deltaTime);
                     }
-                    
-                    
                 }
                 else
                 {
@@ -202,7 +345,7 @@ namespace Barotrauma
 
         partial void UpdateControlled(float deltaTime, Camera cam)
         {
-            if (controlled != this) return;
+            if (controlled != this || spied != null) return;
 
             ControlLocalPlayer(deltaTime, cam);
 
@@ -222,7 +365,8 @@ namespace Barotrauma
 
         partial void DamageHUD(float amount)
         {
-            if (controlled == this) CharacterHUD.TakeDamage(amount);
+            if(spied == this) CharacterHUD.TakeDamage(amount);
+            else if (controlled == this) CharacterHUD.TakeDamage(amount);
         }
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
@@ -273,7 +417,11 @@ namespace Barotrauma
 
         public virtual void AddToGUIUpdateList()
         {
-            if (controlled == this)
+            if(spied == this)
+            {
+                CharacterHUD.AddToGUIUpdateList(this);
+            }
+            else if (spied == null && controlled == this)
             {
                 CharacterHUD.AddToGUIUpdateList(this);
             }
@@ -361,31 +509,62 @@ namespace Barotrauma
             {
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 90.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
                 Color nameColor = Color.White;
-                if (IsDead)
-                {
-                    nameColor = Color.DarkGray;
-                }
-                if(HuskInfectionState >= 0.5f)
-                {
-                    nameColor = new Color(255, 100, 255, 255);
-                }
 
-                if(Character.Controlled == null)
+                if (GameMain.NilMod.UseRecolouredNameInfo)
                 {
-                    if (TeamID == 0) nameColor = Color.White;
-                    else if (TeamID == 1) nameColor = Color.LightBlue;
-                    else if (TeamID == 2) nameColor = Color.Red;
-                }
-                
-
-                if (Character.Controlled != null && TeamID != Character.Controlled.TeamID)
-                {
-                    nameColor = Color.Red;
-                    if (IsDead)
+                    if (Character.Controlled == null)
                     {
-                        nameColor = Color.DarkRed;
+                        if (TeamID == 0)
+                        {
+                            if (!isDead)
+                            {
+                                nameColor = Color.White;
+                            }
+                            else
+                            {
+                                nameColor = Color.DarkGray;
+                            }
+                        }
+                        else if (TeamID == 1)
+                        {
+                            if (!isDead)
+                            {
+                                nameColor = Color.LightBlue;
+                            }
+                            else
+                            {
+                                nameColor = Color.DarkBlue;
+                            }
+                        }
+                        else if (TeamID == 2)
+                        {
+                            if (!isDead)
+                            {
+                                nameColor = Color.Red;
+                            }
+                            else
+                            {
+                                nameColor = Color.DarkRed;
+                            }
+                        }
+
+                        //Im not really sure where to put this relative to teams and such so it can simply override all of them.
+                        if (HuskInfectionState >= 0.5f)
+                        {
+                            nameColor = new Color(255, 100, 255, 255);
+                        }
+                    }
+
+                    if (Character.Controlled != null && TeamID != Character.Controlled.TeamID)
+                    {
+                        nameColor = Color.Red;
+                        if (IsDead)
+                        {
+                            nameColor = Color.DarkRed;
+                        }
                     }
                 }
+
                 GUI.Font.DrawString(spriteBatch, Info.Name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
                 GUI.Font.DrawString(spriteBatch, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
 

@@ -104,8 +104,16 @@ namespace Barotrauma
 #if CLIENT
             CrewManager = new CrewManager();
 
+            if(inGameInfo == null) inGameInfo = new InGameInfo();
+            inGameInfo.Initialize();
+
             infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
+
+            ingameInfoButton = new GUIButton(new Rectangle(10, 30, 100, 20), "Ingame Info", "", null);
+            ingameInfoButton.OnClicked = inGameInfo.ToggleGameInfoFrame;
+
+            ingameInfoButton.Visible = true;
 #endif
 
             if (gameModePreset != null) GameMode = gameModePreset.Instantiate(missionType);

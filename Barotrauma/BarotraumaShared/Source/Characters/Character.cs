@@ -134,6 +134,7 @@ namespace Barotrauma
         public readonly string SpeciesName;
 
         private float bleeding;
+        public float lastSentBleeding;
 
         private float attackCoolDown;
 
@@ -201,7 +202,18 @@ namespace Barotrauma
 
         public bool AllowInput
         {
-            get { return (!IsUnconscious && Stun <= 0.0f && !isDead && GameMain.NilMod.FrozenCharacters.Find(c => c == this) == null) || (GameMain.NilMod.DisconnectedCharacters.Find(dc => dc.character == this) != null && !isDead && !IsUnconscious); }
+            get
+            {
+                //Clients should not be recording FrozenCharacters
+                if (GameMain.Client == null)
+                {
+                    return (!IsUnconscious && Stun <= 0.0f && !isDead && GameMain.NilMod.FrozenCharacters.Find(c => c == this) == null) || (GameMain.NilMod.DisconnectedCharacters.Find(dc => dc.character == this) != null && !isDead && !IsUnconscious);
+                }
+                else
+                {
+                    return (!IsUnconscious && Stun <= 0.0f && !isDead);
+                }
+            }
         }
 
         public bool CanInteract
@@ -289,46 +301,26 @@ namespace Barotrauma
         {
             get
             {
-                ModifiedCharacterStat editedcharacter = GameMain.NilMod.ModifiedCharacterValues.Find(mcv => mcv.character == this && mcv.UpdateOxygen == true);
-                if (editedcharacter != null)
-                {
-                    return editedcharacter.newoxygen;
-                }
-                else
-                {
-                    return oxygen;
-                }
+                return oxygen;
             }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
+                float newoxygen = CheckOxygen(value);
 
-                float newoxygen = value;
+                if (oxygen == newoxygen) return;
+                oxygen = newoxygen;
 
-                if (GameMain.NilMod.UseCharStatOptimisation)
+                /*
+                if (GameMain.Server != null)
                 {
-                    ModifiedCharacterStat editedcharacter = GameMain.NilMod.ModifiedCharacterValues.Find(mcv => mcv.character == this);
-
-                    if(editedcharacter != null)
+                    if (Math.Abs(oxygen - lastSentOxygen) > (100f - -100f) / 255.0f || Math.Sign(oxygen) != Math.Sign(lastSentOxygen))
                     {
-                        editedcharacter.newoxygen = CheckOxygen(newoxygen);
-                        editedcharacter.UpdateOxygen = true;
-                    }
-                    else
-                    {
-                        editedcharacter = new ModifiedCharacterStat();
-                        editedcharacter.character = this;
-                        editedcharacter.newoxygen = CheckOxygen(newoxygen);
-                        editedcharacter.UpdateHealth = false;
-                        editedcharacter.UpdateBleed = false;
-                        editedcharacter.UpdateOxygen = true;
-                        GameMain.NilMod.ModifiedCharacterValues.Add(editedcharacter);
+                        GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                        lastSentOxygen = oxygen;
                     }
                 }
-                else
-                {
-                    SetOxygen(CheckOxygen(newoxygen));
-                }
+                */
+
             }
         }
 
@@ -349,7 +341,7 @@ namespace Barotrauma
             oxygen = MathHelper.Clamp(newoxygen, -100.0f, 100.0f);
 
             //NILMOD: Deny Player Death suffocation code
-            if (!GameMain.NilMod.PlayerCanSuffocateDeath && GameMain.Server.TraitorsEnabled == YesNoMaybe.No)
+            if (!GameMain.NilMod.PlayerCanSuffocateDeath && (GameMain.Server != null ? GameMain.Server.TraitorsEnabled == YesNoMaybe.No : true))
             {
                 if (!IsRemotePlayer)
                 {
@@ -381,21 +373,6 @@ namespace Barotrauma
             return oxygen;
         }
 
-        public void SetOxygen(float newoxygen)
-        {
-            if(oxygen == newoxygen) return;
-            oxygen = newoxygen;
-
-            if (GameMain.Server != null)
-            {
-                if (Math.Abs(oxygen - lastSentOxygen) > (100f - -100f) / 255.0f || Math.Sign(oxygen) != Math.Sign(lastSentOxygen))
-                {
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                    lastSentOxygen = oxygen;
-                }
-            }
-        }
-
         public float OxygenAvailable
         {
             get { return oxygenAvailable; }
@@ -415,6 +392,35 @@ namespace Barotrauma
                 SetStun(value); 
             }
         }
+
+        private float stunresistance;
+
+        //NilMod Stun Additions
+        public float Stunresistance
+        {
+            get { return stunresistance; }
+            set
+            {
+                if (GameMain.Client != null) return;
+
+                if (value <= stunresistbase)
+                {
+                    stunresistance = stunresistbase;
+                }
+                else
+                {
+                    stunresistance = MathHelper.Clamp(value,0f,1f);
+                }
+            }
+        }
+        //Default to 0% resistance
+        public float stunresistbase = 0f;
+        //Lose 1% resistance / second
+        public float stunresistdecreasespeed = 0.01f;
+        //% based on the new inflicted stun of the max stun timer converted into stunresistance additively
+        public float stunresistincreasemult = 0f;
+
+        public float stunresistendmult = 1f;
 
         //Calculates the new health with multipliers
         public float CalculateMultiplierHealth(float healthcurrent, float healthdifference)
@@ -445,7 +451,6 @@ namespace Barotrauma
                             //Is trying to heal
                             if (healthdifference > 0)
                             {
-                                // 80 + (20 / (5 / 0.2)) 
                                 healthcalculation = healthcurrent + (healthdifference / (GameMain.NilMod.PlayerHuskHealthMultiplier / GameMain.NilMod.HuskHealingMultiplierincurable));
                             }
                             //Is taking damage
@@ -519,15 +524,7 @@ namespace Barotrauma
         {
             get
             {
-                ModifiedCharacterStat editedcharacter = GameMain.NilMod.ModifiedCharacterValues.Find(mcv => mcv.character == this && mcv.UpdateHealth == true);
-                if (editedcharacter != null)
-                {
-                    return editedcharacter.newhealth;
-                }
-                else
-                {
-                    return health;
-                }
+                return health;
             }
             set
             {
@@ -538,31 +535,21 @@ namespace Barotrauma
 
                 float newHealth = value;
 
+                newHealth = CheckHealth(newHealth);
 
-                if (GameMain.NilMod.UseCharStatOptimisation)
+                if (health == newHealth) return;
+                health = MathHelper.Clamp(newHealth, minHealth, maxHealth);
+
+                /*
+                if (GameMain.Server != null)
                 {
-                    ModifiedCharacterStat editedcharacter = GameMain.NilMod.ModifiedCharacterValues.Find(mcv => mcv.character == this);
-
-                    if (editedcharacter != null)
+                    if (Math.Abs(health - lastSentHealth) > (maxHealth - minHealth) / 255.0f || Math.Sign(health) != Math.Sign(lastSentHealth))
                     {
-                        editedcharacter.newhealth = CheckHealth(newHealth);
-                        editedcharacter.UpdateHealth = true;
-                    }
-                    else
-                    {
-                        editedcharacter = new ModifiedCharacterStat();
-                        editedcharacter.character = this;
-                        editedcharacter.newhealth = CheckHealth(newHealth);
-                        editedcharacter.UpdateHealth = true;
-                        editedcharacter.UpdateBleed = false;
-                        editedcharacter.UpdateOxygen = false;
-                        GameMain.NilMod.ModifiedCharacterValues.Add(editedcharacter);
+                        GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                        lastSentHealth = health;
                     }
                 }
-                else
-                {
-                    SetHealth(CheckHealth(newHealth));
-                }
+                */
             }
         }
 
@@ -571,27 +558,31 @@ namespace Barotrauma
             //if (newHealth == health) return;
 
             //Take Multipliers of the character into account then Clamp health again in case it went with weird values
-            newHealth = CalculateMultiplierHealth(Health, newHealth - Health);
-            
-            //Nilmod Check and autokill husk infected on any health update if at 0 health
-            if (huskInfection != null)
+            if (GameMain.Client == null)
             {
-                if (huskInfection.State == HuskInfection.InfectionState.Active)
+                newHealth = CalculateMultiplierHealth(Health, newHealth - Health);
+
+
+                //Nilmod Check and autokill husk infected on any health update if at 0 health
+                if (huskInfection != null)
                 {
-                    if (newHealth <= 0)
+                    if (huskInfection.State == HuskInfection.InfectionState.Active)
                     {
-                        //Instantly kill the player if they are incapacitated as a husk instead of going to negative health
-                        Kill(CauseOfDeath.Husk);
+                        if (newHealth <= 0)
+                        {
+                            //Instantly kill the player if they are incapacitated as a husk instead of going to negative health
+                            Kill(CauseOfDeath.Husk, true);
+                        }
                     }
                 }
             }
 
-            //Now return it and cancel all the above IF its simply 
+            //Now return it and cancel all the above IF its simply unchanged
             if (newHealth == Health) return newHealth;
 
 
             //NilMod Progressive Implosion Death Anti Healing (Allow health loss but not health gains during pressure-death)
-            if (PressureTimer >= 100.0f)
+            if (PressureTimer >= 100.0f && GameMain.Client == null)
             {
                 if (GameMain.NilMod.UseProgressiveImplodeDeath && GameMain.NilMod.PreventImplodeHealing)
                 {
@@ -624,7 +615,7 @@ namespace Barotrauma
             }
 
             //Nilmod Deny healing of the infected
-            if (huskInfection != null)
+            if (huskInfection != null && GameMain.Client == null)
             {
                 if (huskInfection.State == HuskInfection.InfectionState.Active)
                 {
@@ -636,21 +627,6 @@ namespace Barotrauma
             }
 
             return newHealth;
-        }
-
-        public void SetHealth(float newhealth)
-        {
-            if (health == newhealth) return;
-            health = MathHelper.Clamp(newhealth, minHealth, maxHealth);
-
-            if (GameMain.Server != null)
-            {
-                if (Math.Abs(health - lastSentHealth) > (maxHealth - minHealth) / 255.0f || Math.Sign(health) != Math.Sign(lastSentHealth))
-                {
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                    lastSentHealth = health;
-                }
-            }
         }
     
         public float MaxHealth
@@ -667,15 +643,7 @@ namespace Barotrauma
         {
             get
             {
-                ModifiedCharacterStat editedcharacter = GameMain.NilMod.ModifiedCharacterValues.Find(mcv => mcv.character == this && mcv.UpdateBleed == true);
-                if (editedcharacter != null)
-                {
-                    return editedcharacter.newbleed;
-                }
-                else
-                {
-                    return bleeding;
-                }
+                return bleeding;
             }
             set
             {
@@ -685,54 +653,32 @@ namespace Barotrauma
                 float newBleeding = MathHelper.Clamp(value, 0.0f, 5.0f);
                 if (newBleeding == Bleeding) return;
 
-                if (GameMain.NilMod.UseCharStatOptimisation)
-                {
-                    ModifiedCharacterStat editedcharacter = GameMain.NilMod.ModifiedCharacterValues.Find(mcv => mcv.character == this);
 
-                    if (editedcharacter != null)
-                    {
-                        editedcharacter.newbleed = CheckBleeding(newBleeding);
-                        editedcharacter.UpdateBleed = true;
-                    }
-                    else
-                    {
-                        editedcharacter = new ModifiedCharacterStat();
-                        editedcharacter.character = this;
-                        editedcharacter.newbleed = CheckBleeding(newBleeding);
-                        editedcharacter.UpdateHealth = false;
-                        editedcharacter.UpdateBleed = true;
-                        editedcharacter.UpdateOxygen = false;
-                        GameMain.NilMod.ModifiedCharacterValues.Add(editedcharacter);
-                    }
-                }
-                else
-                {
-                    SetBleed(CheckBleeding(newBleeding));
-                }
+                newBleeding = CheckBleeding(newBleeding);
+
+                if (newBleeding == bleeding) return;
+                bleeding = newBleeding;
+
+                if (GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
             }
         }
 
         public float CheckBleeding(float newBleed)
         {
-            //NilMod Progressive Implosion Death Anti Healing (Allow Bleeding gain but not bleed reduction during pressure-death)
-            if (PressureTimer >= 100.0f && GameMain.NilMod.UseProgressiveImplodeDeath && GameMain.NilMod.PreventImplodeClotting && newBleed < Bleeding) return Bleeding;
+            if (GameMain.Client == null)
+            {
+                //NilMod Progressive Implosion Death Anti Healing (Allow Bleeding gain but not bleed reduction during pressure-death)
+                if (PressureTimer >= 100.0f && GameMain.NilMod.UseProgressiveImplodeDeath && GameMain.NilMod.PreventImplodeClotting && newBleed < Bleeding) return Bleeding;
 
 
-            //Get difference and factor in bleed multiplier instead for adding bleeding, then reclamp the value in case
-            newBleed = MathHelper.Clamp(((Bleeding * GameMain.NilMod.CreatureBleedMultiplier) + (newBleed - Bleeding)) / GameMain.NilMod.CreatureBleedMultiplier, 0.0f, 5.0f);
+                //Get difference and factor in bleed multiplier instead for adding bleeding, then reclamp the value in case
+                newBleed = MathHelper.Clamp(((Bleeding * GameMain.NilMod.CreatureBleedMultiplier) + (newBleed - Bleeding)) / GameMain.NilMod.CreatureBleedMultiplier, 0.0f, 5.0f);
 
-            if (newBleed * GameMain.NilMod.CreatureBleedMultiplier <= 0.0001f) newBleed = 0f;
+                if (newBleed * GameMain.NilMod.CreatureBleedMultiplier <= 0.0001f) newBleed = 0f;
+            }
 
             return newBleed;
-        }
-
-        public void SetBleed(float newBleed)
-        {
-            if (newBleed == bleeding) return;
-            bleeding = newBleed;
-
-            if (GameMain.Server != null)
-                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
         }
         
         public HuskInfection huskInfection;
@@ -752,6 +698,7 @@ namespace Barotrauma
                     {
                         //already active, can't cure anymore
                         if (huskInfection.State == HuskInfection.InfectionState.Active) return;
+                        GameServer.Log(Name + " has been cured of the husk infection.", Networking.ServerLog.MessageType.Husk);
                         huskInfection.Remove(this);
                         huskInfection = null;
                     }
@@ -762,7 +709,7 @@ namespace Barotrauma
                     {
                         huskInfection = new HuskInfection(this);
                         //NilMod Log husk Infection starts
-                        GameMain.Server.ServerLog.WriteLine(Name + " has been husk infected!", Networking.ServerLog.MessageType.Husk);
+                        GameServer.Log(Name + " has been husk infected!", Networking.ServerLog.MessageType.Husk);
                     }
                     huskInfection.IncubationTimer = MathHelper.Clamp(value, 0.0f, 1.0f);
                 }
@@ -988,7 +935,13 @@ namespace Barotrauma
             BleedingDecreaseSpeed = doc.Root.GetAttributeFloat("bleedingdecreasespeed", 0.05f);
 
             needsAir = doc.Root.GetAttributeBool("needsair", false);
-            
+
+            //Nilmod stun resistance
+            stunresistbase = MathHelper.Clamp(doc.Root.GetAttributeFloat("stunresistbase", 0.0f),0f,1f);
+            stunresistincreasemult = MathHelper.Clamp(doc.Root.GetAttributeFloat("stunresistincreasemult", 0.0f), 0f, 1f);
+            stunresistdecreasespeed = MathHelper.Clamp(doc.Root.GetAttributeFloat("stunresistdecreasespeed", 0.01f), 0f, 1f);
+            stunresistendmult = MathHelper.Clamp(doc.Root.GetAttributeFloat("stunresistendmult", 1.0f), 0f, 1f);
+
             if (file == humanConfigFile)
             {
                 if (Info.PickedItemIDs.Any())
@@ -1774,8 +1727,8 @@ namespace Barotrauma
                         {
                             DebugConsole.NewMessage("Critical error occured in CHARACTER.UPDATEALL - Failiure to enable character to due error: " + e.Message, Color.Red);
                             DebugConsole.NewMessage("Character: " + c.Name + " Has been removed to prevent server crash (Hopefully!)", Color.Red);
-                            GameMain.Server.ServerLog.WriteLine("Critical error occured in CHARACTER.UPDATEALL - Failiure to enable character to due error: " + e.Message, ServerLog.MessageType.Error);
-                            GameMain.Server.ServerLog.WriteLine("Character: " + c.Name + " Has been removed to prevent server crash (Hopefully!)", ServerLog.MessageType.Error);
+                            if(GameMain.Server != null) GameMain.Server.ServerLog.WriteLine("Critical error occured in CHARACTER.UPDATEALL - Failiure to enable character to due error: " + e.Message, ServerLog.MessageType.Error);
+                            if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine("Character: " + c.Name + " Has been removed to prevent server crash (Hopefully!)", ServerLog.MessageType.Error);
 #if CLIENT
                             if (c == Character.controlled) Character.controlled = null;
 #endif
@@ -1902,12 +1855,15 @@ namespace Barotrauma
             if (Stun > 0.0f)
             {
                 stunTimer -= deltaTime;
-                if (stunTimer < 0.0f && GameMain.Server != null)
+                if (stunTimer < 0.0f)
                 {
+                    if (GameMain.Client == null) Stunresistance *= stunresistendmult;
                     //stun ended -> notify clients
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                    if(GameMain.Server != null) GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
                 }                
             }
+
+            if (Stunresistance > stunresistbase && stunresistdecreasespeed > 0f) Stunresistance -= (stunresistdecreasespeed * deltaTime);
 
             if (IsUnconscious)
             {
@@ -1971,7 +1927,7 @@ namespace Barotrauma
             //NilMod Anti death code
             if (Health <= minHealth)
             {
-                if (!GameMain.NilMod.PlayerCanTraumaDeath && GameMain.Server.TraitorsEnabled == YesNoMaybe.No)
+                if (!GameMain.NilMod.PlayerCanTraumaDeath && (GameMain.Server != null ? GameMain.Server.TraitorsEnabled == YesNoMaybe.No : true))
                 {
                     if (!IsRemotePlayer)
                     {
@@ -2161,7 +2117,7 @@ namespace Barotrauma
             //Nilmod Death Code
             if (Health <= minHealth)
             {
-                if (!GameMain.NilMod.PlayerCanTraumaDeath && GameMain.Server.TraitorsEnabled == YesNoMaybe.No)
+                if (!GameMain.NilMod.PlayerCanTraumaDeath && (GameMain.Server != null ? GameMain.Server.TraitorsEnabled == YesNoMaybe.No : true))
                 {
                     if (!IsRemotePlayer)
                     {
@@ -2194,22 +2150,58 @@ namespace Barotrauma
             if (limbHit == null) return new AttackResult();
 
             var attackingCharacter = attacker as Character;
-            if (GameMain.NilMod.LogAIDamage)
+
+            Client attackingclient = null;
+            Client attackedclient = null;
+            if (GameMain.Server != null)
             {
-                if (attackingCharacter != null && attackingCharacter.AIController == null)
-                {
-                    GameServer.Log(Name + " attacked by PLR: " + attackingCharacter.Name + ". Damage: " + attackResult.Damage + " Bleeding damage: " + attackResult.Bleeding + " Stun Damage: " + attack.Stun, ServerLog.MessageType.Attack);
-                }
-                if (attackingCharacter != null && attackingCharacter.AIController != null)
-                {
-                    GameServer.Log(Name + " attacked by AI: " + attackingCharacter.Name + ". Damage: " + attackResult.Damage + " Bleeding damage: " + attackResult.Bleeding + " Stun Damage: " + attack.Stun, ServerLog.MessageType.Attack);
-                }
+                if(attackingCharacter != null) attackingclient = GameMain.Server.ConnectedClients.Find(c => c.Character != null && c.Character == attackingCharacter);
+                attackedclient = GameMain.Server.ConnectedClients.Find(c => c.Character != null && c.Character == this);
             }
-            else
+            if (attackingCharacter != null)
             {
-                if (attackingCharacter != null && attackingCharacter.AIController == null)
+                if (GameMain.NilMod.LogAIDamage)
                 {
-                    GameServer.Log(Name + " attacked by " + attackingCharacter.Name + ". Damage: " + attackResult.Damage + " Bleeding damage: " + attackResult.Bleeding + " Stun Damage: " + attack.Stun, ServerLog.MessageType.Attack);
+                    if (attackingclient != null)
+                    {
+                        GameServer.Log((attackedclient != null ? (attackedclient.Name != Name ? "PLR: " + attackedclient.Name + " As (" + Name + ")" : "PLR: " + Name) : (Character.Controlled == this ? "HOST: " + Name : "AI: " + Name))
+                            + " attacked by PLR: " + (attackingclient.Name != attackingCharacter.Name ? attackingclient.Name + " As (" + attackingCharacter.Name + ")" : attackingCharacter.Name)
+                            + ". Damage: " + Math.Round(attackResult.Damage, 2)
+                            + " Bleed: " + Math.Round(attackResult.Bleeding, 2)
+                            + " Stun: " + Math.Round((attack.Stun * (1f - Stunresistance)), 2)
+                            + (Stunresistance > 0f ? " (" + Math.Round(Stunresistance * 100f, 2) + "% Resisted)" : ""), ServerLog.MessageType.Attack);
+                    }
+                    else if (Character.Controlled == attackingCharacter)
+                    {
+                        GameServer.Log((attackedclient != null ? (attackedclient.Name != Name ? "PLR: " + attackedclient.Name + " As (" + Name + ")" : "PLR: " + Name) : "AI: " + Name)
+                            + " attacked by HOST: " + attackingCharacter.Name
+                            + ". Damage: " + Math.Round(attackResult.Damage, 2)
+                            + " Bleed: " + Math.Round(attackResult.Bleeding, 2)
+                            + " Stun: " + Math.Round((attack.Stun * (1f - Stunresistance)), 2)
+                            + (Stunresistance > 0f ? " (" + Math.Round(Stunresistance * 100f, 2) + "% Resisted)" : ""), ServerLog.MessageType.Attack);
+                    }
+                    else
+                    {
+                        GameServer.Log((attackedclient != null ? (attackedclient.Name != Name ? "PLR: " + attackedclient.Name + " As (" + Name + ")" : "PLR: " + Name) : (Character.Controlled == this ? "HOST: " + Name : "AI: " + Name))
+                            + " attacked by AI: " + attackingCharacter.Name
+                            + ". Damage: " + Math.Round(attackResult.Damage, 2)
+                            + " Bleed: " + Math.Round(attackResult.Bleeding, 2)
+                            + " Stun: " + Math.Round((attack.Stun * (1f - Stunresistance)), 2)
+                            + (Stunresistance > 0f ? " (" + Math.Round(Stunresistance * 100f, 2) + "% Resisted)" : ""), ServerLog.MessageType.Attack);
+                    }
+
+                }
+                else
+                {
+                    if (attackingCharacter != null && attackingclient != null)
+                    {
+                        GameServer.Log((attackedclient != null && attackedclient.Name != Name ? attackedclient.Name + " As (" + Name + ")" : Name)
+                            + " attacked by " + attackingCharacter.Name
+                            + ". Damage: " + Math.Round(attackResult.Damage, 2)
+                            + " Bleed: " + Math.Round(attackResult.Bleeding, 2)
+                            + " Stun: " + Math.Round(attack.Stun * (1f - Stunresistance), 2)
+                            + (Stunresistance > 0f ? " (" + Math.Round(Stunresistance * 100f, 2) + "% Resisted)" : ""), ServerLog.MessageType.Attack);
+                    }
                 }
             }
 
@@ -2293,6 +2285,17 @@ namespace Barotrauma
         {
             if (GameMain.Client != null && !isNetworkMessage) return;
 
+            if(newStun >= stunTimer)
+            {
+                float stunincrease = newStun - stunTimer;
+
+                stunincrease = (stunincrease * (1f - Stunresistance));
+
+                if(stunresistincreasemult > 0f) Stunresistance += ((stunincrease / MaxStun) * 100f) * stunresistincreasemult;
+
+                newStun = stunTimer + stunincrease;
+            }
+
             newStun = MathHelper.Clamp(newStun, 0.0f, MaxStun);
 
             if ((newStun <= stunTimer && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
@@ -2315,7 +2318,7 @@ namespace Barotrauma
         private void Implode(bool isNetworkMessage = false)
         {
             //Nilmod Death code
-            if (!GameMain.NilMod.PlayerCanImplodeDeath && GameMain.Server.TraitorsEnabled == YesNoMaybe.No)
+            if (!GameMain.NilMod.PlayerCanImplodeDeath && (GameMain.Server != null ? GameMain.Server.TraitorsEnabled == YesNoMaybe.No : true))
             {
                 if (!IsRemotePlayer)
                 {
@@ -2499,21 +2502,24 @@ namespace Barotrauma
 
             if (info != null) info.Remove();
 
-            if(GameMain.NilMod.FrozenCharacters.Find(fc => fc == this) != null)
+            if (GameMain.Server != null)
             {
-                GameMain.NilMod.FrozenCharacters.Remove(this);
-            }
-
-            if (GameMain.NilMod.DisconnectedCharacters.Count > 0)
-            {
-                DisconnectedCharacter ReconnectedClient = null;
-
-                ReconnectedClient = GameMain.NilMod.DisconnectedCharacters.Find(dc => dc.character == this);
-
-                if (ReconnectedClient != null)
+                if (GameMain.NilMod.FrozenCharacters.Find(fc => fc == this) != null)
                 {
-                    ReconnectedClient.character = null;
-                    GameMain.NilMod.DisconnectedCharacters.Remove(ReconnectedClient);
+                    GameMain.NilMod.FrozenCharacters.Remove(this);
+                }
+
+                if (GameMain.NilMod.DisconnectedCharacters.Count > 0)
+                {
+                    DisconnectedCharacter ReconnectedClient = null;
+
+                    ReconnectedClient = GameMain.NilMod.DisconnectedCharacters.Find(dc => dc.character == this);
+
+                    if (ReconnectedClient != null)
+                    {
+                        ReconnectedClient.character = null;
+                        GameMain.NilMod.DisconnectedCharacters.Remove(ReconnectedClient);
+                    }
                 }
             }
 
@@ -2550,6 +2556,34 @@ namespace Barotrauma
             if (GameMain.Server != null)
             {
                 GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+            }
+        }
+
+        public void CheckForStatusEvent()
+        {
+            //They should only check these if their alive and on loss of limb.
+            if (isDead) return;
+
+            if (Math.Abs(health - lastSentHealth) > (maxHealth - minHealth) / 255.0f || Math.Sign(health) != Math.Sign(lastSentHealth))
+            {
+                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                lastSentHealth = health;
+                lastSentOxygen = oxygen;
+                lastSentBleeding = bleeding;
+            }
+            else if (Math.Abs(oxygen - lastSentOxygen) > (100f - -100f) / 255.0f || Math.Sign(oxygen) != Math.Sign(lastSentOxygen))
+            {
+                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                lastSentHealth = health;
+                lastSentOxygen = oxygen;
+                lastSentBleeding = bleeding;
+            }
+            else if (Math.Abs(bleeding - lastSentBleeding) > (100f - -100f) / 255.0f || Math.Sign(bleeding) != Math.Sign(lastSentBleeding))
+            {
+                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                lastSentHealth = health;
+                lastSentOxygen = oxygen;
+                lastSentBleeding = bleeding;
             }
         }
     }

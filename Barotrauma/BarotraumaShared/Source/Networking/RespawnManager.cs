@@ -96,8 +96,17 @@ namespace Barotrauma.Networking
                         Array.ForEach(connection.Wires, w => { if (w != null) w.Locked = true; });
                     }
                 }
+
+                //Item Removal Prevention
+                if (item.body != null && item.body.Enabled && item.ParentInventory == null)
+                {
+                    item.AddTag("RespawnItem");
+                    continue;
+                }
             }
-                        
+
+            
+
             var server = networkMember as GameServer;
             if (server != null)
             {
@@ -393,7 +402,8 @@ namespace Barotrauma.Networking
             {
                 if (item.Submarine != respawnShuttle) continue;
 
-                if (item.body != null && item.body.Enabled && item.ParentInventory == null)
+                //Items originally part of the respawn are no longer removed.
+                if (item.body != null && item.body.Enabled && item.ParentInventory == null && !item.HasTag("RespawnItem"))
                 {
                     Entity.Spawner.AddToRemoveQueue(item);
                     continue;
@@ -404,7 +414,10 @@ namespace Barotrauma.Networking
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
                 {
-                    powerContainer.Charge = powerContainer.Capacity;
+                    powerContainer.charge = powerContainer.Capacity;
+                    //Just in case force a syncing event - had reports of depleted respawn shuttles on spawn which is a likely sync issue.
+                    powerContainer.Item.CreateServerEvent(powerContainer);
+                    powerContainer.lastSentCharge = powerContainer.Capacity;
                 }
             }
 
@@ -560,7 +573,9 @@ namespace Barotrauma.Networking
                     server.Character = character;
                     Character.Controlled = character;
 
-                    if(GameMain.NilMod.DisableLOSOnStart)
+                    GameSession.inGameInfo.AddNoneClientCharacter(character, true);
+
+                    if (GameMain.NilMod.DisableLOSOnStart)
                     {
                         GameMain.LightManager.LosEnabled = false;
                     }
@@ -581,10 +596,11 @@ namespace Barotrauma.Networking
                 else
                 {
 #endif
-                clients[i].Character = character;
-                GameServer.Log("Respawn: " + clients[i].Character.Name + " As " + clients[i].Character.Info.Job.Name + " On " + clients[i].Connection.RemoteEndPoint.Address, ServerLog.MessageType.Spawns);
+                    clients[i].Character = character;
+                    GameServer.Log("Respawn: " + clients[i].Character.Name + " As " + clients[i].Character.Info.Job.Name + " On " + clients[i].Connection.RemoteEndPoint.Address, ServerLog.MessageType.Spawns);
 
 #if CLIENT
+                    GameSession.inGameInfo.UpdateClientCharacter(clients[i], character, false);
                 }
 #endif
 
@@ -639,13 +655,14 @@ namespace Barotrauma.Networking
                 //add the ID card tags they should've gotten when spawning in the shuttle
                 foreach (Item item in character.Inventory.Items)
                 {
-                    if (item == null || item.Prefab.Name != "ID Card") continue;                    
+                    if (item == null || item.Prefab.Name != "ID Card") continue;
                     foreach (string s in shuttleSpawnPoints[i].IdCardTags)
                     {
                         item.AddTag(s);
-                    }                    
+                    }
                 }
 #if CLIENT
+                GameSession.inGameInfo.UpdateGameInfoGUIList();
                 GameMain.GameSession.CrewManager.AddCharacter(character);
 #endif
             }

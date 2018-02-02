@@ -573,9 +573,10 @@ namespace Barotrauma
 
                     //apply damage to the target character to get some blood particles flying 
                     targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
+
                     //Lets make this extra bloody, perhaps a client will sync it.
-                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
-                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
+                    //targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
+                    //targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
 
 
                     //keep severing joints until there is only one limb left
@@ -583,7 +584,14 @@ namespace Barotrauma
                     if (nonSeveredJoints.Length == 0)
                     {
                         //only one limb left, the character is now full eaten
-                        Entity.Spawner.AddToRemoveQueue(targetCharacter);
+
+                        if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(Character.Name + " has finished eating " + targetCharacter.Name, Networking.ServerLog.MessageType.Spawns);
+
+                        //Use the hide corpse code for eating too instead of just husks (In a hope to prevent further desync problems)
+                        GameMain.NilMod.HideCharacter(targetCharacter);
+
+                        //Entity.Spawner.AddToRemoveQueue(targetCharacter);
+
                         selectedAiTarget = null;
                         state = AIState.None;
                     }

@@ -38,16 +38,33 @@ namespace Barotrauma.Networking
                 //this client has already been authenticated
                 return;
             }
-            
+
+            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) == true).Count,GameMain.NilMod.MaxAdminSlots);
+            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly == true).Count, GameMain.NilMod.MaxSpectatorSlots);
+
             UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.Connection == conn);
             if (unauthClient == null)
             {
                 //new client, generate nonce and add to unauth queue
-                if (ConnectedClients.Count >= maxPlayers)
+                if ((ConnectedClients.Count + unauthenticatedClients.Count - GameMain.NilMod.Admins - GameMain.NilMod.Spectators) >= maxPlayers)
                 {
-                    //server is full, can't allow new connection
-                    conn.Disconnect("Server full");
-                    return;
+                    var precheckPermissions = clientPermissions.Find(cp => cp.IP == conn.RemoteEndPoint.Address.ToString());
+                    if (precheckPermissions.Permissions.HasFlag(ClientPermissions.Ban))
+                    {
+                        if (GameMain.NilMod.Admins + 1 > GameMain.NilMod.MaxAdminSlots)
+                        {
+                            //Server is full and exceeded its admin slots.
+                            conn.Disconnect("Server full - No admin slots remain");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        //server is full, can't allow new connection
+                        conn.Disconnect("Server full");
+                        return;
+                    }
+                    
                 }
 
                 int nonce = CryptoRandom.Instance.Next();
@@ -72,6 +89,8 @@ namespace Barotrauma.Networking
 
         private void ClientInitRequest(NetIncomingMessage inc)
         {
+            Boolean isNilModClient = false;
+
             if (ConnectedClients.Find(c => c.Connection == inc.SenderConnection) != null)
             {
                 //this client was already authenticated
@@ -150,6 +169,33 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server with Incorrect Content Package: (" + clPackageName + ") vs servers (" + GameMain.SelectedPackage.Name + ")", Color.Red);
                 return;
             }
+
+            if (clPackageHash.Substring(0,7).Contains("NILMOD_"))
+            {
+                if (!GameMain.NilMod.AllowNilModClients)
+                {
+                    DisconnectUnauthClient(inc, unauthClient, "This server does not permit Nilmod clients (Please rejoin using Vanilla).");
+                    Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Nilmod clients are not permitted to connect).", ServerLog.MessageType.Connection);
+                    DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Nilmod clients are not permitted to connect).", Color.Red);
+                    return;
+                }
+                else
+                {
+                    isNilModClient = true;
+                    clPackageHash = clPackageHash.Substring(7);
+                }
+            }
+            else
+            {
+                if(!GameMain.NilMod.AllowVanillaClients)
+                {
+                    DisconnectUnauthClient(inc, unauthClient, "This server does not permit Vanilla clients (Please rejoin using Nilmod).");
+                    Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Vanilla clients are not permitted to connect).", ServerLog.MessageType.Connection);
+                    DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (Vanilla clients are not permitted to connect).", Color.Red);
+                    return;
+                }
+            }
+
             if (GameMain.NilMod.BypassMD5 == true)
             {
                 if (clPackageHash != GameMain.NilMod.ServerMD5A && clPackageHash != GameMain.NilMod.ServerMD5B)
@@ -328,14 +374,17 @@ namespace Barotrauma.Networking
 
             //new client
             Client newClient = new Client(clName, GetNewClientID());
+            newClient.IsNilModClient = isNilModClient;
+            newClient.RequiresNilModSync = isNilModClient;
+            newClient.NilModSyncResendTimer = 4f;
             newClient.InitClientSync();
             newClient.Connection = unauthClient.Connection;
             unauthenticatedClients.Remove(unauthClient);
             unauthClient = null;
             ConnectedClients.Add(newClient);
 
-            
 #if CLIENT
+            GameSession.inGameInfo.AddClient(newClient);
             GameMain.NetLobbyScreen.AddPlayer(newClient.Name);
 #endif
             if (GameMain.NilMod.EnableVPNBanlist)

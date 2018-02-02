@@ -269,12 +269,65 @@ namespace Barotrauma
 
                     if (duration > 0.0f)
                     {
+                        if (GameMain.Server != null)
+                        {
+                            if (target is Character)
+                            {
+                                Character effectedcharacter = (Character)target;
+
+                                if (GameMain.NilMod.LogStatusEffectStun && property.Name.ToLowerInvariant() == "health" && propertyEffects[i] is float && (float)propertyEffects[i] < 0f)
+                                {
+                                    Barotrauma.Networking.GameServer.Log(effectedcharacter.Name + " Poisoned for " + Math.Round((float)propertyEffects[i], 2) + " health per second for " + ToolBox.SecondsToReadableTime(duration) + ".", Networking.ServerLog.MessageType.Attack);
+                                }
+                                else if (GameMain.NilMod.LogStatusEffectHealth && property.Name.ToLowerInvariant() == "health" && propertyEffects[i] is float && (float)propertyEffects[i] < 0f)
+                                {
+                                    Barotrauma.Networking.GameServer.Log(effectedcharacter.Name + " Poisoned for " + Math.Round((float)propertyEffects[i], 2) + " health per second for " + ToolBox.SecondsToReadableTime(duration) + ".", Networking.ServerLog.MessageType.Attack);
+                                }
+                                else if (GameMain.NilMod.LogStatusEffectBleed && property.Name.ToLowerInvariant() == "bleeding" && propertyEffects[i] is float && (float)propertyEffects[i] < 0f)
+                                {
+                                    Barotrauma.Networking.GameServer.Log(effectedcharacter.Name + " Poisoned for " + Math.Round((float)propertyEffects[i], 2) + " bleed per second for " + ToolBox.SecondsToReadableTime(duration) + ".", Networking.ServerLog.MessageType.Attack);
+                                }
+                                else if (GameMain.NilMod.LogStatusEffectOxygen && property.Name.ToLowerInvariant() == "oxygen" && propertyEffects[i] is float && (float)propertyEffects[i] < 0f)
+                                {
+                                    Barotrauma.Networking.GameServer.Log(effectedcharacter.Name + " Poisoned for " + Math.Round((float)propertyEffects[i], 2) + " oxygen per second for " + ToolBox.SecondsToReadableTime(duration) + ".", Networking.ServerLog.MessageType.Attack);
+                                }
+                            }
+                        }
+
                         CoroutineManager.StartCoroutine(
                             ApplyToPropertyOverDuration(duration, property, propertyEffects[i]), "statuseffect");
-
                     }
                     else
                     {
+                        if (GameMain.Server != null)
+                        {
+                            if (target is Character)
+                            {
+                                Character effectedcharacter = (Character)target;
+
+                                //Only show values that are not continous to a character over time, that'd get rediculous fast.
+                                if (deltaTime == 1f)
+                                {
+                                    if (GameMain.NilMod.LogStatusEffectStun && property.Name.ToLowerInvariant() == "stun" && propertyEffects[i] is float && (float)propertyEffects[i] > 5f)
+                                    {
+                                        Barotrauma.Networking.GameServer.Log(effectedcharacter.Name + " Stunned for " + (Math.Round((float)propertyEffects[i] * (1f - effectedcharacter.Stunresistance), 2)) + " (" + Math.Round(effectedcharacter.Stunresistance * 100f, 2) + "% Resisted).", Networking.ServerLog.MessageType.Attack);
+                                    }
+                                    else if (GameMain.NilMod.LogStatusEffectHealth && property.Name.ToLowerInvariant() == "health" && propertyEffects[i] is float && (float)propertyEffects[i] < 5f)
+                                    {
+                                        Barotrauma.Networking.GameServer.Log(effectedcharacter.Name + " Poisoned for " + Math.Round((float)propertyEffects[i], 2) + " health.", Networking.ServerLog.MessageType.Attack);
+                                    }
+                                    else if (GameMain.NilMod.LogStatusEffectBleed && property.Name.ToLowerInvariant() == "bleeding" && propertyEffects[i] is float && (float)propertyEffects[i] < 5f)
+                                    {
+                                        Barotrauma.Networking.GameServer.Log(effectedcharacter.Name + " Poisoned for " + Math.Round((float)propertyEffects[i], 2) + " bleed.", Networking.ServerLog.MessageType.Attack);
+                                    }
+                                    else if (GameMain.NilMod.LogStatusEffectOxygen && property.Name.ToLowerInvariant() == "oxygen" && propertyEffects[i] is float && (float)propertyEffects[i] < 5f)
+                                    {
+                                        Barotrauma.Networking.GameServer.Log(effectedcharacter.Name + " Poisoned for " + Math.Round((float)propertyEffects[i], 2) + " oxygen.", Networking.ServerLog.MessageType.Attack);
+                                    }
+                                }
+                            }
+                        }
+
                         ApplyToProperty(property, propertyEffects[i], deltaTime);                          
                     }
                 }

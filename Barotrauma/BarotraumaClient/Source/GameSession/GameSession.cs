@@ -7,8 +7,10 @@ namespace Barotrauma
     {
         private InfoFrameTab selectedTab;
         private GUIButton infoButton;
+        public GUIButton ingameInfoButton;
         private GUIFrame infoFrame;
-        
+        public static InGameInfo inGameInfo;
+
         private RoundSummary roundSummary;
         public RoundSummary RoundSummary
         {
@@ -109,6 +111,8 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             infoButton.AddToGUIUpdateList();
+            ingameInfoButton.AddToGUIUpdateList();
+            inGameInfo.AddToGUIUpdateList();
 
             if (GameMode != null) GameMode.AddToGUIUpdateList();
 
@@ -121,8 +125,25 @@ namespace Barotrauma
 
             if (GUI.DisableHUD) return;
 
+            if (GameMain.Client != null)
+            {
+                if(GameMain.Client.HasPermission(Networking.ClientPermissions.Kick) || GameMain.Client.HasPermission(Networking.ClientPermissions.Ban))
+                {
+                    //ingameInfoButton.Visible = true;
+                    ingameInfoButton.Visible = false;
+                }
+                else
+                {
+                    ingameInfoButton.Visible = false;
+                }
+            }
+
+            //if (GameMain.Server == null) ingameInfoButton.Visible = false;
+
             //guiRoot.Update(deltaTime);
             infoButton.Update(deltaTime);
+            ingameInfoButton.Update(deltaTime);
+
 
             if (GameMode != null) GameMode.Update(deltaTime);
             if (Mission != null) Mission.Update(deltaTime);
@@ -142,6 +163,8 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
 
             infoButton.Draw(spriteBatch);
+            ingameInfoButton.Draw(spriteBatch);
+            inGameInfo.Draw(spriteBatch);
 
             if (GameMode != null) GameMode.Draw(spriteBatch);
             if (infoFrame != null) infoFrame.Draw(spriteBatch);

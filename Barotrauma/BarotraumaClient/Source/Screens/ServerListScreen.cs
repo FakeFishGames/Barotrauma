@@ -28,7 +28,9 @@ namespace Barotrauma
 
         private GUIListBox serverList;
 
-        private GUIButton joinButton;
+        private GUIButton joinButtonVanilla;
+
+        private GUIButton joinButtonNilmod;
 
         private GUITextBox clientNameBox, ipBox;
 
@@ -86,19 +88,28 @@ namespace Barotrauma
             new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), "Players", "", menu).Font = font;
             new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), "Round started", "", menu).Font = font;
 
-            joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), "Refresh", Alignment.BottomRight, "", menu);
-            joinButton.OnClicked = RefreshServers;
+            //-340
 
-#if DEBUG
-            //joinButton = new GUIButton(new Rectangle(0,0,150,30), "Join (Test)", Alignment.BottomRight, "", menu);
-            //joinButton.OnClicked = JoinServer;
-#endif
+            joinButtonVanilla = new GUIButton(new Rectangle(-340, 0, 150, 30), "Refresh", Alignment.BottomRight, "", menu);
+            joinButtonVanilla.OnClicked = RefreshServers;
 
-#if !DEBUG
-            //joinButton = new GUIButton(new Rectangle(0, 0, 150, 30), "DISABLED - Use Client", Alignment.BottomRight, "", menu);
-            joinButton.OnClicked = JoinServer;
-            joinButton.Enabled = false;
-#endif
+            joinButtonVanilla = new GUIButton(new Rectangle(-170, 0, 150, 30), "Join (Vanilla)", Alignment.BottomRight, "", menu);
+
+            joinButtonVanilla.OnClicked += (btn, userData) =>
+            {
+                JoinServer(btn, userData, false);
+                return true;
+            };
+
+            joinButtonVanilla.Enabled = true;
+
+            joinButtonNilmod = new GUIButton(new Rectangle(0, 0, 150, 30), "Join (Nilmod)", Alignment.BottomRight, "", menu);
+            joinButtonNilmod.OnClicked += (btn, userData) =>
+            {
+                JoinServer(btn, userData, true);
+                return true;
+            };
+            joinButtonNilmod.Enabled = true;
 
             //--------------------------------------------------------
 
@@ -338,7 +349,7 @@ namespace Barotrauma
             masterServerResponded = true;
         }
 
-        private bool JoinServer(GUIButton button, object obj)
+        private bool JoinServer(GUIButton button, object obj, Boolean useNilmod = true)
         {
             if (string.IsNullOrWhiteSpace(clientNameBox.Text))
             {
@@ -354,7 +365,7 @@ namespace Barotrauma
                 return false;
             }
 
-            CoroutineManager.StartCoroutine(ConnectToServer(ip));
+            CoroutineManager.StartCoroutine(ConnectToServer(ip, useNilmod));
 
 
             return true;
@@ -365,11 +376,21 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(ConnectToServer(ip));
         }
 
-        private IEnumerable<object> ConnectToServer(string ip)
+        private IEnumerable<object> ConnectToServer(string ip, Boolean useNilmod = false)
         {
             try
             {
                 GameMain.NetworkMember = new GameClient(clientNameBox.Text);
+                if (useNilmod)
+                {
+                    GameMain.Client.PerformNilModReconnect = false;
+                    GameMain.Client.usingNilMod = true;
+                }
+                else
+                {
+                    GameMain.Client.PerformNilModReconnect = false;
+                    GameMain.Client.usingNilMod = false;
+                }
                 GameMain.Client.ConnectToServer(ip);             
             }
 

@@ -8,9 +8,20 @@ namespace Barotrauma
         //the Character that the player is currently controlling
         private const Character controlled = null;
 
+        private const Character spied = null;
+
         public static Character Controlled
         {
             get { return controlled; }
+            set
+            {
+                //do nothing
+            }
+        }
+
+        public static Character Spied
+        {
+            get { return spied; }
             set
             {
                 //do nothing

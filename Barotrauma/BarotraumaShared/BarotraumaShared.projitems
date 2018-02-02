@@ -1502,6 +1502,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ServerLog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Voting.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\WhiteList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\NilModification\ClientLogServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\NilModification\JoinLog.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\NilModification\NilMod.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\NilModification\NilmodAlerts.cs" />

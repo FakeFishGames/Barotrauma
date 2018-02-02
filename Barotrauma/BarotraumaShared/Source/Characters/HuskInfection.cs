@@ -99,7 +99,7 @@ namespace Barotrauma
 
         private void ActivateHusk(Character character)
         {
-            GameMain.Server.ServerLog.WriteLine(character.Name + " Maxed Husk infection!", Networking.ServerLog.MessageType.Husk);
+            if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Maxed Husk infection!", Networking.ServerLog.MessageType.Husk);
             character.NeedsAir = false;
             AttachHuskAppendage(character);
         }
@@ -152,7 +152,7 @@ namespace Barotrauma
             //Nilmod Deactivate players turning into husks on death optionally
             if (!GameMain.NilMod.PlayerHuskAiOnDeath)
             {
-                GameMain.Server.ServerLog.WriteLine(character.Name + " Died husk infected but did not convert.", Networking.ServerLog.MessageType.Husk);
+                if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Died husk infected but did not convert.", Networking.ServerLog.MessageType.Husk);
                 return;
             }
 
@@ -166,7 +166,7 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
+            if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
 
             var husk = Character.Create(
                 Path.Combine("Content", "Characters", "Human", "humanhusk.xml"),
@@ -201,10 +201,10 @@ namespace Barotrauma
 
         private IEnumerable<object> CreateAIHuskDelayed(Character character)
         {
-            character.Enabled = false;
+            //character.Enabled = false;
             //Entity.Spawner.AddToRemoveQueue(character);
 
-            GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
+            if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
 
             var husk = Character.Create(
                 Path.Combine("Content", "Characters", "Human", "humanhusk.xml"),
@@ -233,16 +233,12 @@ namespace Barotrauma
                 if (character.Inventory.Items[i] == null) continue;
                 husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, null);
             }
-            ConvertingHusk huskconvert = new ConvertingHusk();
-            huskconvert.character = character;
-            //huskconvert.Updatestildeletion = 9999999;
-            //Hide the character completely
-            character.AnimController.CurrentHull = null;
-            character.Submarine = null;
-            character.AnimController.SetPosition(new Vector2(-800000, -800000),false);
-            huskconvert.character.HuskInfectionState = 0f;
 
-            GameMain.NilMod.convertinghusklist.Add(huskconvert);
+#if CLIENT
+            if(GameMain.Server != null) GameSession.inGameInfo.AddNoneClientCharacter(husk);
+#endif
+
+            GameMain.NilMod.HideCharacter(character);
 
             yield return CoroutineStatus.Success;
         }

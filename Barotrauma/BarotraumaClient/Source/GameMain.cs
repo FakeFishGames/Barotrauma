@@ -226,6 +226,23 @@ namespace Barotrauma
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice);
 
+            GameMain.NilMod.FetchExternalIP();
+
+            if (GameMain.NilMod.StartToServer)
+            {
+                LoadingScreen.loadType = LoadType.Server;
+
+                LoadingScreen.ServerName = GameMain.NilMod.ServerName;
+                LoadingScreen.ServerPort = GameMain.NilMod.ServerPort.ToString();
+                LoadingScreen.PublicServer = GameMain.NilMod.PublicServer;
+                LoadingScreen.MaxPlayers = GameMain.NilMod.MaxPlayers.ToString();
+                LoadingScreen.Password = GameMain.NilMod.UseServerPassword ? GameMain.NilMod.ServerPassword : "";
+            }
+            else
+            {
+                LoadingScreen.loadType = LoadType.Mainmenu;
+            }
+
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
         }
 
@@ -531,7 +548,6 @@ namespace Barotrauma
             if (!NilMod.Skippedtoserver)
             {
                 waitForKeyHit = false;
-                NilMod.NilModSetupDefaultServer = true;
                 NilMod.Skippedtoserver = true;
                 GameMain.NetLobbyScreen = new NetLobbyScreen();
 

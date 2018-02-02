@@ -10,21 +10,10 @@ using System.IO;
 
 namespace Barotrauma
 {
-    class ModifiedCharacterStat
-    {
-        public Character character;
-        public Boolean UpdateHealth;
-        public Boolean UpdateBleed;
-        public Boolean UpdateOxygen;
-        public float newhealth;
-        public float newbleed;
-        public float newoxygen;
-    }
-
     class ConvertingHusk
     {
         public Character character;
-        //public int Updatestildeletion;
+        public int Updatestildisable;
     }
 
     class DisconnectedCharacter
@@ -51,9 +40,25 @@ namespace Barotrauma
         public List<ConvertingHusk> convertinghusklist = new List<ConvertingHusk>();
 
         const string SettingsSavePath = "Data/NilModSettings.xml";
+        public const string NilModVersionDate = "01/02/2017 - 1";
+        public Version NilModNetworkingVersion = new Version(0,0,0,0);
+
+        public int Admins;
+        public int Spectators;
+
+        public string ExternalIP = "?.?.?.?";
+        System.Net.WebClient ExternalIPWebClient;
+
         public Boolean SetToDefault = false;
-        public Boolean NilModSetupDefaultServer = false;
         public Boolean Skippedtoserver = false;
+        public String LoadingText = "Loading to Main Menu";
+
+        //Nilmod Client-Server Syncing code.
+        public Boolean ClientWriteNilModSyncResponse = false;
+        public Boolean NilModSynced = false;
+        public float SyncResendTimer = 0f;
+        public const float SyncResendInterval = 1f;
+
         public string RoundSaveName = "";
 
         //Server Packet Handling Storage
@@ -80,7 +85,6 @@ namespace Barotrauma
         public List<Character> FrozenCharacters;
         public List<DisconnectedCharacter> DisconnectedCharacters;
         public List<KickedClient> KickedClients;
-        public List<ModifiedCharacterStat> ModifiedCharacterValues;
 
         public float CharFlashColourTime;
         public const float CharFlashColourRate = 2f;
@@ -108,6 +112,7 @@ namespace Barotrauma
         //Traitor Info
         public String Traitor;
         public String TraitorTarget;
+        public int HostTeamPreference = 0;
 
         //Character Lists - Could be better used to keep track of things at a later date
         //public static List<Character> NetPlayerCharacterList = new List<Character>();
@@ -129,6 +134,9 @@ namespace Barotrauma
         public string ServerMD5A;
         public string ServerMD5B;
 
+        public int MaxAdminSlots;
+        public int MaxSpectatorSlots;
+
         public Boolean DebugConsoleTimeStamp;
 
         public int MaxLogMessages;
@@ -140,8 +148,11 @@ namespace Barotrauma
         public float ChatboxHeight;
         public int ChatboxMaxMessages;
 
+        public Boolean RebalanceTeamPreferences;
+
         public Boolean ShowRoomInfo;
         public Boolean UseUpdatedCharHUD;
+        public Boolean UseRecolouredNameInfo;
         public Boolean UseCreatureZoomBoost;
         public float CreatureZoomMultiplier;
 
@@ -179,7 +190,7 @@ namespace Barotrauma
         public float KickStateNameTimerIncreaseOnRejoin;
         public float KickMaxStateNameTimer;
         public Boolean ClearKickStateNameOnRejoin;
-		public Boolean ClearKicksOnRoundStart;
+        public Boolean ClearKicksOnRoundStart;
 
 
         //NilModDebug
@@ -199,10 +210,9 @@ namespace Barotrauma
         public int ParticleSpawnPercent;
         public float ParticleLifeMultiplier;
         public Boolean DisableParticles = false;
-        public Boolean UseCharStatOptimisation;
 
         //Server Settings
-
+        public Boolean OverrideGamesettings;
         public string ServerName;
         public int ServerPort;
         public int MaxPlayers;
@@ -217,12 +227,17 @@ namespace Barotrauma
         public string DefaultRespawnShuttle;
         public string DefaultSubmarine;
         public string DefaultLevelSeed;
+        public string CampaignSaveName;
         public Boolean SetDefaultsAlways;
         public Boolean UseAlternativeNetworking;
         public float CharacterDisabledistance;
         public float ItemPosUpdateDistance;
         public float DesyncTimerMultiplier;
         public Boolean LogAIDamage;
+        public Boolean LogStatusEffectStun;
+        public Boolean LogStatusEffectHealth;
+        public Boolean LogStatusEffectBleed;
+        public Boolean LogStatusEffectOxygen;
         public Boolean UseStartWindowPosition;
         public int StartXPos;
         public int StartYPos;
@@ -336,6 +351,7 @@ namespace Barotrauma
         //Add fish deletion timer on death (Allows them to be eaten still?)
 
         //Submarine
+        public Color WaterColour;
         public float HullOxygenDistributionSpeed;
         public float HullOxygenDetoriationSpeed;
         public float HullOxygenConsumptionSpeed;
@@ -391,6 +407,14 @@ namespace Barotrauma
         public Boolean HostBypassSkills;
         public string PlayYourselfName;
 
+        //Client Setup
+        public Boolean AllowNilModClients;
+        public Boolean AllowVanillaClients;
+        Boolean cl_UseUpdatedCharHUD;
+        Boolean cl_UseCreatureZoomBoost;
+        float cl_CreatureZoomMultiplier;
+        Boolean cl_UseRecolouredNameInfo;
+
         //Real time updates for NilMod
         public void Update(float deltaTime)
         {
@@ -414,10 +438,10 @@ namespace Barotrauma
                 }
                 if (GameMain.Server.GameStarted)
                 {
-                    if(UseDesyncPrevention)
+                    if (UseDesyncPrevention)
                     {
                         //Item position Anti Desync (Where items are on the server)
-                        if(DesyncPreventionItemPassTimerleft <= 0f)
+                        if (DesyncPreventionItemPassTimerleft <= 0f)
                         {
                             if (DesyncPreventionItemPassTimer > 0f && DesyncPreventionPassItemCount > 0)
                             {
@@ -450,7 +474,7 @@ namespace Barotrauma
 
 
                         //Character Status desync prevention (Health/Oxygen/Bleeding/Unconcious and stun etc)
-                        if(DesyncPreventionPlayerStatusTimerleft <= 0f)
+                        if (DesyncPreventionPlayerStatusTimerleft <= 0f)
                         {
                             if (DesyncPreventionPlayerStatusTimer > 0f && DesyncPreventionPassPlayerStatusCount > 0)
                             {
@@ -491,7 +515,7 @@ namespace Barotrauma
 
 
                         //Submarine and shuttle Hull Desync Prevention (Air/Fires etc)
-                        if(DesyncPreventionHullStatusTimerleft <= 0f)
+                        if (DesyncPreventionHullStatusTimerleft <= 0f)
                         {
                             if (DesyncPreventionHullStatusTimer > 0f && DesyncPreventionPassHullCount > 0)
                             {
@@ -586,7 +610,7 @@ namespace Barotrauma
                 {
                     for (int i = KickedClients.Count - 1; i >= 0; i--)
                     {
-                        if(KickedClients[i].RejoinTimer > 0f)
+                        if (KickedClients[i].RejoinTimer > 0f)
                         {
                             KickedClients[i].RejoinTimer -= deltaTime;
                             if (KickedClients[i].RejoinTimer < 0f) KickedClients[i].RejoinTimer = 0f;
@@ -603,27 +627,44 @@ namespace Barotrauma
                         }
                     }
                 }
+
+                //Each client gets their OWN resync timer to prevent network spikes (This way the packets can be spread across multiple updates, incase they get chunky).
+                if(GameMain.Server.ConnectedClients.Count > 0)
+                {
+                    for(int i = GameMain.Server.ConnectedClients.Count - 1;i >= 0;i--)
+                    {
+                        if(GameMain.Server.ConnectedClients[i].NilModSyncResendTimer >= 0f) GameMain.Server.ConnectedClients[i].NilModSyncResendTimer -= deltaTime;
+                    }
+                }
             }
+
+#if CLIENT
+            if (GameMain.GameSession != null && GameSession.inGameInfo != null) GameSession.inGameInfo.Update(deltaTime);
+#endif
 
             //Cycle the outline flash colours
             CharFlashColourTime += deltaTime;
             if (CharFlashColourTime >= CharFlashColourRate) CharFlashColourTime = 0f;
 
-            //Countdown then remove converted husks
-            /*
-            if(convertinghusklist.Count() > 0)
+            //Countdown to disable temporarilly removed characters
+
+            if (convertinghusklist.Count() > 0)
             {
-                for(int i = convertinghusklist.Count() - 1; i > 0 ; i--)
+                for (int i = convertinghusklist.Count() - 1; i > 0; i--)
                 {
-                    convertinghusklist[i].Updatestildeletion -= 1;
-                    if(convertinghusklist[i].Updatestildeletion <= 0)
+                    if (convertinghusklist[i].Updatestildisable > 0)
                     {
-                        Entity.Spawner.AddToRemoveQueue(convertinghusklist[i].character);
-                        convertinghusklist.RemoveAt(i);
+                        convertinghusklist[i].Updatestildisable -= 1;
+                        if (convertinghusklist[i].Updatestildisable <= 0)
+                        {
+                            Entity.Spawner.AddToRemoveQueue(convertinghusklist[i].character);
+                            convertinghusklist[i].character.Enabled = false;
+                            //convertinghusklist.RemoveAt(i);
+                        }
                     }
                 }
             }
-            */
+
         }
 
         public void ReportSettings()
@@ -640,6 +681,8 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("BypassMD5 = " + BypassMD5.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ServerMD5 A = " + ServerMD5A.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ServerMD5 B = " + ServerMD5B.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("MaxAdminSlots = " + MaxAdminSlots.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("MaxSpectatorSlots = " + MaxSpectatorSlots.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("DebugConsoleTimeStamp = " + DebugConsoleTimeStamp.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("MaxLogMessages = " + MaxLogMessages.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ClearLogRoundStart = " + (ClearLogRoundStart ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
@@ -649,6 +692,7 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("ChatboxHeight = " + MaxLogMessages.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ChatboxWidth = " + MaxLogMessages.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("ChatboxMaxMessages = " + MaxLogMessages.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("RebalanceTeamPreferences = " + (RebalanceTeamPreferences ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("StartToServer = " + StartToServer.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("EnableEventChatterSystem = " + (EnableEventChatterSystem ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("EnableHelpSystem = " + (EnableHelpSystem ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
@@ -662,6 +706,10 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("SubVotingServerLog = " + (SubVotingServerLog ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("SubVotingAnnounce = " + (SubVotingAnnounce ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("LogAIDamage = " + (LogAIDamage ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("LogStatusEffectStun = " + (LogStatusEffectStun ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("LogStatusEffectHealth = " + (LogStatusEffectHealth ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("LogStatusEffectBleed = " + (LogStatusEffectBleed ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("LogStatusEffectOxygen = " + (LogStatusEffectOxygen ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
 
             GameMain.Server.ServerLog.WriteLine("--------------------------------", ServerLog.MessageType.NilMod);
 
@@ -678,6 +726,7 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("DefaultRespawnShuttle = " + DefaultRespawnShuttle.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("DefaultSubmarine = " + DefaultSubmarine.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("DefaultLevelSeed = " + DefaultLevelSeed.ToString(), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("CampaignSaveName = " + CampaignSaveName.ToString(), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("SetDefaultsAlways = " + (SetDefaultsAlways ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("UseAlternativeNetworking = " + (UseAlternativeNetworking ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("CharacterDisabledistance = " + CharacterDisabledistance.ToString(), ServerLog.MessageType.NilMod);
@@ -881,7 +930,7 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("--------------------------------", ServerLog.MessageType.NilMod);
         }
 
-        public void Load()
+        public void Load(Boolean loadVanilla = false)
         {
             //ServerModSetupDefaultServer = false;
 
@@ -890,379 +939,420 @@ namespace Barotrauma
             NilModPermissions = new NilModPermissions();
             NilModPlayerLog = new PlayerLog();
 
-            XDocument doc = null;
-
-            if (File.Exists(SettingsSavePath))
+            if (!loadVanilla)
             {
-                ResetToDefault();
-                doc = XMLExtensions.TryLoadXml(SettingsSavePath);
-            }
-            //We have not actually started once yet, lets reset to current versions default instead without errors.
-            else
-            {
-                ResetToDefault();
-                Save();
-                doc = XMLExtensions.TryLoadXml(SettingsSavePath);
-            }
 
-            if (doc == null)
-            {
-                DebugConsole.ThrowError("NilMod config file 'Data/NilModSettings.xml' failed to load - Operating off default settings until resolved.");
-                DebugConsole.ThrowError("If you cannot correct the issue above, deleting or renaming the XML and restarting or reloading in-server will generate a new one.");
-                ResetToDefault();
-            }
-            //Load the real data
-            else
-            {
-                //Core Settings
-                XElement ServerModGeneralSettings = doc.Root.Element("ServerModGeneralSettings");
+                XDocument doc = null;
 
-                BypassMD5 = ServerModGeneralSettings.GetAttributeBool("BypassMD5", false); //Implemented
-                ServerMD5A = ServerModGeneralSettings.GetAttributeString("ServerMD5A", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
-                ServerMD5B = ServerModGeneralSettings.GetAttributeString("ServerMD5B", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
-                DebugConsoleTimeStamp = ServerModGeneralSettings.GetAttributeBool("DebugConsoleTimeStamp", false);
-                MaxLogMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxLogMessages", 800), 10,16000); //Implemented
-                LogAppendCurrentRound = ServerModGeneralSettings.GetAttributeBool("LogAppendCurrentRound", false); //Implemented
-                LogAppendLineSaveRate = Math.Min(MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("LogAppendLineSaveRate", 5),1,16000), MaxLogMessages); //Implemented
-                ClearLogRoundStart = ServerModGeneralSettings.GetAttributeBool("ClearLogRoundStart", false); //Implemented
-                ChatboxHeight = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxHeight", 0.15f), 0.10f, 0.50f);
-                ChatboxWidth = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxWidth", 0.35f), 0.25f, 0.85f);
-                ChatboxMaxMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("ChatboxMaxMessages", 20), 10,100);
-                ShowRoomInfo = ServerModGeneralSettings.GetAttributeBool("ShowRoomInfo", false);
-                UseUpdatedCharHUD = ServerModGeneralSettings.GetAttributeBool("UseUpdatedCharHUD", false);
-                UseCreatureZoomBoost = ServerModGeneralSettings.GetAttributeBool("UseCreatureZoomBoost", false);
-                CreatureZoomMultiplier = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("CreatureZoomMultiplier", 1f), 0.4f, 3f);
-                StartToServer = ServerModGeneralSettings.GetAttributeBool("StartToServer", false); //Implemented
-                EnableEventChatterSystem = ServerModGeneralSettings.GetAttributeBool("EnableEventChatterSystem", false);
-                EnableHelpSystem = ServerModGeneralSettings.GetAttributeBool("EnableHelpSystem", false);
-                EnableAdminSystem = ServerModGeneralSettings.GetAttributeBool("EnableAdminSystem", false);
-                EnablePlayerLogSystem = ServerModGeneralSettings.GetAttributeBool("EnablePlayerLogSystem", false);
-                NilMod.NilModPlayerLog.PlayerLogStateNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateNames", false);
-                NilMod.NilModPlayerLog.PlayerLogStateFirstJoinedNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateFirstJoinedNames", false);
-                NilMod.NilModPlayerLog.PlayerLogStateLastJoinedNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateLastJoinedNames", false);
-                EnableVPNBanlist = ServerModGeneralSettings.GetAttributeBool("EnableVPNBanlist", false);
-                SubVotingConsoleLog = ServerModGeneralSettings.GetAttributeBool("SubVotingConsoleLog", false);
-                SubVotingServerLog = ServerModGeneralSettings.GetAttributeBool("SubVotingServerLog", false);
-                SubVotingAnnounce = ServerModGeneralSettings.GetAttributeBool("SubVotingAnnounce", false);
-                LogAIDamage = ServerModGeneralSettings.GetAttributeBool("LogAIDamage", false);
-                CrashRestart = ServerModGeneralSettings.GetAttributeBool("CrashRestart", false);
-                StartXPos = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("StartXPos", 0), 0, 16000);
-                StartYPos = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("StartYPos", 0), 0, 16000);
-                UseStartWindowPosition = ServerModGeneralSettings.GetAttributeBool("UseStartWindowPosition", false);
-                BanListReloadTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("BanListReloadTimer", 15), 0, 60);
-                BansOverrideBannedInfo = ServerModGeneralSettings.GetAttributeBool("BansOverrideBannedInfo", true);
-                BansInfoAddBanName = ServerModGeneralSettings.GetAttributeBool("BansInfoAddBanName", true);
-                BansInfoAddBanDuration = ServerModGeneralSettings.GetAttributeBool("BansInfoAddBanDuration", true);
-                BansInfoUseRemainingTime = ServerModGeneralSettings.GetAttributeBool("BansInfoUseRemainingTime", true);
-                BansInfoAddCustomString = ServerModGeneralSettings.GetAttributeBool("BansInfoAddCustomString", false);
-                BansInfoCustomtext = ServerModGeneralSettings.GetAttributeString("BansInfoCustomtext", "");
-                BansInfoAddBanReason = ServerModGeneralSettings.GetAttributeBool("BansInfoAddBanReason", false);
-                VoteKickStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("VoteKickStateNameTimer", 600f), 0f, 86400f);
-                VoteKickDenyRejoinTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("VoteKickDenyRejoinTimer", 60f), 0f, 86400f);
-                AdminKickStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("AdminKickStateNameTimer", 120f), 0f, 86400f);
-                AdminKickDenyRejoinTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("AdminKickDenyRejoinTimer", 20f), 0f, 86400f);
-                KickStateNameTimerIncreaseOnRejoin = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("KickStateNameTimerIncreaseOnRejoin", 60f), 0f, 86400f);
-                KickMaxStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("KickMaxStateNameTimer", 60f),0f,86400f);
-                ClearKickStateNameOnRejoin = ServerModGeneralSettings.GetAttributeBool("ClearKickStateNameOnRejoin", false);
-                ClearKicksOnRoundStart = ServerModGeneralSettings.GetAttributeBool("ClearKicksOnRoundStart", false);
-
-                //Server Default Settings
-                XElement ServerModDefaultServerSettings = doc.Root.Element("ServerModDefaultServerSettings");
-
-                ServerName = ServerModDefaultServerSettings.GetAttributeString("ServerName", "Barotrauma Server");
-                //Sanitize Server Name Code here
-                if (ServerName != "")
+                if (File.Exists(SettingsSavePath))
                 {
+                    ResetToDefault();
+                    doc = XMLExtensions.TryLoadXml(SettingsSavePath);
+                }
+                //We have not actually started once yet, lets reset to current versions default instead without errors.
+                else
+                {
+                    ResetToDefault();
+                    Save();
+                    doc = XMLExtensions.TryLoadXml(SettingsSavePath);
+                }
 
-                    string newservername = ServerName.Trim();
-                    ServerName = ServerName.Replace(":", "");
-                    ServerName = ServerName.Replace(";", "");
-                    if (newservername.Length > 24)
+                if (doc == null)
+                {
+                    DebugConsole.ThrowError("NilMod config file 'Data/NilModSettings.xml' failed to load - Operating off default settings until resolved.");
+                    DebugConsole.ThrowError("If you cannot correct the issue above, deleting or renaming the XML and restarting or reloading in-server will generate a new one.");
+                    ResetToDefault();
+                }
+                //Load the real data
+                else
+                {
+                    //Core Settings
+                    XElement ServerModGeneralSettings = doc.Root.Element("ServerModGeneralSettings");
+
+                    BypassMD5 = ServerModGeneralSettings.GetAttributeBool("BypassMD5", false); //Implemented
+                    ServerMD5A = ServerModGeneralSettings.GetAttributeString("ServerMD5A", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
+                    ServerMD5B = ServerModGeneralSettings.GetAttributeString("ServerMD5B", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
+                    MaxAdminSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxAdminSlots", 0), 0, 16);
+                    MaxSpectatorSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxSpectatorSlots", 0), 0, 16);
+                    DebugConsoleTimeStamp = ServerModGeneralSettings.GetAttributeBool("DebugConsoleTimeStamp", false);
+                    MaxLogMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxLogMessages", 800), 10, 16000); //Implemented
+                    LogAppendCurrentRound = ServerModGeneralSettings.GetAttributeBool("LogAppendCurrentRound", false); //Implemented
+                    LogAppendLineSaveRate = Math.Min(MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("LogAppendLineSaveRate", 5), 1, 16000), MaxLogMessages); //Implemented
+                    ClearLogRoundStart = ServerModGeneralSettings.GetAttributeBool("ClearLogRoundStart", false); //Implemented
+                    ChatboxHeight = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxHeight", 0.15f), 0.10f, 0.50f);
+                    ChatboxWidth = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("ChatboxWidth", 0.35f), 0.25f, 0.85f);
+                    ChatboxMaxMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("ChatboxMaxMessages", 20), 10, 100);
+                    RebalanceTeamPreferences = ServerModGeneralSettings.GetAttributeBool("RebalanceTeamPreferences", true);
+                    ShowRoomInfo = ServerModGeneralSettings.GetAttributeBool("ShowRoomInfo", false);
+                    UseUpdatedCharHUD = ServerModGeneralSettings.GetAttributeBool("UseUpdatedCharHUD", false);
+                    UseRecolouredNameInfo = ServerModGeneralSettings.GetAttributeBool("UseRecolouredNameInfo", false);
+                    UseCreatureZoomBoost = ServerModGeneralSettings.GetAttributeBool("UseCreatureZoomBoost", false);
+                    CreatureZoomMultiplier = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("CreatureZoomMultiplier", 1f), 0.4f, 3f);
+                    StartToServer = ServerModGeneralSettings.GetAttributeBool("StartToServer", false); //Implemented
+                    EnableEventChatterSystem = ServerModGeneralSettings.GetAttributeBool("EnableEventChatterSystem", false);
+                    EnableHelpSystem = ServerModGeneralSettings.GetAttributeBool("EnableHelpSystem", false);
+                    EnableAdminSystem = ServerModGeneralSettings.GetAttributeBool("EnableAdminSystem", false);
+                    EnablePlayerLogSystem = ServerModGeneralSettings.GetAttributeBool("EnablePlayerLogSystem", false);
+                    NilMod.NilModPlayerLog.PlayerLogStateNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateNames", false);
+                    NilMod.NilModPlayerLog.PlayerLogStateFirstJoinedNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateFirstJoinedNames", false);
+                    NilMod.NilModPlayerLog.PlayerLogStateLastJoinedNames = ServerModGeneralSettings.GetAttributeBool("PlayerLogStateLastJoinedNames", false);
+                    EnableVPNBanlist = ServerModGeneralSettings.GetAttributeBool("EnableVPNBanlist", false);
+                    SubVotingConsoleLog = ServerModGeneralSettings.GetAttributeBool("SubVotingConsoleLog", false);
+                    SubVotingServerLog = ServerModGeneralSettings.GetAttributeBool("SubVotingServerLog", false);
+                    SubVotingAnnounce = ServerModGeneralSettings.GetAttributeBool("SubVotingAnnounce", false);
+                    LogAIDamage = ServerModGeneralSettings.GetAttributeBool("LogAIDamage", false);
+                    LogStatusEffectStun = ServerModGeneralSettings.GetAttributeBool("LogStatusEffectStun", false);
+                    LogStatusEffectHealth = ServerModGeneralSettings.GetAttributeBool("LogStatusEffectHealth", false);
+                    LogStatusEffectBleed = ServerModGeneralSettings.GetAttributeBool("LogStatusEffectBleed", false);
+                    LogStatusEffectOxygen = ServerModGeneralSettings.GetAttributeBool("LogStatusEffectOxygen", false);
+                    CrashRestart = ServerModGeneralSettings.GetAttributeBool("CrashRestart", false);
+                    StartXPos = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("StartXPos", 0), 0, 16000);
+                    StartYPos = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("StartYPos", 0), 0, 16000);
+                    UseStartWindowPosition = ServerModGeneralSettings.GetAttributeBool("UseStartWindowPosition", false);
+                    BanListReloadTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("BanListReloadTimer", 15), 0, 60);
+                    BansOverrideBannedInfo = ServerModGeneralSettings.GetAttributeBool("BansOverrideBannedInfo", true);
+                    BansInfoAddBanName = ServerModGeneralSettings.GetAttributeBool("BansInfoAddBanName", true);
+                    BansInfoAddBanDuration = ServerModGeneralSettings.GetAttributeBool("BansInfoAddBanDuration", true);
+                    BansInfoUseRemainingTime = ServerModGeneralSettings.GetAttributeBool("BansInfoUseRemainingTime", true);
+                    BansInfoAddCustomString = ServerModGeneralSettings.GetAttributeBool("BansInfoAddCustomString", false);
+                    BansInfoCustomtext = ServerModGeneralSettings.GetAttributeString("BansInfoCustomtext", "");
+                    BansInfoAddBanReason = ServerModGeneralSettings.GetAttributeBool("BansInfoAddBanReason", false);
+                    VoteKickStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("VoteKickStateNameTimer", 600f), 0f, 86400f);
+                    VoteKickDenyRejoinTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("VoteKickDenyRejoinTimer", 60f), 0f, 86400f);
+                    AdminKickStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("AdminKickStateNameTimer", 120f), 0f, 86400f);
+                    AdminKickDenyRejoinTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("AdminKickDenyRejoinTimer", 20f), 0f, 86400f);
+                    KickStateNameTimerIncreaseOnRejoin = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("KickStateNameTimerIncreaseOnRejoin", 60f), 0f, 86400f);
+                    KickMaxStateNameTimer = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeFloat("KickMaxStateNameTimer", 60f), 0f, 86400f);
+                    ClearKickStateNameOnRejoin = ServerModGeneralSettings.GetAttributeBool("ClearKickStateNameOnRejoin", false);
+                    ClearKicksOnRoundStart = ServerModGeneralSettings.GetAttributeBool("ClearKicksOnRoundStart", false);
+
+                    //Server Default Settings
+                    XElement ServerModDefaultServerSettings = doc.Root.Element("ServerModDefaultServerSettings");
+
+                    ServerName = ServerModDefaultServerSettings.GetAttributeString("ServerName", "Barotrauma Server");
+                    //Sanitize Server Name Code here
+                    if (ServerName != "")
                     {
-                        newservername = newservername.Substring(0, 24);
+                        string newservername = Client.SanitizeName(ServerName).Trim();
+                        ServerName = ServerName.Replace(":", "");
+                        ServerName = ServerName.Replace(";", "");
+                        if (newservername.Length > 24)
+                        {
+                            newservername = newservername.Substring(0, 24);
+                        }
+
+                        ServerName = newservername;
+                    }
+                    if (ServerName.Length < 3)
+                    {
+                        ServerName = "Barotrauma Server";
+                        DebugConsole.ThrowError(@"Server name invalid, too short or not supplied. Defaulting to ""Barotrauma Server""");
                     }
 
-                    ServerName = newservername;
-                }
-                if (ServerName.Length < 3)
-                {
-                    ServerName = "Barotrauma Server";
-                    DebugConsole.ThrowError(@"Server name invalid, too short or not supplied. Defaulting to ""Barotrauma Server""");
-                }
+                    ServerPort = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("ServerPort", 14242), 1025), 65536);
 
-                ServerPort = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("ServerPort", 14242), 1025), 65536);
+                    MaxPlayers = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("MaxPlayers", 8), 1), 32);
+                    UseServerPassword = ServerModDefaultServerSettings.GetAttributeBool("UseServerPassword", false);
+                    ServerPassword = ServerModDefaultServerSettings.GetAttributeString("ServerPassword", "");
+                    AdminAuth = ServerModDefaultServerSettings.GetAttributeString("AdminAuth", "");
+                    PublicServer = ServerModDefaultServerSettings.GetAttributeBool("PublicServer", true);
+                    UPNPForwarding = ServerModDefaultServerSettings.GetAttributeBool("UPNPForwarding", false);
+                    AutoRestart = ServerModDefaultServerSettings.GetAttributeBool("AutoRestart", false);
+                    DefaultGamemode = ServerModDefaultServerSettings.GetAttributeString("DefaultGamemode", "Sandbox");
+                    DefaultMissionType = ServerModDefaultServerSettings.GetAttributeString("DefaultMissionType", "Random");
+                    DefaultRespawnShuttle = ServerModDefaultServerSettings.GetAttributeString("DefaultRespawnShuttle", "");
+                    DefaultSubmarine = ServerModDefaultServerSettings.GetAttributeString("DefaultSubmarine", "");
+                    DefaultLevelSeed = ServerModDefaultServerSettings.GetAttributeString("DefaultLevelSeed", "");
+                    CampaignSaveName = ServerModDefaultServerSettings.GetAttributeString("CampaignSaveName", "");
+                    SetDefaultsAlways = ServerModDefaultServerSettings.GetAttributeBool("SetDefaultsAlways", false);
+                    UseAlternativeNetworking = ServerModDefaultServerSettings.GetAttributeBool("UseAlternativeNetworking", false);
+                    CharacterDisabledistance = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("CharacterDisabledistance", 20000.0f), 10000.00f, 100000.00f);
+                    NetConfig.CharacterIgnoreDistance = CharacterDisabledistance;
+                    NetConfig.CharacterIgnoreDistanceSqr = CharacterDisabledistance * CharacterDisabledistance;
+                    ItemPosUpdateDistance = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ItemPosUpdateDistance", 2.00f), 0.25f, 5.00f);
+                    NetConfig.ItemPosUpdateDistance = ItemPosUpdateDistance;
+                    DesyncTimerMultiplier = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncTimerMultiplier", 1.00f), 1.00f, 30.00f);
+                    DisableParticlesOnStart = ServerModDefaultServerSettings.GetAttributeBool("DisableParticlesOnStart", false);
+                    DisableLightsOnStart = ServerModDefaultServerSettings.GetAttributeBool("DisableLightsOnStart", false);
+                    DisableLOSOnStart = ServerModDefaultServerSettings.GetAttributeBool("DisableLOSOnStart", false);
+                    AllowReconnect = ServerModDefaultServerSettings.GetAttributeBool("AllowReconnect", false);
+                    ReconnectAddStun = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ReconnectAddStun", 5.00f), 0.00f, 60.00f);
+                    ReconnectTimeAllowed = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ReconnectTimeAllowed", 10.00f), 10.00f, 600.00f);
 
-                MaxPlayers = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("MaxPlayers", 8), 1), 32);
-                UseServerPassword = ServerModDefaultServerSettings.GetAttributeBool("UseServerPassword", false);
-                ServerPassword = ServerModDefaultServerSettings.GetAttributeString("ServerPassword", "");
-                AdminAuth = ServerModDefaultServerSettings.GetAttributeString("AdminAuth", "");
-                PublicServer = ServerModDefaultServerSettings.GetAttributeBool("PublicServer", true);
-                UPNPForwarding = ServerModDefaultServerSettings.GetAttributeBool("UPNPForwarding", false);
-                AutoRestart = ServerModDefaultServerSettings.GetAttributeBool("AutoRestart", false);
-                DefaultGamemode = ServerModDefaultServerSettings.GetAttributeString("DefaultGamemode", "Sandbox");
-                DefaultMissionType = ServerModDefaultServerSettings.GetAttributeString("DefaultMissionType", "Random");
-                DefaultRespawnShuttle = ServerModDefaultServerSettings.GetAttributeString("DefaultRespawnShuttle", "");
-                DefaultSubmarine = ServerModDefaultServerSettings.GetAttributeString("DefaultSubmarine", "");
-                DefaultLevelSeed = ServerModDefaultServerSettings.GetAttributeString("DefaultLevelSeed", "");
-                SetDefaultsAlways = ServerModDefaultServerSettings.GetAttributeBool("SetDefaultsAlways", false);
-                UseAlternativeNetworking = ServerModDefaultServerSettings.GetAttributeBool("UseAlternativeNetworking", false);
-                UseCharStatOptimisation = ServerModDefaultServerSettings.GetAttributeBool("UseCharStatOptimisation", true);
-                CharacterDisabledistance = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("CharacterDisabledistance", 20000.0f), 10000.00f, 100000.00f);
-                NetConfig.CharacterIgnoreDistance = CharacterDisabledistance;
-                NetConfig.CharacterIgnoreDistanceSqr = CharacterDisabledistance * CharacterDisabledistance;
-                ItemPosUpdateDistance = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ItemPosUpdateDistance", 2.00f), 0.25f, 5.00f);
-                NetConfig.ItemPosUpdateDistance = ItemPosUpdateDistance;
-                DesyncTimerMultiplier = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncTimerMultiplier", 1.00f), 1.00f, 30.00f);
-                DisableParticlesOnStart = ServerModDefaultServerSettings.GetAttributeBool("DisableParticlesOnStart", false);
-                DisableLightsOnStart = ServerModDefaultServerSettings.GetAttributeBool("DisableLightsOnStart", false);
-                DisableLOSOnStart = ServerModDefaultServerSettings.GetAttributeBool("DisableLOSOnStart", false);
-                AllowReconnect = ServerModDefaultServerSettings.GetAttributeBool("AllowReconnect", false);
-                ReconnectAddStun = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ReconnectAddStun", 5.00f), 0.00f, 60.00f);
-                ReconnectTimeAllowed = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("ReconnectTimeAllowed", 10.00f), 10.00f, 600.00f);
+                    UseDesyncPrevention = ServerModDefaultServerSettings.GetAttributeBool("UseDesyncPrevention", true);
+                    DesyncPreventionItemPassTimer = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncPreventionItemPassTimer", 0.05f), 0.00f, 10.00f);
+                    DesyncPreventionPassItemCount = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("DesyncPreventionPassItemCount", 5), 0), 50);
+                    DesyncPreventionPlayerStatusTimer = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncPreventionPlayerStatusTimer", 0.5f), 0.00f, 10.00f);
+                    DesyncPreventionPassPlayerStatusCount = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("DesyncPreventionPassPlayerStatusCount", 1), 0), 10);
+                    DesyncPreventionHullStatusTimer = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncPreventionHullStatusTimer", 1.5f), 0.00f, 10.00f);
+                    DesyncPreventionPassHullCount = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("DesyncPreventionPassHullCount", 1), 0), 10);
 
-                UseDesyncPrevention = ServerModDefaultServerSettings.GetAttributeBool("UseDesyncPrevention", true);
-                DesyncPreventionItemPassTimer = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncPreventionItemPassTimer", 0.15f), 0.00f, 10.00f);
-                DesyncPreventionPassItemCount = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("DesyncPreventionPassItemCount", 10), 0), 50);
-                DesyncPreventionPlayerStatusTimer = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncPreventionPlayerStatusTimer", 0.5f), 0.00f, 10.00f);
-                DesyncPreventionPassPlayerStatusCount = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("DesyncPreventionPassPlayerStatusCount", 1), 0), 10);
-                DesyncPreventionHullStatusTimer = MathHelper.Clamp(ServerModDefaultServerSettings.GetAttributeFloat("DesyncPreventionHullStatusTimer", 1f), 0.00f, 10.00f);
-                DesyncPreventionPassHullCount = Math.Min(Math.Max(ServerModDefaultServerSettings.GetAttributeInt("DesyncPreventionPassHullCount", 8), 0), 10);
+                    //Debug Settings
+                    XElement ServerModDebugSettings = doc.Root.Element("ServerModDebugSettings");
 
-                //Debug Settings
-                XElement ServerModDebugSettings = doc.Root.Element("ServerModDebugSettings");
-
-                DebugReportSettingsOnLoad = ServerModDebugSettings.GetAttributeBool("DebugReportSettingsOnLoad", false); //Implemented
-                ShowPacketMTUErrors = ServerModDebugSettings.GetAttributeBool("ShowPacketMTUErrors", true); //Implemented
-                ShowOpenALErrors = ServerModDebugSettings.GetAttributeBool("ShowOpenALErrors", true);
-                ShowPathfindingErrors = ServerModDebugSettings.GetAttributeBool("ShowPathfindingErrors", true);
-                ShowMasterServerSuccess = ServerModDebugSettings.GetAttributeBool("ShowMasterServerSuccess", true);
-                DebugLag = ServerModDebugSettings.GetAttributeBool("DebugLag", false);
-                DebugLagSimulatedPacketLoss = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedPacketLoss", 0.05f); //Implemented
-                DebugLagSimulatedRandomLatency = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedRandomLatency", 0.05f); //Implemented
-                DebugLagSimulatedDuplicatesChance = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedDuplicatesChance", 0.05f); //Implemented
-                DebugLagSimulatedMinimumLatency = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedMinimumLatency", 0.10f); //Implemented
-                DebugLagConnectionTimeout = ServerModDebugSettings.GetAttributeFloat("DebugLagConnectionTimeout", 60f); //Implemented
-                MaxParticles = Math.Min(Math.Max(ServerModDebugSettings.GetAttributeInt("MaxParticles", 1500), 150), 15000);
-                ParticleSpawnPercent = Math.Min(Math.Max(ServerModDebugSettings.GetAttributeInt("ParticleSpawnPercent", 100), 0), 100);
-                MathHelper.Clamp(ParticleLifeMultiplier = ServerModDebugSettings.GetAttributeFloat("ParticleLifeMultiplier", 1f),0.15f,1f); //Implemented
+                    DebugReportSettingsOnLoad = ServerModDebugSettings.GetAttributeBool("DebugReportSettingsOnLoad", false); //Implemented
+                    ShowPacketMTUErrors = ServerModDebugSettings.GetAttributeBool("ShowPacketMTUErrors", true); //Implemented
+                    ShowOpenALErrors = ServerModDebugSettings.GetAttributeBool("ShowOpenALErrors", true);
+                    ShowPathfindingErrors = ServerModDebugSettings.GetAttributeBool("ShowPathfindingErrors", true);
+                    ShowMasterServerSuccess = ServerModDebugSettings.GetAttributeBool("ShowMasterServerSuccess", true);
+                    DebugLag = ServerModDebugSettings.GetAttributeBool("DebugLag", false);
+                    DebugLagSimulatedPacketLoss = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedPacketLoss", 0.05f); //Implemented
+                    DebugLagSimulatedRandomLatency = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedRandomLatency", 0.05f); //Implemented
+                    DebugLagSimulatedDuplicatesChance = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedDuplicatesChance", 0.05f); //Implemented
+                    DebugLagSimulatedMinimumLatency = ServerModDebugSettings.GetAttributeFloat("DebugLagSimulatedMinimumLatency", 0.10f); //Implemented
+                    DebugLagConnectionTimeout = ServerModDebugSettings.GetAttributeFloat("DebugLagConnectionTimeout", 60f); //Implemented
+                    MaxParticles = Math.Min(Math.Max(ServerModDebugSettings.GetAttributeInt("MaxParticles", 1500), 150), 15000);
+                    ParticleSpawnPercent = Math.Min(Math.Max(ServerModDebugSettings.GetAttributeInt("ParticleSpawnPercent", 100), 0), 100);
+                    MathHelper.Clamp(ParticleLifeMultiplier = ServerModDebugSettings.GetAttributeFloat("ParticleLifeMultiplier", 1f), 0.15f, 1f); //Implemented
 
 #if CLIENT
-                if (GameMain.ParticleManager != null)
-                {
-                    GameMain.ParticleManager.ResetParticleManager();
-                }
+                    if (GameMain.ParticleManager != null)
+                    {
+                        GameMain.ParticleManager.ResetParticleManager();
+                    }
 #endif
 
-                //Respawn Settings
-                XElement ServerModRespawnSettings = doc.Root.Element("ServerModRespawnSettings");
+                    //Respawn Settings
+                    XElement ServerModRespawnSettings = doc.Root.Element("ServerModRespawnSettings");
 
-                LimitCharacterRespawns = ServerModRespawnSettings.GetAttributeBool("LimitCharacterRespawns", false); //Unimplemented
-                LimitShuttleRespawns = ServerModRespawnSettings.GetAttributeBool("LimitShuttleRespawns", false); //Unimplemented
-                MaxRespawnCharacters = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeInt("MaxRespawnCharacters", -1), -1, 10000);
-                MaxRespawnShuttles = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeInt("MaxRespawnShuttles", -1), -1, 1000);
-                BaseRespawnCharacters = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("BaseRespawnCharacters", 0f), 0f, 10000f);
-                BaseRespawnShuttles = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("BaseRespawnShuttles", 0f), 0f, 1000f);
-                RespawnCharactersPerPlayer = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("RespawnCharactersPerPlayer", 0f), 0f, 10000f);
-                RespawnShuttlesPerPlayer = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("RespawnShuttlesPerPlayer", 0f), 0f, 1000f);
-                AlwaysRespawnNewConnections = ServerModRespawnSettings.GetAttributeBool("AlwaysRespawnNewConnections", false); //Unimplemented
-                RespawnNewConnectionsToSub = ServerModRespawnSettings.GetAttributeBool("RespawnNewConnectionsToSub", false); //Unimplemented
-                RespawnOnMainSub = ServerModRespawnSettings.GetAttributeBool("RespawnOnMainSub", false); //Implemented
-                RespawnWearingSuitGear = ServerModRespawnSettings.GetAttributeBool("RespawnWearingSuitGear", false);
-                RespawnLeavingAutoPilotMode = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeInt("RespawnLeavingAutoPilotMode", 0),0,3);
-                RespawnShuttleLeavingCloseDoors = ServerModRespawnSettings.GetAttributeBool("RespawnShuttleLeavingCloseDoors", true);
-                RespawnShuttleLeavingUndock = ServerModRespawnSettings.GetAttributeBool("RespawnShuttleLeavingUndock", true);
-                RespawnShuttleLeaveAtTime = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("RespawnShuttleLeaveAtTime", -1f), -1f, 600f);
+                    LimitCharacterRespawns = ServerModRespawnSettings.GetAttributeBool("LimitCharacterRespawns", false); //Unimplemented
+                    LimitShuttleRespawns = ServerModRespawnSettings.GetAttributeBool("LimitShuttleRespawns", false); //Unimplemented
+                    MaxRespawnCharacters = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeInt("MaxRespawnCharacters", -1), -1, 10000);
+                    MaxRespawnShuttles = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeInt("MaxRespawnShuttles", -1), -1, 1000);
+                    BaseRespawnCharacters = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("BaseRespawnCharacters", 0f), 0f, 10000f);
+                    BaseRespawnShuttles = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("BaseRespawnShuttles", 0f), 0f, 1000f);
+                    RespawnCharactersPerPlayer = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("RespawnCharactersPerPlayer", 0f), 0f, 10000f);
+                    RespawnShuttlesPerPlayer = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("RespawnShuttlesPerPlayer", 0f), 0f, 1000f);
+                    AlwaysRespawnNewConnections = ServerModRespawnSettings.GetAttributeBool("AlwaysRespawnNewConnections", false); //Unimplemented
+                    RespawnNewConnectionsToSub = ServerModRespawnSettings.GetAttributeBool("RespawnNewConnectionsToSub", false); //Unimplemented
+                    RespawnOnMainSub = ServerModRespawnSettings.GetAttributeBool("RespawnOnMainSub", false); //Implemented
+                    RespawnWearingSuitGear = ServerModRespawnSettings.GetAttributeBool("RespawnWearingSuitGear", false);
+                    RespawnLeavingAutoPilotMode = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeInt("RespawnLeavingAutoPilotMode", 0), 0, 3);
+                    RespawnShuttleLeavingCloseDoors = ServerModRespawnSettings.GetAttributeBool("RespawnShuttleLeavingCloseDoors", true);
+                    RespawnShuttleLeavingUndock = ServerModRespawnSettings.GetAttributeBool("RespawnShuttleLeavingUndock", true);
+                    RespawnShuttleLeaveAtTime = MathHelper.Clamp(ServerModRespawnSettings.GetAttributeFloat("RespawnShuttleLeaveAtTime", -1f), -1f, 600f);
 
-                //Submarine Settings
-                XElement ServerModSubmarineSettings = doc.Root.Element("ServerModSubmarineSettings");
+                    //Submarine Settings
+                    XElement ServerModSubmarineSettings = doc.Root.Element("ServerModSubmarineSettings");
 
-                HullOxygenDistributionSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullOxygenDistributionSpeed", 500f),0f,50000f); //Implemented
-                HullOxygenDetoriationSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullOxygenDetoriationSpeed", 0.3f), -10000f, 50000f); //Implemented
-                HullOxygenConsumptionSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullOxygenConsumptionSpeed", 1000f), 0f, 50000f); //Implemented
-                HullUnbreathablePercent = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullUnbreathablePercent", 30.0f),0f,100f); //Implemented
-                CanDamageSubBody = ServerModSubmarineSettings.GetAttributeBool("CanDamageSubBody", true); //Implemented
-                CanRewireMainSubs = ServerModSubmarineSettings.GetAttributeBool("CanRewireMainSubs", true); //Not Implemented.
-                CrushDamageDepth = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("CrushDamageDepth", -30000f),-1000000f,100000f);
-                PlayerCrushDepthInHull = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PlayerCrushDepthInHull", -30000f), -1000000f, 100000f);
-                PlayerCrushDepthOutsideHull = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PlayerCrushDepthOutsideHull", -30000f), -1000000f, 100000f);
-                UseProgressiveCrush = ServerModSubmarineSettings.GetAttributeBool("UseProgressiveCrush", false);
-                PCrushUseWallRemainingHealthCheck = ServerModSubmarineSettings.GetAttributeBool("PCrushUseWallRemainingHealthCheck", false);
-                PCrushDepthHealthResistMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushDepthHealthResistMultiplier", 1.0f),0f,100.0f);
-                PCrushDepthBaseHealthResist = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushDepthBaseHealthResist", 0f), 0f, 1000000f);
-                PCrushDamageDepthMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushDamageDepthMultiplier", 1.0f), 0f, 100.0f);
-                PCrushBaseDamage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushBaseDamage", 0f), 0f, 100000000f);
-                PCrushWallHealthDamagePercent = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallHealthDamagePercent", 0f), 0f, 100f);
-                PCrushWallBaseDamageChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallBaseDamageChance", 35f), 0f, 100f);
-                PCrushWallDamageChanceIncrease = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallDamageChanceIncrease", 5f), 0f, 1000f);
-                PCrushWallMaxDamageChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallMaxDamageChance", 100f), 0f, 100f);
-                PCrushInterval = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushInterval", 10f), 0.5f, 60f);
-                SyncFireSizeChange = ServerModSubmarineSettings.GetAttributeBool("SyncFireSizeChange", false);
-                FireSyncFrequency = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireSyncFrequency", 4f), 1f, 60f);
-                FireSizeChangeToSync = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireSizeChangeToSync", 6f), 1f, 30f);
-                FireCharDamageMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireCharDamageMultiplier", 1f), 0f, 100f);
-                FireCharRangeMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireCharRangeMultiplier", 1f), 0f, 100f);
-                FireItemRangeMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireItemRangeMultiplier", 1f), 0f, 100f);
-                FireUseRangedDamage = ServerModSubmarineSettings.GetAttributeBool("FireUseRangedDamage", false);
-                FireRangedDamageStrength = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireRangedDamageStrength", 1.0f), -1f, 10f);
-                FireRangedDamageMinMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireRangedDamageMinMultiplier", 0.05f), 0f, 2f);
-                FireRangedDamageMaxMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireRangedDamageMaxMultiplier", 1f), FireRangedDamageMinMultiplier, 100f);
-                FireOxygenConsumption = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireOxygenConsumption", 50f), 0f, 50000f);
-                FireGrowthSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireGrowthSpeed", 5f), 0.1f, 1000f);
-                FireShrinkSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireShrinkSpeed", 5f), 0.1f, 1000f);
-                FireWaterExtinguishMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireWaterExtinguishMultiplier", 1f), 0.5f, 60f);
-                FireToolExtinguishMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireToolExtinguishMultiplier", 1f), 0.5f, 60f);
-                EnginesRegenerateCondition = ServerModSubmarineSettings.GetAttributeBool("EnginesRegenerateCondition", false);
-                EnginesRegenAmount = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("EnginesRegenAmount", 0f), 0f, 1000f);
-                ElectricalRegenerateCondition = ServerModSubmarineSettings.GetAttributeBool("ElectricalRegenerateCondition", false);
-                ElectricalRegenAmount = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalRegenAmount", 0f), 0f, 1000f);
-                ElectricalOverloadDamage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadDamage", 10f), 0f, 60f);
-                ElectricalOverloadMinPower = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadMinPower", 200f), 0f, 100000f);
-                ElectricalOverloadVoltRangeMin = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadVoltRangeMin", 1.9f), 0f, 60f);
-                ElectricalOverloadVoltRangeMax = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadVoltRangeMax", 2.1f), ElectricalOverloadVoltRangeMin, 60f);
-                ElectricalOverloadFiresChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadFiresChance", 100f), 0.5f, 60f);
-                ElectricalFailMaxVoltage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailMaxVoltage", 0.1f), 0f, 100f);
-                ElectricalFailStunTime = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailStunTime", 5f), 0.1f, 60f);
+                    Byte oceancolourR = Convert.ToByte(MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeInt("OceanColourR", 191), 0, 255));
+                    Byte oceancolourG = Convert.ToByte(MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeInt("OceanColourG", 204), 0, 255));
+                    Byte oceancolourB = Convert.ToByte(MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeInt("OceanColourB", 230), 0, 255));
+                    Byte oceancolourA = Convert.ToByte(MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeInt("OceanColourA", 255), 0, 255));
 
+                    WaterColour = new Color(oceancolourR, oceancolourG, oceancolourB, oceancolourA);
 
-                //All Character Settings
-                XElement ServerModAllCharacterSettings = doc.Root.Element("ServerModAllCharacterSettings");
-
-                PlayerOxygenUsageAmount = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerOxygenUsageAmount", -5.0f), -400f, 20f); //Implemented
-                PlayerOxygenGainSpeed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerOxygenGainSpeed", 10.0f), -20f, 400f); //Implemented
-                UseProgressiveImplodeDeath = ServerModAllCharacterSettings.GetAttributeBool("UseProgressiveImplodeDeath", false);
-                ImplodeHealthLoss = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImplodeHealthLoss", 0.35f), 0f, 1000000f);
-                ImplodeBleedGain = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImplodeBleedGain", 0.12f), 0f, 1000000f);
-                ImplodeOxygenLoss = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImplodeOxygenLoss", 1.5f), 0f, 1000000f);
-                PreventImplodeHealing = ServerModAllCharacterSettings.GetAttributeBool("PreventImplodeHealing", false);
-                PreventImplodeClotting = ServerModAllCharacterSettings.GetAttributeBool("PreventImplodeClotting", false);
-                PreventImplodeOxygen = ServerModAllCharacterSettings.GetAttributeBool("PreventImplodeOxygen", false);
-                CharacterImplodeDeathAtMinHealth = ServerModAllCharacterSettings.GetAttributeBool("CharacterImplodeDeathAtMinHealth", true);
-                HuskHealingMultiplierinfected = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HuskHealingMultiplierinfected", 1.0f), -1000f, 1000f);
-                HuskHealingMultiplierincurable = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HuskHealingMultiplierincurable", 1.0f), -1000f, 1000f);
-                PlayerHuskInfectedDrain = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerHuskInfectedDrain", 0.00f), -1000f, 1000f);
-                PlayerHuskIncurableDrain = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerHuskIncurableDrain", 0.50f), -1000f, 1000f);
-                HealthUnconciousDecayHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HealthUnconciousDecayHealth", 0.5f),-500f,200f); //Implemented
-                HealthUnconciousDecayBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HealthUnconciousDecayBleed", 0.0f), -500f, 200f); //Implemented
-                HealthUnconciousDecayOxygen = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HealthUnconciousDecayOxygen", 0.0f),-100f,200f); //Implemented
-                OxygenUnconciousDecayHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("OxygenUnconciousDecayHealth", 0.0f), -500f, 200f); //Implemented
-                OxygenUnconciousDecayBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("OxygenUnconciousDecayBleed", 0.0f), -500f, 200f); //Implemented
-                OxygenUnconciousDecayOxygen = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("OxygenUnconciousDecayOxygen", 0.0f), -100f, 200f); //Implemented
-                MinHealthBleedCap = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("MinHealthBleedCap", 5f),0f,5f); //Implemented
-                CreatureBleedMultiplier = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("CreatureBleedMultiplier", 1.00f),0f,20f);
-                ArmourBleedBypassNoDamage = ServerModAllCharacterSettings.GetAttributeBool("ArmourBleedBypassNoDamage", false);
-                ArmourAbsorptionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionHealth", 0f), 1f, 10000f);
-                ArmourDirectReductionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionHealth", 0f), 0f, 10000f);
-                ArmourMinimumHealthPercent = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourMinimumHealthPercent", 0f), 0f, 100f);
-                ArmourResistancePowerHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistancePowerHealth", 0f), 0f, 1f);
-                ArmourResistanceMultiplierHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistanceMultiplierHealth", 0f), 0f, 100000f);
-                ArmourAbsorptionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionBleed", 1f), 0f, 10000f);
-                ArmourDirectReductionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionBleed", 0f), 0f, 10000f);
-                ArmourResistancePowerBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistancePowerBleed", 0f), 0f, 1f);
-                ArmourResistanceMultiplierBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistanceMultiplierBleed", 0f), 0f, 100000f);
-                ArmourMinimumBleedPercent = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourMinimumBleedPercent", 0f), 0f, 100f);
+                    HullOxygenDistributionSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullOxygenDistributionSpeed", 500f), 0f, 50000f); //Implemented
+                    HullOxygenDetoriationSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullOxygenDetoriationSpeed", 0.3f), -10000f, 50000f); //Implemented
+                    HullOxygenConsumptionSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullOxygenConsumptionSpeed", 1000f), 0f, 50000f); //Implemented
+                    HullUnbreathablePercent = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("HullUnbreathablePercent", 30.0f), 0f, 100f); //Implemented
+                    CanDamageSubBody = ServerModSubmarineSettings.GetAttributeBool("CanDamageSubBody", true); //Implemented
+                    CanRewireMainSubs = ServerModSubmarineSettings.GetAttributeBool("CanRewireMainSubs", true); //Not Implemented.
+                    CrushDamageDepth = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("CrushDamageDepth", -30000f), -1000000f, 100000f);
+                    PlayerCrushDepthInHull = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PlayerCrushDepthInHull", -30000f), -1000000f, 100000f);
+                    PlayerCrushDepthOutsideHull = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PlayerCrushDepthOutsideHull", -30000f), -1000000f, 100000f);
+                    UseProgressiveCrush = ServerModSubmarineSettings.GetAttributeBool("UseProgressiveCrush", false);
+                    PCrushUseWallRemainingHealthCheck = ServerModSubmarineSettings.GetAttributeBool("PCrushUseWallRemainingHealthCheck", false);
+                    PCrushDepthHealthResistMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushDepthHealthResistMultiplier", 1.0f), 0f, 100.0f);
+                    PCrushDepthBaseHealthResist = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushDepthBaseHealthResist", 0f), 0f, 1000000f);
+                    PCrushDamageDepthMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushDamageDepthMultiplier", 1.0f), 0f, 100.0f);
+                    PCrushBaseDamage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushBaseDamage", 0f), 0f, 100000000f);
+                    PCrushWallHealthDamagePercent = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallHealthDamagePercent", 0f), 0f, 100f);
+                    PCrushWallBaseDamageChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallBaseDamageChance", 35f), 0f, 100f);
+                    PCrushWallDamageChanceIncrease = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallDamageChanceIncrease", 5f), 0f, 1000f);
+                    PCrushWallMaxDamageChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushWallMaxDamageChance", 100f), 0f, 100f);
+                    PCrushInterval = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("PCrushInterval", 10f), 0.5f, 60f);
+                    SyncFireSizeChange = ServerModSubmarineSettings.GetAttributeBool("SyncFireSizeChange", false);
+                    FireSyncFrequency = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireSyncFrequency", 4f), 1f, 60f);
+                    FireSizeChangeToSync = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireSizeChangeToSync", 6f), 1f, 30f);
+                    FireCharDamageMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireCharDamageMultiplier", 1f), 0f, 100f);
+                    FireCharRangeMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireCharRangeMultiplier", 1f), 0f, 100f);
+                    FireItemRangeMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireItemRangeMultiplier", 1f), 0f, 100f);
+                    FireUseRangedDamage = ServerModSubmarineSettings.GetAttributeBool("FireUseRangedDamage", false);
+                    FireRangedDamageStrength = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireRangedDamageStrength", 1.0f), -1f, 10f);
+                    FireRangedDamageMinMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireRangedDamageMinMultiplier", 0.05f), 0f, 2f);
+                    FireRangedDamageMaxMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireRangedDamageMaxMultiplier", 1f), FireRangedDamageMinMultiplier, 100f);
+                    FireOxygenConsumption = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireOxygenConsumption", 50f), 0f, 50000f);
+                    FireGrowthSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireGrowthSpeed", 5f), 0.1f, 1000f);
+                    FireShrinkSpeed = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireShrinkSpeed", 5f), 0.1f, 1000f);
+                    FireWaterExtinguishMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireWaterExtinguishMultiplier", 1f), 0.5f, 60f);
+                    FireToolExtinguishMultiplier = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("FireToolExtinguishMultiplier", 1f), 0.5f, 60f);
+                    EnginesRegenerateCondition = ServerModSubmarineSettings.GetAttributeBool("EnginesRegenerateCondition", false);
+                    EnginesRegenAmount = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("EnginesRegenAmount", 0f), 0f, 1000f);
+                    ElectricalRegenerateCondition = ServerModSubmarineSettings.GetAttributeBool("ElectricalRegenerateCondition", false);
+                    ElectricalRegenAmount = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalRegenAmount", 0f), 0f, 1000f);
+                    ElectricalOverloadDamage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadDamage", 10f), 0f, 60f);
+                    ElectricalOverloadMinPower = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadMinPower", 200f), 0f, 100000f);
+                    ElectricalOverloadVoltRangeMin = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadVoltRangeMin", 1.9f), 0f, 60f);
+                    ElectricalOverloadVoltRangeMax = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadVoltRangeMax", 2.1f), ElectricalOverloadVoltRangeMin, 60f);
+                    ElectricalOverloadFiresChance = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalOverloadFiresChance", 100f), 0.5f, 60f);
+                    ElectricalFailMaxVoltage = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailMaxVoltage", 0.1f), 0f, 100f);
+                    ElectricalFailStunTime = MathHelper.Clamp(ServerModSubmarineSettings.GetAttributeFloat("ElectricalFailStunTime", 5f), 0.1f, 60f);
 
 
+                    //All Character Settings
+                    XElement ServerModAllCharacterSettings = doc.Root.Element("ServerModAllCharacterSettings");
+
+                    PlayerOxygenUsageAmount = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerOxygenUsageAmount", -5.0f), -400f, 20f); //Implemented
+                    PlayerOxygenGainSpeed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerOxygenGainSpeed", 10.0f), -20f, 400f); //Implemented
+                    UseProgressiveImplodeDeath = ServerModAllCharacterSettings.GetAttributeBool("UseProgressiveImplodeDeath", false);
+                    ImplodeHealthLoss = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImplodeHealthLoss", 0.35f), 0f, 1000000f);
+                    ImplodeBleedGain = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImplodeBleedGain", 0.12f), 0f, 1000000f);
+                    ImplodeOxygenLoss = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ImplodeOxygenLoss", 1.5f), 0f, 1000000f);
+                    PreventImplodeHealing = ServerModAllCharacterSettings.GetAttributeBool("PreventImplodeHealing", false);
+                    PreventImplodeClotting = ServerModAllCharacterSettings.GetAttributeBool("PreventImplodeClotting", false);
+                    PreventImplodeOxygen = ServerModAllCharacterSettings.GetAttributeBool("PreventImplodeOxygen", false);
+                    CharacterImplodeDeathAtMinHealth = ServerModAllCharacterSettings.GetAttributeBool("CharacterImplodeDeathAtMinHealth", true);
+                    HuskHealingMultiplierinfected = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HuskHealingMultiplierinfected", 1.0f), -1000f, 1000f);
+                    HuskHealingMultiplierincurable = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HuskHealingMultiplierincurable", 1.0f), -1000f, 1000f);
+                    PlayerHuskInfectedDrain = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerHuskInfectedDrain", 0.00f), -1000f, 1000f);
+                    PlayerHuskIncurableDrain = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("PlayerHuskIncurableDrain", 0.50f), -1000f, 1000f);
+                    HealthUnconciousDecayHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HealthUnconciousDecayHealth", 0.5f), -500f, 200f); //Implemented
+                    HealthUnconciousDecayBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HealthUnconciousDecayBleed", 0.0f), -500f, 200f); //Implemented
+                    HealthUnconciousDecayOxygen = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("HealthUnconciousDecayOxygen", 0.0f), -100f, 200f); //Implemented
+                    OxygenUnconciousDecayHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("OxygenUnconciousDecayHealth", 0.0f), -500f, 200f); //Implemented
+                    OxygenUnconciousDecayBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("OxygenUnconciousDecayBleed", 0.0f), -500f, 200f); //Implemented
+                    OxygenUnconciousDecayOxygen = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("OxygenUnconciousDecayOxygen", 0.0f), -100f, 200f); //Implemented
+                    MinHealthBleedCap = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("MinHealthBleedCap", 5f), 0f, 5f); //Implemented
+                    CreatureBleedMultiplier = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("CreatureBleedMultiplier", 1.00f), 0f, 20f);
+                    ArmourBleedBypassNoDamage = ServerModAllCharacterSettings.GetAttributeBool("ArmourBleedBypassNoDamage", false);
+                    ArmourAbsorptionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionHealth", 0f), 1f, 10000f);
+                    ArmourDirectReductionHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionHealth", 0f), 0f, 10000f);
+                    ArmourMinimumHealthPercent = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourMinimumHealthPercent", 0f), 0f, 100f);
+                    ArmourResistancePowerHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistancePowerHealth", 0f), 0f, 1f);
+                    ArmourResistanceMultiplierHealth = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistanceMultiplierHealth", 0f), 0f, 100000f);
+                    ArmourAbsorptionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourAbsorptionBleed", 1f), 0f, 10000f);
+                    ArmourDirectReductionBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourDirectReductionBleed", 0f), 0f, 10000f);
+                    ArmourResistancePowerBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistancePowerBleed", 0f), 0f, 1f);
+                    ArmourResistanceMultiplierBleed = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourResistanceMultiplierBleed", 0f), 0f, 100000f);
+                    ArmourMinimumBleedPercent = MathHelper.Clamp(ServerModAllCharacterSettings.GetAttributeFloat("ArmourMinimumBleedPercent", 0f), 0f, 100f);
 
 
-                //Player Settings
-                XElement ServerModPlayerSettings = doc.Root.Element("ServerModPlayerSettings");
-
-                PlayerCanTraumaDeath = ServerModPlayerSettings.GetAttributeBool("PlayerCanTraumaDeath", true); //Implemented
-                PlayerCanImplodeDeath = ServerModPlayerSettings.GetAttributeBool("PlayerCanImplodeDeath", true); //Implemented
-                PlayerCanSuffocateDeath = ServerModPlayerSettings.GetAttributeBool("PlayerCanSuffocateDeath", true); //Implemented
-                PlayerHealthMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthMultiplier", 1f), 0.01f, 10000f); //Implemented
-                PlayerHuskHealthMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHuskHealthMultiplier", 1f), 0.01f, 10000f); //Implemented
-                PlayerHuskAiOnDeath = ServerModPlayerSettings.GetAttributeBool("PlayerHuskAiOnDeath", true); //Implemented
-                PlayerHealthRegen = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthRegen", 0f), 0f, 10000000f); //Implemented
-                PlayerHealthRegenMin = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthRegenMin", -100f), -100f, 100f) / 100f; //Implemented
-                PlayerHealthRegenMax = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthRegenMax", 100f), -100f, 100f) / 100f; //Implemented
-                PlayerCPROnlyWhileUnconcious = ServerModPlayerSettings.GetAttributeBool("PlayerCPROnlyWhileUnconcious", true); //Implemented
-                PlayerCPRHealthBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRHealthBaseValue", 0f),-1000f,1000f); //Implemented
-                PlayerCPRHealthSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRHealthSkillMultiplier", 0f), -10f, 100f); //Implemented
-                PlayerCPRHealthSkillNeeded = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeInt("PlayerCPRHealthSkillNeeded", 100), 0, 100); //Implemented
-                PlayerCPRStunBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRStunBaseValue", 0f), -1000f, 1000f); //Implemented
-                PlayerCPRStunSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRStunSkillMultiplier", 0f), -10f, 100f); //Implemented
-                PlayerCPRStunSkillNeeded = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeInt("PlayerCPRStunSkillNeeded", 0), 0, 100); //Implemented
-                PlayerCPRClotBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRClotBaseValue", 0f), -1000f, 1000f); //Implemented
-                PlayerCPRClotSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRClotSkillMultiplier", 0f), -10f, 100f); //Implemented
-                PlayerCPRClotSkillNeeded = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeInt("PlayerCPRClotSkillNeeded", 0), 0, 100); //Implemented
-                PlayerCPROxygenBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPROxygenBaseValue", 0f), -1000f, 1000f); //Implemented
-                PlayerCPROxygenSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPROxygenSkillMultiplier", 0.1f), -10f, 100f); //Implemented
-                PlayerUnconciousTimer = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerUnconciousTimer", 5f), 0f, 60f); //Implemented //Implemented
-
-                //Host Specific settings
-                XElement ServerModHostSettings = doc.Root.Element("ServerModHostSettings");
-                
-                PlayYourselfName = ServerModHostSettings.GetAttributeString("PlayYourselfName", ""); //Implemented
-                HostBypassSkills = ServerModHostSettings.GetAttributeBool("HostBypassSkills", false); //Implemented
-
-                //Creature specific settings
-                XElement ServerModAICreatureSettings = doc.Root.Element("ServerModAICreatureSettings");
-
-                CreatureHealthMultiplier = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthMultiplier", 1f),0.01f,1000000f);
-                CreatureHealthRegen = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthRegen", 0f), 0f, 10000000f); //Implemented
-                CreatureHealthRegenMin = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthRegenMin", 0f), 0f, 100f) / 100f;
-                CreatureHealthRegenMax = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthRegenMax", 100f), 0f, 100f) / 100f;
-                CreatureEatDyingPlayers = ServerModAICreatureSettings.GetAttributeBool("CreatureEatDyingPlayers", true); //Implemented
-                CreatureRespawnMonsterEvents = ServerModAICreatureSettings.GetAttributeBool("CreatureRespawnMonsterEvents", true);
-                CreatureLimitRespawns = ServerModAICreatureSettings.GetAttributeBool("CreatureLimitRespawns", false);
-                CreatureMaxRespawns = Math.Min(Math.Max(ServerModAICreatureSettings.GetAttributeInt("CreatureMaxRespawns", 1), 1), 50);
 
 
-                //Sanitize the hosts name
-                if (PlayYourselfName != "")
-                {
-                    string newhostname = PlayYourselfName.Trim();
-                    if (newhostname.Length > 20)
+                    //Player Settings
+                    XElement ServerModPlayerSettings = doc.Root.Element("ServerModPlayerSettings");
+
+                    PlayerCanTraumaDeath = ServerModPlayerSettings.GetAttributeBool("PlayerCanTraumaDeath", true); //Implemented
+                    PlayerCanImplodeDeath = ServerModPlayerSettings.GetAttributeBool("PlayerCanImplodeDeath", true); //Implemented
+                    PlayerCanSuffocateDeath = ServerModPlayerSettings.GetAttributeBool("PlayerCanSuffocateDeath", true); //Implemented
+                    PlayerHealthMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthMultiplier", 1f), 0.01f, 10000f); //Implemented
+                    PlayerHuskHealthMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHuskHealthMultiplier", 1f), 0.01f, 10000f); //Implemented
+                    PlayerHuskAiOnDeath = ServerModPlayerSettings.GetAttributeBool("PlayerHuskAiOnDeath", true); //Implemented
+                    PlayerHealthRegen = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthRegen", 0f), 0f, 10000000f); //Implemented
+                    PlayerHealthRegenMin = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthRegenMin", -100f), -100f, 100f) / 100f; //Implemented
+                    PlayerHealthRegenMax = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerHealthRegenMax", 100f), -100f, 100f) / 100f; //Implemented
+                    PlayerCPROnlyWhileUnconcious = ServerModPlayerSettings.GetAttributeBool("PlayerCPROnlyWhileUnconcious", true); //Implemented
+                    PlayerCPRHealthBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRHealthBaseValue", 0f), -1000f, 1000f); //Implemented
+                    PlayerCPRHealthSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRHealthSkillMultiplier", 0f), -10f, 100f); //Implemented
+                    PlayerCPRHealthSkillNeeded = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeInt("PlayerCPRHealthSkillNeeded", 100), 0, 100); //Implemented
+                    PlayerCPRStunBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRStunBaseValue", 0f), -1000f, 1000f); //Implemented
+                    PlayerCPRStunSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRStunSkillMultiplier", 0f), -10f, 100f); //Implemented
+                    PlayerCPRStunSkillNeeded = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeInt("PlayerCPRStunSkillNeeded", 0), 0, 100); //Implemented
+                    PlayerCPRClotBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRClotBaseValue", 0f), -1000f, 1000f); //Implemented
+                    PlayerCPRClotSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPRClotSkillMultiplier", 0f), -10f, 100f); //Implemented
+                    PlayerCPRClotSkillNeeded = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeInt("PlayerCPRClotSkillNeeded", 0), 0, 100); //Implemented
+                    PlayerCPROxygenBaseValue = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPROxygenBaseValue", 0f), -1000f, 1000f); //Implemented
+                    PlayerCPROxygenSkillMultiplier = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerCPROxygenSkillMultiplier", 0.1f), -10f, 100f); //Implemented
+                    PlayerUnconciousTimer = MathHelper.Clamp(ServerModPlayerSettings.GetAttributeFloat("PlayerUnconciousTimer", 5f), 0f, 60f); //Implemented //Implemented
+
+                    //Host Specific settings
+                    XElement ServerModHostSettings = doc.Root.Element("ServerModHostSettings");
+
+                    PlayYourselfName = ServerModHostSettings.GetAttributeString("PlayYourselfName", ""); //Implemented
+                    HostBypassSkills = ServerModHostSettings.GetAttributeBool("HostBypassSkills", false); //Implemented
+
+                    //Creature specific settings
+                    XElement ServerModAICreatureSettings = doc.Root.Element("ServerModAICreatureSettings");
+
+                    CreatureHealthMultiplier = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthMultiplier", 1f), 0.01f, 1000000f);
+                    CreatureHealthRegen = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthRegen", 0f), 0f, 10000000f); //Implemented
+                    CreatureHealthRegenMin = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthRegenMin", 0f), 0f, 100f) / 100f;
+                    CreatureHealthRegenMax = MathHelper.Clamp(ServerModAICreatureSettings.GetAttributeFloat("CreatureHealthRegenMax", 100f), 0f, 100f) / 100f;
+                    CreatureEatDyingPlayers = ServerModAICreatureSettings.GetAttributeBool("CreatureEatDyingPlayers", true); //Implemented
+                    CreatureRespawnMonsterEvents = ServerModAICreatureSettings.GetAttributeBool("CreatureRespawnMonsterEvents", true);
+                    CreatureLimitRespawns = ServerModAICreatureSettings.GetAttributeBool("CreatureLimitRespawns", false);
+                    CreatureMaxRespawns = Math.Min(Math.Max(ServerModAICreatureSettings.GetAttributeInt("CreatureMaxRespawns", 1), 1), 50);
+
+                    //Nilmod Client specific settings
+                    XElement ServerModClientSettings = doc.Root.Element("ServerModClientSettings");
+                    AllowVanillaClients = ServerModClientSettings.GetAttributeBool("AllowVanillaClients", true);
+                    AllowNilModClients = ServerModClientSettings.GetAttributeBool("AllowNilModClients", true);
+                    cl_UseUpdatedCharHUD = ServerModClientSettings.GetAttributeBool("cl_UseUpdatedCharHUD", false);
+                    cl_UseRecolouredNameInfo = ServerModClientSettings.GetAttributeBool("cl_UseRecolouredNameInfo", false);
+                    cl_UseCreatureZoomBoost = ServerModClientSettings.GetAttributeBool("cl_UseCreatureZoomBoost", false);
+                    cl_CreatureZoomMultiplier = MathHelper.Clamp(ServerModClientSettings.GetAttributeFloat("CreatureHealthMultiplier", 1f), 0.4f, 3f);
+
+
+                    //Sanitize the hosts name
+                    if (PlayYourselfName != "")
                     {
-                        newhostname = newhostname.Substring(0, 20);
+                        string newhostname = PlayYourselfName.Trim();
+                        if (newhostname.Length > 20)
+                        {
+                            newhostname = newhostname.Substring(0, 20);
+                        }
+                        string newhostrName = "";
+                        for (int i = 0; i < newhostname.Length; i++)
+                        {
+                            if (newhostname[i] < 32)
+                            {
+                                newhostrName += '?';
+                            }
+                            else
+                            {
+                                newhostrName += newhostname[i];
+                            }
+                        }
+                        PlayYourselfName = newhostname;
+#if CLIENT
+                        if((Screen.Selected is NetLobbyScreen))
+                        {
+                            NetLobbyScreen netlobby = (NetLobbyScreen)Screen.Selected;
+                            netlobby.setHostName(PlayYourselfName);
+                        }
+#endif
                     }
-                    string newhostrName = "";
-                    for (int i = 0; i < newhostname.Length; i++)
+
+                    //Default Server Creatures to spawn
+
+                    XElement NilModDefaultServerSpawnsdoc = doc.Root.Element("NilModDefaultServerSpawns");
+
+
+                    //Additional Cargo Spawning defaults
+                    XElement NilModAdditionalCargodoc = doc.Root.Element("NilModAdditionalCargo");
+
+                    LoadComponants();
+
+                    //Just Disable everything in the class despite whatever it loaded. simples
+                    if (!EnableEventChatterSystem)
                     {
-                        if (newhostname[i] < 32)
-                        {
-                            newhostrName += '?';
-                        }
-                        else
-                        {
-                            newhostrName += newhostname[i];
-                        }
+                        NilMod.NilModEventChatter.ChatCargo = false;
+                        NilMod.NilModEventChatter.ChatModServerJoin = false;
+                        NilMod.NilModEventChatter.ChatMonster = false;
+                        NilMod.NilModEventChatter.ChatNoneTraitorReminder = false;
+                        NilMod.NilModEventChatter.ChatSalvage = false;
+                        NilMod.NilModEventChatter.ChatSandbox = false;
+                        NilMod.NilModEventChatter.ChatShuttleLeavingKill = false;
+                        NilMod.NilModEventChatter.ChatShuttleRespawn = false;
+                        NilMod.NilModEventChatter.ChatSubvsSub = false;
+                        NilMod.NilModEventChatter.ChatTraitorReminder = false;
+                        NilMod.NilModEventChatter.ChatVoteEnd = false;
                     }
-                    PlayYourselfName = newhostname;
                 }
 
-                //Default Server Creatures to spawn
-
-                XElement NilModDefaultServerSpawnsdoc = doc.Root.Element("NilModDefaultServerSpawns");
-
-
-                //Additional Cargo Spawning defaults
-                XElement NilModAdditionalCargodoc = doc.Root.Element("NilModAdditionalCargo");
-
-                LoadComponants();
-
-                //Just Disable everything in the class despite whatever it loaded. simples
-                if (!EnableEventChatterSystem)
+                //Only if we actually loaded the mod, save over it.
+                if (doc != null)
                 {
-                    NilMod.NilModEventChatter.ChatCargo = false;
-                    NilMod.NilModEventChatter.ChatModServerJoin = false;
-                    NilMod.NilModEventChatter.ChatMonster = false;
-                    NilMod.NilModEventChatter.ChatNoneTraitorReminder = false;
-                    NilMod.NilModEventChatter.ChatSalvage = false;
-                    NilMod.NilModEventChatter.ChatSandbox = false;
-                    NilMod.NilModEventChatter.ChatShuttleLeavingKill = false;
-                    NilMod.NilModEventChatter.ChatShuttleRespawn = false;
-                    NilMod.NilModEventChatter.ChatSubvsSub = false;
-                    NilMod.NilModEventChatter.ChatTraitorReminder = false;
-                    NilMod.NilModEventChatter.ChatVoteEnd = false;
+                    Save();
                 }
             }
-
-            //Only if we actually loaded the mod, save over it.
-            if (doc != null)
+            else
             {
-                Save();
+                ResetToDefault(true);
+
+                //This probagbly doesn't need to be done.
+                //LoadComponants();
             }
         }
 
@@ -1273,55 +1363,13 @@ namespace Barotrauma
                 @"<?xml version=""1.0"" encoding=""utf-8"" ?>",
                 "<NilMod>",
                 "  <!--This is advanced configuration settings for your server stored by this modification!-->",
+                "  <!--PLEASE NOTE: Anything inside these is not a setting but a comment.-->",
 
                 "",
 
-                "  <!--NilMod comes with a variety of additional commands, functionality and features, Below you can configure them:-->",
-                "  <!--Regarding the BypassMD5 function, DO NOT use this to add content such as new creatures/items/missions etc, players will NOT sync data they do not have themselves-->",
-                "  <!--Additionally do NOT edit randomevents.xml or missions.xml or Level generation as these NEVER sync as the client calculates such themselves based of level seed -->",
-                "  <!--Finally do not edit the Human Oxygen or Health values as these cause desynced health/oxygen levels, doesbleed / bleedingdecreasespeed / Speed and other stats may be ok however test it yourself-->",
-                "  <!--MD5 Desync editing on the server content folder is intended for tweaking monster stats, AI operation (Such as sight range / targetting in their creature file)-->",
-                "  <!--Modifying existing status effects or adding new Status Effects to items, Damage/Bleed damage, creature speeds, or general small tweak experimentation-->",
-                "  <!--Once you have made any changes join with another client (So you fail to join due to MD5) and read the clients MD5, enter that in here to allow connection for unmodified clients of that content package-->",
-                "  <!--You could even try other content package mods, Such as Barotrauma Extended and tweak server-sided values-->",
-
-                "",
-
-                "  <!--BypassMD5 = Setting to change server from calculating MD5 normally to using the ServerMD5 setting file instead, Default=false-->",
-                "  <!--ServerMD5 = The server content folders MD5 if unmodified - used for players using the same content mod to connect despite edits, Default= Unknown, try connecting with a client after edits and change then-->",
-                "  <!--SuppressPacketSizeWarning = Suppresses an error that annoys server hosts but is actually mostly harmless anyways, Default=false-->",
-                "  <!--StartToServer = Setting to use the server default settings when starting NilMod - for now please use actually valid settings XD, Default=false-->",
-
-                "",
-
-                //"  <!--MaxRespawns = number of times the respawn shuttle may appear before it ceases to spawn 0=Infinite, default=0-->",
-                "  <!--RespawnOnMainSub = Instantly places newly respawned players into the mainsub at an appropriate spawn point, good for Deathmatching, Default=false-->",
-                "",
-                "  <!--PlayerCanDie = Experiment feature to allow players to be permanently revivable unless they Give in, 6.0.2 currenty has a clientside GUI issue preventing 'Give in' during pressure death however-->",
-                "  <!--PlayerHealthRegen = quantity (As a decimal value per second) a still-living Concious players health regenerates naturally, default=0-->",
-                "  <!--CreatureHealthRegen = quantity (As a decimal value per second) a still-living Creatures health regenerates naturally, default=0-->",
-                "  <!--UnconciousHealthDecay = Amount of health loss per second if you run out of oxygen or health, default=0.5-->",
-                "  <!--UnconciousOxygenDecay = Amount of oxygen loss per second if you run out of oxygen or health, default=0.5-->",
-                "  <!--MinHealthBleedCap = When an unconcious player reaches their minimum (Most negative possible) health, Reset the bleeding to this amount (0.0-5.0), Default=2-->",
-                "  <!--PlayerUnconciousTimer = The Stun duration for when a player crosses from unconcious to concious, smaller values pickup players faster, Default=5-->",
-
-                "",
-
-                "  <!--HullOxygenDistributionSpeed = Rate at which a rooms oxygen moves from one room to another, Default=500-->",
-                "  <!--HullOxygenDetoriationSpeed = Rate at which a room oxygen slowly decays, Default=0.3-->",
-                "  <!--HullOxygenConsumptionSpeed = Rate at which a player or creature removes oxygen from a room, Default=1000-->",
-                "  <!--CanDamageSubBody = if false this allows the submarine hull to be in 'Godmode' regardless of godmode, while players and creatures are still harmed normally, Default=true-->",
-
-                "",
-
-                "  <!--PlayerOxygenUsageAmount = Amount of oxygen a player consumes when they cannot breathe - Effectively the rate the blue bar drops, Default=-5-->",
-                "  <!--PlayerOxygenGainSpeed = Amount of oxygen a player gains when they can breathe - Effectively the rate the blue bar increases, Default=10-->",
-                "  <!--UnbreathablePercent = A scale of 0 % to 100 % of oxygen left in room before it is considered 'Unbreathable' and switches PlayerOxygenGainSpeed to PlayerOxygenUsageAmount, Default=30-->",
-
-                "",
-
-                "  <!--PlayYourselfName = Name for your character that clients will see correctly, Default= (Uses server name if left as empty string)-->",
-                "  <!--HostBypassSkills = Allows anything you control to have 100 skill for any skillcheck regardless of job (Others won't see this on crew tab too) - Allows husks and spawned human AI's / play yourself to do anything, Default=false-->",
+                "  <!--Scroll down under the actual settings to get the documentaiton on what they do.-->",
+                "  <!--Also note this file re-writes itself, it is not possible to add comments but it will add new settings and remove old ones with updates.-->",
+                "  <!--As a final note, if you want to ensure for a newer version of nilmod that the settings are DEFAULT for barotrauma - simply delete the lines (Not categories) from the XML, this will cause them to be re-added next launch as their default values.-->",
 
                 "",
 
@@ -1329,6 +1377,8 @@ namespace Barotrauma
                 @"    BypassMD5=""" + BypassMD5 + @"""",
                 @"    ServerMD5A=""" + ServerMD5A + @"""",
                 @"    ServerMD5B=""" + ServerMD5B + @"""",
+                @"    MaxAdminSlots=""" + MaxAdminSlots + @"""",
+                @"    MaxSpectatorSlots=""" + MaxSpectatorSlots + @"""",
                 @"    DebugConsoleTimeStamp=""" + DebugConsoleTimeStamp + @"""",
                 @"    MaxLogMessages=""" + MaxLogMessages + @"""",
                 @"    LogAppendCurrentRound=""" + LogAppendCurrentRound + @"""",
@@ -1337,14 +1387,15 @@ namespace Barotrauma
                 @"    ChatboxHeight=""" + ChatboxHeight + @"""",
                 @"    ChatboxWidth=""" + ChatboxWidth + @"""",
                 @"    ChatboxMaxMessages=""" + ChatboxMaxMessages + @"""",
+                @"    RebalanceTeamPreferences=""" + RebalanceTeamPreferences + @"""",
                 @"    ShowRoomInfo=""" + ShowRoomInfo + @"""",
                 @"    UseUpdatedCharHUD=""" + UseUpdatedCharHUD + @"""",
+                @"    UseRecolouredNameInfo=""" + UseRecolouredNameInfo + @"""",
                 @"    UseCreatureZoomBoost=""" + UseCreatureZoomBoost + @"""",
                 @"    CreatureZoomMultiplier=""" + CreatureZoomMultiplier + @"""",
                 @"    StartToServer=""" + StartToServer + @"""",
                 @"    EnableEventChatterSystem=""" + EnableEventChatterSystem + @"""",
                 @"    EnableHelpSystem=""" + EnableHelpSystem + @"""",
-                //@"    EnableAdminSystem=""" + EnableAdminSystem + @"""",
                 @"    EnablePlayerLogSystem=""" + EnablePlayerLogSystem + @"""",
                 @"    PlayerLogStateNames=""" + NilModPlayerLog.PlayerLogStateNames + @"""",
                 @"    PlayerLogStateFirstJoinedNames=""" + NilModPlayerLog.PlayerLogStateFirstJoinedNames + @"""",
@@ -1354,6 +1405,10 @@ namespace Barotrauma
                 @"    SubVotingServerLog=""" + SubVotingServerLog + @"""",
                 @"    SubVotingAnnounce=""" + SubVotingAnnounce + @"""",
                 @"    LogAIDamage=""" + LogAIDamage + @"""",
+                @"    LogStatusEffectStun=""" + LogStatusEffectStun + @"""",
+                @"    LogStatusEffectHealth=""" + LogStatusEffectHealth + @"""",
+                @"    LogStatusEffectBleed=""" + LogStatusEffectBleed + @"""",
+                @"    LogStatusEffectOxygen=""" + LogStatusEffectOxygen + @"""",
                 @"    CrashRestart=""" + CrashRestart + @"""",
                 @"    UseStartWindowPosition=""" + UseStartWindowPosition + @"""",
                 @"    StartXPos=""" + StartXPos + @"""",
@@ -1394,9 +1449,9 @@ namespace Barotrauma
                 @"    DefaultRespawnShuttle=""" + DefaultRespawnShuttle + @"""",
                 @"    DefaultSubmarine=""" + DefaultSubmarine + @"""",
                 @"    DefaultLevelSeed=""" + DefaultLevelSeed + @"""",
+                @"    CampaignSaveName=""" + CampaignSaveName + @"""",
                 //@"    SetDefaultsAlways=""" + SetDefaultsAlways + @"""",
                 @"    UseAlternativeNetworking=""" + UseAlternativeNetworking + @"""",
-                //@"    UseCharStatOptimisation=""" + UseCharStatOptimisation + @"""",
                 @"    CharacterDisabledistance=""" + CharacterDisabledistance + @"""",
                 @"    ItemPosUpdateDistance=""" + ItemPosUpdateDistance + @"""",
                 @"    DesyncTimerMultiplier=""" + DesyncTimerMultiplier + @"""",
@@ -1459,12 +1514,16 @@ namespace Barotrauma
                 "",
 
                 "  <ServerModSubmarineSettings",
+                @"    OceanColourR=""" + WaterColour.R + @"""",
+                @"    OceanColourG=""" + WaterColour.G + @"""",
+                @"    OceanColourB=""" + WaterColour.B + @"""",
+                @"    OceanColourA=""" + WaterColour.A + @"""",
                 @"    HullOxygenDistributionSpeed=""" + HullOxygenDistributionSpeed + @"""",
                 @"    HullOxygenDetoriationSpeed=""" + HullOxygenDetoriationSpeed + @"""",
                 @"    HullOxygenConsumptionSpeed=""" + HullOxygenConsumptionSpeed + @"""",
                 @"    HullUnbreathablePercent=""" + HullUnbreathablePercent + @"""",
                 @"    CanDamageSubBody=""" + CanDamageSubBody + @"""",
-                //@"    CanRewireMainSubs=""" + CanRewireMainSubs + @"""",
+                @"    CanRewireMainSubs=""" + CanRewireMainSubs + @"""",
                 @"    CrushDamageDepth=""" + CrushDamageDepth + @"""",
                 @"    PlayerCrushDepthInHull=""" + PlayerCrushDepthInHull + @"""",
                 @"    PlayerCrushDepthOutsideHull=""" + PlayerCrushDepthOutsideHull + @"""",
@@ -1597,6 +1656,18 @@ namespace Barotrauma
 
                 "",
 
+                "  <!--These Settings effect Clients that join the server, more specifically Nilmod clients and ability to connect-->",
+                "  <ServerModClientSettings",
+                @"    AllowVanillaClients=""" + AllowVanillaClients + @"""",
+                @"    AllowNilModClients=""" + AllowNilModClients + @"""",
+                @"    cl_UseUpdatedCharHUD=""" + cl_UseUpdatedCharHUD + @"""",
+                @"    cl_UseRecolouredNameInfo=""" + cl_UseRecolouredNameInfo + @"""",
+                @"    cl_UseCreatureZoomBoost=""" + cl_UseCreatureZoomBoost + @"""",
+                @"    cl_CreatureZoomMultiplier=""" + cl_CreatureZoomMultiplier + @"""",
+                "  />",
+
+                "",
+
                 //"<!--Which mission types can actually be selected Via 'random' by this server-->",
                 //"  <NilModRandomMission",
                 //@"    Cargo=""true""",
@@ -1630,6 +1701,111 @@ namespace Barotrauma
                 //"  <NilModAdditionalCargo>",
                 //@"    <Item name=""Oxygenite Shard"" Quantiy=""0""/>",
                 //"  </NilModAdditionalCargo>",
+
+                "",
+
+                "  <!--NilMod comes with a variety of additional commands, functionality and features, Below you can configure them:-->",
+                "  <!--Regarding the BypassMD5 function, DO NOT use this to add content such as new creatures/items/missions etc, players will NOT sync data they do not have themselves-->",
+                "  <!--Additionally do NOT edit randomevents.xml or missions.xml or Level generation as these NEVER sync as the client calculates such themselves based of level seed -->",
+                "  <!--Finally do not edit the Human Oxygen or Health values as these cause desynced health/oxygen levels, doesbleed / bleedingdecreasespeed / Speed and other stats may be ok however test it yourself-->",
+                "  <!--MD5 Desync editing on the server content folder is intended for tweaking monster stats, AI operation (Such as sight range / targetting in their creature file)-->",
+                "  <!--Modifying existing status effects or adding new Status Effects to items, Damage/Bleed damage, creature speeds, or general small tweak experimentation-->",
+                "  <!--Once you have made any changes join with another client (So you fail to join due to MD5) and read the clients MD5, enter that in here to allow connection for unmodified clients of that content package-->",
+                "  <!--You could even try other content package mods, Such as Barotrauma Extended and tweak server-sided values-->",
+
+                "",
+
+                "  <!--BypassMD5 = Setting to change server from calculating MD5 normally to using the ServerMD5 setting file instead-->",
+                "  <!--ServerMD5A = The server content folders MD5 - used for players using the same content mod to connect despite edits (Read above for what you shouldn't edit), Connect with a client to see the MD5 comparison and adjust to the clients MD5-->",
+                "  <!--ServerMD5B = A Secondary MD5 incase you wish to have two sets of files that may join a server, this is more towards servers that modify and hand out their package, but tweak it further later.-->",
+                "  <!--MaxAdminSlots = Players whom have the Ban Client Permission bypass slots joining the server, if this is set to 2, 2 may join beyond the maxplayers and not count in the server list.-->",
+                "  <!--MaxSpectatorSlots = Players whom are permanent spectators will be counted in this, allowing more players past the cap and not counting them unless they toggle it off (2 spectators removing it would result in 18/16), admins currently are also counted as spectators if their spectating too but not while they play. if MaxPlayers is exceeded and they stop being spectators it does not allow more in regardless-->",
+                "  <!--DebugConsoleTimeStamp = Adds a timestamp to the console messages.-->",
+                "  <!--MaxLogMessages = The max messages the ingame server log will keep.-->",
+                "  <!--LogAppendCurrentRound = Enables the server log to be written in real time, one file per-round.-->",
+                "  <!--LogAppendLineSaveRate = The rate at which the above setting saves (Every X lines).-->",
+                "  <!--ClearLogRoundStart = At the start of a round, clears the ingame server log (And if unsaved, saves the remainder too).-->",
+                "  <!--ChatboxHeight = The Height of your chatbox (Top to bottom).-->",
+                "  <!--ChatboxWidth = The Length of your chatbox (Side-to-side).-->",
+                "  <!--ChatboxMaxMessages = The maximum count of messages your chatbox can store before it begins removing them.-->",
+                "  <!--RebalanceTeamPreferences = The playerlist to the server host may now define Preferred teams, this is an override to prevent team rebalancing if one team has more players than another.-->",
+                "  <!--ShowRoomInfo = Adds the Oxygen and volume text to rooms without the use of DebugDraw.-->",
+                "  <!--UseUpdatedCharHUD = Replaces the games Health bars with more detailed ones, including oxygen, Bleed, pressure, stun and husk, where applicable. The bars also pulse to the condition of the target.-->",
+                "  <!--UseRecolouredNameInfo = Recolour character names from the standard white to red (renegades/enemy team of char)/blue (Coalition/same team of char)/white(No team/AIs) and darker varients, along with purple (Husk infection)-->",
+                "  <!--UseCreatureZoomBoost = Modifies the camera zoom level for creatures based on their size and the zoom multiplier, its not perfect but for huge creatures it keeps the camera zoomed out further.-->",
+                "  <!--CreatureZoomMultiplier = Used in the above setting, this is a multiplier on the effect of the zoom boost, its min to max value is 0.4 - 3.0-->",
+                "  <!--StartToServer =-->",
+                "  <!--EnableEventChatterSystem =-->",
+                "  <!--EnableHelpSystem =-->",
+                "  <!--EnablePlayerLogSystem =-->",
+                "  <!--PlayerLogStateNames =-->",
+                "  <!--PlayerLogStateFirstJoinedNames=-->",
+                "  <!--PlayerLogStateLastJoinedNames=-->",
+                "  <!--EnableVPNBanlist=-->",
+                "  <!--SubVotingConsoleLog=-->",
+                "  <!--SubVotingServerLog=-->",
+                "  <!--SubVotingAnnounce=-->",
+                "  <!--LogAIDamage=-->",
+                "  <!--LogStatusEffectStun=-->",
+                "  <!--LogStatusEffectHealth=-->",
+                "  <!--LogStatusEffectBleed=-->",
+                "  <!--LogStatusEffectOxygen=-->",
+                "  <!--CrashRestart=-->",
+                "  <!--UseStartWindowPosition=-->",
+                "  <!--StartXPos=-->",
+                "  <!--StartYPos=-->",
+                "  <!--BanListReloadTimer=-->",
+                "  <!--BansOverrideBannedInfo=-->",
+                "  <!--BansInfoCustomtext=-->",
+                "  <!--BansInfoAddBanName=-->",
+                "  <!--BansInfoAddBanDuration=-->",
+                "  <!--BansInfoUseRemainingTime=-->",
+                "  <!--BansInfoAddCustomString=-->",
+                "  <!--BansInfoAddBanReason=-->",
+                "  <!--VoteKickStateNameTimer=-->",
+                "  <!--VoteKickDenyRejoinTimer=-->",
+                "  <!--AdminKickStateNameTimer=-->",
+                "  <!--AdminKickDenyRejoinTimer=-->",
+                "  <!--KickStateNameTimerIncreaseOnRejoin=-->",
+                "  <!--KickMaxStateNameTimer=-->",
+                "  <!--ClearKickStateNameOnRejoin=-->",
+                "  <!--ClearKicksOnRoundStart=-->",
+
+                "  <!--SuppressPacketSizeWarning = Suppresses an error that annoys server hosts but is actually mostly harmless anyways, Default=false-->",
+                "  <!--StartToServer = Setting to use the server default settings when starting NilMod - for now please use actually valid settings XD, Default=false-->",
+
+                "",
+
+                //"  <!--MaxRespawns = number of times the respawn shuttle may appear before it ceases to spawn 0=Infinite, default=0-->",
+                //"  <!--RespawnOnMainSub = Instantly places newly respawned players into the mainsub at an appropriate spawn point, good for Deathmatching, Default=false-->",
+                "",
+                "  <!--PlayerCanDie = Experiment feature to allow players to be permanently revivable unless they Give in, 6.0.2 currenty has a clientside GUI issue preventing 'Give in' during pressure death however-->",
+                "  <!--PlayerHealthRegen = quantity (As a decimal value per second) a still-living Concious players health regenerates naturally, default=0-->",
+                "  <!--CreatureHealthRegen = quantity (As a decimal value per second) a still-living Creatures health regenerates naturally, default=0-->",
+                "  <!--UnconciousHealthDecay = Amount of health loss per second if you run out of oxygen or health, default=0.5-->",
+                "  <!--UnconciousOxygenDecay = Amount of oxygen loss per second if you run out of oxygen or health, default=0.5-->",
+                "  <!--MinHealthBleedCap = When an unconcious player reaches their minimum (Most negative possible) health, Reset the bleeding to this amount (0.0-5.0), Default=2-->",
+                "  <!--PlayerUnconciousTimer = The Stun duration for when a player crosses from unconcious to concious, smaller values pickup players faster, Default=5-->",
+
+                "",
+
+                "  <!--HullOxygenDistributionSpeed = Rate at which a rooms oxygen moves from one room to another, Default=500-->",
+                "  <!--HullOxygenDetoriationSpeed = Rate at which a room oxygen slowly decays, Default=0.3-->",
+                "  <!--HullOxygenConsumptionSpeed = Rate at which a player or creature removes oxygen from a room, Default=1000-->",
+                "  <!--CanDamageSubBody = if false this allows the submarine hull to be in 'Godmode' regardless of godmode, while players and creatures are still harmed normally, Default=true-->",
+
+                "",
+
+                "  <!--PlayerOxygenUsageAmount = Amount of oxygen a player consumes when they cannot breathe - Effectively the rate the blue bar drops, Default=-5-->",
+                "  <!--PlayerOxygenGainSpeed = Amount of oxygen a player gains when they can breathe - Effectively the rate the blue bar increases, Default=10-->",
+                "  <!--UnbreathablePercent = A scale of 0 % to 100 % of oxygen left in room before it is considered 'Unbreathable' and switches PlayerOxygenGainSpeed to PlayerOxygenUsageAmount, Default=30-->",
+
+                "",
+
+                "  <!--PlayYourselfName = Name for your character that clients will see correctly, Default= (Uses server name if left as empty string)-->",
+                "  <!--HostBypassSkills = Allows anything you control to have 100 skill for any skillcheck regardless of job (Others won't see this on crew tab too) - Allows husks and spawned human AI's / play yourself to do anything, Default=false-->",
+
+                "",
                 "</NilMod>"
             };
             using (System.IO.StreamWriter file =
@@ -1642,22 +1818,29 @@ namespace Barotrauma
             }
         }
 
-        public void ResetToDefault()
+        public void ResetToDefault(Boolean ClientMode = false)
         {
             //Core Settings
             BypassMD5 = false;
             ServerMD5A = GameMain.SelectedPackage.MD5hash.Hash;
             ServerMD5B = "";
-            DebugConsoleTimeStamp = false;
+            MaxAdminSlots = 0;
+            MaxSpectatorSlots = 0;
+            if (!ClientMode) DebugConsoleTimeStamp = false;
             MaxLogMessages = 800;
             LogAppendCurrentRound = false;
             LogAppendLineSaveRate = 5;
             ClearLogRoundStart = false;
-            ChatboxHeight = 0.15f;
-            ChatboxWidth = 0.35f;
-            ChatboxMaxMessages = 20;
+            if (!ClientMode)
+            {
+                ChatboxHeight = 0.15f;
+                ChatboxWidth = 0.35f;
+                ChatboxMaxMessages = 20;
+            }
+            RebalanceTeamPreferences = true;
             ShowRoomInfo = false;
             UseUpdatedCharHUD = false;
+            UseRecolouredNameInfo = false;
             UseCreatureZoomBoost = false;
             CreatureZoomMultiplier = 1f;
             StartToServer = false;
@@ -1673,6 +1856,10 @@ namespace Barotrauma
             SubVotingServerLog = false;
             SubVotingAnnounce = false;
             LogAIDamage = false;
+            LogStatusEffectStun = false;
+            LogStatusEffectHealth = false;
+            LogStatusEffectBleed = false;
+            LogStatusEffectOxygen = false;
             CrashRestart = false;
             UseStartWindowPosition = false;
             StartXPos = 0;
@@ -1694,7 +1881,7 @@ namespace Barotrauma
             ClearKickStateNameOnRejoin = false;
             ClearKicksOnRoundStart = false;
 
-        //Server Default Settings
+            //Server Default Settings
             ServerName = "Barotrauma Server";
             ServerPort = 14242;
             MaxPlayers = 8;
@@ -1709,16 +1896,16 @@ namespace Barotrauma
             DefaultRespawnShuttle = "";
             DefaultSubmarine = "";
             DefaultLevelSeed = "";
+            CampaignSaveName = "";
             SetDefaultsAlways = false;
             UseAlternativeNetworking = false;
-            UseCharStatOptimisation = true;
             CharacterDisabledistance = 20000.0f;
             NetConfig.CharacterIgnoreDistance = CharacterDisabledistance;
             NetConfig.CharacterIgnoreDistanceSqr = CharacterDisabledistance * CharacterDisabledistance;
             ItemPosUpdateDistance = 2.00f;
             NetConfig.ItemPosUpdateDistance = ItemPosUpdateDistance;
             DesyncTimerMultiplier = 1.00f;
-            DisableParticlesOnStart = false;
+            if(!ClientMode) DisableParticlesOnStart = false;
             DisableLightsOnStart = false;
             DisableLOSOnStart = false;
             AllowReconnect = false;
@@ -1737,9 +1924,12 @@ namespace Barotrauma
             DebugLagSimulatedDuplicatesChance = 0.05f;
             DebugLagSimulatedMinimumLatency = 0.10f;
             DebugLagConnectionTimeout = 60f;
-            MaxParticles = 1500;
-            ParticleSpawnPercent = 100;
-            ParticleLifeMultiplier = 1.0f;
+            if (!ClientMode)
+            {
+                MaxParticles = 1500;
+                ParticleSpawnPercent = 100;
+                ParticleLifeMultiplier = 1.0f;
+            }
             ParticleWhitelist = new List<string>();
             //ParticleWhitelist.Add("watersplash");
             //ParticleWhitelist.Add("mist");
@@ -1788,6 +1978,7 @@ namespace Barotrauma
             RespawnShuttleLeaveAtTime = -1f;
 
             //Submarine Settings
+            WaterColour = new Color(191, 204, 230, 255);
             HullOxygenDistributionSpeed = 500f;
             HullOxygenDetoriationSpeed = 0.3f;
             HullOxygenConsumptionSpeed = 1000f;
@@ -1909,22 +2100,30 @@ namespace Barotrauma
             CreatureEatDyingPlayers = true;
             CreatureRespawnMonsterEvents = true;
 
+            //Client Settings
+            AllowVanillaClients = true;
+            AllowNilModClients = true;
+            cl_UseUpdatedCharHUD = false;
+            cl_UseRecolouredNameInfo = false;
+            cl_UseCreatureZoomBoost = false;
+            cl_CreatureZoomMultiplier = 1f;
+
             //Default Server Creatures to spawn
 
             //Additional Cargo Spawning defaults
 
             //Just Disable everything in the class despite whatever it loaded. simples
-                NilMod.NilModEventChatter.ChatCargo = false;
-                NilMod.NilModEventChatter.ChatModServerJoin = false;
-                NilMod.NilModEventChatter.ChatMonster = false;
-                NilMod.NilModEventChatter.ChatNoneTraitorReminder = false;
-                NilMod.NilModEventChatter.ChatSalvage = false;
-                NilMod.NilModEventChatter.ChatSandbox = false;
-                NilMod.NilModEventChatter.ChatShuttleLeavingKill = false;
-                NilMod.NilModEventChatter.ChatShuttleRespawn = false;
-                NilMod.NilModEventChatter.ChatSubvsSub = false;
-                NilMod.NilModEventChatter.ChatTraitorReminder = false;
-                NilMod.NilModEventChatter.ChatVoteEnd = false;
+            NilMod.NilModEventChatter.ChatCargo = false;
+            NilMod.NilModEventChatter.ChatModServerJoin = false;
+            NilMod.NilModEventChatter.ChatMonster = false;
+            NilMod.NilModEventChatter.ChatNoneTraitorReminder = false;
+            NilMod.NilModEventChatter.ChatSalvage = false;
+            NilMod.NilModEventChatter.ChatSandbox = false;
+            NilMod.NilModEventChatter.ChatShuttleLeavingKill = false;
+            NilMod.NilModEventChatter.ChatShuttleRespawn = false;
+            NilMod.NilModEventChatter.ChatSubvsSub = false;
+            NilMod.NilModEventChatter.ChatTraitorReminder = false;
+            NilMod.NilModEventChatter.ChatVoteEnd = false;
         }
 
         public void LoadComponants()
@@ -1936,80 +2135,109 @@ namespace Barotrauma
             //NilModPermissions.Load();
         }
 
-        public void TestArmour(float armourrating)
+        public void TestArmour(float Modifier = 1f)
         {
-            /*
+            float armourrating = (1f - Modifier) * 100f;
             DebugConsole.NewMessage("ArmourDebug Test Calculations (Does not factor bleed bypass or impossible reverse damage):", Color.White);
             //1 armour damage reduction console messages
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 001, Bleed: 00.25 Damage Taken: "
-                + Limb.CalculateHealthArmor(1f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(0.25f, armourrating), Color.White);
+                + ArmourCheckHealth(1f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(0.25f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 003, Bleed: 00.50 Damage Taken: "
-                + Limb.CalculateHealthArmor(3f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(0.5f, armourrating), Color.White);
+                + ArmourCheckHealth(3f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(0.5f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 005, Bleed: 00.75 Damage Taken: "
-                + Limb.CalculateHealthArmor(5f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(0.75f, armourrating), Color.White);
+                + ArmourCheckHealth(5f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(0.75f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 010, Bleed: 01.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(10f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(1f, armourrating), Color.White);
+                + ArmourCheckHealth(10f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(1f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 015, Bleed: 01.25 Damage Taken: "
-                + Limb.CalculateHealthArmor(15f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(1.25f, armourrating), Color.White);
+                + ArmourCheckHealth(15f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(1.25f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 020, Bleed: 01.50 Damage Taken: "
-                + Limb.CalculateHealthArmor(20f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(1.5f, armourrating), Color.White);
+                + ArmourCheckHealth(20f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(1.5f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 025, Bleed: 01.75 Damage Taken: "
-                + Limb.CalculateHealthArmor(25f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(1.75f, armourrating), Color.White);
+                + ArmourCheckHealth(25f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(1.75f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 030, Bleed: 02.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(30f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(2f, armourrating), Color.White);
+                + ArmourCheckHealth(30f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(2f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 035, Bleed: 02.25 Damage Taken: "
-                + Limb.CalculateHealthArmor(35f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(2.25f, armourrating), Color.White);
+                + ArmourCheckHealth(35f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(2.25f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 040, Bleed: 02.50 Damage Taken: "
-                + Limb.CalculateHealthArmor(40f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(2.50f, armourrating), Color.White);
+                + ArmourCheckHealth(40f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(2.50f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 045, Bleed: 03.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(45f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(3f, armourrating), Color.White);
+                + ArmourCheckHealth(45f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(3f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 050, Bleed: 03.50 Damage Taken: "
-                + Limb.CalculateHealthArmor(50f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(3.5f, armourrating), Color.White);
+                + ArmourCheckHealth(50f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(3.5f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 060, Bleed: 04.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(60f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(4f, armourrating), Color.White);
+                + ArmourCheckHealth(60f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(4f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 070, Bleed: 05.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(70f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(5f, armourrating), Color.White);
+                + ArmourCheckHealth(70f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(5f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 080, Bleed: 06.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(80f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(6f, armourrating), Color.White);
+                + ArmourCheckHealth(80f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(6f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 090, Bleed: 07.50 Damage Taken: "
-                + Limb.CalculateHealthArmor(90f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(7.5f, armourrating), Color.White);
+                + ArmourCheckHealth(90f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(7.5f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 100, Bleed: 10.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(100f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(10f, armourrating), Color.White);
+                + ArmourCheckHealth(100f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(10f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 125, Bleed: 12.50 Damage Taken: "
-                + Limb.CalculateHealthArmor(125f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(12.5f, armourrating), Color.White);
+                + ArmourCheckHealth(125f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(12.5f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 150, Bleed: 15.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(150f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(15f, armourrating), Color.White);
+                + ArmourCheckHealth(150f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(15f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 175, Bleed: 17.50 Damage Taken: "
-                + Limb.CalculateHealthArmor(175f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(17.5f, armourrating), Color.White);
+                + ArmourCheckHealth(175f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(17.5f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 200, Bleed: 20.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(200f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(20f, armourrating), Color.White);
+                + ArmourCheckHealth(200f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(20f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 250, Bleed: 25.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(250f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(25f, armourrating), Color.White);
+                + ArmourCheckHealth(250f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(25f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 300, Bleed: 30.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(300f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(30f, armourrating), Color.White);
+                + ArmourCheckHealth(300f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(30f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 350, Bleed: 40.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(350f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(40f, armourrating), Color.White);
+                + ArmourCheckHealth(350f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(40f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 400, Bleed: 50.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(400f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(50f, armourrating), Color.White);
+                + ArmourCheckHealth(400f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(50f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 500, Bleed: 60.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(500f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(60f, armourrating), Color.White);
+                + ArmourCheckHealth(500f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(60f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 600, Bleed: 75.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(600f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(75f, armourrating), Color.White);
+                + ArmourCheckHealth(600f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(75f, armourrating / 100f), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 800, Bleed: 90.00 Damage Taken: "
-                + Limb.CalculateHealthArmor(800f, armourrating) + " Bleed Taken: " + Limb.CalculateBleedArmor(90f, armourrating), Color.White);
-                */
+                + ArmourCheckHealth(800f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(90f, armourrating / 100f), Color.White);
+                
+        }
+
+        float ArmourCheckHealth(float healthdamage, float modifier)
+        {
+            float fakehealth = 25000f;
+            float fakehealthdamage = 0f;
+
+            fakehealth = fakehealth - Limb.CalculateNewHealth(healthdamage, healthdamage, modifier);
+
+            fakehealthdamage = 25000f - fakehealth;
+
+            return Convert.ToSingle(Math.Round(fakehealthdamage, 2));
+        }
+
+        float ArmourCheckBleed(float bleeddamage, float modifier)
+        {
+            float fakebleed = 500f;
+            float fakebleeddamage = 0f;
+
+            fakebleed = fakebleed - Limb.CalculateNewBleed(bleeddamage, bleeddamage,modifier);
+
+            fakebleeddamage = 500f - fakebleed;
+
+            return Convert.ToSingle(Math.Round(fakebleeddamage, 2));
         }
 
         //Things that are generally done at round start or server start for the server.
         //Note, need to move more code here to clean up project someday (Such as mission selection preferably).
-        public void ServerInitialize(Boolean InitialLaunch)
+        public void GameInitialize(Boolean InitialLaunch = false)
         {
             if (InitialLaunch)
             {
-                UseCharStatOptimisation = true;
-                GameMain.Server.AutoRestart = AutoRestart;
+                if (GameMain.Server != null)
+                {
+                    GameMain.Server.AutoRestart = AutoRestart;
+                }
 
-                if (DisableParticlesOnStart) DisableParticles = true;
+                if (GameMain.Client == null)
+                {
+                    if (DisableParticlesOnStart) DisableParticles = true;
+                }
             }
 
 #if CLIENT
@@ -2036,15 +2264,6 @@ namespace Barotrauma
                 DisconnectedCharacters = new List<DisconnectedCharacter>();
             }
 
-            if(KickedClients != null)
-            {
-                if(ClearKicksOnRoundStart) KickedClients.Clear();
-            }
-            else
-            {
-                KickedClients = new List<KickedClient>();
-            }
-
             if (FrozenCharacters != null)
             {
                 FrozenCharacters.Clear();
@@ -2054,21 +2273,237 @@ namespace Barotrauma
                 FrozenCharacters = new List<Character>();
             }
 
-            if (ModifiedCharacterValues != null)
+            //We should allow this in single player - but not in multiplayer.
+            if (GameMain.Client == null)
             {
-                ModifiedCharacterValues.Clear();
+                
+            }
+            //If their a client a few things shouldn't carry over from singleplayer / self hosting.
+            else
+            {
+                DisableParticles = false;
+            }
+
+            if (GameMain.Server != null)
+            {
+                if (KickedClients != null)
+                {
+                    if (ClearKicksOnRoundStart) KickedClients.Clear();
+                }
+                else
+                {
+                    KickedClients = new List<KickedClient>();
+                }
+
+                DesyncPreventionItemList = new List<Item>();
+                DesyncPreventionPlayerStatusList = new List<Character>();
+                DesyncPreventionHullList = new List<Hull>();
+                DesyncPreventionItemPassTimerleft = 30f + DesyncPreventionItemPassTimer;
+                DesyncPreventionPlayerStatusTimerleft = 30f + DesyncPreventionPlayerStatusTimer;
+                DesyncPreventionHullStatusTimerleft = 30f + DesyncPreventionHullStatusTimerleft;
+            }
+        }
+
+        public void HideCharacter(Character character)
+        {
+            //Only execute this code for Servers - Use normal removal for single player
+            if (GameMain.Server != null)
+            {
+#if CLIENT
+                GameSession.inGameInfo.RemoveCharacter(character);
+#endif
+
+                ConvertingHusk huskconvert = new ConvertingHusk();
+                huskconvert.character = character;
+                huskconvert.Updatestildisable = 2;
+                //Hide the character completely
+                character.AnimController.CurrentHull = null;
+                character.Submarine = null;
+                character.AnimController.SetPosition(new Vector2(800000, 800000), false);
+                huskconvert.character.HuskInfectionState = 0f;
+                GameMain.NilMod.convertinghusklist.Add(huskconvert);
+            }
+            else if (GameMain.Client == null)
+            {
+#if CLIENT
+                GameSession.inGameInfo.RemoveCharacter(character);
+#endif
+
+                //Just add them to the entity remover if single player
+                Entity.Spawner.AddToRemoveQueue(character);
+            }
+        }
+
+        //Code for reading nilmod settings sync data
+        public void ClientSyncRead(Lidgren.Network.NetIncomingMessage inc)
+        {
+            Lidgren.Network.NetOutgoingMessage outmsg = GameMain.Server.server.CreateMessage();
+
+            outmsg.Write((Byte)ClientPacketHeader.NILMODSYNCRECEIVED);
+
+            Version serverversion = new Version(inc.ReadString());
+            //Same networking version
+            if (NilModNetworkingVersion.CompareTo(serverversion) == 0)
+            {
+                //Client Settings
+                UseUpdatedCharHUD = inc.ReadBoolean();
+                UseUpdatedCharHUD = inc.ReadBoolean();
+                UseCreatureZoomBoost = inc.ReadBoolean();
+                CreatureZoomMultiplier = inc.ReadFloat();
+
+                //Submarine Settings
+                Byte OceanColourR;
+                Byte OceanColourG;
+                Byte OceanColourB;
+                Byte OceanColourA;
+                OceanColourR = inc.ReadByte();
+                OceanColourG = inc.ReadByte();
+                OceanColourB = inc.ReadByte();
+                OceanColourA = inc.ReadByte();
+                WaterColour = new Color(OceanColourR, OceanColourG, OceanColourB, OceanColourA);
+
+                HullOxygenDistributionSpeed = inc.ReadFloat();
+                HullOxygenDetoriationSpeed = inc.ReadFloat();
+                HullOxygenConsumptionSpeed = inc.ReadFloat();
+                HullUnbreathablePercent = inc.ReadFloat();
+                CrushDamageDepth = inc.ReadFloat();
+                PlayerCrushDepthInHull = inc.ReadFloat();
+                PlayerCrushDepthOutsideHull = inc.ReadFloat();
+                FireOxygenConsumption = inc.ReadFloat();
+                FireGrowthSpeed = inc.ReadFloat();
+                FireShrinkSpeed = inc.ReadFloat();
+                FireWaterExtinguishMultiplier = inc.ReadFloat();
+                FireToolExtinguishMultiplier = inc.ReadFloat();
+
+
+                //Character Settings
+                PlayerOxygenUsageAmount = inc.ReadFloat();
+                PlayerOxygenGainSpeed = inc.ReadFloat();
+                PlayerUnconciousTimer = inc.ReadFloat();
+
+
+
+                //End of message
+                inc.ReadByte();
+                //Sync successful
+                outmsg.Write((Byte)0);
+            }
+            else if(NilModNetworkingVersion.CompareTo(serverversion) >= 1)
+            {
+                //Sync failed
+                outmsg.Write((Byte)2);
+                DebugConsole.ThrowError("Nilmod attempted and failed client sync, server is using a previous version.");
+                DebugConsole.ThrowError("Nilmod is now in vanilla setup.");
+                DebugConsole.ThrowError("Press the F3 key to close the console.");
+            }
+            //Client is Earlier version than server
+            else if (NilModNetworkingVersion.CompareTo(serverversion) <= -1)
+            {
+                //Sync failed (server is higher version)
+                outmsg.Write((Byte)1);
+                DebugConsole.ThrowError("Nilmod attempted and failed client sync, server is using a newer version.");
+                DebugConsole.ThrowError("Nilmod is now in vanilla setup.");
+                DebugConsole.ThrowError("Press the F3 key to close the console.");
+            }
+
+
+
+            outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+        }
+
+        //Code for writing nilmod settings sync data packets
+        public void ServerSyncWrite(Client c)
+        {
+            Lidgren.Network.NetOutgoingMessage outmsg = GameMain.Server.server.CreateMessage();
+            outmsg.Write((byte)ServerPacketHeader.NILMODSYNC);
+
+            //Send the networking version of the server
+            outmsg.Write(NilModNetworkingVersion.ToString());
+
+            //Client Settings
+            outmsg.Write(cl_UseUpdatedCharHUD);
+            outmsg.Write(cl_UseRecolouredNameInfo);
+            outmsg.Write(cl_UseCreatureZoomBoost);
+            outmsg.Write(cl_CreatureZoomMultiplier);
+
+            //Submarine Settings
+            outmsg.Write((byte)WaterColour.R);
+            outmsg.Write((byte)WaterColour.G);
+            outmsg.Write((byte)WaterColour.B);
+            outmsg.Write((byte)WaterColour.A);
+
+            outmsg.Write(HullOxygenDistributionSpeed);
+            outmsg.Write(HullOxygenDetoriationSpeed);
+            outmsg.Write(HullOxygenConsumptionSpeed);
+            outmsg.Write(HullUnbreathablePercent);
+
+            outmsg.Write(CrushDamageDepth);
+            outmsg.Write(PlayerCrushDepthInHull);
+            outmsg.Write(PlayerCrushDepthOutsideHull);
+
+            outmsg.Write(FireOxygenConsumption);
+            outmsg.Write(FireGrowthSpeed);
+            outmsg.Write(FireShrinkSpeed);
+            outmsg.Write(FireWaterExtinguishMultiplier);
+            outmsg.Write(FireToolExtinguishMultiplier);
+
+
+            //Character Settings
+            outmsg.Write(PlayerOxygenUsageAmount);
+            outmsg.Write(PlayerOxygenGainSpeed);
+            outmsg.Write(PlayerUnconciousTimer);
+
+            outmsg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            GameMain.Server.server.SendMessage(outmsg, c.Connection, Lidgren.Network.NetDeliveryMethod.Unreliable);
+        }
+
+        public void FetchExternalIP()
+        {
+            ExternalIPWebClient = new System.Net.WebClient();
+            ExternalIP = "";
+
+            ExternalIPWebClient.DownloadStringAsync(new Uri("http://checkip.dyndns.org/"));
+            ExternalIPWebClient.DownloadStringCompleted += new System.Net.DownloadStringCompletedEventHandler(ReceivedExternalIPResponse);
+            //externalip = new System.Net.WebClient().DownloadString("http://checkip.dyndns.org/");
+        }
+
+        public void ReceivedExternalIPResponse(object sender, System.Net.DownloadStringCompletedEventArgs e)
+        {
+            if (!e.Cancelled && e.Error == null)
+            {
+                ExternalIP = e.Result;
+                ExternalIP = ExternalIP.Replace("<html><head><title>Current IP Check</title></head><body>Current IP Address: ", "");
+                ExternalIP = ExternalIP.Replace("</body></html>\r\n", "");
+                ExternalIP = ExternalIP.Trim();
+
+#if SERVER
+                DebugConsole.NewMessage(" ", Color.Cyan);
+                DebugConsole.NewMessage("External IP Retrieved successfully.", Color.Cyan);
+                GameMain.Server.StateServerInfo();
+#endif
             }
             else
             {
-                ModifiedCharacterValues = new List<ModifiedCharacterStat>();
+                DebugConsole.NewMessage("NILMOD ERROR - Failed to retrieve External IP: " + Environment.NewLine + e.Error.Message, Color.Red);
+                ExternalIP = "?.?.?.?";
+            }
+            ExternalIPWebClient = null;
+        }
+
+        public List<Client> RandomizeClientOrder(List<Client> clientsource)
+        {
+            List<Client> randList = new List<Client>(clientsource);
+            for (int i = 0; i < randList.Count; i++)
+            {
+                Client a = randList[i];
+                int oi = Rand.Range(0, randList.Count - 1);
+                Client b = randList[oi];
+                randList[i] = b;
+                randList[oi] = a;
             }
 
-            DesyncPreventionItemList = new List<Item>();
-            DesyncPreventionPlayerStatusList = new List<Character>();
-            DesyncPreventionHullList = new List<Hull>();
-            DesyncPreventionItemPassTimerleft = 30f + DesyncPreventionItemPassTimer;
-            DesyncPreventionPlayerStatusTimerleft = 30f + DesyncPreventionPlayerStatusTimer;
-            DesyncPreventionHullStatusTimerleft = 30f + DesyncPreventionHullStatusTimerleft;
+            return randList;
         }
     }
 }

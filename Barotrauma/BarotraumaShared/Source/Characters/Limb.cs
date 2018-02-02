@@ -585,20 +585,20 @@ namespace Barotrauma
 
         public static float CalculateNewHealth(float health, float originalhealth, float damageModifier)
         {
-            float Armour = (1 - damageModifier) * 100f;
+            float Armour = (1f - damageModifier) * 100f;
             float amount = health;
             //Calculate health reduction
-            amount = Math.Max(health * (GameMain.NilMod.ArmourMinimumHealthPercent / 100f), amount - (Armour * GameMain.NilMod.ArmourDirectReductionHealth));
+            amount = Math.Max(originalhealth * (GameMain.NilMod.ArmourMinimumHealthPercent / 100f), amount - (Armour * GameMain.NilMod.ArmourDirectReductionHealth));
 
             //Calculate health absorption after flat reduction - and prevent it turning to 0 if armourabsorption is nothing.
             if (GameMain.NilMod.ArmourAbsorptionHealth > 0f)
             {
-                amount = Math.Max(health * (GameMain.NilMod.ArmourMinimumHealthPercent / 100f), amount - (amount * (Armour * GameMain.NilMod.ArmourAbsorptionHealth)));
+                amount = Math.Max(originalhealth * (GameMain.NilMod.ArmourMinimumHealthPercent / 100f), amount - (amount * (Armour * GameMain.NilMod.ArmourAbsorptionHealth / 100f)));
             }
 
             if (GameMain.NilMod.ArmourResistancePowerHealth > 0f && GameMain.NilMod.ArmourResistancePowerHealth > 0f)
             {
-                amount = Math.Max(health * (GameMain.NilMod.ArmourMinimumHealthPercent / 100f), amount - (amount * (1 - Convert.ToSingle(Math.Pow(Convert.ToDouble(GameMain.NilMod.ArmourResistancePowerHealth), Convert.ToDouble(Armour / GameMain.NilMod.ArmourResistanceMultiplierHealth))))));
+                amount = Math.Max(originalhealth * (GameMain.NilMod.ArmourMinimumHealthPercent / 100f), amount - (amount * (1 - Convert.ToSingle(Math.Pow(Convert.ToDouble(GameMain.NilMod.ArmourResistancePowerHealth), Convert.ToDouble(Armour / GameMain.NilMod.ArmourResistanceMultiplierHealth))))));
             }
 
             if (amount <= 0.0001f) amount = 0f;
@@ -608,7 +608,7 @@ namespace Barotrauma
 
         public static float CalculateNewBleed(float bleed, float originalbleed, float damageModifier)
         {
-            float Armour = (1 - damageModifier) * 100f;
+            float Armour = (damageModifier - 1f) * 100f;
             float bleedingAmount = bleed;
 
             //Calculate bleed reduction
@@ -617,7 +617,7 @@ namespace Barotrauma
             //Calculate bleed absorption after flat reduction - and prevent it turning to 0 if armourabsorption is nothing.
             if (GameMain.NilMod.ArmourAbsorptionBleed != 0f)
             {
-                bleedingAmount = Math.Max(originalbleed * (GameMain.NilMod.ArmourMinimumBleedPercent / 100f), bleedingAmount - (bleedingAmount * (Armour * GameMain.NilMod.ArmourAbsorptionBleed)));
+                bleedingAmount = Math.Max(originalbleed * (GameMain.NilMod.ArmourMinimumBleedPercent / 100f), bleedingAmount - (bleedingAmount * (Armour * GameMain.NilMod.ArmourAbsorptionBleed / 100f)));
             }
 
             if (GameMain.NilMod.ArmourResistancePowerBleed != 0f && GameMain.NilMod.ArmourResistanceMultiplierBleed != 0f)

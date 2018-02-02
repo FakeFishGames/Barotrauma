@@ -107,7 +107,22 @@ namespace Barotrauma
             {
                 spawnPos.X += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
                 spawnPos.Y += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
-                monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null, true, false);
+                monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null, true, createNetworkEvent);
+#if CLIENT
+                if (GameMain.Server != null)
+                {
+                    GameSession.inGameInfo.AddNoneClientCharacter(monsters[i]);
+
+                    if (createNetworkEvent && GameMain.NilMod.CreatureLimitRespawns)
+                    {
+                        GameMain.Server.ServerLog.WriteLine("Respawning creature: " + monsters[i].Name + " - respawns used: " + Respawned + " / " + MaxRespawned, Networking.ServerLog.MessageType.Spawns);
+                    }
+                    else if (createNetworkEvent && !GameMain.NilMod.CreatureLimitRespawns)
+                    {
+                        GameMain.Server.ServerLog.WriteLine("Respawning creature: " + monsters[i].Name + " - respawns used: " + Respawned + " / Infinite", Networking.ServerLog.MessageType.Spawns);
+                    }
+                }
+#endif
             }
 
             return monsters;

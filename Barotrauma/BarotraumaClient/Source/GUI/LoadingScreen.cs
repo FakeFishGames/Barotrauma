@@ -7,8 +7,19 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
+    //Enum for type of loading to do
+    public enum LoadType
+    {
+        Mainmenu = 0,
+        Singleplayer = 1,
+        Client = 2,
+        Server = 3,
+        Other = 4
+    }
+
     class LoadingScreen
     {
+        
         private Texture2D backgroundTexture,monsterTexture,titleTexture;
 
         readonly RenderTarget2D renderTarget;
@@ -24,6 +35,26 @@ namespace Barotrauma
         Video splashScreenVideo;
         VideoPlayer videoPlayer;
 #endif
+
+        //Server Information
+        public static LoadType loadType;
+        public static string ServerName;
+        public static string ServerPort;
+        public static Boolean PublicServer;
+        public static Boolean UPNP;
+        public static string MaxPlayers;
+        public static string Password;
+
+        //Client Information
+        public static string ClientName;
+        public static string GameMode;
+        public static string MissionType;
+        public static string Submarine;
+        public static Boolean IsTraitor;
+
+        //Singleplayer Information
+        public string SinglePlayerText;
+
         public Vector2 TitleSize
         {
             get { return new Vector2(titleTexture.Width, titleTexture.Height); }
@@ -156,40 +187,68 @@ namespace Barotrauma
             if (DrawLoadingText)
             {
                 string loadText = "";
+                //Loading is finished.
                 if (loadState == 100.0f)
                 {
-                    if (GameMain.NilMod.StartToServer)
+                    if (loadType == LoadType.Mainmenu)
                     {
-                        loadText = "Initializing server...";
+                        loadText = "Press any key to enter the main menu." + Environment.NewLine + Environment.NewLine
+                            + "Welcome to NilMod (" + NilMod.NilModVersionDate + ")!" + Environment.NewLine + Environment.NewLine
+                            + "Use Barotrauma/Data/NilModSettings.xml to configure me!" + Environment.NewLine
+                            + "Settings will be controlled by the server you connect to.";
                     }
-                    else
+                    else if (loadType == LoadType.Server)
                     {
-                        loadText = "Press any key to continue" + Environment.NewLine
-                            + "(WARNING: THIS CANNOT BE USED AS A CLIENT AND SHOULD NOT BE USED FOR SINGLE)" + Environment.NewLine
-                            + "Use Data/NilModSettings.xml to configure!";
+                        loadText = "Initializing Nilmod Server Instance (" + NilMod.NilModVersionDate + ")" + Environment.NewLine
+                        + "On: " + GameMain.NilMod.ExternalIP + ":" + ServerPort
+                        + " UPNP: " + UPNP + Environment.NewLine
+                        + "Public: " + PublicServer
+                        + " MaxPlayers: " + MaxPlayers;
+                    }
+                    else if (loadType == LoadType.Client)
+                    {
+                        loadText = "Press any key to join in." + Environment.NewLine + Environment.NewLine
+                            + "Using Nilmod Client : " + NilMod.NilModVersionDate + Environment.NewLine
+                            + "With name: " + ClientName + (IsTraitor ? " As a TRAITOR!!" : "") + Environment.NewLine + Environment.NewLine
+                            + "GameMode: " + GameMode + " Mission Type: " + MissionType + Environment.NewLine
+                            + "On Submarine: " + Submarine;
+    }
+                    else if (loadType == LoadType.Singleplayer)
+                    {
+                        loadText = "Press any key to begin your adventure." + Environment.NewLine
+                            + "" + Environment.NewLine
+                            + "";
+                    }
+                    else if (loadType == LoadType.Other)
+                    {
+                        loadText = "" + Environment.NewLine
+                            + "" + Environment.NewLine
+                            + "";
                     }
                 }
                 else
                 {
-                    if (GameMain.NilMod.StartToServer)
+                    if (loadType == LoadType.Server)
                     {
-                        loadText = "Starting server:" + GameMain.NilMod.ServerName + " ..." + Environment.NewLine +
-                        "Port: " + GameMain.NilMod.ServerPort
-                        + " Public:" + GameMain.NilMod.PublicServer
-                        + " MaxPlayers:" + GameMain.NilMod.MaxPlayers
-                        + " UPNP:" + GameMain.NilMod.UPNPForwarding;
+                        loadText = "Starting server: " + ServerName + " ..." + Environment.NewLine
+                        + " Nilmod Server (" + NilMod.NilModVersionDate + ")" + Environment.NewLine
+                        + "On: " + GameMain.NilMod.ExternalIP + ":" + ServerPort
+                        + " UPNP: " + UPNP + Environment.NewLine
+                        + "Public: " + PublicServer
+                        + " MaxPlayers: " + MaxPlayers;
 
-                        if (GameMain.NilMod.UseServerPassword && GameMain.NilMod.ServerPassword != "")
+
+                        if (Password != "")
                         {
-                            loadText += "Pass: " + GameMain.NilMod.ServerPassword;
+                            loadText += " Pass: " + GameMain.NilMod.ServerPassword;
                         }
 
                         if (loadState != null)
                         {
-                            loadText += Environment.NewLine + (int)loadState + " % Loading Complete";
+                            loadText += Environment.NewLine + "        " + (int)loadState + " % Loading Complete";
                         }
                     }
-                    else
+                    else if(loadType == LoadType.Client)
                     {
                         loadText = "Loading: ...";
 
@@ -197,8 +256,35 @@ namespace Barotrauma
                         {
                             loadText += (int)loadState + " % Ready";
                         }
-                        loadText += Environment.NewLine + "(WARNING: THIS SHOULD NOT BE USED AS A CLIENT)" + Environment.NewLine
-                            + "Use Data/NilModSettings.xml to configure for server!";
+                        loadText += Environment.NewLine +"Using Nilmod Client : " + NilMod.NilModVersionDate + Environment.NewLine
+                            + "With name: " + ClientName + (IsTraitor ? " As a TRAITOR!!" : "") + Environment.NewLine
+                            + "GameMode: " + GameMode + " Mission Type: " + MissionType + Environment.NewLine
+                            + "On Submarine: " + Submarine;
+                    }
+                    else if (loadType == LoadType.Singleplayer)
+                    {
+                        loadText = "Loading Nilmod Singleplayer Instance: ...";
+
+                        if (loadState != null)
+                        {
+                            loadText += (int)loadState + " % Ready";
+                        }
+                        loadText += Environment.NewLine + "" + Environment.NewLine
+                            + "";
+                    }
+                    else if(loadType == LoadType.Mainmenu)
+                    {
+                        loadText = "Loading Game Files: ...";
+
+                        if (loadState != null)
+                        {
+                            loadText += (int)loadState + " % Ready";
+                        }
+                        loadText += "Please wait for this to finish" + Environment.NewLine
+                            + Environment.NewLine + Environment.NewLine
+                            + "Welcome to NilMod (" + NilMod.NilModVersionDate + ")!" + Environment.NewLine + Environment.NewLine
+                            + "Use Barotrauma/Data/NilModSettings.xml to configure me!" + Environment.NewLine
+                            + "Settings will be disabled/configured by the server however in multiplayer!";
                     }
 
                 }
@@ -206,7 +292,7 @@ namespace Barotrauma
                 if (GUI.LargeFont!=null)
                 {
                     GUI.LargeFont.DrawString(spriteBatch, loadText, 
-                        new Vector2(GameMain.GraphicsWidth/2.0f - GUI.LargeFont.MeasureString(loadText).X/2.0f, GameMain.GraphicsHeight*0.8f), 
+                        new Vector2(GameMain.GraphicsWidth/2.0f - GUI.LargeFont.MeasureString(loadText).X/2.0f, GameMain.GraphicsHeight*0.65f), 
                         Color.White); 
                 }
            

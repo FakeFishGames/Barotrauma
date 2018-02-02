@@ -10,6 +10,8 @@ namespace Barotrauma.Networking
     {
         private NetStats netStats;
 
+        
+
         //private GUITextBlock CurrentAction;
 
         int buttonpage;
@@ -83,6 +85,7 @@ namespace Barotrauma.Networking
 
         void InitProjSpecific()
         {
+            
             //----------------------------------------
             buttonpage = 1;
             MaxButtonPages = 4;
@@ -853,6 +856,7 @@ namespace Barotrauma.Networking
 
             if (settingsFrame != null) settingsFrame.AddToGUIUpdateList();
             if (log.LogFrame != null) log.LogFrame.AddToGUIUpdateList();
+            //if(started) ingameInfoButton.AddToGUIUpdateList();
         }
 
         public override void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
@@ -1527,13 +1531,21 @@ namespace Barotrauma.Networking
             var clientInfo = clientNameBox.FindChild("filetransfer");
             if (clientInfo == null)
             {
-                clientNameBox.ClearChildren();
+                //clientNameBox.ClearChildren();
+                foreach(GUIComponent component in clientNameBox.children)
+                {
+                    component.Visible = false;
+                }
                 clientInfo = new GUIFrame(new Rectangle(0, 0, 180, 0), Color.Transparent, Alignment.TopRight, null, clientNameBox);
                 clientInfo.UserData = "filetransfer";
             }
             else if (transfers.Count == 0)
             {
                 clientInfo.Parent.RemoveChild(clientInfo);
+                foreach (GUIComponent component in clientInfo.Parent.children)
+                {
+                    component.Visible = true;
+                }
             }
 
             clientInfo.ClearChildren();

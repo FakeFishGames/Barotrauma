@@ -17,7 +17,8 @@ namespace Barotrauma.Networking
         FILE_REQUEST,   //request a (submarine) file from the server
         
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
-        SERVER_COMMAND      //tell the server to end a round or kick/ban someone (special permissions required)
+        SERVER_COMMAND,      //tell the server to end a round or kick/ban someone (special permissions required)
+        NILMODSYNCRECEIVED
     }
     enum ClientNetObject
     {
@@ -42,7 +43,8 @@ namespace Barotrauma.Networking
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
-        ENDGAME
+        ENDGAME,
+        NILMODSYNC          //Sync all networked nilmod variables
     }
     enum ServerNetObject
     {
@@ -52,7 +54,8 @@ namespace Barotrauma.Networking
         VOTE,
         ENTITY_POSITION,
         ENTITY_EVENT,
-        ENTITY_EVENT_INITIAL
+        ENTITY_EVENT_INITIAL,
+        SERVER_LOG
     }
 
     enum VoteType
