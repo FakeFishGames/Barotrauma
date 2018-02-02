@@ -1,166 +1,350 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Randomevents>
+  <!-- 
+  Crawler x2-3
+    - common in almost all level types 
+    - can be spawned as mid-round random event
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Crawler/crawler.xml"
-    mineventcount="1" maxeventcount="3"
+    difficulty="3"    
     minamount="2" maxamount="3"
-    repeat="true"
     spawntype="mainpath,ruin"
-    musictype="monster">
-    <OverrideEventCount leveltype="Ridge" min="5" max="6"/>
-    <OverrideEventCount leveltype="Wastes" min="5" max="6"/>
-    <OverrideEventCount leveltype="Open" min="-5" max="1"/>
+    musictype="monster">    
+    <InitialCount min="1" max="3">
+      <Override leveltype="Ridge" min="5" max="6"/>
+      <Override leveltype="Wastes" min="5" max="6"/>
+      <Override leveltype="Open" min="-5" max="1"/>      
+    </InitialCount>
+    <Midround commonness="1.0">
+      <Override leveltype="Ridge" commonness="2.0"/>
+      <Override leveltype="Wastes" commonness="2.0"/>
+      <Override leveltype="Open" commonness="0.5"/>
+    </Midround>
   </MonsterEvent>
 
+  <!-- 
+  Crawler x4-6 inside caves
+    - common in most level types 
+    - can be spawned as mid-round random event
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Crawler/crawler.xml"
-    mineventcount="0" maxeventcount="2"
+    difficulty="5"
     minamount="4" maxamount="6"
     spawntype="cave"
     musictype="monster">
+    <InitialCount min="0" max="2"/>
+    <Midround commonness="1.0">
+      <Override leveltype="Ridge" commonness="2.0"/>
+      <Override leveltype="Wastes" commonness="2.0"/>
+      <Override leveltype="Open" commonness="0.5"/>
+    </Midround>
   </MonsterEvent>
 
+  <!-- 
+  Crawler x10-12
+    - only used as a slightly harder mid-round random event
+  -->
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Crawler/crawler.xml"
+    difficulty="11"
+    minamount="10" maxamount="12"
+    spawntype="mainpath"
+    musictype="monster">
+    <InitialCount min="0" max="0"/>
+    <Midround commonness="1.0">
+      <Override leveltype="Ridge" commonness="2.0"/>
+      <Override leveltype="Wastes" commonness="2.0"/>
+      <Override leveltype="Open" commonness="0.5"/>
+    </Midround>
+  </MonsterEvent>
+
+  <!-- 
+  Tiger thresher x1
+    - can only appear initially in Ridge levels
+    - a fairly common low difficulty mid-round random event
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Tigerthresher/tigerthresher.xml"
-    mineventcount="0" maxeventcount="2"
+    difficulty="8"
     spawntype="mainpath"
     musictype="monster">
-    <OverrideEventCount leveltype="Open" min="-5" max="1"/>
-    
+    <InitialCount max="0">
+      <Override leveltype="Ridge" min="0" max="2"/>
+    </InitialCount>
+    <Midround commonness="0.5">
+      <Override leveltype="Open" commonness="1.0"/>
+    </Midround>
   </MonsterEvent>
 
+  <!-- 
+  Tiger thresher x2-3
+    - a fairly common mid-round random event
+  -->
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Tigerthresher/tigerthresher.xml"
+    minamount="2" maxamount="3"
+    difficulty="16"
+    spawntype="mainpath"
+    musictype="monster">
+    <Midround commonness="0.5"/>
+  </MonsterEvent>
+  
+  <!-- 
+  Moloch x1
+    - doesn't appear initially in any level
+    - a semi-rare random event
+    - common random event in Open levels
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Moloch/moloch.xml"
-    mineventcount="-1" maxeventcount="2"
+    difficulty="20"
     spawntype="mainpath"
-    musictype="monster">
-    <OverrideEventCount leveltype="Ridge" min="-5" max="1"/>
-    <OverrideEventCount leveltype="Open" min="1" max="6"/>
+    musictype="monster">    
+    <InitialCount max="0"/>
+    <Midround commonness="0.2">
+      <Override leveltype="Ridge" commonness="0.1"/>
+      <Override leveltype="Open" commonness="1.0"/>
+    </Midround>
   </MonsterEvent>
-
+  
+  <!-- 
+  Mantis x1-2
+    - can appear initially in any type of level
+    - a common mid-round random event
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Mantis/mantis.xml"
-    mineventcount="0" maxeventcount="2"
+    difficulty="10"
     minamount="1" maxamount="2"    
     repeat="true"
     spawntype="mainpath,ruin"
     musictype="monster">
-    <OverrideEventCount leveltype="Ridge" min="5" max="6"/>
-    <OverrideEventCount leveltype="Wastes" min="5" max="6"/>
-    <OverrideEventCount leveltype="Open" min="-5" max="1"/>
+    <InitialCount min="0" max="2">
+      <Override leveltype="Ridge" min="5" max="6"/>
+      <Override leveltype="Wastes" min="5" max="6"/>
+      <Override leveltype="Open" min="-5" max="1"/>
+    </InitialCount>
+    <Midround commonness="0.8">
+      <Override leveltype="Ridge" commonness="1.6"/>
+      <Override leveltype="Wastes" commonness="1.6"/>
+      <Override leveltype="Open" commonness="0.2"/>
+    </Midround>
   </MonsterEvent>
 
+  <!-- 
+  Mantis x2-3 inside caves
+    - can appear initially in any level type
+    - somewhat common mid-round random event in all level types
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Mantis/mantis.xml"
-    mineventcount="0" maxeventcount="1"
+    difficulty="12"
     minamount="2" maxamount="3"
     spawntype="cave"
     musictype="monster">
+    <InitialCount min="0" max="1"/>
+    <Midround commonness="0.5"/>
   </MonsterEvent>
-  
+
+  <!-- 
+  Coelanth x1 below the level
+    - can appear initially in most level types
+    - somewhat rare mid-round event
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Coelanth/coelanth.xml"
-    mineventcount="0" maxeventcount="3"
+    difficulty="8"
     minamount="1" maxamount="1"
     spawndeep="true"
     spawntype="mainpath"
     musictype="monster">
-  </MonsterEvent>
-
-  <MonsterEvent name="Under attack" description=""
-    characterfile="Content/Characters/Charybdis/charybdis.xml"
-    mineventcount="-5" maxeventcount="2"
-    minamount="1" maxamount="1"
-    spawndeep="true"
-    spawntype="deep"
-    musictype="monster">
-    <OverrideEventCount leveltype="Ridge" max="0"/>
-  </MonsterEvent>
-
-  <MonsterEvent name="Under attack" description=""
-    characterfile="Content/Characters/Charybdis/charybdis.xml"
-    maxamount="0"
-    spawntype="deep"
-    musictype="monster">
-    <OverrideEventCount leveltype="Open" min="0" max="3"/>
+    <InitialCount min="0" max="3"/>
+    <Midround commonness="0.2"/>
   </MonsterEvent>
   
+  <!-- 
+  Charybdis x1 below the level
+    - rare event that can appear initially in most level types
+    - somewhat rare mid-round event
+  -->
   <MonsterEvent name="Under attack" description=""
-    characterfile="Content/Characters/Endworm/endworm.xml"
-    mineventcount="-5" maxeventcount="1"
-    spawndeep="true"
+    characterfile="Content/Characters/Charybdis/charybdis.xml"
+    difficulty="15"
     minamount="1" maxamount="1"
     spawntype="mainpath"
-    musictype="deep">
-    <OverrideEventCount leveltype="Ridge" max="0"/>
+    spawndeep="true"
+    musictype="monster">
+    <InitialCount min="-5" max="2">
+      <Override leveltype="Ridge" max="0"/>
+    </InitialCount>
+    <Midround commonness="0.2"/>
   </MonsterEvent>
 
+  <!-- 
+  Charybdis x2 below the level
+    - doesn't appear initially in any level
+    - somewhat rare mid-round event
+  -->
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Charybdis/charybdis.xml"
+    difficulty="15"
+    minamount="2" maxamount="2"
+    spawntype="mainpath"
+    spawndeep="true"
+    musictype="monster">
+    <InitialCount max="0">
+      <Override leveltype="Open" min="0" max="3"/>
+    </InitialCount>
+    <Midround commonness="0.2"/>
+  </MonsterEvent>
+
+  <!-- 
+  Endworm x1 below the level
+    - can rarely appear initially in all level types except Ridge
+    - somewhat rare high-difficulty mid-round event
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Endworm/endworm.xml"
-    maxeventcount="0"
+    difficulty="50"
+    minamount="1" maxamount="1"
+    spawntype="mainpath"
+    spawndeep="true"
+    musictype="deep">
+    <InitialCount min="-5" max="1">
+      <Override leveltype="Ridge" max="0"/>
+    </InitialCount>
+    <Midround commonness="0.2"/>
+  </MonsterEvent>
+
+  <!-- 
+  Endworm x1 inside the level
+    - can rarely appear in Open levels
+    - somewhat rare high-difficulty mid-round event
+  -->
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Endworm/endworm.xml"
+    difficulty="50"
     minamount="1" maxamount="1"
     spawntype="mainpath"
     musictype="deep">
-    <OverrideEventCount leveltype="Open" min="-1" max="2"/>
-  </MonsterEvent>  
+    <InitialCount max="0">
+      <Override leveltype="Open" min="-2" max="1"/>
+    </InitialCount>
+    <Midround commonness="0.2"/>
+  </MonsterEvent>
 
+  <!-- 
+  Watcher x1-3
+    - rare initial event that can appear in all levels except Ridge and Wastes
+    - a rare low-difficulty mid-round event
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Watcher/watcher.xml"
-    mineventcount="-3" maxeventcount="1"
+    difficulty="3"
     spawntype="mainpath,cave"
     minamount="1" maxamount="3">
-    <OverrideEventCount leveltype="Ridge" max="0"/>
-    <OverrideEventCount leveltype="Wastes" max="0"/>    
+    <InitialCount min="-3" max="1">
+      <Override leveltype="Ridge" max="0"/>
+      <Override leveltype="Wastes" max="0"/>
+    </InitialCount>
+    <Midround commonness="0.2">
+      <Override leveltype="Ridge" commonness="0.0"/>
+      <Override leveltype="Wastes" commonness="0.0"/>
+    </Midround>  
   </MonsterEvent>
 
+  <!-- 
+  Husk x2-3
+    - can appear initially in any type of level, more common in Wastes
+    - a medium-commonness mid-round event
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Husk/husk.xml"
-    mineventcount="-2" maxeventcount="3"
+    difficulty="5"
     minamount="2" maxamount="3"
     repeat="true"
     spawntype="mainpath,ruin"
     musictype="monster">
-    <OverrideEventCount leveltype="Wastes" min="1" max="3"/>
+    <InitialCount min="-2" max="3">
+      <Override leveltype="Wastes" min="1" max="3"/>
+    </InitialCount>
+    <Midround commonness="0.5">
+      <Override leveltype="Wastes" commonness="1.0"/>
+      <Override leveltype="Open" commonness="0.5"/>
+    </Midround>
   </MonsterEvent>
 
+  <!-- 
+  Husk x2-6 inside caves
+    - can rarely appear in all level types
+    - a medium-commonness mid-round event
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Husk/husk.xml"
-    mineventcount="-1" maxeventcount="1"
     minamount="2" maxamount="6"
     spawntype="cave"
     musictype="monster">
+    <InitialCount min="-1" max="1"/>
+    <Midround commonness="0.5"/>
   </MonsterEvent>
-  
+
+  <!-- 
+  Fractalguardian x1 inside ruins
+    - appears in all level types
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Fractalguardian/fractalguardian.xml"
-    mineventcount="1" maxeventcount="2"
     minamount="1" maxamount="1"
     spawntype="ruin"
     musictype="monster">
+    <InitialCount min="1" max="2"/>
   </MonsterEvent>
 
+  <!-- 
+  Fractalguardian2 x1 inside ruins
+    - appears in all level types
+  -->
   <MonsterEvent name="Under attack" description=""
     characterfile="Content/Characters/Fractalguardian2/fractalguardian2.xml"
-    mineventcount="1" maxeventcount="2"
     minamount="1" maxamount="1"
     spawntype="ruin"
     musictype="monster">
+    <InitialCount min="1" max="2"/>
+  </MonsterEvent>
+
+  <!-- 
+  Carrier x1
+    - a rare medium-difficulty mid-round random event
+  -->
+  <MonsterEvent name="Under attack" description=""
+    characterfile="Content/Characters/Carrier/carrier.xml"
+    difficulty="30"
+    spawntype="mainpath"
+    musictype="monster">
+    <InitialCount max="0"/>
+    <Midround commonness="0.2"/>
   </MonsterEvent>
 
   <ArtifactEvent name="Artifact" description=""
-    mineventcount="0" maxeventcount="5"
-    itemname="Skyholder Artifact"/>
+    itemname="Skyholder Artifact">
+    <InitialCount min="0" max="5"/>
+  </ArtifactEvent>
 
   <ArtifactEvent name="Artifact" description=""
-    mineventcount="0" maxeventcount="5"
-    itemname="Thermal Artifact"/>
+    itemname="Thermal Artifact">
+    <InitialCount min="0" max="5"/>
+  </ArtifactEvent>
 
   <ArtifactEvent name="Artifact" description=""
-    mineventcount="0" maxeventcount="8"
-    itemname="Faraday Artifact"/>
+    itemname="Faraday Artifact">
+    <InitialCount min="0" max="8"/>
+  </ArtifactEvent>
 
   <ArtifactEvent name="Artifact" description=""
-    mineventcount="0" maxeventcount="2"
-    itemname="Nasonov Artifact"/>
+    itemname="Nasonov Artifact">
+    <InitialCount min="0" max="2"/>
+  </ArtifactEvent>
   
 </Randomevents>

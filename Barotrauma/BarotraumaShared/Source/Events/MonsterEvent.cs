@@ -16,14 +16,14 @@ namespace Barotrauma
 
         private bool spawnDeep;
 
-        private bool disallowed;
-
-        private bool repeat;
-        
-        private Level.PositionType spawnPosType;
-
         private Vector2 spawnPos;
 
+        private bool disallowed;
+                
+        private Level.PositionType spawnPosType;
+
+        private bool spawnPending;
+        
         public override Vector2 DebugDrawPos
         {
             get { return spawnPos; }
@@ -48,27 +48,24 @@ namespace Barotrauma
             }
         }
 
-        public MonsterEvent(XElement element)
-            : base (element)
+        public MonsterEvent(ScriptedEventPrefab prefab)
+            : base (prefab)
         {
-            characterFile = element.GetAttributeString("characterfile", "");
+            characterFile = prefab.ConfigElement.GetAttributeString("characterfile", "");
 
-            int defaultAmount = element.GetAttributeInt("amount", 1);
+            int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
+            minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
+            maxAmount = Math.Max(prefab.ConfigElement.GetAttributeInt("maxamount", 1), minAmount);
 
-            minAmount = element.GetAttributeInt("minamount", defaultAmount);
-            maxAmount = Math.Max(element.GetAttributeInt("maxamount", 1), minAmount);
-
-            var spawnPosTypeStr = element.GetAttributeString("spawntype", "");
+            var spawnPosTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
 
             if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
-                !Enum.TryParse<Level.PositionType>(spawnPosTypeStr, true, out spawnPosType))
+                !Enum.TryParse(spawnPosTypeStr, true, out spawnPosType))
             {
                 spawnPosType = Level.PositionType.MainPath;
             }
 
-            spawnDeep = element.GetAttributeBool("spawndeep", false);
-
-            repeat = element.GetAttributeBool("repeat", repeat);
+            spawnDeep = prefab.ConfigElement.GetAttributeBool("spawndeep", false);
 
             if (GameMain.NetworkMember != null)
             {
@@ -81,42 +78,116 @@ namespace Barotrauma
             }
         }
 
-        public override void Init()
+        public override bool CanAffectSubImmediately(Level level)
         {
-            base.Init();
+            List<Vector2> positions = GetAvailableSpawnPositions();
+            foreach (Vector2 position in positions)
+            {
+                if (Vector2.DistanceSquared(position, Submarine.MainSub.WorldPosition) < 10000.0f * 10000.0f)
+                {
+                    return true;
+                }
+            }
 
-            monsters = SpawnMonsters(Rand.Range(minAmount, maxAmount, Rand.RandSync.Server), false);
+            return false;
+        }
+        
+        public override void Init(bool affectSubImmediately)
+        {
+            FindSpawnPosition(affectSubImmediately);
             if (GameSettings.VerboseLogging)
             {
-                DebugConsole.NewMessage("Initialized MonsterEvent (" + monsters[0]?.SpeciesName + " x" + monsters.Length + ")", Color.White);
+                DebugConsole.NewMessage("Initialized MonsterEvent (" + characterFile + ")", Color.White);
             }
         }
 
-        private Character[] SpawnMonsters(int amount, bool createNetworkEvent)
+        private List<Vector2> GetAvailableSpawnPositions()
         {
-            if (disallowed) return null;
-            
-            float minDist = spawnPosType == Level.PositionType.Ruin ? 0.0f : 20000.0f;
-            if (!Level.Loaded.TryGetInterestingPosition(true, spawnPosType, minDist, out spawnPos))
-            {
-                //no suitable position found, disable the event
-                repeat = false;
-                Finished();
-                return null;
-            }            
+            var availablePositions = Level.Loaded.PositionsOfInterest.FindAll(p => spawnPosType.HasFlag(p.PositionType));
 
-            var monsters = new Character[amount];
-
-            if (spawnDeep) spawnPos.Y -= Level.Loaded.Size.Y;
-                
-            for (int i = 0; i < amount; i++)
+            List<Vector2> positions = new List<Vector2>();
+            foreach (var allowedPosition in availablePositions)
             {
-                spawnPos.X += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
-                spawnPos.Y += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
-                monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null, true, createNetworkEvent);
+                positions.Add(allowedPosition.Position);
             }
 
-            return monsters;
+            if (spawnDeep)
+            {
+                for (int i = 0; i < positions.Count; i++)
+                {
+                    positions[i] = new Vector2(positions[i].X, positions[i].Y - Level.Loaded.Size.Y);
+                }
+            }
+
+            return positions;
+        }
+
+        private void FindSpawnPosition(bool affectSubImmediately)
+        {
+            if (disallowed) return;
+
+            spawnPos = Vector2.Zero;
+            var availablePositions = GetAvailableSpawnPositions();
+            if (affectSubImmediately)
+            {
+                if (availablePositions.Count == 0)
+                {
+                    //no suitable position found, disable the event
+                    Finished();
+                    return;
+                }
+
+                float closestDist = float.PositiveInfinity;
+                //find the closest spawnposition that isn't too close to any of the subs
+                foreach (Vector2 position in availablePositions)
+                {
+                    float dist = Vector2.DistanceSquared(position, Submarine.MainSub.WorldPosition);
+                    foreach (Submarine sub in Submarine.Loaded)
+                    {
+                        float minDistToSub = GetMinDistanceToSub(sub);
+                        if (dist > minDistToSub * minDistToSub && dist < closestDist)
+                        {
+                            closestDist = dist;
+                            spawnPos = position;
+                        }
+                    }
+                }
+
+                //only found a spawnpos that's very far from the sub, pick one that's closer
+                //and wait for the sub to move further before spawning
+                if (closestDist > 10000.0f * 10000.0f)
+                {
+                    foreach (Vector2 position in availablePositions)
+                    {
+                        float dist = Vector2.DistanceSquared(position, Submarine.MainSub.WorldPosition);
+                        if (dist < closestDist)
+                        {
+                            closestDist = dist;
+                            spawnPos = position;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                float minDist = spawnPosType == Level.PositionType.Ruin ? 0.0f : 20000.0f;
+                availablePositions.RemoveAll(p => Vector2.Distance(Submarine.MainSub.WorldPosition, p) < minDist);
+                if (availablePositions.Count == 0)
+                {
+                    //no suitable position found, disable the event
+                    Finished();
+                    return;
+                }
+
+                spawnPos = availablePositions[Rand.Int(availablePositions.Count, Rand.RandSync.Server)];
+            }
+            spawnPending = true;
+        }
+
+        private float GetMinDistanceToSub(Submarine submarine)
+        {
+            //5000 units is slightly more than the default range of the sonar
+            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), 5000.0f);
         }
 
         public override void Update(float deltaTime)
@@ -127,37 +198,35 @@ namespace Barotrauma
                 return;
             }
             
-            if (repeat)
-            {
-                //clients aren't allowed to spawn more monsters mid-round
-                if (GameMain.Client != null)
-                {
-                    return;
-                }
-
-                for (int i = 0; i < monsters.Length; i++)
-                {
-                    if (monsters[i] == null || monsters[i].Removed || monsters[i].IsDead)
-                    {
-                        monsters[i] = SpawnMonsters(1, true)[0];
-                    }
-                }
-            }
-
             if (isFinished) return;
 
-            isActive = false;
+            //isActive = false;
 
-            Entity targetEntity = null;
-            if (Character.Controlled != null)
+            if (spawnPending)
             {
-                targetEntity = Character.Controlled;
-            }
-            else
-            {
-                targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+                //wait until there are no submarines at the spawnpos
+                foreach (Submarine submarine in Submarine.Loaded)
+                {
+                    float minDist = GetMinDistanceToSub(submarine);
+                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos) < minDist * minDist) return;
+                }
+
+                int amount = Rand.Range(minAmount, maxAmount, Rand.RandSync.Server);
+                monsters = new Character[amount];
+
+                for (int i = 0; i < amount; i++)
+                {
+                    spawnPos.X += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
+                    spawnPos.Y += Rand.Range(-0.5f, 0.5f, Rand.RandSync.Server);
+                    monsters[i] = Character.Create(characterFile, spawnPos, null, GameMain.Client != null, true, true);
+                }
+
+                spawnPending = false;
             }
 
+            Entity targetEntity = Character.Controlled != null ? 
+                (Entity)Character.Controlled : Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
+            
             bool monstersDead = true;
             foreach (Character monster in monsters)
             {
@@ -173,7 +242,7 @@ namespace Barotrauma
                 }
             }
 
-            if (monstersDead && !repeat) Finished();
+            if (monstersDead) Finished();
         }
     }
 }

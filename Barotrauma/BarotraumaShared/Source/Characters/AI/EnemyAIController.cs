@@ -74,6 +74,11 @@ namespace Barotrauma
         {
             get { return attackRooms; }
         }
+
+        public float CombatStrength
+        {
+            get { return combatStrength; }
+        }
                         
         public EnemyAIController(Character c, string file) : base(c)
         {
