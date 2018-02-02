@@ -28,7 +28,7 @@ namespace Barotrauma
             MainPath=1, Cave=2, Ruin=4
         }
         
-        struct InterestingPosition
+        public struct InterestingPosition
         {
             public readonly Vector2 Position;
             public readonly PositionType PositionType;
@@ -118,6 +118,11 @@ namespace Barotrauma
         public List<List<Vector2>> SmallTunnels
         {
             get { return smallTunnels; }
+        }
+
+        public List<InterestingPosition> PositionsOfInterest
+        {
+            get { return positionsOfInterest; }
         }
 
         public string Seed

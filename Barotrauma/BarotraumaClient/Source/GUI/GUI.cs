@@ -480,14 +480,11 @@ namespace Barotrauma
                 for (int i = 1; i < Sounds.SoundManager.DefaultSourceCount; i++)
                 {
                     Color clr = Color.White;
-
-                    string soundStr = i+": ";
-
+                    string soundStr = i + ": ";
                     var playingSound = Sounds.SoundManager.GetPlayingSound(i);
-
                     if (playingSound == null)
                     {
-                        soundStr+= "none";
+                        soundStr += "none";
                         clr *= 0.5f;
                     }
                     else
@@ -501,13 +498,18 @@ namespace Barotrauma
                         }
                     }
 
-                    GUI.DrawString(spriteBatch, new Vector2(200, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
+                    DrawString(spriteBatch, new Vector2(200, i * 15), soundStr, clr, Color.Black * 0.5f, 0, SmallFont);
                 }
             }
-            
+
             if (GameMain.NetworkMember != null) GameMain.NetworkMember.Draw(spriteBatch);
 
             DrawMessages(spriteBatch, (float)deltaTime);
+
+            if (GameMain.DebugDraw && GameMain.GameSession?.EventManager != null)
+            {
+                GameMain.GameSession.EventManager.DebugDrawHUD(spriteBatch);
+            }
 
             if (GUIMessageBox.VisibleBox != null)
             {
