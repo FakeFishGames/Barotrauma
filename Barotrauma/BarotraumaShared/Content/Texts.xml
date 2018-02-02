@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<infotexts>  
+<infotexts>    
+  <!-- Loading screen -->
+  <Loading>Loading...</Loading>
+  <PressAnyKey>Press any key to continue</PressAnyKey>
+  
   <!-- Main menu buttons -->
   <TutorialButton>Tutorial</TutorialButton>
   <NewGameButton>New Game</NewGameButton>
@@ -52,7 +56,9 @@
   <OxygenBarInfo>Running out of oxygen!</OxygenBarInfo>
   <PressureInfo>Water pressure increasing!</PressureInfo>
   <Grabbing>Grabbing</Grabbing>
-  <Stun>Stun</Stun>  
+  <Stun>Stun</Stun>
+  <Disguised>(Disguised)</Disguised>
+  <UseItemButton>Use</UseItemButton>
 
   <!-- Status -->
   <StatusOK>OK</StatusOK>
@@ -113,6 +119,7 @@
   <PronounReflexiveFemale>Herself</PronounReflexiveFemale>
 
   <!-- Mission info -->
+  <MissionInfo>Mission info</MissionInfo>
   <NoMission>No mission</NoMission>
   <MissionReward>Reward: [reward]</MissionReward>
 
@@ -145,6 +152,12 @@
   <Reward>Reward</Reward>
   <Credit>Credit</Credit>
   <Credits>Credits</Credits>
+
+  <!-- Ingame menus -->
+  <EndRound>End round</EndRound>
+  <EnterLocation>Enter [locationname]</EnterLocation>
+  <LeaveSubBehind>One of your vessels isn't at the exit yet. Do you want to leave it behind?</LeaveSubBehind>
+  <LeaveSubsBehind>Some of your vessels aren't at the exit yet. Do you want to leave them behind?</LeaveSubsBehind>
 
   <!-- Server list -->
   <JoinServer>Join server</JoinServer>
@@ -243,8 +256,7 @@
   <NoWaypointsWarning>No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.</NoWaypointsWarning>
   <NoCargoSpawnpointWarning>"The submarine does not have spawnpoints for cargo (which are used for determining where to place bought items). To fix this, create a new spawnpoint and change its "spawn type" parameter to "cargo".</NoCargoSpawnpointWarning>
   <FarAwayEntitiesWarning>One or more structures have been placed very far from the submarine. Show the structures?</FarAwayEntitiesWarning>
-  
-  
+    
   <!-- Sub description -->
   <Dimensions>Dimensions</Dimensions>
   <DimensionsFormat>[width]x[height] m</DimensionsFormat>
@@ -277,6 +289,41 @@
   <!-- Chat -->
   <SpamFilterKicked>You have been kicked by the spam filter.</SpamFilterKicked>
   <SpamFilterBlocked>You have been blocked by the spam filter. Try again after 10 seconds.</SpamFilterBlocked>
+
+
+  <!-- Item HUDs -->
+  <Force>Force</Force>
+  <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
+  <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
+  <FabricatorCondition>Condition</FabricatorCondition>
+  <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
+  <FabricatorCreate>Create</FabricatorCreate>
+  <Lvl>Lvl</Lvl>
+  <MiniMapHullBreach>Hull breach</MiniMapHullBreach>
+  <MiniMapWaterLevel>Water level</MiniMapWaterLevel>
+  <MiniMapWaterLevelUnavailable>Water level data not available</MiniMapWaterLevelUnavailable>
+  <MiniMapAirQuality>Air quality</MiniMapAirQuality>
+  <MiniMapAirQualityUnavailable>Air quality data not available</MiniMapAirQualityUnavailable>
+  <PumpRunning>Running</PumpRunning>
+  <PumpIn>IN</PumpIn>
+  <PumpOut>OUT</PumpOut>
+  <PumpSpeed>Pumping speed</PumpSpeed>
+  <ReactorAutoTemp>Automatic temperature control</ReactorAutoTemp>
+  <ReactorOutput>Output</ReactorOutput>
+  <ReactorGridLoad>Grid load</ReactorGridLoad>
+  <ReactorShutdownTemp>Shutdown temperature</ReactorShutdownTemp>
+  <ReactorFissionRate>Fission rate</ReactorFissionRate>
+  <ReactorCoolingRate>Cooling rate</ReactorCoolingRate>
+  <SteeringAutoPilot>Autopilot</SteeringAutoPilot>
+  <SteeringMaintainPos>Maintain position</SteeringMaintainPos>
+  <SteeringVelocityX>Velocity: [kph] km/h</SteeringVelocityX>
+  <SteeringVelocityY>Descent velocity: [kph] km/h</SteeringVelocityY>
+  <SteeringDepth>Depth: [m] m</SteeringDepth>
+  <PowerContainerCharge>Charge: [charge] kWm ([percentage] %)</PowerContainerCharge>
+  <PowerContainerRechargeRate>Recharge rate</PowerContainerRechargeRate>
+  <PowerTransferPower>Power: [power] kW</PowerTransferPower>
+  <PowerTransferLoad>Load: [load] kW</PowerTransferLoad>
+  <ConnectionLocked>(Locked)</ConnectionLocked>
 
   <!-- Item fixing -->
   <FixHeader>Attempting to fix [itemname]</FixHeader>
@@ -327,6 +374,7 @@
   <GiveInButton>Give in</GiveInButton>
   <GiveInHelpMultiplayer>Let go of your character and enter spectator mode (other players will no longer be able to revive you)</GiveInHelpMultiplayer>
   <GiveInHelpSingleplayer>"The character can no longer be revived if you give in."</GiveInHelpSingleplayer>
+  <DeathChatNotification>Your chat messages will only be visible to other dead players.</DeathChatNotification>
 
   <!-- Status -->  
   <Deceased>Deceased</Deceased>
@@ -358,6 +406,9 @@
   <HuskDormant>Your muscles are aching</HuskDormant>
   <HuskCantSpeak>You feel something moving in your throat. You try to scream but no sound comes out.</HuskCantSpeak>
   <HuskActivate>A strange chitinous appendage bursts out from your mouth. Use it to inject eggs into a living body by pressing [Attack]!</HuskActivate>
+
+
+
 
 
 

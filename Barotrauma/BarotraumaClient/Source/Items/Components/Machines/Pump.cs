@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            isActiveTickBox = new GUITickBox(new Rectangle(0, 0, 20, 20), "Running", Alignment.TopLeft, GuiFrame);
+            isActiveTickBox = new GUITickBox(new Rectangle(0, 0, 20, 20), TextManager.Get("PumpRunning"), Alignment.TopLeft, GuiFrame);
             isActiveTickBox.OnSelected = (GUITickBox box) =>
             {
                 targetLevel = null;
@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            var button = new GUIButton(new Rectangle(160, 40, 35, 30), "OUT", "", GuiFrame);
+            var button = new GUIButton(new Rectangle(160, 40, 35, 30), TextManager.Get("PumpOut"), "", GuiFrame);
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 FlowPercentage -= 10.0f;
@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            button = new GUIButton(new Rectangle(210, 40, 35, 30), "IN", "", GuiFrame);
+            button = new GUIButton(new Rectangle(210, 40, 35, 30), TextManager.Get("PumpIn"), "", GuiFrame);
             button.OnClicked = (GUIButton btn, object obj) =>
             {
                 FlowPercentage += 10.0f;
@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
 
             GuiFrame.Draw(spriteBatch);
 
-            GUI.Font.DrawString(spriteBatch, "Pumping speed: " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
+            GUI.Font.DrawString(spriteBatch, TextManager.Get("PumpSpeed") + ": " + (int)flowPercentage + " %", new Vector2(x + 40, y + 85), Color.White);
 
         }
 

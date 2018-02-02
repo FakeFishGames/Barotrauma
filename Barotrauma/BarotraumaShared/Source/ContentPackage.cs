@@ -156,9 +156,9 @@ namespace Barotrauma
                 try 
                 {
                     if (file.path.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
-                        hashes.Add(calculateXmlHash(file, ref md5));
+                        hashes.Add(CalculateXmlHash(file, ref md5));
                     else
-                        hashes.Add(calculateFileHash(file, ref md5));
+                        hashes.Add(CalculateFileHash(file, ref md5));
                 }
 
                 catch (Exception e)
@@ -180,7 +180,7 @@ namespace Barotrauma
         }
 
  
-        private byte[] calculateXmlHash(ContentFile file, ref MD5 md5) //todo: Change ref to in (in C# 7.2)
+        private byte[] CalculateXmlHash(ContentFile file, ref MD5 md5) //todo: Change ref to in (in C# 7.2)
         {
             var doc = XMLExtensions.TryLoadXml(file.path);
 
@@ -200,7 +200,7 @@ namespace Barotrauma
             }
         }
 
-        private byte[] calculateFileHash(ContentFile file, ref MD5 md5)
+        private byte[] CalculateFileHash(ContentFile file, ref MD5 md5)
         {
             using (var stream = File.OpenRead(file.path))
             {

@@ -45,7 +45,7 @@ namespace Barotrauma
 
                         useOnSelfButton[i - 3] = new GUIButton(
                             new Rectangle((int)SlotPositions[i].X, (int)(SlotPositions[i].Y - spacing - rectHeight),
-                                rectWidth, rectHeight), "Use", "")
+                                rectWidth, rectHeight), TextManager.Get("UseItemButton"), "")
                         {
                             UserData = i,
                             OnClicked = UseItemOnSelf

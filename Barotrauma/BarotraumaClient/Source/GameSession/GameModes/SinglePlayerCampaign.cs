@@ -28,30 +28,19 @@ namespace Barotrauma
         public SinglePlayerCampaign(GameModePreset preset, object param)
             : base(preset, param)
         {            
-            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), "End round", null, Alignment.TopLeft, Alignment.Center, "");
+            endRoundButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 220, 20, 200, 25), TextManager.Get("EndRound"), null, Alignment.TopLeft, Alignment.Center, "");
             endRoundButton.Font = GUI.SmallFont;
             endRoundButton.OnClicked = TryEndRound;
 
-            for (int i = 0; i < 3; i++)
+            foreach (JobPrefab jobPrefab in JobPrefab.List)
             {
-                JobPrefab jobPrefab = null;
-                switch (i)
+                for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
-                    case 0:
-                        jobPrefab = JobPrefab.List.Find(jp => jp.Name == "Captain");
-                        break;
-                    case 1:
-                        jobPrefab = JobPrefab.List.Find(jp => jp.Name == "Engineer");
-                        break;
-                    case 2:
-                        jobPrefab = JobPrefab.List.Find(jp => jp.Name == "Mechanic");
-                        break;
+                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
                 }
-                
-                CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", Gender.None, jobPrefab));
             }
         }
-              
+
         public override void Start()
         {
             CargoManager.CreateItems();
@@ -116,13 +105,13 @@ namespace Barotrauma
             }
             else if (leavingSub.AtEndPosition)
             {
-                endRoundButton.Text = ToolBox.LimitString("Enter " + Map.SelectedLocation.Name, endRoundButton.Font, endRoundButton.Rect.Width - 5);
+                endRoundButton.Text = ToolBox.LimitString(TextManager.Get("EnterLocation").Replace("[locationname]", Map.SelectedLocation.Name), endRoundButton.Font, endRoundButton.Rect.Width - 5);
                 endRoundButton.UserData = leavingSub;
                 endRoundButton.Visible = true;
             }
             else if (leavingSub.AtStartPosition)
             {
-                endRoundButton.Text = ToolBox.LimitString("Enter " + Map.CurrentLocation.Name, endRoundButton.Font, endRoundButton.Rect.Width - 5);
+                endRoundButton.Text = ToolBox.LimitString(TextManager.Get("EnterLocation").Replace("[locationname]", Map.CurrentLocation.Name), endRoundButton.Font, endRoundButton.Rect.Width - 5);
                 endRoundButton.UserData = leavingSub;
                 endRoundButton.Visible = true;
             }
@@ -219,7 +208,7 @@ namespace Barotrauma
                     summaryScreen = summaryScreen.children[0];
                     summaryScreen.RemoveChild(summaryScreen.children.Find(c => c is GUIButton));
 
-                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), "Load game", Alignment.BottomRight, "", summaryScreen);
+                    var okButton = new GUIButton(new Rectangle(-120, 0, 100, 30), TextManager.Get("LoadGameButton"), Alignment.BottomRight, "", summaryScreen);
                     okButton.OnClicked += (GUIButton button, object obj) => 
                     {
                         GameMain.GameSession.LoadPrevious();
@@ -228,7 +217,7 @@ namespace Barotrauma
                         return true;
                     };
 
-                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Quit", Alignment.BottomRight, "", summaryScreen);
+                    var quitButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", summaryScreen);
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
                 }
@@ -257,17 +246,9 @@ namespace Barotrauma
 
             if (subsToLeaveBehind.Any())
             {
-                string msg = "";
-                if (subsToLeaveBehind.Count == 1)
-                {
-                    msg = "One of your vessels isn't at the exit yet. Do you want to leave it behind?";
-                }
-                else
-                {
-                    msg = "Some of your vessels aren't at the exit yet. Do you want to leave them behind?";
-                }
+                string msg = TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind");
 
-                var msgBox = new GUIMessageBox("Warning", msg, new string[] {"Yes", "No"});
+                var msgBox = new GUIMessageBox(TextManager.Get("Warning"), msg, new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
                 msgBox.Buttons[0].OnClicked += EndRound;
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
                 msgBox.Buttons[0].UserData = Submarine.Loaded.FindAll(s => !subsToLeaveBehind.Contains(s));

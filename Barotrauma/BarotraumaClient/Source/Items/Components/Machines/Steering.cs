@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            autopilotTickBox = new GUITickBox(new Rectangle(0, 25, 20, 20), "Autopilot", Alignment.TopLeft, GuiFrame);
+            autopilotTickBox = new GUITickBox(new Rectangle(0, 25, 20, 20), TextManager.Get("SteeringAutoPilot"), Alignment.TopLeft, GuiFrame);
             autopilotTickBox.OnSelected = (GUITickBox box) =>
             {
                 AutoPilot = box.Selected;
@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            maintainPosTickBox = new GUITickBox(new Rectangle(5, 50, 15, 15), "Maintain position", Alignment.TopLeft, GUI.SmallFont, GuiFrame);
+            maintainPosTickBox = new GUITickBox(new Rectangle(5, 50, 15, 15), TextManager.Get("SteeringMaintainPos"), Alignment.TopLeft, GUI.SmallFont, GuiFrame);
             maintainPosTickBox.Enabled = false;
             maintainPosTickBox.OnSelected = ToggleMaintainPosition;
 
@@ -100,12 +100,12 @@ namespace Barotrauma.Items.Components
                 Vector2 realWorldVelocity = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity * Physics.DisplayToRealWorldRatio) * 3.6f;
                 float realWorldDepth = Math.Abs(item.Submarine.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 65),
-                    "Velocity: " + (int)realWorldVelocity.X + " km/h", Color.LightGreen, null, 0, GUI.SmallFont);
+                    TextManager.Get("SteeringVelocityX").Replace("[kph]", ((int)realWorldVelocity.X).ToString()), Color.LightGreen, null, 0, GUI.SmallFont);
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 50),
-                    "Descent velocity: " + -(int)realWorldVelocity.Y + " km/h", Color.LightGreen, null, 0, GUI.SmallFont);
+                    TextManager.Get("SteeringVelocityY").Replace("[kph]", ((int)-realWorldVelocity.Y).ToString()), Color.LightGreen, null, 0, GUI.SmallFont);
 
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 30),
-                    "Depth: " + (int)realWorldDepth + " m", Color.LightGreen, null, 0, GUI.SmallFont);
+                   TextManager.Get("SteeringDepth").Replace("[m]", ((int)realWorldDepth).ToString()), Color.LightGreen, null, 0, GUI.SmallFont);
             }
 
             GUI.DrawLine(spriteBatch,
