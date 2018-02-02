@@ -346,5 +346,14 @@
     itemname="Nasonov Artifact">
     <InitialCount min="0" max="2"/>
   </ArtifactEvent>
+
+  <MalfunctionEvent name="Junction Box" description=""
+    difficulty="5"
+    decreaseconditionamount="100"
+    duration="5"
+    minitemamount ="1" maxitemamount="2"
+    itemnames="Junction Box">
+    <Midround commonness="0.5"/>
+  </MalfunctionEvent>
   
 </Randomevents>

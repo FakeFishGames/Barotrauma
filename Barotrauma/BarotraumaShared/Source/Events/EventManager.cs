@@ -6,8 +6,6 @@ namespace Barotrauma
 {
     partial class EventManager
     {
-        const float CriticalPriority = 50.0f;
-
         private List<ScriptedEvent> events;
 
         private Level level;
@@ -36,7 +34,7 @@ namespace Barotrauma
         private const float IntensityUpdateInterval = 5.0f;
         private float intensityUpdateTimer;
 
-        private float avgCrewHealth, avgHullIntegrity, subProgressAmount, floodingAmount, fireAmount, enemyDanger;
+        private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger;
 
         public float CurrentIntensity
         {
