@@ -1006,26 +1006,28 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage]: Creates an explosion at the position of the cursor.", (string[] args) =>
+            commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [emp strength]: Creates an explosion at the position of the cursor.", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                float range = 500, force = 10, damage = 50, structureDamage = 10;
+                float range = 500, force = 10, damage = 50, structureDamage = 10, empStrength = 0.0f;
                 if (args.Length > 0) float.TryParse(args[0], out range);
                 if (args.Length > 1) float.TryParse(args[1], out force);
                 if (args.Length > 2) float.TryParse(args[2], out damage);
                 if (args.Length > 3) float.TryParse(args[3], out structureDamage);
-                new Explosion(range, force, damage, structureDamage).Explode(explosionPos);
+                if (args.Length > 4) float.TryParse(args[4], out empStrength);
+                new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos);
             },
             null,
-            (Client client, Vector2 cursorWorldPos, string[] args) => 
+            (Client client, Vector2 cursorWorldPos, string[] args) =>
             {
                 Vector2 explosionPos = cursorWorldPos;
-                float range = 500, force = 10, damage = 50, structureDamage = 10;
+                float range = 500, force = 10, damage = 50, structureDamage = 10, empStrength = 0.0f; ;
                 if (args.Length > 0) float.TryParse(args[0], out range);
                 if (args.Length > 1) float.TryParse(args[1], out force);
                 if (args.Length > 2) float.TryParse(args[2], out damage);
                 if (args.Length > 3) float.TryParse(args[3], out structureDamage);
-                new Explosion(range, force, damage, structureDamage).Explode(explosionPos);
+                if (args.Length > 4) float.TryParse(args[4], out empStrength);
+                new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos);
             }));
 
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
