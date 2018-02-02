@@ -85,7 +85,7 @@ namespace Barotrauma
             set
             {
                 enabled = value;
-                scrollBar.Enabled = value;
+                //scrollBar.Enabled = value;
             }
         }
         
@@ -331,8 +331,6 @@ namespace Barotrauma
 
             UpdateChildrenRect(deltaTime);
             
-            if (!enabled) return;
-
             if (scrollBarEnabled && !scrollBarHidden) scrollBar.Update(deltaTime);
 
             if ((MouseOn == this || MouseOn == scrollBar || IsParentOf(MouseOn)) && PlayerInput.ScrollWheelSpeed != 0)

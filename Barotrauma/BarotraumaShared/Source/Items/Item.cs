@@ -1436,6 +1436,39 @@ namespace Barotrauma
                 {
                     msg.Write((bool)value);
                 }
+                else if (value is Color)
+                {
+                    Color color = (Color)value;
+                    msg.Write(color.R);
+                    msg.Write(color.G);
+                    msg.Write(color.B);
+                    msg.Write(color.A);
+                }
+                else if (value is Vector2)
+                {
+                    msg.Write(((Vector2)value).X);
+                    msg.Write(((Vector2)value).Y);
+                }
+                else if (value is Vector3)
+                {
+                    msg.Write(((Vector3)value).X);
+                    msg.Write(((Vector3)value).Y);
+                    msg.Write(((Vector3)value).Z);
+                }
+                else if (value is Vector4)
+                {
+                    msg.Write(((Vector4)value).X);
+                    msg.Write(((Vector4)value).Y);
+                    msg.Write(((Vector4)value).Z);
+                    msg.Write(((Vector4)value).W);
+                }
+                else if (value is Rectangle)
+                {
+                    msg.Write(((Rectangle)value).X);
+                    msg.Write(((Rectangle)value).Y);
+                    msg.Write(((Rectangle)value).Width);
+                    msg.Write(((Rectangle)value).Height);
+                }
                 else
                 {
                     throw new System.NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
@@ -1472,6 +1505,26 @@ namespace Barotrauma
             else if (type == typeof(bool))
             {
                 property.TrySetValue(msg.ReadBoolean());
+            }
+            else if (type == typeof(Color))
+            {
+                property.TrySetValue(new Color(msg.ReadByte(), msg.ReadByte(),msg.ReadByte(),msg.ReadByte()));
+            }
+            else if (type == typeof(Vector2))
+            {
+                property.TrySetValue(new Vector2(msg.ReadFloat(), msg.ReadFloat()));
+            }
+            else if (type == typeof(Vector3))
+            {
+                property.TrySetValue(new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat()));
+            }
+            else if (type == typeof(Vector4))
+            {
+                property.TrySetValue(new Vector4(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat()));
+            }
+            else if (type == typeof(Rectangle))
+            {
+                property.TrySetValue(new Vector4(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32()));
             }
             else
             {

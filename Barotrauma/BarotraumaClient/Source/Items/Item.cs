@@ -329,60 +329,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        private bool EnterProperty(GUITickBox tickBox)
-        {
-            var property = tickBox.UserData as SerializableProperty;
-            if (property == null) return false;
-
-            property.TrySetValue(tickBox.Selected);
-
-            return true;
-        }
-
-        private bool EnterProperty(GUITextBox textBox, string text)
-        {
-            textBox.Color = Color.DarkGreen;
-
-            var property = textBox.UserData as SerializableProperty;
-            if (property == null) return false;
-
-            object prevValue = property.GetValue();
-
-            textBox.Deselect();
-
-            if (property.TrySetValue(text))
-            {
-                textBox.Text = text;
-
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
-                }
-                else if (GameMain.Client != null)
-                {
-                    GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
-                }
-
-                return true;
-            }
-            else
-            {
-                if (prevValue != null)
-                {
-                    textBox.Text = prevValue.ToString();
-                }
-                return false;
-            }
-        }
-
-        private bool PropertyChanged(GUITextBox textBox, string text)
-        {
-            textBox.Color = Color.Red;
-
-            return true;
-        }
-
+        
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             if (type == ServerNetObject.ENTITY_POSITION)

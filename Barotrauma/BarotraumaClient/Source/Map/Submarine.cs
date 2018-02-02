@@ -123,7 +123,7 @@ namespace Barotrauma
 
             if (PreviewImage == null)
             {
-                var txtBlock = new GUITextBlock(new Rectangle(-10, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
+                var txtBlock = new GUITextBlock(new Rectangle(-20, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
                 txtBlock.OutlineColor = txtBlock.TextColor;
             }
             else
@@ -135,16 +135,20 @@ namespace Barotrauma
             string dimensionsStr = realWorldDimensions == Vector2.Zero ?
                 TextManager.Get("Unknown") :
                 TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
+            
+            new GUITextBlock(new Rectangle(246, 60, 100, 20),
+                TextManager.Get("ContentPackage") + ": " + (ContentPackage ?? "Unknown"),
+                "", frame, GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(256, 60, 100, 20),
+            new GUITextBlock(new Rectangle(246, 80, 100, 20),
                 TextManager.Get("Dimensions") + ": " + dimensionsStr,
                 "", frame, GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(256, 80, 100, 20),
+            new GUITextBlock(new Rectangle(246, 100, 100, 20),
                 TextManager.Get("RecommendedCrewSize") + ": " + (RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax),
                 "", frame, GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(256, 100, 100, 20),
+            new GUITextBlock(new Rectangle(246, 120, 100, 20),
                 TextManager.Get("RecommendedCrewExperience") + ": " + (string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : RecommendedCrewExperience),
                 "", frame, GUI.SmallFont);
 

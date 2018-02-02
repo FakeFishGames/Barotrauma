@@ -411,7 +411,7 @@ namespace Barotrauma
                     return false;
                 }
             }
-
+            
             string savePath = nameBox.Text + ".sub";
             if (Submarine.MainSub != null)
             {
@@ -421,6 +421,8 @@ namespace Barotrauma
             {
                 savePath = Path.Combine(Submarine.SavePath, savePath);
             }
+
+            Submarine.MainSub.ContentPackage = GameMain.Config.SelectedContentPackage.Name;
 
             MemoryStream imgStream = new MemoryStream();
             CreateImage(256, 128, imgStream);
@@ -524,7 +526,6 @@ namespace Barotrauma
             var crewSizeMin = new GUINumberInput(new Rectangle(230, y, 50, 20), "", GUINumberInput.NumberType.Int, saveFrame);
             crewSizeMin.MinValueInt = 1;
             crewSizeMin.MaxValueInt = 128;
-
 
             new GUITextBlock(new Rectangle(285, y, 10, 20), "-", "", Alignment.TopLeft, Alignment.Center, saveFrame);
 
