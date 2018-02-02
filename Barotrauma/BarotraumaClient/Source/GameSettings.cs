@@ -90,7 +90,12 @@ namespace Barotrauma
 
             displayModeDD.SelectItem(GameMain.Config.WindowMode);
 
-            displayModeDD.OnSelected = (guiComponent, obj) => { GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData; return true; };
+            displayModeDD.OnSelected = (guiComponent, obj) => 
+            {
+                UnsavedSettings = true;
+                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+                return true;
+            };
 
             y += 70;
 
@@ -130,7 +135,6 @@ namespace Barotrauma
             foreach (ContentPackage contentPackage in ContentPackage.list)
             {
                 contentPackageDD.AddItem(contentPackage.Name, contentPackage);
-
                 if (SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
             }
 
@@ -160,14 +164,7 @@ namespace Barotrauma
             textBox.Text = "";
             CoroutineManager.StartCoroutine(WaitForKeyPress(textBox));
         }
-
-        private bool MarkUnappliedChanges(GUIButton button, object obj)
-        {
-            UnsavedSettings = true;
-
-            return true;
-        }
-
+        
         private bool SelectResolution(GUIComponent selected, object userData)
         {
             DisplayMode mode = selected.UserData as DisplayMode;
@@ -183,7 +180,7 @@ namespace Barotrauma
             return true;
         }
 
-        private bool SelectContentPackage(GUIComponent select,object userData)
+        private bool SelectContentPackage(GUIComponent select, object userData)
         {
             GameMain.Config.SelectedContentPackage = (ContentPackage)userData;
             UnsavedSettings = true;
@@ -242,6 +239,11 @@ namespace Barotrauma
             Save("config.xml");
 
             settingsFrame.Flash(Color.Green);
+            
+            if (GameMain.WindowMode != GameMain.Config.WindowMode)
+            {
+                GameMain.Instance.SetWindowMode(GameMain.Config.WindowMode);
+            }
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {

@@ -225,7 +225,7 @@ namespace Barotrauma.Items.Components
                 Vector2.Distance(end, PlayerInput.MousePosition) < 20.0f ||
                 new Rectangle((start.X < end.X) ? textX - 100 : textX, (int)start.Y - 5, 100, 14).Contains(PlayerInput.MousePosition));
 
-            string label = wire.Locked ? item.Name + "\n(Locked)" : item.Name;
+            string label = wire.Locked ? item.Name + "\n" + TextManager.Get("ConnectionLocked") : item.Name;
 
             GUI.DrawString(spriteBatch,
                 new Vector2(start.X < end.X ? textX - GUI.SmallFont.MeasureString(label).X : textX, start.Y - 5.0f),

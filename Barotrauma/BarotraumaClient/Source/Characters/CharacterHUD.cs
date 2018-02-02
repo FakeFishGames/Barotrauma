@@ -95,10 +95,12 @@ namespace Barotrauma
                 if (character.Oxygen < 10.0f) oxygenBar.Flash();
             }
             if (healthBar != null) healthBar.Update(deltaTime);
-
-            if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
-
-            if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
+            
+            if (Inventory.SelectedSlot == null)
+            {
+                if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
+                if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
+            }
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
 
@@ -224,17 +226,8 @@ namespace Barotrauma
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
-                {
-                    character.Inventory.DrawOffset = Vector2.Zero;
-                    character.Inventory.DrawOwn(spriteBatch);
-                }
-
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f, 0.0f);
-                    character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
-
                     if (cprButton == null)
                     {
                         cprButton = new GUIButton(
@@ -287,13 +280,19 @@ namespace Barotrauma
                             return true;
                         };
                     }
-
-                    //cprButton.Visible = character.GetSkillLevel("Medical") > 20.0f;
-
+                    
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
                     if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
+
+                    character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f, 0.0f);
+                    character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
                 }
 
+                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                {
+                    character.Inventory.DrawOffset = Vector2.Zero;
+                    character.Inventory.DrawOwn(spriteBatch);
+                }
                 if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
                 {
                     Inventory.DrawDragging(spriteBatch);

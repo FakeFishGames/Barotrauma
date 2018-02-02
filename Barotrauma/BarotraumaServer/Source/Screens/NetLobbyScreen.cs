@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,9 +72,10 @@ namespace Barotrauma
         public int MissionTypeIndex
         {
             get { return missionTypeIndex; }
-            set {
+            set
+            {
                 lastUpdateID++;
-                missionTypeIndex = Math.Max(0, Math.Min(Mission.MissionTypes.Count()-1, value));
+                missionTypeIndex = Math.Max(0, Math.Min(Mission.MissionTypes.Count() - 1, value));
             }
         }
 
@@ -171,6 +173,22 @@ namespace Barotrauma
             }
 
             lastUpdateID++;
+        }
+
+        public void RandomizeSettings()
+        {
+            if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
+
+            if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
+            {
+                var nonShuttles = Submarine.SavedSubmarines.FindAll(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus));
+                SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
+            }
+            if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
+            {
+                var allowedGameModes = Array.FindAll(gameModes, m => !m.IsSinglePlayer && m.Name != "Campaign");
+                SelectedModeName = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Name;
+            }
         }
     }
 }

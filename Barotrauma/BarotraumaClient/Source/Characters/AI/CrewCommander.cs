@@ -86,7 +86,7 @@ namespace Barotrauma
             characterList.Color = Color.Transparent;
             characterList.BarScroll = 0.5f;
 
-            GUIButton closeButton = new GUIButton(new Rectangle(0, 50, 100, 30), "Close", Alignment.BottomCenter, "", frame);
+            GUIButton closeButton = new GUIButton(new Rectangle(0, 50, 100, 30), TextManager.Get("Close"), Alignment.BottomCenter, "", frame);
             closeButton.OnClicked = (GUIButton button, object userData) =>
             {
                 ToggleGUIFrame();

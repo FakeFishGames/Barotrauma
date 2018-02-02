@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -17,14 +18,17 @@ namespace Barotrauma
 
         private bool sparks, shockwave, flames, smoke, flash;
 
+        private float empStrength;
+
         private string decal;
         private float decalSize;
 
-        public Explosion(float range, float force, float damage, float structureDamage)
+        public Explosion(float range, float force, float damage, float structureDamage, float empStrength = 0.0f)
         {
             attack = new Attack(damage, structureDamage, 0.0f, range);
             attack.SeverLimbsProbability = 1.0f;
             this.force = force;
+            this.empStrength = empStrength;
             sparks = true;
             shockwave = true;
             flames = true;
@@ -42,6 +46,8 @@ namespace Barotrauma
             smoke       = element.GetAttributeBool("smoke", true);
             flash       = element.GetAttributeBool("flash", true);
 
+            empStrength = element.GetAttributeFloat("empstrength", 0.0f);
+
             decal       = element.GetAttributeString("decal", "");
             decalSize   = element.GetAttributeFloat("decalSize", 1.0f);
 
@@ -57,12 +63,41 @@ namespace Barotrauma
             float displayRange = attack.Range;
             if (displayRange < 0.1f) return;
 
-            float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, worldPosition)/2.0f;
+            float cameraDist = Vector2.Distance(GameMain.GameScreen.Cam.Position, worldPosition) / 2.0f;
             GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist) / displayRange, 0.0f);
-            
+
             if (attack.GetStructureDamage(1.0f) > 0.0f)
             {
                 RangedStructureDamage(worldPosition, displayRange, attack.GetStructureDamage(1.0f));
+            }
+
+            if (empStrength > 0.0f)
+            {
+                float displayRangeSqr = displayRange * displayRange;
+                foreach (Item item in Item.ItemList)
+                {
+                    float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
+                    if (distSqr > displayRangeSqr) continue;
+
+                    //ignore reactors (don't want to blow them up)
+                    if (item.GetComponent<Reactor>() == null) continue;
+
+                    float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
+
+                    //damage repairable power-consuming items
+                    var powerTransfer = item.GetComponent<Powered>();
+                    if (powerTransfer != null && item.FixRequirements.Count > 0)
+                    {
+                        item.Condition -= 100 * empStrength * distFactor;
+                    }
+
+                    //discharge batteries
+                    var powerContainer = item.GetComponent<PowerContainer>();
+                    if (powerContainer != null)
+                    {
+                        powerContainer.Charge -= powerContainer.Capacity * empStrength * distFactor;
+                    }                    
+                }
             }
 
             if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;

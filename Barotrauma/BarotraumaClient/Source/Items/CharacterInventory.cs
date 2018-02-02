@@ -45,7 +45,7 @@ namespace Barotrauma
 
                         useOnSelfButton[i - 3] = new GUIButton(
                             new Rectangle((int)SlotPositions[i].X, (int)(SlotPositions[i].Y - spacing - rectHeight),
-                                rectWidth, rectHeight), "Use", "")
+                                rectWidth, rectHeight), TextManager.Get("UseItemButton"), "")
                         {
                             UserData = i,
                             OnClicked = UseItemOnSelf
@@ -169,7 +169,11 @@ namespace Barotrauma
 
             if (highlightedSubInventorySlot != null)
             {
-                UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex);
+                if (highlightedSubInventorySlot.Inventory == this)
+                {
+                    UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex);
+                }
+
                 if (highlightedSubInventory.slots == null || 
                     (!highlightedSubInventorySlot.Slot.InteractRect.Contains(PlayerInput.MousePosition) && !highlightedSubInventory.slots.Any(s => s.InteractRect.Contains(PlayerInput.MousePosition))))
                 {
@@ -186,6 +190,7 @@ namespace Barotrauma
                     {
                         highlightedSubInventory = subInventory;
                         highlightedSubInventorySlot = selectedSlot;
+                        UpdateSubInventory(deltaTime, highlightedSubInventorySlot.SlotIndex);
                     }
                 }
             }
