@@ -15,8 +15,8 @@ namespace Barotrauma
     {
         protected float soundTimer;
         protected float soundInterval;
-        protected float nameTimer;
-        protected bool nameVisible;
+        protected float hudInfoTimer;
+        protected bool hudInfoVisible;
 
         private List<CharacterSound> sounds;
 
@@ -182,10 +182,10 @@ namespace Barotrauma
 
         partial void KillProjSpecific()
         {
-            if (GameMain.NetworkMember != null && Character.controlled == this)
+            if (GameMain.NetworkMember != null && controlled == this)
             {
                 string chatMessage = TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.ToString());
-                if (GameMain.Client != null) chatMessage += " Your chat messages will only be visible to other dead players.";
+                if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
@@ -212,28 +212,28 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            if (info != null)
+            if (info != null || health < maxHealth * 0.98f)
             {
-                nameTimer -= deltaTime;
-                if (nameTimer <= 0.0f)
+                hudInfoTimer -= deltaTime;
+                if (hudInfoTimer <= 0.0f)
                 {
                     if (controlled == null)
                     {
-                        nameVisible = true;
+                        hudInfoVisible = true;
                     }
 
                     //if the character is not in the camera view, the name can't be visible and we can avoid the expensive visibility checks
                     else if (WorldPosition.X < cam.WorldView.X || WorldPosition.X > cam.WorldView.Right || 
                             WorldPosition.Y > cam.WorldView.Y || WorldPosition.Y < cam.WorldView.Y - cam.WorldView.Height)
                     {
-                        nameVisible = false;
+                        hudInfoVisible = false;
                     }
                     else
                     {
                         //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
-                        nameVisible = controlled.CanSeeCharacter(this);                    
+                        hudInfoVisible = controlled.CanSeeCharacter(this);                    
                     }
-                    nameTimer = Rand.Range(0.5f, 1.0f);
+                    hudInfoTimer = Rand.Range(0.5f, 1.0f);
                 }
             }
         }
@@ -290,14 +290,20 @@ namespace Barotrauma
             }
 
             if (this == controlled) return;
+
+            float hoverRange = 300.0f;
+            float fadeOutRange = 200.0f;
+            float cursorDist = Vector2.Distance(WorldPosition, cam.ScreenToWorld(PlayerInput.MousePosition));
+            float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f);
             
-            if (nameVisible && info != null)
+            if (hudInfoVisible && info != null)
             {
                 string name = Info.DisplayName;
-                if (controlled == null && name != Info.Name) name += " (Disguised)";
+                if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");
 
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
-            	Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
+                Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             	Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
             	namePos.X -= cam.WorldView.X; namePos.Y += cam.WorldView.Y;
             	namePos *= screenSize / viewportSize;
@@ -306,13 +312,12 @@ namespace Barotrauma
             	namePos.X += cam.WorldView.X; namePos.Y -= cam.WorldView.Y;
 
                 Color nameColor = Color.White;
-
                 if (Controlled != null && TeamID != Controlled.TeamID)
                 {
                     nameColor = Color.Red;
                 }
                 GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
-                GUI.Font.DrawString(spriteBatch, name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
+                GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
 
                 if (GameMain.DebugDraw)
                 {
@@ -322,11 +327,13 @@ namespace Barotrauma
 
             if (isDead) return;
 
-            if (health < maxHealth * 0.98f)
+            if (health < maxHealth * 0.98f && hudInfoVisible)
             {
                 Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
-
-                GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
+                GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), 
+                    health / maxHealth, 
+                    Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f * hudInfoAlpha,
+                    new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
             }
         }
 
