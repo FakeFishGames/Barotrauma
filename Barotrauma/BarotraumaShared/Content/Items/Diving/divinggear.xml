@@ -63,8 +63,7 @@
   <Item
     name="Diving Suit"
     category="Equipment"
-    tags="diving"
-    
+    tags="diving"    
     price="200"
     fireproof="true"
     description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
@@ -73,7 +72,7 @@
 
     <Body width="37" height="113" density="15"/>
 
-    <Wearable slots="Head+Torso+Legs" armorvalue="10.0">
+    <Wearable slots="Head+Torso+Legs">
       <sprite texture="DivingSuit.png" limb="Head" sourcerect="0,0,1,1" origin="0.5,0.5" hidelimb="true"/>
 
       <sprite texture="DivingSuit.png" limb="Torso" sourcerect="42,0,42,97" origin="0.5,0.55" depthlimb="Head" hidelimb="true"/>
@@ -81,15 +80,18 @@
       <sprite texture="DivingSuit.png" limb="RightHand" sourcerect="0,78,15,50" origin="0.45,0.4" hidelimb="true"/>
       <sprite texture="DivingSuit.png" limb="LeftHand" sourcerect="0,78,15,50" origin="0.45,0.4" hidelimb="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightArm" sourcerect="0,0,19,43" origin="0.5,0.4" depth="0.005" hidelimb="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftArm" sourcerect="0,0,19,43" origin="0.5,0.4" depth="0.005" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="RightArm" sourcerect="0,0,19,43" origin="0.5,0.4" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftArm" sourcerect="0,0,19,43" origin="0.5,0.4" hidelimb="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightThigh" sourcerect="22,0,18,44" origin="0.5,0.5" depth="0.01" hidelimb="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftThigh" sourcerect="22,0,18,44" origin="0.5,0.5" depth="0.01" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="RightThigh" sourcerect="22,0,18,44" origin="0.5,0.5" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftThigh" sourcerect="22,0,18,44" origin="0.5,0.5" hidelimb="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.02" hidelimb="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftLeg" sourcerect="17,47,21,51" origin="0.5,0.55" depth="0.02" hidelimb="true"/>
-      
+      <sprite texture="DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" origin="0.5,0.55" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftLeg" sourcerect="17,47,21,51" origin="0.5,0.55" hidelimb="true"/>
+
+      <sprite texture="DivingSuit.png" limb="RightFoot" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftFoot" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
+
       <StatusEffect type="OnWearing" target="Character" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character"  OxygenAvailable="1000.0" Condition="-0.5">
         <RequiredItem type="Contained" name="Oxygen Tank"/>
@@ -101,6 +103,10 @@
         <RequiredItem type="Contained" name="Oxygenite Shard"/>
       </StatusEffect>
       <StatusEffect type="OnWearing" target="Character" OxygenAvailable="-100.0"/>
+
+      <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.6"/>
+      <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.8" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.5" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
     </Wearable>
 
     <ItemContainer capacity="1" hideitems="true">
@@ -124,11 +130,11 @@
       <Item name="Polycarbonate Bar"/>
     </Deconstruct>
     
-    <Sprite texture ="DivingSuit.png" depth="0.55" sourcerect="22,98,59,32" origin="0.6,0.66"/>
+    <Sprite texture ="Scooter.png" depth="0.55"/>
 
     <Body width="55" height="30" density="15"/>
 
-    <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="0,11" handle2="2,11"/>
+    <Holdable slots="Any,RightHand+LeftHand" aimpos="100,0" handle1="4,10" handle2="6,10"/>
 
     <Propulsion force="80" usablein="water" particles="bubbles">
       <RequiredItems name="Battery Cell,Fulgurium Battery Cell" type="Contained" msg="Battery Cell required"/>
@@ -138,7 +144,6 @@
         <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="2.0,1.0"/>
       </LightComponent>
     </Propulsion>
-
 
     <ItemContainer capacity="1" hideitems="true">
       <Containable name="Battery Cell"/>

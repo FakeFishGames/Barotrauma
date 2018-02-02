@@ -17,7 +17,8 @@ namespace Barotrauma.Networking
         FILE_REQUEST,   //request a (submarine) file from the server
         
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
-        SERVER_COMMAND      //tell the server to end a round or kick/ban someone (special permissions required)
+        SERVER_COMMAND,      //tell the server to end a round or kick/ban someone (special permissions required)
+        NILMODSYNCRECEIVED
     }
     enum ClientNetObject
     {
@@ -42,7 +43,8 @@ namespace Barotrauma.Networking
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
-        ENDGAME
+        ENDGAME,
+        NILMODSYNC          //Sync all networked nilmod variables
     }
     enum ServerNetObject
     {
@@ -52,7 +54,8 @@ namespace Barotrauma.Networking
         VOTE,
         ENTITY_POSITION,
         ENTITY_EVENT,
-        ENTITY_EVENT_INITIAL
+        ENTITY_EVENT_INITIAL,
+        SERVER_LOG
     }
 
     enum VoteType
@@ -87,7 +90,7 @@ namespace Barotrauma.Networking
 
         public Dictionary<string, bool> monsterEnabled;
 
-        protected RespawnManager respawnManager;
+        public RespawnManager respawnManager;
 
         public Voting Voting;
         
@@ -160,9 +163,10 @@ namespace Barotrauma.Networking
 #if CLIENT
             GameMain.NetLobbyScreen.NewChatMessage(message);
 
-            while (chatBox.CountChildren > 20)
+            //NilMod Chat Changes
+            while (chatBox.CountChildren > GameMain.NilMod.ChatboxMaxMessages)
             {
-                chatBox.RemoveChild(chatBox.children[1]);
+                chatBox.RemoveChild(chatBox.children[0]);
             }
 
             if (!string.IsNullOrWhiteSpace(message.SenderName))
@@ -174,6 +178,7 @@ namespace Barotrauma.Networking
                 ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, message.Color,
                 Alignment.Left, Alignment.TopLeft, "", null, true, GUI.SmallFont);
             msg.UserData = message.SenderName;
+            msg.CanBeFocused = false;
 
             msg.Padding = new Vector4(20.0f, 0, 0, 0);
 
@@ -198,7 +203,7 @@ namespace Barotrauma.Networking
 #endif
         }
 
-        public virtual void KickPlayer(string kickedName, string reason) { }
+        public virtual void KickPlayer(string kickedName, string reason, float Expiretime = 0f, float Rejointime = 0f) { }
 
         public virtual void BanPlayer(string kickedName, string reason, bool range = false, TimeSpan? duration = null) { }
 

@@ -27,10 +27,11 @@ namespace Barotrauma
         public static bool EditWater, EditFire;
         
         private List<FireSource> fireSources;
-                
-        public const float OxygenDistributionSpeed = 500.0f;
-        public const float OxygenDetoriationSpeed = 0.3f;
-        public const float OxygenConsumptionSpeed = 1000.0f;
+
+        //NilMod Hull Oxygen Stuff
+        public static float OxygenDistributionSpeed = GameMain.NilMod.HullOxygenDistributionSpeed;
+        public static float OxygenDetoriationSpeed = GameMain.NilMod.HullOxygenDetoriationSpeed;
+        public static float OxygenConsumptionSpeed = GameMain.NilMod.HullOxygenConsumptionSpeed;
 
         public const int WaveWidth = 16;
         const float WaveStiffness = 0.003f;
@@ -106,7 +107,7 @@ namespace Barotrauma
             }
         }
 
-        public override bool IsLinkable
+        public override bool Linkable
         {
             get { return true; }
         }

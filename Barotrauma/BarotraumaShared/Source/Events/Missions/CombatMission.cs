@@ -93,6 +93,7 @@ namespace Barotrauma
 
         public override bool AssignTeamIDs(List<Client> clients, out byte hostTeam)
         {
+            /*
             List<Client> randList = new List<Client>(clients);
             for (int i = 0; i < randList.Count; i++)
             {
@@ -126,6 +127,87 @@ namespace Barotrauma
             {
                 hostTeam = 2;
             }
+            */
+
+            List<Client> CoalitionPreference = GameMain.NilMod.RandomizeClientOrder(clients.FindAll(c => c.PreferredTeam == 1));
+            List<Client> RenegadePreference = GameMain.NilMod.RandomizeClientOrder(clients.FindAll(c => c.PreferredTeam == 2));
+            List<Client> RandomPreference = GameMain.NilMod.RandomizeClientOrder(clients.FindAll(c => c.PreferredTeam == 0));
+
+            int hostpreference = GameMain.NilMod.HostTeamPreference;
+            int CoalitionCount = CoalitionPreference.Count();
+            int RenegadeCount = RenegadePreference.Count();
+
+            //if the host didn't set a preference randomize him
+            if (hostpreference == 0)
+            {
+                hostpreference = Rand.Range(1, 2);
+                if (hostpreference == 1) CoalitionCount += 1;
+                if (hostpreference == 2) RenegadeCount += 1;
+            }
+
+            for(int i = RandomPreference.Count - 1; i >= 0; i--)
+            {
+                if(CoalitionCount > RenegadeCount)
+                {
+                    RenegadePreference.Add(RandomPreference[i]);
+                    RenegadeCount += 1;
+                }
+                else if(RenegadeCount > CoalitionCount)
+                {
+                    CoalitionPreference.Add(RandomPreference[i]);
+                    CoalitionCount += 1;
+                }
+                //Their actually equal so randomise it
+                else
+                {
+                    if(Rand.Range(1, 2) == 1)
+                    {
+                        CoalitionPreference.Add(RandomPreference[i]);
+                        CoalitionCount += 1;
+                    }
+                    else
+                    {
+                        RenegadePreference.Add(RandomPreference[i]);
+                        RenegadeCount += 1;
+                    }
+                }
+            }
+
+            if (GameMain.NilMod.RebalanceTeamPreferences)
+            {
+                //Team Rebalancer
+                if (CoalitionCount > RenegadeCount + 1 && CoalitionPreference.Count > 1)
+                {
+                    for (int x = CoalitionPreference.Count - 1; CoalitionCount > RenegadeCount + 1 && CoalitionPreference.Count > 1; x--)
+                    {
+                        RenegadePreference.Add(CoalitionPreference[x]);
+                        CoalitionPreference.RemoveAt(x);
+                        RenegadeCount += 1;
+                        CoalitionCount -= 1;
+                    }
+                }
+                else if (RenegadeCount > CoalitionCount + 1 && CoalitionPreference.Count > 1)
+                {
+                    for (int x = RenegadePreference.Count - 1; RenegadeCount > CoalitionCount + 1 && RenegadePreference.Count > 1; x--)
+                    {
+                        CoalitionPreference.Add(RenegadePreference[x]);
+                        RenegadePreference.RemoveAt(x);
+                        RenegadeCount += 1;
+                        CoalitionCount -= 1;
+                    }
+                }
+            }
+            //Set the teams
+            foreach(Client c in CoalitionPreference)
+            {
+                c.TeamID = 1;
+            }
+            foreach (Client r in RenegadePreference)
+            {
+                r.TeamID = 2;
+            }
+
+            hostTeam = System.Convert.ToByte(hostpreference);
 
             return true;
         }

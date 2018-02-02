@@ -208,6 +208,59 @@ namespace Barotrauma.Items.Components
 
                 if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
 #endif
+                if (GameMain.Server != null)
+                {
+                    //Check if this tool is meant to destroy walls first and is a submarine body
+                    if (StructureFixAmount < 0f && user != null && targetStructure.Submarine != null)
+                    {
+                        //50% Remaining Integrity (Now has a gap!)
+                        if ((1f - (targetStructure.SectionDamage(sectionIndex) / targetStructure.Health)) >= 0.5f && (1f - ((targetStructure.SectionDamage(sectionIndex) + (-StructureFixAmount * degreeOfSuccess)) / targetStructure.Health)) < 0.5f)
+                        {
+                            //Respawn Shuttle
+                            if (targetStructure.Submarine == GameMain.Server?.respawnManager?.respawnShuttle)
+                            {
+                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Respawn Shuttle: 50% Integrity.", Networking.ServerLog.MessageType.Attack);
+                            }
+                            //Coalition submarine
+                            else if (targetStructure.Submarine == Submarine.MainSubs[0])
+                            {
+                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Coalition Submarine: 50% Integrity.", Networking.ServerLog.MessageType.Attack);
+                            }
+                            //Renegade Submarine
+                            else if (targetStructure.Submarine == Submarine.MainSubs[1])
+                            {
+                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Renegade Submarine: 50% Integrity.", Networking.ServerLog.MessageType.Attack);
+                            }
+                            else
+                            {
+                                GameMain.Server.ServerLog.WriteLine(user + @" Cut a Hull piece on Shuttle """ + targetStructure.Submarine.Name + @"""" + ": 50% Integrity.", Networking.ServerLog.MessageType.Attack);
+                            }
+                        }
+                        //0% Remaining Integrity
+                        if ((1f - (targetStructure.SectionDamage(sectionIndex) / targetStructure.Health)) > 0.00f && (1f - ((targetStructure.SectionDamage(sectionIndex) + (-StructureFixAmount * degreeOfSuccess)) / targetStructure.Health)) < 0.00f)
+                        {
+                            //Respawn Shuttle
+                            if (targetStructure.Submarine == GameMain.Server?.respawnManager?.respawnShuttle)
+                            {
+                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Respawn Shuttle: 0% Integrity.", Networking.ServerLog.MessageType.Attack);
+                            }
+                            //Coalition submarine
+                            else if (targetStructure.Submarine == Submarine.MainSubs[0])
+                            {
+                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Coalition Submarine: 0% Integrity.", Networking.ServerLog.MessageType.Attack);
+                            }
+                            //Renegade Submarine
+                            else if (targetStructure.Submarine == Submarine.MainSubs[1])
+                            {
+                                GameMain.Server.ServerLog.WriteLine(user + " Cut a Hull piece on Renegade Submarine: 0% Integrity.", Networking.ServerLog.MessageType.Attack);
+                            }
+                            else
+                            {
+                                GameMain.Server.ServerLog.WriteLine(user + @" Cut a Hull piece on Shuttle """ + targetStructure.Submarine.Name + @"""" + ": 0% Integrity.", Networking.ServerLog.MessageType.Attack);
+                            }
+                        }
+                    }
+                }
 
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess);
 

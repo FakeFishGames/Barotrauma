@@ -21,13 +21,19 @@ namespace Barotrauma
     {
         private static int restartAttempts;
 
+        public static string[] CommandLineArgs = Environment.GetCommandLineArgs();
+
+        private static GameMain game;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            using (var game = new GameMain())
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnrecoverableCrashHandler);
+
+            using (game = new GameMain())
             {     
 #if DEBUG
                 game.Run();
@@ -50,13 +56,39 @@ namespace Barotrauma
                         }
                         else
                         {
-                            CrashDump(game, "crashreport.txt", e);
-                            attemptRestart = false;
+                            string CrashName = "crashreport" + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".txt";
+
+                            CrashName = CrashName.Replace(":", "");
+                            CrashName = CrashName.Replace("../", "");
+                            CrashName = CrashName.Replace("/", "");
+                            CrashDump(game, CrashName, e);
                         }
 
                     }
                 } while (attemptRestart);
 #endif
+            }
+        }
+
+        static void UnrecoverableCrashHandler(object sender, UnhandledExceptionEventArgs args)
+        {
+            if (GameMain.NilMod != null)
+            {
+                if (GameMain.NilMod.CrashRestart)
+                {
+                    Exception e = (Exception)args.ExceptionObject;
+                    //DebugConsole.NewMessage("Unhandled Exception Caught (Program has crashed!) : " + e.Message, Microsoft.Xna.Framework.Color.Red);
+                    if(GameMain.Server != null)
+                    {
+                        GameMain.Server.ServerLog.WriteLine("Server Has Suffered a fatal Crash (Autorestarting).", Networking.ServerLog.MessageType.Error);
+                        GameMain.Server.ServerLog.Save();
+                    }
+                    System.Diagnostics.Process.Start(Application.StartupPath + "\\Barotrauma NilEdit.exe");
+                    //Kind of flipping the table here after the last one or two didnt work.
+                    Application.ExitThread();
+                    Application.Exit();
+                    Environment.Exit(-1);
+                }
             }
         }
 
@@ -137,7 +169,7 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("If you'd like to help fix the bug that caused the crash, please send this file to the developers on the Undertow Games forums.");
             sb.AppendLine("\n");
-            sb.AppendLine("Game version " + GameMain.Version);
+            sb.AppendLine("Game version " + GameMain.Version + " NILMOD SERVER MODIFICATION");
             sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
             sb.AppendLine("Selected content package: " + GameMain.SelectedPackage.Name);
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
@@ -156,7 +188,7 @@ namespace Barotrauma
             sb.AppendLine("\n");
             sb.AppendLine("System info:");
             sb.AppendLine("    Operating system: " + System.Environment.OSVersion + (System.Environment.Is64BitOperatingSystem ? " 64 bit" : " x86"));
-            
+
             if (game.GraphicsDevice == null)
             {
                 sb.AppendLine("    Graphics device not set");
@@ -177,6 +209,8 @@ namespace Barotrauma
             }
 
             sb.AppendLine("\n");
+            sb.AppendLine("This was running NilMod Code!");
+            sb.AppendLine("\n");
             sb.AppendLine("Exception: " + exception.Message);
             sb.AppendLine("Target site: " + exception.TargetSite.ToString());
             sb.AppendLine("Stack trace: ");
@@ -184,17 +218,61 @@ namespace Barotrauma
             sb.AppendLine("\n");
 
             sb.AppendLine("Last debug messages:");
-            for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
+            if(game != null)
             {
-                sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                if(GameMain.NilMod != null)
+                {
+                    if(GameMain.NilMod.DebugConsoleTimeStamp)
+                    {
+                        for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
+                        {
+                            sb.AppendLine("   " + DebugConsole.Messages[i].Text);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
+                        {
+                            sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
+                    {
+                        sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                    }
+                }
             }
-
+            else
+            {
+                for (int i = DebugConsole.Messages.Count - 1; i > 0; i--)
+                {
+                    sb.AppendLine("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+                }
+            }
 
             sw.WriteLine(sb.ToString());
             sw.Close();
 
-            CrashMessageBox( "A crash report (\"crashreport.txt\") was saved in the root folder of the game."+
-                " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");       
+            if (GameMain.NilMod != null)
+            {
+                if (GameMain.NilMod.CrashRestart)
+                {
+                    System.Diagnostics.Process.Start(Application.StartupPath + "\\blabla.exe");
+                }
+                else
+                {
+                    CrashMessageBox("A crash report (\"crashreport.txt\") was saved in the root folder of the game." +
+                    " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");
+                }
+            }
+            else
+            {
+                CrashMessageBox("A crash report (\"crashreport.txt\") was saved in the root folder of the game." +
+                " If you'd like to help fix this bug, please post the report on the Undertow Games forums.");
+            }
         }
     }
 #endif

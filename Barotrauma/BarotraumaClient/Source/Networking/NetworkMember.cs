@@ -23,7 +23,7 @@ namespace Barotrauma.Networking
 
         protected GUIFrame inGameHUD;
         protected GUIListBox chatBox;
-        protected GUITextBox chatMsgBox;
+        public GUITextBox chatMsgBox;
 
         public GUIFrame InGameHUD
         {
@@ -35,8 +35,8 @@ namespace Barotrauma.Networking
             inGameHUD = new GUIFrame(new Rectangle(0, 0, 0, 0), null, null);
             inGameHUD.CanBeFocused = false;
 
-            int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
-            int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.15f, 100, 200);
+            int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * GameMain.NilMod.ChatboxWidth, 350, 500);
+            int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * GameMain.NilMod.ChatboxHeight, 100, 200);
             chatBox = new GUIListBox(new Rectangle(
                 GameMain.GraphicsWidth - 20 - width,
                 GameMain.GraphicsHeight - 40 - 25 - height,
@@ -80,7 +80,11 @@ namespace Barotrauma.Networking
         {
             textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
 
-            if (string.IsNullOrWhiteSpace(message)) return false;
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                if (textBox == chatMsgBox) textBox.Deselect();
+                return false;
+            }
 
             if (this == GameMain.Server)
             {
@@ -112,16 +116,16 @@ namespace Barotrauma.Networking
 
             inGameHUD.Draw(spriteBatch);
 
-            if (EndVoteCount > 0)
+            if (EndVoteCount >= 0)
             {
                 if (GameMain.NetworkMember.myCharacter == null)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 180.0f, 40),
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 460.0f, 12),
                         "Votes to end the round (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
                 }
                 else
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 140.0f, 40),
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 400.0f, 12),
                         "Votes (y/n): " + EndVoteCount + "/" + (EndVoteMax - EndVoteCount), Color.White, null, 0, GUI.SmallFont);
                 }
             }
@@ -199,16 +203,16 @@ namespace Barotrauma.Networking
                     if (!permaBanTickBox.Selected)
                     {
                         TimeSpan banDuration = new TimeSpan(durationInputDays.IntValue, durationInputHours.IntValue, 0, 0);
-                        BanPlayer(clientName, banReasonBox.Text, ban, banDuration);
+                        BanPlayer(clientName, banReasonBox.Text, rangeBan, banDuration);
                     }
                     else
                     {
-                        BanPlayer(clientName, banReasonBox.Text, ban);
+                        BanPlayer(clientName, banReasonBox.Text, rangeBan);
                     }
                 }
                 else
                 {
-                    KickPlayer(clientName, banReasonBox.Text);
+                    KickPlayer(clientName, banReasonBox.Text,GameMain.NilMod.AdminKickStateNameTimer, GameMain.NilMod.AdminKickDenyRejoinTimer);
                 }
                 return true;
             };

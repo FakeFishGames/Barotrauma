@@ -13,6 +13,9 @@ namespace Barotrauma.Networking
     {
         private NetClient client;
 
+        private ClientLog clientLog;
+        private GUIButton clientLogButton;
+
         private GUIMessageBox reconnectBox;
         
         private GUIButton endRoundButton;
@@ -32,6 +35,10 @@ namespace Barotrauma.Networking
         private bool requiresPw;
         private int nonce;
         private string saltedPw;
+        public bool usingNilMod;
+        public bool PerformNilModReconnect;
+        public bool NilModRejected;
+        public string RejectReason;
 
         private UInt16 lastSentChatMsgID = 0; //last message this client has successfully sent
         private UInt16 lastQueueChatMsgID = 0; //last message added to the queue
@@ -78,6 +85,17 @@ namespace Barotrauma.Networking
             };
             endRoundButton.Visible = false;
 
+            clientLogButton = new GUIButton(new Rectangle(GameMain.GraphicsWidth - 170 - 170 - 170, 20, 150, 20), "Client Logs", Alignment.TopLeft, "", inGameHUD);
+            clientLogButton.OnClicked = (btn, userdata) =>
+            {
+                if (!permissions.HasFlag(ClientPermissions.Ban) || !permissions.HasFlag(ClientPermissions.Kick)) return false;
+
+                clientLog.CreateLogFrame();
+
+                return true;
+            };
+            clientLogButton.Visible = false;
+
             newName = newName.Replace(":", "");
             newName = newName.Replace(";", "");
 
@@ -97,6 +115,8 @@ namespace Barotrauma.Networking
             characterInfo.Job = null;
 
             otherClients = new List<Client>();
+
+            clientLog = new ClientLog();
 
             ChatMessage.LastID = 0;
             GameMain.NetLobbyScreen = new NetLobbyScreen();
@@ -220,6 +240,9 @@ namespace Barotrauma.Networking
             DateTime timeOut = DateTime.Now + new TimeSpan(0,0,20);
             DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
 
+            //Force an as-close to unmodded barotrauma reload.
+            GameMain.NilMod.Load(true);
+
             // Loop until we are approved
             while (!CanStart && !connectCancelled)
             {
@@ -258,7 +281,14 @@ namespace Barotrauma.Networking
                             outmsg.Write((byte)ClientPacketHeader.REQUEST_INIT);
                             outmsg.Write(GameMain.Version.ToString());
                             outmsg.Write(GameMain.SelectedPackage.Name);
-                            outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
+                            if (usingNilMod == true)
+                            {
+                                outmsg.Write("NILMOD_" + GameMain.SelectedPackage.MD5hash.Hash);
+                            }
+                            else
+                            {
+                                outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
+                            }
                             outmsg.Write(name);
                             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
                         }
@@ -269,7 +299,14 @@ namespace Barotrauma.Networking
                             outmsg.Write(saltedPw);
                             outmsg.Write(GameMain.Version.ToString());
                             outmsg.Write(GameMain.SelectedPackage.Name);
-                            outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
+                            if (usingNilMod == true)
+                            {
+                                outmsg.Write("NILMOD_" + GameMain.SelectedPackage.MD5hash.Hash);
+                            }
+                            else
+                            {
+                                outmsg.Write(GameMain.SelectedPackage.MD5hash.Hash);
+                            }
                             outmsg.Write(name);
                             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
                         }
@@ -330,8 +367,23 @@ namespace Barotrauma.Networking
                             {
                                 string denyMessage = inc.ReadString();
 
-                                var cantConnectMsg = new GUIMessageBox("Couldn't connect to the server", denyMessage);
-                                cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
+                                if(denyMessage.Contains("Your content package (") && denyMessage.Contains(") doesn't match the server's version (") && usingNilMod == true)
+                                {
+                                    PerformNilModReconnect = true;
+                                    RejectReason = "Server has not been detected as running the modification (Defaulted to vanilla).";
+                                }
+                                else if(denyMessage.Contains("This server does not permit Nilmod clients (Please rejoin using Vanilla).") && usingNilMod == true)
+                                {
+                                    PerformNilModReconnect = true;
+                                    RejectReason = "Server has denied usage of the modification (Defaulted to vanilla).";
+                                }
+                                else
+                                {
+                                    PerformNilModReconnect = false;
+
+                                    var cantConnectMsg = new GUIMessageBox("Couldn't connect to the server", denyMessage);
+                                    cantConnectMsg.Buttons[0].OnClicked += ReturnToServerList;
+                                }
 
                                 connectCancelled = true;
                             }
@@ -424,7 +476,22 @@ namespace Barotrauma.Networking
                 reconnectBox = null;
             }
 
-            if (connectCancelled) yield return CoroutineStatus.Success;
+            if (connectCancelled && PerformNilModReconnect == true && usingNilMod == true)
+            {
+                usingNilMod = false;
+                PerformNilModReconnect = false;
+                NilModRejected = true;
+                if (client != null) client.Shutdown("Disconnecting");
+                ConnectToServer(serverIP);
+                yield return CoroutineStatus.Success;
+            }
+            else if(connectCancelled)
+            {
+                //Connection was cancelled (Reload modded nilmod)
+                GameMain.NilMod.Load(false);
+
+                yield return CoroutineStatus.Success;
+            }
 
             if (client.ConnectionStatus != NetConnectionStatus.Connected)
             {
@@ -442,8 +509,15 @@ namespace Barotrauma.Networking
                 if (Screen.Selected != GameMain.GameScreen)
                 {
                     GameMain.NetLobbyScreen.Select();
+
+                    if(NilModRejected)
+                    {
+                        var NotNilmodMessage = new GUIMessageBox("Client mod not running.", RejectReason);
+                    }
                 }
                 connected = true;
+                GameMain.NilMod.GameInitialize(true);
+                LoadingScreen.ClientName = Name;
             }
 
             yield return CoroutineStatus.Success;
@@ -544,6 +618,7 @@ namespace Barotrauma.Networking
                                 
                                 break;
                             case ServerPacketHeader.STARTGAME:
+                                LoadingScreen.loadType = LoadType.Client;
                                 startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(inc), false);
                                 break;
                             case ServerPacketHeader.ENDGAME:
@@ -560,6 +635,9 @@ namespace Barotrauma.Networking
                                 break;
                             case ServerPacketHeader.FILE_TRANSFER:
                                 fileReceiver.ReadMessage(inc);
+                                break;
+                            case ServerPacketHeader.NILMODSYNC:
+                                GameMain.NilMod.ClientSyncRead(inc);
                                 break;
                         }
                         break;
@@ -664,7 +742,14 @@ namespace Barotrauma.Networking
 
             bool isTraitor          = inc.ReadBoolean();
             string traitorTargetName = isTraitor ? inc.ReadString() : null;
-            
+
+            LoadingScreen.GameMode = modeName;
+            LoadingScreen.MissionType = Mission.MissionTypes[missionTypeIndex];
+            LoadingScreen.Submarine = subName;
+            LoadingScreen.IsTraitor = isTraitor;
+
+            yield return CoroutineStatus.Running;
+
             //monster spawn settings
             if (monsterEnabled == null)
             {
@@ -729,7 +814,10 @@ namespace Barotrauma.Networking
             {
                 TraitorManager.CreateStartPopUp(traitorTargetName);
             }
-            
+
+            GameMain.NilMod.GameInitialize(false);
+
+
             gameStarted = true;
 
             GameMain.GameScreen.Select();
@@ -940,7 +1028,7 @@ namespace Barotrauma.Networking
         private void ReadIngameUpdate(NetIncomingMessage inc)
         {
             float sendingTime = inc.ReadFloat() - inc.SenderConnection.RemoteTimeOffset;
-
+            
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
@@ -1228,6 +1316,9 @@ namespace Barotrauma.Networking
 
         public override void Disconnect()
         {
+            //Client has been disconnected (Reload modded nilmod)
+            GameMain.NilMod.Load(false);
+
             client.Shutdown("");
             GameMain.NetworkMember = null;
         }
@@ -1252,7 +1343,7 @@ namespace Barotrauma.Networking
         public override bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
         {
             if (character == null) return false;
-            
+
             if (character != myCharacter)
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
@@ -1298,6 +1389,15 @@ namespace Barotrauma.Networking
             client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
         }
 
+        public void NilModSendSyncReceived()
+        {
+            NetOutgoingMessage msg = client.CreateMessage();
+            msg.Write((byte)ClientPacketHeader.NILMODSYNCRECEIVED);
+            msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+
+            client.SendMessage(msg, NetDeliveryMethod.ReliableUnordered);
+        }
+
         public bool VoteForKick(GUIButton button, object userdata)
         {
             var votedClient = otherClients.Find(c => c.Character == userdata);
@@ -1311,7 +1411,7 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public override void KickPlayer(string kickedName, string reason)
+        public override void KickPlayer(string kickedName, string reason, float Expiretime = 0f, float Rejointime = 0f)
         {
             NetOutgoingMessage msg = client.CreateMessage();
             msg.Write((byte)ClientPacketHeader.SERVER_COMMAND);

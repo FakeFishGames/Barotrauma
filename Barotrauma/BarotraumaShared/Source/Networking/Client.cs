@@ -26,6 +26,11 @@ namespace Barotrauma.Networking
 
     class Client
     {
+        //NilMod
+        public Boolean IsNilModClient = false;
+        public Boolean RequiresNilModSync = false;
+        public float NilModSyncResendTimer = 3f;
+
         public string Name;
         public byte ID;
 
@@ -81,6 +86,8 @@ namespace Barotrauma.Networking
         public ClientPermissions Permissions = ClientPermissions.None;
 
         public bool SpectateOnly;
+
+        public int PreferredTeam = 0;
                 
         private object[] votes;
 

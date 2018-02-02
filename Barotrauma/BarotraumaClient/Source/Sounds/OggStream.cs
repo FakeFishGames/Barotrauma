@@ -47,14 +47,17 @@ namespace Barotrauma.Sounds
 
         public static void Check()
         {
-            ALError error;
-            if ((error = AL.GetError()) != ALError.NoError)
+            if (GameMain.NilMod.ShowOpenALErrors)
             {
+                ALError error;
+                if ((error = AL.GetError()) != ALError.NoError)
+                {
 #if DEBUG
-                DebugConsole.ThrowError("OpenAL error: " + AL.GetErrorString(error) + "\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("OpenAL error: " + AL.GetErrorString(error) + "\n" + Environment.StackTrace);
 #else
-                DebugConsole.NewMessage("OpenAL error: " + AL.GetErrorString(error) + "\n" + Environment.StackTrace, Microsoft.Xna.Framework.Color.Red);
+                    DebugConsole.NewMessage("OpenAL error: " + AL.GetErrorString(error) + "\n" + Environment.StackTrace, Microsoft.Xna.Framework.Color.Red);
 #endif
+                }
             }
         }
     }

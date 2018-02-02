@@ -157,11 +157,11 @@ namespace Barotrauma.Items.Components
             {
                 if (newFlowPercentage != FlowPercentage)
                 {
-                    GameServer.Log(c.Character + " set the pumping speed of " + item.Name + " to " + (int)(newFlowPercentage) + " %", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(c.Character + " set the pumping speed of " + item.Name + " to " + (int)(newFlowPercentage) + " %", ServerLog.MessageType.Set);
                 }
                 if (newIsActive != IsActive)
                 {
-                    GameServer.Log(c.Character + (newIsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(c.Character + (newIsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.Set);
                 }
 
                 FlowPercentage  = newFlowPercentage;

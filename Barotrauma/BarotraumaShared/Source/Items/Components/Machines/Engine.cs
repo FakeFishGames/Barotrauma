@@ -66,6 +66,9 @@ namespace Barotrauma.Items.Components
             currPowerConsumption = Math.Abs(targetForce)/100.0f * powerConsumption;
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
+            if (GameMain.NilMod.EnginesRegenerateCondition && this.Item.Condition > 0f && this.Item.Condition < this.Item.Prefab.Health) this.Item.Condition += deltaTime * GameMain.NilMod.EnginesRegenAmount;
+
+
 
             Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)

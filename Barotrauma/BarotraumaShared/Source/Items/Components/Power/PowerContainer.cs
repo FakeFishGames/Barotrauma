@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
         //[power/min]        
         private float capacity;
 
-        private float charge;
+        public float charge;
 
         private float rechargeVoltage, outputVoltage;
 
@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
 
         private float maxOutput;
 
-        private float lastSentCharge;
+        public float lastSentCharge;
 
         public float CurrPowerOutput
         {
@@ -201,7 +201,7 @@ namespace Barotrauma.Items.Components
             if (item.CanClientAccess(c))
             {
                 RechargeSpeed = newRechargeSpeed;
-                GameServer.Log(c.Character + " set the recharge speed of "+item.Name+" to "+ (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(c.Character + " set the recharge speed of "+item.Name+" to "+ (int)((rechargeSpeed / maxRechargeSpeed) * 100.0f) + " %", ServerLog.MessageType.Set);
             }
 
             item.CreateServerEvent(this);

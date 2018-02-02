@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     partial class GameScreen : Screen
     {
-        private Color waterColor = new Color(0.75f, 0.8f, 0.9f, 1.0f);
+        public Color waterColor = GameMain.NilMod.WaterColour;
 
         private BlurEffect lightBlur;
         
@@ -69,12 +69,23 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Immediate, null, null, null, GameMain.ScissorTestEnable);
 
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
+            if (Character.Spied != null && Character.Spied.SelectedConstruction != null && Character.Spied.CanInteractWith(Character.Spied.SelectedConstruction))
+            {
+                Character.Spied.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Spied);
+            }
+            else if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
             {
                 Character.Controlled.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
             }
 
-            if (Character.Controlled != null && cam != null) Character.Controlled.DrawHUD(spriteBatch, cam);
+            if (Character.Spied != null && cam != null)
+            {
+                Character.Spied.DrawHUD(spriteBatch, cam);
+            }
+            else if (Character.Controlled != null && cam != null)
+            {
+                Character.Controlled.DrawHUD(spriteBatch, cam);
+            }
 
             if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);
 

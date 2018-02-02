@@ -39,17 +39,36 @@ namespace Barotrauma.Networking
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
                 var tickBox = new GUITickBox(new Rectangle(0, y, 20, 20), messageTypeName[(int)msgType], Alignment.TopLeft, GUI.SmallFont, innerFrame);
-                tickBox.Selected = true;
+                tickBox.Selected = !msgTypeHidden[(int)msgType];
                 tickBox.TextColor = messageColor[(int)msgType];
 
                 tickBox.OnSelected += (GUITickBox tb) =>
                 {
-                    msgTypeHidden[(int)msgType] = !tb.Selected;
+                    if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) | PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl))
+                    {
+                        foreach (MessageType checkedMsgType in Enum.GetValues(typeof(MessageType)))
+                        {
+                            msgTypeHidden[(int)checkedMsgType] = true;
+                        }
+
+                        foreach (GUIComponent chkBox in innerFrame.children)
+                        {
+                            if (chkBox is GUITickBox)
+                            {
+                                GUITickBox chkBox2 = (GUITickBox)chkBox;
+                                chkBox2.Selected = false;
+                            }
+                        }
+                        tickBox.Selected = true;
+                        msgTypeHidden[(int)msgType] = false;
+                    }
+                    else
+                    {
+                        msgTypeHidden[(int)msgType] = !tb.Selected;
+                    }
                     FilterMessages();
                     return true;
                 };
-
-                tickBox.Selected = !msgTypeHidden[(int)msgType];
 
                 y += 20;
             }
@@ -60,7 +79,6 @@ namespace Barotrauma.Networking
             {
                 AddLine(line);
             }
-            FilterMessages();
 
             listBox.UpdateScrollBarSize();
 
@@ -74,6 +92,8 @@ namespace Barotrauma.Networking
             };
 
             msgFilter = "";
+
+            FilterMessages();
         }
 
         private void AddLine(LogMessage line)
@@ -118,6 +138,21 @@ namespace Barotrauma.Networking
         {
             var searchBox = button.UserData as GUITextBox;
             if (searchBox != null) searchBox.Text = "";
+
+            //Nilmod ServerLog GUI Code
+            foreach (GUIComponent chkBox in button.Parent.children)
+            {
+                if (chkBox is GUITickBox)
+                {
+                    GUITickBox chkBox2 = (GUITickBox)chkBox;
+                    chkBox2.Selected = true;
+                }
+            }
+
+            foreach (MessageType checkedMsgType in Enum.GetValues(typeof(MessageType)))
+            {
+                msgTypeHidden[(int)checkedMsgType] = false;
+            }
 
             msgFilter = "";
             FilterMessages();

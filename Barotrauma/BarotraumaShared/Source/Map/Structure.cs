@@ -625,7 +625,9 @@ namespace Barotrauma
         public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f);
-            if (!prefab.Body || prefab.Platform) return new AttackResult(0.0f, 0.0f);
+            if  (!prefab.Body || prefab.Platform) return new AttackResult(0.0f, 0.0f);
+            //Nilmod CanDamageSubBody
+            if (Submarine != null && !GameMain.NilMod.CanDamageSubBody) return new AttackResult(0.0f, 0.0f);
 
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
@@ -654,6 +656,8 @@ namespace Barotrauma
         {
             if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.Body) return;
+            //Nilmod CanDamageSubBody
+            if (Submarine != null && !GameMain.NilMod.CanDamageSubBody) return;
 
             if (!MathUtils.IsValid(damage)) return;
 

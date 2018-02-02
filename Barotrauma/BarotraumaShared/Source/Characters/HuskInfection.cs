@@ -70,13 +70,17 @@ namespace Barotrauma
 
             IncubationTimer += deltaTime / IncubationDuration;
 
+            character.AddDamage(CauseOfDeath.Husk, GameMain.NilMod.PlayerHuskInfectedDrain * deltaTime, null);
+
             if (Character.Controlled != character) return;
         }
 
         private void UpdateTransitionState(float deltaTime, Character character)
         {
             IncubationTimer += deltaTime / IncubationDuration;
-            
+
+            character.AddDamage(CauseOfDeath.Husk, GameMain.NilMod.PlayerHuskInfectedDrain * deltaTime, null);
+
             state = InfectionState.Transition;
         }
 
@@ -88,12 +92,14 @@ namespace Barotrauma
                 state = InfectionState.Active;
             }
 
-            character.AddDamage(CauseOfDeath.Husk, 0.5f * deltaTime, null);
+            character.AddDamage(CauseOfDeath.Husk, GameMain.NilMod.PlayerHuskIncurableDrain * deltaTime, null);
+            //character.AddDamage(CauseOfDeath.Husk, 0.5f * deltaTime, null);
         }
 
 
         private void ActivateHusk(Character character)
         {
+            if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Maxed Husk infection!", Networking.ServerLog.MessageType.Husk);
             character.NeedsAir = false;
             AttachHuskAppendage(character);
         }
@@ -142,15 +148,25 @@ namespace Barotrauma
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.Client != null) return;
-            
-            //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
-            CoroutineManager.StartCoroutine(CreateAIHusk(character));
+
+            //Nilmod Deactivate players turning into husks on death optionally
+            if (!GameMain.NilMod.PlayerHuskAiOnDeath)
+            {
+                if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Died husk infected but did not convert.", Networking.ServerLog.MessageType.Husk);
+                return;
+            }
+
+            //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it 
+            //CoroutineManager.StartCoroutine(CreateAIHusk(character));
+            CoroutineManager.StartCoroutine(CreateAIHuskDelayed(character));
         }
 
         private IEnumerable<object> CreateAIHusk(Character character)
         {
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
+
+            if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
 
             var husk = Character.Create(
                 Path.Combine("Content", "Characters", "Human", "humanhusk.xml"),
@@ -179,6 +195,50 @@ namespace Barotrauma
                 if (character.Inventory.Items[i] == null) continue;
                 husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, null);
             }
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private IEnumerable<object> CreateAIHuskDelayed(Character character)
+        {
+            //character.Enabled = false;
+            //Entity.Spawner.AddToRemoveQueue(character);
+
+            if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
+
+            var husk = Character.Create(
+                Path.Combine("Content", "Characters", "Human", "humanhusk.xml"),
+                character.WorldPosition,
+                character.Info,
+                false, true);
+
+            foreach (Limb limb in husk.AnimController.Limbs)
+            {
+                if (limb.type == LimbType.None)
+                {
+                    limb.body.SetTransform(character.SimPosition, 0.0f);
+                    continue;
+                }
+
+                var matchingLimb = character.AnimController.GetLimb(limb.type);
+                if (matchingLimb?.body != null)
+                {
+                    limb.body.SetTransform(matchingLimb.SimPosition, matchingLimb.Rotation);
+                    limb.body.LinearVelocity = matchingLimb.LinearVelocity;
+                    limb.body.AngularVelocity = matchingLimb.body.AngularVelocity;
+                }
+            }
+            for (int i = 0; i < character.Inventory.Items.Length; i++)
+            {
+                if (character.Inventory.Items[i] == null) continue;
+                husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, null);
+            }
+
+#if CLIENT
+            if(GameMain.Server != null) GameSession.inGameInfo.AddNoneClientCharacter(husk);
+#endif
+
+            GameMain.NilMod.HideCharacter(character);
 
             yield return CoroutineStatus.Success;
         }

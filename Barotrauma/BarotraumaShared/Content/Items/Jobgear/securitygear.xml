@@ -10,17 +10,18 @@
 
     <Body width="52" height="17" density="40"/>
 
-    <Wearable slots="Any,Torso" armorvalue="10.0">
+    <Wearable slots="Any,Torso">
+      <damagemodifier damagetype="Burn" armorsector="0.0,360.0" damagemultiplier="0.9"/>
+      <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
       <sprite texture="securitygear.png" limb="Torso" sourcerect="0,0,38,58" origin="0.52,0.48"/>
-
       <sprite texture="securitygear.png" limb="RightArm" sourcerect="41,0,21,21" origin="0.5,1.1"/>
     </Wearable>
   </Item>
 
   <Item
     name="Ballistic Helmet"
-    category="Equipment"
-    
+    category="Equipment"    
     tags="smallitem"
     description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.">
 
@@ -34,6 +35,8 @@
     <Body radius="12" density="50"/>
 
     <Wearable slots="Any,Head" armorvalue="20.0">
+      <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
       <sprite texture="securitygear.png" limb="Head" sourcerect="39,31,29,22" origin="0.51,0.9"/>
     </Wearable>
   </Item>

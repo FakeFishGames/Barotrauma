@@ -183,7 +183,6 @@ namespace Barotrauma
                 else if (entities.Entity is Character)
                 {
                     message.Write((byte)SpawnableType.Character);
-                    DebugConsole.NewMessage("WRITING CHARACTER DATA: " + (entities.Entity).ToString(),Color.Cyan);
                     ((Character)entities.Entity).WriteSpawnData(message);
                 }
             }

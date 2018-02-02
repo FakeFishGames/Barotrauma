@@ -20,6 +20,10 @@ namespace Barotrauma
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
+        //NilMod Class
+        public static NilMod NilMod;
+        public static NilModLagDiagnostics NilModProfiler;
+
         public static GameScreen            GameScreen;
         public static MainMenuScreen        MainMenuScreen;
         public static LobbyScreen           LobbyScreen;
@@ -125,6 +129,15 @@ namespace Barotrauma
                 Config.Save("config.xml");
             }
 
+            NilMod = new NilMod();
+            NilMod.Load();
+
+            NilModProfiler = new NilModLagDiagnostics();
+            NilModProfiler.InitTimers();
+
+            NilMod.NilModVPNBanlist = new VPNBanlist();
+            NilMod.NilModVPNBanlist.LoadVPNBans();
+
             ApplyGraphicsSettings();
 
             Content.RootDirectory = "Content";
@@ -154,11 +167,17 @@ namespace Barotrauma
 
             if (Config.WindowMode == WindowMode.Windowed)
             {
-                //for whatever reason, window isn't centered automatically
-                //since MonoGame 3.6 (nuget package might be broken), so
-                //let's do it manually
+                //for whatever reason, window isn't centered automatically 
+                //since MonoGame 3.6 (nuget package might be broken), so 
+                //let's do it manually 
                 Window.Position = new Point((GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - GraphicsWidth) / 2,
                                             (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - GraphicsHeight) / 2);
+
+                //NilMod Set window start position
+                if (GameMain.NilMod.UseStartWindowPosition)
+                {
+                    Window.Position = new Point(GameMain.NilMod.StartXPos, GameMain.NilMod.StartYPos);
+                }
             }
 
             GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
@@ -206,6 +225,23 @@ namespace Barotrauma
 
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice);
+
+            GameMain.NilMod.FetchExternalIP();
+
+            if (GameMain.NilMod.StartToServer)
+            {
+                LoadingScreen.loadType = LoadType.Server;
+
+                LoadingScreen.ServerName = GameMain.NilMod.ServerName;
+                LoadingScreen.ServerPort = GameMain.NilMod.ServerPort.ToString();
+                LoadingScreen.PublicServer = GameMain.NilMod.PublicServer;
+                LoadingScreen.MaxPlayers = GameMain.NilMod.MaxPlayers.ToString();
+                LoadingScreen.Password = GameMain.NilMod.UseServerPassword ? GameMain.NilMod.ServerPassword : "";
+            }
+            else
+            {
+                LoadingScreen.loadType = LoadType.Mainmenu;
+            }
 
             loadingCoroutine = CoroutineManager.StartCoroutine(Load());
         }
@@ -304,7 +340,15 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("LOADING COROUTINE FINISHED", Color.Lime);
             }
-        yield return CoroutineStatus.Success;
+
+            //Nilmod Server Start code
+            HandleParameters();
+            if (NilMod.StartToServer)
+            {
+                Autostart();
+            }
+
+            yield return CoroutineStatus.Success;
 
         }
 
@@ -332,13 +376,16 @@ namespace Barotrauma
 
             while (Timing.Accumulator >= Timing.Step)
             {
+                NilModProfiler.SWMainUpdateLoop.Start();
                 fixedTime.IsRunningSlowly = gameTime.IsRunningSlowly;
                 TimeSpan addTime = new TimeSpan(0, 0, 0, 0, 16);
                 fixedTime.ElapsedGameTime = addTime;
                 fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
 
+                NilModProfiler.SWPlayerInput.Start();
                 PlayerInput.Update(Timing.Step);
+                NilModProfiler.RecordPlayerInput();
 
                 if (loadingScreenOpen)
                 {
@@ -360,7 +407,11 @@ namespace Barotrauma
                 }
                 else if (hasLoaded)
                 {
+                    NilMod.Update((float)Timing.Step);
+
+                    NilModProfiler.SWSoundPlayer.Start();
                     SoundPlayer.Update((float)Timing.Step);
+                    NilModProfiler.RecordSoundPlayer();
 
                     if (PlayerInput.KeyHit(Keys.Escape)) GUI.TogglePauseMenu();
 
@@ -382,25 +433,38 @@ namespace Barotrauma
                     DebugConsole.AddToGUIUpdateList();
                     GUIComponent.UpdateMouseOn();
 
+                    NilModProfiler.SWDebugConsole.Start();
                     DebugConsole.Update(this, (float)Timing.Step);
-                    
+                    NilModProfiler.RecordDebugConsole();
+
                     if (!paused)
                     {
+                        NilModProfiler.SWGameScreen.Start();
                         Screen.Selected.Update(Timing.Step);
+                        NilModProfiler.RecordGameScreen();
                     }
 
                     if (NetworkMember != null)
                     {
+                        NilModProfiler.SWNetworkMember.Start();
                         NetworkMember.Update((float)Timing.Step);
+                        NilModProfiler.RecordNetworkMember();
                     }
 
+                    NilModProfiler.SWGUIUpdate.Start();
                     GUI.Update((float)Timing.Step);
+                    NilModProfiler.RecordGUIUpdate();
                 }
 
+                NilModProfiler.SWCoroutineManager.Start();
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
+                NilModProfiler.RecordCoroutineManager();
 
                 Timing.Accumulator -= Timing.Step;
+                if(NilModProfiler.SWMainUpdateLoop.ElapsedTicks > 0) NilModProfiler.RecordMainLoopUpdate();
             }
+
+            GameMain.NilModProfiler.Update((float)Timing.Step);
 
             if (!paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
         }
@@ -447,6 +511,66 @@ namespace Barotrauma
             if (NetworkMember != null) NetworkMember.Disconnect();
            
             base.OnExiting(sender, args);
+        }
+
+        //NilMod Handle Parameters
+        public void HandleParameters()
+        {
+
+            for (int i = 1; i <= Program.CommandLineArgs.GetUpperBound(0); i++)
+            {
+                //DebugConsole.NewMessage(Program.CommandLineArgs[i], Color.White);
+                switch (Program.CommandLineArgs[i].ToLowerInvariant())
+                {
+                    case "-startserver":
+                        //DebugConsole.NewMessage("-startserver", Color.White);
+                        Autostart();
+                        break;
+                    case "-test":
+                        Console.WriteLine("-test");
+                        break;
+                    case "-resolutionx":
+                        Console.WriteLine("-resolutionx");
+                        break;
+                    case "-resolutiony":
+                        Console.WriteLine("-resolutiony");
+                        break;
+                    default:
+                        //DebugConsole.NewMessage("Argument " + Program.CommandLineArgs[i] + " Not Recognized", Color.White);
+                        break;
+                }
+            }
+        }
+
+        //NilMod Autoserver start code
+        public void Autostart()
+        {
+            if (!NilMod.Skippedtoserver)
+            {
+                waitForKeyHit = false;
+                NilMod.Skippedtoserver = true;
+                GameMain.NetLobbyScreen = new NetLobbyScreen();
+
+                try
+                {
+                    GameMain.NetworkMember = new GameServer(GameMain.NilMod.ServerName,
+                                                            GameMain.NilMod.ServerPort,
+                                                            GameMain.NilMod.PublicServer,
+                                                            GameMain.NilMod.UseServerPassword ? "" : GameMain.NilMod.ServerPassword,
+                                                            GameMain.NilMod.UPNPForwarding,
+                                                            GameMain.NilMod.MaxPlayers
+                                                            );
+                }
+
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to start server", e);
+                }
+
+                GameMain.NetLobbyScreen.IsServer = true;
+                GameMain.NetLobbyScreen.DefaultServerStartup();
+                waitForKeyHit = false;
+            }
         }
     }
 }

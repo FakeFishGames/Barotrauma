@@ -184,7 +184,7 @@ namespace Barotrauma.Items.Components
                 {
                     msg += ", contained items: " + string.Join(", ", Array.FindAll(projectiles[0].Item.ContainedItems, i => i != null).Select(i => i.Name)) + ")";
                 }
-                GameServer.Log(msg, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(msg, ServerLog.MessageType.Attack);
             }
 
             return true;
@@ -347,6 +347,9 @@ namespace Barotrauma.Items.Components
                 if (returnNull)
                 {
                     var itemContainer = projectileContainer.GetComponent<ItemContainer>();
+                    if (itemContainer == null) continue;
+                    if (itemContainer.Inventory == null) continue;
+                    if (itemContainer.Inventory.Items == null) continue;
                     for (int i = 0; i < itemContainer.Inventory.Items.Length; i++)
                     {
                         projectiles.Add(itemContainer.Inventory.Items[i]?.GetComponent<Projectile>());                        

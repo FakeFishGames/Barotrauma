@@ -419,7 +419,7 @@ namespace Barotrauma.Items.Components
             bool newState = predictedState == null ? isOpen : predictedState.Value;
             if (sender != null && wasOpen != newState)
             {
-                GameServer.Log(sender.Name + (newState ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(sender.Name + (newState ? " opened " : " closed ") + item.Name, ServerLog.MessageType.Doorinteraction);
             }
         }
 

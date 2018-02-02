@@ -83,8 +83,8 @@ namespace Barotrauma
                 return false;
             }
         }
-        
-        public virtual bool IsLinkable
+
+        public virtual bool Linkable
         {
             get { return false; }
         }
@@ -222,10 +222,9 @@ namespace Barotrauma
                     int itemIndex = entitiesToClone.IndexOf(connectedItem);
                     //index of the connection in the connectionpanel of the target item
                     int connectionIndex = connectedItem.Connections.IndexOf(originalWire.Connections[n]);
-                    
-                    (clones[itemIndex] as Item).GetComponent<ConnectionPanel>().Connections[connectionIndex].TryAddLink(cloneWire);
-                    cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
 
+                    (clones[itemIndex] as Item).Connections[connectionIndex].TryAddLink(cloneWire);
+                    cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
                 }
             }
 

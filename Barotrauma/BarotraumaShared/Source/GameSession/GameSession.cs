@@ -104,8 +104,16 @@ namespace Barotrauma
 #if CLIENT
             CrewManager = new CrewManager();
 
+            if(inGameInfo == null) inGameInfo = new InGameInfo();
+            inGameInfo.Initialize();
+
             infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
+
+            ingameInfoButton = new GUIButton(new Rectangle(10, 30, 100, 20), "Ingame Info", "", null);
+            ingameInfoButton.OnClicked = inGameInfo.ToggleGameInfoFrame;
+
+            ingameInfoButton.Visible = true;
 #endif
 
             if (gameModePreset != null) GameMode = gameModePreset.Instantiate(missionType);
@@ -177,9 +185,26 @@ namespace Barotrauma
         public void StartRound(Level level, bool reloadSub = true, bool loadSecondSub = false)
         {
 #if CLIENT
-            GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
+            if(GameMain.NilMod.DisableLOSOnStart)
+            {
+                GameMain.LightManager.LosEnabled = false;
+            }
+            else
+            {
+                GameMain.LightManager.LosEnabled = (GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null);
+            }
+            if (GameMain.NilMod.DisableLightsOnStart)
+            {
+                GameMain.LightManager.LightingEnabled = false;
+            }
+            else
+            {
+                //GameMain.LightManager.LightingEnabled = (GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null);
+            }
+
+                
 #endif
-                        
+
             this.level = level;
 
             if (submarine == null)

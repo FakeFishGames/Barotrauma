@@ -72,7 +72,7 @@ namespace Barotrauma
             
             SoundUpdate(deltaTime);
 
-            if (!IsRemotePlayer)
+            if (!IsRemotePlayer && ((GameMain.Client == null) ? GameMain.NilMod.FrozenCharacters.Find(c => c == this) == null : false))
             {
                 aiController.Update(deltaTime);
             }

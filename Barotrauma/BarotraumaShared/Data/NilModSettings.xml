@@ -1,0 +1,253 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<NilMod>
+  <!--This is advanced configuration settings for your server stored by this modification!-->
+
+  <!--NilMod comes with a variety of additional commands, functionality and features, Below you can configure them:-->
+
+  <!--Regarding the BypassMD5 function, DO NOT use this to add content such as new creatures/items/missions etc, players will NOT sync data they do not have themselves-->
+  <!--Additionally do NOT edit randomevents.xml or missions.xml or Level generation as these NEVER sync as the client calculates such themselves based of level seed -->
+  <!--Finally do not edit the Human Oxygen or Health values as these cause desynced health/oxygen levels, doesbleed / bleedingdecreasespeed / Speed and other stats may be ok however test it yourself-->
+  <!--MD5 Desync editing on the server content folder is intended for tweaking monster stats, AI operation (Such as sight range / targetting in their creature file)-->
+  <!--Modifying existing status effects or adding new Status Effects to items, Damage/Bleed damage, creature speeds, or general small tweak experimentation-->
+  <!--Once you have made any changes join with another client (So you fail to join due to MD5) and read the clients MD5, enter that in here to allow connection for unmodified clients of that content package-->
+  <!--You could even try other content package mods, Such as Barotrauma Extended and tweak server-sided values-->
+
+  <!--BypassMD5 = Setting to change server from calculating MD5 normally to using the ServerMD5 setting file instead, Default=false-->
+  <!--ServerMD5 = The server content folders MD5 if unmodified - used for players using the same content mod to connect despite edits, Default= Unknown, try connecting with a client after edits and change then-->
+  <!--SuppressPacketSizeWarning = Suppresses an error that annoys server hosts but is actually mostly harmless anyways, Default=false-->
+  <!--StartToServer = Setting to use the server default settings when starting NilMod - for now please use actually valid settings XD, Default=false-->
+
+  <!--MaxRespawns = number of times the respawn shuttle may appear before it ceases to spawn 0=Infinite, default=0-->
+  <!--RespawnOnMainSub = Instantly places newly respawned players into the mainsub at an appropriate spawn point, good for Deathmatching, Default=false-->
+
+  <!--PlayerCanDie = Experiment feature to allow players to be permanently revivable unless they Give in, 6.0.2 currenty has a clientside GUI issue preventing 'Give in' during pressure death however-->
+  <!--PlayerHealthRegen = quantity (As a decimal value per second) a still-living Concious players health regenerates naturally, default=0-->
+  <!--CreatureHealthRegen = quantity (As a decimal value per second) a still-living Creatures health regenerates naturally, default=0-->
+  <!--UnconciousHealthDecay = Amount of health loss per second if you run out of oxygen or health, default=0.5-->
+  <!--UnconciousOxygenDecay = Amount of oxygen loss per second if you run out of oxygen or health, default=0.5-->
+  <!--MinHealthBleedCap = When an unconcious player reaches their minimum (Most negative possible) health, Reset the bleeding to this amount (0.0-5.0), Default=2-->
+  <!--PlayerCPRSpeed = Multiplier for oxygen gain when using CPR - 0 for no CPR at all 0.4 for 40% 1.2 for 120% etc - (Medical skill / 10) * PlayerCPRSpeed determines oxygen gain, default=1-->
+  <!--PlayerUnconciousTimer = The Stun duration for when a player crosses from unconcious to concious, smaller values pickup players faster, Default=5-->
+
+  <!--HullOxygenDistributionSpeed = Rate at which a rooms oxygen moves from one room to another, Default=500-->
+  <!--HullOxygenDetoriationSpeed = Rate at which a room oxygen slowly decays, Default=0.3-->
+  <!--HullOxygenConsumptionSpeed = Rate at which a player or creature removes oxygen from a room, Default=1000-->
+  <!--CanDamageSubBody = if false this allows the submarine hull to be in 'Godmode' regardless of godmode, while players and creatures are still harmed normally, Default=true-->
+
+  <!--PlayerOxygenUsageAmount = Amount of oxygen a player consumes when they cannot breathe - Effectively the rate the blue bar drops, Default=-5-->
+  <!--PlayerOxygenGainSpeed = Amount of oxygen a player gains when they can breathe - Effectively the rate the blue bar increases, Default=10-->
+  <!--UnbreathablePercent = A scale of 0 % to 100 % of oxygen left in room before it is considered 'Unbreathable' and switches PlayerOxygenGainSpeed to PlayerOxygenUsageAmount, Default=30-->
+
+  <!--PlayYourselfName = Name for your character that clients will see correctly, Default= (Uses server name if left as empty string)-->
+  <!--HostBypassSkills = Allows anything you control to have 100 skill for any skillcheck regardless of job (Others won't see this on crew tab too) - Allows husks and spawned human AI's / play yourself to do anything, Default=false-->
+
+  <!--The general settings of the server-->
+  <ServerModGeneralSettings
+    BypassMD5="true"
+    ServerMD5A="75718AFAAEB174F08BCFE277803849C1"
+    ServerMD5B=""
+    MaxLogMessages="800"
+    ClearLogRoundStart="true"
+    ChatboxHeight="0.15"
+    ChatboxWidth="0.35"
+    ChatboxMaxMessages="20"
+    StartToServer="true"
+    EnableEventChatterSystem="true"
+    EnableHelpSystem="true"
+    EnableAdminSystem="true"
+    EnablePlayerLogSystem="true"
+    PlayerLogStateNames="true"
+    PlayerLogStateFirstJoinedNames="true"
+  />
+
+  <!--If Barotrauma is started with -startserver OR StartToServer above is true, allows to immediately start the server with the following setup-->
+  <ServerModDefaultServerSettings
+    ServerName="ARS - CODE TEST"
+    ServerPort="14500"
+    MaxPlayers="8"
+    UseServerPassword="false"
+    ServerPassword=""
+    AdminAuth=""
+    PublicServer="false"
+    UPNPForwarding="false"
+    AutoRestart="true"
+    DefaultGamemode="Mission"
+    DefaultMissionType="Random"
+    DefaultRespawnShuttle=""
+    DefaultSubmarine=""
+    DefaultLevelSeed=""
+    SetDefaultsAlways="true"
+    UseAlternativeNetworking="false"
+    CharacterDisabledistance="20000.0"
+    ItemPosUpdateDistance="2.0"
+    DesyncTimerMultiplier="600.0"
+  />
+
+  <!--Debug Options for error management and testing-->
+  <ServerModDebugSettings
+    DebugReportSettingsOnLoad="true"
+    ShowPacketMTUErrors="true"
+    ShowOpenALErrors="true"
+    ShowPathfindingErrors="true"
+    ShowMasterServerSuccess="true"
+    DebugLag="false"
+    DebugLagSimulatedPacketLoss="0.05"
+    DebugLagSimulatedRandomLatency="0.05"
+    DebugLagSimulatedDuplicatesChance="0.05"
+    DebugLagSimulatedMinimumLatency="0.1"
+    DebugLagConnectionTimeout="60.0"
+  />
+
+  <!--These Settings are related to respawning manager-->
+  <ServerModRespawnSettings
+    LimitCharacterRespawns="true"
+	  LimitShuttleRespawns="true"
+	  MaxRespawnCharacters="60"
+	  MaxRespawnShuttles="12"
+	  BaseRespawnCharacters="18.0"
+	  BaseRespawnShuttles="10.0"
+	  RespawnCharactersPerPlayer="1.0"
+	  RespawnShuttlesPerPlayer="0.30"
+    AlwaysRespawnNewConnections="false"
+    RespawnNewConnectionsToSub="false"
+    RespawnOnMainSub="false"
+    RespawnLeavingAutoPilotMode="1"
+    RespawnShuttleLeavingLockDoors="false"
+    RespawnShuttleLeavingUndock="false"
+    RespawnShuttleLeaveAtTime="-1.00"
+  />
+
+  <ServerModSubmarineSettings
+    HullOxygenDistributionSpeed="500.0"
+    HullOxygenDetoriationSpeed="0.3"
+    HullOxygenConsumptionSpeed="1000.0"
+    UnbreathablePercent="30.0"
+    CanDamageSubBody="true"
+    CanRewireMainSubs="true"
+    CrushDamageDepth="-30000"
+	  UseProgressiveCrush="true"
+	  PCrushUseWallRemainingHealthCheck="true"
+	  PCrushDepthHealthResistMultiplier="0.2"
+	  PCrushDepthBaseHealthResist="200.0"
+	  PCrushDamageDepthMultiplier="0.15"
+	  PCrushBaseDamage="0.0"
+	  PCrushWallHealthDamagePercent="10"
+	  PCrushWallBaseDamageChance="20.0"
+	  PCrushWallDamageChanceIncrease="20.0"
+	  PCrushWallMaxDamageChance="20.0"
+	  PCrushInterval="2.0"
+  />
+
+  <!--These Settings are shared between the AI creatures/humans and the remote players if ever applicable-->
+  <ServerModAllCharacterSettings
+    CharacterOxygenUsageAmount="-0.001"
+    CharacterOxygenGainSpeed="10.0"
+    UseProgressiveImplodeDeath="true"
+    ImplodeHealthLoss="0"
+    ImplodeBleedGain="0.00"
+    ImplodeOxygenLoss="0"
+    PreventImplodeHealing="false"
+    PreventImplodeClotting="false"
+    PreventImplodeBreathing="false"
+    CharacterImplodeDeathAtMinHealth="true"
+    HuskHealingMultiplierinfected="1.0"
+    HuskHealingMultiplierincurable="1.0"
+    PlayerHuskInfectedDrain="0.00"
+    PlayerHuskIncurableDrain="0.50"
+    UnconciousHealthDecay="0.5"
+    UnconciousOxygenDecay="0.0"
+    MinHealthBleedCap="5"
+    CreatureBleedMultiplier="1.0"
+    ArmourBleedBypassNoDamage="true"
+    ArmourAbsorptionHealth="0.01"
+    ArmourDirectReductionHealth="0.00"
+    ArmourResistanceMultiplierHealth="0"
+    ArmourResistancePowerHealth="0"
+    ArmourMinimumHealthPercent="0"
+    ArmourAbsorptionBleed="0.01"
+    ArmourDirectReductionBleed="0.00"
+    ArmourResistanceMultiplierBleed="0"
+    ArmourResistancePowerBleed="0"
+    ArmourMinimumBleedPercent="0"
+  />
+
+  <!--These Settings effect player-controlled characters (Remote player clients) and the locally controlled character-->
+  <ServerModPlayerSettings
+    PlayerCanTraumaDeath="false"
+    PlayerCanImplodeDeath="false"
+    PlayerCanSuffocateDeath="false"
+    PlayerHealthMultiplier="1.0"
+    PlayerHuskHealthMultiplier="1.0"
+    PlayerHuskAiOnDeath="false"
+    PlayerHealthRegen="0.0"
+    PlayerHealthRegenMin="-100"
+    PlayerHealthRegenMax="100"
+    PlayerCPROnlyWhileUnconcious="true"
+    PlayerCPRHealthBaseValue="0"
+    PlayerCPRHealthSkillMultiplier="0"
+    PlayerCPRHealthSkillNeeded="100"
+    PlayerCPRStunBaseValue="0"
+    PlayerCPRStunSkillMultiplier="0"
+    PlayerCPRStunSkillNeeded="100"
+    PlayerCPRClotBaseValue="0"
+    PlayerCPRClotSkillMultiplier="0"
+    PlayerCPRClotSkillNeeded="100"
+    PlayerCPROxygenBaseValue="0"
+    PlayerCPROxygenSkillMultiplier="0.10"
+    PlayerUnconciousTimer="5.0"
+  />
+
+  <ServerModHostSettings
+    PlayYourselfName="Scruffy, The Janitor"
+    HostBypassSkills="true"
+  />
+
+  <!--These Settings effect AI-Controlled creatures (But not Player-Controlled ones, those use PlayerSettings instead)-->
+  <ServerModAICreatureSettings
+    CreatureHealthMultiplier="1.0"
+    CreatureHealthRegen="0.0"
+    CreatureHealthRegenMin="0.0"
+    CreatureHealthRegenMax="100.0"
+    CreatureEatDyingPlayers="true"
+    CreatureRespawnMonsterEvents="true"
+  />
+
+  <!--Which mission types can actually be selected Via 'random' by this server-->
+  <NilModMissionSettings
+    RandomMinPlayersCargo="0"
+    RandomMinPlayersSalvage="0"
+    RandomMinPlayersMonster="0"
+    RandomMinPlayersCombat="2"
+    RandomAllowCargo="true"
+    RandomAllowSalvage="true"
+    RandomAllowMonster="true"
+    RandomAllowCombat="true"
+    CombatEndRoundOnTeamDeath="false"
+    UseEndNoneCombatMissionAtDepth="false"
+    EndNoneCombatMissionAtDepth="-400000"
+  />
+
+  <!--If started with -startserver OR StartToServer above is true, Use the following Monster Spawns settings-->
+  <NilModDefaultSpawnSettings
+    Carrier="true"
+    Charybdis="true"
+    Coelanth="true"
+    Crawler="true"
+    Endworm="true"
+    Fractalguardian="true"
+    Fractalguardian2="true"
+    Human="true"
+    Husk="true"
+    Mantis="true"
+    Moloch="true"
+    Scorpion="true"
+    Tigerthresher="true"
+    Watcher="true"
+  />
+
+  <!--If started with -startserver OR StartToServer above is true, Use the following Additional Cargo Settings-->
+  <NilModDefaultAdditionalCargoSettings>
+    <Item name="Oxygenite Shard" Quantiy="0"/>
+  </NilModDefaultAdditionalCargoSettings>
+
+</NilMod>

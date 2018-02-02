@@ -25,9 +25,10 @@
     <collider radius="100"/>
     
     <!-- head -->
-    <limb id = "0" type="Head" width="350" height="320" steerforce="1.0" flip="true" armorsector="0.0,360.0" armorvalue="100.0">
+    <limb id = "0" type="Head" width="350" height="320" steerforce="1.0" flip="true">
       <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="0,0,369,348" depth="0.02" origin ="0.5,0.6"/>
       <attack range="250" damagerange="170" duration="0.05" damage="200" stun="5" force="20" damagetype="blunt" targetforce="100"/>
+      <damagemodifier damagetype="Any" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>
 
     <limb id = "1" radius="50" height="120" flip="true">

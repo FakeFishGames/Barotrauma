@@ -30,7 +30,7 @@ namespace Barotrauma
 
         public static void TakeDamage(float amount)
         {
-            healthBar.Flash();
+            if(healthBar != null) healthBar.Flash();
 
             damageOverlayTimer = MathHelper.Clamp(amount * 0.1f, 0.2f, 5.0f);
         }
@@ -39,11 +39,11 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
 
-            if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
+            if (cprButton != null && cprButton.Visible && character != Character.Spied) cprButton.AddToGUIUpdateList();
 
-            if (suicideButton != null && suicideButton.Visible) suicideButton.AddToGUIUpdateList();
+            if (suicideButton != null && suicideButton.Visible && character != Character.Spied) suicideButton.AddToGUIUpdateList();
             
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if ((!character.IsUnconscious && character.Stun <= 0.0f) || character == Character.Spied)
             {
 
                 if (character.Inventory != null)
