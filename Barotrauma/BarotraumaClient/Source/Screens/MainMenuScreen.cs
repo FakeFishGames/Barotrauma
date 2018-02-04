@@ -370,6 +370,8 @@ namespace Barotrauma
             GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.list.Find(gm => gm.Name == "Single Player"));
             (GameMain.GameSession.GameMode as CampaignMode).GenerateMap(mapSeed);
 
+            GameSession.inGameInfo.Initialize();
+
             GameMain.NilMod.GameInitialize(true);
 
             GameMain.LobbyScreen.Select();
@@ -389,6 +391,7 @@ namespace Barotrauma
                 return;
             }
 
+            GameSession.inGameInfo.Initialize();
 
             GameMain.LobbyScreen.Select();
         }

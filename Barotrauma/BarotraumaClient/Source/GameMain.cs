@@ -325,7 +325,9 @@ namespace Barotrauma
             CharacterEditorScreen   =   new CharacterEditorScreen();
             ParticleEditorScreen    =   new ParticleEditorScreen();
 
-        yield return CoroutineStatus.Running;
+            GameSession.inGameInfo = new InGameInfo();
+
+            yield return CoroutineStatus.Running;
 
             ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", GameScreen.Cam);
             DecalManager = new DecalManager("Content/Particles/DecalPrefabs.xml");

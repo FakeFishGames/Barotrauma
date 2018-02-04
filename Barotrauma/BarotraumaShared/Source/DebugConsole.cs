@@ -1456,7 +1456,7 @@ namespace Barotrauma
 #elif CLIENT
             lock (queuedMessages)
             {
-                if (GameMain.NilMod.DebugConsoleTimeStamp)
+                if (GameMain.NilMod != null && GameMain.NilMod.DebugConsoleTimeStamp)
                 {
                     queuedMessages.Enqueue(new ColoredText("[" + DateTime.Now.ToString() + "] " + msg, color));
                 }

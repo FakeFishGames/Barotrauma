@@ -518,6 +518,8 @@ namespace Barotrauma.Networking
                 connected = true;
                 GameMain.NilMod.GameInitialize(true);
                 LoadingScreen.ClientName = Name;
+
+                GameSession.inGameInfo.Initialize();
             }
 
             yield return CoroutineStatus.Success;

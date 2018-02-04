@@ -226,6 +226,7 @@ namespace Barotrauma.Networking
 
 #if CLIENT
             GameMain.NetLobbyScreen.DefaultServerStartupSubSelect();
+            GameSession.inGameInfo.Initialize();
 #endif
 
             GameMain.NilMod.GameInitialize(true);

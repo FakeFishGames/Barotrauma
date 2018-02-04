@@ -279,6 +279,11 @@ namespace Barotrauma
         float IngameInfoScroll;
         int LastCharacterCount;
 
+        public InGameInfo()
+        {
+            Initialize();
+        }
+
         public void Initialize()
         {
             //if (CommandIcons == null) CommandIcons = TextureLoader.FromFile("Content/UI/NilMod/inventoryIcons.png");
@@ -286,11 +291,17 @@ namespace Barotrauma
             if (NoCommandIcon == null) NoCommandIcon = TextureLoader.FromFile("Content/UI/uiButton.png");
 
             characterlist = new List<InGameInfoCharacter>();
+            filteredcharacterlist = new List<InGameInfoCharacter>();
+
+            ingameInfoFilterText = null;
+            timerwarning = null;
+            clientguilist = null;
+            ingameInfoFrame = null;
 
             //InGameInfoClient Host = new InGameInfoClient();
             //clientlist.Add(Host);
 
-            
+
             currentfilter = 0;
         }
 
@@ -459,6 +470,7 @@ namespace Barotrauma
             else
             {
                 ingameInfoFilterText = null;
+                timerwarning = null;
                 clientguilist = null;
                 ingameInfoFrame = null;
             }

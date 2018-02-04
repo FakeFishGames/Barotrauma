@@ -104,9 +104,6 @@ namespace Barotrauma
 #if CLIENT
             CrewManager = new CrewManager();
 
-            if(inGameInfo == null) inGameInfo = new InGameInfo();
-            inGameInfo.Initialize();
-
             infoButton = new GUIButton(new Rectangle(10, 10, 100, 20), "Info", "", null);
             infoButton.OnClicked = ToggleInfoFrame;
 
