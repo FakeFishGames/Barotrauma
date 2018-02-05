@@ -87,6 +87,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Fractalguardian\fractalguardian.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\HumanoidAnimRun.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Human\damagedhead.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -226,6 +229,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\damageshader.fx" />
+    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\HumanoidAnimWalk.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Texts.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1459,6 +1465,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\AnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\FishAnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Attack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />
