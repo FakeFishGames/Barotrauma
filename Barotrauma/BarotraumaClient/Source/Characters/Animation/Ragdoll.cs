@@ -39,7 +39,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
+                if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = Math.Min(strongestImpact, 3.0f);
             }
         }
 
