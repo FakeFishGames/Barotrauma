@@ -715,7 +715,8 @@ namespace Barotrauma
                         GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
                     }
 
-                    //remove existing gap if damage is below 50%
+                    //remove existing gap if damage is below leak threshold
+                    sections[sectionIndex].gap.Open = 0.0f;
                     sections[sectionIndex].gap.Remove();
                     sections[sectionIndex].gap = null;
 #if CLIENT

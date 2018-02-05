@@ -12,10 +12,15 @@ namespace Barotrauma
         private AITarget currentTarget;
         private float newTargetTimer;
 
+        private float standStillTimer;
+        private float walkDuration;
+
         private AIObjectiveFindSafety findSafety;
 
         public AIObjectiveIdle(Character character) : base(character, "")
         {
+            standStillTimer = Rand.Range(-10.0f, 10.0f);
+            walkDuration = Rand.Range(0.0f, 10.0f);
         }
 
         public override bool IsCompleted()
@@ -33,11 +38,11 @@ namespace Barotrauma
 
             var pathSteering = character.AIController.SteeringManager as IndoorsSteeringManager;
 
-            if (pathSteering==null)
+            if (pathSteering == null)
             {
                 return;
             }
-            
+
             if (character.AnimController.InWater)
             {
                 //attempt to find a safer place if in water
@@ -56,7 +61,7 @@ namespace Barotrauma
                     if (character != null && character.Submarine == null) pos -= Submarine.MainSub.SimPosition;
                     
                     var path = pathSteering.PathFinder.FindPath(pos, currentTarget.SimPosition);
-                    if (path.Cost > 200.0f && character.AnimController.CurrentHull!=null) return;
+                    if (path.Cost > 1000.0f && character.AnimController.CurrentHull!=null) return;
 
                     pathSteering.SetPath(path);
                 }
@@ -67,14 +72,27 @@ namespace Barotrauma
             
             newTargetTimer -= deltaTime;
 
-                  
+
             //wander randomly 
             // - if reached the end of the path 
             // - if the target is unreachable
             // - if the path requires going outside
-            if (pathSteering==null || (pathSteering.CurrentPath != null && 
+            if (pathSteering == null || (pathSteering.CurrentPath != null &&
                 (pathSteering.CurrentPath.NextNode == null || pathSteering.CurrentPath.Unreachable || pathSteering.CurrentPath.HasOutdoorsNodes)))
             {
+                standStillTimer -= deltaTime;
+                if (standStillTimer > 0.0f)
+                {
+                    walkDuration = Rand.Range(1.0f, 5.0f);
+                    pathSteering.Reset();
+                    return;
+                }
+
+                if (standStillTimer < -walkDuration)
+                {
+                    standStillTimer = Rand.Range(1.0f, 10.0f);
+                }
+
                 //steer away from edges of the hull
                 if (character.AnimController.CurrentHull!=null)
                 {

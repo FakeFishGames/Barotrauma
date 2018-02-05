@@ -997,12 +997,39 @@ namespace Barotrauma
                         connectedComponents.Add(component);
                     }
 
-                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);
-
-                    
+                    recipient.Item.GetConnectedComponentsRecursive<T>(alreadySearched, connectedComponents);                   
                 }
             }
         }
+
+        public List<T> GetConnectedComponentsRecursive<T>(Connection c)
+        {
+            List<T> connectedComponents = new List<T>();            
+            List<Item> alreadySearched = new List<Item>() { this };
+            GetConnectedComponentsRecursive<T>(c, alreadySearched, connectedComponents);
+
+            return connectedComponents;
+        }
+
+        private void GetConnectedComponentsRecursive<T>(Connection c, List<Item> alreadySearched, List<T> connectedComponents)
+        {
+            alreadySearched.Add(this);
+                        
+            var recipients = c.Recipients;
+            foreach (Connection recipient in recipients)
+            {
+                if (alreadySearched.Contains(recipient.Item)) continue;
+
+                var component = recipient.Item.GetComponent<T>();                    
+                if (component != null)
+                {
+                    connectedComponents.Add(component);
+                }
+
+                recipient.Item.GetConnectedComponentsRecursive<T>(recipient, alreadySearched, connectedComponents);                   
+            }            
+        }
+
 
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f)
         {

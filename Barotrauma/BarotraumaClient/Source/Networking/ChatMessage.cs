@@ -5,10 +5,11 @@ namespace Barotrauma.Networking
 {
     partial class ChatMessage
     {
-        public void ClientWrite(NetOutgoingMessage msg)
+        public virtual void ClientWrite(NetOutgoingMessage msg)
         {
             msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
+            msg.Write((byte)Type);
             msg.Write(Text);
         }
 
@@ -16,7 +17,12 @@ namespace Barotrauma.Networking
         {
             UInt16 ID = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();
-            string txt = msg.ReadString();
+            string txt = "";
+
+            if (type != ChatMessageType.Order)
+            {
+                txt = msg.ReadString();
+            }
 
             string senderName = msg.ReadString();
             Character senderCharacter = null;
@@ -30,21 +36,68 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (NetIdUtils.IdMoreRecent(ID, LastID))
+            if (type == ChatMessageType.Order)
             {
-                if (type == ChatMessageType.MessageBox)
+                int orderIndex = msg.ReadByte();
+                UInt16 targetCharacterID = msg.ReadUInt16();
+                Character targetCharacter = Entity.FindEntityByID(targetCharacterID) as Character;
+                Entity targetEntity =  Entity.FindEntityByID(msg.ReadUInt16());
+                int optionIndex = msg.ReadByte();
+
+                Order order = null;
+                if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
                 {
-                    new GUIMessageBox("", txt);
-                }
-                else if (type == ChatMessageType.Console)
-                {
-                    DebugConsole.NewMessage(txt, MessageColor[(int)ChatMessageType.Console]);
+                    DebugConsole.ThrowError("Invalid order message - order index out of bounds.");
+                    if (NetIdUtils.IdMoreRecent(ID, LastID)) LastID = ID;
+                    return;
                 }
                 else
                 {
-                    GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
+                    order = Order.PrefabList[orderIndex];
                 }
-                LastID = ID;
+                string orderOption = "";
+                if (optionIndex >= 0 && optionIndex < order.Options.Length)
+                {
+                    orderOption = order.Options[optionIndex];
+                }
+                txt = order.GetChatMessage(targetCharacter?.Name, senderCharacter?.CurrentHull?.RoomName, orderOption);
+
+                if (order.TargetAllCharacters)
+                {
+                    GameMain.GameSession?.CrewManager?.AddOrder(
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), 
+                        order.Prefab.FadeOutTime);
+                }
+                else if (targetCharacter != null)
+                {
+                    targetCharacter.SetOrder(
+                        new Order(order.Prefab, targetEntity, (targetEntity as Item)?.GetComponent<Items.Components.ItemComponent>()), orderOption);
+                }
+
+                if (NetIdUtils.IdMoreRecent(ID, LastID))
+                {
+                    GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
+                    LastID = ID;
+                }
+            }
+            else
+            {
+                if (NetIdUtils.IdMoreRecent(ID, LastID))
+                {
+                    if (type == ChatMessageType.MessageBox)
+                    {
+                        new GUIMessageBox("", txt);
+                    }
+                    else if (type == ChatMessageType.Console)
+                    {
+                        DebugConsole.NewMessage(txt, MessageColor[(int)ChatMessageType.Console]);
+                    }
+                    else
+                    {
+                        GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
+                    }
+                    LastID = ID;
+                }
             }
         }
     }

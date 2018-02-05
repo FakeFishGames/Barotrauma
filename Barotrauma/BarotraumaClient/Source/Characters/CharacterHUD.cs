@@ -3,6 +3,8 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -17,6 +19,8 @@ namespace Barotrauma
         private static GUIButton grabHoldButton;
 
         private static GUIButton suicideButton;
+
+        //private static GUIListBox orderList;
 
         private static GUIProgressBar oxygenBar, healthBar;
 
@@ -34,7 +38,7 @@ namespace Barotrauma
         {
             healthBar.Flash();
 
-            damageOverlayTimer = MathHelper.Clamp(amount * 0.1f, 0.2f, 5.0f);
+            damageOverlayTimer = MathHelper.Clamp(amount * 0.05f, 0.2f, 1.0f);
         }
 
         public static void AddToGUIUpdateList(Character character)
@@ -46,10 +50,11 @@ namespace Barotrauma
             if (grabHoldButton != null && cprButton.Visible) grabHoldButton.AddToGUIUpdateList();
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.AddToGUIUpdateList();
+
+            //if (orderList != null && orderList.Visible && orderList.CountChildren > 0) orderList.AddToGUIUpdateList();
             
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-
                 if (character.Inventory != null)
                 {
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
@@ -99,6 +104,8 @@ namespace Barotrauma
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
 
+            //if (orderList != null && orderList.Visible && orderList.children.Count > 0) orderList.Update(deltaTime);
+
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
@@ -131,6 +138,8 @@ namespace Barotrauma
             }
         }
 
+        private static Dictionary<Entity, int> orderIndicatorCount = new Dictionary<Entity, int>();
+
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
             if (statusIcons == null)
@@ -149,6 +158,55 @@ namespace Barotrauma
             }
 
             if (GUI.DisableHUD) return;
+
+            if (GameMain.GameSession?.CrewManager != null)
+            {
+                orderIndicatorCount.Clear();
+                foreach (Pair<Order, float> timedOrder in GameMain.GameSession.CrewManager.ActiveOrders)
+                {
+                    DrawOrderIndicator(spriteBatch, cam, character, timedOrder.First, MathHelper.Clamp(timedOrder.Second / 10.0f, 0.2f, 1.0f));
+                }
+
+                if (character.CurrentOrder != null)
+                {
+                    DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);                    
+                }
+
+                /*//recreate order list if it doesn't exist, is for some other character, 
+                //if there are new orders, or if the list contains orders that don't exist anymore
+                if (orderList == null || orderList.UserData != character ||
+                    currentOrders.Any(o => orderList.FindChild(o) == null) ||
+                    orderList.children.Any(c => !currentOrders.Contains(c.UserData as Order)))
+                {
+                    orderList = new GUIListBox(new Rectangle(GameMain.GraphicsWidth - 150, 50, 150, 500), Color.Transparent, null);
+                    orderList.UserData = character;
+
+                    foreach (Order order in currentOrders)
+                    {
+                        var orderFrame = new GUITextBlock(
+                            new Rectangle(0, 0, 0, 50), order.Name, "ListBoxElement", 
+                            Alignment.TopLeft, Alignment.TopRight, orderList, false, GUI.SmallFont);
+                        orderFrame.UserData = order;
+
+                        var dismissButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Dismiss", Alignment.BottomRight, "", orderFrame);
+                        //dismissButton.Font = GUI.SmallFont;
+                        dismissButton.UserData = order;
+                        dismissButton.OnClicked += (btn, userdata) =>
+                        {
+                            Order dismissedOrder = userdata as Order;
+                            GameMain.GameSession.CrewManager.RemoveOrder(dismissedOrder);
+                            if (dismissedOrder == character.CurrentOrder)
+                            {
+                                character.SetOrder(null, "");
+                            }
+                            return true;
+                        };
+                    }
+                }
+
+                orderList.Draw(spriteBatch);*/
+
+            }
 
             if (character.Inventory != null)
             {
@@ -344,6 +402,21 @@ namespace Barotrauma
             }
         }
 
+        private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)
+        {
+            if (order.TargetAllCharacters && !order.HasAppropriateJob(character)) return;
+
+            Entity target = order.ConnectedController != null ? order.ConnectedController.Item : order.TargetEntity;
+            if (target == null) return;
+
+            if (!orderIndicatorCount.ContainsKey(target)) orderIndicatorCount.Add(target, 0);
+            
+            Vector2 drawPos = target.WorldPosition + Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
+            GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);
+
+            orderIndicatorCount[target] = orderIndicatorCount[target] + 1;
+        }
+
         private static void DrawStatusIcons(SpriteBatch spriteBatch, Character character)
         {
             if (GameMain.DebugDraw)
@@ -368,7 +441,7 @@ namespace Barotrauma
                 oxygenBar.Draw(spriteBatch);
                 if (!oxyMsgShown)
                 {
-                    GUI.AddMessage(TextManager.Get("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Y), Alignment.Left, Color.White, 5.0f);
+                    GUI.AddMessage(TextManager.Get("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Center.Y), Alignment.CenterLeft, Color.White, 5.0f);
                     oxyMsgShown = true;
                 }
             }
@@ -398,7 +471,7 @@ namespace Barotrauma
                 
                 if (pressureMsgTimer > 0.5f && !pressureMsgShown)
                 {
-                    GUI.AddMessage(TextManager.Get("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 60.0f), Alignment.Left, Color.White, 5.0f);
+                    GUI.AddMessage(TextManager.Get("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 75.0f), Alignment.CenterLeft, Color.White, 5.0f);
                     pressureMsgShown = true;                    
                 }
 

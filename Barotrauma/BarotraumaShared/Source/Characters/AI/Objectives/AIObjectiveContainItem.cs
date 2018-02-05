@@ -56,7 +56,7 @@ namespace Barotrauma
                     return goToObjective.CanBeCompleted;
                 }
 
-                return getItemObjective == null || !getItemObjective.CanBeCompleted;
+                return getItemObjective == null || getItemObjective.CanBeCompleted;
             }
         }
 

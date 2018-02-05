@@ -157,28 +157,25 @@ namespace Barotrauma
             }
 
             if (currentPath.CurrentNode == null) return Vector2.Zero;
-            
+
             if (character.AnimController.Anim == AnimController.Animation.Climbing)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
-                
-                if (currentPath.CurrentNode.Ladders != null)
+
+                //climbing ladders -> don't move horizontally
+                diff.X = 0.0f;
+
+                //at the same height as the waypoint
+                if (Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < collider.height / 2 + collider.radius)
                 {
-                    //climbing ladders -> don't move horizontally
-                    diff.X = 0.0f;
+                    float heightFromFloor = character.AnimController.GetColliderBottom().Y - character.AnimController.FloorY;
 
-                    //at the same height as the waypoint
-                    if (Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < collider.height / 2 + collider.radius)
+                    //we can safely skip to the next waypoint if the character is at a safe height above the floor,
+                    //or if the next waypoint in the path is also on ladders
+                    if ((heightFromFloor > 0.0f && heightFromFloor < collider.height) ||
+                        (currentPath.NextNode != null && currentPath.NextNode.Ladders != null))
                     {
-                        float heightFromFloor = character.AnimController.GetColliderBottom().Y - character.AnimController.FloorY;
-
-                        //we can safely skip to the next waypoint if the character is at a safe height above the floor,
-                        //or if the next waypoint in the path is also on ladders
-                        if ((heightFromFloor > 0.0f && heightFromFloor < collider.height) || 
-                            (currentPath.NextNode != null && currentPath.NextNode.Ladders != null))
-                        {
-                            currentPath.SkipToNextNode();
-                        }
+                        currentPath.SkipToNextNode();
                     }
                 }
 

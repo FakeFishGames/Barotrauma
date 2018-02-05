@@ -1632,19 +1632,19 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void SendChatMessage(string txt, Client recipient)
+        public void SendDirectChatMessage(string txt, Client recipient)
         {
             ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Server, null);
-            SendChatMessage(msg, recipient);
+            SendDirectChatMessage(msg, recipient);
         }
 
         public void SendConsoleMessage(string txt, Client recipient)
         {
             ChatMessage msg = ChatMessage.Create("", txt, ChatMessageType.Console, null);
-            SendChatMessage(msg, recipient);
+            SendDirectChatMessage(msg, recipient);
         }
 
-        public void SendChatMessage(ChatMessage msg, Client recipient)
+        public void SendDirectChatMessage(ChatMessage msg, Client recipient)
         {
             msg.NetStateID = recipient.ChatMsgQueue.Count > 0 ?
                 (ushort)(recipient.ChatMsgQueue.Last().NetStateID + 1) :
@@ -1653,18 +1653,17 @@ namespace Barotrauma.Networking
             recipient.ChatMsgQueue.Add(msg);
             recipient.LastChatMsgQueueID = msg.NetStateID;
         }
-
+        
         /// <summary>
         /// Add the message to the chatbox and pass it to all clients who can receive it
         /// </summary>
-        public void SendChatMessage(string message, ChatMessageType? type = null, Client senderClient = null)
+        public void SendChatMessage(string message, ChatMessageType? type = null, Client senderClient = null, Character senderCharacter = null)
         {
-            Character senderCharacter = null;
             string senderName = "";
 
             Client targetClient = null;
-            
-            if (type==null)
+
+            if (type == null)
             {
                 string tempStr;
                 string command = ChatMessage.GetChatMessageCommand(message, out tempStr);
@@ -1729,11 +1728,18 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                //msg sent by the server
                 if (senderClient == null)
                 {
-                    senderCharacter = myCharacter;
-                    senderName = myCharacter == null ? name : myCharacter.Name;
+                    //msg sent by the server
+                    if (senderCharacter == null)
+                    {
+                        senderCharacter = myCharacter;
+                        senderName = myCharacter == null ? name : myCharacter.Name;
+                    }
+                    else //msg sent by an AI character
+                    {
+                        senderName = senderCharacter.Name;
+                    }
                 }                
                 else //msg sent by a client
                 {
@@ -1755,10 +1761,17 @@ namespace Barotrauma.Networking
             }
             else
             {
-                //msg sent by the server
                 if (senderClient == null)
                 {
-                    senderName = name;
+                    //msg sent by the server
+                    if (senderCharacter == null)
+                    {
+                        senderName = name;
+                    }
+                    else //sent by an AI character, not allowed when the game is not running
+                    {
+                        return;
+                    }
                 }                
                 else //msg sent by a client          
                 {
@@ -1773,14 +1786,15 @@ namespace Barotrauma.Networking
             switch (type)
             {
                 case ChatMessageType.Radio:
+                case ChatMessageType.Order:
                     if (senderCharacter == null) return;
 
                     //return if senderCharacter doesn't have a working radio
-                    var radio = senderCharacter.Inventory.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
-                    if (radio == null) return;
+                    var radio = senderCharacter.Inventory?.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
+                    if (radio == null || !senderCharacter.HasEquippedItem(radio)) return;
 
                     senderRadio = radio.GetComponent<WifiComponent>();
-                    if (!senderRadio.CanTransmit()) return;
+                    if (!senderRadio.CanTransmit()) return;                    
                     break;
                 case ChatMessageType.Dead:
                     //character still alive -> not allowed
@@ -1806,10 +1820,11 @@ namespace Barotrauma.Networking
                 {
                     case ChatMessageType.Default:
                     case ChatMessageType.Radio:
+                    case ChatMessageType.Order:
                         if (senderCharacter != null && 
                             client.Character != null && !client.Character.IsDead)
                         {
-                            modifiedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, client.Character);
+                            modifiedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, client.Character);
 
                             //too far to hear the msg -> don't send
                             if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
@@ -1831,13 +1846,13 @@ namespace Barotrauma.Networking
                     (ChatMessageType)type,
                     senderCharacter);
 
-                SendChatMessage(chatMsg, client);
+                SendDirectChatMessage(chatMsg, client);
             }
 
             string myReceivedMessage = message;
             if (gameStarted && myCharacter != null && senderCharacter != null)
             {
-                myReceivedMessage = ApplyChatMsgDistanceEffects(message, (ChatMessageType)type, senderCharacter, myCharacter);
+                myReceivedMessage = ChatMessage.ApplyDistanceEffect(message, (ChatMessageType)type, senderCharacter, myCharacter);
             }
 
             if (!string.IsNullOrWhiteSpace(myReceivedMessage) && 
@@ -1846,47 +1861,42 @@ namespace Barotrauma.Networking
                 AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderCharacter); 
             }       
         }
-
-        private string ApplyChatMsgDistanceEffects(string message, ChatMessageType type, Character sender, Character receiver)
+        
+        public void SendOrderChatMessage(OrderChatMessage message, Client senderClient = null)
         {
-            if (sender == null) return "";
+            if (message.Sender == null || !message.Sender.CanSpeak) return;            
 
-            switch (type)
+            //check which clients can receive the message and apply distance effects
+            foreach (Client client in ConnectedClients)
             {
-                case ChatMessageType.Default:
-                    if (!receiver.IsDead)
-                    {
-                        return ChatMessage.ApplyDistanceEffect(receiver, sender, message, ChatMessage.SpeakRange, 3.0f);
-                    }
-                    break;
-                case ChatMessageType.Radio:
-                    if (!receiver.IsDead)
-                    {
-                        if (receiver.Inventory != null)
-                        {
-                            var receiverItem = receiver.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                            //client doesn't have a radio -> don't send
-                            if (receiverItem == null) return "";
+                string modifiedMessage = message.Text;
+                
+                if (message.Sender != null &&
+                    client.Character != null && !client.Character.IsDead)
+                {
+                    modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Text, ChatMessageType.Radio, message.Sender, client.Character);
 
-                            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                            if (senderItem == null) return "";
+                    //too far to hear the msg -> don't send
+                    if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
+                }
 
-                            var receiverRadio = receiverItem.GetComponent<WifiComponent>();
-                            var senderRadio = senderItem.GetComponent<WifiComponent>();
-
-                            if (!receiverRadio.CanReceive(senderRadio)) return "";
-
-                            return ChatMessage.ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
-                        }
-                        else
-                        {
-                            return ChatMessage.ApplyDistanceEffect(receiver, sender, message, ChatMessage.SpeakRange, 3.0f);
-                        }
-                    }
-                    break;
+                var modifiedChatMsg = new OrderChatMessage(
+                    message.Order, message.OrderOption, 
+                    message.TargetEntity, message.TargetCharacter, message.Sender);
+                    
+                SendDirectChatMessage(modifiedChatMsg, client);
             }
 
-            return message;
+            string myReceivedMessage = message.Text;
+            if (gameStarted && myCharacter != null)
+            {
+                myReceivedMessage = ChatMessage.ApplyDistanceEffect(message.Text, ChatMessageType.Radio, message.Sender, myCharacter);
+            }
+
+            if (!string.IsNullOrWhiteSpace(myReceivedMessage))
+            {
+                AddChatMessage(myReceivedMessage, ChatMessageType.Order, message.SenderName, message.Sender);
+            }
         }
 
         private void FileTransferChanged(FileSender.FileTransferOut transfer)

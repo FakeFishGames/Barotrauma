@@ -186,6 +186,11 @@ namespace Barotrauma
                 errorMsgs.Add(TextManager.Get("NoCargoSpawnpointWarning"));
             }
 
+            if (!Item.ItemList.Any(it => it.GetComponent<Items.Components.Pump>() != null && it.HasTag("ballast")))
+            {
+                errorMsgs.Add(TextManager.Get("NoBallastTagsWarning"));
+            }
+
             if (errorMsgs.Any())
             {
                 new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), 400, 0);

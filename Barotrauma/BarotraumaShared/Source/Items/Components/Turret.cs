@@ -221,7 +221,29 @@ namespace Barotrauma.Items.Components
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             var projectiles = GetLoadedProjectiles();
+            if (GetAvailablePower() < powerConsumption)
+            {
+                var batteries = item.GetConnectedComponents<PowerContainer>();
 
+                float lowestCharge = 0.0f;
+                PowerContainer batteryToLoad = null;
+                foreach (PowerContainer battery in batteries)
+                {
+                    if (batteryToLoad == null || battery.Charge < lowestCharge)
+                    {
+                        batteryToLoad = battery;
+                        lowestCharge = battery.Charge;
+                    }
+                }
+
+                if (batteryToLoad == null) return true;
+
+                if (batteryToLoad.RechargeSpeed < batteryToLoad.MaxRechargeSpeed * 0.4f)
+                {
+                    objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, "", false));                    
+                    return false;
+                }
+            }
             if (projectiles.Count == 0 || (projectiles.Count == 1 && objective.Option.ToLowerInvariant() != "fire at will"))
             {
                 ItemContainer container = null;
@@ -234,35 +256,14 @@ namespace Barotrauma.Items.Components
                     if (container != null) break;
                 }
 
-                if (container == null || container.ContainableItems.Count==0) return true;
+                if (container == null || container.ContainableItems.Count == 0) return true;
 
                 var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Names[0], container);
+                character?.Speak(TextManager.Get("DialogLoadTurret").Replace("[itemname]", item.Name), null, 0.0f, "loadturret", 30.0f);
+                containShellObjective.MinContainedAmount = projectiles.Count + 1;
                 containShellObjective.IgnoreAlreadyContainedItems = true;
                 objective.AddSubObjective(containShellObjective);
                 return false;
-            }
-            else if (GetAvailablePower() < powerConsumption)
-            {
-                var batteries = item.GetConnectedComponents<PowerContainer>();
-
-                float lowestCharge = 0.0f;
-                PowerContainer batteryToLoad = null;
-                foreach (PowerContainer battery in batteries)
-                {
-                    if (batteryToLoad == null || battery.Charge < lowestCharge)
-                    {
-                        batteryToLoad = battery;
-                        lowestCharge = battery.Charge;
-                    }                    
-                }
-
-                if (batteryToLoad == null) return true;
-
-                if (batteryToLoad.RechargeSpeed < batteryToLoad.MaxRechargeSpeed * 0.4f)
-                {
-                    objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, "", false));
-                    return false;
-                }
             }
 
             //enough shells and power
@@ -295,7 +296,11 @@ namespace Barotrauma.Items.Components
             var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
             if (pickedBody != null && !(pickedBody.UserData is Limb)) return false;
 
-            if (objective.Option.ToLowerInvariant() == "fire at will") Use(deltaTime, character);
+            if (objective.Option.ToLowerInvariant() == "fire at will")
+            {
+                character?.Speak(TextManager.Get("DialogFireTurret").Replace("[itemname]", item.Name), null, 0.0f, "fireturret", 5.0f);
+                Use(deltaTime, character);
+            }
 
             return false;
         }
