@@ -70,7 +70,8 @@
   
   <Item
     name="Railgun Shell"
-    category="Misc">
+    category="Misc"
+    radarsize="5">
 
     <Price locationtype="Outpost" buyprice="300"/>
     <Price locationtype="Military" buyprice="200"/>
@@ -103,7 +104,8 @@
 
   <Item
     name="Nuclear Shell"
-    category="Misc">
+    category="Misc"
+    radarsize="5">
     
     <Price locationtype="Military" buyprice="500"/>
     

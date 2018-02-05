@@ -5,8 +5,7 @@
     category="Machine"
     focusonselected="true"
     offsetonselected="700"
-    linkable="true"
-    >
+    linkable="true">
 
     <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
@@ -35,7 +34,8 @@
 
   <Item
     name="Depth Charge Shell"
-    category="Misc">
+    category="Misc"
+    radarsize="5">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -61,7 +61,8 @@
 
   <Item
     name="Nuclear Depth Charge"
-    category="Misc">
+    category="Misc"
+    radarsize="5">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>

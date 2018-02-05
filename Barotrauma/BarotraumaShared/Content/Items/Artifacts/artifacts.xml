@@ -4,7 +4,7 @@
     name="Skyholder Artifact"
     category="Alien"
     Tags="alien"
-    >
+    radarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="58,0,60,60"/>
 
@@ -26,7 +26,7 @@
     name="Thermal Artifact"
     category="Alien"
     Tags="alien"
-    >
+    radarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56"/>
 
@@ -50,7 +50,7 @@
     name="Faraday Artifact"
     category="Alien"
     Tags="alien"
-    >
+    radarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="0,56,60,49"/>
 
@@ -71,7 +71,8 @@
     category="Alien"
     Tags="alien"
     pickdistance="150"
-    indestructible="true">
+    indestructible="true"
+    radarsize="30">
 
     <Sprite texture="artifact.png" depth="0.7" sourcerect="60,61,63,67"/>
 
