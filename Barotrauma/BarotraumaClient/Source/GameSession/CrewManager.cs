@@ -11,6 +11,9 @@ namespace Barotrauma
     {
         const float ChatMessageFadeTime = 10.0f;
 
+        const float ConversationIntervalMin = 60.0f;
+        const float ConversationIntervalMax = 120.0f;
+        
         private List<CharacterInfo> characterInfos;
         private List<Character> characters;
 
@@ -21,6 +24,9 @@ namespace Barotrauma
         
         private GUIFrame guiFrame;
         private GUIListBox characterListBox, orderListBox;
+
+        private float conversationTimer, conversationLineTimer;
+        private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
 
         private GUIListBox chatBox;
 
@@ -142,6 +148,43 @@ namespace Barotrauma
             
             chatBox.AddChild(msg);
             chatBox.BarScroll = 1.0f;
+        }
+
+        private void UpdateConversations(float deltaTime)
+        {
+            conversationTimer -= deltaTime;
+            if (conversationTimer <= 0.0f)
+            {
+                pendingConversationLines.AddRange(NPCConversation.CreateRandom(GameMain.GameSession.CrewManager.GetCharacters().ToList()));
+                conversationTimer = Rand.Range(ConversationIntervalMin, ConversationIntervalMax);
+            }
+
+            if (pendingConversationLines.Count > 0)
+            {
+                conversationLineTimer -= deltaTime;
+                if (conversationLineTimer <= 0.0f)
+                {
+                    //speaker of the next line can't speak, interrupt the conversation
+                    if (!pendingConversationLines[0].First.CanSpeak)
+                    {
+                        pendingConversationLines.Clear();
+                        return;
+                    }
+
+                    pendingConversationLines[0].First.Speak(pendingConversationLines[0].Second, null);
+                    if (pendingConversationLines.Count > 1)
+                    {
+                        conversationLineTimer = MathHelper.Clamp(pendingConversationLines[0].Second.Length * 0.1f, 1.0f, 5.0f);
+                    }
+                    pendingConversationLines.RemoveAt(0);                    
+                }
+            }
+        }
+
+        private void CreateConversation()
+        {
+            pendingConversationLines.AddRange(NPCConversation.CreateRandom(GameMain.GameSession.CrewManager.GetCharacters().ToList()));
+            
         }
 
         public bool AddOrder(Order order, float fadeOutTime)
@@ -267,6 +310,8 @@ namespace Barotrauma
                 
                 commander.ToggleGUIFrame();                
             }
+
+            UpdateConversations(deltaTime);
 
             foreach (Pair<Order, float> order in activeOrders)
             {
@@ -411,7 +456,9 @@ namespace Barotrauma
                 AddCharacter(character);
             }
 
-            if (characters.Any()) characterListBox.Select(0);// SelectCharacter(null, characters[0]);
+            if (characters.Any()) characterListBox.Select(0);
+
+            conversationTimer = Rand.Range(5.0f, 10.0f);
         }
 
         public void EndRound()
