@@ -30,7 +30,7 @@ namespace Barotrauma
         private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger;
 
         private EventManagerSettings settings;
-
+        
         public float CurrentIntensity
         {
             get { return currentIntensity; }
@@ -257,12 +257,10 @@ namespace Barotrauma
             // calculate final intensity --------------------------------------------------------
 
             targetIntensity = 
-                ((1.0f - avgCrewHealth)
-                + (1.0f - avgHullIntegrity) 
-                + floodingAmount 
-                + fireAmount 
-                + enemyDanger)
-                    / 5.0f;
+                ((1.0f - avgCrewHealth) + (1.0f - avgHullIntegrity) + floodingAmount) / 3.0f;
+            targetIntensity += fireAmount * 0.5f;
+            targetIntensity += enemyDanger;
+            targetIntensity = MathHelper.Clamp(targetIntensity, 0.0f, 1.0f);
 
             if (targetIntensity > currentIntensity)
             {
