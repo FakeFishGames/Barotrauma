@@ -142,7 +142,7 @@
     reward="1000"
     radarlabel="Moloch"
     successmessage="The Moloch has been killed."
-    monsterfile="Content/Characters/Moloch/moloch.xml">
+    monsterfile="Content/Characters/MolochBoss/molochboss.xml">
 
     <LocationType from="City" to="None"/>
     <LocationType from="City" to="City"/>
@@ -167,7 +167,7 @@
     reward="800"
     radarlabel="Tiger Thresher"
     successmessage="The Tiger Thresher has been killed."
-    monsterfile="Content/Characters/Tigerthresher/tigerthresher.xml">
+    monsterfile="Content/Characters/TigerthresherBoss/tigerthresherboss.xml">
     <message header="Target terminated" text="The thresher is dead. Navigate the submarine out of the cavern to claim the reward."/>
     
     <LocationType from="City" to="None"/>
