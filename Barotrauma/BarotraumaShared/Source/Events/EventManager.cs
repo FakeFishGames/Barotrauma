@@ -21,20 +21,15 @@ namespace Barotrauma
         //the sub is laying broken on the ocean floor or if the players are trying to abuse the system
         //by intentionally keeping the intensity high by causing breaches, damaging themselves or such
         private float eventThreshold = 0.2f;
-
-        //How much the event threshold increases per second. 0.0005f = 0.03f per minute
-        private float eventThresholdIncrease = 0.0005f;
-
-        //The threshold is reset to this value after an event has been triggered.
-        private float defaultEventThreshold = 0.2f;
-
+        
         //New events can't be triggered when the cooldown is active.
         private float eventCoolDown;
 
-        private const float IntensityUpdateInterval = 5.0f;
         private float intensityUpdateTimer;
 
         private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger;
+
+        private EventManagerSettings settings;
 
         public float CurrentIntensity
         {
@@ -50,10 +45,24 @@ namespace Barotrauma
         {
             events = new List<ScriptedEvent>();        
         }
-        
+
         public void StartRound(Level level)
         {
             if (GameMain.Client != null) return;
+
+            var suitableSettings = EventManagerSettings.List.FindAll(s =>
+                level.Difficulty > s.MinLevelDifficulty &&
+                level.Difficulty < s.MaxLevelDifficulty);
+
+            if (suitableSettings.Count == 0)
+            {
+                DebugConsole.ThrowError("No suitable event manager settings found for the selected level (difficulty " + level.Difficulty + ")");
+                settings = EventManagerSettings.List[Rand.Int(EventManagerSettings.List.Count, Rand.RandSync.Server)];
+            }
+            else
+            {
+                settings = suitableSettings[Rand.Int(suitableSettings.Count, Rand.RandSync.Server)];
+            }
 
             this.level = level;
             CreateInitialEvents();
@@ -65,7 +74,8 @@ namespace Barotrauma
             intensityUpdateTimer = 0.0f;
             CalculateCurrentIntensity(0.0f);
             currentIntensity = targetIntensity;
-            eventCoolDown = 360.0f;
+            eventThreshold = settings.DefaultEventThreshold;
+            eventCoolDown = settings.EventCooldown;
         }
 
         public void EndRound()
@@ -101,7 +111,9 @@ namespace Barotrauma
                 allowedEvents.Add(prefab);
             }
 
-            allowedEvents.RemoveAll(e => e.Difficulty > level.Difficulty);
+            allowedEvents.RemoveAll(e => 
+                e.Difficulty < settings.MinEventDifficulty || 
+                e.Difficulty > settings.MaxEventDifficulty);
 
             if (allowedEvents.Count == 0)
             {
@@ -148,16 +160,16 @@ namespace Barotrauma
 
             CalculateCurrentIntensity(deltaTime);
 
-            eventThreshold += eventThresholdIncrease * deltaTime;
+            eventThreshold += settings.EventThresholdIncrease * deltaTime;
             if (eventCoolDown > 0.0f)
             {
-                eventCoolDown -= deltaTime;// CalculateEventCoolDownReduction() * deltaTime;
+                eventCoolDown -= deltaTime;
             }
             else if (currentIntensity < eventThreshold)
             {
                 CreateRandomEvent();
-                eventThreshold = defaultEventThreshold;
-                eventCoolDown = 360.0f;
+                eventThreshold = settings.DefaultEventThreshold;
+                eventCoolDown = settings.EventCooldown;
             }
 
             events.RemoveAll(t => t.IsFinished);
@@ -169,17 +181,12 @@ namespace Barotrauma
                 }
             }
         }
-        
-        private float CalculateEventCoolDownReduction()
-        {
-            return MathHelper.Clamp(1.0f - currentIntensity, 0.1f, 1.0f);
-        }
-        
+                
         private void CalculateCurrentIntensity(float deltaTime)
         {
             intensityUpdateTimer -= deltaTime;
             if (intensityUpdateTimer > 0.0f) return;
-            intensityUpdateTimer = IntensityUpdateInterval;
+            intensityUpdateTimer = settings.IntensityUpdateInterval;
 
             // crew health --------------------------------------------------------
 
@@ -260,12 +267,12 @@ namespace Barotrauma
             if (targetIntensity > currentIntensity)
             {
                 //50 seconds for intensity to go from 0.0 to 1.0
-                currentIntensity = MathHelper.Min(currentIntensity + 0.02f * IntensityUpdateInterval, targetIntensity);
+                currentIntensity = MathHelper.Min(currentIntensity + 0.02f * settings.IntensityUpdateInterval, targetIntensity);
             }
             else
             {
                 //400 seconds for intensity to go from 1.0 to 0.0
-                currentIntensity = MathHelper.Max(0.0025f * IntensityUpdateInterval, targetIntensity);
+                currentIntensity = MathHelper.Max(0.0025f * settings.IntensityUpdateInterval, targetIntensity);
             }
         }
     }

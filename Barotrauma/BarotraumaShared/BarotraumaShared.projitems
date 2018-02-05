@@ -226,6 +226,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\damageshader.fx" />
+    <Content Include="$(MSBuildThisFileDirectory)Content\EventManagerSettings.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Texts.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1465,6 +1468,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DamageModifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Events\EventManagerSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\MalfunctionEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\Missions\MissionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Events\ScriptedEventPrefab.cs" />

@@ -42,6 +42,8 @@ namespace Barotrauma
             
             MusicType = element.GetAttributeString("musictype", "default");
 
+            Difficulty = element.GetAttributeFloat("difficulty", 0);
+
             MidRoundCommonness = new Dictionary<string, float>();
             MidRoundCommonness.Add("", 0);
             MinEventCount = new Dictionary<string, int>();
