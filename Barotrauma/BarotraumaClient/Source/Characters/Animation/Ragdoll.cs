@@ -97,7 +97,7 @@ namespace Barotrauma
 
                 limb.body.DebugDraw(spriteBatch, inWater ? Color.Cyan : Color.White);
             }
-
+            
             Collider.DebugDraw(spriteBatch, frozen ? Color.Red : (inWater ? Color.SkyBlue : Color.Gray));
             GUI.Font.DrawString(spriteBatch, Collider.LinearVelocity.X.ToString(), new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y), Color.Orange);
 

@@ -76,6 +76,13 @@ namespace Barotrauma
         {
             if (Frozen) return;
 
+#if CLIENT
+            if (Character.Controlled == character)
+            {
+                HumanoidAnimParams.UpdateEditor(deltaTime);
+            }
+#endif
+
             levitatingCollider = true;
             ColliderIndex = Crouching ? 1 : 0;
             if (!Crouching && ColliderIndex == 1) Crouching = true;
@@ -223,6 +230,8 @@ namespace Barotrauma
 
         void UpdateStanding()
         {
+            HumanoidAnimParams animParams = Math.Abs(TargetMovement.X) > 1.5f ? HumanoidAnimParams.RunInstance : HumanoidAnimParams.WalkInstance;
+
             Vector2 handPos;
 
             //if you're allergic to magic numbers, stop reading now
@@ -240,8 +249,8 @@ namespace Barotrauma
             Limb leftLeg = GetLimb(LimbType.LeftLeg);
             Limb rightLeg = GetLimb(LimbType.RightLeg);
             
-            float getUpSpeed = 0.3f;
-            float walkCycleSpeed = movement.X * walkAnimSpeed;
+            float getUpSpeed = animParams.GetUpSpeed;
+            //float walkCycleSpeed = movement.X * walkAnimSpeed;
             if (Stairs != null)
             {
                 TargetMovement = new Vector2(MathHelper.Clamp(TargetMovement.X, -1.5f, 1.5f), TargetMovement.Y);
@@ -271,13 +280,11 @@ namespace Barotrauma
 
             float walkPosX = (float)Math.Cos(walkPos);
             float walkPosY = (float)Math.Sin(walkPos);
-            float runningModifier = (float)Math.Max(Math.Min(Math.Abs(TargetMovement.X), 3.0f) / 1.5f, 1.0);
-            
-            Vector2 stepSize = new Vector2(
-                this.stepSize.X * walkPosX * runningModifier,
-                this.stepSize.Y * walkPosY * runningModifier * runningModifier);
 
-            if (Crouching) stepSize *= 0.5f;
+
+            Vector2 stepSize = animParams.StepSize;
+            stepSize.X *= walkPosX;
+            stepSize.Y *= walkPosY;                
 
             float footMid = colliderPos.X;// (leftFoot.SimPosition.X + rightFoot.SimPosition.X) / 2.0f;
 
@@ -306,11 +313,9 @@ namespace Barotrauma
                 }
                 else
                 {
-
-                    leg.body.ApplyTorque(shortestAngle * 10.0f);
-
+                    leg.body.ApplyTorque(shortestAngle * animParams.LegCorrectionTorque);
                     leg = GetLimb((i == 0) ? LimbType.LeftLeg : LimbType.RightLeg);
-                    leg.body.ApplyTorque(-shortestAngle * 10.0f);
+                    leg.body.ApplyTorque(-shortestAngle * animParams.LegCorrectionTorque);
                 }
             }
 
@@ -336,13 +341,13 @@ namespace Barotrauma
             if (Stairs != null || onSlope)
             {
                 torso.pullJoint.WorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * 0.25f, getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(torso.SimPosition.X, footMid + movement.X * animParams.TorsoLeanAmount, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(torso.SimPosition.Y, colliderPos.Y + animParams.TorsoPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
 
                 head.pullJoint.WorldAnchorB = new Vector2(
-                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * (Crouching ? 0.6f : 0.25f), getUpSpeed * 0.8f),
-                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
+                    MathHelper.SmoothStep(head.SimPosition.X, footMid + movement.X * animParams.HeadLeanAmount, getUpSpeed * 0.8f),
+                    MathHelper.SmoothStep(head.SimPosition.Y, colliderPos.Y + animParams.HeadPosition - Math.Abs(walkPosX * 0.05f), getUpSpeed * 2.0f));
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition;// +movement * 0.3f;
             }
@@ -352,11 +357,11 @@ namespace Barotrauma
 
                 torso.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(torso.SimPosition,
-                    new Vector2(footMid + movement.X * 0.2f, colliderPos.Y + TorsoPosition), getUpSpeed);
+                    new Vector2(footMid + movement.X * animParams.TorsoLeanAmount, colliderPos.Y + animParams.TorsoPosition), getUpSpeed);
 
                 head.pullJoint.WorldAnchorB =
                     MathUtils.SmoothStep(head.SimPosition,
-                    new Vector2(footMid + movement.X * (Crouching && Math.Sign(movement.X) == Math.Sign(Dir) ? 0.6f : 0.2f), colliderPos.Y + HeadPosition), getUpSpeed * 1.2f);
+                    new Vector2(footMid + movement.X * animParams.HeadLeanAmount, colliderPos.Y + animParams.HeadPosition), getUpSpeed * 1.2f);
 
                 waist.pullJoint.WorldAnchorB = waist.SimPosition + movement * 0.06f;
             }
@@ -377,7 +382,8 @@ namespace Barotrauma
             if (TargetMovement.X != 0.0f)
             {
                 //progress the walking animation
-                walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
+                //walkPos -= (walkCycleSpeed / runningModifier) * 0.8f;
+                walkPos -= MathHelper.ToRadians(animParams.CycleSpeed) * Math.Sign(movement.X);
 
                 for (int i = -1; i < 2; i += 2)
                 {
@@ -385,6 +391,8 @@ namespace Barotrauma
                     Limb leg = i == -1 ? leftLeg : rightLeg;
 
                     Vector2 footPos = stepSize * -i;
+                    footPos += new Vector2(Math.Sign(movement.X) * animParams.FootMoveOffset.X, animParams.FootMoveOffset.Y);
+
                     if (stepSize.Y < 0.0f) stepSize.Y = -0.15f;
 
                     if (onSlope && Stairs == null)
@@ -393,50 +401,50 @@ namespace Barotrauma
                     }
                     footPos.Y = Math.Min(waist.SimPosition.Y - colliderPos.Y - 0.4f, footPos.Y);
 
-                    MoveLimb(foot, footPos + colliderPos, 15.0f, true);
-                    foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, 20.0f * runningModifier);
+                    MoveLimb(foot, footPos + colliderPos, animParams.FootMoveStrength, true);
+                    foot.body.SmoothRotate(leg.body.Rotation + MathHelper.PiOver2 * Dir * 1.6f, animParams.FootRotateStrength);
                 }
 
-                if (runningModifier > 1.0f)
+                /*if (runningModifier > 1.0f)
                 {
                     if (walkPosY > 0.0f)
                     {
-                        GetLimb(LimbType.LeftThigh).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * thighTorque);
+                        GetLimb(LimbType.LeftThigh).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * animParams.ThighCorrectionTorque);
                     }
                     else
                     {
-                        GetLimb(LimbType.RightThigh).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * thighTorque);
+                        GetLimb(LimbType.RightThigh).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * animParams.ThighCorrectionTorque);
                     }
-                }
+                }*/
 
-                if (legTorque > 0.0f)
+                if (animParams.ThighCorrectionTorque > 0.0f)
                 {
                     if (Math.Sign(walkPosX) != Math.Sign(movement.X))
                     {
-                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * legTorque / runningModifier);
+                        GetLimb(LimbType.LeftLeg).body.ApplyTorque(-walkPosY * Dir * Math.Abs(movement.X) * animParams.ThighCorrectionTorque);
                     }
                     else
                     {
-                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * legTorque / runningModifier);
+                        GetLimb(LimbType.RightLeg).body.ApplyTorque(walkPosY * Dir * Math.Abs(movement.X) * animParams.ThighCorrectionTorque);
                     }
                 }
 
                 //calculate the positions of hands
                 handPos = torso.SimPosition;
-                handPos.X = -walkPosX * 0.4f;
+                handPos.X = -walkPosX * animParams.HandMoveAmount.X;
 
-                float lowerY = -1.0f + (runningModifier - 1.0f) * 0.8f;
+                float lowerY = animParams.HandClampY;
 
-                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * 0.15 * runningModifier));
+                handPos.Y = lowerY + (float)(Math.Abs(Math.Sin(walkPos - Math.PI * 1.5f) * animParams.HandMoveAmount.Y));
 
-                Vector2 posAddition = new Vector2(-movement.X * 0.015f * runningModifier, 0.0f);
+                Vector2 posAddition = new Vector2(Math.Sign(movement.X) * animParams.HandMoveOffset.X, animParams.HandMoveOffset.Y);
 
                 if (!rightHand.Disabled)
                 {
                     HandIK(rightHand, torso.SimPosition + posAddition +
                         new Vector2(
                             -handPos.X,
-                            (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY), 0.7f * runningModifier);
+                            (Math.Sign(walkPosX) == Math.Sign(Dir)) ? handPos.Y : lowerY), animParams.HandMoveStrength);
                 }
 
                 if (!leftHand.Disabled)
@@ -444,14 +452,12 @@ namespace Barotrauma
                     HandIK(leftHand, torso.SimPosition + posAddition +
                         new Vector2(
                             handPos.X,
-                            (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY), 0.7f * runningModifier);
+                            (Math.Sign(walkPosX) == Math.Sign(-Dir)) ? handPos.Y : lowerY), animParams.HandMoveStrength);
                 }
 
             }
             else
             {
-                //float movementFactor = (movement.X / 4.0f) * movement.X * Math.Sign(movement.X);
-
                 for (int i = -1; i < 2; i += 2)
                 {
                     Vector2 footPos = colliderPos;

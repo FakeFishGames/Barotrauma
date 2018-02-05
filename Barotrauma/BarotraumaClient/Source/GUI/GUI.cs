@@ -493,7 +493,12 @@ namespace Barotrauma
             if (GUIMessageBox.VisibleBox != null)
             {
                 GUIMessageBox.VisibleBox.Draw(spriteBatch);
-            }            
+            }          
+            
+            if (GameMain.DebugDraw && Character.Controlled?.AnimController is HumanoidAnimController)
+            {
+                HumanoidAnimParams.DrawEditor(spriteBatch);
+            }
 
             if (pauseMenuOpen)
             {
