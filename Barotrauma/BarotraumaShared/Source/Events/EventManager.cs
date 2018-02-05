@@ -211,7 +211,7 @@ namespace Barotrauma
             enemyDanger = 0.0f;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsDead || character.IsUnconscious) continue;
+                if (character.IsDead || character.IsUnconscious || !character.Enabled) continue;
 
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
                 if (enemyAI == null) continue;
