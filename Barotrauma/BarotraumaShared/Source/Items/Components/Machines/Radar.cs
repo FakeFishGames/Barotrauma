@@ -109,7 +109,7 @@ namespace Barotrauma.Items.Components
         {
             currPowerConsumption = powerConsumption;
 
-            base.Update(deltaTime, cam);
+            UpdateOnActiveEffects(deltaTime);
             
             if (voltage >= minVoltage || powerConsumption <= 0.0f)
             {
