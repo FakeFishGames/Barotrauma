@@ -198,9 +198,7 @@ namespace Barotrauma
                 Character c = Character.CharacterList[i];
                 if (c.AnimController.CurrentHull == null || c.IsDead) continue;
 
-                float range = DamageRange;
-                if (c.Position.X < position.X - range || c.Position.X > position.X + size.X + range) continue;
-                if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) continue;
+                if (!IsInDamageRange(c, DamageRange)) continue;
 
                 float dmg = (float)Math.Sqrt(size.X) * deltaTime / c.AnimController.Limbs.Length;
                 foreach (Limb limb in c.AnimController.Limbs)
@@ -208,6 +206,22 @@ namespace Barotrauma
                     c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
                 }
             }
+        }
+
+        public bool IsInDamageRange(Character c, float damageRange)
+        {
+            if (c.Position.X < position.X - damageRange || c.Position.X > position.X + size.X + damageRange) return false;
+            if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) return false;
+
+            return true;
+        }
+
+        public bool IsInDamageRange(Vector2 worldPosition, float damageRange)
+        {
+            if (worldPosition.X < WorldPosition.X - damageRange || worldPosition.X > WorldPosition.X + size.X + damageRange) return false;
+            if (worldPosition.Y < WorldPosition.Y - size.Y || worldPosition.Y > hull.WorldRect.Y) return false;
+
+            return true;
         }
 
         private void DamageItems(float deltaTime)
@@ -275,21 +289,16 @@ namespace Barotrauma
 
             if (size.X < 1.0f) Remove();
         }
-
-        public void Extinguish(float deltaTime, float amount, Vector2 pos)
+        
+        public void Extinguish(float deltaTime, float amount)
         {
-            float range = 100.0f;
-
-            if (pos.X < WorldPosition.X - range || pos.X > WorldPosition.X + size.X + range) return;
-            if (pos.Y < WorldPosition.Y - range || pos.Y > WorldPosition.Y + 500.0f) return;
-
             float extinquishAmount = amount * deltaTime;
 
 #if CLIENT
             float steamCount = Rand.Range(-5.0f, (float)Math.Sqrt(amount));
             for (int i = 0; i < steamCount; i++)
             {
-                Vector2 spawnPos = new Vector2(pos.X + Rand.Range(-5.0f, 5.0f), Rand.Range(position.Y - size.Y, position.Y) + 10.0f);
+                Vector2 spawnPos = new Vector2(Rand.Range(position.X, position.X + size.X), Rand.Range(position.Y - size.Y, position.Y) + 10.0f);
 
                 Vector2 speed = new Vector2((spawnPos.X - (position.X + size.X / 2.0f)), (float)Math.Sqrt(size.X) * Rand.Range(20.0f, 25.0f));
 
@@ -310,6 +319,11 @@ namespace Barotrauma
             if (GameMain.Client != null) return;
 
             if (size.X < 1.0f) Remove();
+        }
+
+        public void Extinguish(float deltaTime, float amount, Vector2 worldPosition)
+        {
+            if (IsInDamageRange(worldPosition, 100.0f)) Extinguish(deltaTime, amount);
         }
 
         public void Remove()

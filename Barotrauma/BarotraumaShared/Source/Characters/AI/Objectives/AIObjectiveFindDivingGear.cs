@@ -36,11 +36,12 @@ namespace Barotrauma
         protected override void Act(float deltaTime)
         {
             var item = character.Inventory.FindItem(gearName);
-            if (item == null)
+            if (item == null || !character.HasEquippedItem(item))
             {
                 //get a diving mask/suit first
                 if (!(subObjective is AIObjectiveGetItem))
                 {
+                    character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
                     subObjective = new AIObjectiveGetItem(character, gearName, true);
                 }
             }
@@ -66,6 +67,7 @@ namespace Barotrauma
                 
                 if (!(subObjective is AIObjectiveContainItem) || subObjective.IsCompleted())
                 {
+                    character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
                     subObjective = new AIObjectiveContainItem(character, new string[] { "Oxygen Tank", "oxygensource" }, item.GetComponent<ItemContainer>());
                 }
             }

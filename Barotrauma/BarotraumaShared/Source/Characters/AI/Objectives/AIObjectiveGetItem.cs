@@ -45,12 +45,11 @@ namespace Barotrauma
             : base(character, "")
         {
             canBeCompleted = true;
-
+            currSearchIndex = -1;
             this.equip = equip;
-
-            currSearchIndex = 0;
-
             this.targetItem = targetItem;
+
+            CheckInventory();
         }
 
         public AIObjectiveGetItem(Character character, string itemName, bool equip = false)
@@ -62,12 +61,23 @@ namespace Barotrauma
             : base(character, "")
         {
             canBeCompleted = true;
-
+            currSearchIndex = -1;
             this.equip = equip;
-
-            currSearchIndex = 0;
-
             this.itemNames = itemNames;
+
+            CheckInventory();
+        }
+
+        private void CheckInventory()
+        {
+            for (int i = 0; i < character.Inventory.Items.Length; i++)
+            {
+                if (character.Inventory.Items[i] == null) continue;
+                if (!itemNames.Any(name => character.Inventory.Items[i].Prefab.NameMatches(name) || character.Inventory.Items[i].HasTag(name))) continue;
+
+                targetItem = character.Inventory.Items[i];
+                currItemPriority = 100.0f;
+            }
         }
 
         protected override void Act(float deltaTime)
@@ -152,7 +162,7 @@ namespace Barotrauma
 
             float currDist = moveToTarget == null ? 0.0f : Vector2.DistanceSquared(moveToTarget.Position, character.Position);
 
-            for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 2; i++)
+            for (int i = 0; i < 10 && currSearchIndex < Item.ItemList.Count - 1; i++)
             {
                 currSearchIndex++;
 
@@ -194,10 +204,11 @@ namespace Barotrauma
 
                 targetItem = item;
                 moveToTarget = rootContainer ?? item;
+
             }
 
             //if searched through all the items and a target wasn't found, can't be completed
-            if (currSearchIndex >= Item.ItemList.Count && targetItem == null) canBeCompleted = false;
+            if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null) canBeCompleted = false;
         }
 
         public override bool IsDuplicate(AIObjective otherObjective)

@@ -1130,14 +1130,22 @@ namespace Barotrauma.Networking
             client.SendMessage(outmsg, NetDeliveryMethod.Unreliable);
         }
 
-        public void SendChatMessage(string message)
+        public void SendChatMessage(ChatMessage msg)
+        {
+            if (client.ServerConnection == null) return;            
+            lastQueueChatMsgID++;
+            msg.NetStateID = lastQueueChatMsgID;
+            chatMsgQueue.Add(msg);
+        }
+
+        public void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Default)
         {
             if (client.ServerConnection == null) return;
 
             ChatMessage chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
-                message, 
-                ChatMessageType.Default, 
+                message,
+                type, 
                 gameStarted && myCharacter != null ? myCharacter : null);
 
             lastQueueChatMsgID++;

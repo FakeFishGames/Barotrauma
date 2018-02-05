@@ -30,6 +30,8 @@ namespace Barotrauma
 
         public bool SelectMultiple;
 
+        public bool HideChildrenOutsideFrame = true;
+
         public GUIComponent Selected
         {
             get
@@ -86,7 +88,7 @@ namespace Barotrauma
                 //scrollBar.Enabled = value;
             }
         }
-
+        
         public override Rectangle Rect
         {
             get
@@ -210,6 +212,8 @@ namespace Barotrauma
             UpdateScrollBarSize();
         }
 
+        private bool dragging;
+
         private void UpdateChildrenRect(float deltaTime)
         {
             int x = rect.X, y = rect.Y;
@@ -226,6 +230,27 @@ namespace Barotrauma
                 }
             }
 
+            if (PlayerInput.LeftButtonHeld())
+            {
+                if (MouseOn == this || (MouseOn != null && IsParentOf(MouseOn)))
+                {
+                    if (PlayerInput.MouseSpeed.LengthSquared() > 5.0f)
+                    {
+                        dragging = true;
+                    }
+                    if (dragging)
+                    {
+                        scrollBar.MoveButton(-PlayerInput.MouseSpeed);
+                    }
+                }
+            }
+            else if (dragging)
+            {
+                ForceMouseOn(null);
+                dragging = false;
+                return;
+            }
+
             for (int i = 0; i < children.Count; i++)
             {
                 GUIComponent child = children[i];
@@ -240,10 +265,10 @@ namespace Barotrauma
                 {
                     y += child.Rect.Height + spacing;
                 }
-                
-                if (deltaTime>0.0f) child.Update(deltaTime);
-                if (enabled && child.CanBeFocused &&
-                    (MouseOn == this || (MouseOn != null && this.IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
+
+                if (deltaTime > 0.0f) child.Update(deltaTime);
+                if (!dragging && enabled && child.CanBeFocused &&
+                    (MouseOn == this || (MouseOn != null && IsParentOf(MouseOn))) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
                     if (PlayerInput.LeftButtonClicked())
@@ -405,10 +430,13 @@ namespace Barotrauma
             
             frame.Draw(spriteBatch);
 
-            if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
+            if (!scrollBarHidden && scrollBarEnabled) scrollBar.Draw(spriteBatch);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            spriteBatch.GraphicsDevice.ScissorRectangle = frame.Rect;
+            if (HideChildrenOutsideFrame)
+            {
+                spriteBatch.GraphicsDevice.ScissorRectangle = frame.Rect;
+            }
 
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)
@@ -426,7 +454,10 @@ namespace Barotrauma
                 child.Draw(spriteBatch);
             }
 
-            spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            if (HideChildrenOutsideFrame)
+            {
+                spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
+            }
         }
 
         private bool IsChildVisible(GUIComponent child)

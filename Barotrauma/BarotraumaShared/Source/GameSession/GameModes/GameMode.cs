@@ -60,8 +60,15 @@ namespace Barotrauma
         }
 
         public virtual void MsgBox() { }
-
-        public virtual void AddToGUIUpdateList() { }
+        
+        public virtual void AddToGUIUpdateList()
+        {
+#if CLIENT
+            if (!isRunning) return;
+            
+            GameMain.GameSession?.CrewManager.AddToGUIUpdateList();
+#endif
+        }
 
         public virtual void Update(float deltaTime) { }
 

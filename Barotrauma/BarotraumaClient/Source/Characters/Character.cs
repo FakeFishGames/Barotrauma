@@ -113,15 +113,20 @@ namespace Barotrauma
                     cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, MathHelper.Clamp(Mass, 250.0f, 800.0f), deltaTime);
                 }
             }
-
+            
             cursorPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
             if (AnimController.CurrentHull != null && AnimController.CurrentHull.Submarine != null)
             {
                 cursorPosition -= AnimController.CurrentHull.Submarine.Position;
-            }
+            }  
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-            if (moveCam)
+            if (DebugConsole.IsOpen || GUI.PauseMenuOpen ||
+                (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
+            {
+                cam.OffsetAmount = 0.0f;
+            }
+            else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
             {
                 if (DebugConsole.IsOpen || GUI.PauseMenuOpen || IsUnconscious ||
                     (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))

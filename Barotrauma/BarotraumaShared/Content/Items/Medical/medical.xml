@@ -45,7 +45,7 @@
   <Item
     name="Bandage"
     category="Equipment"
-    Tags="smallitem,medical"    
+    Tags="smallitem,medical,stopbleeding"    
     canuseonself="true"
     cargocontainername="Chemical Crate"
     description="Treated with a hemostatic agent that quickly seals most minor wounds.">
@@ -302,7 +302,7 @@
     category="Material"
     spritecolor="0.6,0.4,0.2,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
+    Tags="smallitem,chem,medical,stopbleeding"    
     canuseonself="true"
     description="A hemostatic agent that slows down bleeding.">
 
@@ -332,7 +332,7 @@
     category="Material"
     spritecolor="0.8,0.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"    
+    Tags="smallitem,chem,medical,heal"
     canuseonself="true"
     description="Highly effective at treating various types of physical trauma.">
 
@@ -362,7 +362,7 @@
     category="Material"
     spritecolor="1.0,1.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"
+    Tags="smallitem,chem,medical,heal,stopbleeding"
     description="A highly potent corrigodone-based stimulant.">
 
     <Price locationtype="Research" buyprice="150"/>

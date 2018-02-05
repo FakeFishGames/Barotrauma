@@ -1435,6 +1435,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AICharacter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AIChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\AIController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\AITarget.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\EnemyAIController.cs" />
@@ -1442,8 +1443,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\IndoorsSteeringManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\ISteerable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjective.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveChargeBatteries.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveCombat.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveContainItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveExtinguishFire.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveExtinguishFires.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveFindDivingGear.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveFindSafety.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveFixLeak.cs" />
@@ -1453,6 +1457,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveIdle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveOperateItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectivePumpWater.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRepairItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRepairItems.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRescue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Objectives\AIObjectiveRescueAll.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AI\Order.cs" />
@@ -1475,6 +1482,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Map\LocationTypeChange.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\PriceInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\OrderChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HuskInfection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />

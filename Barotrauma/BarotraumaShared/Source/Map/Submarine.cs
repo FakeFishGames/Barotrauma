@@ -1106,6 +1106,7 @@ namespace Barotrauma
             subBody = new SubmarineBody(this);
             subBody.SetPosition(HiddenSubPosition);
 
+
             loaded.Add(this);
 
             if (entityGrid != null)
@@ -1125,7 +1126,13 @@ namespace Barotrauma
 
             MapEntity.MapLoaded(this);
 
-            //WayPoint.GenerateSubWaypoints();
+            foreach (Hull hull in matchingHulls)
+            {
+                if (string.IsNullOrEmpty(hull.RoomName))
+                {
+                    hull.RoomName = hull.CreateRoomName();
+                }
+            }
 
 #if CLIENT
             GameMain.LightManager.OnMapLoaded();

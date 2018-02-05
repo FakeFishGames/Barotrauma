@@ -9,42 +9,78 @@ namespace Barotrauma
 {
     class CrewManager
     {
+        const float ChatMessageFadeTime = 10.0f;
+
         private List<CharacterInfo> characterInfos;
         private List<Character> characters;
+
+        //orders that have not been issued to a specific character
+        private List<Pair<Order, float>> activeOrders = new List<Pair<Order, float>>();
 
         public int WinningTeam = 1;
         
         private GUIFrame guiFrame;
-        private GUIListBox listBox, orderListBox;
-        
+        private GUIListBox characterListBox, orderListBox;
+
+        private GUIListBox chatBox;
+
         private CrewCommander commander;
+
+        private bool isSinglePlayer;
 
         public CrewCommander CrewCommander
         {
             get { return commander; }
         }
-        
-        public CrewManager()
+
+        public bool IsSinglePlayer
         {
+            get { return isSinglePlayer; }
+        }
+
+        public List<Pair<Order, float>> ActiveOrders
+        {
+            get { return activeOrders; }
+        }
+                
+        public CrewManager(bool isSinglePlayer)
+        {
+            this.isSinglePlayer = isSinglePlayer;
             characters = new List<Character>();
             characterInfos = new List<CharacterInfo>();
             
             guiFrame = new GUIFrame(new Rectangle(0, 50, 150, 450), Color.Transparent);
             guiFrame.Padding = Vector4.One * 5.0f;
 
-            listBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
-            listBox.ScrollBarEnabled = false;
-            listBox.OnSelected = SelectCharacter;
+            characterListBox = new GUIListBox(new Rectangle(45, 30, 150, 0), Color.Transparent, null, guiFrame);
+            characterListBox.ScrollBarEnabled = false;
+            characterListBox.OnSelected = SelectCharacter;
+            characterListBox.Visible = isSinglePlayer;
 
             orderListBox = new GUIListBox(new Rectangle(5, 30, 30, 0), Color.Transparent, null, guiFrame);
             orderListBox.ScrollBarEnabled = false;
             orderListBox.OnSelected = SelectCharacterOrder;
+            orderListBox.Visible = isSinglePlayer;
+
+            if (isSinglePlayer)
+            {
+                int width = (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.35f, 350, 500);
+                int height = (int)MathHelper.Clamp(GameMain.GraphicsHeight * 0.2f, 150, 250);
+
+                chatBox = new GUIListBox(new Rectangle(
+                    GameMain.GraphicsWidth - width,
+                    GameMain.GraphicsHeight - 40 - 25 - height,
+                    width, height),
+                    Color.White * 0.5f, null, guiFrame);
+                chatBox.Padding = Vector4.Zero;
+                chatBox.ScrollBarEnabled = false;
+            }
 
             commander = new CrewCommander(this);
         }
 
-        public CrewManager(XElement element)
-            : this()
+        public CrewManager(XElement element, bool isSinglePlayer)
+            : this(isSinglePlayer)
         {
             foreach (XElement subElement in element.Elements())
             {
@@ -80,18 +116,70 @@ namespace Barotrauma
             return false;
         }
 
+        public void AddSinglePlayerChatMessage(Character sender, string message, Color color)
+        {
+            if (!isSinglePlayer)
+            {
+                DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
+                return;
+            }
+
+            while (chatBox.CountChildren < 10)
+            {
+                new GUITextBlock(new Rectangle(0, 0, 0, 20), "", "", chatBox).UserData = 0.0f;
+            }
+
+            while (chatBox.CountChildren > 10)
+            {
+                chatBox.RemoveChild(chatBox.children[1]);
+            }
+
+            string displayedText = sender.Name + ": " + message;
+            GUITextBlock msg = new GUITextBlock(new Rectangle(0, 0, chatBox.Rect.Width - 20, 0), displayedText,
+                ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, color,
+                Alignment.Left, Alignment.CenterRight, "", null, true, GUI.Font);
+            msg.UserData = msg.TextColor.A / 255.0f;
+            
+            chatBox.AddChild(msg);
+            chatBox.BarScroll = 1.0f;
+        }
+
+        public bool AddOrder(Order order, float fadeOutTime)
+        {
+            if (order.TargetEntity == null)
+            {
+                DebugConsole.ThrowError("Attempted to add an order with no target entity to CrewManager!\n" + Environment.StackTrace);
+                return false;
+            }
+
+            Pair<Order, float> existingOrder = activeOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity);
+            if (existingOrder != null)
+            {
+                existingOrder.Second = fadeOutTime;
+                return false;
+            }
+            else
+            {
+                activeOrders.Add(new Pair<Order, float>(order, fadeOutTime));
+                return true;
+            }
+        }
+
+        public void RemoveOrder(Order order)
+        {
+            activeOrders.RemoveAll(o => o.First == order);
+        }
+
         public void SetCharacterOrder(Character character, Order order)
         {
-            if (order == null) return;
-
-            var characterFrame = listBox.FindChild(character);
-
+            var characterFrame = characterListBox.FindChild(character);
             if (characterFrame == null) return;
 
-            int characterIndex = listBox.children.IndexOf(characterFrame);
-
+            int characterIndex = characterListBox.children.IndexOf(characterFrame);
             orderListBox.children[characterIndex].ClearChildren();
             
+            if (order == null) return;
+
             var img = new GUIImage(new Rectangle(0, 0, 30, 30), order.SymbolSprite, Alignment.Center, orderListBox.children[characterIndex]);
             img.Scale = 30.0f / img.SourceRect.Width;
             img.Color = order.Color;
@@ -105,9 +193,9 @@ namespace Barotrauma
             commander.ToggleGUIFrame();
 
             int orderIndex = orderListBox.children.IndexOf(component);
-            if (orderIndex < 0 || orderIndex >= listBox.children.Count) return false;
+            if (orderIndex < 0 || orderIndex >= characterListBox.children.Count) return false;
 
-            var characterFrame = listBox.children[orderIndex];
+            var characterFrame = characterListBox.children[orderIndex];
             if (characterFrame == null) return false;
 
             commander.SelectCharacter(characterFrame.UserData as Character);
@@ -126,9 +214,7 @@ namespace Barotrauma
             if (character is AICharacter)
             {
                 commander.UpdateCharacters();
-
-                character.Info.CreateCharacterFrame(listBox, character.Info.Name.Replace(' ', '\n'), character);
-
+                character.Info.CreateCharacterFrame(characterListBox, character.Info.Name.Replace(' ', '\n'), character);
                 GUIFrame orderFrame = new GUIFrame(new Rectangle(0, 0, 40, 40), Color.Transparent, "ListBoxElement", orderListBox);
                 orderFrame.UserData = character;
 
@@ -151,7 +237,7 @@ namespace Barotrauma
         {
             if (characterInfos.Contains(characterInfo))
             {
-                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" +Environment.StackTrace);
+                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
                 return;
             }
 
@@ -161,15 +247,14 @@ namespace Barotrauma
         public void AddToGUIUpdateList()
         {
             guiFrame.AddToGUIUpdateList();
-            if (commander.Frame != null) commander.Frame.AddToGUIUpdateList();
+            commander.AddToGUIUpdateList();
         }
 
         public void Update(float deltaTime)
         {
             guiFrame.Update(deltaTime);
             
-            //TODO: implement AI commands in multiplayer?
-            if (GameMain.NetworkMember == null &&
+            if (GUIComponent.KeyboardDispatcher.Subscriber == null && 
                 GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
             {
                 //deselect construction unless it's the ladders the character is climbing
@@ -179,17 +264,35 @@ namespace Barotrauma
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }
-
-                //only allow opening the command UI if there are AICharacters in the crew
-                if (commander.IsOpen || characters.Any(c => c is AICharacter)) commander.ToggleGUIFrame();                
+                
+                commander.ToggleGUIFrame();                
             }
 
-            if (commander.Frame != null) commander.Frame.Update(deltaTime);
+            foreach (Pair<Order, float> order in activeOrders)
+            {
+                order.Second -= deltaTime;
+            }
+            activeOrders.RemoveAll(o => o.Second <= 0.0f);
+
+            commander.Update(deltaTime);
+            
+            if (isSinglePlayer)
+            {
+                for (int i = chatBox.children.Count - 1; i >= 0; i--)
+                {
+                    var textBlock = chatBox.children[i] as GUITextBlock;
+                    if (textBlock == null) continue;
+
+                    float alpha = (float)textBlock.UserData - (1.0f / ChatMessageFadeTime * deltaTime);
+                    textBlock.UserData = alpha;
+                    textBlock.TextColor = new Color(textBlock.TextColor, alpha);
+                }
+            }
         }
 
         public void ReviveCharacter(Character revivedCharacter)
         {
-            GUIComponent characterBlock = listBox.GetChild(revivedCharacter) as GUIComponent;
+            GUIComponent characterBlock = characterListBox.GetChild(revivedCharacter) as GUIComponent;
             if (characterBlock != null) characterBlock.Color = Color.Transparent;
 
             if (revivedCharacter is AICharacter)
@@ -200,7 +303,7 @@ namespace Barotrauma
 
         public void KillCharacter(Character killedCharacter)
         {
-            GUIComponent characterBlock = listBox.GetChild(killedCharacter) as GUIComponent;
+            GUIComponent characterBlock = characterListBox.GetChild(killedCharacter) as GUIComponent;
             if (characterBlock != null) characterBlock.Color = Color.DarkRed * 0.5f;
 
             if (killedCharacter is AICharacter)
@@ -278,7 +381,7 @@ namespace Barotrauma
 
         public void StartRound()
         {
-            listBox.ClearChildren();
+            characterListBox.ClearChildren();
             characters.Clear();
 
             WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub, false);
@@ -308,7 +411,7 @@ namespace Barotrauma
                 AddCharacter(character);
             }
 
-            if (characters.Any()) listBox.Select(0);// SelectCharacter(null, characters[0]);
+            if (characters.Any()) characterListBox.Select(0);// SelectCharacter(null, characters[0]);
         }
 
         public void EndRound()
@@ -329,7 +432,7 @@ namespace Barotrauma
             characterInfos.RemoveAll(c => c.Character == null);
             
             characters.Clear();
-            listBox.ClearChildren();
+            characterListBox.ClearChildren();
             orderListBox.ClearChildren();
         }
 
@@ -337,15 +440,19 @@ namespace Barotrauma
         {
             characters.Clear();
             characterInfos.Clear();
-            listBox.ClearChildren();
+            characterListBox.ClearChildren();
             orderListBox.ClearChildren();
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            commander.Draw(spriteBatch);
             if (commander.IsOpen)
             {
-                commander.Draw(spriteBatch);
+                if (isSinglePlayer)
+                {
+                    chatBox.Draw(spriteBatch);
+                }
             }
             else
             {
