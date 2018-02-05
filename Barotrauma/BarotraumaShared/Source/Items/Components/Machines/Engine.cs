@@ -61,9 +61,9 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
+            UpdateOnActiveEffects(deltaTime);
 
-            currPowerConsumption = Math.Abs(targetForce)/100.0f * powerConsumption;
+            currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
 
             if (powerConsumption == 0.0f) voltage = 1.0f;
 
