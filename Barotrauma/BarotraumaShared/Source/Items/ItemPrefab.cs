@@ -131,6 +131,13 @@ namespace Barotrauma
             set { impactTolerance = Math.Max(value, 0.0f); }
         }
 
+        [Serialize(0.0f, false)]
+        public float RadarSize
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool CanUseOnSelf
         {
