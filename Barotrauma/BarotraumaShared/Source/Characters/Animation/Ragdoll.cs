@@ -498,23 +498,13 @@ namespace Barotrauma
         {
             if (character.DisableImpactDamageTimer > 0.0f) return;
 
-            Vector2 normal = contact.Manifold.LocalNormal;
-
-            //Vector2 avgVelocity = Vector2.Zero;
-            //foreach (Limb limb in Limbs)
-            //{
-            //    avgVelocity += limb.LinearVelocity;
-            //}
-
+            Vector2 normal = contact.Manifold.LocalNormal;            
             Vector2 velocity = f1.Body.LinearVelocity;
 
             if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
                                     
             float impact = Vector2.Dot(velocity, -normal);
-            
-            ImpactProjSpecific(impact,f1.Body);
-            
-            if ((f1.Body.UserData is Limb && character.Stun > 0f) || f1.Body == Collider.FarseerBody)
+            if (f1.Body == Collider.FarseerBody)
             {
                 if (!character.IsRemotePlayer || GameMain.Server != null)
                 {
@@ -526,6 +516,8 @@ namespace Barotrauma
                     }
                 }
             }
+
+            ImpactProjSpecific(impact, f1.Body);
         }
 
         public void SeverLimbJoint(LimbJoint limbJoint)
