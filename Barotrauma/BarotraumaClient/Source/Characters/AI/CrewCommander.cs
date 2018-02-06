@@ -262,7 +262,7 @@ namespace Barotrauma
                     if (radio.CanTransmit())
                     {
                         hasHeadset = true;
-                        if (Character.Controlled != null)
+                        if (Character.Controlled?.Inventory != null)
                         {
                             var ownRadioItem = Character.Controlled.Inventory.Items.FirstOrDefault(it => it != null && it.GetComponent<WifiComponent>() != null);
                             if (ownRadioItem != null && Character.Controlled.HasEquippedItem(ownRadioItem))

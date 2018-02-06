@@ -69,7 +69,7 @@ namespace Barotrauma
     {
         public enum Shape
         {
-            Circle, Rectangle, Capsule
+            Circle, Rectangle, Capsule, HorizontalCapsule
         };
 
         private static List<PhysicsBody> list = new List<PhysicsBody>();
@@ -338,7 +338,7 @@ namespace Barotrauma
             else if (radius != 0.0f && width != 0.0f)
             {
                 body = BodyFactory.CreateCapsuleHorizontal(GameMain.World, width, radius, density);
-                bodyShape = Shape.Capsule;
+                bodyShape = Shape.HorizontalCapsule;
             }
             else if (radius != 0.0f && height != 0.0f)
             {
@@ -358,6 +358,23 @@ namespace Barotrauma
             this.width = width;
             this.height = height;
             this.radius = radius;
+        }
+
+        public Vector2 GetFrontLocal()
+        {
+            switch (bodyShape)
+            {
+                case Shape.Capsule:
+                    return new Vector2(0.0f, height / 2 + radius);
+                case Shape.HorizontalCapsule:
+                    return new Vector2(width / 2 + radius, 0.0f);
+                case Shape.Circle:
+                    return new Vector2(0.0f, radius);
+                case Shape.Rectangle:
+                    return new Vector2(0.0f, height / 2.0f);
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         public void ResetDynamics()

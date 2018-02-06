@@ -67,7 +67,7 @@ namespace Barotrauma
             {
                 switch (BodyShape)
                 {
-                    case PhysicsBody.Shape.Rectangle:
+                    case Shape.Rectangle:
                         {
                             float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(width), ConvertUnits.ToDisplayUnits(height));
                             if (maxSize > 128.0f)
@@ -84,7 +84,8 @@ namespace Barotrauma
                                 (int)ConvertUnits.ToDisplayUnits(height * bodyShapeTextureScale));
                             break;
                         }
-                    case PhysicsBody.Shape.Capsule:
+                    case Shape.Capsule:
+                    case Shape.HorizontalCapsule:
                         {
                             float maxSize = Math.Max(ConvertUnits.ToDisplayUnits(radius), ConvertUnits.ToDisplayUnits(Math.Max(height, width)));
                             if (maxSize > 128.0f)
@@ -101,18 +102,24 @@ namespace Barotrauma
                                 (int)ConvertUnits.ToDisplayUnits(Math.Max(height, width) * bodyShapeTextureScale));
                             break;
                         }
-                    case PhysicsBody.Shape.Circle:
+                    case Shape.Circle:
                         if (ConvertUnits.ToDisplayUnits(radius)> 128.0f)
                         {
                             bodyShapeTextureScale = 128.0f / ConvertUnits.ToDisplayUnits(radius);
                         }
+                        else
+                        {
+                            bodyShapeTextureScale = 1.0f;
+                        }
                         bodyShapeTexture = GUI.CreateCircle((int)ConvertUnits.ToDisplayUnits(radius * bodyShapeTextureScale));
                         break;
+                    default:
+                        throw new NotImplementedException();
                 }
             }
 
             float rot = -DrawRotation;
-            if (bodyShape == PhysicsBody.Shape.Capsule && width > height)
+            if (bodyShape == PhysicsBody.Shape.HorizontalCapsule)
             {
                 rot -= MathHelper.PiOver2;
             }

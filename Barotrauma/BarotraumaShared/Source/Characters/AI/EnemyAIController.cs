@@ -1,5 +1,6 @@
 ﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,15 @@ namespace Barotrauma
         private float attackCoolDown;
         private float coolDownTimer;
 
+        private Pair<Structure, int> selectedWallSection;
+
+        private Body attachedToBody;
+
+        private bool aggressiveBoarding;
+        private bool attachToSub;
         private bool attachToWalls;
+
+        private List<Joint> attachJoints = new List<Joint>();
         
         //a point in a wall which the Character is currently targeting
         private Vector2 wallAttackPos;
@@ -108,13 +117,15 @@ namespace Barotrauma
             fleeHealthThreshold = aiElement.GetAttributeFloat("fleehealththreshold", 0.0f);
 
             attachToWalls = aiElement.GetAttributeBool("attachtowalls", false);
+            attachToSub = aiElement.GetAttributeBool("attachtosub", false);
+            aggressiveBoarding = aiElement.GetAttributeBool("aggressiveboarding", false);
 
             outsideSteering = new SteeringManager(this);
             insideSteering = new IndoorsSteeringManager(this, false);
 
             steeringManager = outsideSteering;
 
-            state = AIState.None;
+            State = AIState.None;
         }
 
         public override void SelectTarget(AITarget target)
@@ -162,27 +173,35 @@ namespace Barotrauma
 
                 if (selectedAiTarget == null)
                 {
-                    state = AIState.None;
+                    State = AIState.None;
                 }
                 else if ((selectedAiTarget.Entity is Character) && ((Character)selectedAiTarget.Entity).IsDead)
                 {
-                    if (state != AIState.Eat)
+                    if (State != AIState.Eat)
                     {
                         eatTimer = 0.0f;
-                        state = AIState.Eat;
+                        State = AIState.Eat;
                     }
                 }
                 else
                 {
-                    state = (targetValue < 0.0f || Character.Health < fleeHealthThreshold) ? AIState.Escape : AIState.Attack;
+                    State = (targetValue < 0.0f || Character.Health < fleeHealthThreshold) ? AIState.Escape : AIState.Attack;
                 }
                 //if (coolDownTimer >= 0.0f) return;
             }
 
-            steeringManager = Character.Submarine == null ? outsideSteering : insideSteering;
+            if (Character.Submarine == null)
+            {
+                steeringManager = outsideSteering;
+            }
+            else
+            {
+                steeringManager = insideSteering;
+                DeattachFromBody();
+            }
 
             bool run = false;
-            switch (state)
+            switch (State)
             {
                 case AIState.None:
                     UpdateNone(deltaTime);
@@ -213,17 +232,52 @@ namespace Barotrauma
             }
         }
 
+        private void AttachToBody(PhysicsBody collider, PhysicsBody attachLimb, Body targetBody, Vector2 attachPos)
+        {
+            //already attached to something
+            if (attachJoints.Count > 0)
+            {
+                //already attached to the target body, no need to do anything
+                if (attachJoints[0].BodyB == targetBody) return;
+                DeattachFromBody();
+            }
+            
+            var limbJoint = new DistanceJoint(attachLimb.FarseerBody, targetBody, attachLimb.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
+            {
+                CollideConnected = false,
+                Length = 0.1f
+            };
+            GameMain.World.AddJoint(limbJoint);
+            attachJoints.Add(limbJoint);
+
+            var colliderJoint = new DistanceJoint(collider.FarseerBody, targetBody, collider.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
+            {
+                CollideConnected = true, Length = 0.1f
+            };
+            GameMain.World.AddJoint(colliderJoint);
+            attachJoints.Add(colliderJoint);
+        }
+
+        private void DeattachFromBody()
+        {
+            foreach (Joint joint in attachJoints)
+            {
+                GameMain.World.RemoveJoint(joint);
+            }
+            attachJoints.Clear();
+        }
+
         #region Idle
 
         private void UpdateNone(float deltaTime)
         {
-            attackingLimb = null;
             coolDownTimer -= deltaTime;
 
             if (Character.Submarine == null && SimPosition.Y < ConvertUnits.ToSimUnits(SubmarineBody.DamageDepth * 0.5f))
             {
                 //steer straight up if very deep
                 steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
+                DeattachFromBody();
                 return;
             }
 
@@ -241,6 +295,7 @@ namespace Barotrauma
                         Body closestBody = Submarine.CheckVisibility(Character.SimPosition, ConvertUnits.ToSimUnits(cells[0].Center));
                         if (closestBody != null && closestBody.UserData is Voronoi2.VoronoiCell)
                         {
+                            attachedToBody = closestBody;
                             wallAttackPos = Submarine.LastPickedPosition;
                         }
                     }
@@ -254,6 +309,7 @@ namespace Barotrauma
 
             if (wallAttackPos == Vector2.Zero)
             {
+                DeattachFromBody();
                 //wander around randomly
                 steeringManager.SteeringAvoid(deltaTime, 0.1f);
                 steeringManager.SteeringWander(0.5f);
@@ -265,12 +321,15 @@ namespace Barotrauma
             {
                 //close enough to a wall -> attach
                 Character.AnimController.Collider.MoveToPos(wallAttackPos, 1.0f);
-                steeringManager.Reset();                    
-
+                var/* attachLimb = Array.Find(Character.AnimController.Limbs, l => l.attack != null);
+                if (attachLimb == null) */attachLimb = Character.AnimController.MainLimb;
+                AttachToBody(Character.AnimController.Collider, attachLimb.body, attachedToBody, wallAttackPos);
+                steeringManager.Reset();
             }
             else
             {
                 //move closer to the wall
+                DeattachFromBody();
                 steeringManager.SteeringAvoid(deltaTime, 0.1f);
                 steeringManager.SteeringSeek(wallAttackPos);
             }
@@ -295,7 +354,7 @@ namespace Barotrauma
         {
             if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
             {
-                state = AIState.None;
+                State = AIState.None;
                 return;
             }
 
@@ -329,6 +388,36 @@ namespace Barotrauma
                 Character.AnimController.TargetDir = Character.SimPosition.X < attackSimPosition.X ? Direction.Right : Direction.Left;
             }
 
+            if (aggressiveBoarding && Character.CurrentHull == null && selectedWallSection != null &&
+                CanPassThroughHole(selectedWallSection.First, selectedWallSection.Second))
+            {
+                WallSection section = selectedWallSection.First.GetSection(selectedWallSection.Second);
+                Hull targetHull = section.gap?.FlowTargetHull;
+                if (targetHull != null)
+                {
+                    Vector2 targetPos = selectedWallSection.First.SectionPosition(selectedWallSection.Second, true);
+                    if (selectedWallSection.First.IsHorizontal)
+                    {
+                        targetPos.Y = targetHull.WorldRect.Y - targetHull.Rect.Height / 2;
+                    }
+                    else
+                    {
+                        targetPos.X = targetHull.WorldRect.Center.X;
+                    }
+
+                    DeattachFromBody();
+                    if (steeringManager is IndoorsSteeringManager)
+                    {
+                        steeringManager.SteeringManual(deltaTime, targetPos - Character.WorldPosition);
+                    }
+                    else
+                    {
+                        steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetPos), 10.0f);
+                    }
+                    return;
+                }
+            }
+
             if (coolDownTimer > 0.0f)
             {
                 UpdateCoolDown(attackSimPosition, deltaTime);
@@ -342,12 +431,9 @@ namespace Barotrauma
             else
             {
                 GetTargetEntity();
-
                 raycastTimer = RaycastInterval;
             }
-
-            //steeringManager.SteeringAvoid(deltaTime, 1.0f);
-
+            
             Limb attackLimb = attackingLimb;
             //check if any of the limbs is close enough to attack the target
             if (attackingLimb == null)
@@ -389,8 +475,17 @@ namespace Barotrauma
                         }
                     }
                 }
-
-                if (attackingLimb != null) UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
+                
+                if (attackingLimb != null)
+                {
+                    UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
+                    
+                    if (attachToSub && wallAttackPos != Vector2.Zero && attachedToBody != null &&
+                        Vector2.DistanceSquared(attackSimPosition, attackingLimb.SimPosition) < attackingLimb.attack.Range * attackingLimb.attack.Range)
+                    {
+                        AttachToBody(Character.AnimController.Collider, Character.AnimController.MainLimb.body, attachedToBody, attackSimPosition);                        
+                    }
+                }
             }
         }
 
@@ -420,31 +515,47 @@ namespace Barotrauma
                 wallAttackPos = Vector2.Zero;
                 return;
             }
-            
+
             Structure wall = closestBody.UserData as Structure;
             if (wall == null)
             {
                 wallAttackPos = Submarine.LastPickedPosition;
-                if (selectedAiTarget.Entity.Submarine!=null && Character.Submarine == null) wallAttackPos -= ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
-            
+                if (selectedAiTarget.Entity.Submarine != null && Character.Submarine == null) wallAttackPos -= ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
+                attachedToBody = closestBody;
             }
             else
             {
+                attachedToBody = wall.Submarine.PhysicsBody.FarseerBody;
+
                 int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition));
+                int passableHoleCount = GetMinimumPassableHoleCount();
 
                 float sectionDamage = wall.SectionDamage(sectionIndex);
                 for (int i = sectionIndex - 2; i <= sectionIndex + 2; i++)
                 {
                     if (wall.SectionBodyDisabled(i))
                     {
-                        sectionIndex = i;
-                        break;
+                        if (aggressiveBoarding && CanPassThroughHole(wall, i)) //aggressive boarders always target holes they can pass through
+                        {
+                            sectionIndex = i;
+                            break;
+                        }
+                        else //otherwise ignore and keep breaking other sections
+                        {
+                            continue;
+                        }
                     }
                     if (wall.SectionDamage(i) > sectionDamage) sectionIndex = i;
                 }
-                wallAttackPos = wall.SectionPosition(sectionIndex);
-                //if (wall.Submarine != null) wallAttackPos += wall.Submarine.Position;
-                wallAttackPos = ConvertUnits.ToSimUnits(wallAttackPos);
+
+                Vector2 sectionPos = wall.SectionPosition(sectionIndex);
+                selectedWallSection = new Pair<Structure, int>(wall, sectionIndex);
+
+                wallAttackPos = Submarine.LastPickedPosition;
+                if (wall.IsHorizontal)
+                    wallAttackPos.X = ConvertUnits.ToSimUnits(sectionPos.X);
+                else
+                    wallAttackPos.Y = ConvertUnits.ToSimUnits(sectionPos.Y);
             }
             
             targetEntity = closestBody.UserData as IDamageable;            
@@ -507,7 +618,7 @@ namespace Barotrauma
         {
             if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
             {
-                state = AIState.None;
+                State = AIState.None;
                 return;
             }
 
@@ -517,7 +628,7 @@ namespace Barotrauma
             if (mouthLimb == null)
             {
                 DebugConsole.ThrowError("Character \"" + Character.SpeciesName + "\" failed to eat a target (a head or a limb with a mouthpos required)");
-                state = AIState.None;
+                State = AIState.None;
                 return;
             }
 
@@ -566,7 +677,7 @@ namespace Barotrauma
                         //only one limb left, the character is now full eaten
                         Entity.Spawner.AddToRemoveQueue(targetCharacter);
                         selectedAiTarget = null;
-                        state = AIState.None;
+                        State = AIState.None;
                     }
                     else //sever a random joint
                     {
@@ -737,7 +848,53 @@ namespace Barotrauma
             }
         }
 
-        #endregion        
+        #endregion
+
+        protected override void OnStateChanged(AIState from, AIState to)
+        {
+            DeattachFromBody();
+        }
+
+        private int GetMinimumPassableHoleCount()
+        {
+            float colliderSize = 0.1f;
+            switch (Character.AnimController.Collider.BodyShape)
+            {
+                case PhysicsBody.Shape.Capsule:
+                case PhysicsBody.Shape.HorizontalCapsule:
+                case PhysicsBody.Shape.Circle:
+                    colliderSize = Character.AnimController.Collider.radius * 2;
+                    break;
+                case PhysicsBody.Shape.Rectangle:
+                    colliderSize = Math.Min(Character.AnimController.Collider.width, Character.AnimController.Collider.height);
+                    break;
+            }
+
+            return (int)Math.Ceiling(ConvertUnits.ToDisplayUnits(colliderSize)  / Structure.WallSectionSize);
+        }
+
+        private bool CanPassThroughHole(Structure wall, int sectionIndex)
+        {
+            int requiredHoleCount = GetMinimumPassableHoleCount();
+            if (!wall.SectionBodyDisabled(sectionIndex)) return false;
+            int holeCount = 1;
+            for (int j = sectionIndex - 1; j > sectionIndex - requiredHoleCount; j--)
+            {
+                if (wall.SectionBodyDisabled(j))
+                    holeCount++;
+                else
+                    break;
+            }
+            for (int j = sectionIndex + 1; j < sectionIndex + requiredHoleCount; j++)
+            {
+                if (wall.SectionBodyDisabled(j))
+                    holeCount++;
+                else
+                    break;
+            }
+
+            return holeCount >= requiredHoleCount;
+        }
     }
 
     //the "memory" of the Character 
