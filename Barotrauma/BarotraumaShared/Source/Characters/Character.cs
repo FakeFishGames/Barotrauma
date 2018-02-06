@@ -1695,9 +1695,9 @@ namespace Barotrauma
         {
             if (aiTarget == null) return;
 
-            aiTarget.SightRange = Mass*100.0f + AnimController.Collider.LinearVelocity.Length()*500.0f;
+            aiTarget.SightRange = MathHelper.Clamp(Mass * 100.0f + AnimController.Collider.LinearVelocity.Length() * 500.0f, 2000.0f, 50000.0f);
         }
-        
+
         public void SetOrder(Order order, string orderOption)
         {
             HumanAIController humanAI = AIController as HumanAIController;
