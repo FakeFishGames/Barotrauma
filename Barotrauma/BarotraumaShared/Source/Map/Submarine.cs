@@ -88,7 +88,7 @@ namespace Barotrauma
         public int RecommendedCrewSizeMin = 1, RecommendedCrewSizeMax = 2;
         public string RecommendedCrewExperience;
 
-        public string ContentPackage;
+        public HashSet<string> CompatibleContentPackages = new HashSet<string>();
         
         //properties ----------------------------------------------------
 
@@ -286,7 +286,11 @@ namespace Barotrauma
                     RecommendedCrewSizeMin = doc.Root.GetAttributeInt("recommendedcrewsizemin", 0);
                     RecommendedCrewSizeMax = doc.Root.GetAttributeInt("recommendedcrewsizemax", 0);
                     RecommendedCrewExperience = doc.Root.GetAttributeString("recommendedcrewexperience", "Unknown");
-                    ContentPackage = doc.Root.GetAttributeString("contentpackage", "Unknown");
+                    string[] contentPackageNames = doc.Root.GetAttributeStringArray("compatiblecontentpackages", new string[0]);
+                    foreach (string contentPackageName in contentPackageNames)
+                    {
+                        CompatibleContentPackages.Add(contentPackageName);
+                    }
 
 #if CLIENT                    
                     string previewImageData = doc.Root.GetAttributeString("previewimage", "");
@@ -1208,7 +1212,7 @@ namespace Barotrauma
             element.Add(new XAttribute("recommendedcrewsizemin", RecommendedCrewSizeMin));
             element.Add(new XAttribute("recommendedcrewsizemax", RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", RecommendedCrewExperience ?? ""));
-            element.Add(new XAttribute("contentpackage", ContentPackage ?? ""));
+            element.Add(new XAttribute("compatiblecontentpackages", string.Join(", ", CompatibleContentPackages)));
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {

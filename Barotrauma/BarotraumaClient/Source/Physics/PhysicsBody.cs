@@ -103,7 +103,7 @@ namespace Barotrauma
                             break;
                         }
                     case Shape.Circle:
-                        if (ConvertUnits.ToDisplayUnits(radius)> 128.0f)
+                        if (ConvertUnits.ToDisplayUnits(radius) > 128.0f)
                         {
                             bodyShapeTextureScale = 128.0f / ConvertUnits.ToDisplayUnits(radius);
                         }
@@ -119,7 +119,7 @@ namespace Barotrauma
             }
 
             float rot = -DrawRotation;
-            if (bodyShape == PhysicsBody.Shape.HorizontalCapsule)
+            if (bodyShape == Shape.HorizontalCapsule)
             {
                 rot -= MathHelper.PiOver2;
             }

@@ -406,7 +406,7 @@ namespace Barotrauma
                     GUIComponent.UpdateMouseOn();
 
                     DebugConsole.Update(this, (float)Timing.Step);
-                    paused = paused || DebugConsole.IsOpen;
+                    paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
                     
                     if (!paused)
                     {

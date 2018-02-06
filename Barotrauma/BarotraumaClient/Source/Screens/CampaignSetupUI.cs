@@ -59,13 +59,12 @@ namespace Barotrauma
                 if (selectedSub == null) return false;
 
                 string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
-                if (selectedSub.HasTag(SubmarineTag.Shuttle) || GameMain.SelectedPackage.Name != selectedSub.ContentPackage)
+                if (selectedSub.HasTag(SubmarineTag.Shuttle) || !selectedSub.CompatibleContentPackages.Contains(GameMain.SelectedPackage.Name))
                 {
-                    if (GameMain.SelectedPackage.Name != selectedSub.ContentPackage)
+                    if (!selectedSub.CompatibleContentPackages.Contains(GameMain.SelectedPackage.Name))
                     {
                         var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
                             TextManager.Get("ContentPackageMismatchWarning")
-                                .Replace("[subcontentpackage]", selectedSub.ContentPackage)
                                 .Replace("[selectedcontentpackage]", GameMain.SelectedPackage.Name),
                             new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 

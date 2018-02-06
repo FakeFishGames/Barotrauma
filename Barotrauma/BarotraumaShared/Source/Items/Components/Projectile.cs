@@ -224,6 +224,8 @@ namespace Barotrauma.Items.Components
                 if (item.body.LinearVelocity.LengthSquared() < ContinuousCollisionThreshold * ContinuousCollisionThreshold)
                 {
                     item.body.FarseerBody.IsBullet = false;
+                    //projectiles with a stickjoint don't become inactive until the stickjoint is detached
+                    if (stickJoint == null) IsActive = false;
                 }
             }
 
