@@ -17,6 +17,8 @@
     hearing="1.0"
     fleehealththreshold="10"
     attachtowalls="true"
+    attachtosub="true"
+    aggressiveboarding="true"
     attackcooldown="3.0"/>
 
   <ragdoll headposition="50" headangle="-70" 

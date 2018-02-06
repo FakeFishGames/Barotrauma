@@ -34,7 +34,7 @@ namespace Barotrauma
             GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "AvgHullIntegrity: " + (int)(avgHullIntegrity * 100), Color.Lerp(Color.Red, Color.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "FloodingAmount: " + (int)(floodingAmount * 100), Color.Lerp(Color.Green, Color.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "FireAmount: " + (int)(fireAmount * 100), Color.Lerp(Color.Green, Color.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int)(enemyDanger * 100), Color.Lerp(Color.Green, Color.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int)(enemyDanger * 100), Color.Lerp(Color.Green, Color.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
 
 #if DEBUG
             if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) && 
