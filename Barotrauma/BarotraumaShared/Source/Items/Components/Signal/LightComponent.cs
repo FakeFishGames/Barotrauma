@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
+            UpdateOnActiveEffects(deltaTime);
 
 #if CLIENT
             light.ParentSub = item.Submarine;
