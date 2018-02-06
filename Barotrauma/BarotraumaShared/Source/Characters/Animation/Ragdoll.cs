@@ -900,13 +900,9 @@ namespace Barotrauma
                         //if the Character dropped into water, create a wave
                         if (limb.LinearVelocity.Y < 0.0f)
                         {
-                            //1.0 when the limb is parallel to the surface of the water
-                            // = big splash and a large impact
-                            float parallel = (float)Math.Abs(Math.Sin(limb.Rotation));
-                            Vector2 impulse = Vector2.Multiply(limb.LinearVelocity, -parallel * limb.Mass);
-                            //limb.body.ApplyLinearImpulse(impulse);
+                            Vector2 impulse = limb.LinearVelocity * limb.Mass;
                             int n = (int)((limb.Position.X - limbHull.Rect.X) / Hull.WaveWidth);
-                            limbHull.WaveVel[n] = Math.Min(impulse.Y * 1.0f, 5.0f);
+                            limbHull.WaveVel[n] += MathHelper.Clamp(impulse.Y, -5.0f, 5.0f);
                         }
                     }
                 }

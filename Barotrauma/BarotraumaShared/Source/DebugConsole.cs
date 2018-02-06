@@ -1030,6 +1030,21 @@ namespace Barotrauma
                 new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos);
             }));
 
+#if DEBUG
+            commands.Add(new Command("waterparams", "waterparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
+            {
+                Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                float stiffness = 0.02f, spread = 0.05f, damp = 0.01f;
+                if (args.Length > 0) float.TryParse(args[0], out stiffness);
+                if (args.Length > 1) float.TryParse(args[1], out spread);
+                if (args.Length > 2) float.TryParse(args[2], out damp);
+                Hull.WaveStiffness = stiffness;
+                Hull.WaveSpread = spread;
+                Hull.WaveDampening = damp;
+            },
+            null, null));
+#endif
+
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
             {
                 foreach (Item it in Item.ItemList)

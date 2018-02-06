@@ -259,10 +259,8 @@ namespace Barotrauma
             }
         }
 
-        public void Render(GraphicsDevice graphicsDevice, Camera cam)
+        public void UpdateVertices(GraphicsDevice graphicsDevice, Camera cam)
         {
-            if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
-
             Vector2 submarinePos = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
             //calculate where the surface should be based on the water volume
@@ -272,7 +270,7 @@ namespace Barotrauma
             float drawSurface = surface + submarinePos.Y;
 
             Matrix transform = cam.Transform * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
-
+            
             if (bottom > cam.WorldView.Y || top < cam.WorldView.Y - cam.WorldView.Height) return;
 
             if (!update)
@@ -317,44 +315,111 @@ namespace Barotrauma
 
             x += start * WaveWidth;
 
+            Vector3[] prevCorners = new Vector3[2];
+            Vector2[] prevUVs = new Vector2[2];
+
+            int width = WaveWidth;
+            
             for (int i = start; i < end; i++)
             {
-                if (renderer.PositionInBuffer > renderer.vertices.Length - 6) return;
+                Vector3[] corners = new Vector3[6];
 
-                Vector3[] corners = new Vector3[4];
-
+                //top left
                 corners[0] = new Vector3(x, top, 0.0f);
+                //watersurface left
                 corners[3] = new Vector3(corners[0].X, drawSurface + waveY[i], 0.0f);
-
-                //skip adjacent "water rects" if the surface of the water is roughly at the same position
-                int width = WaveWidth;
-                while (i < end - 1 && Math.Abs(waveY[i + 1] - waveY[i]) < 1.0f)
-                {
-                    width += WaveWidth;
-                    i++;
-                }
-
+                
+                //top right
                 corners[1] = new Vector3(x + width, top, 0.0f);
+                //watersurface right
                 corners[2] = new Vector3(corners[1].X, drawSurface + waveY[i + 1], 0.0f);
 
+                //bottom left
+                corners[4] = new Vector3(x, bottom, 0.0f);
+                //bottom right
+                corners[5] = new Vector3(x + width, bottom, 0.0f);
+                
                 Vector2[] uvCoords = new Vector2[4];
                 for (int n = 0; n < 4; n++)
                 {
                     uvCoords[n] = Vector2.Transform(new Vector2(corners[n].X, -corners[n].Y), transform);
                 }
 
-                renderer.vertices[renderer.PositionInBuffer] = new VertexPositionTexture(corners[0], uvCoords[0]);
-                renderer.vertices[renderer.PositionInBuffer + 1] = new VertexPositionTexture(corners[1], uvCoords[1]);
-                renderer.vertices[renderer.PositionInBuffer + 2] = new VertexPositionTexture(corners[2], uvCoords[2]);
+                if (renderer.PositionInBuffer <= renderer.vertices.Length - 6)
+                {
+                    if (i == start)
+                    {
+                        prevCorners[0] = corners[0];
+                        prevCorners[1] = corners[3];
+                        prevUVs[0] = uvCoords[0];
+                        prevUVs[1] = uvCoords[3];
+                    }
 
-                renderer.vertices[renderer.PositionInBuffer + 3] = new VertexPositionTexture(corners[0], uvCoords[0]);
-                renderer.vertices[renderer.PositionInBuffer + 4] = new VertexPositionTexture(corners[2], uvCoords[2]);
-                renderer.vertices[renderer.PositionInBuffer + 5] = new VertexPositionTexture(corners[3], uvCoords[3]);
+                    if (i == end - 1 || i == start || Math.Abs(prevCorners[1].Y - corners[3].Y) > 1.0f)
+                    {
+                        renderer.vertices[renderer.PositionInBuffer] = new VertexPositionTexture(prevCorners[0], prevUVs[0]);
+                        renderer.vertices[renderer.PositionInBuffer + 1] = new VertexPositionTexture(corners[1], uvCoords[1]);
+                        renderer.vertices[renderer.PositionInBuffer + 2] = new VertexPositionTexture(corners[2], uvCoords[2]);
 
-                renderer.PositionInBuffer += 6;
+                        renderer.vertices[renderer.PositionInBuffer + 3] = new VertexPositionTexture(prevCorners[0], prevUVs[0]);
+                        renderer.vertices[renderer.PositionInBuffer + 4] = new VertexPositionTexture(corners[2], uvCoords[2]);
+                        renderer.vertices[renderer.PositionInBuffer + 5] = new VertexPositionTexture(prevCorners[1], prevUVs[1]);
 
-                x += width;
+                        prevCorners[0] = corners[0];
+                        prevCorners[1] = corners[3];
+                        prevUVs[0] = uvCoords[0];
+                        prevUVs[1] = uvCoords[3];
+
+                        renderer.PositionInBuffer += 6;
+                    }
+                }
+
+                if (renderer.PositionInSurfaceBuffer <= renderer.SurfaceVertices.Length - 12)
+                {
+                    //surface shrinks and finally disappears when the water level starts to reach the top of the hull
+                    float surfaceScale = 1.0f - MathHelper.Clamp(corners[3].Y - (top - 10), 0.0f, 1.0f);
+
+                    Vector3 surfaceOffset = new Vector3(0.0f, -10.0f, 0.0f);
+                    surfaceOffset.Y += (float)Math.Sin((rect.X+i* width) * 0.01f + renderer.WavePos.X * 0.25f) * 2;
+                    surfaceOffset.Y += (float)Math.Sin((rect.X + i * width) * 0.05f - renderer.WavePos.X) * 2;
+                    surfaceOffset *= surfaceScale;
+
+                    Vector3 surfaceOffset2 = new Vector3(0.0f, -10.0f, 0.0f);
+                    surfaceOffset2.Y += (float)Math.Sin((rect.X + (i + 1) * width) * 0.01f + renderer.WavePos.X * 0.25f) * 2;
+                    surfaceOffset2.Y += (float)Math.Sin((rect.X + (i + 1) * width) * 0.05f - renderer.WavePos.X) * 2;
+                    surfaceOffset2 *= surfaceScale;
+
+                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 0] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 1] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 2] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
+
+                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 3] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 4] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 5] = new VertexPositionColorTexture(corners[4], renderer.IndoorsWaterColor, Vector2.Zero);
+
+                    renderer.PositionInSurfaceBuffer += 6;
+
+                    if (surfaceScale > 0)
+                    {
+                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 0] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
+                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 1] = new VertexPositionColorTexture(corners[2], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
+                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 2] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
+
+                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 3] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
+                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 4] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
+                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 5] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
+                    
+                        renderer.PositionInSurfaceBuffer += 6;
+                    }
+                }
+
+                x += WaveWidth;
+                //clamp the last segment to the right edge of the hull
+                if (i == end - 2)
+                {
+                    width -= (int)Math.Max((x + WaveWidth) - (rect.Right + Submarine.DrawPosition.X), 0);
+                }
             }
-        }
+        }        
     }
 }
