@@ -422,7 +422,7 @@ namespace Barotrauma
                 savePath = Path.Combine(Submarine.SavePath, savePath);
             }
 
-            Submarine.MainSub.ContentPackage = GameMain.Config.SelectedContentPackage.Name;
+            Submarine.MainSub.CompatibleContentPackages.Add(GameMain.Config.SelectedContentPackage.Name);
 
             MemoryStream imgStream = new MemoryStream();
             CreateImage(256, 128, imgStream);
@@ -481,7 +481,7 @@ namespace Barotrauma
             y += descriptionBox.Rect.Height;
             new GUITextBlock(new Rectangle(0, y, 150, 20), TextManager.Get("SaveSubDialogSettings"), "", saveFrame);
 
-            y += 20;
+            y += 30;
 
             int tagX = 10, tagY = 0;
             foreach (SubmarineTag tag in Enum.GetValues(typeof(SubmarineTag)))
@@ -519,7 +519,36 @@ namespace Barotrauma
                 }
             }
 
-            y += tagY;
+            y -= 30;
+
+            new GUITextBlock(new Rectangle(160, y, 100, 20), TextManager.Get("CompatibleContentPackages"), "", saveFrame);
+            var contentPackList = new GUIListBox(new Rectangle(160, y + 30, 0, 50), "", saveFrame);
+            List<string> contentPacks = Submarine.MainSub.CompatibleContentPackages.ToList();
+            foreach (ContentPackage contentPack in ContentPackage.list)
+            {
+                if (!contentPacks.Contains(contentPack.Name)) contentPacks.Add(contentPack.Name);
+            }
+
+            foreach (string contentPackageName in contentPacks)
+            {
+                var cpTickBox = new GUITickBox(new Rectangle(0, 0, 15, 15), contentPackageName, Alignment.TopLeft, GUI.SmallFont, contentPackList);
+                cpTickBox.Selected = Submarine.MainSub.CompatibleContentPackages.Contains(contentPackageName);
+                cpTickBox.UserData = contentPackageName;
+                cpTickBox.OnSelected += (GUITickBox tickBox) =>
+                {
+                    if (tickBox.Selected)
+                    {
+                        Submarine.MainSub.CompatibleContentPackages.Add((string)tickBox.UserData);
+                    }
+                    else
+                    {
+                        Submarine.MainSub.CompatibleContentPackages.Remove((string)tickBox.UserData);
+                    }
+                    return true;
+                };
+            }
+
+            y += 90;
 
             new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("RecommendedCrewSize"), "", Alignment.TopLeft, Alignment.CenterLeft, saveFrame);
 

@@ -138,7 +138,7 @@
   <ShuttleWarning>Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. Are you sure you want to choose a shuttle as your vessel?</ShuttleWarning>
 
   <ContentPackageMismatch>Mismatching content package</ContentPackageMismatch>
-  <ContentPackageMismatchWarning>The selected submarine has been saved using the content package "[subcontentpackage]". The submarine may not be compatible with the currently selected content package "[selectedcontentpackage]". Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
+  <ContentPackageMismatchWarning>The submarine may not be compatible with the currently selected content package "[selectedcontentpackage]". Are you sure you want to choose the submarine?</ContentPackageMismatchWarning>
   
   <!-- Campaign menu -->
   <Map>Map</Map>
@@ -263,6 +263,7 @@
   <SubPreviewImageNotFound>Preview image not found</SubPreviewImageNotFound>
   <RecommendedCrewSize>Recommended crew size</RecommendedCrewSize>
   <RecommendedCrewExperience>Recommended crew experience</RecommendedCrewExperience>
+  <CompatibleContentPackages>Compatible content packages</CompatibleContentPackages>
   <CrewExperienceLow>Beginner</CrewExperienceLow>
   <CrewExperienceMid>Intermediate</CrewExperienceMid>
   <CrewExperienceHigh>Experienced</CrewExperienceHigh>
