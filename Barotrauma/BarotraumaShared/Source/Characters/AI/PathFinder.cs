@@ -177,7 +177,8 @@ namespace Barotrauma
 
                 //prefer nodes that are closer to the end position
                 dist += Vector2.Distance(end, nodePos) / 10.0f;
-                
+                //much higher cost to waypoints that are outside
+                if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
                 if (dist < closestDist || startNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
@@ -213,6 +214,8 @@ namespace Barotrauma
                 Vector2 nodePos = node.Position;
 
                 float dist = Vector2.Distance(end, nodePos);
+                //much higher cost to waypoints that are outside
+                if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
                 if (dist < closestDist || endNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
