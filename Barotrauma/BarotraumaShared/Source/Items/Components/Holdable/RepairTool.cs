@@ -253,17 +253,24 @@ namespace Barotrauma.Items.Components
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
             if (dist > range * 5.0f) return true;
-            
+
+            Vector2 gapDiff = leak.WorldPosition - item.WorldPosition;
+            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
+                Math.Abs(gapDiff.X) < 100.0f && gapDiff.Y < 0.0f && gapDiff.Y > -150.0f)
+            {
+                ((HumanoidAnimController)character.AnimController).Crouching = true;
+            }
+
             //steer closer if almost in range
             if (dist > range)
             {
                 Vector2 standPos = leak.IsHorizontal ?
-                    new Vector2(Math.Sign(item.WorldPosition.X - leak.WorldPosition.X), 0.0f)
-                    : new Vector2(0.0f, Math.Sign(item.WorldPosition.Y - leak.WorldPosition.Y));
+                    new Vector2(Math.Sign(-gapDiff.X), 0.0f)
+                    : new Vector2(0.0f, Math.Sign(-gapDiff.Y) * 0.5f);
 
                 standPos = leak.WorldPosition + standPos * range;
 
-                character.AIController.SteeringManager.SteeringManual(deltaTime, (standPos - character.WorldPosition) / 1000.0f);   
+                character.AIController.SteeringManager.SteeringManual(deltaTime, (standPos - character.WorldPosition) / 1000.0f);
             }
             else
             {
@@ -288,7 +295,6 @@ namespace Barotrauma.Items.Components
                 {
                     character.Speak(TextManager.Get("DialogLeakFixed").Replace("[roomname]", leak.FlowTargetHull.RoomName), null, 0.0f, "leakfixed", 10.0f);
                 }
-
             }
 
             return leakFixed;
