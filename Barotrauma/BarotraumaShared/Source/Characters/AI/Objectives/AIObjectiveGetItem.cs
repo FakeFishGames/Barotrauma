@@ -145,6 +145,7 @@ namespace Barotrauma
                 }
 
                 goToObjective.TryComplete(deltaTime);
+                if (!goToObjective.CanBeCompleted) targetItem = null;
             }
 
         }

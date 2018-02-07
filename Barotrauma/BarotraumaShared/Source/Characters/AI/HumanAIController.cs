@@ -47,6 +47,7 @@ namespace Barotrauma
         {
             if (DisableCrewAI || Character.IsUnconscious) return;
 
+            (Character.AnimController as HumanoidAnimController).Crouching = false;
             Character.ClearInputs();
             
             if (updateObjectiveTimer > 0.0f)
@@ -90,7 +91,6 @@ namespace Barotrauma
             }
 
             Character.AnimController.IgnorePlatforms = ignorePlatforms;
-            (Character.AnimController as HumanoidAnimController).Crouching = false;
 
             if (!Character.AnimController.InWater)
             {

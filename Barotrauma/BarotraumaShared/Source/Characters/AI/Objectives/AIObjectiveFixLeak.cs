@@ -73,7 +73,15 @@ namespace Barotrauma
 
             Vector2 standPosition = GetStandPosition();
 
-            if (Vector2.DistanceSquared(character.WorldPosition, leak.WorldPosition) > 100.0f * 100.0f)
+            Vector2 gapDiff = leak.WorldPosition - character.WorldPosition;
+
+            if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController && 
+                Math.Abs(gapDiff.X) < 100.0f && gapDiff.Y < 0.0f && gapDiff.Y > -150.0f)
+            {
+                ((HumanoidAnimController)character.AnimController).Crouching = true;
+            }
+
+            if (Math.Abs(gapDiff.X) > 100.0f || Math.Abs(gapDiff.Y) > 150.0f)
             {
                 var gotoObjective = new AIObjectiveGoTo(ConvertUnits.ToSimUnits(standPosition), character);
                 if (!gotoObjective.IsCompleted())
