@@ -263,6 +263,12 @@ namespace Barotrauma
         {
             Vector2 submarinePos = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
+            if (!renderer.IndoorsVertices.ContainsKey(Submarine))
+            {
+                renderer.IndoorsVertices[Submarine] = new VertexPositionColorTexture[WaterRenderer.DefaultIndoorsBufferSize];
+                renderer.PositionInIndoorsBuffer[Submarine] = 0;
+            }
+
             //calculate where the surface should be based on the water volume
             float top = rect.Y + submarinePos.Y;
             float bottom = top - rect.Height;
@@ -374,7 +380,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (renderer.PositionInSurfaceBuffer <= renderer.SurfaceVertices.Length - 12)
+                if (renderer.PositionInIndoorsBuffer[Submarine] <= renderer.IndoorsVertices[Submarine].Length - 12)
                 {
                     //surface shrinks and finally disappears when the water level starts to reach the top of the hull
                     float surfaceScale = 1.0f - MathHelper.Clamp(corners[3].Y - (top - 10), 0.0f, 1.0f);
@@ -389,27 +395,30 @@ namespace Barotrauma
                     surfaceOffset2.Y += (float)Math.Sin((rect.X + (i + 1) * width) * 0.05f - renderer.WavePos.X) * 2;
                     surfaceOffset2 *= surfaceScale;
 
-                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 0] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
-                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 1] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsWaterColor, Vector2.Zero);
-                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 2] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
+                    int posInBuffer = renderer.PositionInIndoorsBuffer[Submarine];
 
-                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 3] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
-                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 4] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
-                    renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 5] = new VertexPositionColorTexture(corners[4], renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[Submarine][posInBuffer + 0] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[Submarine][posInBuffer + 1] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[Submarine][posInBuffer + 2] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
 
-                    renderer.PositionInSurfaceBuffer += 6;
+                    renderer.IndoorsVertices[Submarine][posInBuffer + 3] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[Submarine][posInBuffer + 4] = new VertexPositionColorTexture(corners[5], renderer.IndoorsWaterColor, Vector2.Zero);
+                    renderer.IndoorsVertices[Submarine][posInBuffer + 5] = new VertexPositionColorTexture(corners[4], renderer.IndoorsWaterColor, Vector2.Zero);
+
+                    posInBuffer += 6;
+                    renderer.PositionInIndoorsBuffer[Submarine] = posInBuffer;
 
                     if (surfaceScale > 0)
                     {
-                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 0] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
-                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 1] = new VertexPositionColorTexture(corners[2], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
-                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 2] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
+                        renderer.IndoorsVertices[Submarine][posInBuffer + 0] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
+                        renderer.IndoorsVertices[Submarine][posInBuffer + 1] = new VertexPositionColorTexture(corners[2], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
+                        renderer.IndoorsVertices[Submarine][posInBuffer + 2] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
 
-                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 3] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
-                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 4] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
-                        renderer.SurfaceVertices[renderer.PositionInSurfaceBuffer + 5] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
-                    
-                        renderer.PositionInSurfaceBuffer += 6;
+                        renderer.IndoorsVertices[Submarine][posInBuffer + 3] = new VertexPositionColorTexture(corners[3], renderer.IndoorsSurfaceTopColor, Vector2.Zero);
+                        renderer.IndoorsVertices[Submarine][posInBuffer + 4] = new VertexPositionColorTexture(corners[2] + surfaceOffset2, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
+                        renderer.IndoorsVertices[Submarine][posInBuffer + 5] = new VertexPositionColorTexture(corners[3] + surfaceOffset, renderer.IndoorsSurfaceBottomColor, Vector2.Zero);
+
+                        renderer.PositionInIndoorsBuffer[Submarine] += 6;
                     }
                 }
 
