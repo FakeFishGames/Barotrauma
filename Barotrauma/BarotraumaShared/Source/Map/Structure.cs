@@ -513,21 +513,15 @@ namespace Barotrauma
                 Vector2 pos = ConvertUnits.ToDisplayUnits(f2.Body.Position);
 
                 int section = FindSectionIndex(pos);
-                if (section > 0)
+                if (section > -1)
                 {
                     Vector2 normal = contact.Manifold.LocalNormal;
 
-                    float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal)*f2.Body.Mass*0.1f;
-
-#if CLIENT
-                    SoundPlayer.PlayDamageSound("StructureBlunt", impact,
-                        new Vector2(
-                            sections[section].rect.X + sections[section].rect.Width / 2,
-                            sections[section].rect.Y - sections[section].rect.Height / 2), tags: Tags);
-#endif
-
+                    float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal) * f2.Body.Mass * 0.1f;
                     if (impact < 10.0f) return true;
-
+#if CLIENT
+                    SoundPlayer.PlayDamageSound("StructureBlunt", impact, SectionPosition(section, true), tags: Tags);                    
+#endif
                     AddDamage(section, impact);                 
                 }
             }

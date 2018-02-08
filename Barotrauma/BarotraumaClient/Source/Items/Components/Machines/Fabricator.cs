@@ -110,19 +110,19 @@ namespace Barotrauma.Items.Components
                 string text;
                 if (!inadequateSkills.Any())
                 {
-                    text = "Required items:\n";
+                    text = TextManager.Get("FabricatorRequiredItems")+ ":\n";
                     foreach (Tuple<ItemPrefab, int, float, bool> ip in targetItem.RequiredItems)
                     {
-                        text += "   - " + ip.Item1.Name + " x" + ip.Item2 + (ip.Item3 < 1.0f ? ", " + ip.Item3 * 100 + "% condition\n" : "\n");
+                        text += "   - " + ip.Item1.Name + " x" + ip.Item2 + (ip.Item3 < 1.0f ? ", " + ip.Item3 * 100 + "% " + TextManager.Get("FabricatorRequiredCondition") + "\n" : "\n");
                     }
-                    text += "Required time: " + targetItem.RequiredTime + " s";
+                    text += TextManager.Get("FabricatorRequiredTime") + ": " + targetItem.RequiredTime + " s";
                 }
                 else
                 {
-                    text = "Skills required to calibrate:\n";
+                    text = TextManager.Get("FabricatorRequiredSkills") + ":\n";
                     foreach (Skill skill in inadequateSkills)
                     {
-                        text += "   - " + skill.Name + " lvl " + skill.Level + "\n";
+                        text += "   - " + skill.Name + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level + "\n";
                     }
 
                     textColor = Color.Red;
@@ -136,7 +136,7 @@ namespace Barotrauma.Items.Components
                     Alignment.TopLeft, null,
                     selectedItemFrame);
 
-                activateButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Create", Color.White, Alignment.CenterX | Alignment.Bottom, "", selectedItemFrame);
+                activateButton = new GUIButton(new Rectangle(0, -30, 100, 20), TextManager.Get("FabricatorCreate"), Color.White, Alignment.CenterX | Alignment.Bottom, "", selectedItemFrame);
                 activateButton.OnClicked = StartButtonClicked;
                 activateButton.UserData = targetItem;
                 activateButton.Enabled = false;

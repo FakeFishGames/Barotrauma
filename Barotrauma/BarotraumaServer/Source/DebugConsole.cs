@@ -67,6 +67,12 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.LevelSeed = string.Join(" ", args);
             }));
 
+            commands.Add(new Command("randomizeseed", "randomizeseed: Toggles level seed randomization on/off.", (string[] args) =>
+            {
+                GameMain.Server.RandomizeSeed = !GameMain.Server.RandomizeSeed;
+                NewMessage((GameMain.Server.RandomizeSeed ? "Enabled" : "Disabled") + " level seed randomization.", Color.Cyan);
+            }));
+
             commands.Add(new Command("gamemode", "gamemode [name]/[index]: Select the game mode for the next round. The parameter can either be the name or the index number of the game mode (0 = sandbox, 1 = mission, etc).", (string[] args) =>
             {
                 int index = -1;

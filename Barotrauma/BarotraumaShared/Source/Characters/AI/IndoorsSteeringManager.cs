@@ -109,9 +109,9 @@ namespace Barotrauma
             if (currentPath.Finished)
             {
                 Vector2 pos2 = host.SimPosition;
-                if (character != null && character.Submarine == null && CurrentPath.Nodes.Last().Submarine != null)
+                if (character != null && character.Submarine == null &&
+                    CurrentPath.Nodes.Count > 0 && CurrentPath.Nodes.Last().Submarine != null)
                 {
-                    //todo: take multiple subs into account
                     pos2 -= CurrentPath.Nodes.Last().Submarine.SimPosition;
                 }
                 return currentTarget - pos2;

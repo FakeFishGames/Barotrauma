@@ -74,6 +74,12 @@ namespace Barotrauma
             private set;
         }
         
+        public static WindowMode WindowMode
+        {
+            get;
+            private set;
+        }
+
         public static int GraphicsWidth
         {
             get;
@@ -164,15 +170,21 @@ namespace Barotrauma
                                             (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - GraphicsHeight) / 2);
             }
 
-            GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
-
-            GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
 
-            GraphicsDeviceManager.ApplyChanges();
+            SetWindowMode(Config.WindowMode);
 
             defaultViewport = GraphicsDevice.Viewport;
+        }
+
+        public void SetWindowMode(WindowMode windowMode)
+        {
+            WindowMode = windowMode;
+            GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+            GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
+            
+            GraphicsDeviceManager.ApplyChanges();
         }
 
         public void ResetViewPort()
@@ -394,6 +406,7 @@ namespace Barotrauma
                     GUIComponent.UpdateMouseOn();
 
                     DebugConsole.Update(this, (float)Timing.Step);
+                    paused = paused || DebugConsole.IsOpen;
                     
                     if (!paused)
                     {

@@ -155,24 +155,24 @@ namespace Barotrauma
                 string loadText = "";
                 if (loadState == 100.0f)
                 {
-                    loadText = "Press any key to continue";
+                    loadText = TextManager.Get("PressAnyKey");
                 }
                 else
                 {
-                    loadText = "Loading... ";
-                    if (loadState!=null)
+                    loadText = TextManager.Get("Loading");
+                    if (loadState != null)
                     {
-                        loadText += (int)loadState + " %";
+                        loadText += " " + (int)loadState + " %";
                     }
                 }
 
-                if (GUI.LargeFont!=null)
+                if (GUI.LargeFont != null)
                 {
-                    GUI.LargeFont.DrawString(spriteBatch, loadText, 
-                        new Vector2(GameMain.GraphicsWidth/2.0f - GUI.LargeFont.MeasureString(loadText).X/2.0f, GameMain.GraphicsHeight*0.8f), 
-                        Color.White); 
+                    GUI.LargeFont.DrawString(spriteBatch, loadText,
+                        new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.8f),
+                        Color.White);
                 }
-           
+
             }
             spriteBatch.End();
 

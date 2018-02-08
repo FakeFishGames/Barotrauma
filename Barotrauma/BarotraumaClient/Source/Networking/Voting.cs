@@ -69,7 +69,7 @@ namespace Barotrauma
             GUIListBox listBox = (voteType == VoteType.Sub) ?
                 GameMain.NetLobbyScreen.SubList : GameMain.NetLobbyScreen.ModeList;
 
-            foreach (GUITextBlock comp in listBox.children)
+            foreach (GUIComponent comp in listBox.children)
             {
                 GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;
                 if (voteText != null) comp.RemoveChild(voteText);

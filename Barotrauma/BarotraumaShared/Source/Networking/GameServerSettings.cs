@@ -79,9 +79,8 @@ namespace Barotrauma.Networking
         public bool RandomizeSeed
         {
             get;
-            private set;
+            set;
         }
-
 
         [Serialize(300.0f, true)]
         public float RespawnInterval
@@ -241,6 +240,20 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize("Sandbox", true)]
+        public string GameMode
+        {
+            get;
+            set;
+        }
+
+        [Serialize("Random", true)]
+        public string MissionType
+        {
+            get;
+            set;
+        }
+
         private void SaveSettings()
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
@@ -327,6 +340,8 @@ namespace Barotrauma.Networking
             {
 #if SERVER
                 GameMain.NetLobbyScreen.ServerName = doc.Root.GetAttributeString("name", "");
+                GameMain.NetLobbyScreen.SelectedModeName = GameMode;
+                GameMain.NetLobbyScreen.MissionTypeName = MissionType;
 #endif
                 GameMain.NetLobbyScreen.ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             }

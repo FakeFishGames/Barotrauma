@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Jobs>
-  <Job name="Captain" description="The Commanding Officer is responsible for commanding the entirety of the crew and ensuring that everything is running smoothly." minnumber="1" maxnumber="1" minkarma="0.7">
+  <Job name="Captain" description="The Commanding Officer is responsible for commanding the entirety of the crew and ensuring that everything is running smoothly." 
+       minnumber="1" maxnumber="1" minkarma="0.7" initialcount="1">
     <Skills>
       <Skill name="Weapons" level="50,60"/>
       <Skill name="Construction" level="20,30"/>
@@ -22,7 +23,8 @@
     </Items>
   </Job>
   
-  <Job name="Engineer" description="Engineers are the backbone of a submarine's crew, complementing a mechanic's construction skill with their knowledge of electrical engineering. They are capable of performing maintenance on the various electrical pieces of the submarine." minnumber="1" minkarma="0.5">
+  <Job name="Engineer" description="Engineers are the backbone of a submarine's crew, complementing a mechanic's construction skill with their knowledge of electrical engineering. They are capable of performing maintenance on the various electrical pieces of the submarine." 
+       minnumber="1" minkarma="0.5" initialcount="1">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="20,30"/>
@@ -40,7 +42,8 @@
     </Items>
   </Job>
 
-  <Job name="Mechanic" description="Mechanics are capable of fixing various mechanical devices with their high construction skill. Together with engineers they ensure a submarine is working to its fullest." minnumber="1" minkarma="0.5">
+  <Job name="Mechanic" description="Mechanics are capable of fixing various mechanical devices with their high construction skill. Together with engineers they ensure a submarine is working to its fullest." 
+       minnumber="1" minkarma="0.5" initialcount="1">
     <Skills>
       <Skill name="Weapons" level="10,30"/>
       <Skill name="Construction" level="50,60"/>
