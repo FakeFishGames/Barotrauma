@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -28,7 +29,8 @@ namespace Barotrauma
 
     class WaterRenderer : IDisposable
     {
-        const int DefaultBufferSize = 1500;
+        public const int DefaultBufferSize = 1500;
+        public const int DefaultIndoorsBufferSize = 3000;
 
         public Vector2 WavePos
         {
@@ -43,7 +45,7 @@ namespace Barotrauma
         public readonly WaterVertexData IndoorsSurfaceBottomColor = new WaterVertexData(0.2f, 0.1f, 0.9f, 1.0f);
 
         public VertexPositionTexture[] vertices = new VertexPositionTexture[DefaultBufferSize];
-        public VertexPositionColorTexture[] SurfaceVertices = new VertexPositionColorTexture[DefaultBufferSize * 2];
+        public Dictionary<Submarine, VertexPositionColorTexture[]> IndoorsVertices = new Dictionary<Submarine, VertexPositionColorTexture[]>();// VertexPositionColorTexture[DefaultBufferSize * 2];
 
         public Effect waterEffect
         {
@@ -53,7 +55,7 @@ namespace Barotrauma
         private BasicEffect basicEffect;
 
         public int PositionInBuffer = 0;
-        public int PositionInSurfaceBuffer = 0;
+        public Dictionary<Submarine, int> PositionInIndoorsBuffer = new Dictionary<Submarine, int>();
 
         private Texture2D waterTexture;
 
@@ -88,7 +90,7 @@ namespace Barotrauma
             }
         }
 
-        public void RenderBack(SpriteBatch spriteBatch, RenderTarget2D texture, Camera cam, float blurAmount = 0.0f)
+        public void RenderWater(SpriteBatch spriteBatch, RenderTarget2D texture, Camera cam, float blurAmount = 0.0f)
         {
             spriteBatch.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             
@@ -103,10 +105,7 @@ namespace Barotrauma
                 offset.X += cam.WorldView.Width;
             }
             offset.Y = -offset.Y;
-            waterEffect.Parameters["xUvOffset"].SetValue(
-                new Vector2(
-                    offset.X / GameMain.GraphicsWidth,
-                    offset.Y / GameMain.GraphicsHeight));
+            waterEffect.Parameters["xUvOffset"].SetValue(new Vector2(offset.X / GameMain.GraphicsWidth, offset.Y / GameMain.GraphicsHeight));
 
             waterEffect.Parameters["xBumpPos"].SetValue(Vector2.Zero);
             waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
@@ -148,27 +147,26 @@ namespace Barotrauma
             verts[4] = new VertexPositionColorTexture(corners[2], backGroundColor, Vector2.Zero);
             verts[5] = new VertexPositionColorTexture(corners[3], backGroundColor, Vector2.Zero);
 
-            spriteBatch.GraphicsDevice.DrawUserPrimitives<VertexPositionColorTexture>(
-                PrimitiveType.TriangleList, verts, 0, 2);
+            spriteBatch.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, verts, 0, 2);
 
-            if (PositionInSurfaceBuffer == 0) return;
-
-            offset = WavePos;
-            if (cam != null)
+            foreach (KeyValuePair<Submarine, VertexPositionColorTexture[]> subVerts in IndoorsVertices)
             {
-                offset.Y += cam.WorldView.Height;
-                offset.X += cam.WorldView.Width;
+                if (!PositionInIndoorsBuffer.ContainsKey(subVerts.Key) || PositionInIndoorsBuffer[subVerts.Key] == 0) continue;
+
+                offset = WavePos - subVerts.Key.WorldPosition;
+                if (cam != null)
+                {
+                    offset += cam.WorldView.Location.ToVector2();
+                    offset.Y += cam.WorldView.Height;
+                    offset.X += cam.WorldView.Width;
+                }
+                offset.Y = -offset.Y;
+                waterEffect.Parameters["xUvOffset"].SetValue(new Vector2(offset.X / GameMain.GraphicsWidth, offset.Y / GameMain.GraphicsHeight));
+
+                waterEffect.CurrentTechnique.Passes[0].Apply();
+
+                spriteBatch.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, subVerts.Value, 0, PositionInIndoorsBuffer[subVerts.Key] / 3);
             }
-            offset.Y = -offset.Y;
-            waterEffect.Parameters["xUvOffset"].SetValue(
-                new Vector2(
-                    offset.X / GameMain.GraphicsWidth,
-                    offset.Y / GameMain.GraphicsHeight));
-
-            waterEffect.CurrentTechnique.Passes[0].Apply();
-
-            spriteBatch.GraphicsDevice.DrawUserPrimitives<VertexPositionColorTexture>(
-                PrimitiveType.TriangleList, SurfaceVertices, 0, PositionInSurfaceBuffer / 3);
         }
 
         public void ScrollWater(float deltaTime)
@@ -176,7 +174,7 @@ namespace Barotrauma
             WavePos = WavePos + Vector2.One * 10.0f * deltaTime;
         }
 
-        public void Render(GraphicsDevice graphicsDevice, Camera cam, RenderTarget2D texture, Matrix transform)
+        public void RenderAir(GraphicsDevice graphicsDevice, Camera cam, RenderTarget2D texture, Matrix transform)
         {
             if (vertices == null || vertices.Length < 0 || PositionInBuffer <= 0) return;
 
@@ -188,8 +186,14 @@ namespace Barotrauma
             basicEffect.CurrentTechnique.Passes[0].Apply();
 
             graphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
-            graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, vertices, 0, PositionInBuffer / 3);
-         
+            graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, vertices, 0, PositionInBuffer / 3);         
+        }
+
+        public void ResetBuffers()
+        {
+            PositionInBuffer = 0;
+            PositionInIndoorsBuffer.Clear();
+            IndoorsVertices.Clear();
         }
 
         public void Dispose()
