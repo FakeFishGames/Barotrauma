@@ -10,27 +10,24 @@ namespace Barotrauma
 {
     class CharacterEditorScreen : Screen
     {
-        Camera cam;
+        private Camera cam;
 
-        GUIComponent GUIpanel;
-        GUIButton physicsButton;
+        private GUIComponent GUIpanel;
+        private GUIButton physicsButton;
 
-        GUIListBox limbList, jointList;
+        private GUIListBox limbList, jointList;
 
-        GUIFrame limbPanel;
-        
-        Character editingCharacter;
-        Limb editingLimb;
-        //RevoluteJoint editingJoint;
+        private GUIFrame limbPanel;
 
+        private Character editingCharacter;
+        private Limb editingLimb;
 
-
-        List<Texture2D> textures;
-        List<string> texturePaths;
+        private List<Texture2D> textures;
+        private List<string> texturePaths;
 
         private bool physicsEnabled;
 
-        public Camera Cam
+        public override Camera Cam
         {
             get { return cam; }
         }
@@ -99,6 +96,8 @@ namespace Barotrauma
         {
             cam.MoveCamera((float)deltaTime);
 
+            GUIpanel.Update((float)deltaTime);
+
             if (physicsEnabled)
             {
                 Character.UpdateAnimAll((float)deltaTime);
@@ -107,6 +106,11 @@ namespace Barotrauma
 
                 GameMain.World.Step((float)deltaTime);
             }                                                
+        }
+
+        public override void AddToGUIUpdateList()
+        {
+            GUIpanel.AddToGUIUpdateList();
         }
 
         /// <summary>

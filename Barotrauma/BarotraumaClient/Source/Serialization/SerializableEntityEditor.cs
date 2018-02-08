@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -465,6 +466,11 @@ namespace Barotrauma
 
         private void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
         {
+            if (entity is ItemComponent)
+            {
+                entity = ((ItemComponent)entity).Item;
+            }
+
             if (GameMain.Server != null)
             {
                 IServerSerializable serverSerializable = entity as IServerSerializable;

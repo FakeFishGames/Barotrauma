@@ -381,7 +381,22 @@ namespace Barotrauma
             VoronoiCell cell = f2.Body.UserData as VoronoiCell;
             if (cell != null)
             {
-                HandleLevelCollision(contact, cell);
+                HandleLevelCollision(contact, Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center));
+                return true;
+            }
+
+            Structure structure = f2.Body.UserData as Structure;
+            if (structure != null)
+            {
+                Vector2 normal;
+                FixedArray2<Vector2> points;
+                contact.GetWorldManifold(out normal, out points);
+                if (contact.FixtureA.Body == f1.Body)
+                {
+                    normal = -normal;
+                }
+
+                HandleLevelCollision(contact, normal);
                 return true;
             }
 
@@ -510,10 +525,8 @@ namespace Barotrauma
             }
         }
 
-        private void HandleLevelCollision(Contact contact, VoronoiCell cell)
+        private void HandleLevelCollision(Contact contact, Vector2 collisionNormal)
         {
-            var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center);
-
             float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
 
             ApplyImpact(wallImpact, -collisionNormal, contact);
@@ -522,11 +535,11 @@ namespace Barotrauma
                 dockedSub.SubBody.ApplyImpact(wallImpact, -collisionNormal, contact);
             }
 
+#if CLIENT
             Vector2 n;
             FixedArray2<Vector2> particlePos;
             contact.GetWorldManifold(out n, out particlePos);
-
-#if CLIENT
+            
             int particleAmount = (int)Math.Min(wallImpact * 10.0f, 50);
             for (int i = 0; i < particleAmount; i++)
             {

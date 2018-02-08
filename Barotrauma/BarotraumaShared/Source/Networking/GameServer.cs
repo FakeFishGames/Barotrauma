@@ -201,7 +201,9 @@ namespace Barotrauma.Networking
             Log("Server started", ServerLog.MessageType.ServerMessage);
                         
             GameMain.NetLobbyScreen.Select();
+            GameMain.NetLobbyScreen.RandomizeSettings();
             started = true;
+
             yield return CoroutineStatus.Success;
         }
 
@@ -1480,22 +1482,21 @@ namespace Barotrauma.Networking
                 }
             }
 
-            CoroutineManager.StartCoroutine(EndCinematic(),"EndCinematic");
-        }
+            CoroutineManager.StartCoroutine(EndCinematic(), "EndCinematic");
 
+            GameMain.NetLobbyScreen.RandomizeSettings();
+        }
+        
         public IEnumerable<object> EndCinematic()
         {
             float endPreviewLength = 10.0f;
             
             var cinematic = new TransitionCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, endPreviewLength);
-            //float secondsLeft = endPreviewLength;
 
             do
             {
-                //secondsLeft -= CoroutineManager.UnscaledDeltaTime;
-
                 yield return CoroutineStatus.Running;
-            } while (cinematic.Running);//(secondsLeft > 0.0f);
+            } while (cinematic.Running);
 #if CLIENT
             SoundPlayer.OverrideMusicType = null;
 #endif
