@@ -39,22 +39,40 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) == true).Count,GameMain.NilMod.MaxAdminSlots);
-            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly == true).Count, GameMain.NilMod.MaxSpectatorSlots);
+            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban)).Count,GameMain.NilMod.MaxAdminSlots);
+            GameMain.NilMod.Moderators = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban)).Count, GameMain.NilMod.MaxModeratorSlots);
+            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly).Count, GameMain.NilMod.MaxSpectatorSlots);
+            
+            //Code so they don't reduce current player counts multiple times when counted for multiple  slots
+            int ModAdminSpectators = Math.Min((Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxAdminSlots)
+                + Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxModeratorSlots)), GameMain.NilMod.MaxSpectatorSlots);
+
+            int CurrentPlayers = ConnectedClients.Count - (GameMain.NilMod.Admins + GameMain.NilMod.Moderators + GameMain.NilMod.Spectators - ModAdminSpectators);
 
             UnauthenticatedClient unauthClient = unauthenticatedClients.Find(uc => uc.Connection == conn);
             if (unauthClient == null)
             {
+                //Clients permissions
+                var precheckPermissions = clientPermissions.Find(cp => cp.IP == conn.RemoteEndPoint.Address.ToString());
+
                 //new client, generate nonce and add to unauth queue
-                if ((ConnectedClients.Count + unauthenticatedClients.Count - GameMain.NilMod.Admins - GameMain.NilMod.Spectators) >= maxPlayers)
+                if ((CurrentPlayers + unauthenticatedClients.Count) >= maxPlayers)
                 {
-                    var precheckPermissions = clientPermissions.Find(cp => cp.IP == conn.RemoteEndPoint.Address.ToString());
                     if (precheckPermissions.Permissions.HasFlag(ClientPermissions.Ban))
                     {
                         if (GameMain.NilMod.Admins + 1 > GameMain.NilMod.MaxAdminSlots)
                         {
                             //Server is full and exceeded its admin slots.
-                            conn.Disconnect("Server full - No admin slots remain");
+                            conn.Disconnect("Server full - Server is at " + GameMain.NilMod.Admins + "/" + GameMain.NilMod.MaxAdminSlots + " Admin Slots.");
+                            return;
+                        }
+                    }
+                    else if (precheckPermissions.Permissions.HasFlag(ClientPermissions.Kick))
+                    {
+                        if (GameMain.NilMod.Moderators + 1 > GameMain.NilMod.MaxModeratorSlots)
+                        {
+                            //Server is full and exceeded its admin slots.
+                            conn.Disconnect("Server full - Server is at " + GameMain.NilMod.Moderators + "/" + GameMain.NilMod.MaxModeratorSlots + " Moderator Slots.");
                             return;
                         }
                     }
@@ -64,7 +82,6 @@ namespace Barotrauma.Networking
                         conn.Disconnect("Server full");
                         return;
                     }
-                    
                 }
 
                 int nonce = CryptoRandom.Instance.Next();
@@ -233,14 +250,14 @@ namespace Barotrauma.Networking
             }
 
             //Nilmod prevent players rejoining as server hosts current name OR server name.
-            if (clName.ToLower() == Name.ToLower() | clName.ToLower() == GameMain.NilMod.PlayYourselfName.ToLower())
+            if (Homoglyphs.Compare(clName.ToLower(), Name.ToLower()) || Homoglyphs.Compare(clName.ToLower(), GameMain.NilMod.PlayYourselfName.ToLower()))
             {
                 DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Connection);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", Color.Red);
                 return;
             }
-            Client nameTaken = ConnectedClients.Find(c => c.Name.ToLower() == clName.ToLower());
+            Client nameTaken = ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), clName.ToLower()));
             if (nameTaken != null)
             {
                 if (nameTaken.Connection.RemoteEndPoint.Address.ToString() == inc.SenderEndPoint.Address.ToString())

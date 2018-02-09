@@ -242,14 +242,21 @@ namespace Barotrauma.Networking
                 restClient = new RestClient(NetConfig.MasterServerUrl);            
             }
 
-            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) == true).Count, GameMain.NilMod.MaxAdminSlots);
-            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly == true).Count, GameMain.NilMod.MaxSpectatorSlots);
+            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban)).Count, GameMain.NilMod.MaxAdminSlots);
+            GameMain.NilMod.Moderators = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban)).Count, GameMain.NilMod.MaxModeratorSlots);
+            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly).Count, GameMain.NilMod.MaxSpectatorSlots);
+
+            //Code so they don't reduce current player counts multiple times when counted for multiple  slots
+            int ModAdminSpectators = Math.Min((Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxAdminSlots)
+                + Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxModeratorSlots)), GameMain.NilMod.MaxSpectatorSlots);
+
+            int CurrentPlayers = ConnectedClients.Count - (GameMain.NilMod.Admins + GameMain.NilMod.Moderators + GameMain.NilMod.Spectators - ModAdminSpectators);
 
             var request = new RestRequest("masterserver3.php", Method.GET);            
             request.AddParameter("action", "addserver");
             request.AddParameter("servername", name);
             request.AddParameter("serverport", Port);
-            request.AddParameter("currplayers", (connectedClients.Count - GameMain.NilMod.Admins - GameMain.NilMod.Spectators));
+            request.AddParameter("currplayers", CurrentPlayers);
             request.AddParameter("maxplayers", maxPlayers);
             request.AddParameter("password", string.IsNullOrWhiteSpace(password) ? 0 : 1);
             request.AddParameter("version", GameMain.Version.ToString());
@@ -300,14 +307,21 @@ namespace Barotrauma.Networking
                 restClient = new RestClient(NetConfig.MasterServerUrl);
             }
 
-            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) == true).Count, GameMain.NilMod.MaxAdminSlots);
-            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly == true).Count, GameMain.NilMod.MaxSpectatorSlots);
+            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban)).Count, GameMain.NilMod.MaxAdminSlots);
+            GameMain.NilMod.Moderators = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban)).Count, GameMain.NilMod.MaxModeratorSlots);
+            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly).Count, GameMain.NilMod.MaxSpectatorSlots);
 
+            //Code so they don't reduce current player counts multiple times when counted for multiple  slots
+            int ModAdminSpectators = Math.Min((Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxAdminSlots)
+                + Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxModeratorSlots)), GameMain.NilMod.MaxSpectatorSlots);
+
+            int CurrentPlayers = ConnectedClients.Count - (GameMain.NilMod.Admins + GameMain.NilMod.Moderators + GameMain.NilMod.Spectators - ModAdminSpectators);
+            
             var request = new RestRequest("masterserver3.php", Method.GET);
             request.AddParameter("action", "refreshserver");
             request.AddParameter("serverport", Port);
             request.AddParameter("gamestarted", gameStarted ? 1 : 0);
-            request.AddParameter("currplayers", (connectedClients.Count - GameMain.NilMod.Admins - GameMain.NilMod.Spectators));
+            request.AddParameter("currplayers", CurrentPlayers);
             request.AddParameter("maxplayers", maxPlayers);
 
             if (GameMain.NilMod.ShowMasterServerSuccess)
@@ -514,9 +528,36 @@ namespace Barotrauma.Networking
                                 DebugConsole.NewMessage("Banned Player tried to join the server (" + inc.SenderEndPoint.Address.ToString() + ")", Color.Red);
                                 inc.SenderConnection.Deny("You have been banned from the server");
                             }
-                            else */if (ConnectedClients.Count >= maxPlayers)
+                            else */
+
+                            GameMain.NilMod.Admins = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban)).Count, GameMain.NilMod.MaxAdminSlots);
+                            GameMain.NilMod.Moderators = Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban)).Count, GameMain.NilMod.MaxModeratorSlots);
+                            GameMain.NilMod.Spectators = Math.Min(ConnectedClients.FindAll(c => c.SpectateOnly).Count, GameMain.NilMod.MaxSpectatorSlots);
+
+                            //Code so they don't reduce current player counts multiple times when counted for multiple  slots
+                            int ModAdminSpectators = Math.Min((Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxAdminSlots)
+                                + Math.Min(ConnectedClients.FindAll(c => c.HasPermission(ClientPermissions.Kick) && !c.HasPermission(ClientPermissions.Ban) && c.SpectateOnly).Count, GameMain.NilMod.MaxModeratorSlots)), GameMain.NilMod.MaxSpectatorSlots);
+
+                            int CurrentPlayers = ConnectedClients.Count - (GameMain.NilMod.Admins + GameMain.NilMod.Moderators + GameMain.NilMod.Spectators - ModAdminSpectators);
+
+                            var precheckPermissions = clientPermissions.Find(cp => cp.IP == inc.SenderConnection.RemoteEndPoint.Address.ToString());
+
+                            if ((CurrentPlayers + unauthenticatedClients.Count) >= maxPlayers)
                             {
-                                inc.SenderConnection.Deny("Server full");
+                                if (precheckPermissions.Permissions.HasFlag(ClientPermissions.Ban) || precheckPermissions.Permissions.HasFlag(ClientPermissions.Kick))
+                                {
+                                    if ((ClientPacketHeader)inc.SenderConnection.RemoteHailMessage.ReadByte() == ClientPacketHeader.REQUEST_AUTH)
+                                    {
+                                        inc.SenderConnection.Approve();
+                                        ClientAuthRequest(inc.SenderConnection);
+                                    }
+                                }
+                                else
+                                {
+                                    //server is full, can't allow new connection
+                                    inc.SenderConnection.Deny("Server full");
+                                    return;
+                                }
                             }
                             else
                             {

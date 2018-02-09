@@ -40,10 +40,11 @@ namespace Barotrauma
         public List<ConvertingHusk> convertinghusklist = new List<ConvertingHusk>();
 
         const string SettingsSavePath = "Data/NilModSettings.xml";
-        public const string NilModVersionDate = "01/02/2017 - 1";
+        public const string NilModVersionDate = "09/02/2017 - 1";
         public Version NilModNetworkingVersion = new Version(0,0,0,0);
 
         public int Admins;
+        public int Moderators;
         public int Spectators;
 
         public string ExternalIP = "?.?.?.?";
@@ -135,6 +136,7 @@ namespace Barotrauma
         public string ServerMD5B;
 
         public int MaxAdminSlots;
+        public int MaxModeratorSlots;
         public int MaxSpectatorSlots;
 
         public Boolean DebugConsoleTimeStamp;
@@ -973,6 +975,7 @@ namespace Barotrauma
                     ServerMD5A = ServerModGeneralSettings.GetAttributeString("ServerMD5A", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
                     ServerMD5B = ServerModGeneralSettings.GetAttributeString("ServerMD5B", GameMain.SelectedPackage.MD5hash.Hash); //Implemented
                     MaxAdminSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxAdminSlots", 0), 0, 16);
+                    MaxModeratorSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxModeratorSlots", 0), 0, 16);
                     MaxSpectatorSlots = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxSpectatorSlots", 0), 0, 16);
                     DebugConsoleTimeStamp = ServerModGeneralSettings.GetAttributeBool("DebugConsoleTimeStamp", false);
                     MaxLogMessages = MathHelper.Clamp(ServerModGeneralSettings.GetAttributeInt("MaxLogMessages", 800), 10, 16000); //Implemented
@@ -1378,6 +1381,7 @@ namespace Barotrauma
                 @"    ServerMD5A=""" + ServerMD5A + @"""",
                 @"    ServerMD5B=""" + ServerMD5B + @"""",
                 @"    MaxAdminSlots=""" + MaxAdminSlots + @"""",
+                @"    MaxModeratorSlots=""" + MaxModeratorSlots + @"""",
                 @"    MaxSpectatorSlots=""" + MaxSpectatorSlots + @"""",
                 @"    DebugConsoleTimeStamp=""" + DebugConsoleTimeStamp + @"""",
                 @"    MaxLogMessages=""" + MaxLogMessages + @"""",
@@ -1719,6 +1723,7 @@ namespace Barotrauma
                 "  <!--ServerMD5A = The server content folders MD5 - used for players using the same content mod to connect despite edits (Read above for what you shouldn't edit), Connect with a client to see the MD5 comparison and adjust to the clients MD5-->",
                 "  <!--ServerMD5B = A Secondary MD5 incase you wish to have two sets of files that may join a server, this is more towards servers that modify and hand out their package, but tweak it further later.-->",
                 "  <!--MaxAdminSlots = Players whom have the Ban Client Permission bypass slots joining the server, if this is set to 2, 2 may join beyond the maxplayers and not count in the server list.-->",
+                "  <!--MaxModeratorSlots = Players whom have the Kick Client Permission bypass slots joining the server, if this is set to 2, 2 may join beyond the maxplayers and not count in the server list.-->",
                 "  <!--MaxSpectatorSlots = Players whom are permanent spectators will be counted in this, allowing more players past the cap and not counting them unless they toggle it off (2 spectators removing it would result in 18/16), admins currently are also counted as spectators if their spectating too but not while they play. if MaxPlayers is exceeded and they stop being spectators it does not allow more in regardless-->",
                 "  <!--DebugConsoleTimeStamp = Adds a timestamp to the console messages.-->",
                 "  <!--MaxLogMessages = The max messages the ingame server log will keep.-->",
@@ -1825,6 +1830,7 @@ namespace Barotrauma
             ServerMD5A = GameMain.SelectedPackage.MD5hash.Hash;
             ServerMD5B = "";
             MaxAdminSlots = 0;
+            MaxModeratorSlots = 0;
             MaxSpectatorSlots = 0;
             if (!ClientMode) DebugConsoleTimeStamp = false;
             MaxLogMessages = 800;

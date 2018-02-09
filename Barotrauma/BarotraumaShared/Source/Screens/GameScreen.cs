@@ -256,7 +256,7 @@ namespace Barotrauma
                 {
                     case "spawncreature":
                         //ARG0 = Character, ARG1 = WorldPosX, ARG2 = WorldPosY
-                        WorldCoordinate = new Vector2(float.Parse((string)Arguments[1]), float.Parse((string)Arguments[2]));
+                        WorldCoordinate = new Vector2(float.Parse(Arguments[1].ToString()), float.Parse(Arguments[2].ToString()));
 
                         if (Arguments[0].ToString().ToLowerInvariant() == "human")
                         {
@@ -297,7 +297,7 @@ namespace Barotrauma
 
                     case "teleportsub":
                         //ARG0 = SUBID, ARG1 = WorldPosX, ARG2 = WorldPosY
-                        WorldCoordinate = new Vector2(float.Parse((string)Arguments[1]), float.Parse((string)Arguments[2]));
+                        WorldCoordinate = new Vector2(float.Parse(Arguments[1].ToString()), float.Parse(Arguments[2].ToString()));
                         GameMain.Server.MoveSub(int.Parse(Arguments[0].ToString()), WorldCoordinate);
                         break;
 
@@ -305,7 +305,7 @@ namespace Barotrauma
                         //ARG0 = Character, ARG1 = WorldPosX, ARG2 = WorldPosY
 
                         character = (Character)Arguments[0];
-                        WorldCoordinate = new Vector2(float.Parse((string)Arguments[1]), float.Parse((string)Arguments[2]));
+                        WorldCoordinate = new Vector2(float.Parse(Arguments[1].ToString()), float.Parse(Arguments[2].ToString()));
 
                         Character.Controlled.AnimController.CurrentHull = null;
                         Character.Controlled.Submarine = null;
