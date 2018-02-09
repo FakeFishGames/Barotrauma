@@ -296,9 +296,16 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             guiFrame.Update(deltaTime);
+
+            if (commander.IsOpen &&
+                (Character.Controlled == null || !characters.Contains(Character.Controlled)))
+            {
+                commander.ToggleGUIFrame();
+            }
             
             if (GUIComponent.KeyboardDispatcher.Subscriber == null && 
-                GameMain.Config.KeyBind(InputType.CrewOrders).IsHit())
+                GameMain.Config.KeyBind(InputType.CrewOrders).IsHit() &&
+                characters.Contains(Character.Controlled))
             {
                 //deselect construction unless it's the ladders the character is climbing
                 if (!commander.IsOpen && Character.Controlled != null && 
