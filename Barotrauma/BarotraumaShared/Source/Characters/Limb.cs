@@ -608,7 +608,7 @@ namespace Barotrauma
 
         public static float CalculateNewBleed(float bleed, float originalbleed, float damageModifier)
         {
-            float Armour = (damageModifier - 1f) * 100f;
+            float Armour = (1f - damageModifier) * 100f;
             float bleedingAmount = bleed;
 
             //Calculate bleed reduction

@@ -3063,7 +3063,7 @@ namespace Barotrauma.Networking
                                 GameMain.GameScreen.RunIngameCommand(GameMain.NilMod.ClickCommandType, new object[] { GameMain.NilMod.ClickArgs[0],
                                     GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition).X.ToString(),
                                     GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition).Y.ToString(),
-                                    GameMain.NilMod.ClickArgs[3]});
+                                    GameMain.NilMod.ClickArgs[2]});
                             }
                             if (Convert.ToInt16(GameMain.NilMod.ClickArgs[2]) == 0)
                             {
