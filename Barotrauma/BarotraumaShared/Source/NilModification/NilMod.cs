@@ -40,7 +40,7 @@ namespace Barotrauma
         public List<ConvertingHusk> convertinghusklist = new List<ConvertingHusk>();
 
         const string SettingsSavePath = "Data/NilModSettings.xml";
-        public const string NilModVersionDate = "09/02/2017 - 1";
+        public const string NilModVersionDate = "11/02/2017 - 1";
         public Version NilModNetworkingVersion = new Version(0,0,0,0);
 
         public int Admins;
@@ -799,7 +799,7 @@ namespace Barotrauma
             GameMain.Server.ServerLog.WriteLine("HullOxygenConsumptionSpeed = " + HullOxygenConsumptionSpeed.ToString() + " Volume of oxygen consumed / Player inside a hull.", ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("HullUnbreathablePercent = " + HullUnbreathablePercent.ToString() + "% before a room is rendered unbreathable.", ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("CanDamageSubBody = " + (CanDamageSubBody ? "Enabled - Submarine hulls may take damage via any means." : "Disabled - Submarine hulls cannot be damaged."), ServerLog.MessageType.NilMod);
-            //GameMain.Server.ServerLog.WriteLine("CanRewireMainSubs = " + (CanRewireMainSubs ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
+            GameMain.Server.ServerLog.WriteLine("CanRewireMainSubs = " + (CanRewireMainSubs ? "Enabled" : "Disabled"), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("CrushDamageDepth = " + CrushDamageDepth.ToString() + " worldspace Y coordinate for crush to be calculated from for subs and suits.", ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("UseProgressiveCrush = " + (UseProgressiveCrush ? "Enabled - Use PCrush settings to distribute crush damage to all walls." : "Disabled - Use vanilla submarine crush mechanics."), ServerLog.MessageType.NilMod);
             GameMain.Server.ServerLog.WriteLine("PCrushUseWallRemainingHealthCheck = " + (PCrushUseWallRemainingHealthCheck ? "Enabled - Wall resistance health is based off damaged sections." : "Disabled - Wall resistance health is based off max section health."), ServerLog.MessageType.NilMod);
@@ -2147,61 +2147,61 @@ namespace Barotrauma
             DebugConsole.NewMessage("ArmourDebug Test Calculations (Does not factor bleed bypass or impossible reverse damage):", Color.White);
             //1 armour damage reduction console messages
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 001, Bleed: 00.25 Damage Taken: "
-                + ArmourCheckHealth(1f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(0.25f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(1f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(0.25f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 003, Bleed: 00.50 Damage Taken: "
-                + ArmourCheckHealth(3f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(0.5f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(3f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(0.5f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 005, Bleed: 00.75 Damage Taken: "
-                + ArmourCheckHealth(5f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(0.75f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(5f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(0.75f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 010, Bleed: 01.00 Damage Taken: "
-                + ArmourCheckHealth(10f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(1f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(10f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(1f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 015, Bleed: 01.25 Damage Taken: "
-                + ArmourCheckHealth(15f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(1.25f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(15f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(1.25f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 020, Bleed: 01.50 Damage Taken: "
-                + ArmourCheckHealth(20f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(1.5f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(20f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(1.5f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 025, Bleed: 01.75 Damage Taken: "
-                + ArmourCheckHealth(25f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(1.75f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(25f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(1.75f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 030, Bleed: 02.00 Damage Taken: "
-                + ArmourCheckHealth(30f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(2f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(30f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(2f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 035, Bleed: 02.25 Damage Taken: "
-                + ArmourCheckHealth(35f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(2.25f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(35f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(2.25f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 040, Bleed: 02.50 Damage Taken: "
-                + ArmourCheckHealth(40f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(2.50f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(40f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(2.50f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 045, Bleed: 03.00 Damage Taken: "
-                + ArmourCheckHealth(45f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(3f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(45f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(3f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 050, Bleed: 03.50 Damage Taken: "
-                + ArmourCheckHealth(50f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(3.5f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(50f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(3.5f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 060, Bleed: 04.00 Damage Taken: "
-                + ArmourCheckHealth(60f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(4f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(60f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(4f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 070, Bleed: 05.00 Damage Taken: "
-                + ArmourCheckHealth(70f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(5f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(70f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(5f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 080, Bleed: 06.00 Damage Taken: "
-                + ArmourCheckHealth(80f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(6f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(80f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(6f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 090, Bleed: 07.50 Damage Taken: "
-                + ArmourCheckHealth(90f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(7.5f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(90f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(7.5f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 100, Bleed: 10.00 Damage Taken: "
-                + ArmourCheckHealth(100f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(10f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(100f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(10f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 125, Bleed: 12.50 Damage Taken: "
-                + ArmourCheckHealth(125f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(12.5f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(125f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(12.5f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 150, Bleed: 15.00 Damage Taken: "
-                + ArmourCheckHealth(150f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(15f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(150f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(15f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 175, Bleed: 17.50 Damage Taken: "
-                + ArmourCheckHealth(175f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(17.5f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(175f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(17.5f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 200, Bleed: 20.00 Damage Taken: "
-                + ArmourCheckHealth(200f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(20f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(200f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(20f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 250, Bleed: 25.00 Damage Taken: "
-                + ArmourCheckHealth(250f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(25f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(250f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(25f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 300, Bleed: 30.00 Damage Taken: "
-                + ArmourCheckHealth(300f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(30f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(300f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(30f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 350, Bleed: 40.00 Damage Taken: "
-                + ArmourCheckHealth(350f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(40f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(350f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(40f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 400, Bleed: 50.00 Damage Taken: "
-                + ArmourCheckHealth(400f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(50f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(400f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(50f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 500, Bleed: 60.00 Damage Taken: "
-                + ArmourCheckHealth(500f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(60f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(500f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(60f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 600, Bleed: 75.00 Damage Taken: "
-                + ArmourCheckHealth(600f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(75f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(600f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(75f, Modifier), Color.White);
             DebugConsole.NewMessage("Armour: " + armourrating + " Damage: 800, Bleed: 90.00 Damage Taken: "
-                + ArmourCheckHealth(800f, armourrating / 100f) + " Bleed Taken: " + ArmourCheckBleed(90f, armourrating / 100f), Color.White);
+                + ArmourCheckHealth(800f, Modifier) + " Bleed Taken: " + ArmourCheckBleed(90f, Modifier), Color.White);
                 
         }
 

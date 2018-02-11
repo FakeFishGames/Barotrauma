@@ -19,11 +19,6 @@ namespace Barotrauma
             get;
         }
 
-        AITarget AiTarget
-        {
-            get;
-        }
-
-        AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound=true);
+        AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true);
     }
 }

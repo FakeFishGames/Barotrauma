@@ -100,7 +100,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received
         /// </summary>
-        public void Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime)
+        public void Read(ServerNetObject type, NetIncomingMessage msg, float sendingTime, List<IServerSerializable> entities)
         {
             UInt16 unreceivedEntityEventCount = 0;
 
@@ -128,6 +128,8 @@ namespace Barotrauma.Networking
                 firstNewID = null;
             }
 
+            entities.Clear();
+
             UInt16 firstEventID = msg.ReadUInt16();
             int eventCount = msg.ReadByte();
 
@@ -146,6 +148,7 @@ namespace Barotrauma.Networking
                 byte msgLength = msg.ReadByte();
 
                 IServerSerializable entity = Entity.FindEntityByID(entityID) as IServerSerializable;
+                entities.Add(entity);
 
                 //skip the event if we've already received it or if the entity isn't found
                 if (thisEventID != (UInt16)(lastReceivedID + 1) || entity == null)

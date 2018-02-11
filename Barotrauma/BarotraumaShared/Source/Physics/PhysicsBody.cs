@@ -169,7 +169,22 @@ namespace Barotrauma
         public bool Enabled
         {
             get { return isEnabled; }
-            set { isEnabled = value; if (isEnabled) body.Enabled = isPhysEnabled; else body.Enabled = false; }
+            set
+            {
+                isEnabled = value;
+                try
+                {
+                    if (isEnabled) body.Enabled = isPhysEnabled; else body.Enabled = false;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Exception in PhysicsBody.Enabled = " + value + " (" + isPhysEnabled + ")", e);
+                    if (UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + UserData.GetType().ToString(), Color.Red);
+                    if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", Color.Red);
+                    else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", Color.Red);
+                    if (body.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", Color.Red);
+                }
+            }
         }
 
         public bool PhysEnabled

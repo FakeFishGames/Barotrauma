@@ -1029,8 +1029,14 @@ namespace Barotrauma.Networking
 
         private void ReadIngameUpdate(NetIncomingMessage inc)
         {
+            List<IServerSerializable> entities = new List<IServerSerializable>();
+
             float sendingTime = inc.ReadFloat() - inc.SenderConnection.RemoteTimeOffset;
-            
+
+            ServerNetObject? prevObjHeader = null;
+            long prevBitPos = 0;
+            long prevBytePos = 0;
+
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
@@ -1059,15 +1065,51 @@ namespace Barotrauma.Networking
                         break;
                     case ServerNetObject.ENTITY_EVENT:
                     case ServerNetObject.ENTITY_EVENT_INITIAL:
-                        entityEventManager.Read(objHeader, inc, sendingTime);
+                        entityEventManager.Read(objHeader, inc, sendingTime, entities);
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
                         break;
                     default:
                         DebugConsole.ThrowError("Error while reading update from server (unknown object header \""+objHeader+"\"!)");
+                        if (prevObjHeader != null)
+                        {
+                            DebugConsole.ThrowError("Previous object type: " + prevObjHeader.ToString());
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError("Error occurred on the very first object!");
+                        }
+                        DebugConsole.ThrowError("Previous object was " + (inc.Position - prevBitPos) + " bits long (" + (inc.PositionInBytes - prevBytePos) + " bytes)");
+                        if (prevObjHeader == ServerNetObject.ENTITY_EVENT || prevObjHeader == ServerNetObject.ENTITY_EVENT_INITIAL)
+                        {
+                            foreach (IServerSerializable ent in entities)
+                            {
+                                if (ent == null)
+                                {
+                                    DebugConsole.ThrowError(" - NULL");
+                                    continue;
+                                }
+                                Entity e = ent as Entity;
+                                DebugConsole.ThrowError(" - " + e.ToString() + " - Removed: " + e.Removed);
+                            }
+                        }
+                        DebugConsole.ThrowError("Writing object data to \"crashreport_object" + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".bin\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
+
+                        FileStream fl = File.Open("crashreport_object" + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".bin", FileMode.Create);
+                        BinaryWriter sw = new BinaryWriter(fl);
+
+                        sw.Write(inc.Data, (int)prevBytePos, (int)(inc.LengthBytes - prevBytePos));
+
+                        sw.Close();
+                        fl.Close();
+
+                        throw new Exception("Error while reading update from server: please send us \"crashreport_object" + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".bin!");
                         break;
                 }
+                prevObjHeader = objHeader;
+                prevBitPos = inc.Position;
+                prevBytePos = inc.PositionInBytes;
             }
         }
 
@@ -1153,8 +1195,8 @@ namespace Barotrauma.Networking
             ChatMessage chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
                 message, 
-                ChatMessageType.Default, 
-                gameStarted ? myCharacter : null);
+                ChatMessageType.Default,
+                gameStarted && myCharacter != null ? myCharacter : null);
 
             lastQueueChatMsgID++;
             chatMessage.NetStateID = lastQueueChatMsgID;

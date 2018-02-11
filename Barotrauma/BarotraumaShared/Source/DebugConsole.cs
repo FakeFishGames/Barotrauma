@@ -1031,7 +1031,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
+            commands.Add(new Command("kill", CommandType.GamePower, "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = null;
                 if (args.Length == 0)
@@ -1204,28 +1204,38 @@ namespace Barotrauma
 
             commands.Add(new Command("messagebox", CommandType.Network, "messagebox [text here]: Sends a messagebox to all connected clients displaying the text.", (string[] args) =>
             {
-                if (GameMain.Server != null)
+                if (args != null && args.Count() > 0)
                 {
-                    var chatMsg = ChatMessage.Create(
-                    "Server Message",
-                    (string.Join(" ", args)),
-                    (ChatMessageType)ChatMessageType.MessageBox,
-                    null);
-
-                    foreach (Client c in GameMain.Server.ConnectedClients)
+                    if (GameMain.Server != null)
                     {
-                        GameMain.Server.SendChatMessage(chatMsg, c);
+                        var chatMsg = ChatMessage.Create(
+                        "Server Message",
+                        (string.Join(" ", args)),
+                        (ChatMessageType)ChatMessageType.MessageBox,
+                        null);
+
+                        if (GameMain.Server.ConnectedClients.Count() > 0)
+                        {
+                            foreach (Client c in GameMain.Server.ConnectedClients)
+                            {
+                                GameMain.Server.SendChatMessage(chatMsg, c);
+                            }
+                        }
+#if CLIENT
+                        new GUIMessageBox("Server Broadcast", chatMsg.Text);
+#endif
                     }
 #if CLIENT
-                    new GUIMessageBox("Server Broadcast", chatMsg.Text);
+                    else
+                    {
+                        new GUIMessageBox("", string.Join(" ", args));
+                    }
 #endif
                 }
-#if CLIENT
                 else
                 {
-                    new GUIMessageBox("", string.Join(" ", args));
+                    DebugConsole.NewMessage("Messagebox [Text here] is the correct usage, messagebox cancelled (Command requires text)", Color.Red);
                 }
-#endif
             }));
 
             //NilMod Commands
@@ -1842,7 +1852,7 @@ namespace Barotrauma
 
             commands.Add(new Command("finditem", CommandType.Spawning, "finditem [Partial Item Name]: Searches all possible spawnable items based off what you type, leave blank to list everything.", (string[] args) =>
             {
-                List<string> FoundItems = new List<string>();
+                List<ItemPrefab> FoundItems = new List<ItemPrefab>();
                 string SearchItemName = null;
                 if (args.Length < 1)
                 {
@@ -1856,18 +1866,158 @@ namespace Barotrauma
                 //Find all the unique items and populate the list
                 foreach (MapEntityPrefab searchitem in MapEntityPrefab.List)
                 {
-                    if (searchitem.Name.ToLowerInvariant().Contains(SearchItemName.ToLowerInvariant()) | searchitem.Name.ToLowerInvariant() == SearchItemName.ToLowerInvariant())
+                    if (searchitem.Name.ToLowerInvariant().Contains(SearchItemName.ToLowerInvariant())
+                    || searchitem.Name.ToLowerInvariant() == SearchItemName.ToLowerInvariant()
+                    || searchitem.Category.ToString().ToLowerInvariant().Contains(SearchItemName.ToLowerInvariant())
+                    || searchitem.Category.ToString().ToLowerInvariant() == SearchItemName.ToLowerInvariant()
+                    )
                     {
-                        if (searchitem is ItemPrefab) FoundItems.Add(searchitem.Name);
+                        var itemPrefab = searchitem as ItemPrefab;
+                        if (searchitem is ItemPrefab && searchitem.Name != null) FoundItems.Add(itemPrefab);
                     }
                 }
-                //Sort the list
-                FoundItems.Sort();
-                //Now Display them in alphabetical order
-                foreach (string searchitemtext in FoundItems)
+                List<string> FoundItemsText = new List<string>();
+                foreach(ItemPrefab item in FoundItems)
                 {
-                    DebugConsole.NewMessage("spawnitem name: " + searchitemtext, Color.White);
+                    FoundItemsText.Add(item.Category + " - " + @"""" + item.Name + @"""");
                 }
+                //Sort the list
+                FoundItemsText.Sort();
+                //Now Display them in alphabetical order
+                foreach (string itemtext in FoundItemsText)
+                {
+                    DebugConsole.NewMessage(itemtext, Color.White);
+                }
+            }));
+
+            commands.Add(new Command("itemdetail", CommandType.Debug, "itemdetail [Partial Item Name]: Searches all possible spawnable items based off what you type, leave blank to list everything.", (string[] args) =>
+            {
+                //List<ItemPrefab> FoundItems = new List<ItemPrefab>();
+                string SearchItemName = null;
+                if (args.Length < 1)
+                {
+                    SearchItemName = "";
+                }
+                else
+                {
+                    SearchItemName = string.Join(" ", args.Take(args.Length)).ToLowerInvariant();
+                }
+
+                if (SearchItemName == "")
+                {
+                    return;
+                }
+
+                Boolean found = false;
+
+                //Find all the unique items and populate the list
+                foreach (MapEntityPrefab searchitem in MapEntityPrefab.List)
+                {
+                    if (searchitem.Name.ToLowerInvariant() == SearchItemName.ToLowerInvariant())
+                    {
+                        if (searchitem is ItemPrefab)
+                        {
+                            string temp;
+                            var itemPrefab = searchitem as ItemPrefab;
+                            DebugConsole.NewMessage(@"Found Matching item: """ + itemPrefab.Name + @""".", Color.Cyan);
+                            DebugConsole.NewMessage("Category: " + itemPrefab.Category, Color.Cyan);
+
+                            if (itemPrefab.Aliases != null && itemPrefab.Aliases.Count() > 0)
+                            {
+                                temp = "";
+                                foreach (var Alias in itemPrefab.Aliases)
+                                {
+                                    temp = temp + ", " + Alias.ToString();
+                                }
+
+                                DebugConsole.NewMessage("Aliases: " + temp.Substring(2).Trim(), Color.Cyan);
+                            }
+                            else
+                            {
+                                DebugConsole.NewMessage("Item has no Aliases.", Color.Cyan);
+                            }
+                            
+                            DebugConsole.NewMessage("Description: " + itemPrefab.Description, Color.Cyan);
+
+                            if (itemPrefab.Tags != null && itemPrefab.Tags.Count() > 0)
+                            {
+                                temp = "";
+                                foreach (var tag in itemPrefab.Tags)
+                                {
+                                    temp = temp + ", " + tag.ToString();
+                                }
+
+                                DebugConsole.NewMessage("Tags: " + temp.Substring(2).Trim(), Color.Cyan);
+                            }
+                            else
+                            {
+                                DebugConsole.NewMessage("Item has no Tags.", Color.Cyan);
+                            }
+                            
+                            DebugConsole.NewMessage("Price: " + itemPrefab.Price, Color.Green);
+
+                            if (itemPrefab.DeconstructItems != null && itemPrefab.DeconstructItems.Count() > 0)
+                            {
+                                foreach (var deconstructitem in itemPrefab.DeconstructItems)
+                                {
+                                    DebugConsole.NewMessage(@"Deconstruct Item: """ + deconstructitem.ItemPrefabName.ToString() + @""" fullcondition: " + deconstructitem.RequireFullCondition, Color.Green);
+                                }
+                            }
+                            else
+                            {
+                                DebugConsole.NewMessage("Deconstructs into nothing.", Color.Green);
+                            }
+
+                            DebugConsole.NewMessage("CanSpriteFlipX: " + itemPrefab.CanSpriteFlipX, Color.Green);
+                            DebugConsole.NewMessage("CanUseOnSelf: " + itemPrefab.CanUseOnSelf, Color.Green);
+                            DebugConsole.NewMessage("ConfigFile: " + itemPrefab.ConfigFile, Color.Green);
+                            DebugConsole.NewMessage("DeconstructTime: " + itemPrefab.DeconstructTime.ToString(), Color.Green);
+                            DebugConsole.NewMessage("FireProof: " + itemPrefab.FireProof, Color.Green);
+                            DebugConsole.NewMessage("FocusOnSelected: " + itemPrefab.FocusOnSelected, Color.Green);
+                            DebugConsole.NewMessage("Health: " + itemPrefab.Health, Color.Green);
+                            DebugConsole.NewMessage("ImpactTolerance: " + itemPrefab.ImpactTolerance, Color.Green);
+                            DebugConsole.NewMessage("Indestructible: " + itemPrefab.Indestructible, Color.Green);
+                            DebugConsole.NewMessage("InteractDistance: " + itemPrefab.InteractDistance, Color.Green);
+                            DebugConsole.NewMessage("InteractPriority: " + itemPrefab.InteractPriority, Color.Green);
+                            DebugConsole.NewMessage("InteractThroughWalls: " + itemPrefab.InteractThroughWalls, Color.Green);
+                            DebugConsole.NewMessage("Linkable: " + itemPrefab.Linkable, Color.Green);
+                            DebugConsole.NewMessage("OffsetOnSelected: " + itemPrefab.OffsetOnSelected, Color.Green);
+                            DebugConsole.NewMessage("ResizeHorizontal: " + itemPrefab.ResizeHorizontal, Color.Green);
+                            DebugConsole.NewMessage("ResizeVertical: " + itemPrefab.ResizeVertical, Color.Green);
+                            DebugConsole.NewMessage("Size: " + itemPrefab.Size.ToString(), Color.Green);
+                            DebugConsole.NewMessage("SpriteColor: " + itemPrefab.SpriteColor.ToString(), Color.Green);
+                            if (itemPrefab.sprite != null)
+                            {
+                                DebugConsole.NewMessage("Sprite Depth: " + itemPrefab.sprite.Depth, Color.Green);
+                                DebugConsole.NewMessage("Sprite FilePath: " + itemPrefab.sprite.FilePath, Color.Green);
+
+                                DebugConsole.NewMessage("Sprite Origin: " + itemPrefab.sprite.Origin.ToString(), Color.Green);
+                                DebugConsole.NewMessage("Sprite Rotation: " + itemPrefab.sprite.rotation, Color.Green);
+                                DebugConsole.NewMessage("Sprite SourceRect: " + itemPrefab.sprite.SourceRect, Color.Green);
+                            }
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!found)
+                {
+                    DebugConsole.NewMessage(@"Item: """ + SearchItemName + @""" not found, performing search", Color.Red);
+                    DebugConsole.ExecuteCommand("finditem " + SearchItemName, GameMain.Instance);
+                }
+            }));
+
+            commands.Add(new Command("checktraitor|traitor|traitorcheck",CommandType.Network, "checktraitor: States the current traitor if there was one and his target.", (string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                TraitorManager traitorManager = GameMain.Server.TraitorManager;
+                if (traitorManager == null)
+                {
+                    DebugConsole.NewMessage("No traitor existed this game.", Color.Cyan);
+                    return;
+                }
+                DebugConsole.NewMessage(traitorManager.TraitorCharacter + " Is the traitor and his target is: " + traitorManager.TargetCharacter, Color.Cyan);
             }));
 
             commands.Add(new Command("debugarmor|debugarmour", CommandType.Debug, "debugarmor|debugarmour [Armour Value]: Shows a series of damage estimations for a lone modifier using nilmod/Vanilla armour calculation! - 1.0 by default is no damage and 0.5 is half (Configure nilmodsettings.xml to change behaviour!)", (string[] args) =>

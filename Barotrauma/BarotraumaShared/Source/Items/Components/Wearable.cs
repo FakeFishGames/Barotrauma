@@ -97,7 +97,10 @@ namespace Barotrauma.Items.Components
                 IsActive = true;
 
                 limb[i] = equipLimb;
-                equipLimb.WearingItems.Add(wearableSprites[i]);
+                if (!equipLimb.WearingItems.Contains(wearableSprites[i]))
+                {
+                    equipLimb.WearingItems.Add(wearableSprites[i]);
+                }
             }
         }
 

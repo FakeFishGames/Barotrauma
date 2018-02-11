@@ -36,6 +36,8 @@ namespace Barotrauma
 
         public GUITextBox hostNameBox;
 
+        private GUITextBlock preferredHostTeamSelection;
+
         private GUIFrame defaultModeContainer, campaignContainer;
 
         private GUIButton campaignViewButton;
@@ -519,6 +521,7 @@ namespace Barotrauma
             if (myPlayerFrame.children.Count <= 2)
             {
                 hostNameBox = null;
+                preferredHostTeamSelection = null;
                 myPlayerFrame.ClearChildren();
                 
                 var playYourself = new GUITickBox(new Rectangle(0, 0, 20, 20), "Play yourself", Alignment.TopLeft, myPlayerFrame);
@@ -533,12 +536,36 @@ namespace Barotrauma
                     hostNameBox = new GUITextBox(new Rectangle(100, 25, 140, 20), null, null, Alignment.TopLeft, Alignment.TopLeft, "", myPlayerFrame);
                     hostNameBox.Text = GameMain.NilMod.PlayYourselfName;
                     hostNameBox.OnTextChanged = HostChangeName;
+
+                    preferredHostTeamSelection = new GUITextBlock(new Rectangle(130, 75, 200, 30), "Random", "", myPlayerFrame);
+                    if (GameMain.NilMod.HostTeamPreference == 0)
+                    {
+                        preferredHostTeamSelection.TextColor = Color.White;
+                        preferredHostTeamSelection.Text = "Random";
+                    }
+                    else if (GameMain.NilMod.HostTeamPreference == 1)
+                    {
+                        preferredHostTeamSelection.TextColor = Color.MediumSlateBlue;
+                        preferredHostTeamSelection.Text = "Coalition";
+                    }
+                    else if (GameMain.NilMod.HostTeamPreference == 2)
+                    {
+                        preferredHostTeamSelection.TextColor = new Color(220, 30, 30, 255);
+                        preferredHostTeamSelection.Text = "Renegades";
+                    }
+
+                    GUIButton togglePreferredTeam = new GUIButton(new Rectangle(100, 80, 15, 20), "<", "", myPlayerFrame);
+                    togglePreferredTeam.UserData = -1;
+                    togglePreferredTeam.OnClicked = TogglePreferredTeam;
+                    togglePreferredTeam = new GUIButton(new Rectangle(215, 80, 15, 20), ">", "", myPlayerFrame);
+                    togglePreferredTeam.UserData = 1;
+                    togglePreferredTeam.OnClicked = TogglePreferredTeam;
                 }
 
-                GUIButton toggleHead = new GUIButton(new Rectangle(0, 60, 15, 15), "<", "", myPlayerFrame);
+                GUIButton toggleHead = new GUIButton(new Rectangle(0, 60, 15, 20), "<", "", myPlayerFrame);
                 toggleHead.UserData = -1;
                 toggleHead.OnClicked = ToggleHead;
-                toggleHead = new GUIButton(new Rectangle(60, 60, 15, 15), ">", "", myPlayerFrame);
+                toggleHead = new GUIButton(new Rectangle(60, 60, 15, 20), ">", "", myPlayerFrame);
                 toggleHead.UserData = 1;
                 toggleHead.OnClicked = ToggleHead;
 
@@ -848,17 +875,77 @@ namespace Barotrauma
             {
                 Client client = GameMain.Server.ConnectedClients.Find(c => c.Name == name);
 
-            GUIButton SetTeam1 = new GUIButton(new Rectangle(playerList.Rect.Width - 125, 0, 35, 25), "T-1", Color.Blue, Alignment.TopLeft, "", textBlock);
+            GUIButton SetTeam1 = new GUIButton(new Rectangle(playerList.Rect.Width - 125, 0, 35, 25), "T-1", Color.MediumSlateBlue, Alignment.TopLeft, "", textBlock);
                 SetTeam1.OnClicked += (btn, userData) =>
                 {
                     Client thisclient = (Client)userData;
 
                     thisclient.PreferredTeam = 1;
 
+                    //Calculate new totals
+                    int Coalitionmembers = 0;
+                    int Renegademembers = 0;
+                    int Random = 0;
+
+                    if (GameMain.Server.ConnectedClients.Count() > 0)
+                    {
+                        foreach (Client c in GameMain.Server.ConnectedClients)
+                        {
+                            if (c.PreferredTeam == 0)
+                            {
+                                Random += 1;
+                            }
+                            else if (c.PreferredTeam == 1)
+                            {
+                                Coalitionmembers += 1;
+                            }
+                            else if (c.PreferredTeam == 2)
+                            {
+                                Renegademembers += 1;
+                            }
+                        }
+                    }
+
+                    //Set the hosts character too
+                    if (GameMain.NetworkMember.CharacterInfo != null)
+                    {
+                        if (GameMain.NilMod.HostTeamPreference == 0)
+                        {
+                            Random += 1;
+                        }
+                        else if (GameMain.NilMod.HostTeamPreference == 1)
+                        {
+                            Coalitionmembers += 1;
+                        }
+                        else if (GameMain.NilMod.HostTeamPreference == 2)
+                        {
+                            Renegademembers += 1;
+                        }
+                    }
+
+                    var chatMsg = ChatMessage.Create(
+                    "Server",
+                    thisclient.Name.ToString() + " 's team preference set to: Coalition"
+                    + " - Random: " + Random + ", Coalition: " + Coalitionmembers + ", Renegades: " + Renegademembers
+                    + (GameMain.NilMod.RebalanceTeamPreferences ? " - Rebalancing: ON" : " - Rebalancing: OFF"),
+                    (ChatMessageType)ChatMessageType.Server,
+                    null);
+
+                    if (GameMain.Server.ConnectedClients.Count() > 0)
+                    {
+                        foreach (Client c in GameMain.Server.ConnectedClients)
+                        {
+                            GameMain.Server.SendChatMessage(chatMsg, c);
+                        }
+                    }
+
+                    //Send to self too
+                    GameMain.NetworkMember.AddChatMessage(chatMsg.TextWithSender, ChatMessageType.Server);
+
                     GUIButton thisbtn = (GUIButton)btn;
                     GUITextBlock nametextblock = (GUITextBlock)thisbtn.Parent;
 
-                    nametextblock.TextColor = new Color(30,30,240,255);
+                    nametextblock.TextColor = Color.MediumSlateBlue;
                     nametextblock.Text = thisclient.Name + " (Coalition)";
 
                     return true;
@@ -875,6 +962,66 @@ namespace Barotrauma
 
                     thisclient.PreferredTeam = 0;
 
+                    //Calculate new totals
+                    int Coalitionmembers = 0;
+                    int Renegademembers = 0;
+                    int Random = 0;
+
+                    if (GameMain.Server.ConnectedClients.Count() > 0)
+                    {
+                        foreach (Client c in GameMain.Server.ConnectedClients)
+                        {
+                            if (c.PreferredTeam == 0)
+                            {
+                                Random += 1;
+                            }
+                            else if (c.PreferredTeam == 1)
+                            {
+                                Coalitionmembers += 1;
+                            }
+                            else if (c.PreferredTeam == 2)
+                            {
+                                Renegademembers += 1;
+                            }
+                        }
+                    }
+
+                    //Set the hosts character too
+                    if (GameMain.NetworkMember.CharacterInfo != null)
+                    {
+                        if (GameMain.NilMod.HostTeamPreference == 0)
+                        {
+                            Random += 1;
+                        }
+                        else if (GameMain.NilMod.HostTeamPreference == 1)
+                        {
+                            Coalitionmembers += 1;
+                        }
+                        else if (GameMain.NilMod.HostTeamPreference == 2)
+                        {
+                            Renegademembers += 1;
+                        }
+                    }
+
+                    var chatMsg = ChatMessage.Create(
+                    "Server",
+                    thisclient.Name.ToString() + " 's team preference set to: Random"
+                    + " - Random: " + Random + ", Coalition: " + Coalitionmembers + ", Renegades: " + Renegademembers
+                    + (GameMain.NilMod.RebalanceTeamPreferences ? " - Rebalancing: ON" : " - Rebalancing: OFF"),
+                    (ChatMessageType)ChatMessageType.Server,
+                    null);
+
+                    if (GameMain.Server.ConnectedClients.Count() > 0)
+                    {
+                        foreach (Client c in GameMain.Server.ConnectedClients)
+                        {
+                            GameMain.Server.SendChatMessage(chatMsg, c);
+                        }
+                    }
+
+                    //Send to self too
+                    GameMain.NetworkMember.AddChatMessage(chatMsg.TextWithSender, ChatMessageType.Server);
+
                     GUIButton thisbtn = (GUIButton)btn;
                     GUITextBlock nametextblock = (GUITextBlock)thisbtn.Parent;
 
@@ -887,17 +1034,77 @@ namespace Barotrauma
                 SetTeam0.SelectedColor = Color.Yellow;
                 SetTeam0.UserData = client;
 
-                GUIButton SetTeam2 = new GUIButton(new Rectangle(playerList.Rect.Width - 55, 0, 35, 25), "T-2", Color.Red, Alignment.TopLeft, "", textBlock);
+                GUIButton SetTeam2 = new GUIButton(new Rectangle(playerList.Rect.Width - 55, 0, 35, 25), "T-2", new Color(220, 30, 30, 255), Alignment.TopLeft, "", textBlock);
                 SetTeam2.OnClicked += (btn, userData) =>
                 {
                     Client thisclient = (Client)userData;
 
                     thisclient.PreferredTeam = 2;
 
+                    //Calculate new totals
+                    int Coalitionmembers = 0;
+                    int Renegademembers = 0;
+                    int Random = 0;
+
+                    if (GameMain.Server.ConnectedClients.Count() > 0)
+                    {
+                        foreach (Client c in GameMain.Server.ConnectedClients)
+                        {
+                            if (c.PreferredTeam == 0)
+                            {
+                                Random += 1;
+                            }
+                            else if (c.PreferredTeam == 1)
+                            {
+                                Coalitionmembers += 1;
+                            }
+                            else if (c.PreferredTeam == 2)
+                            {
+                                Renegademembers += 1;
+                            }
+                        }
+                    }
+
+                    //Set the hosts character too
+                    if (GameMain.NetworkMember.CharacterInfo != null)
+                    {
+                        if (GameMain.NilMod.HostTeamPreference == 0)
+                        {
+                            Random += 1;
+                        }
+                        else if (GameMain.NilMod.HostTeamPreference == 1)
+                        {
+                            Coalitionmembers += 1;
+                        }
+                        else if (GameMain.NilMod.HostTeamPreference == 2)
+                        {
+                            Renegademembers += 1;
+                        }
+                    }
+
+                        var chatMsg = ChatMessage.Create(
+                        "Server",
+                        thisclient.Name.ToString() + " 's team preference set to: Renegades"
+                        + " - Random: " + Random + ", Coalition: " + Coalitionmembers + ", Renegades: " + Renegademembers
+                        + (GameMain.NilMod.RebalanceTeamPreferences ? " - Rebalancing: ON" : " - Rebalancing: OFF"),
+                        (ChatMessageType)ChatMessageType.Server,
+                        null);
+
+                    if (GameMain.Server.ConnectedClients.Count() > 0)
+                    {
+                        foreach (Client c in GameMain.Server.ConnectedClients)
+                        {
+                            GameMain.Server.SendChatMessage(chatMsg, c);
+                        }
+                    }
+
+                    //Send to self too
+                    GameMain.NetworkMember.AddChatMessage(chatMsg.TextWithSender, ChatMessageType.Server);
+
                     GUIButton thisbtn = (GUIButton)btn;
                     GUITextBlock nametextblock = (GUITextBlock)thisbtn.Parent;
 
-                    nametextblock.TextColor = new Color(240,30,30,255);
+                    nametextblock.TextColor = new Color(220, 30,30,255);
                     nametextblock.Text = thisclient.Name + " (Renegades)";
 
                     return true;
@@ -1187,6 +1394,93 @@ namespace Barotrauma
             GameMain.NetworkMember.CharacterInfo.HeadSpriteId += dir;
 
             UpdatePlayerHead(GameMain.NetworkMember.CharacterInfo);
+
+            return true;
+        }
+
+        private bool TogglePreferredTeam(GUIButton button, object userData)
+        {
+            int dir = (int)userData;
+
+            if (GameMain.NetworkMember.CharacterInfo == null) return true;
+
+            GameMain.NilMod.HostTeamPreference += dir;
+
+            if (GameMain.NilMod.HostTeamPreference < 0) GameMain.NilMod.HostTeamPreference = 2;
+            if (GameMain.NilMod.HostTeamPreference > 2) GameMain.NilMod.HostTeamPreference = 0;
+
+            if (GameMain.NilMod.HostTeamPreference == 0)
+            {
+                preferredHostTeamSelection.TextColor = Color.White;
+                preferredHostTeamSelection.Text = "Random";
+            }
+            else if (GameMain.NilMod.HostTeamPreference == 1)
+            {
+                preferredHostTeamSelection.TextColor = Color.MediumSlateBlue;
+                preferredHostTeamSelection.Text = "Coalition";
+            }
+            else if (GameMain.NilMod.HostTeamPreference == 2)
+            {
+                preferredHostTeamSelection.TextColor = new Color(220, 30, 30, 255);
+                preferredHostTeamSelection.Text = "Renegades";
+            }
+
+            //Calculate new totals
+            int Coalitionmembers = 0;
+            int Renegademembers = 0;
+            int Random = 0;
+
+            if (GameMain.Server.ConnectedClients.Count() > 0)
+            {
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    if (c.PreferredTeam == 0)
+                    {
+                        Random += 1;
+                    }
+                    else if (c.PreferredTeam == 1)
+                    {
+                        Coalitionmembers += 1;
+                    }
+                    else if (c.PreferredTeam == 2)
+                    {
+                        Renegademembers += 1;
+                    }
+                }
+            }
+
+            //Set the hosts character too
+            if (GameMain.NilMod.HostTeamPreference == 0)
+            {
+                Random += 1;
+            }
+            else if (GameMain.NilMod.HostTeamPreference == 1)
+            {
+                Coalitionmembers += 1;
+            }
+            else if (GameMain.NilMod.HostTeamPreference == 2)
+            {
+                Renegademembers += 1;
+            }
+
+            var chatMsg = ChatMessage.Create(
+            "Server",
+            "Host's team preference set to: " + preferredHostTeamSelection.Text
+            + " - Random: " + Random + ", Coalition: " + Coalitionmembers + ", Renegades: " + Renegademembers
+            + (GameMain.NilMod.RebalanceTeamPreferences ? " - Rebalancing: ON" : " - Rebalancing: OFF"),
+            (ChatMessageType)ChatMessageType.Server,
+            null);
+
+            if (GameMain.Server.ConnectedClients.Count() > 0)
+            {
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    GameMain.Server.SendChatMessage(chatMsg, c);
+                }
+            }
+
+            //Send to self too
+            GameMain.NetworkMember.AddChatMessage(chatMsg.TextWithSender, ChatMessageType.Server);
 
             return true;
         }

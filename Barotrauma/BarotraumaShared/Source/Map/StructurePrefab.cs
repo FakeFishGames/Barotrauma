@@ -36,6 +36,13 @@ namespace Barotrauma
             get { return maxHealth; }
             set { maxHealth = Math.Max(value, 0.0f); }
         }
+        //Nilmod compatability fix
+        [Serialize(100.0f, false)]
+        public float Health
+        {
+            get;
+            set;
+        }
 
         [Serialize(false, false)]
         public bool CastShadow
@@ -134,6 +141,9 @@ namespace Barotrauma
             }
             
             SerializableProperty.DeserializeProperties(sp, element);
+
+            //Nilmod compatability fix (If the correct name is used do -not- change it.
+            if (sp.Health != 100f && sp.MaxHealth == 100f) sp.MaxHealth = sp.Health;
 
             //backwards compatibility
             if (element.Attribute("size") == null)

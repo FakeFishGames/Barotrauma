@@ -74,6 +74,15 @@ namespace Barotrauma
                 {
                     if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
 
+                    //don't apply OnFire effects if the item is inside a fireproof container 
+                    //(or if it's inside a container that's inside a fireproof container, etc) 
+                    Item container = item.Container;
+                    while (container != null)
+                    {
+                        if (container.FireProof) return;
+                        container = container.Container;
+                    }
+
                     if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.1f) continue;
 
                     item.ApplyStatusEffects(ActionType.OnFire, 1.0f);

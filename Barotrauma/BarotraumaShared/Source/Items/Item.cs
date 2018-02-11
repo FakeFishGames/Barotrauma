@@ -139,6 +139,14 @@ namespace Barotrauma
             get { return prefab.InteractPriority; }
         }
 
+        public override Vector2 Position
+        {
+            get
+            {
+                return (body == null) ? base.Position : ConvertUnits.ToDisplayUnits(SimPosition);
+            }
+        }
+
         public override Vector2 SimPosition
         {
             get
@@ -754,7 +762,7 @@ namespace Barotrauma
         }
 
 
-        public AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
             if (prefab.Indestructible) return new AttackResult();
 

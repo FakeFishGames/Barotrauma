@@ -1264,13 +1264,16 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < selectedItems.Length; i++ )
+            if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
             {
-                if (selectedItems[i] == null) continue;
-                if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
+                for (int i = 0; i < selectedItems.Length; i++)
+                {
+                    if (selectedItems[i] == null) continue;
+                    if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
 
-                if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
-                if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
+                    if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
+                    if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);
+                }
             }
 
             if (selectedConstruction != null)
@@ -1397,6 +1400,9 @@ namespace Barotrauma
             Wire wire = item.GetComponent<Wire>();
             if (wire != null)
             {
+                //locked wires are never interactable 
+                if (wire.Locked) return false;
+
                 //wires are interactable if the character has selected either of the items the wire is connected to 
                 if (wire.Connections[0]?.Item != null && selectedConstruction == wire.Connections[0].Item) return true;
                 if (wire.Connections[1]?.Item != null && selectedConstruction == wire.Connections[1].Item) return true;
@@ -2103,8 +2109,11 @@ namespace Barotrauma
             speechBubbleTimer = Math.Max(speechBubbleTimer, duration);
             speechBubbleColor = color;
         }
-        
-        public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
+
+        /// <summary> 
+        /// Directly reduce the health of the character without any additional effects (particles, sounds, status effects...) 
+        /// </summary> 
+        public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, Character attacker)
         {
             Health = Health-amount;
             if (amount > 0.0f)
@@ -2143,10 +2152,21 @@ namespace Barotrauma
         }
         partial void DamageHUD(float amount);
 
-        public virtual AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
+        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            Limb limbHit = null;
-            var attackResult = AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit);
+            return ApplyAttack(attacker, worldPosition, attack, deltaTime, playSound, null);
+        }
+
+        /// <summary> 
+        /// Apply the specified attack to this character. If the targetLimb is not specified, the limb closest to worldPosition will receive the damage. 
+        /// </summary> 
+        public virtual AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
+        {
+            Limb limbHit = targetLimb;
+            var attackResult = targetLimb == null ?
+                AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit, attacker) :
+                DamageLimb(worldPosition, targetLimb, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, attacker);
+
             if (limbHit == null) return new AttackResult();
 
             var attackingCharacter = attacker as Character;
@@ -2243,13 +2263,11 @@ namespace Barotrauma
             return AddDamage(worldPosition, damageType, amount, bleedingAmount, stun, playSound, attackForce, out temp);
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, out Limb hitLimb)
+        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
         {
             hitLimb = null;
 
             if (Removed) return new AttackResult();
-
-            SetStun(stun);
             
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
@@ -2261,7 +2279,16 @@ namespace Barotrauma
                     closestDistance = distance;
                 }
             }
-            
+
+            return DamageLimb(worldPosition, hitLimb, damageType, amount, bleedingAmount, stun, playSound, attackForce, attacker);
+        }
+
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, Character attacker = null)
+        {
+            if (Removed) return new AttackResult();
+
+            SetStun(stun);
+
             if (Math.Abs(attackForce) > 0.0f)
             {
                 Vector2 diff = hitLimb.WorldPosition - worldPosition;

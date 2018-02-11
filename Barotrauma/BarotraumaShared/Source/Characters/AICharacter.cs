@@ -79,16 +79,16 @@ namespace Barotrauma
         }
         partial void SoundUpdate(float deltaTime);
 
-        public override void AddDamage(CauseOfDeath causeOfDeath, float amount, IDamageable attacker)
+        public override void AddDamage(CauseOfDeath causeOfDeath, float amount, Character attacker)
         {
             base.AddDamage(causeOfDeath, amount, attacker);
 
             if (attacker != null) aiController.OnAttacked(attacker, amount);
         }
 
-        public override AttackResult AddDamage(IDamageable attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
+        public override AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb limb = null)
         {
-            AttackResult result = base.AddDamage(attacker, worldPosition, attack, deltaTime, playSound);
+            AttackResult result = base.ApplyAttack(attacker, worldPosition, attack, deltaTime, playSound, limb);
 
             aiController.OnAttacked(attacker, result.Damage + result.Bleeding);
 

@@ -7,12 +7,8 @@ namespace Barotrauma
     {
         public static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
 
-        const int DefaultWidth=400, DefaultHeight=250;
+        public const int DefaultWidth = 400, DefaultHeight = 250;
 
-        //public delegate bool OnClickedHandler(GUIButton button, object obj);
-        //public OnClickedHandler OnClicked;
-
-        //GUIFrame frame;
         public GUIButton[] Buttons;
 
         public static GUIComponent VisibleBox
@@ -32,7 +28,7 @@ namespace Barotrauma
         }
 
         public GUIMessageBox(string headerText, string text)
-            : this(headerText, text, new string[] {"OK"})
+            : this(headerText, text, new string[] { "OK" }, DefaultWidth, 0)
         {
             this.Buttons[0].OnClicked = Close;
         }
@@ -43,30 +39,33 @@ namespace Barotrauma
             this.Buttons[0].OnClicked = Close;
         }
 
-        public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = DefaultHeight, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null)
+        public GUIMessageBox(string headerText, string text, string[] buttons, int width = DefaultWidth, int height = 0, Alignment textAlignment = Alignment.TopLeft, GUIComponent parent = null)
             : base(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 Color.Black * 0.5f, Alignment.TopLeft, null, parent)
         {
+            int headerHeight = 30;
+
+            var frame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, "", this);
+            GUI.Style.Apply(frame, "", this);
+
             if (height == 0)
             {
-                string wrappedText = ToolBox.WrapText(text, width, GUI.Font);
+                string wrappedText = ToolBox.WrapText(text, frame.Rect.Width - frame.Padding.X - frame.Padding.Z, GUI.Font);
                 string[] lines = wrappedText.Split('\n');
                 foreach (string line in lines)
                 {
                     height += (int)GUI.Font.MeasureString(line).Y;
                 }
-                height += 220;
+                height += string.IsNullOrWhiteSpace(headerText) ? 220 : 220 - headerHeight;
             }
+            frame.Rect = new Rectangle(frame.Rect.X, GameMain.GraphicsHeight / 2 - height / 2, frame.Rect.Width, height);
 
-            var frame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, "", this);
-            GUI.Style.Apply(frame, "", this);
-
-            var header = new GUITextBlock(new Rectangle(0, 0, 0, 30), headerText, null, null, textAlignment, "", frame, true);
+            var header = new GUITextBlock(new Rectangle(0, 0, 0, headerHeight), headerText, null, null, textAlignment, "", frame, true);
             GUI.Style.Apply(header, "", this);
 
             if (!string.IsNullOrWhiteSpace(text))
             {
-                var textBlock = new GUITextBlock(new Rectangle(0, 30, 0, height - 70), text,
+                var textBlock = new GUITextBlock(new Rectangle(0, string.IsNullOrWhiteSpace(headerText) ? 0 : headerHeight, 0, height - 70), text,
                     null, null, textAlignment, "", frame, true);
                 GUI.Style.Apply(textBlock, "", this);
             }

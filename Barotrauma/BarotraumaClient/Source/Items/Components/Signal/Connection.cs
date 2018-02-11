@@ -102,11 +102,11 @@ namespace Barotrauma.Items.Components
                 {
                     if (GameMain.Client != null)
                     {
-                        panel.Item.CreateClientEvent<ConnectionPanel>(panel);
+                        panel.Item.CreateClientEvent(panel);
                     }
                     else if (GameMain.Server != null)
                     {
-                        panel.Item.CreateServerEvent<ConnectionPanel>(panel);
+                        panel.Item.CreateServerEvent(panel);
                     }
 
                     draggingConnected = null;
