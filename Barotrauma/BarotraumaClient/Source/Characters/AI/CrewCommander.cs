@@ -40,6 +40,10 @@ namespace Barotrauma
         public CrewCommander(CrewManager crewManager)
         {
             this.crewManager = crewManager;
+            reportButtonContainer = new GUIListBox(new Rectangle(GameMain.GraphicsWidth - 180, 200, 180, GameMain.GraphicsHeight), null, Alignment.TopRight, null);
+            reportButtonContainer.Color = Color.Transparent;
+            reportButtonContainer.Spacing = 50;
+            reportButtonContainer.HideChildrenOutsideFrame = false;
         }
 
         public void ToggleGUIFrame()
@@ -65,10 +69,6 @@ namespace Barotrauma
             frame = new GUIFrame(new Rectangle(200,0,0,0), Color.Black * 0.6f, null);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
 
-            reportButtonContainer = new GUIListBox(new Rectangle(GameMain.GraphicsWidth - 180, 200, 180, GameMain.GraphicsHeight), null, Alignment.TopRight, null);
-            reportButtonContainer.Color = Color.Transparent;
-            reportButtonContainer.Spacing = 50;
-            reportButtonContainer.HideChildrenOutsideFrame = false;
 
             generalOrderFrame = new GUIFrame(new Rectangle(-(int)(frame.Padding.X + frame.Rect.X), -(int)frame.Padding.Y, 200, GameMain.GraphicsHeight), Color.Black * 0.6f, null, frame);
             generalOrderFrame.Padding = new Vector4(10.0f, 100.0f, 10.0f, 100.0f);

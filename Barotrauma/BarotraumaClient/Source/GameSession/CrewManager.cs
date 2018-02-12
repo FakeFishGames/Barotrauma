@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -98,12 +99,12 @@ namespace Barotrauma
 
         public List<Character> GetCharacters()
         {
-            return characters;
+            return new List<Character>(characters);
         }
 
         public List<CharacterInfo> GetCharacterInfos()
         {
-            return characterInfos;
+            return new List<CharacterInfo>(characterInfos);
         }
 
         public bool SelectCharacter(GUIComponent component, object selection)
@@ -155,7 +156,18 @@ namespace Barotrauma
             conversationTimer -= deltaTime;
             if (conversationTimer <= 0.0f)
             {
-                pendingConversationLines.AddRange(NPCConversation.CreateRandom(GameMain.GameSession.CrewManager.GetCharacters().ToList()));
+                List<Character> availableSpeakers = GameMain.GameSession.CrewManager.GetCharacters();
+                availableSpeakers.RemoveAll(c => !(c.AIController is HumanAIController) || c.IsDead || !c.CanSpeak);
+                if (GameMain.Server != null)
+                {
+                    foreach (Client client in GameMain.Server.ConnectedClients)
+                    {
+                        if (client.Character != null) availableSpeakers.Remove(client.Character);
+                    }
+                    if (GameMain.Server.Character != null) availableSpeakers.Remove(GameMain.Server.Character);
+                }
+                
+                pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers));
                 conversationTimer = Rand.Range(ConversationIntervalMin, ConversationIntervalMax);
             }
 
@@ -180,13 +192,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        private void CreateConversation()
-        {
-            pendingConversationLines.AddRange(NPCConversation.CreateRandom(GameMain.GameSession.CrewManager.GetCharacters().ToList()));
-            
-        }
-
+        
         public bool AddOrder(Order order, float fadeOutTime)
         {
             if (order.TargetEntity == null)
