@@ -68,6 +68,11 @@ namespace Barotrauma
         {
             frame = new GUIFrame(new Rectangle(200,0,0,0), Color.Black * 0.6f, null);
             frame.Padding = new Vector4(200.0f, 100.0f, 200.0f, 100.0f);
+
+            reportButtonContainer = new GUIListBox(new Rectangle(GameMain.GraphicsWidth - 180, 200, 180, GameMain.GraphicsHeight), null, Alignment.TopRight, null);
+            reportButtonContainer.Color = Color.Transparent;
+            reportButtonContainer.Spacing = 50;
+            reportButtonContainer.HideChildrenOutsideFrame = false;
             
             generalOrderFrame = new GUIFrame(new Rectangle(-(int)(frame.Padding.X + frame.Rect.X), -(int)frame.Padding.Y, 200, GameMain.GraphicsHeight), Color.Black * 0.6f, null, frame);
             generalOrderFrame.Padding = new Vector4(10.0f, 100.0f, 10.0f, 100.0f);
@@ -255,22 +260,14 @@ namespace Barotrauma
 
                 bool hasHeadset = false;
                 bool headSetInRange = false;
-                var radioItem = character.Inventory.Items.FirstOrDefault(it => it != null && it.GetComponent<WifiComponent>() != null);
-                if (radioItem != null && character.HasEquippedItem(radioItem))
+                var targetRadio = GetHeadset(character, true);
+                if (targetRadio != null && targetRadio.CanTransmit())
                 {
-                    var radio = radioItem.GetComponent<WifiComponent>();
-                    if (radio.CanTransmit())
+                    hasHeadset = true;
+                    if (Character.Controlled != null && Character.Controlled.Inventory != null)
                     {
-                        hasHeadset = true;
-                        if (Character.Controlled?.Inventory != null)
-                        {
-                            var ownRadioItem = Character.Controlled.Inventory.Items.FirstOrDefault(it => it != null && it.GetComponent<WifiComponent>() != null);
-                            if (ownRadioItem != null && Character.Controlled.HasEquippedItem(ownRadioItem))
-                            {
-                                var ownRadio = ownRadioItem.GetComponent<WifiComponent>();
-                                if (radio.CanReceive(ownRadio)) headSetInRange = true;                                
-                            }
-                        }
+                        var ownRadio = GetHeadset(Character.Controlled, true);
+                        if (ownRadio != null && targetRadio.CanReceive(ownRadio)) headSetInRange = true;
                     }
                 }
 
@@ -298,6 +295,17 @@ namespace Barotrauma
             new GUIFrame(new Rectangle(0, 0, characterList.Rect.Width / 2, 0), null, characterList);
 
             characterList.BarScroll = 0.5f;
+        }
+
+        private WifiComponent GetHeadset(Character character, bool requireEquipped)
+        {
+            if (character?.Inventory == null) return null;
+
+            var radioItem = character.Inventory.Items.FirstOrDefault(it => it != null && it.GetComponent<WifiComponent>() != null);
+            if (radioItem == null) return null;
+            if (requireEquipped && !character.HasEquippedItem(radioItem)) return null;
+            
+            return  radioItem.GetComponent<WifiComponent>();
         }
 
         public void SelectCharacter(Character character)
@@ -457,7 +465,14 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (Character.Controlled?.CurrentHull != null)
+            bool hasRadio = false;
+            if (Character.Controlled?.CurrentHull != null && Character.Controlled.CanSpeak)
+            {
+                WifiComponent radio = GetHeadset(Character.Controlled, true);
+                hasRadio = radio != null && radio.CanTransmit();
+            }
+
+            if (hasRadio)
             {
                 bool hasFires = Character.Controlled.CurrentHull.FireSources.Count > 0;
                 ToggleReportButton("reportfire", hasFires);
@@ -468,6 +483,7 @@ namespace Barotrauma
                 bool hasIntruders = Character.CharacterList.Any(c => 
                     c.CurrentHull == Character.Controlled.CurrentHull && !c.IsDead &&
                     (c.AIController is EnemyAIController || c.TeamID != Character.Controlled.TeamID));
+
                 ToggleReportButton("reportintruders", hasIntruders);
 
                 if (reportButtonContainer.CountChildren > 0)
@@ -485,10 +501,17 @@ namespace Barotrauma
             foreach (GUIComponent child in generalOrderFrame.children)
             {
                 GUIButton orderButton = child as GUIButton;
-                if (orderButton != null) orderButton.Enabled = Character.Controlled?.CurrentHull != null;
+                if (orderButton == null) continue;
+                if (Character.Controlled == null || Character.Controlled.CurrentHull == null || !Character.Controlled.CanSpeak)
+                {
+                    orderButton.Enabled = false;
+                }
+                else
+                {
+                    WifiComponent radio = GetHeadset(Character.Controlled, true);
+                    orderButton.Enabled = radio != null && radio.CanTransmit();
+                }
             }
-
-
 
             frame.Update(deltaTime);
             if (characterList.Selected != null && autoScrolling)
