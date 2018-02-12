@@ -23,6 +23,8 @@ namespace Barotrauma
         public CrewManager CrewManager;
 #endif
 
+        public double RoundStartTime;
+
         private Mission currentMission;
 
         public Mission Mission
@@ -181,7 +183,6 @@ namespace Barotrauma
 #if CLIENT
             GameMain.LightManager.LosEnabled = GameMain.NetworkMember == null || GameMain.NetworkMember.CharacterInfo != null;
 #endif
-                        
             this.level = level;
 
             if (submarine == null)
@@ -228,6 +229,8 @@ namespace Barotrauma
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
             SoundPlayer.SwitchMusic();
 #endif
+
+            RoundStartTime = Timing.TotalTime;
         }
 
         public void EndRound(string endMessage)
