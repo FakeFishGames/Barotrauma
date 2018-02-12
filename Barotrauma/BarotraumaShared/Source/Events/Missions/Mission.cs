@@ -80,10 +80,10 @@ namespace Barotrauma
             
             for (int n = 0; n < 2; n++)
             {
-                Description = Description.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                if (Description != null) Description = Description.Replace("[location" + (n + 1) + "]", locations[n].Name);
 
-                SuccessMessage = SuccessMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                FailureMessage = FailureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                if (SuccessMessage != null) SuccessMessage = SuccessMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                if (FailureMessage != null) FailureMessage = FailureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
 
                 for (int m = 0; m < Messages.Count; m++)
                 {
@@ -107,7 +107,7 @@ namespace Barotrauma
             }
             else
             {
-                matchingMissions = MissionPrefab.List.FindAll(m => m.Name.ToString().ToLowerInvariant().Replace("mission", "") == missionType);
+                matchingMissions = MissionPrefab.List.FindAll(m => m.TypeName.ToString().ToLowerInvariant().Replace("mission", "") == missionType);
             }
             
             matchingMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);
