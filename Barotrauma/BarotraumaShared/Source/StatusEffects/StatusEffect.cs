@@ -26,7 +26,7 @@ namespace Barotrauma
         }
 
         private TargetType targetTypes;
-        private HashSet<string> targetNames;
+        protected HashSet<string> targetNames;
 
         private List<RelatedItem> requiredItems;
 
@@ -278,19 +278,38 @@ namespace Barotrauma
 
             if (targetNames != null && !targetNames.Contains(target.Name)) return;
 
-            if (duration > 0.0f && !Stackable && DurationList.Find(d => d.Parent == this && d.Entity == entity && d.Targets.Contains(target)) != null) return;
+            if (duration > 0.0f && !Stackable)
+            {
+                //ignore if not stackable and there's already an identical statuseffect
+                if (DurationList.Any(d => d.Parent == this && d.Entity == entity && d.Targets.Count == 1 && d.Targets[0] == target)) return;
+            }
 
             List<ISerializableEntity> targets = new List<ISerializableEntity>();
             targets.Add(target);
 
             if (!HasRequiredConditions(targets)) return;
 
-            Apply(type, deltaTime, entity, targets);
+            Apply(deltaTime, entity, targets);
         }
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
-            if (this.type != type || !HasRequiredItems(entity) || !HasRequiredConditions(targets)) return;
+            if (this.type != type) return;
+
+            //remove invalid targets
+            if (targetNames != null)
+            {
+                targets.RemoveAll(t => !targetNames.Contains(t.Name));
+                if (targets.Count == 0) return;
+            }
+
+            if (!HasRequiredItems(entity) || !HasRequiredConditions(targets)) return;
+
+            if (duration > 0.0f && !Stackable)
+            {
+                //ignore if not stackable and there's already an identical statuseffect
+                if (DurationList.Any(d => d.Parent == this && d.Entity == entity && d.Targets.SequenceEqual(targets))) return;
+            }
 
             Apply(deltaTime, entity, targets);
         }
