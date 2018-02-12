@@ -95,7 +95,16 @@ namespace Barotrauma
             spriteBatch.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             
             waterEffect.Parameters["xTexture"].SetValue(texture);
-            waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
+
+            if (blurAmount > 0.0f)
+            {
+                waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShaderBlurred"];
+                waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
+            }
+            else
+            {   waterEffect.CurrentTechnique = waterEffect.Techniques["WaterShader"];
+                waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
+            }
 
             Vector2 offset = WavePos;
             if (cam != null)
@@ -106,9 +115,7 @@ namespace Barotrauma
             }
             offset.Y = -offset.Y;
             waterEffect.Parameters["xUvOffset"].SetValue(new Vector2((offset.X / GameMain.GraphicsWidth) % 1.0f, (offset.Y / GameMain.GraphicsHeight) % 1.0f));
-
             waterEffect.Parameters["xBumpPos"].SetValue(Vector2.Zero);
-            waterEffect.Parameters["xBlurDistance"].SetValue(blurAmount);
 
             if (cam != null)
             {
