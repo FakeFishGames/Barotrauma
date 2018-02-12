@@ -7,8 +7,6 @@ namespace Barotrauma
 {
     partial class GameScreen : Screen
     {
-        private Color waterColor = new Color(0.75f, 0.8f, 0.9f, 1.0f);
-
         private BlurEffect lightBlur;
         
         readonly RenderTarget2D renderTargetBackground;
@@ -167,7 +165,7 @@ namespace Barotrauma
 			graphics.SetRenderTarget(renderTargetWater);
 
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
-			spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), waterColor);
+            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);// waterColor);
 			spriteBatch.End();
 
 			//draw alpha blended particles that are inside a sub
@@ -194,20 +192,23 @@ namespace Barotrauma
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.None, null, null, cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
 			spriteBatch.End();
-
-			graphics.SetRenderTarget(renderTargetFinal);
-			Hull.renderer.RenderBack(spriteBatch, renderTargetWater);
-
-			Array.Clear(Hull.renderer.vertices, 0, Hull.renderer.vertices.Length);
-			Hull.renderer.PositionInBuffer = 0;
-			foreach (Hull hull in Hull.hullList)
+            
+            graphics.DepthStencilState = DepthStencilState.DepthRead;
+            graphics.SetRenderTarget(renderTargetFinal);
+            
+            Hull.renderer.ResetBuffers();
+            foreach (Hull hull in Hull.hullList)
 			{
-				hull.Render(graphics, cam);
+				hull.UpdateVertices(graphics, cam);
 			}
 
-			Hull.renderer.Render(graphics, cam, renderTarget, Cam.ShaderTransform);
+            Hull.renderer.RenderWater(spriteBatch, renderTargetWater, cam);
 
-			spriteBatch.Begin(SpriteSortMode.Immediate,
+
+			Hull.renderer.RenderAir(graphics, cam, renderTarget, Cam.ShaderTransform);
+            graphics.DepthStencilState = DepthStencilState.None;
+
+            spriteBatch.Begin(SpriteSortMode.Immediate,
 				BlendState.NonPremultiplied, SamplerState.LinearWrap,
 				null, null,
 				damageEffect,

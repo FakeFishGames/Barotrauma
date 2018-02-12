@@ -32,11 +32,11 @@ namespace Barotrauma
         public const float OxygenDetoriationSpeed = 0.3f;
         public const float OxygenConsumptionSpeed = 1000.0f;
 
-        public const int WaveWidth = 16;
-        const float WaveStiffness = 0.003f;
-        const float WaveSpread = 0.05f;
-        const float WaveDampening = 0.01f;
-
+        public const int WaveWidth = 32;
+        public static float WaveStiffness = 0.02f;
+        public static float WaveSpread = 0.05f;
+        public static float WaveDampening = 0.05f;
+        
         //how much excess water the room can contain  (= more than the volume of the room)
         public const float MaxCompress = 10000f;
         
@@ -206,7 +206,7 @@ namespace Barotrauma
 
             properties = SerializableProperty.GetProperties(this);
 
-            int arraySize = (rectangle.Width / WaveWidth + 1);
+            int arraySize = (int)Math.Ceiling((float)rectangle.Width / WaveWidth + 1);
             waveY = new float[arraySize];
             waveVel = new float[arraySize];
 
@@ -439,12 +439,14 @@ namespace Barotrauma
 
                 if (surfaceY + waveY[i] > rect.Y)
                 {
-                    waveY[i] -= (surfaceY + waveY[i]) - rect.Y;
+                    float excess = (surfaceY + waveY[i]) - rect.Y;
+                    waveY[i] -= excess;
                     waveVel[i] = waveVel[i] * -0.5f;
                 }
                 else if (surfaceY + waveY[i] < rect.Y - rect.Height)
                 {
-                    waveY[i] -= (surfaceY + waveY[i]) - (rect.Y - rect.Height);
+                    float excess = (surfaceY + waveY[i]) - (rect.Y - rect.Height);
+                    waveY[i] -= excess;
                     waveVel[i] = waveVel[i] * -0.5f;
                 }
 
@@ -458,17 +460,52 @@ namespace Barotrauma
                 for (int i = 1; i < waveY.Length - 1; i++)
                 {
                     leftDelta[i] = WaveSpread * (waveY[i] - waveY[i - 1]);
-                    waveVel[i - 1] = waveVel[i - 1] + leftDelta[i];
+                    waveVel[i - 1] += leftDelta[i];
 
                     rightDelta[i] = WaveSpread * (waveY[i] - waveY[i + 1]);
-                    waveVel[i + 1] = waveVel[i + 1] + rightDelta[i];
+                    waveVel[i + 1] += rightDelta[i];
                 }
 
                 for (int i = 1; i < waveY.Length - 1; i++)
                 {
-                    waveY[i - 1] = waveY[i - 1] + leftDelta[i];
-                    waveY[i + 1] = waveY[i + 1] + rightDelta[i];
+                    waveY[i - 1] += leftDelta[i];
+                    waveY[i + 1] += rightDelta[i];
                 }
+            }
+
+            foreach (Gap gap in ConnectedGaps)
+            {
+                if (!gap.IsRoomToRoom || !gap.IsHorizontal || this != gap.linkedTo[0] as Hull || gap.Open <= 0.0f) continue;
+
+                if (surfaceY > gap.Rect.Y || surfaceY < gap.Rect.Y - gap.Rect.Height) continue;
+
+                Hull hull2 = (Hull)gap.linkedTo[1];
+
+                float otherSurfaceY = hull2.rect.Y - hull2.rect.Height + hull2.WaterVolume / hull2.rect.Width;
+                if (otherSurfaceY > gap.Rect.Y || otherSurfaceY < gap.Rect.Y - gap.Rect.Height) continue;
+
+                float surfaceDiff = (surfaceY - otherSurfaceY) * gap.Open;
+                for (int j = 0; j < 2; j++)
+                {
+                    int i = waveY.Length - 1;
+
+                    leftDelta[i] = WaveSpread * (waveY[i] - waveY[i - 1]);
+                    waveVel[i - 1] += leftDelta[i];
+
+                    rightDelta[i] = WaveSpread * (waveY[i] - hull2.waveY[0] + surfaceDiff);
+                    hull2.waveVel[0] += rightDelta[i];
+
+                    i = 0;
+
+                    hull2.leftDelta[i] = WaveSpread * (hull2.waveY[i] - waveY[waveY.Length - 1] - surfaceDiff);
+                    waveVel[waveVel.Length - 1] += hull2.leftDelta[i];
+
+                    hull2.rightDelta[i] = WaveSpread * (hull2.waveY[i] - hull2.waveY[i + 1]);
+                    hull2.waveVel[i + 1] += hull2.rightDelta[i];
+                }
+
+                hull2.waveY[0] += rightDelta[waveY.Length - 1];
+                waveY[waveY.Length - 1] += hull2.leftDelta[0];
             }
 
             //interpolate the position of the rendered surface towards the "target surface"
