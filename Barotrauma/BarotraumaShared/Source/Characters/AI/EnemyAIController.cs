@@ -43,6 +43,10 @@ namespace Barotrauma
         private bool attachToSub;
         private bool attachToWalls;
 
+        private float minDeattachSpeed = 3.0f, maxDeattachSpeed = 10.0f;
+
+        private float deattachTimer;
+
         private List<Joint> attachJoints = new List<Joint>();
         
         //a point in a wall which the Character is currently targeting
@@ -125,6 +129,8 @@ namespace Barotrauma
 
             steeringManager = outsideSteering;
 
+            c.OnDeath += OnCharacterDeath;
+
             State = AIState.None;
         }
 
@@ -187,12 +193,28 @@ namespace Barotrauma
                 {
                     State = (targetValue < 0.0f || Character.Health < fleeHealthThreshold) ? AIState.Escape : AIState.Attack;
                 }
-                //if (coolDownTimer >= 0.0f) return;
             }
 
             if (Character.Submarine == null)
             {
                 steeringManager = outsideSteering;
+                deattachTimer -= deltaTime;
+                if (attachedToBody != null && deattachTimer < 0.0f)
+                {
+                    Entity entity = attachedToBody.UserData as Entity;
+                    Submarine attachedSub = entity is Submarine ? (Submarine)entity : entity?.Submarine;
+                    if (attachedSub != null)
+                    {
+                        float velocityFactor = (attachedSub.Velocity.X - minDeattachSpeed) / (maxDeattachSpeed - minDeattachSpeed);
+                        if (Rand.Range(0.0f, 1.0f) < velocityFactor)
+                        {
+                            DeattachFromBody();
+                            coolDownTimer = 5.0f;
+                        }
+                    }
+
+                    deattachTimer = 5.0f;
+                }
             }
             else
             {
@@ -341,6 +363,7 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
+            DeattachFromBody();
             SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
             SteeringManager.SteeringWander(1.0f);
             SteeringManager.SteeringAvoid(deltaTime, 2f);
@@ -454,6 +477,7 @@ namespace Barotrauma
                     if (!Character.IsKeyDown(InputType.Attack)) return;
                 }
             }
+
             if (attackLimb != null)
             {
                 steeringManager.SteeringSeek(attackSimPosition - (attackLimb.SimPosition - SimPosition), 3);
@@ -894,6 +918,12 @@ namespace Barotrauma
             }
 
             return holeCount >= requiredHoleCount;
+        }
+
+        private void OnCharacterDeath(Character character, CauseOfDeath causeOfDeath)
+        {
+            DeattachFromBody();
+            character.OnDeath -= OnCharacterDeath;
         }
     }
 
