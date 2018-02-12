@@ -5,6 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
+#if CLIENT
+using Barotrauma.Particles;
+#endif
+
 namespace Barotrauma.Items.Components
 {
     class RepairTool : ItemComponent
@@ -45,18 +49,19 @@ namespace Barotrauma.Items.Components
             get; set;
         }
 
-        [Serialize("", false)]
-        public string Particles
+#if CLIENT
+        public ParticleEmitter ParticleEmitter
         {
-            get { return particles; }
-            set { particles = value; }
+            get;
+            private set;
         }
 
-        [Serialize(0.0f, false)]
-        public float ParticleSpeed
-        {
-            get; set;
-        }
+        private List<ParticleEmitter> ParticleEmitterHitStructure = new List<ParticleEmitter>();
+
+        private List<ParticleEmitter> ParticleEmitterHitItem = new List<ParticleEmitter>();
+
+        private List<ParticleEmitter> ParticleEmitterHitCharacter = new List<ParticleEmitter>();
+#endif
 
         [Serialize("0.0,0.0", false)]
         public Vector2 BarrelPos
@@ -89,6 +94,20 @@ namespace Barotrauma.Items.Components
                     case "fixable":
                         fixableEntities.Add(subElement.Attribute("name").Value);
                         break;
+#if CLIENT
+                    case "particleemitter":
+                        ParticleEmitter = new ParticleEmitter(subElement);
+                        break;
+                    case "particleemitterhititem":
+                        ParticleEmitterHitItem.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "particleemitterhitstructure":
+                        ParticleEmitterHitStructure.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "particleemitterhitcharacter":
+                        ParticleEmitterHitCharacter.Add(new ParticleEmitter(subElement));
+                        break;
+#endif
                 }
             }
         }
@@ -144,8 +163,10 @@ namespace Barotrauma.Items.Components
             }
 
 #if CLIENT
-            GameMain.ParticleManager.CreateParticle(particles, item.WorldPosition + TransformedBarrelPos,
-                -item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi), ParticleSpeed);
+            float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+            ParticleEmitter.Emit(
+                deltaTime, item.WorldPosition + TransformedBarrelPos, 
+                item.CurrentHull, particleAngle, -particleAngle);
 #endif
           
             return true;
@@ -191,10 +212,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
                 Vector2 progressBarPos = targetStructure.SectionPosition(sectionIndex);
-                if (targetStructure.Submarine != null)
-                {
-                    progressBarPos += targetStructure.Submarine.DrawPosition;
-                }
+                if (targetStructure.Submarine != null) progressBarPos += targetStructure.Submarine.DrawPosition;
 
                 var progressBar = user.UpdateHUDProgressBar(
                     targetStructure,
@@ -203,6 +221,14 @@ namespace Barotrauma.Items.Components
                     Color.Red, Color.Green);
 
                 if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
+
+                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                if (targetStructure.Submarine != null) particlePos += targetStructure.Submarine.DrawPosition; 
+                foreach (var emitter in ParticleEmitterHitStructure)
+                {
+                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                }
 #endif
 
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess,user);
@@ -223,14 +249,49 @@ namespace Barotrauma.Items.Components
             }
             else if ((targetLimb = (targetBody.UserData as Limb)) != null)
             {
-                targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);                
+                targetLimb.character.AddDamage(CauseOfDeath.Damage, -LimbFixAmount * degreeOfSuccess, user);
+
+#if CLIENT
+                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                if (targetLimb.character.Submarine != null) particlePos += targetLimb.character.Submarine.DrawPosition; 
+                foreach (var emitter in ParticleEmitterHitCharacter)
+                {
+                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                }
+#endif
             }
             else if ((targetItem = (targetBody.UserData as Item)) != null)
             {
                 targetItem.IsHighlighted = true;
 
-                ApplyStatusEffects(ActionType.OnUse, targetItem.AllPropertyObjects, deltaTime);
-            }        
+                float prevCondition = targetItem.Condition;
+
+                ApplyStatusEffectsOnTarget(deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
+
+#if CLIENT
+                if (item.Condition != prevCondition)
+                {
+                    Vector2 progressBarPos = targetItem.DrawPosition;
+
+                    var progressBar = user.UpdateHUDProgressBar(
+                        targetItem,
+                        progressBarPos,
+                        targetItem.Condition / 100.0f,
+                        Color.Red, Color.Green);
+
+                    if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
+
+                    Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                    if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition; 
+                    foreach (var emitter in ParticleEmitterHitItem)
+                    {
+                        float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                        emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                    }
+                }
+#endif
+            }
         }
         
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
@@ -266,6 +327,22 @@ namespace Barotrauma.Items.Components
             Use(deltaTime, character);
 
             return leak.Open <= 0.0f;
+        }
+
+        private void ApplyStatusEffectsOnTarget(float deltaTime, ActionType actionType, List<ISerializableEntity> targets)
+        {
+            if (statusEffectLists == null) return;
+
+            List<StatusEffect> statusEffects;
+            if (!statusEffectLists.TryGetValue(actionType, out statusEffects)) return;
+
+            foreach (StatusEffect effect in statusEffects)
+            {
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.UseTarget))
+                {
+                    effect.Apply(actionType, deltaTime, item, targets);
+                }
+            }
         }
     }
 }
