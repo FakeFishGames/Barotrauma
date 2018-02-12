@@ -1,4 +1,159 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.0.0
+---------------------------------------------------------------------------------------------------------
+
+- Made ambient lighting much darker and added a subtle glow around the player.
+- Made partially damaged walls leak much more slowly.
+- Nerfed wall damage. Crawlers, mantises, threshers and coelanths now take much more time to tear through 
+the hull and collisions with the level cause less damage.
+- Moved a bunch of hard-coded texts to an xml file "Content/Texts.xml". Full translation support is still 
+in progress, but now it should be possible to translate most of the in-game texts without recompiling the game.
+- Optimized rendering.
+- More accurate endworm attack hit detection.
+- Players can only see the names of characters that are in their field of view.
+- Fixed submarines bouncing off monsters and other submarines that are laying against the ocean floor.
+- Characters can be crushed between submarines and ice walls.
+- Item names can be changed without breaking everything as long as the original name is included as an
+alias of the item.
+- Console command arguments can be autocompleted by hitting tab.
+- Added a console command for automatic hull generation.
+- Added a console command for killing a character.
+- FPS counter can be enabled separately from DebugDraw.
+- Option to display lighting in the submarine editor.
+- Added a submarine preview window that displays a preview image and some extra information of the subs.
+- Option to configure which content packages a submarine is compatible with.
+- Names and health bars fade out when the cursor is not being hovered near the character.
+- Added spark and smoke particle effects when welding or cutting something.
+- Welding or cutting a door displays its health.
+- Added a button for forcing the controlled character into ragdoll mode.
+- Option to grab onto the torso of a dead/unconscious character.
+- Dead/unconscious characters can be dragged up ladders.
+- Improved CPR animations.
+- Doing CPR on bleeding characters causes them to take damage.
+- Characters can fall through holes in floors.
+- Players can pick up corpses and eat them when controlling a monster.
+- Husks don't attack huskified humans.
+- Characters with severed limbs cannot be resurrected as a husk.
+- The humanhusk.xml config file is found based on the name instead of the file path, making it possible
+to use a custom config file without modifying the original one.
+- More footstep sound variety.
+- More gore particles!
+- Added a conditional system to status effects. Allows creating status effects that only have an effect
+when a specific condition is met (e.g. health above a specific level, charge of an item high enough).
+- Option to prevent status effects from stacking.
+- Option to make status effects cancel other status effects.
+
+Items:
+	- Added syringe guns and a bunch of new chemicals.
+	- Added ducts, switches and motion detectors.
+	- Added crowbars (can be used to open locked doors).
+	- Chemicals and explosives can be thrown.
+	- Made more items craftable and deconstructable.
+	- Added sprites for broken doors, hatches and junction boxes.
+	- Health Scanner HUD displays causes of death.
+	- Health Scanner HUD only shows the status of the visible character that the cursor is closest to 
+	prevent multiple characters from cluttering the screen
+	- Added "smallitem" tag to revolver rounds (can be placed in cabinets and pockets now).
+	- Option to determine which types of targets a projectile can stick to.
+	- Improved revolver hitscan logic.
+	- Item descriptions can be changed in the submarine editor.
+	- Characters can hold flashlights in their mouths.
+	- Added an inventory slot for ID cards.
+	- If a character is wearing an item that obscures their face, the game will either hide their name or
+	show the name that's in the ID card the character is wearing. 
+	- The owner of an ID card is stated in the description of the card.
+	- Fabricating items requires the ingredients to have a specific minimum condition (can't use 
+	already-used consumables to craft something).
+	- Deconstructing an item that's not in a full condition may prevent some deconstruction products from appearing.
+	- Optimized electricity/signal logic.
+	- Grenades can be triggered by detonators.
+	- Bought cargo spawns in containers instead of being scattered across the floor.
+	- Players can't use other items when a railgun controller is selected. Prevents accidentally firing 
+	weapons or hitting people with something while using the railguns.
+	- Item editing menus display color values as 0-255 instead of 0-1.
+	- Reactor temperature has to be critical for 30 seconds before the reactor explodes, giving the crew 
+	more time to deal with griefers or incompetent reactor operators. The reactors also have an output 
+	connection	that sends out a signal when the temperature is critical.
+
+Multiplayer additions:
+	- Added an optional "karma system". Harming other players, damaging structures and blowing up the reactor 
+	reduces karma, while repairing things causes it to increase. A too low karma level prevents the players 
+	from choosing specific jobs
+	- Clients can be given permission to use specific console commands.
+	- Client permission presets: the clients can be assigned as moderators or admins which have specific
+	pre-configured permissions. New presets can be added by editing Data/permissionpresets.xml.
+	- Option to have more than one traitor. Traitors also now get a set of code words that can be used to 
+	secretly identify other traitors.
+	- Added an option to make players spawn directly in the main submarine instead of the respawn shuttle.
+	- Keybinds are disabled when the chatbox is active. Now it's possible to use normal letter/number keys
+	as the chat hotkey without accidentally deselecting the chatbox by typing a message.
+	- Chat hotkey can also be used in the server lobby.
+	- Added a [PM] tag to private chat messages.
+	- Fixed game over/round end music not playing when a round ends.
+	- Cutting and repairing walls is included in server logs.
+
+Multiplayer bugfixes:
+	- Fixed clients getting disconnected due to desync when a new monster is spawned mid-round by a repeating
+	monster event.
+	- Fixed modified clients being able to chat while unconscious due to the lack of server-side checks.
+	- Fixed modified clients being able to disconnect locked wires due to the lack of server-side checks.
+	- Fixed chat messages being assigned to the wrong sender when their bodies have been eaten.
+	- Fixed crashing when setting a server filter while the game is refreshing the server list.
+	- Fixed wires not being dropped server-side when a player drops a connected wire without dragging it 
+	to their inventory first.
+	- Fixed 5th server being impossible to select in the server list.
+	- Improvements to character position syncing.
+	- Re-enabled logic for preventing players from using visually similar names.
+	- Fixed client-side null exception when the client is in the lobby and a round ends with the mission 
+	successfully completed.
+	- Fixed clients being able to votekick/kick/ban themselves in the server lobby.
+	- Fixed "selected mode" and "mission type" settings not being saved.
+	- Level seed randomization can be toggled on and off via the debug console.
+	- Fixed dedicated server not randomizing the submarine or game mode even if randomization is enabled.
+	- Lighting is forced back on when a client starts a round (-> can't disable lighting by using the console 
+	command before joining a server).
+
+Bugfixes:
+	- Fixed wire connections being lost when copy-pasting in the submarine editor.
+	- Fixed wire nodes being impossible to select in the wiring mode if the nodes are exactly at the same position.
+	- Fixed artifact holders being occasionally placed inside ruin doors and hatches.
+	- Fixed particles in water being drawn under ruin structures, making it seem as if plasma cutters and
+	welders weren't working.
+	- Fixed all ruin structures having a health of 100.
+	- Fixed OnActive status effects not being applied on powered items that don't require any power.
+	- Fixed damage modifiers being applied multiple times when wearing an item that takes up multiple slots.
+	Meaning that items such as the diving suit gave the players an excessive protection against damage.
+	- Messagebox overflow fixes.
+	- Fixed monsters being able to spawn right next to the spawnpoint of the sub.
+	- Fixed hulls not being linked to gaps if the center of the gap is exactly at the edge of the adjacent
+	hulls.
+	- Miscellaneous crew AI fixes.
+	- Fixes to fast projectiles going through walls.
+	- Fixed structure damage sounds not being played when a structure is fully destroyed.
+	- Fixed glass windows using wrong sound effects.
+	- Fixed carrier's light falling off when it dies.
+	- Fixed incorrect positioning of debug console question prompts.
+	- Fixed being able to use a wrench on multiple items at the same time.
+	- Fixed double-clicking items in corpses putting them in their hands instead of your own inventory.
+	- Fixed some level seeds generating a tiny enclosed cave that makes it impossible to reach the destination.
+	- Fixed opened and broken doors being ignored during waypoint generation, causing waypoint connections 
+	to go through doors which prevented AI characters from opening them.
+	- Fixed modified structure colors not being cloned.
+	- Fixed modified wall colors only being visible in the submarine editor.
+	- Fixed items being dropped when attempting to place them in an itemcontainer slot that's on a normal 
+	inventory slot.
+	- Fixed stack overflow exceptions caused by signal loops between junction boxes.
+	- Fixed submarine editor crashing when attempting to use illegal characters in the filename.
+	- Mouse clicks have to be <10 pixels apart to be considered a double click.
+	- Fixed subinventory slots going outside the screen when highlighting an item such as a metal crate.
+	- All creatures all cleared from the tutorial level to prevent any unintended monster attacks.
+	- Fixed "constructing final path failed" pathfinding errors.
+	- Fixed particles going through closed gaps (e.g. closed doors).
+	- Fixed submarines being able to enter ruins.
+	- Fixed collisions between a sub and the ruins not causing any damage to either the sub or the ruins.
+	- Whitespace is ignored when calculating MD5 hashes for files.
+
+---------------------------------------------------------------------------------------------------------
 v0.7.0.1
 ---------------------------------------------------------------------------------------------------------
 

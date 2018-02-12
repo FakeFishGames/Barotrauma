@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -22,16 +23,43 @@ namespace Barotrauma
             delay = element.GetAttributeFloat("delay", 1.0f);
         }
 
+        public override void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target)
+        {
+            if (this.type != type || !HasRequiredItems(entity)) return;
+            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Entity == entity && d.Targets.Count == 1 && d.Targets[0] == target)) return;
+
+            if (targetNames != null && !targetNames.Contains(target.Name)) return;
+
+            DelayedListElement element = new DelayedListElement
+            {
+                Parent = this,
+                StartTimer = delay,
+                Entity = entity,
+                Targets = new List<ISerializableEntity>() { target }
+            };
+
+            DelayList.Add(element);
+        }
+
         public override void Apply(ActionType type, float deltaTime, Entity entity, List<ISerializableEntity> targets)
         {
             if (this.type != type || !HasRequiredItems(entity)) return;
-            if (!base.Stackable && DelayList.Find(d => d.Parent == this && d.Entity == entity && d.Targets == targets) != null) return;
+            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Entity == entity && d.Targets.SequenceEqual(targets))) return;
 
-            DelayedListElement element = new DelayedListElement();
-            element.Parent = this;
-            element.StartTimer = delay;
-            element.Entity = entity;
-            element.Targets = targets;
+            //remove invalid targets
+            if (targetNames != null)
+            {
+                targets.RemoveAll(t => !targetNames.Contains(t.Name));
+                if (targets.Count == 0) return;
+            }
+
+            DelayedListElement element = new DelayedListElement
+            {
+                Parent = this,
+                StartTimer = delay,
+                Entity = entity,
+                Targets = targets
+            };
 
             DelayList.Add(element);
         }
