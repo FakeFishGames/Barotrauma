@@ -1739,7 +1739,7 @@ namespace Barotrauma
                 GameMain.Server.ShowNetStatsButton.ToolTip = "Turns on the netstats screen which shows the latencies and IP Addresses of connections.";
             }));
 #endif
-            commands.Add(new Command("nilmodreload", CommandType.Generic, "nilmodreload: Reloads NilMod Settings during runtime, good for tweaking mid-round!", (string[] args) =>
+            commands.Add(new Command("nilmodreload", CommandType.Generic, "nilmodreload: Reloads then saves NilMod Settings during runtime, good for tweaking mid-round!", (string[] args) =>
             {
                 //If this is a client
                 if (GameMain.Client != null)
@@ -1779,7 +1779,7 @@ namespace Barotrauma
                 GameMain.NilMod.ResetToDefault();
             }));
 
-            commands.Add(new Command("nilmodsave", CommandType.Generic, "nilmodreset: Resets NilMod Settings during runtime (Does not save), used to get default barotrauma setup.", (string[] args) =>
+            commands.Add(new Command("nilmodsave", CommandType.Generic, "nilmodsave: Saves the current NilMod settings without loading them.", (string[] args) =>
             {
                 //This is a client
                 if (GameMain.Client != null) return;

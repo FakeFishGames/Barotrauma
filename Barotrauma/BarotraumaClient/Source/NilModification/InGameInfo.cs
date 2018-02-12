@@ -940,36 +940,36 @@ namespace Barotrauma
                     case 0:     //0 - All Clients
                         ingameInfoFilterText.Text = "Filter: All Clients";
                         //Include the hosts original spawns and respawns, but only if their actually alive or controlled.
-                        filteredcharacterlist = characterlist.FindAll(cl => ((cl.client != null || (cl.IsHostCharacter && !cl.character.IsDead)) | (cl.character != null && cl.character == Character.Controlled)));
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && (cl.client != null || (cl.character != null && (cl.IsHostCharacter && !cl.character.IsDead))) | (cl.character != null && cl.character == Character.Controlled)));
                         break;
                     case 1:     //1 - Coalition Clients
                         ingameInfoFilterText.Text = "Filter: Coalition Clients";
-                        filteredcharacterlist = characterlist.FindAll(cl => ((cl.client != null || cl.IsHostCharacter) | (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 1);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && (cl.client != null || cl.IsHostCharacter) | (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 1);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 2:     //2 - Renegade Clients
                         ingameInfoFilterText.Text = "Filter: Renegade Clients";
-                        filteredcharacterlist = characterlist.FindAll(cl => ((cl.client != null || cl.IsHostCharacter) | (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 2);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && (cl.client != null || cl.IsHostCharacter) | (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 2);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 3:     //3 - Creature Clients
                         ingameInfoFilterText.Text = "Filter: Creature Clients";
-                        filteredcharacterlist = characterlist.FindAll(cl => ((cl.client != null || cl.IsHostCharacter) | (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 0);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && (cl.client != null || cl.IsHostCharacter) | (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 0);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 4:     //4 - Creature AI
                         ingameInfoFilterText.Text = "Filter: Creature AI";
-                        filteredcharacterlist = characterlist.FindAll(cl => (cl.client == null || !cl.IsHostCharacter) && (cl.character != null && cl.character != Character.Controlled) && cl.character.TeamID == 0);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && cl.client == null || !cl.IsHostCharacter) && (cl.character != null && cl.character != Character.Controlled) && (cl.character != null && cl.character.TeamID == 0));
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 5:     //4 - Human AI
                         ingameInfoFilterText.Text = "Filter: Human AI";
-                        filteredcharacterlist = characterlist.FindAll(cl => (cl.client == null || !cl.IsHostCharacter) && cl.character != Character.Controlled && cl.character.AIController is HumanAIController);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && cl.client == null || !cl.IsHostCharacter) && cl.character != Character.Controlled && (cl.character != null && cl.character.AIController is HumanAIController));
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 6:
                         ingameInfoFilterText.Text = "Filter: Player Corpses";
-                        filteredcharacterlist = characterlist.FindAll(cl => cl.character != null && (cl.character.IsRemotePlayer || cl.IsHostCharacter) && cl.character.IsDead);
+                        filteredcharacterlist = characterlist.FindAll(cl => !cl.Removed && cl.character != null && (cl.character.IsRemotePlayer || cl.IsHostCharacter) && cl.character.IsDead);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 7:
@@ -990,7 +990,7 @@ namespace Barotrauma
                     case 0:     //0 - All Clients
                         ingameInfoFilterText.Text = "Filter: Humans";
                         //Include the hosts original spawns and respawns, but only if their actually alive or controlled.
-                        filteredcharacterlist = characterlist.FindAll(cl => (cl.character.SpeciesName.ToLowerInvariant() == "human"));
+                        filteredcharacterlist = characterlist.FindAll(cl => !cl.Removed && ( cl.character.SpeciesName.ToLowerInvariant() == "human"));
                         break;
                     default:
                         ChangeFilter(filterincrement);
@@ -1006,7 +1006,7 @@ namespace Barotrauma
                     case 0:     //0 - All Clients
                         ingameInfoFilterText.Text = "Filter: Humans";
                         //Include the hosts original spawns and respawns, but only if their actually alive or controlled.
-                        filteredcharacterlist = characterlist.FindAll(cl => (cl.character.SpeciesName.ToLowerInvariant() == "human"));
+                        filteredcharacterlist = characterlist.FindAll(cl => !cl.Removed && (cl.character.SpeciesName.ToLowerInvariant() == "human"));
                         break;
 
                     default:
