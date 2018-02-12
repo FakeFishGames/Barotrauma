@@ -534,20 +534,7 @@ namespace Barotrauma.Items.Components
                 item.ApplyStatusEffect(effect, type, deltaTime, character);
             }
         }
-
-        public void ApplyStatusEffects(ActionType type, List<ISerializableEntity> targets, float deltaTime)
-        {
-            if (statusEffectLists == null) return;
-
-            List<StatusEffect> statusEffects;
-            if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
-
-            foreach (StatusEffect effect in statusEffects)
-            {
-                effect.Apply(type, deltaTime, item, targets);
-            }
-        }
-
+        
         public virtual void Load(XElement componentElement)
         {
             if (componentElement == null) return;            
