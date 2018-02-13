@@ -396,8 +396,17 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
             
-
             body.SetTransform(simPosition, rotation);
+            SetPrevTransform(simPosition, rotation);
+        }
+
+        public void SetTransformIgnoreContacts(Vector2 simPosition, float rotation)
+        {
+            System.Diagnostics.Debug.Assert(MathUtils.IsValid(simPosition));
+            System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
+            System.Diagnostics.Debug.Assert(Math.Abs(simPosition.Y) < 1000000.0f);
+            
+            body.SetTransformIgnoreContacts(ref simPosition, rotation);
             SetPrevTransform(simPosition, rotation);
         }
 

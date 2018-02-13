@@ -528,7 +528,14 @@ namespace Barotrauma
             {
                 try
                 {
-                    body.SetTransform(simPosition, rotation);
+                    if (body.Enabled)
+                    {
+                        body.SetTransform(simPosition, rotation);
+                    }
+                    else
+                    {
+                        body.SetTransformIgnoreContacts(simPosition, rotation);
+                    }
                 }
                 catch (Exception e)
                 {
