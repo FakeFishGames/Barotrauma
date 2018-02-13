@@ -137,7 +137,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    ac.HoldItem(deltaTime, item, handlePos, new Vector2(hitPos, 0.0f), aimPos, false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, aimPos, false, holdAngle);
                 }
             }
             else
@@ -233,6 +233,7 @@ namespace Barotrauma.Items.Components
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
+<<<<<<< HEAD
             Character targetCharacter = null;
             Limb targetLimb = null;
 
@@ -246,12 +247,33 @@ namespace Barotrauma.Items.Components
             {
 
                 targetCharacter = (Character)f2.Body.UserData;
+=======
+            Character targetCharacter = null;
+            Limb targetLimb = null;
+            Structure targetStructure = null;
+
+            if (f2.Body.UserData is Limb)
+            {
+                targetLimb = (Limb)f2.Body.UserData;
+                if (targetLimb.IsSevered || targetLimb.character == null) return false;
+                targetCharacter = targetLimb.character;
+            }
+            else if (f2.Body.UserData is Character)
+            {
+                targetCharacter = (Character)f2.Body.UserData;
+                targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
+            }
+            else if (f2.Body.UserData is Structure)
+            {
+                targetStructure = (Structure)f2.Body.UserData;
+>>>>>>> master
             }
             else
             {
                 return false;
             }
 
+<<<<<<< HEAD
             if (targetCharacter == picker) return false;
 
             if (attack != null)
@@ -264,6 +286,28 @@ namespace Barotrauma.Items.Components
                 {
                     attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
                 }
+=======
+            if (targetCharacter == picker) return false;
+
+            if (attack != null)
+            {
+                if (targetLimb != null)
+                {
+                    attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
+                }
+                else if (targetCharacter != null)
+                {
+                    attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
+                }
+                else if (targetStructure != null)
+                {
+                    attack.DoDamage(user, targetStructure, item.WorldPosition, 1.0f);
+                }
+                else
+                {
+                    return false;
+                }
+>>>>>>> master
             }
 
             RestoreCollision();
@@ -271,20 +315,35 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.Client != null) return true;
 
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
             {
+<<<<<<< HEAD
                 GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, targetCharacter.ID });
 
                 string logStr = picker?.Name + " used " + item.Name;
+=======
+                GameMain.Server.CreateEntityEvent(item, new object[] { Networking.NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, targetCharacter.ID });
+
+                string logStr = picker?.LogName + " used " + item.Name;
+>>>>>>> master
                 if (item.ContainedItems != null && item.ContainedItems.Length > 0)
                 {
                     logStr += "(" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
                 }
+<<<<<<< HEAD
                 logStr += " on " + targetCharacter + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
             }
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, targetLimb.character);
+=======
+                logStr += " on " + targetCharacter.LogName + ".";
+                Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
+            }
+            
+            if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter != null ? targetCharacter : null);
+>>>>>>> master
 
             return true;
         }

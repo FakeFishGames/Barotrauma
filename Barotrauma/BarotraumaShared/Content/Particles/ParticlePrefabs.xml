@@ -17,7 +17,7 @@
     <sprite texture="Content/Particles/spatter.png" sourcerect="128,0,128,128"/>
     <sprite texture="Content/Particles/spatter.png" sourcerect="0,128,128,128"/>
   </watersplash>
-
+  
   <mist
     startsizemin="0.4,0.4" startsizemax="0.5,0.5"
     sizechangemin="0.25,0.25" sizechangemax="0.3,0.3"
@@ -29,6 +29,44 @@
     velocitychange="0.0, -0.05">
     <sprite texture="Content/Particles/spatter.png" sourcerect="128,128,128,128"/>
   </mist>
+
+  <waterdrop
+    lifetime="5"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="0"
+    rotatetodirection="True"
+    drag="0"
+    waterdrag="0.3"
+    velocitychange="0,-9.8"
+    velocitychangewater="0,-5"
+    collisionradius="10"
+    collideswithwalls="True"
+    deleteoncollision="True"
+    friction="0.5"
+    restitution="0.2"
+    startsizemin="0.4,0.2"
+    startsizemax="0.4,0.2"
+    sizechangemin="-0.02,-0.02"
+    sizechangemax="-0.02,-0.02"
+    growtime="0.1"
+    startcolor="1,1,1,1"
+    startalpha="0.5"
+    colorchange="0,0,0,-0.3"
+    drawtarget="Air"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True">
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="192,96,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,96,32,32"/>
+  </waterdrop>
 
   <dustcloud
     startsizemin="0.8,0.8" startsizemax="1.0,1.0"
@@ -82,6 +120,121 @@
     <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
   </waterblood>
 
+  <bloodtrail
+    lifetime="0.5"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0.8"
+    velocitychange="0,0"
+    collisionradius="30"
+    collideswithwalls="False"
+    deleteoncollision="False"
+    friction="0.01"
+    restitution="0.2"
+    startsizemin="0.6,0.6"
+    startsizemax="1,1"
+    sizechangemin="0.2,0.2"
+    sizechangemax="0.5,0.5"
+    growtime="0.05"
+    startcolor="0.4941176,0,0,0.4941176"
+    startalpha="0.5"
+    colorchange="0,0,0,-1"
+    drawtarget="Both"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True">
+    <sprite texture="Content/Particles/spatter.png" sourcerect="0,0,128,128"/>
+    <sprite texture="Content/Particles/spatter.png" sourcerect="128,0,128,128"/>
+    <sprite texture="Content/Particles/spatter.png" sourcerect="0,128,128,128"/>
+  </bloodtrail>
+  
+  <gib
+    lifetime="5"
+    angularvelocitymin="-500"
+    angularvelocitymax="500"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="True"
+    drag="0"
+    waterdrag="0.3"
+    velocitychange="0,-8"
+    velocitychangewater="0,-1"
+    collisionradius="10"
+    collideswithwalls="True"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.1"
+    startsizemin="0.3,0.3"
+    startsizemax="0.6,0.6"
+    sizechangemin="-0.1,-0.1"
+    sizechangemax="-0.1,-0.1"
+    growtime="0"
+    startcolor="0.2980392,0,0,1"
+    startalpha="1"
+    colorchange="0,0,0,-0.3"
+    drawtarget="Both"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True">
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,64,48,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="208,64,48,32"/>
+  </gib>
+
+  <heavygib
+    lifetime="1"
+    angularvelocitymin="-500"
+    angularvelocitymax="500"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0.3"
+    velocitychange="0,-8"
+    velocitychangewater="0,-1"
+    collisionradius="10"
+    collideswithwalls="True"
+    deleteoncollision="True"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.8,0.8"
+    startsizemax="1,1"
+    sizechangemin="-0.5,-0.5"
+    sizechangemax="-0.5,-0.5"
+    growtime="0"
+    startcolor="0.2980392,0,0,1"
+    startalpha="1"
+    colorchange="0,0,0,-0.3"
+    drawtarget="Both"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True">
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="0,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="32,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="64,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="96,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="128,64,32,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="160,64,48,32"/>
+    <sprite texture="Content/Particles/shrapnel.png" sourcerect="208,64,48,32"/>
+
+    <ParticleEmitter
+      particle="bloodtrail"
+      particlespersecond="10"
+      position="0,0"
+      anglemin="0"
+      anglemax="360"
+      velocitymin="10"
+      velocitymax="20"/>
+  </heavygib>
+  
   <spark
     startsizemin="0.5,0.2" startsizemax="1.0,0.7"
     sizechangemin="-0.5,-0.5" sizechangemax="-1.0,-1.0"
@@ -222,6 +375,68 @@
     <sprite texture="Content/Particles/flames.png" sourcerect="0,0,128,64" origin="0.15,0.5"/>
   </weld>
 
+  <weldspark
+    lifetime="1"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="True"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,-5"
+    velocitychangewater="0,-5"
+    collisionradius="1"
+    collideswithwalls="False"
+    deleteoncollision="True"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.2,0.2"
+    startsizemax="0.5,0.2"
+    sizechangemin="-0.5,-0.5"
+    sizechangemax="-1,-1"
+    growtime="0.1"
+    startcolor="1,0.76,0.39,1"
+    startalpha="1"
+    colorchange="0,0,0,-0.3"
+    drawtarget="Both"
+    blendstate="Additive"
+    animduration="1"
+    loopanim="True">
+    <sprite texture="Content/Particles/explosion.png" sourcerect="128,0,128,64"/>
+  </weldspark>
+
+  <weldsmoke
+    lifetime="3"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0.2"
+    velocitychangewater="0,0.2"
+    collisionradius="1"
+    collideswithwalls="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.1,0.1"
+    startsizemax="0.2,0.2"
+    sizechangemin="0.1,0.1"
+    sizechangemax="0.1,0.1"
+    growtime="0.1"
+    startcolor="1,1,1,1"
+    startalpha="1"
+    colorchange="-0.3,-0.3,-0.3,-0.2"
+    drawtarget="Both"
+    blendstate="AlphaBlend"
+    animduration="3"
+    loopanim="True">
+    <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
+  </weldsmoke>
+
   <plasma
     startsizemin="0.9,0.9" startsizemax="1.1,1.1"
     sizechange="-4.0,-0.5"
@@ -234,6 +449,68 @@
     <sprite texture="Content/Particles/flames.png" sourcerect="0,64,128,64" origin="0.15,0.5"/>
   </plasma>
 
+  <plasmaspark
+    lifetime="1"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="True"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,-2"
+    velocitychangewater="0,-2"
+    collisionradius="1"
+    collideswithwalls="False"
+    deleteoncollision="True"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.2,0.2"
+    startsizemax="0.5,0.4"
+    sizechangemin="-0.5,-0.5"
+    sizechangemax="-1,-1"
+    growtime="0.1"
+    startcolor="0.1960784,1,1,1"
+    startalpha="1"
+    colorchange="2,-2,-3,-0.3"
+    drawtarget="Both"
+    blendstate="Additive"
+    animduration="1"
+    loopanim="True">
+    <sprite texture="Content/Particles/explosion.png" sourcerect="128,0,128,64"/>
+  </plasmaspark>
+  
+  <plasmasmoke
+    lifetime="3"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0.2"
+    velocitychangewater="0,0.2"
+    collisionradius="1"
+    collideswithwalls="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.1,0.1"
+    startsizemax="0.2,0.2"
+    sizechangemin="0.1,0.1"
+    sizechangemax="0.1,0.1"
+    growtime="0.1"
+    startcolor="1,1,1,1"
+    startalpha="1"
+    colorchange="-0.5,-0.5,-0.45,-0.2"
+    drawtarget="Both"
+    blendstate="AlphaBlend"
+    animduration="3"
+    loopanim="True">
+    <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
+  </plasmasmoke>
+
   <largeplasma
     startsizemin="0.9,3.0" startsizemax="5.0,5.0"
     sizechange="20.0,-0.5"
@@ -245,6 +522,37 @@
     velocitychange="0.0, 0.0">
     <sprite texture="Content/Particles/flames.png" sourcerect="0,64,128,64" origin="0.0,0.5"/>
   </largeplasma>
+
+  <fleshsmoke
+    lifetime="3"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0.2"
+    velocitychangewater="0,0.2"
+    collisionradius="1"
+    collideswithwalls="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.1,0.1"
+    startsizemax="0.2,0.2"
+    sizechangemin="0.1,0.1"
+    sizechangemax="0.1,0.1"
+    growtime="0.1"
+    startcolor="0.6,0.6,0.6,1"
+    startalpha="0.4"
+    colorchange="0,0,0,0"
+    drawtarget="Both"
+    blendstate="AlphaBlend"
+    animduration="3"
+    loopanim="True">
+    <animatedsprite texture="Content/Particles/Smoke.png" sourcerect="0,0,4096,4096" columns="8" rows="8" origin="0.5,0.5"/>
+  </fleshsmoke>  
   
   <extinguisher
     startsizemin="1.2,1.2" startsizemax="1.5,1.5"
@@ -314,7 +622,7 @@
     startcolor="1.0, 1.0, 1.0" startalpha="1.0"
     colorchange="0.0, 0.0, 0.0, -0.3"
     lifetime="10.0"
-    drawtarget="both"
+    drawtarget="water"
     collideswithwalls="true"
     collisionradius="10.0"
     restitution="0.2"
@@ -340,4 +648,5 @@
     <sprite texture="Content/Particles/shrapnel.png" sourcerect="224,96,32,32"/>
   </iceshards>  
   
+
 </prefabs>

@@ -20,9 +20,8 @@ namespace Barotrauma
 
         //the force of the water flow which is exerted on physics bodies
         private Vector2 flowForce;
-
         private Hull flowTargetHull;
-
+        
         private float higherSurface;
         private float lowerSurface;
         
@@ -163,8 +162,11 @@ namespace Barotrauma
                 searchPos[1] = new Vector2(rect.Center.X, rect.Y - rect.Height);
             }
 
-            hulls[0] = Hull.FindHullOld(searchPos[0], null, false);
-            hulls[1] = Hull.FindHullOld(searchPos[1], null, false);
+            for (int i = 0; i < 2; i++)
+            {
+                hulls[i] = Hull.FindHullOld(searchPos[i], null, false);
+                if (hulls[i] == null) hulls[i] = Hull.FindHullOld(searchPos[i], null, false, true);
+            }
 
             if (hulls[0] == null && hulls[1] == null) return;
 
@@ -210,69 +212,7 @@ namespace Barotrauma
 
             lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime * 5.0f);
 
-#if CLIENT
-            if (LerpedFlowForce.LengthSquared() > 20000.0f && flowTargetHull != null && flowTargetHull.WaterVolume < flowTargetHull.Volume)
-            {
-                Vector2 pos = Position;
-                if (IsHorizontal)
-                {
-                    pos.X += Math.Sign(flowForce.X);
-                    pos.Y = MathHelper.Clamp((higherSurface + lowerSurface) / 2.0f, rect.Y - rect.Height, rect.Y) + 10;
-                    
-
-                    Vector2 velocity = new Vector2(
-                        MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
-                        flowForce.Y * Rand.Range(0.5f, 0.7f));
-
-                    var particle = GameMain.ParticleManager.CreateParticle(
-                        "watersplash",
-                        (Submarine == null ? pos : pos + Submarine.Position) - Vector2.UnitY * Rand.Range(0.0f, 10.0f),
-                        velocity, 0, flowTargetHull);
-
-                    if (particle != null)
-                    {
-                        particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f), 5.0f);
-                    }
-
-                    if (Math.Abs(flowForce.X) > 300.0f)
-                    {
-                        pos.X += Math.Sign(flowForce.X) * 10.0f;
-                        pos.Y = Rand.Range(lowerSurface, rect.Y - rect.Height);
-
-                        GameMain.ParticleManager.CreateParticle(
-                          "bubbles",
-                          Submarine == null ? pos : pos + Submarine.Position,
-                          flowForce / 10.0f, 0, flowTargetHull);  
-                    }
-                }
-                else
-                {
-                    if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) return;
-
-                    pos.Y += Math.Sign(flowForce.Y) * rect.Height / 2.0f;
-                    for (int i = 0; i < rect.Width; i += (int)Rand.Range(80, 100))
-                    {
-                        pos.X = Rand.Range(rect.X, rect.X + rect.Width);
-
-                        Vector2 velocity = new Vector2(
-                            lerpedFlowForce.X * Rand.Range(0.5f, 0.7f),
-                            Math.Max(lerpedFlowForce.Y, -100.0f) * Rand.Range(0.5f, 0.7f));
-
-                        var splash = GameMain.ParticleManager.CreateParticle(
-                            "watersplash", 
-                            Submarine == null ? pos : pos + Submarine.Position,
-                            -velocity, 0, FlowTargetHull);
-
-                        if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
-
-                        GameMain.ParticleManager.CreateParticle(
-                            "bubbles", 
-                            Submarine == null ? pos : pos + Submarine.Position,
-                            flowForce / 2.0f, 0, FlowTargetHull);
-                    }
-                }
-            }
-#endif
+            EmitParticles(deltaTime);
 
             if (flowTargetHull != null && lerpedFlowForce != Vector2.Zero)
             {
@@ -309,6 +249,8 @@ namespace Barotrauma
             }
         }
 
+        partial void EmitParticles(float deltaTime);
+
         void UpdateRoomToRoom(float deltaTime)
         {
             if (linkedTo.Count < 2) return;
@@ -344,7 +286,6 @@ namespace Barotrauma
                 //water level is above the lower boundary of the gap
                 if (Math.Max(hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1], hull2.Surface + subOffset.Y + hull2.WaveY[0]) > rect.Y - size)
                 {
-
                     int dir = (hull1.Pressure > hull2.Pressure + subOffset.Y) ? 1 : -1;
 
                     //water flowing from the righthand room to the lefthand room

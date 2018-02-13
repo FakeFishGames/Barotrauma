@@ -16,7 +16,7 @@ namespace Barotrauma
     class SubmarineBody
     {
         public const float DamageDepth = -30000.0f;
-        private const float DamageMultiplier = 50.0f;
+        private const float ImpactDamageMultiplier = 10.0f;
 
         private const float Friction = 0.2f, Restitution = 0.0f;
 
@@ -389,118 +389,68 @@ namespace Barotrauma
             Limb limb = f2.Body.UserData as Limb;
             if (limb != null)
             {
-
-                bool collision = HandleLimbCollision(contact, limb);
-
-                if (collision && limb.Mass > 100.0f)
-                {
-                    Vector2 normal = Vector2.Normalize(Body.SimPosition - limb.SimPosition);
-
-                    float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f * Math.Min(limb.Mass / 200.0f, 1);
-
-                    ApplyImpact(impact, -normal, contact);
-                    foreach (Submarine dockedSub in submarine.DockedTo)
-                    {
-                        dockedSub.SubBody.ApplyImpact(impact, -normal, contact);
-                    }
-                }
-
+                bool collision = CheckLimbCollision(contact, limb);
+                if (collision) HandleLimbCollision(contact, limb);
                 return collision;
             }
 
             VoronoiCell cell = f2.Body.UserData as VoronoiCell;
             if (cell != null)
             {
-                var collisionNormal = Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center);
+                HandleLevelCollision(contact, Vector2.Normalize(ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center));
+                return true;
+            }
 
-                float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
-
-                ApplyImpact(wallImpact, -collisionNormal, contact);
-                foreach (Submarine dockedSub in submarine.DockedTo)
+            Structure structure = f2.Body.UserData as Structure;
+            if (structure != null)
+            {
+                Vector2 normal;
+                FixedArray2<Vector2> points;
+                contact.GetWorldManifold(out normal, out points);
+                if (contact.FixtureA.Body == f1.Body)
                 {
-                    dockedSub.SubBody.ApplyImpact(wallImpact, -collisionNormal, contact);
+                    normal = -normal;
                 }
 
-                Vector2 n;
-                FixedArray2<Vector2> particlePos;
-                contact.GetWorldManifold(out n, out particlePos);
-
-#if CLIENT
-                int particleAmount = (int)(wallImpact * 10.0f);
-                for (int i = 0; i < particleAmount; i++)
-                {
-                    GameMain.ParticleManager.CreateParticle("iceshards",
-                        ConvertUnits.ToDisplayUnits(particlePos[0]) + Rand.Vector(Rand.Range(1.0f, 50.0f)),
-                        Rand.Vector(Rand.Range(50.0f, 500.0f)) + Velocity);
-                }
-#endif
-
+                HandleLevelCollision(contact, normal);
                 return true;
             }
 
             Submarine otherSub = f2.Body.UserData as Submarine;
             if (otherSub != null)
             {
-                Debug.Assert(otherSub != submarine);
-
-                Vector2 normal;
-                FixedArray2<Vector2> points;
-                contact.GetWorldManifold(out normal, out points);
-                if (contact.FixtureA.Body == otherSub.SubBody.Body.FarseerBody)
-                {
-                    normal = -normal;
-                }
-
-                float thisMass = Body.Mass + submarine.DockedTo.Sum(s => s.PhysicsBody.Mass);
-                float otherMass = otherSub.PhysicsBody.Mass + otherSub.DockedTo.Sum(s => s.PhysicsBody.Mass);
-
-                float massRatio = otherMass / (thisMass + otherMass);
-
-                float impact = (Vector2.Dot(Velocity - otherSub.Velocity, normal) / 2.0f) * massRatio;
-
-                ApplyImpact(impact, normal, contact);
-                foreach (Submarine dockedSub in submarine.DockedTo)
-                {
-                    dockedSub.SubBody.ApplyImpact(impact, normal, contact);
-                }
-
+                HandleSubCollision(contact, otherSub);
                 return true;
             }
 
             return true;
         }
 
-        private bool HandleLimbCollision(Contact contact, Limb limb)
+        private bool CheckLimbCollision(Contact contact, Limb limb)
         {
             if (limb.character.Submarine != null) return false;
 
-            Vector2 normal2;
+            Vector2 contactNormal;
             FixedArray2<Vector2> points;
-            contact.GetWorldManifold(out normal2, out points);
+            contact.GetWorldManifold(out contactNormal, out points);
 
             Vector2 normalizedVel = limb.character.AnimController.Collider.LinearVelocity == Vector2.Zero ?
                 Vector2.Zero : Vector2.Normalize(limb.character.AnimController.Collider.LinearVelocity);
 
-            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - normal2);
-
+            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - contactNormal);
             Hull newHull = Hull.FindHull(targetPos, null);
 
             if (newHull == null)
             {
                 targetPos = ConvertUnits.ToDisplayUnits(points[0] + normalizedVel);
-
                 newHull = Hull.FindHull(targetPos, null);
-
                 if (newHull == null) return true;
             }
 
             var gaps = newHull.ConnectedGaps;
-
             targetPos = limb.character.WorldPosition;
-
             Gap adjacentGap = Gap.FindAdjacent(gaps, targetPos, 200.0f);
-
-            if (adjacentGap==null) return true;
+            if (adjacentGap == null) return true;
 
             var ragdoll = limb.character.AnimController;
             ragdoll.FindHull(newHull.WorldPosition, true);
@@ -508,13 +458,204 @@ namespace Barotrauma
             return false;
         }
 
+        private void HandleLimbCollision(Contact contact, Limb limb)
+        {
+            if (limb.Mass > 100.0f)
+            {
+                Vector2 normal = Vector2.Normalize(Body.SimPosition - limb.SimPosition);
+
+                float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) / 5.0f * Math.Min(limb.Mass / 200.0f, 1);
+
+                ApplyImpact(impact, -normal, contact);
+                foreach (Submarine dockedSub in submarine.DockedTo)
+                {
+                    dockedSub.SubBody.ApplyImpact(impact, -normal, contact);
+                }
+            }
+
+            //find all contacts between the limb and level walls
+            List<Contact> levelContacts = new List<Contact>();
+            ContactEdge contactEdge = limb.body.FarseerBody.ContactList;
+            while (contactEdge.Next != null)
+            {
+                if (contactEdge.Contact.Enabled &&
+                    contactEdge.Other.UserData is VoronoiCell &&
+                    contactEdge.Contact.IsTouching)
+                {
+                    levelContacts.Add(contactEdge.Contact);
+                }
+                contactEdge = contactEdge.Next;
+            }
+
+            if (levelContacts.Count == 0) return;
+
+            //if the limb is in contact with the level, apply an artifical impact to prevent the sub from bouncing on top of it
+            //not a very realistic way to handle the collisions (makes it seem as if the characters were made of reinforced concrete),
+            //but more realistic than bouncing and prevents using characters as "bumpers" that prevent all collision damage
+
+            //TODO: apply impact damage and/or gib the character that got crushed between the sub and the level?
+            Vector2 avgContactNormal = Vector2.Zero;
+            foreach (Contact levelContact in levelContacts)
+            {
+                Vector2 contactNormal;
+                FixedArray2<Vector2> temp;
+                levelContact.GetWorldManifold(out contactNormal, out temp);
+
+                //if the contact normal is pointing from the limb towards the level cell it's touching, flip the normal
+                VoronoiCell cell = levelContact.FixtureB.Body.UserData is VoronoiCell ?
+                    ((VoronoiCell)levelContact.FixtureB.Body.UserData) : ((VoronoiCell)levelContact.FixtureA.Body.UserData);
+
+                var cellDiff = ConvertUnits.ToDisplayUnits(limb.body.SimPosition) - cell.Center;
+                if (Vector2.Dot(contactNormal, cellDiff) < 0)
+                {
+                    contactNormal = -contactNormal;
+                }
+
+                avgContactNormal += contactNormal;
+
+                //apply impacts at the positions where this sub is touching the limb
+                ApplyImpact((Vector2.Dot(-Velocity, contactNormal) / 2.0f) / levelContacts.Count, contactNormal, levelContact);
+            }
+            avgContactNormal /= levelContacts.Count;
+            
+            float contactDot = Vector2.Dot(Body.LinearVelocity, -avgContactNormal);
+            if (contactDot > 0.0f)
+            {
+                Body.LinearVelocity -= Vector2.Normalize(Body.LinearVelocity) * contactDot;
+
+                float damageAmount = contactDot * Body.Mass / limb.character.Mass;
+
+                Vector2 n;
+                FixedArray2<Vector2> contactPos;
+                contact.GetWorldManifold(out n, out contactPos);
+                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, DamageType.Blunt, damageAmount, 0.0f, 0.0f, true, 0.0f);
+
+                if (limb.character.IsDead)
+                {
+                    foreach (LimbJoint limbJoint in limb.character.AnimController.LimbJoints)
+                    {
+                        if (limbJoint.IsSevered || (limbJoint.LimbA != limb && limbJoint.LimbB != limb)) continue;
+                        limb.character.AnimController.SeverLimbJoint(limbJoint);
+                    }
+                }
+            }
+        }
+
+        private void HandleLevelCollision(Contact contact, Vector2 collisionNormal)
+        {
+            float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
+
+            ApplyImpact(wallImpact, -collisionNormal, contact);
+            foreach (Submarine dockedSub in submarine.DockedTo)
+            {
+                dockedSub.SubBody.ApplyImpact(wallImpact, -collisionNormal, contact);
+            }
+
+#if CLIENT
+            Vector2 n;
+            FixedArray2<Vector2> particlePos;
+            contact.GetWorldManifold(out n, out particlePos);
+            
+            int particleAmount = (int)Math.Min(wallImpact * 10.0f, 50);
+            for (int i = 0; i < particleAmount; i++)
+            {
+                GameMain.ParticleManager.CreateParticle("iceshards",
+                    ConvertUnits.ToDisplayUnits(particlePos[0]) + Rand.Vector(Rand.Range(1.0f, 50.0f)),
+                    Rand.Vector(Rand.Range(50.0f, 500.0f)) + Velocity);
+            }
+#endif
+        }
+
+        private void HandleSubCollision(Contact contact, Submarine otherSub)
+        {
+            Debug.Assert(otherSub != submarine);
+
+            Vector2 normal;
+            FixedArray2<Vector2> points;
+            contact.GetWorldManifold(out normal, out points);
+            if (contact.FixtureA.Body == otherSub.SubBody.Body.FarseerBody)
+            {
+                normal = -normal;
+            }
+
+            float thisMass = Body.Mass + submarine.DockedTo.Sum(s => s.PhysicsBody.Mass);
+            float otherMass = otherSub.PhysicsBody.Mass + otherSub.DockedTo.Sum(s => s.PhysicsBody.Mass);
+            float massRatio = otherMass / (thisMass + otherMass);
+
+            float impact = (Vector2.Dot(Velocity - otherSub.Velocity, normal) / 2.0f) * massRatio;
+
+            //apply impact to this sub (the other sub takes care of this in its own collision callback)
+            ApplyImpact(impact, normal, contact);
+            foreach (Submarine dockedSub in submarine.DockedTo)
+            {
+                dockedSub.SubBody.ApplyImpact(impact, normal, contact);
+            }
+
+            //find all contacts between this sub and level walls
+            List<Contact> levelContacts = new List<Contact>();
+            ContactEdge contactEdge = Body.FarseerBody.ContactList;
+            while (contactEdge.Next != null)
+            {
+                if (contactEdge.Contact.Enabled &&
+                    contactEdge.Other.UserData is VoronoiCell &&
+                    contactEdge.Contact.IsTouching)
+                {
+                    levelContacts.Add(contactEdge.Contact);
+                }
+
+                contactEdge = contactEdge.Next;
+            }
+
+            if (levelContacts.Count == 0) return;
+            
+            //if this sub is in contact with the level, apply artifical impacts
+            //to both subs to prevent the other sub from bouncing on top of this one 
+            //and to fake the other sub "crushing" this one against a wall
+            Vector2 avgContactNormal = Vector2.Zero;
+            foreach (Contact levelContact in levelContacts)
+            {
+                Vector2 contactNormal;
+                FixedArray2<Vector2> temp;
+                levelContact.GetWorldManifold(out contactNormal, out temp);
+
+                //if the contact normal is pointing from the sub towards the level cell we collided with, flip the normal
+                VoronoiCell cell = levelContact.FixtureB.Body.UserData is VoronoiCell ? 
+                    ((VoronoiCell)levelContact.FixtureB.Body.UserData) : ((VoronoiCell)levelContact.FixtureA.Body.UserData);
+
+                var cellDiff = ConvertUnits.ToDisplayUnits(Body.SimPosition) - cell.Center;
+                if (Vector2.Dot(contactNormal, cellDiff) < 0)
+                {
+                    contactNormal = -contactNormal;
+                }
+
+                avgContactNormal += contactNormal;
+
+                //apply impacts at the positions where this sub is touching the level
+                ApplyImpact((Vector2.Dot(Velocity - otherSub.Velocity, contactNormal) / 2.0f) * massRatio / levelContacts.Count, contactNormal, levelContact);
+            }
+            avgContactNormal /= levelContacts.Count;
+
+            //apply an impact to the other sub
+            float contactDot = Vector2.Dot(otherSub.PhysicsBody.LinearVelocity, -avgContactNormal);
+            if (contactDot > 0.0f)
+            {
+                otherSub.PhysicsBody.LinearVelocity -= Vector2.Normalize(otherSub.PhysicsBody.LinearVelocity) * contactDot;
+
+                impact = Vector2.Dot(otherSub.Velocity, normal);
+                otherSub.SubBody.ApplyImpact(impact, normal, contact);
+                foreach (Submarine dockedSub in otherSub.DockedTo)
+                {
+                    dockedSub.SubBody.ApplyImpact(impact, normal, contact);
+                }
+            }            
+        }
+
         private void ApplyImpact(float impact, Vector2 direction, Contact contact)
         {
             if (impact < 3.0f) return;
 
             Vector2 tempNormal;
-
-            FarseerPhysics.Common.FixedArray2<Vector2> worldPoints;
+            FixedArray2<Vector2> worldPoints;
             contact.GetWorldManifold(out tempNormal, out worldPoints);
 
             Vector2 lastContactPoint = worldPoints[0];
@@ -551,8 +692,9 @@ namespace Barotrauma
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse);                
             }
 
-            var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * DamageMultiplier);
+            var damagedStructures = Explosion.RangedStructureDamage(ConvertUnits.ToDisplayUnits(lastContactPoint), impact * 50.0f, impact * ImpactDamageMultiplier);
 
+#if CLIENT
             //play a damage sound for the structure that took the most damage
             float maxDamage = 0.0f;
             Structure maxDamageStructure = null;
@@ -565,11 +707,10 @@ namespace Barotrauma
                 }
             }
 
-#if CLIENT
             if (maxDamageStructure != null)
             {
                 SoundPlayer.PlayDamageSound(
-                    DamageSoundType.StructureBlunt,
+                    "StructureBlunt",
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(lastContactPoint),
                     MathHelper.Clamp(maxDamage * 4.0f, 1000.0f, 4000.0f),

@@ -45,6 +45,8 @@ namespace Barotrauma
         public const int WallSectionSize = 96;
         public static List<Structure> WallList = new List<Structure>();
 
+        const float LeakThreshold = 0.1f;
+
         private StructurePrefab prefab;
 
         //farseer physics bodies, separated by gaps
@@ -89,6 +91,11 @@ namespace Barotrauma
             get { return prefab.Body; }
         }
 
+        public List<Body> Bodies
+        {
+            get { return bodies; }
+        }
+
         public bool CastShadow
         {
             get { return prefab.CastShadow; }
@@ -106,7 +113,7 @@ namespace Barotrauma
 
         public float Health
         {
-            get { return prefab.MaxHealth; }
+            get { return prefab.Health; }
         }
 
         public override bool DrawBelowWater
@@ -272,7 +279,13 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            return new Structure(rect, prefab, Submarine);
+            var clone = new Structure(rect, prefab, Submarine);
+            foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
+            {
+                if (!property.Value.Attributes.OfType<Editable>().Any()) continue;
+                clone.SerializableProperties[property.Key].TrySetValue(property.Value.GetValue());
+            }
+            return clone;
         }
 
         private void CreateStairBodies()
@@ -500,21 +513,15 @@ namespace Barotrauma
                 Vector2 pos = ConvertUnits.ToDisplayUnits(f2.Body.Position);
 
                 int section = FindSectionIndex(pos);
-                if (section > 0)
+                if (section > -1)
                 {
                     Vector2 normal = contact.Manifold.LocalNormal;
 
-                    float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal)*f2.Body.Mass*0.1f;
-
+                    float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal) * f2.Body.Mass * 0.1f;
                     if (impact < 10.0f) return true;
-
 #if CLIENT
-                    SoundPlayer.PlayDamageSound(DamageSoundType.StructureBlunt, impact,
-                        new Vector2(
-                            sections[section].rect.X + sections[section].rect.Width / 2, 
-                            sections[section].rect.Y - sections[section].rect.Height / 2));
+                    SoundPlayer.PlayDamageSound("StructureBlunt", impact, SectionPosition(section, true), tags: Tags);                    
 #endif
-
                     AddDamage(section, impact);                 
                 }
             }
@@ -535,7 +542,7 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
 
-            return (sections[sectionIndex].damage>=prefab.MaxHealth);
+            return (sections[sectionIndex].damage >= prefab.Health);
         }
 
         /// <summary>
@@ -545,7 +552,7 @@ namespace Barotrauma
         {
             if (sectionIndex < 0 || sectionIndex >= sections.Length) return false;
 
-            return (sections[sectionIndex].damage >= prefab.MaxHealth*0.5f);
+            return (sections[sectionIndex].damage >= prefab.Health * LeakThreshold);
         }
 
         public int SectionLength(int sectionIndex)
@@ -555,7 +562,7 @@ namespace Barotrauma
             return (isHorizontal ? sections[sectionIndex].rect.Width : sections[sectionIndex].rect.Height);
         }
 
-        public void AddDamage(int sectionIndex, float damage)
+        public void AddDamage(int sectionIndex, float damage, Character attacker = null)
         {
             if (!prefab.Body || prefab.Platform) return;
 
@@ -566,7 +573,7 @@ namespace Barotrauma
 #if CLIENT
             float particleAmount = Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f);
 
-            particleAmount = Math.Min(particleAmount + Rand.Range(-5,1), 100);
+            particleAmount = Math.Min(particleAmount + Rand.Range(-5,1), 20);
             for (int i = 0; i < particleAmount; i++)
             {
                 Vector2 particlePos = new Vector2(
@@ -580,7 +587,7 @@ namespace Barotrauma
             }
 #endif
 
-            if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage);
+            if (GameMain.Client == null) SetDamage(sectionIndex, section.damage + damage, attacker);
         }
 
         public int FindSectionIndex(Vector2 displayPos)
@@ -622,6 +629,27 @@ namespace Barotrauma
             return sectionPos;
         }
 
+        private void AdjustKarma(IDamageable attacker, float amount)
+        {
+            if (GameMain.Server != null)
+            {
+                if (Submarine == null) return;
+                if (attacker == null) return;
+                if (attacker is Character)
+                {
+                    Character attackerCharacter = attacker as Character;
+                    Barotrauma.Networking.Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
+                    if (attackerClient != null)
+                    {
+                        if (attackerCharacter.TeamID == Submarine.TeamID)
+                        {
+                            attackerClient.Karma -= amount * 0.001f;
+                        }
+                    }
+                }
+            }
+        }
+
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
             if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f);
@@ -632,27 +660,32 @@ namespace Barotrauma
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
 
-            int i = FindSectionIndex(transformedPos);
-            if (i == -1) return new AttackResult(0.0f, 0.0f);
-            
-            float damageAmount = attack.GetStructureDamage(deltaTime);
-
-            AddDamage(i, damageAmount);
+            float damageAmount = 0.0f;
+            for (int i = 0; i < SectionCount; i++)
+            {
+                if (Vector2.DistanceSquared(SectionPosition(i, true), worldPosition) <= attack.DamageRange * attack.DamageRange)
+                {
+                    damageAmount = attack.GetStructureDamage(deltaTime);
+                    AddDamage(i, damageAmount, attacker);
 
 #if CLIENT
             GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+#endif
+                }
+            }
 
-            if (playSound && !SectionBodyDisabled(i))
+#if CLIENT
+            if (playSound)// && !SectionBodyDisabled(i))
             {
-                DamageSoundType damageSoundType = (attack.DamageType == DamageType.Blunt) ? DamageSoundType.StructureBlunt : DamageSoundType.StructureSlash;
-                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition);
+                string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
+                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
-            
+
             return new AttackResult(damageAmount, 0.0f);
         }
 
-        private void SetDamage(int sectionIndex, float damage)
+        private void SetDamage(int sectionIndex, float damage, Character attacker = null)
         {
             if (Submarine != null && Submarine.GodMode) return;
             if (!prefab.Body) return;
@@ -665,23 +698,41 @@ namespace Barotrauma
             {
                 GameMain.Server.CreateEntityEvent(this);
             }
-            
-            if (damage < prefab.MaxHealth*0.5f)
+
+            bool noGaps = true;
+            for (int i = 0; i < sections.Length; i++)
+            {
+                if (i != sectionIndex && SectionIsLeaking(i))
+                {
+                    noGaps = false;
+                    break;
+                }
+            }
+
+            if (damage < prefab.Health * LeakThreshold)
             {
                 if (sections[sectionIndex].gap != null)
                 {
+                    //the structure doesn't have any other gap, log the structure being fixed
+                    if (noGaps && attacker != null)
+                    {
+                        GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
+                    }
+
                     //remove existing gap if damage is below 50%
                     sections[sectionIndex].gap.Remove();
                     sections[sectionIndex].gap = null;
 #if CLIENT
-                    if(CastShadow) GenerateConvexHull();
+                    if (CastShadow) GenerateConvexHull();
 #endif
                 }
             }
             else
             {
+
                 if (sections[sectionIndex].gap == null)
                 {
+
                     Rectangle gapRect = sections[sectionIndex].rect;
                     gapRect.X -= 10;
                     gapRect.Y += 10;
@@ -689,21 +740,33 @@ namespace Barotrauma
                     gapRect.Height += 20;
                     sections[sectionIndex].gap = new Gap(gapRect, !isHorizontal, Submarine);
                     sections[sectionIndex].gap.ConnectedWall = this;
+                    //AdjustKarma(attacker, 300);
+
+                    //the structure didn't have any other gaps yet, log the breach
+                    if (noGaps && attacker != null)
+                    {
+                        GameServer.Log((sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall breached by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
+                    }
 #if CLIENT
-                    if(CastShadow) GenerateConvexHull();
+                    if (CastShadow) GenerateConvexHull();
 #endif
                 }
-
-                sections[sectionIndex].gap.Open = (damage / prefab.MaxHealth - 0.5f) * 2.0f;
+                
+                float gapOpen = (damage / prefab.Health - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
+                sections[sectionIndex].gap.Open = gapOpen;
             }
-            
+
+            float damageDiff = damage - sections[sectionIndex].damage;
             bool hadHole = SectionBodyDisabled(sectionIndex);
-            sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.MaxHealth);
+            sections[sectionIndex].damage = MathHelper.Clamp(damage, 0.0f, prefab.Health);
+
+            if (sections[sectionIndex].damage < prefab.Health) //otherwise it's possible to infinitely gain karma by welding fixed things
+                AdjustKarma(attacker, damageDiff);
 
             bool hasHole = SectionBodyDisabled(sectionIndex);
 
             if (hadHole == hasHole) return;
-            //if (hasHole) Explosion.ApplyExplosionForces(sections[sectionIndex].gap.WorldPosition, 500.0f, 5.0f, 0.0f, 0.0f);
+            
             UpdateSections();
         }
 
@@ -753,7 +816,12 @@ namespace Barotrauma
 
             //if the section has holes (or is just one big hole with no bodies),
             //we need a sensor for repairtools to be able to target the structure
-            if (hasHoles || !bodies.Any()) CreateRectBody(rect).IsSensor = true;            
+            if (hasHoles || !bodies.Any())
+            {
+                Body sensorBody = CreateRectBody(rect);
+                sensorBody.CollisionCategories = Physics.CollisionRepair;
+                sensorBody.IsSensor = true;
+            }
         }
 
         private Body CreateRectBody(Rectangle rect)
@@ -809,6 +877,7 @@ namespace Barotrauma
             {
                 StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
                 bodies.ForEach(b => GameMain.World.RemoveBody(b));
+                bodies.Clear();
 
                 CreateStairBodies();
             }

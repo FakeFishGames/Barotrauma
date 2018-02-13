@@ -223,11 +223,12 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\watcher.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\damageshader.fx">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    <Content Include="$(MSBuildThisFileDirectory)Content\CodeWords.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\InfoTexts.xml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    <Content Include="$(MSBuildThisFileDirectory)Content\damageshader.fx" />
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Artifacts\alientools.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -281,7 +282,7 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Diving\Scooter.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Door\dockingport.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -294,6 +295,9 @@
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Door\doors.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Door\duct.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Door\hatch.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -446,9 +450,6 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Reactor\fuelrod.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Reactor\heatabsorber.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Reactor\reactor.png">
@@ -739,6 +740,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\waterbump.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Data\clientpermissions.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.7.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -764,6 +768,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)Content\blurshader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\blurshader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Carrier\alarm1.ogg">
@@ -907,6 +914,9 @@
     <None Include="$(MSBuildThisFileDirectory)Content\damageshader.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\damageshader_opengl.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Exo2-Light.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -922,6 +932,9 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Button\beep.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Button\switch.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Diving\divingSuit.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
@@ -936,6 +949,9 @@
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\door.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\duct.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Electricity\powerOn.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -985,6 +1001,12 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Reactor\reactor.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Tools\bump.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Tools\crowbar.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Tools\extinguisher.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
@@ -1029,6 +1051,15 @@
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\stungrenade.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\syringegun.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\losshader.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\losshader_opengl.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Map\TutorialSub.sub">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -1126,6 +1157,18 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\HitArmor3.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\HitClown1.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\HitClown2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\HitClown3.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\HitClown4.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Damage\implode.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
@@ -1188,6 +1231,45 @@
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\firelarge.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Armor\armor-01.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Armor\armor-02.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Armor\armor-03.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Clown\clown-01.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Clown\clown-02.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Metal\metal-01.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Metal\metal-02.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Metal\metal-03.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Metal\metal-04.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Metal\metal-05.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Metal\metal-06.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\Metal\metal-07.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Footsteps\step.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Music\amb_JD_drone_clattering_machine.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
@@ -1312,9 +1394,6 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Sounds\Water\WaterAmbience2.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\step.ogg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="$(MSBuildThisFileDirectory)Content\utg_4.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -1324,9 +1403,33 @@
     <None Include="$(MSBuildThisFileDirectory)Content\watershader_opengl.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Submarines\Nehalennia.sub" />
-    <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialSub.sub" />
-    <None Include="$(MSBuildThisFileDirectory)Submarines\Vellamo.sub" />
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Aegir Mark III.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Nehalennia.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\The Blind Carp.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\The Nibbler.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\TutorialSub.sub">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Submarines\Vellamo.sub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\doorBreak1.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\doorBreak2.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(MSBuildThisFileDirectory)Content\Items\Door\ductBreak.ogg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\AICharacter.cs" />
@@ -1363,14 +1466,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DamageModifier.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DelayedEffect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HuskInfection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\JobPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Skill.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\SkillPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Limb.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\StatusEffect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\PropertyConditional.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\StatusEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ContentPackage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\CoroutineManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\DebugConsole.cs" />
@@ -1392,8 +1496,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\MultiplayerCampaign.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\TraitorManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameSession.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\InfoTextManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\TextManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\CharacterInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\DockingPort.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Door.cs" />
@@ -1485,6 +1589,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\BanList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ChatMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\Client.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\ClientPermissions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\EntitySpawner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\FileTransfer\FileSender.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Networking\GameServer.cs" />

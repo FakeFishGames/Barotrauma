@@ -3,8 +3,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -38,41 +36,41 @@ namespace Barotrauma
                 290, y,
                 500, 360);
 
-            GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), "Tutorial", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            GUIButton button = new GUIButton(new Rectangle(50, y, 200, 30), TextManager.Get("TutorialButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
 
             button.Color = button.Color * 0.8f;
             button.OnClicked = TutorialButtonClicked;
 
-            button = new GUIButton(new Rectangle(50, y + 60, 200, 30), "New Game", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 60, 200, 30), TextManager.Get("NewGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.NewGame;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 100, 200, 30), "Load Game", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 100, 200, 30), TextManager.Get("LoadGameButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.LoadGame;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 160, 200, 30), "Join Server", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 160, 200, 30), TextManager.Get("JoinServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             //button.UserData = (int)Tabs.JoinServer;
             button.OnClicked = JoinServerClicked;
 
-            button = new GUIButton(new Rectangle(50, y + 200, 200, 30), "Host Server", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 200, 200, 30), TextManager.Get("HostServerButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.HostServer;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(50, y + 260, 200, 30), "Submarine Editor", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 260, 200, 30), TextManager.Get("SubEditorButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.OnClicked = (GUIButton btn, object userdata) => { GameMain.SubEditorScreen.Select(); return true; };
 
-            button = new GUIButton(new Rectangle(50, y + 320, 200, 30), "Settings", null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
+            button = new GUIButton(new Rectangle(50, y + 320, 200, 30), TextManager.Get("SettingsButton"), null, Alignment.TopLeft, Alignment.Left, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.UserData = Tab.Settings;
             button.OnClicked = SelectTab;
 
-            button = new GUIButton(new Rectangle(0, 0, 150, 30), "Quit", Alignment.BottomRight, "", buttonsTab);
+            button = new GUIButton(new Rectangle(0, 0, 150, 30), TextManager.Get("QuitButton"), Alignment.BottomRight, "", buttonsTab);
             button.Color = button.Color * 0.8f;
             button.OnClicked = QuitClicked;
 
@@ -93,15 +91,15 @@ namespace Barotrauma
 
             menuTabs[(int)Tab.HostServer] = new GUIFrame(panelRect, "");
 
-            new GUITextBlock(new Rectangle(0, 0, 100, 30), "Server Name:", "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 0, 100, 30), TextManager.Get("ServerName"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             serverNameBox = new GUITextBox(new Rectangle(160, 0, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
 
-            new GUITextBlock(new Rectangle(0, 50, 100, 30), "Server port:", "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 50, 100, 30), TextManager.Get("ServerPort"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             portBox = new GUITextBox(new Rectangle(160, 50, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
             portBox.Text = NetConfig.DefaultPort.ToString();
             portBox.ToolTip = "Server port";
 
-            new GUITextBlock(new Rectangle(0, 100, 100, 30), "Max players:", "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 100, 100, 30), TextManager.Get("MaxPlayers"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             maxPlayersBox = new GUITextBox(new Rectangle(195, 100, 30, 30), null, null, Alignment.TopLeft, Alignment.Center, "", menuTabs[(int)Tab.HostServer]);
             maxPlayersBox.Text = "8";
             maxPlayersBox.Enabled = false;
@@ -114,19 +112,16 @@ namespace Barotrauma
             plusPlayersBox.UserData = 1;
             plusPlayersBox.OnClicked = ChangeMaxPlayers;
             
-            new GUITextBlock(new Rectangle(0, 150, 100, 30), "Password (optional):", "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
+            new GUITextBlock(new Rectangle(0, 150, 100, 30), TextManager.Get("Password"), "", Alignment.TopLeft, Alignment.Left, menuTabs[(int)Tab.HostServer]);
             passwordBox = new GUITextBox(new Rectangle(160, 150, 200, 30), null, null, Alignment.TopLeft, Alignment.Left, "", menuTabs[(int)Tab.HostServer]);
             
-            isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), "Public server", Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
-            isPublicBox.ToolTip = "Public servers are shown in the list of available servers in the \"Join Server\" -tab";
-
-
-            useUpnpBox = new GUITickBox(new Rectangle(10, 250, 20, 20), "Attempt UPnP port forwarding", Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
-            useUpnpBox.ToolTip = "UPnP can be used for forwarding ports on your router to allow players join the server."
-            + " However, UPnP isn't supported by all routers, so you may need to setup port forwards manually"
-            +" if players are unable to join the server (see the readme for instructions).";
+            isPublicBox = new GUITickBox(new Rectangle(10, 200, 20, 20), TextManager.Get("PublicServer"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
+            isPublicBox.ToolTip = TextManager.Get("PublicServerToolTip");
             
-            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
+            useUpnpBox = new GUITickBox(new Rectangle(10, 250, 20, 20), TextManager.Get("AttemptUPnP"), Alignment.TopLeft, menuTabs[(int)Tab.HostServer]);
+            useUpnpBox.ToolTip = TextManager.Get("AttemptUPnPToolTip");
+            
+            GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartServerButton"), Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
             hostButton.OnClicked = HostServerClicked;
 
             this.game = game;
@@ -179,8 +174,10 @@ namespace Barotrauma
         {
             if (GameMain.Config.UnsavedSettings)
             {
-                var applyBox = new GUIMessageBox("Apply changes?", "Do you want to apply the settings or discard the changes?", 
-                    new string[] {"Apply", "Discard"});
+                var applyBox = new GUIMessageBox(
+                    TextManager.Get("ApplySettingsLabel"),
+                    TextManager.Get("ApplySettingsQuestion"),
+                    new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") });
                 applyBox.Buttons[0].OnClicked += applyBox.Close;
                 applyBox.Buttons[0].OnClicked += ApplySettings;
                 applyBox.Buttons[0].UserData = tab;
@@ -216,7 +213,9 @@ namespace Barotrauma
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
-                new GUIMessageBox("Restart required", "You need to restart the game for the resolution changes to take effect.");
+                new GUIMessageBox(
+                    TextManager.Get("RestartRequiredLabel"), 
+                    TextManager.Get("RestartRequiredText"));
             }
 
             return true;
@@ -354,7 +353,7 @@ namespace Barotrauma
             
             if (selectedSub == null)
             {
-                new GUIMessageBox("Submarine not selected", "Please select a submarine");
+                new GUIMessageBox(TextManager.Get("SubNotSelected"), TextManager.Get("SelectSubRequest"));
                 return;
             }
 

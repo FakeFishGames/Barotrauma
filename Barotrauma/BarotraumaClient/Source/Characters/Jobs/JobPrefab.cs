@@ -18,7 +18,7 @@ namespace Barotrauma
 
             var descriptionBlock = new GUITextBlock(new Rectangle(0, 40, 0, 0), Description, "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(0, 40 + descriptionBlock.Rect.Height + 20, 100, 20), "Skills: ", "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, 40 + descriptionBlock.Rect.Height + 20, 100, 20), TextManager.Get("Skills") + ": ", "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
 
             int y = 40 + descriptionBlock.Rect.Height + 50;
             foreach (SkillPrefab skill in Skills)
@@ -36,7 +36,7 @@ namespace Barotrauma
                 y += 20;
             }
 
-            new GUITextBlock(new Rectangle(250, 40 + descriptionBlock.Rect.Height + 20, 0, 20), "Items: ", "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(250, 40 + descriptionBlock.Rect.Height + 20, 0, 20), TextManager.Get("Items") + ": ", "", Alignment.TopLeft, Alignment.TopLeft, frame, false, GUI.LargeFont);
 
             y = 40 + descriptionBlock.Rect.Height + 50;
             foreach (string itemName in ItemNames)

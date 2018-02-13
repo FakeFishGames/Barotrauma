@@ -17,15 +17,19 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 2, 0);
+                        msg.WriteRangedInteger(0, 3, 0);
                         inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Repair:
-                        msg.WriteRangedInteger(0, 2, 1);
+                        msg.WriteRangedInteger(0, 3, 1);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(0, 2, 2);
+                        msg.WriteRangedInteger(0, 3, 2);
+                        break;
+                    case NetEntityEvent.Type.Control:
+                        msg.WriteRangedInteger(0, 3, 3);
+                        msg.Write((UInt16)AnimController.GrabLimb);
                         break;
                 }
             }
@@ -91,6 +95,7 @@ namespace Barotrauma
                             bool crouching = msg.ReadBoolean();
                             keys[(int)InputType.Crouch].Held = crouching;
                             keys[(int)InputType.Crouch].SetState(false, crouching);
+                            AnimController.GrabLimb = (LimbType)msg.ReadUInt16();
                         }
 
                         bool hasAttackLimb = msg.ReadBoolean();
@@ -109,6 +114,10 @@ namespace Barotrauma
 
                             TransformCursorPos();
                         }
+                        bool ragdollInput = msg.ReadBoolean();
+                        keys[(int)InputType.Ragdoll].Held = ragdollInput;
+                        keys[(int)InputType.Ragdoll].SetState(false, ragdollInput);
+
                         facingRight = msg.ReadBoolean();
                     }
 
@@ -123,7 +132,7 @@ namespace Barotrauma
                         if (selectedEntity is Character)
                         {
                             bool doingCpr = msg.ReadBoolean();
-                            if (doingCpr && selectedCharacter != null)
+                            if (doingCpr && SelectedCharacter != null)
                             {
                                 animation = AnimController.Animation.CPR;
                             }
@@ -134,11 +143,16 @@ namespace Barotrauma
                         msg.ReadFloat(),
                         msg.ReadFloat());
 
+                    float rotation = msg.ReadFloat();
+
+                    ReadStatus(msg);
+
+                    msg.ReadPadBits();
 
                     int index = 0;
-                    if (GameMain.NetworkMember.Character == this && AllowInput)
+                    if (GameMain.NetworkMember.Character == this)
                     {
-                        var posInfo = new CharacterStateInfo(pos, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        var posInfo = new CharacterStateInfo(pos, rotation, networkUpdateID, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
                             index++;
 
@@ -146,7 +160,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        var posInfo = new CharacterStateInfo(pos, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
+                        var posInfo = new CharacterStateInfo(pos, rotation, sendingTime, facingRight ? Direction.Right : Direction.Left, selectedEntity, animation);
                         while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                             index++;
 
@@ -186,8 +200,9 @@ namespace Barotrauma
                         case 2:
                             ReadStatus(msg);
                             break;
-                    }
 
+                    }
+                    msg.ReadPadBits();
                     break;
             }
         }
@@ -361,6 +376,9 @@ namespace Barotrauma
                 {
                     SetStun(0.0f, true, true);
                 }
+
+                bool ragdolled = msg.ReadBoolean();
+                IsRagdolled = ragdolled;
 
                 bool huskInfected = msg.ReadBoolean();
                 if (huskInfected)

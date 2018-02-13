@@ -46,7 +46,9 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
-            Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, 30.0f);
+            //ruin items are allowed to spawn close to the sub
+            float minDistance = spawnPositionType == Level.PositionType.Ruin ? 0.0f : Level.Loaded.Size.X * 0.3f;
+            Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
             
             item = new Item(itemPrefab, position, null);
             item.MoveWithLevel = true;

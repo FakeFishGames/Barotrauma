@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -14,6 +15,8 @@ namespace Barotrauma
 
         private bool canBeCompleted;
 
+        private bool requireEquip;
+
         public override bool CanBeCompleted
         {
             get
@@ -27,11 +30,21 @@ namespace Barotrauma
             get { return operateTarget; }
         }
 
-        public AIObjectiveOperateItem(ItemComponent item, Character character, string option, Entity operateTarget = null, bool useController = false)
-            :base (character, option)
+        public override float GetPriority(AIObjectiveManager objectiveManager)
+        {
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
+
+            return 1.0f;
+        }
+
+        public AIObjectiveOperateItem(ItemComponent item, Character character, string option, bool requireEquip, Entity operateTarget = null, bool useController = false)
+            : base (character, option)
         {
             this.component = item;
-
+            this.requireEquip = requireEquip;
             this.operateTarget = operateTarget;
 
             if (useController)
@@ -72,6 +85,43 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (requireEquip && !character.HasEquippedItem(component.Item))
+                    {
+                        //the item has to be equipped before using it if it's holdable
+                        var holdable = component.Item.GetComponent<Holdable>();
+                        if (holdable == null)
+                        {
+                            DebugConsole.ThrowError("AIObjectiveOperateItem failed - equipping item " + component.Item + " is required but the item has no Holdable component");
+                            return;
+                        }
+
+                        for (int i = 0; i < CharacterInventory.limbSlots.Length; i++)
+                        {
+                            if (CharacterInventory.limbSlots[i] == InvSlotType.Any ||
+                                !holdable.AllowedSlots.Any(s => s.HasFlag(CharacterInventory.limbSlots[i])))
+                            {
+                                continue;
+                            }
+
+                            //equip slot already taken
+                            if (character.Inventory.Items[i] != null)
+                            {
+                                //try to put the item in an Any slot, and drop it if that fails
+                                if (!character.Inventory.Items[i].AllowedSlots.Contains(InvSlotType.Any) ||
+                                    !character.Inventory.TryPutItem(character.Inventory.Items[i], character, new List<InvSlotType>() { InvSlotType.Any }))
+                                {
+                                    character.Inventory.Items[i].Drop();
+                                }
+                            }
+                            if (character.Inventory.TryPutItem(component.Item, i, true, character))
+                            {
+                                component.Item.Equip(character);
+                                break;
+                            }
+                        }
+                        return;
+                    }
+
                     if (component.AIOperate(deltaTime, character, this)) isCompleted = true;
                 }
             }

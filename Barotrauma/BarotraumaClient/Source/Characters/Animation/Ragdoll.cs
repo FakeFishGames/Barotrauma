@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
@@ -13,27 +14,32 @@ namespace Barotrauma
         {
             float volume = Math.Min(impact - 3.0f, 1.0f);
 
-            if (body.UserData is Limb)
+            if (body.UserData is Limb && character.Stun <= 0f)
             {
                 Limb limb = (Limb)body.UserData;
 
                 if (impact > 3.0f && limb.HitSound != null && limb.SoundTimer <= 0.0f)
                 {
                     limb.SoundTimer = Limb.SoundInterval;
-                    limb.HitSound.Play(volume, impact * 100.0f, limb.WorldPosition);
+                    SoundPlayer.PlaySound(limb.HitSound, volume, impact * 100.0f, limb.WorldPosition);
+                    foreach(WearableSprite wearable in limb.WearingItems)
+                    {
+                        if (limb.type == wearable.Limb && wearable.Sound != null)
+                            SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition);
+                    }
                 }
             }
-            else if (body == Collider.FarseerBody)
+            else if (body.UserData is Limb || body == Collider.FarseerBody)
             {
                 if (!character.IsRemotePlayer || GameMain.Server != null)
                 {
                     if (impact > ImpactTolerance)
                     {
-                        SoundPlayer.PlayDamageSound(DamageSoundType.LimbBlunt, strongestImpact, Collider);
+                        SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
                     }
                 }
 
-                if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = strongestImpact;
+                if (Character.Controlled == character) GameMain.GameScreen.Cam.Shake = Math.Min(strongestImpact, 3.0f);
             }
         }
 

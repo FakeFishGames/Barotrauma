@@ -3,6 +3,7 @@ using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -20,6 +21,8 @@ namespace Barotrauma.Items.Components
 
         private float temperature;
 
+        private Client BlameOnBroken;
+
         //is automatic temperature control on
         //(adjusts the cooling rate automatically to keep the
         //amount of power generated balanced with the load)
@@ -29,21 +32,12 @@ namespace Barotrauma.Items.Components
         //turned down and cooling increased
         private float shutDownTemp;
 
-        private float fireTemp, meltDownTemp;
+        private float fireTemp, meltDownTemp, meltDownDelay;
+
+        private float meltDownTimer;
 
         //how much power is provided to the grid per 1 temperature unit
         private float powerPerTemp;
-
-        private int graphSize = 25;
-
-        private float graphTimer;
-
-        private int updateGraphInterval = 500;
-
-        private float[] fissionRateGraph;
-        private float[] coolingRateGraph;
-        private float[] tempGraph;
-        private float[] loadGraph;
 
         private float load;
         
@@ -62,6 +56,13 @@ namespace Barotrauma.Items.Components
             {
                 meltDownTemp = Math.Max(0.0f, value);
             }
+        }
+
+        [Serialize(30.0f, true)]
+        public float MeltdownDelay
+        {
+            get { return meltDownDelay; }
+            set { meltDownDelay = Math.Max(value, 0.0f); }
         }
 
         [Editable(ToolTip = "The temperature at which the reactor catches fire."), Serialize(9000.0f, true)]
@@ -139,6 +140,9 @@ namespace Barotrauma.Items.Components
 
         public float AvailableFuel { get; set; }
 
+        private float availableHeat, availableCooling;
+        private float prevTemperature, temperatureChange;
+
         [Serialize(500.0f, true)]
         public float ShutDownTemp
         {
@@ -149,17 +153,9 @@ namespace Barotrauma.Items.Components
         public Reactor(Item item, XElement element)
             : base(item, element)
         {
-            fissionRateGraph    = new float[graphSize];
-            coolingRateGraph    = new float[graphSize];
-            tempGraph           = new float[graphSize];
-            loadGraph           = new float[graphSize];
-
             shutDownTemp = 500.0f;
-
-            powerPerTemp = 1.0f;
-            
+            powerPerTemp = 1.0f;            
             IsActive = true;
-
             InitProjSpecific();
         }
 
@@ -171,7 +167,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Timing.TotalTime >= (float)nextServerLogWriteTime)
                 {
-                    GameServer.Log(lastUser + " adjusted reactor settings: " +
+                    GameServer.Log(lastUser.LogName + " adjusted reactor settings: " +
                             "Temperature: " + (int)temperature +
                             ", Fission rate: " + (int)fissionRate +
                             ", Cooling rate: " + (int)coolingRate +
@@ -189,11 +185,19 @@ namespace Barotrauma.Items.Components
 
             fissionRate = Math.Min(fissionRate, AvailableFuel);
 
-            float heat = 80 * fissionRate * (AvailableFuel / 2000.0f);
-            float heatDissipation = 50 * coolingRate + Math.Max(ExtraCooling, 5.0f);
+            //the amount of cooling is always non-zero, so that the reactor always needs 
+            //to generate some amount of heat to prevent the temperature from dropping
+            availableCooling = Math.Max(ExtraCooling, 5.0f);
+            availableHeat = 80 * (AvailableFuel / 2000.0f);
 
-            float deltaTemp = (((heat - heatDissipation) * 5) - temperature) / 10000.0f;
+            float heat = availableHeat * fissionRate;
+            float heatDissipation = 50 * coolingRate + availableCooling;
+
+            float deltaTemp = (((heat - heatDissipation) * 5) - temperature) / 10000.0f;            
             Temperature = temperature + deltaTemp;
+
+            temperatureChange = Temperature - prevTemperature;
+            prevTemperature = temperature;
 
             if (temperature > fireTemp && temperature - deltaTemp < fireTemp)
             {
@@ -213,8 +217,19 @@ namespace Barotrauma.Items.Components
 
             if (temperature > meltDownTemp)
             {
-                MeltDown();
-                return;
+                item.SendSignal(0, "1", "meltdown_warning", null);
+                meltDownTimer += deltaTime;
+
+                if (meltDownTimer > MeltdownDelay)
+                {
+                    MeltDown();
+                    return;
+                }
+            }
+            else
+            {
+                item.SendSignal(0, "0", "meltdown_warning", null);
+                meltDownTimer = Math.Max(0.0f, meltDownTimer - deltaTime);
             }
 
             load = 0.0f;
@@ -312,20 +327,26 @@ namespace Barotrauma.Items.Components
 
         private void MeltDown()
         {
-            if (item.Condition <= 0.0f) return;
+            if (item.Condition <= 0.0f || GameMain.Client != null) return;
 
             GameServer.Log("Reactor meltdown!", ServerLog.MessageType.Reactor);
  
             item.Condition = 0.0f;
 
             var containedItems = item.ContainedItems;
-            if (containedItems == null) return;
-            
-            foreach (Item containedItem in item.ContainedItems)
+            if (containedItems != null)
             {
-                if (containedItem == null) continue;
-                containedItem.Condition = 0.0f;
+                foreach (Item containedItem in containedItems)
+                {
+                    if (containedItem == null) continue;
+                    containedItem.Condition = 0.0f;
+                }
             }
+            
+            if (GameMain.Server != null && GameMain.Server.ConnectedClients.Contains(BlameOnBroken))
+            {
+                BlameOnBroken.Karma = 0.0f;
+            }            
         }
 
         public override bool Pick(Character picker)
@@ -335,37 +356,71 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+            float degreeOfSuccess = DegreeOfSuccess(character);
+
+            //characters with insufficient skill levels don't refuel the reactor
+            if (degreeOfSuccess > 0.2f)
+            {
+                //remove used-up fuel from the reactor
+                var containedItems = item.ContainedItems;
+                foreach (Item item in containedItems)
+                {
+                    if (item != null && item.Condition <= 0.0f)
+                    {
+                        item.Drop();
+                    }
+                }
+
+                //the temperature is too low and not increasing even though the fission rate is high and cooling low
+                // -> we need more fuel
+                if (temperature < load * 0.5f && temperatureChange <= 0.0f && fissionRate > 0.9f && coolingRate < 0.1f)
+                {
+                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "Fuel Rod", "reactorfuel" }, item.GetComponent<ItemContainer>());
+                    containFuelObjective.MinContainedAmount = containedItems.Count(i => i != null && i.Prefab.NameMatches("Fuel Rod") || i.HasTag("reactorfuel")) + 1;
+                    containFuelObjective.GetItemPriority = (Item fuelItem) =>
+                    {
+                        if (fuelItem.ParentInventory?.Owner is Item)
+                        {
+                            //don't take fuel from other reactors
+                            if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                        }
+                        return 1.0f;
+                    };
+                    objective.AddSubObjective(containFuelObjective);
+
+                    return false;
+                }
+            }
+
+
             switch (objective.Option.ToLowerInvariant())
-             {
-                 case "power up":
-                     float tempDiff = load - temperature;
+            {
+                case "power up":
+                    float tempDiff = load - temperature;
 
-                     shutDownTemp = Math.Min(load + 1000.0f, 7500.0f);
+                    shutDownTemp = Math.Min(load + 1000.0f, 7500.0f);
 
-                     //temperature too high/low
-                     if (Math.Abs(tempDiff)>500.0f)
-                     {
-                         AutoTemp = false;
-                         FissionRate += deltaTime * 100.0f * Math.Sign(tempDiff);
-                         CoolingRate -= deltaTime * 100.0f * Math.Sign(tempDiff);
-                     }
-                     //temperature OK
-                     else
-                     {
-                         AutoTemp = true;
-                     }
+                    //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
+                    if (Math.Abs(tempDiff) < 500.0f || degreeOfSuccess < 0.5f)
+                    {
+                        AutoTemp = true;
+                    }
+                    else
+                    {
+                        AutoTemp = false;
+                        //higher skill levels make the character adjust the temperature faster
+                        FissionRate += deltaTime * 100.0f * Math.Sign(tempDiff) * degreeOfSuccess;
+                        CoolingRate -= deltaTime * 100.0f * Math.Sign(tempDiff) * degreeOfSuccess;
+                    }                    
+                    break;
+                case "shutdown":
+                    shutDownTemp = 0.0f;
+                    break;
+            }
 
-                     break;
-                 case "shutdown":
-
-                     shutDownTemp = 0.0f;
-
-                     break;
-             }
-
-             return false;
+            return false;
         }
-        
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power)
         {
             switch (connection.Name)
@@ -387,8 +442,12 @@ namespace Barotrauma.Items.Components
             float coolingRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             float fissionRate   = msg.ReadRangedSingle(0.0f, 100.0f, 8);
 
-            if (!item.CanClientAccess(c)) return; 
+            if (!item.CanClientAccess(c)) return;
 
+            if (!autoTemp && AutoTemp) BlameOnBroken = c;
+            if (shutDownTemp > ShutDownTemp) BlameOnBroken = c;
+            if (fissionRate > FissionRate) BlameOnBroken = c;
+            
             AutoTemp = autoTemp;
             ShutDownTemp = shutDownTemp;
 

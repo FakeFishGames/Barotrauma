@@ -107,7 +107,11 @@ namespace Barotrauma
             }
         }
 
+<<<<<<< HEAD
         public override bool Linkable
+=======
+        public override bool Linkable
+>>>>>>> master
         {
             get { return true; }
         }
@@ -559,23 +563,23 @@ namespace Barotrauma
 
             return null;
         }
-        
+
         //returns the water block which contains the point (or null if it isn't inside any)
-        public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true)
+        public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = false)
         {
-            return FindHullOld(position, hullList, guess, useWorldCoordinates);
+            return FindHullOld(position, hullList, guess, useWorldCoordinates, inclusive);
         }
 
-        public static Hull FindHullOld(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true)
+        public static Hull FindHullOld(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = false)
         {
             if (guess != null && hulls.Contains(guess))
             {
-                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position)) return guess;
+                if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive)) return guess;
             }
 
             foreach (Hull hull in hulls)
             {
-                if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position)) return hull;
+                if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position, inclusive)) return hull;
             }
 
             return null;

@@ -5,10 +5,10 @@
   <Item
     name="Wire"
     category="Electrical"
-    Tags="smallitem,wire"
-    
+    Tags="smallitem,wire"    
     linkable="true"
     canbepicked="true"
+    cargocontainername="Metal Crate"
     price="10">
 
     <Deconstruct time="5">
@@ -29,9 +29,9 @@
     category="Electrical"
     Tags="smallitem,wire"
     spritecolor="1.0,0.0,0.0,1.0"
-    
     linkable="true"
     canbepicked="true"
+    cargocontainername="Metal Crate"
     price="10">
 
     <Deconstruct time="5">
@@ -50,10 +50,10 @@
     name="Blue Wire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="0.0,0.6,1.0,1.0"
-    
+    spritecolor="0.0,0.6,1.0,1.0"    
     linkable="true"
     canbepicked="true"
+    cargocontainername="Metal Crate"
     price="10">
 
     <Deconstruct time="5">
@@ -72,10 +72,10 @@
     name="Orange Wire"
     category="Electrical"
     Tags="smallitem,wire"
-    spritecolor="1.0,0.5,0.0,1.0"
-    
+    spritecolor="1.0,0.5,0.0,1.0"    
     linkable="true"
     canbepicked="true"
+    cargocontainername="Metal Crate"
     price="10">
 
     <Deconstruct time="5">
@@ -93,11 +93,16 @@
   <Item
     name="FPGA Circuit"
     category="Electrical"
-    Tags="smallitem"
-    
-    linkable="true"
+    Tags="smallitem"    
+    linkable="true"    
+    cargocontainername="Metal Crate"
     price="100"
     description="Field-programmable gate array - a multi-purpose circuit which can be reconfigured for use in a large variety of electrical devices.">
+
+    <Deconstruct time="5">
+      <Item name="Copper Bar"/>
+      <Item name="Copper Bar"/>
+    </Deconstruct>
 
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,16,16,16"/>
 
@@ -110,8 +115,8 @@
     name="And Component"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="Sends a signal when both inputs receive a signal within a set period of each other.">
 
@@ -145,8 +150,8 @@
     name="Or Component"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="Sends a signal if either of the inputs receive a signal.">
 
@@ -179,8 +184,8 @@
     name="Not Component"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="Sends a signal when the input is NOT receiving a signal.">
 
@@ -211,8 +216,8 @@
     name="Relay Component"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="When switched on, forwards all received signals from the input connections to the outputs.">
 
@@ -258,8 +263,8 @@
     name="Delay Component"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="Delays all received signals for a specific amount of time.">
 
@@ -290,8 +295,8 @@
     name="Light Component"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10">
 
     <Deconstruct time="10">
@@ -325,8 +330,8 @@
     name="Oxygen Detector"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="Sends out a value between 0-100 depending on the quality of the surrounding air.">
 
@@ -335,7 +340,7 @@
       <Item name="FPGA Circuit"/>
     </Deconstruct>
 
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="96,0,31,24"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="97,0,31,24"/>
 
     <OxygenDetector canbeselected = "true"/>
 
@@ -356,8 +361,8 @@
     name="Water Detector"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="Sends out a signal when the detector is submerged.">
 
@@ -366,7 +371,7 @@
       <Item name="FPGA Circuit"/>
     </Deconstruct>
 
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="64,0,31,25"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,0,31,24"/>
 
     <WaterDetector canbeselected = "true"/>
 
@@ -382,13 +387,44 @@
       <output name="signal_out"/>
     </ConnectionPanel>
   </Item>
+  
+  <Item
+    name="Motion Detector"
+    category="Electrical"
+    Tags="smallitem"
+    linkable="true"
+    cargocontainername="Metal Crate"
+    price="10"
+    description="Sends out a signal when it detects movement.">
+   
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="FPGA Circuit"/>
+    </Deconstruct>
+
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="65,24,31,24"/>
+
+    <MotionSensor range="100" canbeselected = "true"/>
+	
+	  <Body width="31" height="24" density="30"/>
+
+    <Holdable selectkey="Action" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0"
+              aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem name="Wrench" type="Equipped"/>
+    </Holdable>
+
+    <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
+      <requireditem name="Screwdriver,Wire" type="Equipped"/>
+      <output name="state_out"/>
+    </ConnectionPanel>
+  </Item>
 
   <Item
     name="Signal Check Component"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="Sends a signal when a signal matching a specific value is received.">
 
@@ -421,8 +457,8 @@
     name="RegEx Find Component"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="Sends a signal if the received signal matches a specific regular expression pattern.">
 
@@ -454,8 +490,8 @@
     name="Oscillator"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10"
     description="Sends out a periodic, oscillating signal.">
 
@@ -487,8 +523,8 @@
     name="Wifi Component"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="20"
     description="Allows remote communication between other Wifi Components that are using the same channel.">
 
@@ -519,8 +555,8 @@
     name="Emergency Siren"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10">
 
     <Deconstruct time="10">
@@ -552,8 +588,8 @@
     name="Alarm Buzzer"
     category="Electrical"
     Tags="smallitem"
-    
     linkable="true"
+    cargocontainername="Metal Crate"
     price="10">
 
     <Deconstruct time="10">
@@ -561,7 +597,7 @@
       <Item name="FPGA Circuit"/>
     </Deconstruct>
 
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="64,32,23,16"/>
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="34,64,23,16"/>
 
     <Body width="20" height="16" density="20"/>
 
@@ -584,11 +620,11 @@
   <Item
     name="Camera"
     category="Electrical"
-    Tags="smallitem"
-    
+    Tags="smallitem"    
     focusonselected="true"
     offsetonselected="500"
     linkable="true"
+    cargocontainername="Metal Crate"
     price="50"
     description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub.">
 

@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            autopilotTickBox = new GUITickBox(new Rectangle(0, 25, 20, 20), "Autopilot", Alignment.TopLeft, GuiFrame);
+            autopilotTickBox = new GUITickBox(new Rectangle(0, 25, 20, 20), TextManager.Get("SteeringAutoPilot"), Alignment.TopLeft, GuiFrame);
             autopilotTickBox.OnSelected = (GUITickBox box) =>
             {
                 AutoPilot = box.Selected;
@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
                 return true;
             };
 
-            maintainPosTickBox = new GUITickBox(new Rectangle(5, 50, 15, 15), "Maintain position", Alignment.TopLeft, GUI.SmallFont, GuiFrame);
+            maintainPosTickBox = new GUITickBox(new Rectangle(5, 50, 15, 15), TextManager.Get("SteeringMaintainPos"), Alignment.TopLeft, GUI.SmallFont, GuiFrame);
             maintainPosTickBox.Enabled = false;
             maintainPosTickBox.OnSelected = ToggleMaintainPosition;
 
@@ -90,7 +90,7 @@ namespace Barotrauma.Items.Components
 
             GuiFrame.Draw(spriteBatch);
 
-            if (voltage < minVoltage && powerConsumption > 0.0f) return;
+            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             //GUI.DrawRectangle(spriteBatch, velRect, Color.White, false);
@@ -100,12 +100,12 @@ namespace Barotrauma.Items.Components
                 Vector2 realWorldVelocity = ConvertUnits.ToDisplayUnits(item.Submarine.Velocity * Physics.DisplayToRealWorldRatio) * 3.6f;
                 float realWorldDepth = Math.Abs(item.Submarine.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 65),
-                    "Velocity: " + (int)realWorldVelocity.X + " km/h", Color.LightGreen, null, 0, GUI.SmallFont);
+                    TextManager.Get("SteeringVelocityX").Replace("[kph]", ((int)realWorldVelocity.X).ToString()), Color.LightGreen, null, 0, GUI.SmallFont);
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 50),
-                    "Descent velocity: " + -(int)realWorldVelocity.Y + " km/h", Color.LightGreen, null, 0, GUI.SmallFont);
+                    TextManager.Get("SteeringVelocityY").Replace("[kph]", ((int)-realWorldVelocity.Y).ToString()), Color.LightGreen, null, 0, GUI.SmallFont);
 
                 GUI.DrawString(spriteBatch, new Vector2(x + 20, y + height - 30),
-                    "Depth: " + (int)realWorldDepth + " m", Color.LightGreen, null, 0, GUI.SmallFont);
+                   TextManager.Get("SteeringDepth").Replace("[m]", ((int)realWorldDepth).ToString()), Color.LightGreen, null, 0, GUI.SmallFont);
             }
 
             GUI.DrawLine(spriteBatch,
@@ -136,6 +136,8 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character)
         {
             GuiFrame.Update(1.0f / 60.0f);
+            
+            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             if (Vector2.Distance(PlayerInput.MousePosition, new Vector2(GuiFrame.Rect.Center.X, GuiFrame.Rect.Center.Y)) < 200.0f)
             {

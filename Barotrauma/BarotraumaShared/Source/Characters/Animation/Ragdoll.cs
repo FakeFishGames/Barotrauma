@@ -67,7 +67,7 @@ namespace Barotrauma
 
         protected float colliderHeightFromFloor;
         
-        protected Structure stairs;
+        public Structure Stairs;
                 
         protected Direction dir;
 
@@ -356,19 +356,22 @@ namespace Barotrauma
                     (joint.LowerLimit + joint.UpperLimit) / 2.0f);
             }
 
+            //make sure every character gets drawn at a distinct "layer" 
+            //(instead of having some of the limbs appear behind and some in front of other characters)
             float startDepth = 0.1f;
             float increment = 0.001f;
-
             foreach (Character otherCharacter in Character.CharacterList)
             {
-                if (otherCharacter==character) continue;
-                startDepth+=increment;
+                if (otherCharacter == character) continue;
+                startDepth += increment;
             }
 
+            //make sure each limb has a distinct depth value 
+            List<Limb> depthSortedLimbs = Limbs.OrderBy(l => l.sprite == null ? 0.0f : l.sprite.Depth).ToList();
             foreach (Limb limb in Limbs)
             {
                 if (limb.sprite != null)
-                    limb.sprite.Depth = startDepth + limb.sprite.Depth * 0.0001f;
+                    limb.sprite.Depth = startDepth + depthSortedLimbs.IndexOf(limb) * 0.00001f;
             }
 
             Limb torso = GetLimb(LimbType.Torso);
@@ -452,7 +455,7 @@ namespace Barotrauma
             }
             else if (structure.StairDirection != Direction.None)
             {
-                stairs = null;
+                Stairs = null;
 
                 //don't collider with stairs if
                 
@@ -475,8 +478,15 @@ namespace Barotrauma
                 if (inWater && targetMovement.Y < 0.5f) return false;
 
                 //---------------
-                
-                stairs = structure;
+
+                //set stairs to that of the one dragging us
+                if (character.SelectedBy != null)
+                    Stairs = character.SelectedBy.AnimController.Stairs;
+                else
+                    Stairs = structure;
+
+                if (Stairs == null)
+                    return false;
             }
 
             CalculateImpact(f1, f2, contact);
@@ -488,26 +498,13 @@ namespace Barotrauma
         {
             if (character.DisableImpactDamageTimer > 0.0f) return;
 
-            Vector2 normal = contact.Manifold.LocalNormal;
-
-            //Vector2 avgVelocity = Vector2.Zero;
-            //foreach (Limb limb in Limbs)
-            //{
-            //    avgVelocity += limb.LinearVelocity;
-            //}
-
+            Vector2 normal = contact.Manifold.LocalNormal;            
             Vector2 velocity = f1.Body.LinearVelocity;
 
             if (character.Submarine == null && f2.Body.UserData is Submarine) velocity -= ((Submarine)f2.Body.UserData).Velocity;
                                     
             float impact = Vector2.Dot(velocity, -normal);
-            
-            ImpactProjSpecific(impact,f1.Body);
-            
-            if (f1.Body.UserData is Limb)
-            {
-            }
-            else if (f1.Body == Collider.FarseerBody)
+            if (f1.Body == Collider.FarseerBody)
             {
                 if (!character.IsRemotePlayer || GameMain.Server != null)
                 {
@@ -519,11 +516,13 @@ namespace Barotrauma
                     }
                 }
             }
+
+            ImpactProjSpecific(impact, f1.Body);
         }
 
         public void SeverLimbJoint(LimbJoint limbJoint)
         {
-            if (!limbJoint.CanBeSevered)
+            if (!limbJoint.CanBeSevered || limbJoint.IsSevered)
             {
                 return;
             }
@@ -537,12 +536,29 @@ namespace Barotrauma
             GetConnectedLimbs(connectedLimbs, checkedJoints, MainLimb);
             foreach (Limb limb in Limbs)
             {
-                if (!connectedLimbs.Contains(limb))
+                if (connectedLimbs.Contains(limb)) continue;
+                
+                limb.IsSevered = true;                           
+            }
+
+#if CLIENT
+            if (character.UseBloodParticles)
+            {
+                foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
                 {
-                    limb.IsSevered = true;
+                    for (int i = 0; i < MathHelper.Clamp(limb.Mass * 2.0f, 1.0f, 50.0f); i++)
+                    {
+                        GameMain.ParticleManager.CreateParticle("gib", limb.WorldPosition, Rand.Range(0.0f, MathHelper.TwoPi), Rand.Range(200.0f, 700.0f), character.CurrentHull);
+                    }
+                    
+                    for (int i = 0; i < MathHelper.Clamp(limb.Mass * 2.0f, 1.0f, 10.0f); i++)
+                    {
+                        GameMain.ParticleManager.CreateParticle("heavygib", limb.WorldPosition, Rand.Range(0.0f, MathHelper.TwoPi), Rand.Range(50.0f, 250.0f), character.CurrentHull);
+                    }                    
                 }
             }
-            
+#endif
+
             if (GameMain.Server != null)
             {
                 GameMain.Server.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
@@ -898,8 +914,8 @@ namespace Barotrauma
                 limb.Update(deltaTime);
             }
             
-            bool onStairs = stairs != null;
-            stairs = null;
+            bool onStairs = Stairs != null;
+            Stairs = null;
 
             var contacts = Collider.FarseerBody.ContactList;
             while (Collider.FarseerBody.Enabled && contacts != null && contacts.Contact != null)
@@ -917,7 +933,7 @@ namespace Barotrauma
                             Structure structure = contacts.Contact.FixtureA.Body.UserData as Structure;
                             if (structure != null && onStairs)
                             {
-                                stairs = structure;
+                                Stairs = structure;
                             }
                             break;
                     }
@@ -966,7 +982,7 @@ namespace Barotrauma
             rayEnd.Y -= Collider.height * 0.5f + Collider.radius + colliderHeightFromFloor*1.2f;
 
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
-            if (!inWater && !character.IsDead && !character.IsUnconscious && levitatingCollider && Collider.LinearVelocity.Y>-ImpactTolerance)
+            if (!inWater && !character.IsDead && character.Stun <= 0f && levitatingCollider && Collider.LinearVelocity.Y>-ImpactTolerance)
             {
                 float closestFraction = 1.0f;
                 Fixture closestFixture = null;
@@ -978,6 +994,7 @@ namespace Barotrauma
                             Structure structure = fixture.Body.UserData as Structure;
                             if (inWater && targetMovement.Y < 0.5f) return -1;
                             if (colliderBottomDisplay.Y < structure.Rect.Y - structure.Rect.Height + 30 && TargetMovement.Y < 0.5f) return -1;
+                            if (character.SelectedBy != null) return -1;
                             break;
                         case Physics.CollisionPlatform:
                             Structure platform = fixture.Body.UserData as Structure;
@@ -1007,7 +1024,7 @@ namespace Barotrauma
                     switch (closestFixture.CollisionCategories)
                     {
                         case Physics.CollisionStairs:
-                            stairs = closestFixture.Body.UserData as Structure;
+                            Stairs = closestFixture.Body.UserData as Structure;
                             onStairs = true;
                             forceImmediate = true;
                             break;
@@ -1334,13 +1351,34 @@ namespace Barotrauma
                         }
                     }
 
-                    Vector2 positionError = serverPos.Position - localPos.Position;                    
-                    for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
+                    Hull serverHull = Hull.FindHull(serverPos.Position, character.CurrentHull, false);
+                    Hull clientHull = Hull.FindHull(localPos.Position, serverHull, false);
+                    
+                    Vector2 positionError = serverPos.Position - localPos.Position;
+                    float rotationError = serverPos.Rotation - localPos.Rotation;
+
+                    if (serverHull!=clientHull && ((serverHull==null) || (clientHull==null) || (serverHull.Submarine != clientHull.Submarine)))
                     {
-                        character.MemLocalState[i].Translate(positionError);
+                        //hull subs don't match => just teleport the player to exactly this position to avoid mismatches,
+                        //since this would completely break the camera
+                        positionError = Collider.SimPosition - serverPos.Position;
+                        character.MemLocalState.Clear();
+                    }
+                    else
+                    {
+                        for (int i = localPosIndex; i < character.MemLocalState.Count; i++)
+                        {
+                            Hull pointHull = Hull.FindHull(character.MemLocalState[i].Position, clientHull, false);
+                            if (pointHull != clientHull && ((pointHull == null) || (clientHull == null) || (pointHull.Submarine == clientHull.Submarine))) break;
+                            character.MemLocalState[i].Translate(positionError, rotationError);
+                        }
                     }
 
-                    Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation);
+                    Collider.SetTransform(Collider.SimPosition + positionError, Collider.Rotation + rotationError);
+                    foreach (Limb limb in Limbs)
+                    {
+                        limb.body.SetTransform(limb.body.SimPosition + positionError, limb.body.Rotation);
+                    }
                 }
 
                 if (character.MemLocalState.Count > 120) character.MemLocalState.RemoveRange(0, character.MemLocalState.Count - 120);
@@ -1443,5 +1481,12 @@ namespace Barotrauma
             list.Remove(this);
         }
 
+        public static void RemoveAll()
+        {
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                list[i].Remove();
+            }
+        }
     }
 }

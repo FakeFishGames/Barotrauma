@@ -144,8 +144,19 @@ namespace Barotrauma
         public Item FindItem(string itemName)
         {
             if (itemName == null) return null;
+            return Items.FirstOrDefault(i => i != null && (i.Prefab.NameMatches(itemName) || i.HasTag(itemName)));
+        }
 
-            return Items.FirstOrDefault(i => i != null && (i.Name == itemName || i.HasTag(itemName)));
+        public Item FindItem(string[] itemNames)
+        {
+            if (itemNames == null) return null;
+
+            foreach (string itemName in itemNames)
+            {
+                var item = FindItem(itemName);
+                if (item != null) return item;
+            }
+            return null;
         }
 
         public virtual void RemoveItem(Item item)
@@ -212,6 +223,7 @@ namespace Barotrauma
                 if (!prevItems.Contains(item))
                 {
                     if (Owner == c.Character)
+<<<<<<< HEAD
                     {
                         if (item.ContainedItems == null || item.ContainedItems.All(i => i == null))
                         {
@@ -234,6 +246,14 @@ namespace Barotrauma
                         {
                             GameServer.Log(c.Character + " placed " + item.Name + " (contained items: " + string.Join(", ", Array.FindAll(item.ContainedItems, i => i != null).Select(i => i.Name)) + ")" + " in " + Owner, ServerLog.MessageType.Inventory);
                         }
+=======
+                    {
+                        GameServer.Log(c.Character.LogName+ " picked up " + item.Name, ServerLog.MessageType.Inventory);
+                    }
+                    else
+                    {
+                        GameServer.Log(c.Character.LogName + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
+>>>>>>> master
                     }
                     
                 }
@@ -245,6 +265,7 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
+<<<<<<< HEAD
                         if (item.ContainedItems == null || item.ContainedItems.All(i => i == null))
                         {
                             GameServer.Log(c.Character + " dropped " + item.Name, ServerLog.MessageType.Inventory);
@@ -264,6 +285,13 @@ namespace Barotrauma
                         {
                             GameServer.Log(c.Character + " removed " + item.Name + " (contained items: " + string.Join(", ", Array.FindAll(item.ContainedItems, i => i != null).Select(i => i.Name)) + ")" + " from " + Owner, ServerLog.MessageType.Inventory);
                         }
+=======
+                        GameServer.Log(c.Character.LogName + " dropped " + item.Name, ServerLog.MessageType.Inventory);
+                    }
+                    else
+                    {
+                        GameServer.Log(c.Character.LogName + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
+>>>>>>> master
                     }
                 }
             }

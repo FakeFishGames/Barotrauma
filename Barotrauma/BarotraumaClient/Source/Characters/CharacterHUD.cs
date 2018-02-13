@@ -13,6 +13,8 @@ namespace Barotrauma
         private static Sprite noiseOverlay, damageOverlay;
 
         private static GUIButton cprButton;
+        
+        private static GUIButton grabHoldButton;
 
         private static GUIButton suicideButton;
 
@@ -40,6 +42,8 @@ namespace Barotrauma
             if (GUI.DisableHUD) return;
 
             if (cprButton != null && cprButton.Visible && character != Character.Spied) cprButton.AddToGUIUpdateList();
+
+            if (grabHoldButton != null && cprButton.Visible) grabHoldButton.AddToGUIUpdateList();
 
             if (suicideButton != null && suicideButton.Visible && character != Character.Spied) suicideButton.AddToGUIUpdateList();
             
@@ -86,8 +90,12 @@ namespace Barotrauma
                 if (character.Oxygen < 10.0f) oxygenBar.Flash();
             }
             if (healthBar != null) healthBar.Update(deltaTime);
-
-            if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
+            
+            if (Inventory.SelectedSlot == null)
+            {
+                if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
+                if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
+            }
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
 
@@ -114,10 +122,12 @@ namespace Barotrauma
                     }
                 }
 
-                if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
+                if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
                     character.SelectedCharacter.Inventory.Update(deltaTime);
                 }
+
+                Inventory.UpdateDragging();
             }
         }
 
@@ -158,17 +168,8 @@ namespace Barotrauma
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
-                    character.Inventory.DrawOffset = Vector2.Zero;
-                    character.Inventory.DrawOwn(spriteBatch);
-                }
-
-                if (character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
-                {
-                    character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f, 0.0f);
-                    character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
-
                     if (cprButton == null)
                     {
                         cprButton = new GUIButton(
@@ -195,9 +196,48 @@ namespace Barotrauma
                         };
                     }
 
-                    //cprButton.Visible = character.GetSkillLevel("Medical") > 20.0f;
+                    if (grabHoldButton == null)
+                    {
+                        grabHoldButton = new GUIButton(
+                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(320, -60), new Point(130, 20)),
+                                TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
 
+                        grabHoldButton.OnClicked = (button, userData) =>
+                        {
+                            if (Character.Controlled == null || Character.Controlled.SelectedCharacter == null) return false;
+
+                            Character.Controlled.AnimController.GrabLimb = Character.Controlled.AnimController.GrabLimb == LimbType.None ? LimbType.Torso : LimbType.None;
+
+                            foreach (Limb limb in Character.Controlled.SelectedCharacter.AnimController.Limbs)
+                            {
+                                limb.pullJoint.Enabled = false;
+                            }
+
+                            if (GameMain.Client != null)
+                            {
+                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Control });
+                            }
+
+                            grabHoldButton.Text = TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString());
+                            return true;
+                        };
+                    }
+                    
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
+                    if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
+
+                    character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f, 0.0f);
+                    character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
+                }
+
+                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                {
+                    character.Inventory.DrawOffset = Vector2.Zero;
+                    character.Inventory.DrawOwn(spriteBatch);
+                }
+                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                {
+                    Inventory.DrawDragging(spriteBatch);
                 }
 
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
@@ -205,10 +245,15 @@ namespace Barotrauma
                     Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
                     startPos = cam.WorldToScreen(startPos);
 
+                    string focusName = character.FocusedCharacter.SpeciesName;
+                    if (character.FocusedCharacter.Info != null)
+                    {
+                        focusName = character.FocusedCharacter.Info.DisplayName;
+                    }
                     Vector2 textPos = startPos;
-                    textPos -= new Vector2(GUI.Font.MeasureString(character.FocusedCharacter.Info.Name).X / 2, 20);
+                    textPos -= new Vector2(GUI.Font.MeasureString(focusName).X / 2, 20);
 
-                    GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.Info.Name, Color.White, Color.Black, 2);
+                    GUI.DrawString(spriteBatch, textPos, focusName, Color.White, Color.Black, 2);
                 }
                 else if (character.SelectedCharacter == null && character.FocusedItem != null && character.SelectedConstruction == null)
                 {
@@ -270,12 +315,10 @@ namespace Barotrauma
                 if (suicideButton == null)
                 {
                     suicideButton = new GUIButton(
-                        new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), "Give in", "");
+                        new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), TextManager.Get("GiveInButton"), "");
 
-                    
-                    suicideButton.ToolTip = GameMain.NetworkMember == null ?
-                        "The character can no longer be revived if you give in." :
-                        "Let go of your character and enter spectator mode (other players will no longer be able to revive you)";
+
+                    suicideButton.ToolTip = TextManager.Get(GameMain.NetworkMember == null ? "GiveInHelpSingleplayer" : "GiveInHelpMultiplayer");
 
                     suicideButton.OnClicked = (button, userData) =>
                     {
@@ -305,7 +348,7 @@ namespace Barotrauma
         {
             if (GameMain.DebugDraw)
             {
-                GUI.DrawString(spriteBatch, new Vector2(30, GameMain.GraphicsHeight - 260), "Stun: "+character.Stun, Color.White);
+                GUI.DrawString(spriteBatch, new Vector2(30, GameMain.GraphicsHeight - 260), TextManager.Get("Stun") + ": " + character.Stun, Color.White);
             }
 
             if (oxygenBar == null)
@@ -325,7 +368,7 @@ namespace Barotrauma
                 oxygenBar.Draw(spriteBatch);
                 if (!oxyMsgShown)
                 {
-                    GUI.AddMessage(InfoTextManager.GetInfoText("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Y), Alignment.Left, Color.White, 5.0f);
+                    GUI.AddMessage(TextManager.Get("OxygenBarInfo"), new Vector2(oxygenBar.Rect.Right + 10, oxygenBar.Rect.Y), Alignment.Left, Color.White, 5.0f);
                     oxyMsgShown = true;
                 }
             }
@@ -355,7 +398,7 @@ namespace Barotrauma
                 
                 if (pressureMsgTimer > 0.5f && !pressureMsgShown)
                 {
-                    GUI.AddMessage(InfoTextManager.GetInfoText("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 60.0f), Alignment.Left, Color.White, 5.0f);
+                    GUI.AddMessage(TextManager.Get("PressureInfo"), new Vector2(40.0f, healthBar.Rect.Y - 60.0f), Alignment.Left, Color.White, 5.0f);
                     pressureMsgShown = true;                    
                 }
 

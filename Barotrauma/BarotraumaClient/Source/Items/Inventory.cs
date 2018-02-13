@@ -68,6 +68,22 @@ namespace Barotrauma
 
     partial class Inventory
     {
+        public class SlotReference
+        {
+            public readonly Inventory Inventory;
+            public readonly InventorySlot Slot;
+            public readonly int SlotIndex;
+
+            public bool IsSubSlot;
+
+            public SlotReference(Inventory inventory, InventorySlot slot, int slotIndex, bool isSubSlot)
+            {
+                Inventory = inventory;
+                Slot = slot;
+                SlotIndex = slotIndex;
+                IsSubSlot = isSubSlot;
+            }
+        }
 
         public static InventorySlot draggingSlot;
         public static Item draggingItem;
@@ -80,9 +96,12 @@ namespace Barotrauma
             set { slotsPerRow = Math.Max(1, value); }
         }
 
-        protected int selectedSlot = -1;
+        protected static SlotReference highlightedSubInventorySlot;
+        protected static Inventory highlightedSubInventory;
 
-        protected InventorySlot[] slots;
+        protected static SlotReference selectedSlot;
+
+        public InventorySlot[] slots;
 
         private Vector2 centerPos;
 
@@ -114,6 +133,10 @@ namespace Barotrauma
             }
         }
 
+        public static SlotReference SelectedSlot
+        {
+            get { return selectedSlot; }
+        }
 
         protected virtual void CreateSlots()
         {
@@ -135,6 +158,11 @@ namespace Barotrauma
 
                 slots[i] = new InventorySlot(slotRect);
             }
+
+            if (selectedSlot != null && selectedSlot.Inventory == this)
+            {
+                selectedSlot = new SlotReference(this, slots[selectedSlot.SlotIndex], selectedSlot.SlotIndex, selectedSlot.IsSubSlot);
+            }
         }
 
         public virtual void Update(float deltaTime, bool subInventory = false)
@@ -150,22 +178,8 @@ namespace Barotrauma
             for (int i = 0; i < capacity; i++)
             {
                 if (slots[i].Disabled) continue;
-                UpdateSlot(slots[i], i, Items[i], false);
+                UpdateSlot(slots[i], i, Items[i], subInventory);
             }
-
-
-            if (draggingItem != null &&
-                (draggingSlot == null || (!draggingSlot.InteractRect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
-            {
-                if (!PlayerInput.LeftButtonHeld())
-                {
-                    CreateNetworkEvent();
-                    draggingItem.Drop();
-
-                    GUI.PlayUISound(GUISoundType.DropItem);
-                }
-            }
-
         }
 
         protected void UpdateSlot(InventorySlot slot, int slotIndex, Item item, bool isSubSlot)
@@ -173,20 +187,16 @@ namespace Barotrauma
             bool mouseOn = slot.InteractRect.Contains(PlayerInput.MousePosition) && !Locked;
             
             slot.State = GUIComponent.ComponentState.None;
-
-            if (!(this is CharacterInventory) && !mouseOn && selectedSlot == slotIndex)
-            {
-                selectedSlot = -1;
-            }
-
+            
             if (mouseOn &&
-                (draggingItem != null || selectedSlot == slotIndex || selectedSlot == -1))
+                (draggingItem != null || selectedSlot == null || selectedSlot.Slot == slot) &&
+                (highlightedSubInventory == null || highlightedSubInventory == this || highlightedSubInventorySlot?.Slot == slot || highlightedSubInventory.Owner == item))
             {
                 slot.State = GUIComponent.ComponentState.Hover;
 
-                if (!isSubSlot && selectedSlot == -1)
+                if (selectedSlot == null || (!selectedSlot.IsSubSlot && isSubSlot))
                 {
-                    selectedSlot = slotIndex;
+                    selectedSlot = new SlotReference(this, slot, slotIndex, isSubSlot);
                 }
 
                 if (draggingItem == null)
@@ -203,38 +213,29 @@ namespace Barotrauma
                     {
                         doubleClickedItem = item;
                     }
-
-                    if (draggingItem != Items[slotIndex])
-                    {
-                        //selectedSlot = slotIndex;
-                        if (TryPutItem(draggingItem, slotIndex, true, Character.Controlled))
-                        {
-                            if (slots != null) slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
-                            GUI.PlayUISound(GUISoundType.PickItem);
-                        }
-                        else
-                        {
-                            if (slots != null) slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
-                            GUI.PlayUISound(GUISoundType.PickItemFail);
-                        }
-                        draggingItem = null;
-                        draggingSlot = null;
-                    }
-                }
+                }               
             }
+        }
+
+        protected Inventory GetSubInventory(int slotIndex)
+        {
+            var item = Items[slotIndex];
+            if (item == null) return null;
+
+            var container = item.GetComponent<ItemContainer>();
+            if (container == null) return null;
+
+            return container.Inventory;
         }
 
         public void UpdateSubInventory(float deltaTime, int slotIndex)
         {
-            var item = Items[slotIndex];
-            if (item == null) return;
+            Inventory subInventory = GetSubInventory(slotIndex);
+            if (subInventory == null) return;
 
-            var container = item.GetComponent<ItemContainer>();
-            if (container == null) return;
+            if (subInventory.slots == null) subInventory.CreateSlots();
 
-            if (container.Inventory.slots == null) container.Inventory.CreateSlots();
-
-            int itemCapacity = container.Capacity;
+            int itemCapacity = subInventory.Items.Length;
 
             var slot = slots[slotIndex];
             new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
@@ -246,17 +247,22 @@ namespace Barotrauma
             for (int i = 0; i < itemCapacity; i++)
             {
                 subRect.Y = subRect.Y - subRect.Height - 10;
-                container.Inventory.slots[i].Rect = subRect;
-                container.Inventory.slots[i].InteractRect = subRect;
-                container.Inventory.slots[i].InteractRect.Inflate(5, 5);
+                subInventory.slots[i].Rect = subRect;
+                subInventory.slots[i].InteractRect = subRect;
+                subInventory.slots[i].InteractRect.Inflate(5, 5);
 
+                if (subRect.Y < GameMain.GraphicsHeight * 0.4f)
+                {
+                    subRect = slot.Rect;
+                    subRect.X = subInventory.slots[i].Rect.Right + 10;
+                }
             }
 
-            container.Inventory.isSubInventory = true;
+            subInventory.isSubInventory = true;
             
             slots[slotIndex].State = GUIComponent.ComponentState.Hover;
 
-            container.Inventory.Update(deltaTime, true);
+            subInventory.Update(deltaTime, true);
         }
 
 
@@ -274,17 +280,6 @@ namespace Barotrauma
                 DrawSlot(spriteBatch, slots[i], Items[i], drawItem);
             }
 
-            if (draggingItem != null &&
-                (draggingSlot == null || (!draggingSlot.InteractRect.Contains(PlayerInput.MousePosition) && draggingItem.ParentInventory == this)))
-            {
-                Rectangle dragRect = new Rectangle(
-                    (int)PlayerInput.MousePosition.X - 10,
-                    (int)PlayerInput.MousePosition.Y - 10,
-                    40, 40);
-
-                DrawSlot(spriteBatch, new InventorySlot(dragRect), draggingItem);
-            }
-
             for (int i = 0; i < capacity; i++)
             {
                 if (slots[i].InteractRect.Contains(PlayerInput.MousePosition) && !slots[i].Disabled && Items[i] != null)
@@ -296,9 +291,26 @@ namespace Barotrauma
                     }
                     else
                     {
-                        toolTip = string.IsNullOrEmpty(Items[i].Description) ?
+                        string description = Items[i].Description;
+                        if (Items[i].Prefab.NameMatches("ID Card"))
+                        {
+                            string[] readTags = Items[i].Tags.Split(',');
+                            string idName = null;
+                            string idJob = null;
+                            foreach (string tag in readTags)
+                            {
+                                string[] s = tag.Split(':');
+                                if (s[0] == "name")
+                                    idName = s[1];
+                                if (s[0] == "job")
+                                    idJob = s[1];
+                            }
+                            if (idName != null)
+                                description = "This belongs to " + idName + (idJob != null ? ", the " + idJob + "." : ".") + description;
+                        }
+                        toolTip = string.IsNullOrEmpty(description) ?
                             Items[i].Name :
-                            Items[i].Name + '\n' + Items[i].Description;
+                            Items[i].Name + '\n' + description;
                     }
 
                     DrawToolTip(spriteBatch, toolTip, slots[i].Rect);
@@ -316,9 +328,9 @@ namespace Barotrauma
             Vector2 textSize = GUI.Font.MeasureString(toolTip);
             Vector2 rectSize = textSize * 1.2f;
 
-            Vector2 pos = new Vector2(highlightedSlot.Right, highlightedSlot.Y - rectSize.Y);
+            Vector2 pos = new Vector2(highlightedSlot.Right, highlightedSlot.Y);
             pos.X = (int)(pos.X + 3);
-            pos.Y = (int)pos.Y;
+            pos.Y = (int)pos.Y - Math.Max((pos.Y + rectSize.Y) - GameMain.GraphicsHeight, 0);
 
             GUI.DrawRectangle(spriteBatch, pos, rectSize, Color.Black * 0.8f, true);
             GUI.Font.DrawString(spriteBatch, toolTip,
@@ -348,17 +360,67 @@ namespace Barotrauma
 #endif
 
             var slot = slots[slotIndex];
-            Rectangle containerRect = new Rectangle(slot.Rect.X - 5, slot.Rect.Y - (40 + 10) * itemCapacity - 5,
-                    slot.Rect.Width + 10, slot.Rect.Height + (40 + 10) * itemCapacity + 10);
+            Rectangle containerRect = container.Inventory.slots[0].InteractRect;
+            for (int i = 1; i< container.Inventory.slots.Length; i++)
+            {
+                containerRect = Rectangle.Union(containerRect, container.Inventory.slots[i].InteractRect);
+            }
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(containerRect.X, containerRect.Y, containerRect.Width, containerRect.Height - slot.Rect.Height - 5), Color.Black * 0.8f, true);
             GUI.DrawRectangle(spriteBatch, containerRect, Color.White);
 
             container.Inventory.Draw(spriteBatch, true);
+        }
 
-            if (!containerRect.Contains(PlayerInput.MousePosition))
+        public static void UpdateDragging()
+        {
+            if (draggingItem != null && PlayerInput.LeftButtonReleased())
             {
-                if (draggingItem == null || draggingItem.Container != item) selectedSlot = -1;
+                if (selectedSlot == null)
+                {
+                    draggingItem.ParentInventory?.CreateNetworkEvent();
+                    draggingItem.Drop();
+                    GUI.PlayUISound(GUISoundType.DropItem);
+                }
+                else if (selectedSlot.Inventory.Items[selectedSlot.SlotIndex] != draggingItem)
+                {
+                    Inventory selectedInventory = selectedSlot.Inventory;
+                    int slotIndex = selectedSlot.SlotIndex;
+                    if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, Character.Controlled))
+                    {
+                        if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                        GUI.PlayUISound(GUISoundType.PickItem);
+                    }
+                    else
+                    {
+                        if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        GUI.PlayUISound(GUISoundType.PickItemFail);
+                    }
+                    draggingItem = null;
+                    draggingSlot = null;
+                }
+
+                draggingItem = null;
+            }
+            
+            if (selectedSlot != null && !selectedSlot.Slot.InteractRect.Contains(PlayerInput.MousePosition))
+            {
+                selectedSlot = null;
+            }
+        }
+
+        public static void DrawDragging(SpriteBatch spriteBatch)
+        {
+            if (draggingItem == null) return;
+
+            if (draggingSlot == null || (!draggingSlot.InteractRect.Contains(PlayerInput.MousePosition)))
+            {
+                Rectangle dragRect = new Rectangle(
+                    (int)PlayerInput.MousePosition.X - 10,
+                    (int)PlayerInput.MousePosition.Y - 10,
+                    40, 40);
+
+                DrawSlot(spriteBatch, new InventorySlot(dragRect), draggingItem);
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+using Barotrauma.Networking;
 using Barotrauma.Particles;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -14,16 +14,21 @@ namespace Barotrauma
 {
     class GameMain : Game
     {
+        public static bool ShowFPS = true;
         public static bool DebugDraw;
         
         public static FrameCounter FrameCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
+<<<<<<< HEAD
 
         //NilMod Class
         public static NilMod NilMod;
         public static NilModLagDiagnostics NilModProfiler;
 
+=======
+        
+>>>>>>> master
         public static GameScreen            GameScreen;
         public static MainMenuScreen        MainMenuScreen;
         public static LobbyScreen           LobbyScreen;
@@ -63,6 +68,8 @@ namespace Barotrauma
 
         private static SpriteBatch spriteBatch;
 
+        private Viewport defaultViewport;
+
         public static GameMain Instance
         {
             get;
@@ -75,6 +82,12 @@ namespace Barotrauma
             private set;
         }
         
+        public static WindowMode WindowMode
+        {
+            get;
+            private set;
+        }
+
         public static int GraphicsWidth
         {
             get;
@@ -180,13 +193,26 @@ namespace Barotrauma
                 }
             }
 
-            GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
-
-            GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
             GraphicsDeviceManager.PreferredBackBufferWidth = GraphicsWidth;
             GraphicsDeviceManager.PreferredBackBufferHeight = GraphicsHeight;
 
+            SetWindowMode(Config.WindowMode);
+
+            defaultViewport = GraphicsDevice.Viewport;
+        }
+
+        public void SetWindowMode(WindowMode windowMode)
+        {
+            WindowMode = windowMode;
+            GraphicsDeviceManager.HardwareModeSwitch = Config.WindowMode != WindowMode.BorderlessWindowed;
+            GraphicsDeviceManager.IsFullScreen = Config.WindowMode == WindowMode.Fullscreen || Config.WindowMode == WindowMode.BorderlessWindowed;
+            
             GraphicsDeviceManager.ApplyChanges();
+        }
+
+        public void ResetViewPort()
+        {
+            GraphicsDevice.Viewport = defaultViewport;
         }
 
         /// <summary>
@@ -260,7 +286,7 @@ namespace Barotrauma
             DebugConsole.Log(SelectedPackage == null ? "No content package selected" : "Content package \"" + SelectedPackage.Name + "\" selected");
         yield return CoroutineStatus.Running;
 
-            LightManager = new Lights.LightManager(base.GraphicsDevice);
+            LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
 
             Hull.renderer = new WaterRenderer(base.GraphicsDevice, Content);
             TitleScreen.LoadState = 1.0f;
@@ -321,7 +347,7 @@ namespace Barotrauma
             
             ServerListScreen        =   new ServerListScreen();
 
-            SubEditorScreen         =   new SubEditorScreen();
+            SubEditorScreen         =   new SubEditorScreen(Content);
             CharacterEditorScreen   =   new CharacterEditorScreen();
             ParticleEditorScreen    =   new ParticleEditorScreen();
 
@@ -330,6 +356,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Running;
 
             ParticleManager = new ParticleManager("Content/Particles/ParticlePrefabs.xml", GameScreen.Cam);
+            ParticleManager.LoadPrefabs();
             DecalManager = new DecalManager("Content/Particles/DecalPrefabs.xml");
         yield return CoroutineStatus.Running;
 
@@ -437,8 +464,13 @@ namespace Barotrauma
 
                     NilModProfiler.SWDebugConsole.Start();
                     DebugConsole.Update(this, (float)Timing.Step);
+<<<<<<< HEAD
                     NilModProfiler.RecordDebugConsole();
 
+=======
+                    paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
+                    
+>>>>>>> master
                     if (!paused)
                     {
                         NilModProfiler.SWGameScreen.Start();

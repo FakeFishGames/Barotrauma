@@ -11,7 +11,7 @@
     <Sprite texture="lamp.png" sourcerect="0,0,16,32" depth="0.8"/>
 
     <LightComponent lightcolor="1.0,1.0,1.0,1.0" range ="800.0" powerconsumption="5">
-      <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="33,0,31,37"/>
+      <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="33,0,31,37" alpha="1.0"/>
     </LightComponent>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
@@ -31,7 +31,7 @@
     <Sprite texture="lamp.png" sourcerect="0,48,48,16" depth="0.8"/>
 
     <LightComponent lightcolor="1.0,0.0,0.0,0.2" range="500.0" IsOn="true">
-      <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="0,48,48,16"/>
+      <sprite texture="Content/Items/Electricity/lamp.png" sourcerect="0,48,48,16" alpha="1.0"/>
     </LightComponent>
     
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">

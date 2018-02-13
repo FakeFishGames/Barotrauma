@@ -34,13 +34,11 @@ namespace Barotrauma.Particles
             MaxParticles = GameMain.NilMod.MaxParticles;
 
             particles = new Particle[MaxParticles];
-
-            LoadPrefabs(configFile);
         }
 
-        public void LoadPrefabs(string file)
+        public void LoadPrefabs()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(file);
+            XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
             if (doc == null || doc.Root == null) return;
 
             prefabs = new Dictionary<string, ParticlePrefab>();
@@ -49,7 +47,7 @@ namespace Barotrauma.Particles
             {
                 if (prefabs.ContainsKey(element.Name.ToString()))
                 {
-                    DebugConsole.ThrowError("Error in " + file + "! Each particle prefab must have a unique name.");
+                    DebugConsole.ThrowError("Error in " + ConfigFile + "! Each particle prefab must have a unique name.");
                     continue;
                 }
                 prefabs.Add(element.Name.ToString(), new ParticlePrefab(element));

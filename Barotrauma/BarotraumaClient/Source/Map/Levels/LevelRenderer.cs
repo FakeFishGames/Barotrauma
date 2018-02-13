@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -19,20 +19,32 @@ namespace Barotrauma
         private Level level;
 
         private VertexBuffer wallVertices, bodyVertices;
-        
-        //public VertexPositionTexture[] WallVertices;
-        //public VertexPositionColor[] BodyVertices;
-        
+
+        public static Sprite Background
+        {
+            get
+            {
+                if (background == null) background = new Sprite("Content/Map/background2.png", Vector2.Zero);
+                return background;
+            }
+        }
+
+        public static Sprite BackgroundTop
+        {
+            get
+            {
+                if (backgroundTop == null) backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
+                return backgroundTop;
+            }
+        }
+
         public LevelRenderer(Level level)
         {
             if (shaftTexture == null) shaftTexture = TextureLoader.FromFile("Content/Map/iceWall.png");
 
-            if (background==null)
-            {
-                background = new Sprite("Content/Map/background2.png", Vector2.Zero);
-                backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
-                dustParticles = new Sprite("Content/Map/dustparticles.png", Vector2.Zero);
-            }
+            if (background == null) background = new Sprite("Content/Map/background2.png", Vector2.Zero);
+            if (backgroundTop == null) backgroundTop = new Sprite("Content/Map/background.png", Vector2.Zero);
+            if (dustParticles == null) dustParticles = new Sprite("Content/Map/dustparticles.png", Vector2.Zero);
 
             if (wallEdgeEffect == null)
             {
@@ -63,6 +75,7 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             dustOffset -= Vector2.UnitY * 10.0f * deltaTime;
+            while (dustOffset.Y <= -1024.0f) dustOffset.Y += 1024.0f;
         }
 
         public static VertexPositionColorTexture[] GetColoredVertices(VertexPositionTexture[] vertices, Color color)
@@ -108,7 +121,7 @@ namespace Barotrauma
             Vector2 backgroundPos = cam.WorldViewCenter;
             
             backgroundPos.Y = -backgroundPos.Y;
-            backgroundPos /= 20.0f;
+            backgroundPos *= 0.05f;
 
             if (backgroundPos.Y < 1024)
             {
@@ -130,35 +143,38 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
+            spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
                 SamplerState.LinearWrap, DepthStencilState.Default, null, null,
                 cam.Transform);
+            
 
             if (backgroundSpriteManager != null) backgroundSpriteManager.DrawSprites(spriteBatch, cam);
             if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch);
-            
+
+            Rectangle srcRect = new Rectangle(0, 0, 2048, 2048);
+            Vector2 origin = new Vector2(cam.WorldView.X, -cam.WorldView.Y);
+            Vector2 offset = -origin + dustOffset;
+            while (offset.X <= -srcRect.Width) offset.X += srcRect.Width;
+            while (offset.X > 0.0f) offset.X -= srcRect.Width;
+            while (offset.Y <= -srcRect.Height) offset.Y += srcRect.Height;
+            while (offset.Y > 0.0f) offset.Y -= srcRect.Height;
             for (int i = 0; i < 4; i++)
             {
                 float scale = 1.0f - i * 0.2f;
+                float recipScale = 1.0f / scale;
 
-                //alpha goes from 1.0 to 0.0 when scale is in the range of 0.2-0.1
-                float alpha = (cam.Zoom * scale) < 0.2f ? (cam.Zoom * scale - 0.1f) * 10.0f : 1.0f;
+                //alpha goes from 1.0 to 0.0 when scale is in the range of 0.5-0.25
+                float alpha = (cam.Zoom * scale) < 0.5f ? (cam.Zoom * scale - 0.25f) * 40.0f : 1.0f;
                 if (alpha <= 0.0f) continue;
 
-                Vector2 offset = (new Vector2(cam.WorldViewCenter.X, cam.WorldViewCenter.Y) + dustOffset) * scale;
-                Vector3 origin = new Vector3(cam.WorldView.Width, cam.WorldView.Height, 0.0f) * 0.5f;
+                Vector2 offsetS = offset * scale + new Vector2(cam.WorldView.Width, cam.WorldView.Height) * (1.0f - scale) * 0.5f - new Vector2(256.0f * i);
+                while (offsetS.X <= -srcRect.Width * scale) offsetS.X += srcRect.Width * scale;
+                while (offsetS.X > 0.0f) offsetS.X -= srcRect.Width * scale;
+                while (offsetS.Y <= -srcRect.Height * scale) offsetS.Y += srcRect.Height * scale;
+                while (offsetS.Y > 0.0f) offsetS.Y -= srcRect.Height * scale;
 
-                dustParticles.SourceRect = new Rectangle(
-                    (int)((offset.X - origin.X + (i * 256)) / scale),
-                    (int)((-offset.Y - origin.Y + (i * 256)) / scale),
-                    (int)((cam.WorldView.Width) / scale),
-                    (int)((cam.WorldView.Height) / scale));
-
-                spriteBatch.Draw(dustParticles.Texture,
-                    new Vector2(cam.WorldViewCenter.X, -cam.WorldViewCenter.Y),
-                    dustParticles.SourceRect, Color.White * alpha, 0.0f,
-                    new Vector2(cam.WorldView.Width, cam.WorldView.Height) * 0.5f / scale, scale, SpriteEffects.None, 1.0f - scale);
+                dustParticles.DrawTiled(spriteBatch, origin + offsetS, new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), Vector2.Zero, srcRect, Color.White * alpha, new Vector2(scale));
             }
 
             spriteBatch.End();

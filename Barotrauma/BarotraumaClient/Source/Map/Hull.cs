@@ -73,7 +73,7 @@ namespace Barotrauma
                 {
                     if (entity == this || !entity.IsHighlighted) continue;
                     if (!entity.IsMouseOn(position)) continue;
-
+                    
                     if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
                 }
             }
@@ -83,7 +83,7 @@ namespace Barotrauma
                 {
                     if (entity == this || !entity.IsHighlighted) continue;
                     if (!entity.IsMouseOn(position)) continue;
-
+                    
                     if (entity.linkedTo != null && entity.linkedTo.Contains(this)) entity.linkedTo.Remove(this);
                 }
             }

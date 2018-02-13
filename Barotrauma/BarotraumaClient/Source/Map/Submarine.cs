@@ -4,13 +4,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     partial class Submarine : Entity, IServerSerializable
     {
+        public Sprite PreviewImage;
+
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
@@ -67,6 +69,7 @@ namespace Barotrauma
         }
 
         public static float DamageEffectCutoff;
+        public static Color DamageEffectColor;
 
         public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
         {
@@ -103,17 +106,54 @@ namespace Barotrauma
             }
         }
 
-        public static bool SaveCurrent(string filePath)
+        public static bool SaveCurrent(string filePath, MemoryStream previewImage = null)
         {
-            if (Submarine.MainSub == null)
+            if (MainSub == null)
             {
-                Submarine.MainSub = new Submarine(filePath);
-                // return;
+                MainSub = new Submarine(filePath);
             }
 
-            Submarine.MainSub.filePath = filePath;
+            MainSub.filePath = filePath;
+            return MainSub.SaveAs(filePath, previewImage);
+        }
 
-            return Submarine.MainSub.SaveAs(filePath);
+        public void CreatePreviewWindow(GUIComponent frame)
+        {
+            new GUITextBlock(new Rectangle(0, 0, 0, 20), Name, "", Alignment.TopCenter, Alignment.TopCenter, frame, true, GUI.LargeFont);
+
+            if (PreviewImage == null)
+            {
+                var txtBlock = new GUITextBlock(new Rectangle(-20, 60, 256, 128), TextManager.Get("SubPreviewImageNotFound"), Color.Black * 0.5f, null, Alignment.Center, "", frame, true);
+                txtBlock.OutlineColor = txtBlock.TextColor;
+            }
+            else
+            {
+                new GUIImage(new Rectangle(-10, 60, 256, 128), PreviewImage, Alignment.TopLeft, frame);
+            }
+
+            Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
+            string dimensionsStr = realWorldDimensions == Vector2.Zero ?
+                TextManager.Get("Unknown") :
+                TextManager.Get("DimensionsFormat").Replace("[width]", ((int)(realWorldDimensions.X)).ToString()).Replace("[height]", ((int)(realWorldDimensions.Y)).ToString());
+            
+            new GUITextBlock(new Rectangle(246, 60, 100, 20),
+                TextManager.Get("Dimensions") + ": " + dimensionsStr,
+                "", frame, GUI.SmallFont);
+
+            new GUITextBlock(new Rectangle(246, 80, 100, 20),
+                TextManager.Get("RecommendedCrewSize") + ": " + (RecommendedCrewSizeMax == 0 ? TextManager.Get("Unknown") : RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax),
+                "", frame, GUI.SmallFont);
+
+            new GUITextBlock(new Rectangle(246, 100, 100, 20),
+                TextManager.Get("RecommendedCrewExperience") + ": " + (string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : RecommendedCrewExperience),
+                "", frame, GUI.SmallFont);
+
+            new GUITextBlock(new Rectangle(246, 120, 100, 20),
+                TextManager.Get("CompatibleContentPackages") + ": " + string.Join(", ", CompatibleContentPackages),
+                "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+
+            var descr = new GUITextBlock(new Rectangle(0, 200, 0, 100), Description, "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+            descr.CanBeFocused = false;
         }
 
         public void CheckForErrors()
@@ -122,7 +162,7 @@ namespace Barotrauma
 
             if (!Hull.hullList.Any())
             {
-                errorMsgs.Add("No hulls found in the submarine. Hulls determine the \"borders\" of an individual room and are required for water and air distribution to work correctly.");
+                errorMsgs.Add(TextManager.Get("NoHullsWarning"));
             }
 
             foreach (Item item in Item.ItemList)
@@ -131,25 +171,24 @@ namespace Barotrauma
 
                 if (!item.linkedTo.Any())
                 {
-                    errorMsgs.Add("The submarine contains vents which haven't been linked to an oxygen generator. Select a vent and click an oxygen generator while holding space to link them.");
+                    errorMsgs.Add(TextManager.Get("DisconnectedVentsWarning"));
                     break;
                 }
             }
 
             if (WayPoint.WayPointList.Find(wp => !wp.MoveWithLevel && wp.SpawnType == SpawnType.Path) == null)
             {
-                errorMsgs.Add("No waypoints found in the submarine. AI controlled crew members won't be able to navigate without waypoints.");
+                errorMsgs.Add(TextManager.Get("NoWaypointsWarning"));
             }
 
             if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)
             {
-                errorMsgs.Add("The submarine doesn't have spawnpoints for cargo (which are used for determining where to place bought items). "
-                     + "To fix this, create a new spawnpoint and change its \"spawn type\" parameter to \"cargo\".");
+                errorMsgs.Add(TextManager.Get("NoCargoSpawnpointWarning"));
             }
 
             if (errorMsgs.Any())
             {
-                new GUIMessageBox("Warning", string.Join("\n\n", errorMsgs), 400, 0);
+                new GUIMessageBox(TextManager.Get("Warning"), string.Join("\n\n", errorMsgs), 400, 0);
             }
 
             foreach (MapEntity e in MapEntity.mapEntityList)
@@ -157,9 +196,9 @@ namespace Barotrauma
                 if (Vector2.Distance(e.Position, HiddenSubPosition) > 20000)
                 {
                     var msgBox = new GUIMessageBox(
-                        "Warning",
-                        "One or more structures have been placed very far from the submarine. Show the structures?",
-                        new string[] { "Yes", "No" });
+                        TextManager.Get("Warning"),
+                        TextManager.Get("FarAwayEntitiesWarning"),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                     msgBox.Buttons[0].OnClicked += (btn, obj) =>
                     {

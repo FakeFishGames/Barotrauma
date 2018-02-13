@@ -49,8 +49,8 @@ namespace Barotrauma
 
 
 #if CLIENT
-        [Serialize(DamageSoundType.None, false)]
-        public DamageSoundType DamageSoundType
+        [Serialize("", false)]
+        public string DamageSound
         {
             get;
             private set;

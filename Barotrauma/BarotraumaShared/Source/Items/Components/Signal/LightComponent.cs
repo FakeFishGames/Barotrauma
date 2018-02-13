@@ -28,6 +28,9 @@ namespace Barotrauma.Items.Components
             set
             {
                 range = MathHelper.Clamp(value, 0.0f, 2048.0f);
+#if CLIENT
+                if (light != null) light.Range = range;
+#endif
             }
         }
 
@@ -72,7 +75,13 @@ namespace Barotrauma.Items.Components
         public Color LightColor
         {
             get { return lightColor; }
-            set { lightColor = value; }
+            set
+            {
+                lightColor = value;
+#if CLIENT
+                if (light != null) light.Color = lightColor;
+#endif
+            }
         }
 
         public override void Move(Vector2 amount)
@@ -111,36 +120,25 @@ namespace Barotrauma.Items.Components
 #endif
 
             IsActive = IsOn;
-
-            //foreach (XElement subElement in element.Elements())
-            //{
-            //    if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
-
-            //    light.LightSprite = new Sprite(subElement);
-            //    break;
-            //}
         }
         
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
+            UpdateOnActiveEffects(deltaTime);
 
 #if CLIENT
             light.ParentSub = item.Submarine;
-#endif
-            
-#if CLIENT
             if (item.Container != null)
             {
                 light.Color = Color.Transparent;
                 return;
             }
+            light.Position = item.Position;
 #endif
 
             if (item.body != null)
             {
 #if CLIENT
-                light.Position = item.Position;
                 light.Rotation = item.body.Dir > 0.0f ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
 #endif
                 if (!item.body.Enabled)
@@ -180,19 +178,17 @@ namespace Barotrauma.Items.Components
 
             voltage = 0.0f;
         }
-        
-        public override bool Use(float deltaTime, Character character = null)
-        {
-            return true;
-        }
 
+#if CLIENT
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
-
-#if CLIENT
             light.Remove();
+        }
 #endif
+        public override bool Use(float deltaTime, Character character = null)
+        {
+            return true;
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)

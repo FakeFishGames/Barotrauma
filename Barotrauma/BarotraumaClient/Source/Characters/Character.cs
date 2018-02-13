@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+using Barotrauma.Networking;
 using Barotrauma.Particles;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -15,6 +15,8 @@ namespace Barotrauma
     {
         protected float soundTimer;
         protected float soundInterval;
+        protected float hudInfoTimer;
+        protected bool hudInfoVisible;
 
         protected Vector2 LastHealthStatusVector;
 
@@ -323,18 +325,24 @@ namespace Barotrauma
             }
 
             Vector2 mouseSimPos = ConvertUnits.ToSimUnits(cursorPosition);
-
-            if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+            if (moveCam)
             {
-                Body body = Submarine.PickBody(AnimController.Limbs[0].SimPosition, mouseSimPos);
-                Structure structure = null;
-                if (body != null) structure = body.UserData as Structure;
-                if (structure != null)
+                if (DebugConsole.IsOpen || GUI.PauseMenuOpen || IsUnconscious ||
+                    (GameMain.GameSession?.CrewManager?.CrewCommander != null && GameMain.GameSession.CrewManager.CrewCommander.IsOpen))
                 {
-                    if (!structure.CastShadow && moveCam)
+                    if (deltaTime > 0.0f) cam.OffsetAmount = 0.0f;
+                }
+                else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+                {
+                    Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
+                    Structure structure = body == null ? null : body.UserData as Structure;
+
+                    float sightDist = Submarine.LastPickedFraction;
+                    if (body?.UserData is Structure && !((Structure)body.UserData).CastShadow)
                     {
-                        cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, 500.0f, 0.05f);
+                        sightDist = 1.0f;
                     }
+                    cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, Math.Max(250.0f, sightDist * 500.0f), 0.05f);
                 }
             }
 
@@ -379,10 +387,10 @@ namespace Barotrauma
 
         partial void KillProjSpecific()
         {
-            if (GameMain.NetworkMember != null && Character.controlled == this)
+            if (GameMain.NetworkMember != null && controlled == this)
             {
-                string chatMessage = InfoTextManager.GetInfoText("Self_CauseOfDeath." + causeOfDeath.ToString());
-                if (GameMain.Client != null) chatMessage += " Your chat messages will only be visible to other dead players.";
+                string chatMessage = TextManager.Get("Self_CauseOfDeathDescription." + causeOfDeath.ToString());
+                if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
@@ -405,6 +413,34 @@ namespace Barotrauma
             if (GameMain.Client != null && GameMain.Client.Character == this) GameMain.Client.Character = null;
 
             if (Lights.LightManager.ViewTarget == this) Lights.LightManager.ViewTarget = null;
+        }
+
+        partial void UpdateProjSpecific(float deltaTime, Camera cam)
+        {
+            if (info != null || health < maxHealth * 0.98f)
+            {
+                hudInfoTimer -= deltaTime;
+                if (hudInfoTimer <= 0.0f)
+                {
+                    if (controlled == null)
+                    {
+                        hudInfoVisible = true;
+                    }
+
+                    //if the character is not in the camera view, the name can't be visible and we can avoid the expensive visibility checks
+                    else if (WorldPosition.X < cam.WorldView.X || WorldPosition.X > cam.WorldView.Right || 
+                            WorldPosition.Y > cam.WorldView.Y || WorldPosition.Y < cam.WorldView.Y - cam.WorldView.Height)
+                    {
+                        hudInfoVisible = false;
+                    }
+                    else
+                    {
+                        //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
+                        hudInfoVisible = controlled.CanSeeCharacter(this);                    
+                    }
+                    hudInfoTimer = Rand.Range(0.5f, 1.0f);
+                }
+            }
         }
 
         public static void AddAllToGUIUpdateList()
@@ -449,6 +485,7 @@ namespace Barotrauma
 
                 if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
+<<<<<<< HEAD
 
             /*if (memPos != null && memPos.Count > 0 && controlled == this)
             {
@@ -491,6 +528,9 @@ namespace Barotrauma
             closestItemPos.Y = -closestItemPos.Y;
             GUI.DrawLine(spriteBatch, closestItemPos - new Vector2(0, 5), closestItemPos + new Vector2(0, 5), Color.Lime, 0, 10);*/
 
+=======
+            
+>>>>>>> master
             if (GUI.DisableHUD) return;
 
             Vector2 pos = DrawPosition;
@@ -500,11 +540,12 @@ namespace Barotrauma
             {
                 GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 100.0f,
                     speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f,
-                    Math.Min((float)speechBubbleTimer, 1.0f));
+                    Math.Min(speechBubbleTimer, 1.0f));
             }
 
             //if (this == controlled) return;
 
+<<<<<<< HEAD
             if (info != null && !(this == controlled))
             {
                 Vector2 namePos = new Vector2(pos.X, pos.Y - 90.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
@@ -567,6 +608,35 @@ namespace Barotrauma
 
                 GUI.Font.DrawString(spriteBatch, Info.Name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
                 GUI.Font.DrawString(spriteBatch, Info.Name, namePos, nameColor, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
+=======
+            float hoverRange = 300.0f;
+            float fadeOutRange = 200.0f;
+            float cursorDist = Vector2.Distance(WorldPosition, cam.ScreenToWorld(PlayerInput.MousePosition));
+            float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f);
+            
+            if (hudInfoVisible && info != null)
+            {
+                string name = Info.DisplayName;
+                if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");
+
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 110.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(Info.Name) * 0.5f / cam.Zoom;
+
+                Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            	Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
+            	namePos.X -= cam.WorldView.X; namePos.Y += cam.WorldView.Y;
+            	namePos *= screenSize / viewportSize;
+            	namePos.X = (float)Math.Floor(namePos.X); namePos.Y = (float)Math.Floor(namePos.Y);
+            	namePos *= viewportSize / screenSize;
+            	namePos.X += cam.WorldView.X; namePos.Y -= cam.WorldView.Y;
+
+                Color nameColor = Color.White;
+                if (Controlled != null && TeamID != Controlled.TeamID)
+                {
+                    nameColor = Color.Red;
+                }
+                GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
+                GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
+>>>>>>> master
 
                 if (GameMain.DebugDraw)
                 {
@@ -649,6 +719,7 @@ namespace Barotrauma
                         else if (Stun >= 1f) FlashColour = new Color(10, 10, 10, 100);
                     }
 
+<<<<<<< HEAD
                     if (GameMain.NilMod.CharFlashColourTime >= (NilMod.CharFlashColourRate / 2))
                     {
                         outLineColour = Color.Lerp(baseoutlinecolour, FlashColour, (GameMain.NilMod.CharFlashColourTime - (NilMod.CharFlashColourRate / 2)) / (NilMod.CharFlashColourRate / 2));
@@ -732,6 +803,15 @@ namespace Barotrauma
 
                     GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), health / maxHealth, Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f);
                 }
+=======
+            if (health < maxHealth * 0.98f && hudInfoVisible)
+            {
+                Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
+                GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), 
+                    health / maxHealth, 
+                    Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f * hudInfoAlpha,
+                    new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
+>>>>>>> master
             }
         }
 
@@ -784,6 +864,19 @@ namespace Barotrauma
                 GameMain.ParticleManager.CreateParticle("bubbles",
                     ConvertUnits.ToDisplayUnits(centerOfMass) + Rand.Vector(5.0f),
                     new Vector2(Rand.Range(-50f, 50f), Rand.Range(-100f, 50f)));
+
+                GameMain.ParticleManager.CreateParticle("gib",
+                    WorldPosition + Rand.Vector(Rand.Range(0.0f, 50.0f)),
+                    Rand.Range(0.0f, MathHelper.TwoPi),
+                    Rand.Range(200.0f, 700.0f), null);
+            }
+
+            for (int i = 0; i < 30; i++)
+            {
+                GameMain.ParticleManager.CreateParticle("heavygib",
+                    WorldPosition + Rand.Vector(Rand.Range(0.0f, 50.0f)),
+                    Rand.Range(0.0f, MathHelper.TwoPi),
+                    Rand.Range(50.0f, 500.0f), null);
             }
         }
     }

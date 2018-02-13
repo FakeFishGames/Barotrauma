@@ -30,6 +30,8 @@ namespace Barotrauma.Items.Components
 
         protected bool canBePicked;
         protected bool canBeSelected;
+        protected bool canBeCombined;
+        protected bool removeOnCombined;
 
         public bool WasUsed;
 
@@ -47,7 +49,7 @@ namespace Barotrauma.Items.Components
 
         private string msg;
         
-        [Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false)]
         public float PickingTime
         {
             get;
@@ -103,7 +105,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false)]
+        [Editable, Serialize(false, false)] //Editable for doors to do their magic
         public bool CanBePicked
         {
             get { return canBePicked; }
@@ -122,6 +124,22 @@ namespace Barotrauma.Items.Components
         {
             get { return canBeSelected; }
             set { canBeSelected = value; }
+        }
+
+        //Transfer conditions between same prefab items
+        [Serialize(false, false)]
+        public bool CanBeCombined
+        {
+            get { return canBeCombined; }
+            set { canBeCombined = value; }
+        }
+
+        //Remove item if combination results in 0 condition
+        [Serialize(false, false)]
+        public bool RemoveOnCombined
+        {
+            get { return removeOnCombined; }
+            set { removeOnCombined = value; }
         }
 
         public InputType PickKey
@@ -153,7 +171,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
 
-        [Serialize("", false)]
+        [Editable, Serialize("", false)]
         public string Msg
         {
             get { return msg; }
@@ -196,7 +214,7 @@ namespace Barotrauma.Items.Components
 
             try
             {
-                string pickKeyStr = element.GetAttributeString("selectkey", "Select");
+                string pickKeyStr = element.GetAttributeString("pickkey", "Select");
                 pickKeyStr = ToolBox.ConvertInputType(pickKeyStr);
                 PickKey = (InputType)Enum.Parse(typeof(InputType),pickKeyStr, true);
             }
@@ -287,11 +305,14 @@ namespace Barotrauma.Items.Components
         //returns true if the item was used succesfully (not out of ammo, reloading, etc)
         public virtual bool Use(float deltaTime, Character character = null) 
         {
-            return false;
+            return characterUsable || character == null;
         }
 
         //called when the item is equipped and right mouse button is pressed
-        public virtual void SecondaryUse(float deltaTime, Character character = null) { }  
+        public virtual bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return false;
+        }
 
         //called when the item is placed in a "limbslot"
         public virtual void Equip(Character character) { }
@@ -320,6 +341,43 @@ namespace Barotrauma.Items.Components
 
         public virtual bool Combine(Item item) 
         {
+            if (canBeCombined && this.item.Prefab == item.Prefab && item.Condition > 0.0f && this.item.Condition > 0.0f)
+            {
+                float transferAmount = 0.0f;
+                if (this.Item.Condition <= item.Condition)
+                    transferAmount = Math.Min(item.Condition, this.item.Prefab.Health - this.item.Condition);
+                else
+                    transferAmount = -Math.Min(this.item.Condition, item.Prefab.Health - item.Condition);
+
+                if (transferAmount == 0.0f)
+                    return false;
+                this.Item.Condition += transferAmount;
+                item.Condition -= transferAmount;
+                if (removeOnCombined)
+                {
+                    if (item.Condition <= 0.0f)
+                    {
+                        if (item.ParentInventory != null)
+                        {
+                            Character owner = (Character)item.ParentInventory.Owner;
+                            if (owner != null && owner.HasSelectedItem(item)) item.Unequip(owner);
+                            item.ParentInventory.RemoveItem(item);
+                        }
+                        Entity.Spawner.AddToRemoveQueue(item);
+                    }
+                    if (this.Item.Condition <= 0.0f)
+                    {
+                        if (this.Item.ParentInventory != null)
+                        {
+                            Character owner = (Character)this.Item.ParentInventory.Owner;
+                            if (owner != null && owner.HasSelectedItem(this.Item)) this.Item.Unequip(owner);
+                            this.Item.ParentInventory.RemoveItem(this.Item);
+                        }
+                        Entity.Spawner.AddToRemoveQueue(this.Item);
+                    }
+                }
+                return true;
+            }
             return false;
         }
 
@@ -396,7 +454,7 @@ namespace Barotrauma.Items.Components
 
             float[] skillSuccess = new float[requiredSkills.Count];
 
-            for (int i = 0; i < requiredSkills.Count; i++ )
+            for (int i = 0; i < requiredSkills.Count; i++)
             {
                 int characterLevel = character.GetSkillLevel(requiredSkills[i].Name);
 
@@ -405,7 +463,7 @@ namespace Barotrauma.Items.Components
 
             float average = skillSuccess.Average();
 
-            return (average+100.0f)/2.0f;        
+            return (average + 100.0f) / 2.0f;
         }
 
         public virtual void FlipX() { }
@@ -434,7 +492,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public bool HasRequiredItems(Character character, bool addMessage)
+        public virtual bool HasRequiredItems(Character character, bool addMessage)
         {
             if (!requiredItems.Any()) return true;
             if (character.Inventory == null) return false;
@@ -476,20 +534,7 @@ namespace Barotrauma.Items.Components
                 item.ApplyStatusEffect(effect, type, deltaTime, character);
             }
         }
-
-        public void ApplyStatusEffects(ActionType type, List<ISerializableEntity> targets, float deltaTime)
-        {
-            if (statusEffectLists == null) return;
-
-            List<StatusEffect> statusEffects;
-            if (!statusEffectLists.TryGetValue(type, out statusEffects)) return;
-
-            foreach (StatusEffect effect in statusEffects)
-            {
-                effect.Apply(type, deltaTime, item, targets);
-            }
-        }
-
+        
         public virtual void Load(XElement componentElement)
         {
             if (componentElement == null) return;            
@@ -503,13 +548,16 @@ namespace Barotrauma.Items.Components
             }
 
             List<RelatedItem> prevRequiredItems = new List<RelatedItem>(requiredItems);
-            requiredItems.Clear();
+            bool overrideRequiredItems = false;
 
             foreach (XElement subElement in componentElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
+                        if (!overrideRequiredItems) requiredItems.Clear();
+                        overrideRequiredItems = true;
+
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement);
                         
                         if (newRequiredItem == null) continue;

@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using FarseerPhysics.Factories;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -28,7 +30,7 @@ namespace Barotrauma.RuinGeneration
         }
 
         public List<Line> Walls;
-
+        
         public virtual void CreateWalls() { }
 
         public Alignment GetLineAlignment(Line line)
@@ -345,10 +347,78 @@ namespace Barotrauma.RuinGeneration
 
                 new Structure(backgroundRect, (background.Prefab as StructurePrefab), null).MoveWithLevel = true;
 
+                var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World, 
+                    ConvertUnits.ToSimUnits(leaf.Rect.Width),
+                    ConvertUnits.ToSimUnits(leaf.Rect.Height), 
+                    1, ConvertUnits.ToSimUnits(leaf.Center));
+
+                submarineBlocker.IsStatic = true;
+                submarineBlocker.CollisionCategories = Physics.CollisionWall;
+                submarineBlocker.CollidesWith = Physics.CollisionWall;
             }
 
+            List<RuinShape> doorlessRooms = new List<RuinShape>(shapes);
+
+            //generate doors & sensors that close them -------------------------------------------------------------
+
+            var sensorPrefab = MapEntityPrefab.Find("Alien Motion Sensor") as ItemPrefab;
+            var wirePrefab = MapEntityPrefab.Find("Wire") as ItemPrefab;
+
+            foreach (Corridor corridor in corridors)
+            {
+                var doorPrefab = RuinStructure.GetRandom(corridor.IsHorizontal ? RuinStructureType.Door : RuinStructureType.Hatch, Alignment.Center);
+                if (doorPrefab == null) continue;
+
+                //find all walls that are parallel to the corridor
+                var suitableWalls = corridor.IsHorizontal ?
+                    corridor.Walls.FindAll(c => c.A.Y == c.B.Y) : corridor.Walls.FindAll(c => c.A.X == c.B.X);
+
+                if (!suitableWalls.Any()) continue;
+
+                doorlessRooms.Remove(corridor);
+                Vector2 doorPos = corridor.Center;
+
+                //choose a random wall to place the door next to
+                var wall = suitableWalls[Rand.Int(suitableWalls.Count, Rand.RandSync.Server)];
+                if (corridor.IsHorizontal)
+                {
+                    doorPos.X = (wall.A.X + wall.B.X) / 2.0f;
+                }
+                else
+                {
+                    doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
+                }
+
+                var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos, null);
+                door.MoveWithLevel = true;
+
+                door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
+
+                if (sensorPrefab == null || wirePrefab == null) continue;
+
+                var sensorRoom = corridor.ConnectedRooms.FirstOrDefault(r => r != null && rooms.Contains(r));
+                if (sensorRoom == null) continue;
+
+                var sensor = new Item(sensorPrefab, new Vector2(
+                    Rand.Range(sensorRoom.Rect.X, sensorRoom.Rect.Right, Rand.RandSync.Server),
+                    Rand.Range(sensorRoom.Rect.Y, sensorRoom.Rect.Bottom, Rand.RandSync.Server)), null);
+                sensor.MoveWithLevel = true;
+
+                var wire = new Item(wirePrefab, sensorRoom.Center, null).GetComponent<Items.Components.Wire>();
+                wire.Item.MoveWithLevel = false;
+
+                var conn1 = door.Connections.Find(c => c.Name == "set_state");
+                conn1.AddLink(0, wire);
+                wire.Connect(conn1, false);
+
+                var conn2 = sensor.Connections.Find(c => c.Name == "state_out");
+                conn2.AddLink(0, wire);
+                wire.Connect(conn2, false);
+            }
+
+
             //generate props --------------------------------------------------------------
-            for (int i = 0; i < shapes.Count*2; i++ )
+            for (int i = 0; i < shapes.Count * 2; i++)
             {
                 Alignment[] alignments = new Alignment[] { Alignment.Top, Alignment.Bottom, Alignment.Right, Alignment.Left, Alignment.Center };
 
@@ -356,12 +426,15 @@ namespace Barotrauma.RuinGeneration
 
                 Vector2 size = (prop.Prefab is StructurePrefab) ? ((StructurePrefab)prop.Prefab).Size : Vector2.Zero;
 
-                var shape = shapes[Rand.Int(shapes.Count, Rand.RandSync.Server)];
+                //if the prop is placed at the center of the room, we have to use a room without a door (because they're also placed at the center)
+                var shape = prop.Alignment.HasFlag(Alignment.Center) ?
+                    doorlessRooms[Rand.Int(doorlessRooms.Count, Rand.RandSync.Server)] :
+                    shapes[Rand.Int(shapes.Count, Rand.RandSync.Server)];
 
                 Vector2 position = shape.Rect.Center.ToVector2();
                 if (prop.Alignment.HasFlag(Alignment.Top))
                 {
-                    position = new Vector2(Rand.Range(shape.Rect.X+size.X, shape.Rect.Right - size.X, Rand.RandSync.Server), shape.Rect.Bottom - 64);
+                    position = new Vector2(Rand.Range(shape.Rect.X + size.X, shape.Rect.Right - size.X, Rand.RandSync.Server), shape.Rect.Bottom - 64);
                 }
                 else if (prop.Alignment.HasFlag(Alignment.Bottom))
                 {
@@ -388,62 +461,6 @@ namespace Barotrauma.RuinGeneration
                         (int)size.X, (int)size.Y),
                         prop.Prefab as StructurePrefab, null).MoveWithLevel = true;
                 }
-            }
-            
-            //generate doors & sensors that close them -------------------------------------------------------------
-
-            var sensorPrefab = MapEntityPrefab.Find("Alien Motion Sensor") as ItemPrefab;
-            var wirePrefab = MapEntityPrefab.Find("Wire") as ItemPrefab;           
-
-            foreach (Corridor corridor in corridors)
-            {
-                var doorPrefab = RuinStructure.GetRandom(corridor.IsHorizontal ? RuinStructureType.Door : RuinStructureType.Hatch, Alignment.Center);
-                if (doorPrefab == null) continue;
-
-                //find all walls that are parallel to the corridor
-                var suitableWalls = corridor.IsHorizontal ? 
-                    corridor.Walls.FindAll(c => c.A.Y == c.B.Y) : corridor.Walls.FindAll(c => c.A.X == c.B.X);
-
-                if (!suitableWalls.Any()) continue;
-
-                Vector2 doorPos = corridor.Center;
-
-                //choose a random wall to place the door next to
-                var wall = suitableWalls[Rand.Int(suitableWalls.Count, Rand.RandSync.Server)];
-                if (corridor.IsHorizontal)
-                {
-                    doorPos.X = (wall.A.X + wall.B.X) / 2.0f;
-                }
-                else
-                {
-                    doorPos.Y = (wall.A.Y + wall.B.Y) / 2.0f;
-                }
-
-                var door = new Item(doorPrefab.Prefab as ItemPrefab, doorPos, null);
-                door.MoveWithLevel = true;
-
-                door.GetComponent<Items.Components.Door>().IsOpen = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.8f;
-
-                if (sensorPrefab == null || wirePrefab == null) continue;
-
-                var sensorRoom = corridor.ConnectedRooms.FirstOrDefault(r => r != null && rooms.Contains(r));
-                if (sensorRoom == null) continue;
-
-                var sensor = new Item(sensorPrefab, new Vector2(
-                    Rand.Range(sensorRoom.Rect.X, sensorRoom.Rect.Right, Rand.RandSync.Server), 
-                    Rand.Range(sensorRoom.Rect.Y, sensorRoom.Rect.Bottom, Rand.RandSync.Server)), null);
-                sensor.MoveWithLevel = true;
-
-                var wire = new Item(wirePrefab, sensorRoom.Center, null).GetComponent<Items.Components.Wire>();
-                wire.Item.MoveWithLevel = false;
-
-                var conn1 = door.Connections.Find(c => c.Name == "set_state");
-                conn1.AddLink(0, wire);
-                wire.Connect(conn1, false);
-
-                var conn2 = sensor.Connections.Find(c => c.Name == "state_out");
-                conn2.AddLink(0, wire);
-                wire.Connect(conn2, false);
             }
 
             return shapes;

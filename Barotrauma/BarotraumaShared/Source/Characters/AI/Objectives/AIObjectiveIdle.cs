@@ -9,15 +9,21 @@ namespace Barotrauma
     {
         const float WallAvoidDistance = 150.0f;
 
-        AITarget currentTarget;
+        private AITarget currentTarget;
         private float newTargetTimer;
+
+        private AIObjectiveFindSafety findSafety;
 
         public AIObjectiveIdle(Character character) : base(character, "")
         {
-
         }
 
-        public override float GetPriority(Character character)
+        public override bool IsCompleted()
+        {
+            return false;
+        }
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
         {
             return 1.0f;
         }
@@ -29,6 +35,14 @@ namespace Barotrauma
 
             if (pathSteering==null)
             {
+                return;
+            }
+            
+            if (character.AnimController.InWater)
+            {
+                //attempt to find a safer place if in water
+                if (findSafety == null) findSafety = new AIObjectiveFindSafety(character);
+                findSafety.TryComplete(deltaTime);
                 return;
             }
 
@@ -92,17 +106,10 @@ namespace Barotrauma
                         return;
                     }
                 }
-
-                if (character.AnimController.InWater)
-                {
-                    character.AIController.SteeringManager.SteeringManual(deltaTime, new Vector2(0.0f, 0.5f));
-                }
-                else
-                {
-                    character.AIController.SteeringManager.SteeringWander();
-                    //reset vertical steering to prevent dropping down from platforms etc
-                    character.AIController.SteeringManager.ResetY();
-                }
+                
+                character.AIController.SteeringManager.SteeringWander();
+                //reset vertical steering to prevent dropping down from platforms etc
+                character.AIController.SteeringManager.ResetY();                
 
                 return;                
             }

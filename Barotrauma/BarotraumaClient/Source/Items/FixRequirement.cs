@@ -49,7 +49,7 @@ namespace Barotrauma
             frame.Padding = new Vector4(20.0f, 20.0f, 20.0f, 20.0f);
             frame.UserData = item;
 
-            new GUITextBlock(new Rectangle(0, 0, 200, 20), "Attempting to fix " + item.Name, "", frame);
+            new GUITextBlock(new Rectangle(0, 0, 200, 20), TextManager.Get("FixHeader").Replace("[itemname]", item.Name), "", frame);
 
             y = y + 40;
             foreach (FixRequirement requirement in item.FixRequirements)
@@ -60,7 +60,7 @@ namespace Barotrauma
                 reqFrame.UserData = requirement;
 
 
-                var fixButton = new GUIButton(new Rectangle(0, 0, 50, 20), "Fix", "", reqFrame);
+                var fixButton = new GUIButton(new Rectangle(0, 0, 50, 20), TextManager.Get("FixButton"), "", reqFrame);
                 fixButton.OnClicked = FixButtonPressed;
                 fixButton.UserData = requirement;
 

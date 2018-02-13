@@ -23,6 +23,7 @@
 
     <Reactor canbeselected = "true">
       <GuiFrame rect="0,0,760,460" alignment="Center" style="ItemUI"/>
+      <RequiredSkill name="Construction" level="30"/>
       <StatusEffect type="InWater" target="This" Temperature="-500.0"/>
       <StatusEffect type="OnActive" target="Contained" targetnames="Fuel Rod, Heat Absorber, Temperature Control Circuit" Condition="-0.1" />
       <sound file="reactor.ogg" type="OnActive" range="2000.0" volume="FissionRate" volumemultiplier="0.02" loop="true"/>
@@ -38,6 +39,7 @@
       <output name="power_out"/>
       <output name="temperature_out"/>
       <input name="shutdown"/>
+      <output name="meltdown_warning"/>
     </ConnectionPanel>
 
     <ItemContainer capacity="5" canbeselected="true">
@@ -55,52 +57,41 @@
 
   <Item
     name="Fuel Rod"
-    Tags="smallitem"
-    
+    Tags="smallitem,reactorfuel"
+    cargocontainername="Metal Crate"
     price="200">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
-      <Item name="Uranium Bar" requirefullcondition="true"/>
+      <Item name="Uranium Powder" mincondition="0.1" maxcondition="0.5"/>
+      <Item name="Uranium Powder" mincondition="0.1" maxcondition="0.9"/>
+      <Item name="Uranium Bar" mincondition="0.9"/>
     </Deconstruct>
 
     <Sprite texture ="fuelrod.png" depth="0.55"/>
 
     <Body radius="6" height="22" density="5"/>
 
-    <Holdable handle1="0,0" slots="RightHand,Any"/>
+    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand"/>
   </Item>
 
   <Item
     name="Incendium Fuel Rod"
-    Tags="smallitem"
-    
+    Tags="smallitem,reactorfuel"    
+    cargocontainername="Metal Crate"
     spritecolor="0.5,0.0,0.0,1.0">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
-      <Item name="Incendium Bar" requirefullcondition="true"/>
+      <Item name="Incendium Bar" mincondition="0.95"/>
     </Deconstruct>
 
     <Sprite texture ="fuelrod.png" depth="0.55"/>
 
     <Body radius="6" height="22" density="5"/>
 
-    <Holdable handle1="0,0" slots="RightHand,Any"/>
+    <Holdable handle1="0,0" slots="Any,RightHand,LeftHand"/>
   </Item>
   
-
-  <Item
-    name="Heat Absorber"
-    Tags="smallitem"
-    >
-
-    <Sprite texture ="heatabsorber.png"/>
-
-    <Body radius="6" height="22" density="5"/>
-
-    <Holdable handle1="0,0" slots="Any"/>
-  </Item>
-
 </Items>
 

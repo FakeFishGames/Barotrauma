@@ -187,6 +187,7 @@ namespace Barotrauma.Networking
             monsterButton.Enabled = !GameStarted;
             var monsterFrame = new GUIListBox(new Rectangle(-290, 60, 280, 250), "", settingsTabs[0]);
             monsterFrame.Visible = false;
+            monsterFrame.ClampMouseRectToParent = false;
             monsterButton.UserData = monsterFrame;
             monsterButton.OnClicked = (button, obj) =>
             {
@@ -231,6 +232,7 @@ namespace Barotrauma.Networking
 
             var cargoFrame = new GUIListBox(new Rectangle(300, 60, 280, 250), "", settingsTabs[0]);
             cargoFrame.Visible = false;
+            cargoFrame.ClampMouseRectToParent = false;
             cargoButton.UserData = cargoFrame;
             cargoButton.OnClicked = (button, obj) =>
             {
@@ -243,30 +245,31 @@ namespace Barotrauma.Networking
                 ((GUIComponent)obj).Visible = !((GUIComponent)obj).Visible;
                 return true;
             };
-
-
+            
             foreach (MapEntityPrefab pf in MapEntityPrefab.List)
             {
-                if (!(pf is ItemPrefab) || (pf.Price <= 0.0f && !pf.Tags.Contains("smallitem"))) continue;
+                ItemPrefab ip = pf as ItemPrefab;
 
+                if (ip == null || (ip.Price <= 0.0f && !ip.Tags.Contains("smallitem"))) continue;
+                
                 GUITextBlock textBlock = new GUITextBlock(
                     new Rectangle(0, 0, 260, 25),
-                    pf.Name, "",
+                    ip.Name, "",
                     Alignment.Left, Alignment.CenterLeft, cargoFrame, false, GUI.SmallFont);
                 textBlock.Padding = new Vector4(40.0f, 3.0f, 0.0f, 0.0f);
                 textBlock.UserData = cargoFrame;
                 textBlock.CanBeFocused = false;
 
-                if (pf.sprite != null)
+                if (ip.sprite != null)
                 {
-                    float scale = Math.Min(Math.Min(30.0f / pf.sprite.SourceRect.Width, 30.0f / pf.sprite.SourceRect.Height), 1.0f);
-                    GUIImage img = new GUIImage(new Rectangle(-20 - (int)(pf.sprite.SourceRect.Width * scale * 0.5f), 12 - (int)(pf.sprite.SourceRect.Height * scale * 0.5f), 40, 40), pf.sprite, Alignment.Left, textBlock);
-                    img.Color = pf.SpriteColor;
+                    float scale = Math.Min(Math.Min(30.0f / ip.sprite.SourceRect.Width, 30.0f / ip.sprite.SourceRect.Height), 1.0f);
+                    GUIImage img = new GUIImage(new Rectangle(-20 - (int)(ip.sprite.SourceRect.Width * scale * 0.5f), 12 - (int)(ip.sprite.SourceRect.Height * scale * 0.5f), 40, 40), ip.sprite, Alignment.Left, textBlock);
+                    img.Color = ip.SpriteColor;
                     img.Scale = scale;
                 }
 
                 int cargoVal = 0;
-                extraCargo.TryGetValue(pf.Name, out cargoVal);
+                extraCargo.TryGetValue(ip, out cargoVal);
                 var amountInput = new GUINumberInput(new Rectangle(160, 0, 50, 20), "", GUINumberInput.NumberType.Int, textBlock);
                 amountInput.MinValueInt = 0;
                 amountInput.MaxValueInt = 100;
@@ -274,13 +277,13 @@ namespace Barotrauma.Networking
 
                 amountInput.OnValueChanged += (numberInput) =>
                 {
-                    if (extraCargo.ContainsKey(pf.Name))
+                    if (extraCargo.ContainsKey(ip))
                     {
-                        extraCargo[pf.Name] = numberInput.IntValue;
+                        extraCargo[ip] = numberInput.IntValue;
                     }
                     else
                     {
-                        extraCargo.Add(pf.Name, numberInput.IntValue);
+                        extraCargo.Add(ip, numberInput.IntValue);
                     }
                 };                
             }
@@ -320,7 +323,7 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            y += 40;
+            y += 20;
 
             var voteKickBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow vote kicking", Alignment.Left, settingsTabs[1]);
             voteKickBox.Selected = Voting.AllowVoteKick;
@@ -357,7 +360,7 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            y += 40;
+            y += 20;
 
             var randomizeLevelBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Randomize level seed between rounds", Alignment.Left, settingsTabs[1]);
             randomizeLevelBox.Selected = RandomizeSeed;
@@ -367,7 +370,7 @@ namespace Barotrauma.Networking
                 return true;
             };
 
-            y += 40;
+            y += 20;
 
             var saveLogsBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Save server logs", Alignment.Left, settingsTabs[1]);
             saveLogsBox.Selected = SaveServerLogs;
@@ -378,6 +381,83 @@ namespace Barotrauma.Networking
                 return true;
             };
 
+            y += 20;
+
+            var ragdollButtonBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Allow ragdoll button", Alignment.Left, settingsTabs[1]);
+            ragdollButtonBox.Selected = AllowRagdollButton;
+            ragdollButtonBox.OnSelected = (GUITickBox) =>
+            {
+                AllowRagdollButton = GUITickBox.Selected;
+                return true;
+            };
+
+            y += 20;
+
+            var traitorRatioBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Use % of players for max traitors", Alignment.Left, settingsTabs[1]);
+            var traitorRatioText = new GUITextBlock(new Rectangle(20, y + 20, 20, 20), "Traitor ratio: 20 %", "", settingsTabs[1], GUI.SmallFont);
+            var traitorRatioSlider = new GUIScrollBar(new Rectangle(150, y + 22, 100, 15), "", 0.1f, settingsTabs[1]);
+            //Prepare the slider before the tick box
+            if (TraitorUseRatio)
+            {
+                traitorRatioSlider.UserData = traitorRatioText;
+                traitorRatioSlider.Step = 0.01f; //Lots of fine-tuning
+                traitorRatioSlider.BarScroll = (TraitorRatio - 0.1f) / 0.9f;
+            }
+            else
+            {
+                traitorRatioSlider.UserData = traitorRatioText;
+                traitorRatioSlider.Step = 1f / (maxPlayers-1);
+                traitorRatioSlider.BarScroll = MathUtils.Round(TraitorRatio, 1f);
+            }
+            //Slider END
+
+            traitorRatioBox.Selected = TraitorUseRatio;
+            traitorRatioBox.OnSelected = (GUITickBox) =>
+            {
+                TraitorUseRatio = GUITickBox.Selected;
+                //Affect the slider graphics
+                if (TraitorUseRatio)
+                {
+                    traitorRatioSlider.UserData = traitorRatioText;
+                    traitorRatioSlider.Step = 0.01f; //Lots of fine-tuning
+                    traitorRatioSlider.BarScroll = 0.2f; //default values
+                    traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll); //Update the scroll bar
+                }
+                else
+                {
+                    traitorRatioSlider.UserData = traitorRatioText;
+                    traitorRatioSlider.Step = 1f / (maxPlayers-1);
+                    traitorRatioSlider.BarScroll = 1; //default values
+                    traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll); //Update the scroll bar
+                }
+                return true;
+            };
+            traitorRatioSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            {
+                GUITextBlock traitorText = scrollBar.UserData as GUITextBlock;
+                if (TraitorUseRatio)
+                {
+                    TraitorRatio = barScroll * 0.9f + 0.1f;
+                    traitorText.Text = "Traitor ratio: " + (int)MathUtils.Round(TraitorRatio * 100.0f, 1.0f) + " %";
+                }
+                else
+                {
+                    TraitorRatio = MathUtils.Round(barScroll * (maxPlayers-1), 1f) + 1;
+                    traitorText.Text = "Traitor count: " + TraitorRatio;
+                }
+                return true;
+            };
+            traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll);
+
+            y += 45;
+
+            var karmaButtonBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Use Karma", Alignment.Left, settingsTabs[1]);
+            karmaButtonBox.Selected = KarmaEnabled;
+            karmaButtonBox.OnSelected = (GUITickBox) =>
+            {
+                KarmaEnabled = GUITickBox.Selected;
+                return true;
+            };
 
             //--------------------------------------------------------------------------------
             //                              banlist

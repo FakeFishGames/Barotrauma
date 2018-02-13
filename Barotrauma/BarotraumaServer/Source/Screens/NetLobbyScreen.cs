@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace Barotrauma
     {
         private Submarine selectedSub;
         private Submarine selectedShuttle;
+        private bool usingShuttle = true;
 
         Boolean IsStarting = true;
 
@@ -21,6 +23,11 @@ namespace Barotrauma
         {
             get { return selectedShuttle; }
             set { selectedShuttle = value; lastUpdateID++; }
+        }
+        public bool UsingShuttle
+        {
+            get { return usingShuttle; }
+            set { usingShuttle = value; lastUpdateID++; }
         }
 
         private GameModePreset[] gameModes;
@@ -67,9 +74,10 @@ namespace Barotrauma
         public int MissionTypeIndex
         {
             get { return missionTypeIndex; }
-            set {
+            set
+            {
                 lastUpdateID++;
-                missionTypeIndex = Math.Max(0, Math.Min(Mission.MissionTypes.Count()-1, value));
+                missionTypeIndex = Math.Max(0, Math.Min(Mission.MissionTypes.Count() - 1, value));
             }
         }
 
@@ -166,27 +174,25 @@ namespace Barotrauma
             lastUpdateID++;
         }
 
-        public override void Select()
+        public void RandomizeSettings()
         {
             GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients);
 
-            if (GameMain.Server.RandomizeSeed && !IsStarting) LevelSeed = ToolBox.RandomSeed(8);
+            if (GameMain.Server.RandomizeSeed) LevelSeed = ToolBox.RandomSeed(8);
 
-            if (GameMain.Server.SubSelectionMode == Barotrauma.Networking.SelectionMode.Random)
+            if (GameMain.Server.SubSelectionMode == SelectionMode.Random)
             {
-                selectedSub = subs.First(s => !s.HasTag(SubmarineTag.Shuttle));
-
-                var nonShuttles = subs.FindAll(c => c is Submarine && !((Submarine)c).HasTag(SubmarineTag.Shuttle));
-                selectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
+                var nonShuttles = Submarine.SavedSubmarines.FindAll(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus));
+                SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
             }
-
-            if (GameMain.Server.ModeSelectionMode == Barotrauma.Networking.SelectionMode.Random) SelectedModeIndex = Rand.Range(0, GameModes.Length);
+            if (GameMain.Server.ModeSelectionMode == SelectionMode.Random)
+            {
+                var allowedGameModes = Array.FindAll(gameModes, m => !m.IsSinglePlayer && m.Name != "Campaign");
+                SelectedModeName = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Name;
+            }
 
             GameMain.NetworkMember.EndVoteCount = 0;
             GameMain.NetworkMember.EndVoteMax = 1;
-
-            IsStarting = false;
-            base.Select();
         }
     }
 }

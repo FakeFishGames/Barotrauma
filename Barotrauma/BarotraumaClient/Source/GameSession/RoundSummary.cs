@@ -26,7 +26,7 @@ namespace Barotrauma
         {
             bool singleplayer = GameMain.NetworkMember == null;
 
-            bool gameOver = gameSession.CrewManager.GetCharacters().All(c => c.IsDead);
+            bool gameOver = gameSession.CrewManager.GetCharacters().All(c => c.IsDead || c.IsUnconscious);
             bool progress = Submarine.MainSub.AtEndPosition;
             
             GUIFrame frame = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.8f, null);
@@ -36,15 +36,22 @@ namespace Barotrauma
             
             int y = 0;
             
-            if (singleplayer)
+            if (!singleplayer)
             {
-                string summaryText = InfoTextManager.GetInfoText(gameOver ? "gameover" :
-                    (progress ? "progress" : "return"));
-
-                var infoText = new GUITextBlock(new Rectangle(0, y, 0, 50), summaryText, "", innerFrame, true);
-                y += infoText.Rect.Height;
+                //Game over if everyone dead or didn't progress
+                gameOver = gameOver || !progress;
+                SoundPlayer.OverrideMusicType = gameOver ? "crewdead" : "endround";
             }
 
+            string summaryText = TextManager.Get(gameOver ? "RoundSummaryGameOver" :
+                (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"));
+
+            summaryText = summaryText
+                .Replace("[sub]", Submarine.MainSub.Name)
+                .Replace("[location]", progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name);
+
+            var infoText = new GUITextBlock(new Rectangle(0, y, 0, 50), summaryText, "", innerFrame, true);
+            y += infoText.Rect.Height;
 
             if (!string.IsNullOrWhiteSpace(endMessage))
             {
@@ -53,7 +60,7 @@ namespace Barotrauma
                 y += 30 + endText.Text.Split('\n').Length * 20;
             }
 
-            new GUITextBlock(new Rectangle(0, y, 0, 20), "Crew status:", "", innerFrame, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, y, 0, 20), TextManager.Get("RoundSummaryCrewStatus"), "", innerFrame, GUI.LargeFont);
             y += 30;
 
             GUIListBox listBox = new GUIListBox(new Rectangle(0,y,0,90), null, Alignment.TopLeft, "", innerFrame, true);
@@ -75,25 +82,25 @@ namespace Barotrauma
                 characterInfo.CreateCharacterFrame(characterFrame,
                     characterInfo.Job != null ? (characterInfo.Name + '\n' + "(" + characterInfo.Job.Name + ")") : characterInfo.Name, null);
                 
-                string statusText = "OK";
+                string statusText = TextManager.Get("StatusOK");
                 Color statusColor = Color.DarkGreen;
 
                 Character character = characterInfo.Character;
                 if (character == null || character.IsDead)
                 {
-                    statusText = InfoTextManager.GetInfoText("CauseOfDeath." + characterInfo.CauseOfDeath.ToString());
+                    statusText = TextManager.Get("CauseOfDeathDescription." + characterInfo.CauseOfDeath.ToString());
                     statusColor = Color.DarkRed;
                 }
                 else
                 {
                     if (character.IsUnconscious)
                     {
-                        statusText = "Unconscious";
+                        statusText = TextManager.Get("Unconscious");
                         statusColor = Color.DarkOrange;
                     }
                     else if (character.Health / character.MaxHealth < 0.8f)
                     {
-                        statusText = "Injured";
+                        statusText = TextManager.Get("Injured");
                         statusColor = Color.DarkOrange;
                     }
                 }
@@ -110,17 +117,26 @@ namespace Barotrauma
 
             if (GameMain.GameSession.Mission != null)
             {
-                new GUITextBlock(new Rectangle(0, y, 0, 20), "Mission: " + GameMain.GameSession.Mission.Name, "", innerFrame, GUI.LargeFont);
+                new GUITextBlock(new Rectangle(0, y, 0, 20), TextManager.Get("Mission") + ": " + GameMain.GameSession.Mission.Name, "", innerFrame, GUI.LargeFont);
                 y += 30;
 
                 new GUITextBlock(new Rectangle(0, y, innerFrame.Rect.Width - 170, 0),
                     (GameMain.GameSession.Mission.Completed) ? GameMain.GameSession.Mission.SuccessMessage : GameMain.GameSession.Mission.FailureMessage,
                     "", innerFrame, true);
 
+                if (GameMain.GameSession.Mission.Completed)
+                {
+                    GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
+                }
+
                 if (GameMain.GameSession.Mission.Completed && singleplayer)
                 {
-                    new GUITextBlock(new Rectangle(0, 0, 0, 30), "Reward: " + GameMain.GameSession.Mission.Reward, "", Alignment.BottomLeft, Alignment.BottomLeft, innerFrame);
+                    new GUITextBlock(new Rectangle(0, 0, 0, 30), TextManager.Get("Reward") + ": " + GameMain.GameSession.Mission.Reward, "", Alignment.BottomLeft, Alignment.BottomLeft, innerFrame);
                 }  
+            }
+            else
+            {
+                GameMain.Server?.ConnectedClients.ForEach(c => c.Karma += 0.1f);
             }
 
             return frame;

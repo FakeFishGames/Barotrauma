@@ -21,6 +21,12 @@ namespace Barotrauma
         Any = Blunt | Slash | Burn
     }
 
+    public enum HitDetection
+    {
+        Distance,
+        Contact
+    }
+
     struct AttackResult
     {
         public readonly float Damage;
@@ -36,93 +42,90 @@ namespace Barotrauma
             this.AppliedDamageModifiers = appliedDamageModifiers;
         }
     }
-
+    
     partial class Attack
     {
-        public readonly float Range;
-        public readonly float DamageRange;
-        public readonly float Duration;
+        [Serialize(HitDetection.Distance, false)]
+        public HitDetection HitDetectionType { get; private set; }
 
-        public readonly DamageType DamageType;
+        [Serialize(0.0f, false)]
+        public float Range { get; private set; }
 
-        private readonly float structureDamage;
-        private readonly float damage;
-        private readonly float bleedingDamage;
+        [Serialize(0.0f, false)]
+        public float DamageRange { get; private set; }
 
-        private readonly bool onlyHumans;
+        [Serialize(0.0f, false)]
+        public float Duration { get; private set; }
 
-        private readonly List<StatusEffect> statusEffects;
+        [Serialize(DamageType.None, false)]
+        public DamageType DamageType { get; private set; }
 
-        public readonly float Force;
+        [Serialize(0.0f, false)]
+        public float StructureDamage { get; private set; }
 
-        public readonly float Torque;
+        [Serialize(0.0f, false)]
+        public float Damage { get; private set; }
 
-        public readonly float TargetForce;
+        [Serialize(0.0f, false)]
+        public float BleedingDamage { get; private set; }
 
-        public readonly float SeverLimbsProbability;
+        [Serialize(0.0f, false)]
+        public float Stun { get; private set; }
+
+        [Serialize(false, false)]
+        public bool OnlyHumans { get; private set; }
+
+        [Serialize(0.0f, false)]
+        public float Force { get; private set; }
+
+        [Serialize(0.0f, false)]
+        public float Torque { get; private set; }
+
+        [Serialize(0.0f, false)]
+        public float TargetForce { get; private set; }
+
+        [Serialize(0.0f, false)]
+        public float SeverLimbsProbability { get; set; }
+
+        [Serialize(0.0f, false)]
+        public float Priority { get; private set; }
 
         //the indices of the limbs Force is applied on 
         //(if none, force is applied only to the limb the attack is attached to)
         public readonly List<int> ApplyForceOnLimbs;
         
-        public readonly float Stun;
-
-        private float priority;
+        private readonly List<StatusEffect> statusEffects;
 
         public float GetDamage(float deltaTime)
         {
-            return (Duration == 0.0f) ? damage : damage * deltaTime;
+            return (Duration == 0.0f) ? Damage : Damage * deltaTime;
         }
 
         public float GetBleedingDamage(float deltaTime)
         {
-            return (Duration == 0.0f) ? bleedingDamage : bleedingDamage * deltaTime;
+            return (Duration == 0.0f) ? BleedingDamage : BleedingDamage * deltaTime;
         }
 
         public float GetStructureDamage(float deltaTime)
         {
-            return (Duration == 0.0f) ? structureDamage : structureDamage * deltaTime;
+            return (Duration == 0.0f) ? StructureDamage : StructureDamage * deltaTime;
         }
 
         public Attack(float damage, float structureDamage, float bleedingDamage, float range = 0.0f)
         {
             Range = range;
             DamageRange = range;
-            this.damage = damage;
-            this.structureDamage = structureDamage;
-            this.bleedingDamage = bleedingDamage;
+            this.Damage = damage;
+            this.StructureDamage = structureDamage;
+            this.BleedingDamage = bleedingDamage;
         }
 
         public Attack(XElement element)
         {
-            try
-            {
-                DamageType = (DamageType)Enum.Parse(typeof(DamageType), element.GetAttributeString("damagetype", "None"), true);
-            }
-            catch
-            {
-                DamageType = DamageType.None;
-            }
-            
-            damage          = element.GetAttributeFloat("damage", 0.0f);
-            structureDamage = element.GetAttributeFloat("structuredamage", 0.0f);
-            bleedingDamage  = element.GetAttributeFloat("bleedingdamage", 0.0f);
-            Stun            = element.GetAttributeFloat("stun", 0.0f);
-
-            SeverLimbsProbability = element.GetAttributeFloat("severlimbsprobability", 0.0f);
-
-            Force = element.GetAttributeFloat("force", 0.0f);
-            TargetForce = element.GetAttributeFloat("targetforce", 0.0f);
-            Torque = element.GetAttributeFloat("torque", 0.0f);
-
-            Range = element.GetAttributeFloat("range", 0.0f);
+            SerializableProperty.DeserializeProperties(this, element);
+                                                            
             DamageRange = element.GetAttributeFloat("damagerange", Range);
-            Duration = element.GetAttributeFloat("duration", 0.0f); 
-
-            priority = element.GetAttributeFloat("priority", 1.0f);
-
-            onlyHumans = element.GetAttributeBool("onlyhumans", false);
-
+            
             InitProjSpecific(element);
 
             string limbIndicesStr = element.GetAttributeString("applyforceonlimbs", "");
@@ -155,10 +158,10 @@ namespace Barotrauma
             }
         }
         partial void InitProjSpecific(XElement element);
-
+        
         public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
-            if (onlyHumans)
+            if (OnlyHumans)
             {
                 Character character = target as Character;
                 if (character != null && character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
@@ -189,7 +192,7 @@ namespace Barotrauma
         {
             if (targetLimb == null) return new AttackResult();
 
-            if (onlyHumans)
+            if (OnlyHumans)
             {
                 if (targetLimb.character != null && targetLimb.character.ConfigPath != Character.HumanConfigFile) return new AttackResult();
             }
@@ -198,7 +201,7 @@ namespace Barotrauma
 
             var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb);
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
-            if (statusEffects == null) return attackResult;
+            if (statusEffects == null) return attackResult;            
 
             foreach (StatusEffect effect in statusEffects)
             {

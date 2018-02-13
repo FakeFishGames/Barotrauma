@@ -15,6 +15,8 @@ namespace Barotrauma
 
         private static Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
 
+        private static GUITextBlock activeQuestionText;
+
         public static bool IsOpen
         {
             get
@@ -26,7 +28,7 @@ namespace Barotrauma
         static GUIFrame frame;
         static GUIListBox listBox;
         static GUITextBox textBox;
-        
+
         public static void Init(GameWindow window)
         {
             int x = 20, y = 20;
@@ -45,7 +47,7 @@ namespace Barotrauma
                     return true;
                 };
 
-            
+
             NewMessage("Press F3 to open/close the debug console", Color.Cyan);
             NewMessage("Enter \"help\" for a list of available console commands", Color.Cyan);
 
@@ -67,6 +69,13 @@ namespace Barotrauma
                 {
                     AddMessage(queuedMessages.Dequeue());
                 }
+            }
+
+            if (activeQuestionText != null &&
+                (listBox.children.Count == 0 || listBox.children[listBox.children.Count - 1] != activeQuestionText))
+            {
+                listBox.children.Remove(activeQuestionText);
+                listBox.children.Add(activeQuestionText);
             }
 
             if (PlayerInput.KeyHit(Keys.F3))
@@ -102,10 +111,10 @@ namespace Barotrauma
                 {
                     textBox.Text = AutoComplete(textBox.Text);
                 }
-                
+
                 if (PlayerInput.KeyHit(Keys.Enter))
                 {
-                    ExecuteCommand(textBox.Text, game);
+                    ExecuteCommand(textBox.Text);
                     textBox.Text = "";
                 }
             }
@@ -134,7 +143,7 @@ namespace Barotrauma
                 case "entitylist":
                     return true;
                 default:
-                    return false;
+                    return client.HasConsoleCommandPermission(command);
             }
         }
 
@@ -155,7 +164,7 @@ namespace Barotrauma
             {
                 listBox.children.RemoveRange(0, listBox.children.Count - MaxMessages);
             }
-            
+
             Messages.Add(msg);
             if (Messages.Count > MaxMessages)
             {
@@ -177,21 +186,31 @@ namespace Barotrauma
             }
 
             selectedIndex = Messages.Count;
-
-            if (activeQuestionText != null)
-            {
-                //make sure the active question stays at the bottom of the list
-                listBox.children.Remove(activeQuestionText);
-                listBox.children.Add(activeQuestionText);
-            }
         }
 
         private static void InitProjectSpecific()
         {
+            commands.Add(new Command("autohull", "", (string[] args) =>
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen) return;
+
+                if (MapEntity.mapEntityList.Any(e => e is Hull || e is Gap))
+                {
+                    ShowQuestionPrompt("This submarine already has hulls and/or gaps. This command will delete them. Do you want to continue? Y/N",
+                        (option) => {
+                            if (option.ToLower() == "y") GameMain.SubEditorScreen.AutoHull();
+                        });
+                }
+                else
+                {
+                    GameMain.SubEditorScreen.AutoHull();
+                }
+            }));
+
             commands.Add(new Command("startclient", CommandType.Generic, "", (string[] args) =>
             {
                 if (args.Length == 0) return;
-                
+
                 if (GameMain.Client == null)
                 {
                     GameMain.NetworkMember = new GameClient("Name");
@@ -246,6 +265,13 @@ namespace Barotrauma
                 {
                     Character.Controlled = character;
                 }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("shake", CommandType.Debug, "", (string[] args) =>
@@ -492,6 +518,11 @@ namespace Barotrauma
                     NewMessage("Deleted filelist", Color.Green);
                 }
 
+                if (System.IO.File.Exists("Data/bannedplayers.txt"))
+                {
+                    System.IO.File.Delete("Data/bannedplayers.txt");
+                    NewMessage("Deleted bannedplayers.txt", Color.Green);
+                }
 
                 if (System.IO.File.Exists("Submarines/TutorialSub.sub"))
                 {

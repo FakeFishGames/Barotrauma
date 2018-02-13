@@ -119,9 +119,12 @@ namespace Barotrauma
             get { return prefab.Name; }
         }
 
+        private string description;
+        [Editable, Serialize("", true)]
         public string Description
         {
-            get { return prefab.Description; }
+            get { return description == null ? prefab.Description : description; }
+            set { description = value; }
         }
 
         public float ImpactTolerance
@@ -332,18 +335,18 @@ namespace Barotrauma
             }
         }
 
-        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
+        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, float? spawnCondition = null)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.sprite.size.X / 2), 
                 (int)(position.Y + itemPrefab.sprite.size.Y / 2), 
                 (int)itemPrefab.sprite.size.X, 
                 (int)itemPrefab.sprite.size.Y), 
-            itemPrefab, submarine)
+            itemPrefab, submarine, spawnCondition)
         {
 
         }
 
-        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine)
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, float? spawnCondition = null)
             : base(itemPrefab, submarine)
         {
             prefab = itemPrefab;
@@ -358,8 +361,8 @@ namespace Barotrauma
                        
             rect = newRect;
                         
-            condition = prefab.Health;
-            lastSentCondition = prefab.Health;
+            condition = (float)(spawnCondition ?? prefab.Health);
+            lastSentCondition = condition;
 
             XElement element = prefab.ConfigElement;
             if (element == null) return;
@@ -380,6 +383,7 @@ namespace Barotrauma
                     case "trigger":
                     case "sprite":
                     case "deconstruct":
+                    case "brokensprite":
                         break;
                     case "aitarget":
                         aiTarget = new AITarget(this);
@@ -778,7 +782,7 @@ namespace Barotrauma
             
             float surfaceY = CurrentHull.Surface;
 
-            return Position.Y < surfaceY;            
+            return CurrentHull.WaterVolume > 0.0f && Position.Y < surfaceY;
         }
 
 
@@ -800,6 +804,7 @@ namespace Barotrauma
                 if (!ic.WasUsed)
                 {
                     ic.StopSounds(ActionType.OnUse);
+                    ic.StopSounds(ActionType.OnSecondaryUse);
                 }
 #endif
                 ic.WasUsed = false;
@@ -822,44 +827,46 @@ namespace Barotrauma
                 }
             }
             
-            inWater = IsInWater();
-            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
-            
-            if (body == null || !body.Enabled) return;
-
-            System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
-
-            if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
+            if (body != null && body.Enabled)
             {
-                Submarine prevSub = Submarine;
+                System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
 
-                FindHull();
+                if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f)
+                {
+                    Submarine prevSub = Submarine;
 
-                if (Submarine == null && prevSub != null)
-                {
-                    body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
-                }
-                else if (Submarine != null && prevSub == null)
-                {
-                    body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
-                }
-                
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
-                rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-                rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+                    FindHull();
 
-                if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
-                {
-                    body.LinearVelocity = new Vector2(
-                        MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
-                        MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                    if (Submarine == null && prevSub != null)
+                    {
+                        body.SetTransform(body.SimPosition + prevSub.SimPosition, body.Rotation);
+                    }
+                    else if (Submarine != null && prevSub == null)
+                    {
+                        body.SetTransform(body.SimPosition - Submarine.SimPosition, body.Rotation);
+                    }
+                    
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
+                    rect.X = (int)(displayPos.X - rect.Width / 2.0f);
+                    rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+
+                    if (Math.Abs(body.LinearVelocity.X) > MaxVel || Math.Abs(body.LinearVelocity.Y) > MaxVel)
+                    {
+                        body.LinearVelocity = new Vector2(
+                            MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
+                            MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
+                    }
                 }
+
+                UpdateNetPosition();
             }
 
-            UpdateNetPosition();
-            
-            if (!inWater || ParentInventory != null) return;
-            
+            inWater = IsInWater();
+
+            if (inWater) ApplyStatusEffects(ActionType.InWater, deltaTime);
+
+            if (body == null || !body.Enabled || !inWater || ParentInventory != null) return;
+
             ApplyWaterForces();
             CurrentHull?.ApplyFlowForces(deltaTime, this);
         }
@@ -1100,8 +1107,6 @@ namespace Barotrauma
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 
 #if CLIENT
-                    ic.PlaySound(ActionType.OnPicked, picker.WorldPosition);
-
                     if (picker == Character.Controlled) GUIComponent.ForceMouseOn(null);
 #endif
 
@@ -1167,11 +1172,28 @@ namespace Barotrauma
 
         public void SecondaryUse(float deltaTime, Character character = null)
         {
+            if (condition == 0.0f) return;
+
+            bool remove = false;
+
             foreach (ItemComponent ic in components)
             {
                 if (!ic.HasRequiredContainedItems(character == Character.Controlled)) continue;
-                ic.SecondaryUse(deltaTime, character);
+                if (ic.SecondaryUse(deltaTime, character))
+                {
+                    ic.WasUsed = true;
+
+#if CLIENT
+                    ic.PlaySound(ActionType.OnSecondaryUse, WorldPosition);
+#endif
+
+                    ic.ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character);
+
+                    if (ic.DeleteOnUse) remove = true;
+                }
             }
+
+            if (remove) Remove();
         }
 
         public List<ColoredText> GetHUDTexts(Character character)
@@ -1186,7 +1208,7 @@ namespace Barotrauma
                 Color color = Color.Red;
                 if (ic.HasRequiredSkills(character) && ic.HasRequiredItems(character, false)) color = Color.Orange;
 
-                texts.Add(new ColoredText(ic.Msg, color));
+                texts.Add(new ColoredText(ic.Msg, color, false));
             }
 
             return texts;
@@ -1329,6 +1351,8 @@ namespace Barotrauma
                         Condition = prefab.Health;
                     }
 
+                    c.Karma += 0.4f;
+
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
 
                     break;
@@ -1339,12 +1363,12 @@ namespace Barotrauma
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {
-                        GameServer.Log(c.Character.Name + " used item " + Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(c.Character.LogName + " used item " + Name, ServerLog.MessageType.ItemInteraction);
                     }
                     else
                     {
                         GameServer.Log(
-                            c.Character.Name + " used item " + Name + " (contained items: " + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")", 
+                            c.Character.LogName + " used item " + Name + " (contained items: " + string.Join(", ", Array.FindAll(ContainedItems, i => i != null).Select(i => i.Name)) + ")", 
                             ServerLog.MessageType.ItemInteraction);
                     }
 
@@ -1385,6 +1409,39 @@ namespace Barotrauma
                 {
                     msg.Write((bool)value);
                 }
+                else if (value is Color)
+                {
+                    Color color = (Color)value;
+                    msg.Write(color.R);
+                    msg.Write(color.G);
+                    msg.Write(color.B);
+                    msg.Write(color.A);
+                }
+                else if (value is Vector2)
+                {
+                    msg.Write(((Vector2)value).X);
+                    msg.Write(((Vector2)value).Y);
+                }
+                else if (value is Vector3)
+                {
+                    msg.Write(((Vector3)value).X);
+                    msg.Write(((Vector3)value).Y);
+                    msg.Write(((Vector3)value).Z);
+                }
+                else if (value is Vector4)
+                {
+                    msg.Write(((Vector4)value).X);
+                    msg.Write(((Vector4)value).Y);
+                    msg.Write(((Vector4)value).Z);
+                    msg.Write(((Vector4)value).W);
+                }
+                else if (value is Rectangle)
+                {
+                    msg.Write(((Rectangle)value).X);
+                    msg.Write(((Rectangle)value).Y);
+                    msg.Write(((Rectangle)value).Width);
+                    msg.Write(((Rectangle)value).Height);
+                }
                 else
                 {
                     throw new System.NotImplementedException("Serializing item properties of the type \"" + value.GetType() + "\" not supported");
@@ -1422,6 +1479,26 @@ namespace Barotrauma
             {
                 property.TrySetValue(msg.ReadBoolean());
             }
+            else if (type == typeof(Color))
+            {
+                property.TrySetValue(new Color(msg.ReadByte(), msg.ReadByte(),msg.ReadByte(),msg.ReadByte()));
+            }
+            else if (type == typeof(Vector2))
+            {
+                property.TrySetValue(new Vector2(msg.ReadFloat(), msg.ReadFloat()));
+            }
+            else if (type == typeof(Vector3))
+            {
+                property.TrySetValue(new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat()));
+            }
+            else if (type == typeof(Vector4))
+            {
+                property.TrySetValue(new Vector4(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat()));
+            }
+            else if (type == typeof(Rectangle))
+            {
+                property.TrySetValue(new Vector4(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32()));
+            }
             else
             {
                 return;
@@ -1438,6 +1515,7 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
             
             msg.Write(Prefab.Name);
+            msg.Write(Description);
             msg.Write(ID);
 
             if (ParentInventory == null || ParentInventory.Owner == null)
@@ -1456,7 +1534,8 @@ namespace Barotrauma
                 msg.Write(index < 0 ? (byte)255 : (byte)index);
             }
 
-            if (Name == "ID Card") msg.Write(Tags);            
+            //TODO: See if tags are different from their prefab before sending 'em
+            msg.Write(Tags);            
         }
 
         public static Item ReadSpawnData(NetBuffer msg, bool spawn = true)
@@ -1464,6 +1543,7 @@ namespace Barotrauma
             if (GameMain.Server != null) return null;
 
             string itemName     = msg.ReadString();
+            string itemDesc     = msg.ReadString();
             ushort itemId       = msg.ReadUInt16();
 
             ushort inventoryId  = msg.ReadUInt16();
@@ -1487,11 +1567,7 @@ namespace Barotrauma
                 }
             }
 
-            string tags = "";
-            if (itemName == "ID Card")
-            {
-                tags = msg.ReadString();
-            }
+            string tags = msg.ReadString();
 
             if (!spawn) return null;
 
@@ -1521,6 +1597,7 @@ namespace Barotrauma
 
             var item = new Item(itemPrefab, pos, sub);
 
+            item.Description = itemDesc;
             item.ID = itemId;
             if (sub != null)
             {
@@ -1585,7 +1662,7 @@ namespace Barotrauma
             msg.Write(body.FarseerBody.Awake);
             if (body.FarseerBody.Awake)
             {
-                body.FarseerBody.Enabled = true;
+                body.Enabled = true;
                 msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
                 msg.WriteRangedSingle(MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel), -MaxVel, MaxVel, 12);
             }

@@ -1,10 +1,11 @@
 ﻿<Items>
   <Item
     name="Headset"
-    category="Equipment"
-    
+    category="Equipment"    
     tags="smallitem"
-    description="Allows remote communication between the crew.">
+    description="Allows remote communication between the crew."
+    cargocontainername="Metal Crate"    
+    price="10">
 
     <Sprite texture ="headset.png" depth="0.6"/>
 
@@ -14,13 +15,16 @@
       <RequiredItems name="Battery Cell" type="Contained"/>      
     </WifiComponent>
 
-      <ItemContainer capacity="1" hideitems="true">
-        <Containable name="Battery Cell"/>
-        <Containable name="Fulgurium Battery Cell"/>
-      </ItemContainer>
+    <ItemContainer capacity="1" hideitems="true">
+      <Containable name="Battery Cell">
+        <StatusEffect type="OnContaining" target="Contained" Condition="-0.05"/>
+      </Containable>
+      <Containable name="Fulgurium Battery Cell">
+        <StatusEffect type="OnContaining" target="Contained" Condition="-0.05"/>
+      </Containable>
+    </ItemContainer>
     
     <Wearable limbtype="Head" slots="Any,Face">
-      <StatusEffect type="OnWearing" target="Contained" Condition="-0.1"/>
       <sprite texture="headset.png" limb="Head" origin="0.5,0.5"/>
     </Wearable>
   </Item>
@@ -28,7 +32,7 @@
   <Item
     name="Clown Mask"
     category="Equipment"
-    
+    cargocontainername="Metal Crate"    
     tags="smallitem"
     description="Praise the honkmother.">
 
@@ -36,21 +40,32 @@
 
     <Body width="10" radius="10"  density="10"/>
 
+    <Deconstruct time="10">
+      <Item name="Bike Horn"/>
+    </Deconstruct>
+
     <Wearable limbtype="Head" slots="Any,Face">
       <sprite texture="clownmask.png" limb="Head" origin="0.5,0.5"/>
+      <StatusEffect type="OnWearing" target="Character" HideFace="true"/>
     </Wearable>
   </Item>
 
   <Item
     name="Clown Costume"
     category="Equipment"
-    
+    cargocontainername="Metal Crate"    
     tags="smallitem"
     description="Praise the honkmother.">
 
     <Sprite texture ="clownpants.png" sourcerect="0,62,53,18" depth="0.6"/>
 
     <Body width="53" height="18" density="30"/>
+
+    <Deconstruct time="40">
+      <Item name="Bike Horn"/>
+      <Item name="Bike Horn"/>
+      <Item name="Bike Horn"/>
+    </Deconstruct>
 
     <Wearable slots="Any,Torso+Legs">
       <sprite texture="clownshirt.png" limb="Torso" sourcerect="0,3,30,58" origin="0.5,0.48" depth="0.02"/>
@@ -68,9 +83,12 @@
       <sprite texture="clownpants.png" limb="RightLeg" sourcerect="37,0,28,52" origin="0.55,0.5" depth="0.11" hidelimb="true"/>
       <sprite texture="clownpants.png" limb="LeftLeg" sourcerect="37,0,28,52" origin="0.55,0.5" depth="0.15" hidelimb="true"/>
 
-      <sprite texture="clownpants.png" limb="RightFoot" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.11" hidelimb="true"/>
-      <sprite texture="clownpants.png" limb="LeftFoot" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.15" hidelimb="true"/>
+      <sprite texture="clownpants.png" limb="RightFoot" sound="footstep_clown" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.11" hidelimb="true"/>
+      <sprite texture="clownpants.png" limb="LeftFoot" sound="footstep_clown" sourcerect="65,41,15,39" origin="0.5,0.35" depth="0.15" hidelimb="true"/>
       
+      <!-- HENK -->
+      <damagemodifier damagetype="Blunt" armorsector="0.0,360.0" damagemultiplier="1.0" damagesound="LimbClown"/>
+      <damagemodifier damagetype="Slash" armorsector="0.0,360.0" damagemultiplier="1.0" damagesound="LimbClown"/>
     </Wearable>
   </Item>
 </Items>

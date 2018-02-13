@@ -1,8 +1,8 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -16,7 +16,7 @@ namespace Barotrauma
             {
                 while (QueuedCommands.Count>0)
                 {
-                    ExecuteCommand(QueuedCommands[0], GameMain.Instance);
+                    ExecuteCommand(QueuedCommands[0]);
                     QueuedCommands.RemoveAt(0);
                 }
             }
@@ -67,6 +67,12 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.LevelSeed = string.Join(" ", args);
             }));
 
+            commands.Add(new Command("randomizeseed", "randomizeseed: Toggles level seed randomization on/off.", (string[] args) =>
+            {
+                GameMain.Server.RandomizeSeed = !GameMain.Server.RandomizeSeed;
+                NewMessage((GameMain.Server.RandomizeSeed ? "Enabled" : "Disabled") + " level seed randomization.", Color.Cyan);
+            }));
+
             commands.Add(new Command("gamemode", CommandType.Network, "gamemode [name]/[index]: Select the game mode for the next round. The parameter can either be the name or the index number of the game mode (0 = sandbox, 1 = mission, etc).", (string[] args) =>
             {
                 int index = -1;
@@ -95,6 +101,13 @@ namespace Barotrauma
                     }
                 }
                 NewMessage("Set gamemode to " + GameMain.NetLobbyScreen.SelectedModeName, Color.Cyan);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    GameModePreset.list.Select(gm => gm.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("mission", CommandType.Network, "mission [name]/[index]: Select the mission type for the next round. The parameter can either be the name or the index number of the mission type (0 = first mission type, 1 = second mission type, etc).", (string[] args) =>
@@ -109,6 +122,13 @@ namespace Barotrauma
                     GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
                 }
                 NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Mission.MissionTypes.ToArray()
+                };
             }));
 
             commands.Add(new Command("sub|submarine", CommandType.Network, "submarine [name]: Select the submarine for the next round.", (string[] args) =>
@@ -121,6 +141,13 @@ namespace Barotrauma
                 }
                 sub = GameMain.NetLobbyScreen.SelectedSub;
                 NewMessage("Selected sub: " + sub.Name + (sub.HasTag(SubmarineTag.Shuttle) ? " (shuttle)" : ""), Color.Cyan);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Submarine.Loaded.Select(s => s.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("shuttle", CommandType.Network, "shuttle [name]: Select the specified submarine as the respawn shuttle for the next round.", (string[] args) =>
@@ -133,6 +160,13 @@ namespace Barotrauma
                 }
                 shuttle = GameMain.NetLobbyScreen.SelectedShuttle;
                 NewMessage("Selected shuttle: " + shuttle.Name + (shuttle.HasTag(SubmarineTag.Shuttle) ? "" : " (not shuttle)"), Color.Cyan);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Submarine.Loaded.Select(s => s.Name).ToArray()
+                };
             }));
 
             commands.Add(new Command("startgame|startround|start", CommandType.Network, "start/startgame/startround: Start a new round.", (string[] args) =>

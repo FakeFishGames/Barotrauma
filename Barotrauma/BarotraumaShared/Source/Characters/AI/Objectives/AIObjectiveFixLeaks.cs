@@ -7,38 +7,80 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeaks : AIObjective
     {
-        const float UpdateGapListInterval = 10.0f;
+        const float UpdateGapListInterval = 5.0f;
 
-        private float updateGapListTimer;
+        private double lastGapUpdate;
 
         private AIObjectiveIdle idleObjective;
+
+        private AIObjectiveFindDivingGear findDivingGear;
 
         private List<AIObjectiveFixLeak> objectiveList;
 
         public AIObjectiveFixLeaks(Character character)
             : base (character, "")
         {
-            objectiveList = new List<AIObjectiveFixLeak>();
         }
 
         public override bool IsCompleted()
         {
-            return false;
+            if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
+            {
+                UpdateGapList();
+                lastGapUpdate = Timing.TotalTime;
+            }
+
+            return objectiveList.Count == 0;
+        }
+
+        public override float GetPriority(AIObjectiveManager objectiveManager)
+        {
+            if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
+            {
+                UpdateGapList();
+                lastGapUpdate = Timing.TotalTime;
+            }
+
+            float priority = 0.0f;
+            foreach (AIObjectiveFixLeak fixObjective in objectiveList)
+            {
+                //gaps from outside to inside significantly increase the priority 
+                if (!fixObjective.Leak.IsRoomToRoom)
+                {
+                    priority = Math.Max(priority + fixObjective.Leak.Open * 100.0f, 50.0f);
+                }
+                else
+                {
+                    priority += fixObjective.Leak.Open * 10.0f;
+                }
+
+                if (priority >= 100.0f) break;
+            }
+
+            return Math.Min(priority, 100.0f);
         }
 
         protected override void Act(float deltaTime)
         {
-            updateGapListTimer -= deltaTime;
-
-            if (updateGapListTimer<=0.0f)
+            if (Timing.TotalTime > lastGapUpdate + UpdateGapListInterval || objectiveList == null)
             {
                 UpdateGapList();
-
-                updateGapListTimer = UpdateGapListInterval;
+                lastGapUpdate = Timing.TotalTime;
             }
 
             if (objectiveList.Any())
             {
+                if (!objectiveList[objectiveList.Count - 1].Leak.IsRoomToRoom)
+                {
+                    if (findDivingGear == null) findDivingGear = new AIObjectiveFindDivingGear(character, true);
+
+                    if (!findDivingGear.IsCompleted() && findDivingGear.CanBeCompleted)
+                    {
+                        findDivingGear.TryComplete(deltaTime);
+                        return;
+                    }
+                }
+
                 objectiveList[objectiveList.Count - 1].TryComplete(deltaTime);
 
                 if (!objectiveList[objectiveList.Count - 1].CanBeCompleted ||
@@ -56,12 +98,16 @@ namespace Barotrauma
 
         private void UpdateGapList()
         {
+            if (objectiveList == null) objectiveList = new List<AIObjectiveFixLeak>();
             objectiveList.Clear();
             
             foreach (Gap gap in Gap.GapList)
             {
                 if (gap.ConnectedWall == null) continue;
                 if (gap.ConnectedDoor != null || gap.Open <= 0.0f) continue;
+
+                //TODO: prevent the AI characters from fixing leaks in the enemy sub in sub-vs-sub missions if/when multiplayer bots are implemented
+                if (gap.Submarine == null) continue;
 
                 float gapPriority = GetGapFixPriority(gap);
 

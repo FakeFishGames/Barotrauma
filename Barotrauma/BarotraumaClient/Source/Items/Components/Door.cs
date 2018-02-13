@@ -7,7 +7,7 @@ using System;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Door : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class Door : Pickable, IDrawableComponent, IServerSerializable
     {
         private ConvexHull convexHull;
         private ConvexHull convexHull2;
@@ -83,10 +83,16 @@ namespace Barotrauma.Items.Components
                 convexHull.SetVertices(GetConvexHullCorners(rect));
             }
         }
-
+        
         public void Draw(SpriteBatch spriteBatch, bool editing)
         {
             Color color = (item.IsSelected) ? Color.Green : Color.White;
+            if (brokenSprite == null)
+            {
+                //broken doors turn black if no broken sprite has been configured
+                color = color * (item.Condition / item.Prefab.Health);
+                color.A = 255;
+            }
             
             if (stuck > 0.0f && weldedSprite != null)
             {

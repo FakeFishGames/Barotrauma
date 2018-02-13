@@ -234,6 +234,7 @@ namespace Barotrauma
 
                 float dmg = (((float)Math.Sqrt(size.X) * deltaTime * GameMain.NilMod.FireCharDamageMultiplier) / c.AnimController.Limbs.Length);
                 foreach (Limb limb in c.AnimController.Limbs)
+<<<<<<< HEAD
                 {
                     if (GameMain.NilMod.FireUseRangedDamage)
                     {
@@ -247,6 +248,10 @@ namespace Barotrauma
                     {
                         c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
                     }
+=======
+                {
+                    c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
+>>>>>>> master
                 }
             }
         }
@@ -257,6 +262,7 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
+<<<<<<< HEAD
                 if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
 
                 //don't apply OnFire effects if the item is inside a fireproof container 
@@ -269,6 +275,20 @@ namespace Barotrauma
                 }
 
                 float range = ((float)Math.Sqrt(size.X) * 10.0f) * GameMain.NilMod.FireItemRangeMultiplier;
+=======
+                if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
+
+                //don't apply OnFire effects if the item is inside a fireproof container
+                //(or if it's inside a container that's inside a fireproof container, etc)
+                Item container = item.Container;
+                while (container != null)
+                {
+                    if (container.FireProof) return;
+                    container = container.Container;
+                }
+
+                float range = (float)Math.Sqrt(size.X) * 10.0f;
+>>>>>>> master
                 if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) continue;
                 if (item.Position.Y < position.Y - size.Y || item.Position.Y > hull.Rect.Y) continue;
 

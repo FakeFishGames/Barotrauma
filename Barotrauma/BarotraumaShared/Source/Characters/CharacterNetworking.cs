@@ -15,18 +15,18 @@ namespace Barotrauma
 
         public readonly AnimController.Animation Animation;
 
-        public CharacterStateInfo(Vector2 pos, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, 0, time, dir, interact, animation)
+        public CharacterStateInfo(Vector2 pos, float rotation, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : this(pos, rotation, 0, time, dir, interact, animation)
         {
         }
 
-        public CharacterStateInfo(Vector2 pos, UInt16 ID, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : this(pos, ID, 0.0f, dir, interact, animation)
+        public CharacterStateInfo(Vector2 pos, float rotation, UInt16 ID, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : this(pos, rotation, ID, 0.0f, dir, interact, animation)
         {
         }
 
-        protected CharacterStateInfo(Vector2 pos, UInt16 ID, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
-            : base(pos, ID, time)
+        protected CharacterStateInfo(Vector2 pos, float rotation, UInt16 ID, float time, Direction dir, Entity interact, AnimController.Animation animation = AnimController.Animation.None)
+            : base(pos, rotation, ID, time)
         {
             Direction = dir;
             Interact = interact;
@@ -52,8 +52,9 @@ namespace Barotrauma
             Use = 0x100,
             Aim = 0x200,
             Attack = 0x400,
+            Ragdoll = 0x800,
 
-            MaxVal = 0x7FF
+            MaxVal = 0xFFF
         }
         private InputNetFlags dequeuedInput = 0;
         private InputNetFlags prevDequeuedInput = 0;
@@ -127,6 +128,12 @@ namespace Barotrauma
                     if (!AllowInput)
                     {
                         AnimController.Frozen = false;
+                        if (memInput.Count > 0)
+                        {
+                            prevDequeuedInput = dequeuedInput;
+                            dequeuedInput = memInput[memInput.Count - 1].states;
+                            memInput.RemoveAt(memInput.Count - 1);
+                        }
                     }
                     else if (memInput.Count == 0)
                     {
@@ -190,9 +197,10 @@ namespace Barotrauma
             {
                 var posInfo = new CharacterStateInfo(
                     SimPosition,
+                    AnimController.Collider.Rotation,
                     LastNetworkUpdateID, 
                     AnimController.TargetDir, 
-                    selectedCharacter == null ? (Entity)selectedConstruction : (Entity)selectedCharacter,
+                    SelectedCharacter == null ? (Entity)selectedConstruction : (Entity)SelectedCharacter,
                     AnimController.Anim);
 
                 memLocalState.Add(posInfo);
@@ -208,6 +216,7 @@ namespace Barotrauma
                 if (IsKeyDown(InputType.Use))       newInput |= InputNetFlags.Use;
                 if (IsKeyDown(InputType.Aim))       newInput |= InputNetFlags.Aim;
                 if (IsKeyDown(InputType.Attack))    newInput |= InputNetFlags.Attack;
+                if (IsKeyDown(InputType.Ragdoll))   newInput |= InputNetFlags.Ragdoll;
 
                 if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
 
@@ -334,20 +343,20 @@ namespace Barotrauma
                             }
                         }
 
-                        if (AllowInput)
+                        //if (AllowInput)
+                        //{
+                        if (NetIdUtils.IdMoreRecent((ushort)(networkUpdateID - i), LastNetworkUpdateID) && (i < 60))
                         {
-                            if (NetIdUtils.IdMoreRecent((ushort)(networkUpdateID - i), LastNetworkUpdateID) && (i < 60))
-                            {
-                                NetInputMem newMem = new NetInputMem();
-                                newMem.states = newInput;
-                                newMem.intAim = newAim;
-                                newMem.interact = newInteract;
+                            NetInputMem newMem = new NetInputMem();
+                            newMem.states = newInput;
+                            newMem.intAim = newAim;
+                            newMem.interact = newInteract;
 
-                                newMem.networkUpdateID = (ushort)(networkUpdateID - i);
+                            newMem.networkUpdateID = (ushort)(networkUpdateID - i);
 
-                                memInput.Insert(i, newMem);
-                            }
+                            memInput.Insert(i, newMem);
                         }
+                        //}
                     }
 
                     if (NetIdUtils.IdMoreRecent(networkUpdateID, LastNetworkUpdateID))
@@ -363,13 +372,14 @@ namespace Barotrauma
                     break;
 
                 case ClientNetObject.ENTITY_STATE:
-                    int eventType = msg.ReadRangedInteger(0,2);
+                    int eventType = msg.ReadRangedInteger(0,3);
                     switch (eventType)
                     {
                         case 0:
                             inventory.ServerRead(type, msg, c);
                             break;
                         case 1:
+                            bool doingCPR = msg.ReadBoolean();
                             if (c.Character != this)
                             {
 #if DEBUG
@@ -378,7 +388,6 @@ namespace Barotrauma
                                 return;
                             }
 
-                            bool doingCPR = msg.ReadBoolean();
                             AnimController.Anim = doingCPR ? AnimController.Animation.CPR : AnimController.Animation.None;
                             break;
                         case 2:
@@ -395,6 +404,17 @@ namespace Barotrauma
                                 Kill(lastAttackCauseOfDeath);
                             }
                             break;
+                        case 3:
+                            LimbType grabLimb = (LimbType)msg.ReadUInt16();
+                            if (c.Character != this)
+                            {
+#if DEBUG
+                                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+#endif
+                                return;
+                            }
+                            AnimController.GrabLimb = grabLimb;
+                            break;
                     }
                     break;
             }
@@ -406,8 +426,7 @@ namespace Barotrauma
             if (GameMain.Server == null) return;
 
             if (extraData != null)
-            {
-                
+            {                
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
@@ -422,6 +441,9 @@ namespace Barotrauma
                     case NetEntityEvent.Type.Status:
                         msg.WriteRangedInteger(0, 2, 2);
                         WriteStatus(msg);
+                        break;
+                    default:
+                        DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");
                         break;
                 }
                 msg.WritePadBits();
@@ -474,6 +496,7 @@ namespace Barotrauma
                     if (AnimController is HumanoidAnimController)
                     {
                         tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
+                        tempBuffer.Write((UInt16)AnimController.GrabLimb);
                     }
 
                     bool hasAttackLimb = AnimController.Limbs.Any(l => l != null && l.attack != null);
@@ -485,15 +508,16 @@ namespace Barotrauma
                         Vector2 relativeCursorPos = cursorPosition - (ViewTarget == null ? AnimController.AimSourcePos : ViewTarget.Position);
                         tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
                     }
+                    tempBuffer.Write(IsRagdolled);
 
                     tempBuffer.Write(AnimController.TargetDir == Direction.Right);
                 }
 
-                if (selectedCharacter != null || selectedConstruction != null)
+                if (SelectedCharacter != null || selectedConstruction != null)
                 {
                     tempBuffer.Write(true);
-                    tempBuffer.Write(selectedCharacter != null ? selectedCharacter.ID : selectedConstruction.ID);
-                    if (selectedCharacter != null)
+                    tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : selectedConstruction.ID);
+                    if (SelectedCharacter != null)
                     {
                         tempBuffer.Write(AnimController.Anim == AnimController.Animation.CPR);
                     }
@@ -505,6 +529,9 @@ namespace Barotrauma
 
                 tempBuffer.Write(SimPosition.X);
                 tempBuffer.Write(SimPosition.Y);
+                tempBuffer.Write(AnimController.Collider.Rotation);
+
+                WriteStatus(tempBuffer);
 
                 tempBuffer.WritePadBits();
 
@@ -569,6 +596,8 @@ namespace Barotrauma
                 {
                     msg.WriteRangedSingle(MathHelper.Clamp(Stun, 0.0f, MaxStun), 0.0f, MaxStun, 8);
                 }
+
+                msg.Write(IsRagdolled);
 
                 msg.Write(HuskInfectionState > 0.0f);
             }

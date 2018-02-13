@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="carrier" humanoid="false" health="1000" doesbleed="false">
+<Character name="carrier" humanoid="false" health="1000" doesbleed="false" usebloodparticles="false">
   
   <sound file="Content/Characters/Carrier/alarm1.ogg" state="Attack" range="2000"/>
   <sound file="Content/Characters/Carrier/carrier1.ogg" state="Attack" range="2000"/>
@@ -27,8 +27,8 @@
     <limb id = "0" width="300" height="673" type="Head" steerforce="1.0" flip="true">
       <sprite texture="Content/Characters/Carrier/carrier.png" sourcerect="0,0,393,778" depth="0.02" origin ="0.5,0.45"/>
 
-      <lightsource range="400.0" color="0.7,0.8,1.0,1.0">
-        <lighttexture texture="Content/Characters/Carrier/carrier.png" sourcerect="392,0,307,778" origin="0.5, 0.45"/>
+      <lightsource range="1.0" color="0.7,0.8,1.0,1.0" castshadows="false">
+        <sprite texture="Content/Characters/Carrier/carrier.png" sourcerect="392,0,307,778" origin="0.5, 0.45"/>
       </lightsource>
 
       <damagemodifier armorsector="0.0,180.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="SctructureBlunt" deflectprojectiles="true"/>
@@ -61,7 +61,7 @@
     <joint limb1="0" limb1anchor="64,-264" limb2="2" limb2anchor="0,-100" lowerlimit="180" upperlimit="210" canbesevered="true"/>
 
     <joint limb1="0" limb1anchor="-100,100" limb2="3" limb2anchor="38,0" lowerlimit="-50" upperlimit="5" canbesevered="true"/>
-    <joint limb1="0" limb1anchor="140,268" limb2="4" limb2anchor="0,0" lowerlimit="87" upperlimit="93"/>
+    <joint limb1="0" limb1anchor="140,268" limb2="4" limb2anchor="0,0" lowerlimit="87" upperlimit="93" canbesevered="false"/>
 
   </ragdoll>
 

@@ -12,7 +12,7 @@ namespace Barotrauma
     {
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
-
+        
         public GUIFrame SettingsFrame
         {
             get
@@ -26,7 +26,7 @@ namespace Barotrauma
         {
             return keyMapping[(int)inputType];
         }
-
+        
         private bool ChangeSoundVolume(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
@@ -52,11 +52,11 @@ namespace Barotrauma
         {
             settingsFrame = new GUIFrame(new Rectangle(0, 0, 500, 500), null, Alignment.Center, "");
 
-            new GUITextBlock(new Rectangle(0, -30, 0, 30), "Settings", "", Alignment.TopCenter, Alignment.TopCenter, settingsFrame, false, GUI.LargeFont);
+            new GUITextBlock(new Rectangle(0, -30, 0, 30), TextManager.Get("Settings"), "", Alignment.TopCenter, Alignment.TopCenter, settingsFrame, false, GUI.LargeFont);
 
             int x = 0, y = 10;
 
-            new GUITextBlock(new Rectangle(0, y, 20, 20), "Resolution", "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
+            new GUITextBlock(new Rectangle(0, y, 20, 20), TextManager.Get("Resolution"), "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
             var resolutionDD = new GUIDropDown(new Rectangle(0, y + 20, 180, 20), "", "", settingsFrame);
             resolutionDD.OnSelected = SelectResolution;
 
@@ -82,19 +82,24 @@ namespace Barotrauma
             //fullScreenTick.OnSelected = ToggleFullScreen;
             //fullScreenTick.Selected = FullScreenEnabled;
 
-            new GUITextBlock(new Rectangle(x, y, 20, 20), "Display mode", "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
+            new GUITextBlock(new Rectangle(x, y, 20, 20), TextManager.Get("DisplayMode"), "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
             var displayModeDD = new GUIDropDown(new Rectangle(x, y + 20, 180, 20), "", "", settingsFrame);
-            displayModeDD.AddItem("Fullscreen", WindowMode.Fullscreen);
-            displayModeDD.AddItem("Windowed", WindowMode.Windowed);
-            displayModeDD.AddItem("Borderless windowed", WindowMode.BorderlessWindowed);
+            displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
+            displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
+            displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
 
             displayModeDD.SelectItem(GameMain.Config.WindowMode);
 
-            displayModeDD.OnSelected = (guiComponent, obj) => { GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData; return true; };
+            displayModeDD.OnSelected = (guiComponent, obj) => 
+            {
+                UnsavedSettings = true;
+                GameMain.Config.WindowMode = (WindowMode)guiComponent.UserData;
+                return true;
+            };
 
             y += 70;
 
-            GUITickBox vsyncTickBox = new GUITickBox(new Rectangle(0, y, 20, 20), "Enable vertical sync", Alignment.CenterY | Alignment.Left, settingsFrame);
+            GUITickBox vsyncTickBox = new GUITickBox(new Rectangle(0, y, 20, 20), TextManager.Get("EnableVSync"), Alignment.CenterY | Alignment.Left, settingsFrame);
             vsyncTickBox.OnSelected = (GUITickBox box) =>
             {
                 VSyncEnabled = !VSyncEnabled;
@@ -108,13 +113,13 @@ namespace Barotrauma
 
             y += 70;
 
-            new GUITextBlock(new Rectangle(0, y, 100, 20), "Sound volume:", "", settingsFrame);
+            new GUITextBlock(new Rectangle(0, y, 100, 20), TextManager.Get("SoundVolume"), "", settingsFrame);
             GUIScrollBar soundScrollBar = new GUIScrollBar(new Rectangle(0, y + 20, 150, 20), "", 0.1f, settingsFrame);
             soundScrollBar.BarScroll = SoundVolume;
             soundScrollBar.OnMoved = ChangeSoundVolume;
             soundScrollBar.Step = 0.05f;
 
-            new GUITextBlock(new Rectangle(0, y + 40, 100, 20), "Music volume:", "", settingsFrame);
+            new GUITextBlock(new Rectangle(0, y + 40, 100, 20), TextManager.Get("MusicVolume"), "", settingsFrame);
             GUIScrollBar musicScrollBar = new GUIScrollBar(new Rectangle(0, y + 60, 150, 20), "", 0.1f, settingsFrame);
             musicScrollBar.BarScroll = MusicVolume;
             musicScrollBar.OnMoved = ChangeMusicVolume;
@@ -123,18 +128,18 @@ namespace Barotrauma
             x = 200;
             y = 10;
 
-            new GUITextBlock(new Rectangle(x, y, 20, 20), "Content package", "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
+            new GUITextBlock(new Rectangle(x, y, 20, 20), TextManager.Get("ContentPackage"), "", Alignment.TopLeft, Alignment.TopLeft, settingsFrame);
             var contentPackageDD = new GUIDropDown(new Rectangle(x, y + 20, 200, 20), "", "", settingsFrame);
+            contentPackageDD.OnSelected = SelectContentPackage;
 
             foreach (ContentPackage contentPackage in ContentPackage.list)
             {
                 contentPackageDD.AddItem(contentPackage.Name, contentPackage);
-
                 if (SelectedContentPackage == contentPackage) contentPackageDD.SelectItem(contentPackage);
             }
 
             y += 50;
-            new GUITextBlock(new Rectangle(x, y, 100, 20), "Controls:", "", settingsFrame);
+            new GUITextBlock(new Rectangle(x, y, 100, 20), TextManager.Get("Controls"), "", settingsFrame);
             y += 30;
             var inputNames = Enum.GetNames(typeof(InputType));
             for (int i = 0; i < inputNames.Length; i++)
@@ -150,7 +155,7 @@ namespace Barotrauma
                 y += 20;
             }
 
-            applyButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Apply", Alignment.BottomRight, "", settingsFrame);
+            applyButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("ApplySettingsButton"), Alignment.BottomRight, "", settingsFrame);
             applyButton.OnClicked = ApplyClicked;
         }
 
@@ -159,14 +164,7 @@ namespace Barotrauma
             textBox.Text = "";
             CoroutineManager.StartCoroutine(WaitForKeyPress(textBox));
         }
-
-        private bool MarkUnappliedChanges(GUIButton button, object obj)
-        {
-            UnsavedSettings = true;
-
-            return true;
-        }
-
+        
         private bool SelectResolution(GUIComponent selected, object userData)
         {
             DisplayMode mode = selected.UserData as DisplayMode;
@@ -179,6 +177,13 @@ namespace Barotrauma
 
             UnsavedSettings = true;
 
+            return true;
+        }
+
+        private bool SelectContentPackage(GUIComponent select, object userData)
+        {
+            GameMain.Config.SelectedContentPackage = (ContentPackage)userData;
+            UnsavedSettings = true;
             return true;
         }
 
@@ -223,16 +228,21 @@ namespace Barotrauma
 
             yield return CoroutineStatus.Success;
         }
-
+        
         private bool ApplyClicked(GUIButton button, object userData)
         {
             Save("config.xml");
 
             settingsFrame.Flash(Color.Green);
+            
+            if (GameMain.WindowMode != GameMain.Config.WindowMode)
+            {
+                GameMain.Instance.SetWindowMode(GameMain.Config.WindowMode);
+            }
 
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
-                new GUIMessageBox("Restart required", "You need to restart the game for the resolution changes to take effect.");
+                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredText"));
             }
 
             return true;

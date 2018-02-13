@@ -118,9 +118,9 @@ namespace Barotrauma.Items.Components
 
         }
 
-        public override void SecondaryUse(float deltaTime, Character character = null)
+        public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (reload > 0.0f) return;
+            if (reload > 0.0f) return false;
 
             bool first = true;
             for (int i = 0; i < ropeBodies.Length - 1; i++)
@@ -157,7 +157,8 @@ namespace Barotrauma.Items.Components
 
                     //ropeBodies[i + 1].ApplyForce(dist / length * pullForce * 0.1f);
                 }
-            }           
+            }
+            return true;
         }
 
         private void NextSection(int i)

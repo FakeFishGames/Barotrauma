@@ -8,7 +8,7 @@ namespace Barotrauma
         public static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
 
         public const int DefaultWidth = 400, DefaultHeight = 250;
-
+        
         public GUIButton[] Buttons;
 
         public static GUIComponent VisibleBox
@@ -28,7 +28,7 @@ namespace Barotrauma
         }
 
         public GUIMessageBox(string headerText, string text)
-            : this(headerText, text, new string[] { "OK" }, DefaultWidth, 0)
+            : this(headerText, text, new string[] {"OK"}, DefaultWidth, 0)
         {
             this.Buttons[0].OnClicked = Close;
         }
@@ -47,7 +47,7 @@ namespace Barotrauma
 
             var frame = new GUIFrame(new Rectangle(0, 0, width, height), null, Alignment.Center, "", this);
             GUI.Style.Apply(frame, "", this);
-
+            
             if (height == 0)
             {
                 string wrappedText = ToolBox.WrapText(text, frame.Rect.Width - frame.Padding.X - frame.Padding.Z, GUI.Font);
@@ -58,10 +58,10 @@ namespace Barotrauma
                 }
                 height += string.IsNullOrWhiteSpace(headerText) ? 220 : 220 - headerHeight;
             }
-            frame.Rect = new Rectangle(frame.Rect.X, GameMain.GraphicsHeight / 2 - height / 2, frame.Rect.Width, height);
+            frame.Rect = new Rectangle(frame.Rect.X, GameMain.GraphicsHeight / 2 - height/2, frame.Rect.Width, height);
 
             var header = new GUITextBlock(new Rectangle(0, 0, 0, headerHeight), headerText, null, null, textAlignment, "", frame, true);
-            GUI.Style.Apply(header, "", this);
+            GUI.Style.Apply(header, "", this);            
 
             if (!string.IsNullOrWhiteSpace(text))
             {

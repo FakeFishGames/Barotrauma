@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Barotrauma
 {
-    class AIObjectiveRescue : AIObjective
+    /*class AIObjectiveRescue : AIObjective
     {
         private readonly Character targetCharacter;
 
@@ -30,5 +30,5 @@ namespace Barotrauma
             return targetCharacter.IsDead ? 1000.0f / distance : 10000.0f / distance;
         }
 
-    }
+    }*/
 }

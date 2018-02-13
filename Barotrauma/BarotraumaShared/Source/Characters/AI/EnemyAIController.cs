@@ -456,8 +456,13 @@ namespace Barotrauma
             targetEntity = closestBody.UserData as IDamageable;            
         }
 
+<<<<<<< HEAD
         public override void OnAttacked(Character attacker, float amount)
         {
+=======
+        public override void OnAttacked(Character attacker, float amount)
+        {
+>>>>>>> master
             updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
             coolDownTimer *= 0.1f;
 

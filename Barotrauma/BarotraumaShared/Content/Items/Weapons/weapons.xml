@@ -5,7 +5,8 @@
     name="Spear"
     category="Equipment"
     interactthroughwalls="true"
-    price="50">
+    price="50"
+    cargocontainername="Metal Crate">
 
     <Deconstruct time="5">
       <Item name="Steel Bar"/>
@@ -16,7 +17,7 @@
     <Body width="64" height="5" density="20"/>
 
     <Pickable slots="Any"/>
-    <Projectile launchimpulse="20.0" doesstick="true">
+    <Projectile launchimpulse="20.0" sticktocharacters="true">
       <Attack damage="20" bleedingdamage="2" structuredamage="50" damagetype="Blunt" stun="0.2" targetforce="50"/>
     </Projectile>
   </Item>
@@ -24,8 +25,8 @@
   <Item
     name="Harpoon Gun"
     category="Equipment"
-    
     price="500"
+    cargocontainername="Metal Crate"
     tags="weapon">
 
     <Deconstruct time="10">      
@@ -57,26 +58,61 @@
   </Item>
 
   <Item
+    name="Syringe Gun"
+    category="Equipment"
+    price="700"
+    cargocontainername="Metal Crate"
+    tags="weapon">
+
+    <Deconstruct time="10">      
+      <Item name="Steel Bar"/>
+      <Item name="Aluminium"/>      
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+  
+    <Sprite texture="weapons.png" sourcerect="62,97,44,24" depth="0.55"/>
+
+    <Body width="40" height="25" density="50"/>
+
+    <Holdable slots="Any,RightHand,LeftHand" controlpose="true"
+              aimpos="90,10" handle1="-10,-7"/>
+    
+    <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
+      <Sound file="syringegun.ogg" type="OnUse"/>
+      <RequiredItems name="Medical Syringe" type="Contained" msg="Please load a Syringe"/>
+      <RequiredSkill name="Weapons" level="15"/>
+      <RequiredSkill name="Medical" level="30"/>
+    </RangedWeapon>
+
+    <ItemContainer capacity="1" itempos="0,10" hideitems="false">
+      <Containable name="Medical Syringe"/>
+    </ItemContainer>
+  </Item>
+
+  <Item
     name="Revolver Round"
     category="Equipment"
     interactthroughwalls="true"
-    price="10">
+    price="10"
+    cargocontainername="Metal Crate"
+    tags="smallitem">
 
     <Sprite texture="weapons.png" sourcerect="52,99,8,3" depth="0.55"/>
 
     <Body width="8" height="3" density="40"/>
 
     <Pickable slots="Any"/>
-    <Projectile hitscan="true" doesstick="false" removeonhit="true" >
+    <Projectile hitscan="true" removeonhit="true" >
       <Attack damage="40" bleedingdamage="3" structuredamage="100" damagetype="Blunt" stun="0.5" targetforce="50"/>
     </Projectile>
   </Item>
   
   <Item
     name="Revolver"
-    category="Equipment"    
+    category="Equipment"
     price="700"
-    tags="weapon">
+    cargocontainername="Metal Crate"
+    tags="smallitem,weapon">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
@@ -108,16 +144,30 @@
   <Item
     name="Stun Grenade"
     category="Equipment"
-    
     price="200"
-    tags="smallitem,weapon">
+    cargocontainername="Explosive Crate"
+    tags="smallitem,weapon,explosive">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="Flash Powder" mincondition="0.9"/>
+      <Item name="Chloral Hydrate" mincondition="0.9"/>
+    </Deconstruct>
 
     <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.55"/>
 
     <Body width="11" height="24" density="30"/>
+    
+    <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
+    <ItemComponent characterusable="false">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg"/>
+        <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false"/>
+      </StatusEffect>
+    </ItemComponent>
 
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false"/>
       </StatusEffect>
@@ -126,16 +176,30 @@
 
   <Item
     name="Incendium Grenade"
-    category="Equipment"
-    
-    tags="smallitem,weapon">
+    category="Equipment"    
+    cargocontainername="Explosive Crate"
+    tags="smallitem,weapon,explosive">
+
+    <Deconstruct time="10">
+      <Item name="Steel Bar"/>
+      <Item name="Flash Powder" mincondition="0.9"/>
+      <Item name="Incendium Bar" mincondition="0.9"/>
+    </Deconstruct>
 
     <Sprite texture="weapons.png" sourcerect="98,0,11,24" depth="0.55"/>
 
     <Body width="11" height="24" density="30"/>
 
+    <!-- Empty itemcomponent that explodes the grenade when used by something else than a character (e.g. a detonator) -->
+    <ItemComponent characterusable="false">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0">
+        <sound file="Content/Items/Weapons/stungrenade.ogg"/>
+        <Explosion range="500" damage="5" stun="25" force="0.1" smoke="false"/>
+      </StatusEffect>
+    </ItemComponent>
+
     <Throwable slots="Any,RightHand,LeftHand" holdpos="0,0" handle1="0,0" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="This" Condition="-100.0" delay="3.0">
+      <StatusEffect type="OnSecondaryUse" target="This" Condition="-100.0" delay="3.0">
         <sound file="Content/Items/Weapons/stungrenade.ogg"/>
         <Explosion range="500" damage="5" stun="1" force="0.1"/>
         <Fire size="300.0"/>
@@ -146,9 +210,9 @@
   <Item
     name="Stun Baton"
     category="Equipment"
-    Tags="smallitem,weapon"
-    
+    Tags="smallitem,weapon"    
     price="100"
+    cargocontainername="Metal Crate"
     description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission.">
 
     <Deconstruct time="10">
@@ -183,16 +247,16 @@
 
   <Item
     name="Battery Cell"
-    category="Equipment,Electrical"
-    
+    category="Equipment,Electrical"    
     tags="smallitem,loadable"
     price="50"
+    cargocontainername="Metal Crate"
     description="Used as a power source for various handheld devices. Most submarines have several stationary backup batteries with recharge docks for battery cells.">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
-      <Item name="Copper Bar"/>
+      <Item name="Copper Bar" mincondition="0.5"/>
+      <Item name="Sulphuric Acid" mincondition="0.9"/>
     </Deconstruct>
     
     <Sprite texture="weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
@@ -205,14 +269,14 @@
   <Item
     name="Fulgurium Battery Cell"
     category="Equipment,Electrical"
-    
     tags="smallitem,loadable"
+    cargocontainername="Metal Crate"
     description="A battery cell contructed of the rare and poorly understood compound Fulgurium.">
 
     <Deconstruct time="10">
       <Item name="Steel Bar"/>
-      <Item name="FPGA Circuit"/>
-      <Item name="Fulgurium Bar"/>  
+      <Item name="Fulgurium Bar" mincondition="0.8"/>
+      <Item name="Sulphuric Acid" mincondition="0.9"/>
     </Deconstruct>
 
     <Sprite texture="weapons.png" sourcerect="0,0,20,9" depth="0.8"/>
@@ -225,8 +289,8 @@
   <Item
     name="Bike Horn"
     category="Equipment"
-    
     tags="weapon,smallitem"
+    cargocontainername="Metal Crate"
     description="HONK">
 
     <Sprite texture="Content/Items/Jobgear/clownshirt.png" sourcerect="32,50,32,14" depth="0.55"/>

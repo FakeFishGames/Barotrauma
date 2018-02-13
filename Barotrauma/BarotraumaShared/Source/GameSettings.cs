@@ -24,8 +24,8 @@ namespace Barotrauma
 
         public bool EnableSplashScreen { get; set; }
 
-        //public bool FullScreenEnabled { get; set; } 
-
+        //public bool FullScreenEnabled { get; set; }
+        
         private KeyOrMouse[] keyMapping;
 
         private WindowMode windowMode;
@@ -43,7 +43,7 @@ namespace Barotrauma
             get { return jobNamePreferences; }
             set
             {
-                // Begin saving coroutine. Remove any existing save coroutines if one is running. 
+                // Begin saving coroutine. Remove any existing save coroutines if one is running.
                 if (CoroutineManager.IsCoroutineRunning("saveCoroutine")) { CoroutineManager.StopCoroutines("saveCoroutine"); }
                 CoroutineManager.StartCoroutine(ApplyUnsavedChanges(), "saveCoroutine");
 
@@ -65,7 +65,7 @@ namespace Barotrauma
 #if CLIENT
                 if (applyButton != null)
                 {
-                    //applyButton.Selected = unsavedSettings; 
+                    //applyButton.Selected = unsavedSettings;
                     applyButton.Enabled = unsavedSettings;
                     applyButton.Text = unsavedSettings ? "Apply*" : "Apply";
                 }
@@ -105,6 +105,23 @@ namespace Barotrauma
         public bool     AutoCheckUpdates { get; set; }
         public bool     WasGameUpdated { get; set; }
 
+        private string defaultPlayerName;
+        public string   DefaultPlayerName
+        {
+            get
+            {
+                return defaultPlayerName;
+            }
+            set
+            {
+                if (defaultPlayerName != value)
+                {
+                    defaultPlayerName = value;
+                    Save("config.xml");
+                }
+            }
+        }
+
         public static bool VerboseLogging { get; set; }
 
         public GameSettings(string filePath)
@@ -117,7 +134,7 @@ namespace Barotrauma
         public void Load(string filePath)
         {
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
-
+            
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", "");
 
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", true);
@@ -131,7 +148,7 @@ namespace Barotrauma
                 GraphicsHeight = 678;
 
                 MasterServerUrl = "";
-                
+
                 SelectedContentPackage = ContentPackage.list.Any() ? ContentPackage.list[0] : new ContentPackage("");
 
                 JobNamePreferences = new List<string>();
@@ -155,7 +172,7 @@ namespace Barotrauma
             }
 #endif
 
-            //FullScreenEnabled = ToolBox.GetAttributeBool(graphicsMode, "fullscreen", true); 
+            //FullScreenEnabled = ToolBox.GetAttributeBool(graphicsMode, "fullscreen", true);
 
             var windowModeStr = graphicsMode.GetAttributeString("displaymode", "Fullscreen");
             if (!Enum.TryParse<WindowMode>(windowModeStr, out windowMode))
@@ -217,6 +234,9 @@ namespace Barotrauma
                             JobNamePreferences.Add(ele.GetAttributeString("name", ""));
                         }
                         break;
+                    case "player":
+                        defaultPlayerName = subElement.GetAttributeString("name", "");
+                        break;
                 }
             }
 
@@ -228,7 +248,7 @@ namespace Barotrauma
                     keyMapping[(int)inputType] = new KeyOrMouse(Keys.D1);
                 }
             }
-
+            
             UnsavedSettings = false;
 
             foreach (XElement subElement in doc.Root.Elements())
@@ -246,7 +266,7 @@ namespace Barotrauma
                 }
             }
         }
-
+        
         public void Save(string filePath)
         {
             UnsavedSettings = false;
@@ -310,24 +330,24 @@ namespace Barotrauma
                 {
                     keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].MouseButton));
                 }
-
-
             }
 
             var gameplay = new XElement("gameplay");
-
             var jobPreferences = new XElement("jobpreferences");
             foreach (string jobName in JobNamePreferences)
             {
                 jobPreferences.Add(new XElement("job", new XAttribute("name", jobName)));
             }
-
             gameplay.Add(jobPreferences);
             doc.Root.Add(gameplay);
 
+            var playerElement = new XElement("player");
+            playerElement.Add(new XAttribute("name", defaultPlayerName));
+            doc.Root.Add(playerElement);
+
             doc.Save(filePath);
         }
-
+        
         private IEnumerable<object> ApplyUnsavedChanges()
         {
             yield return new WaitForSeconds(10.0f);

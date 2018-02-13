@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
@@ -68,12 +69,20 @@ namespace Barotrauma
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
 
+<<<<<<< HEAD
             Config = new GameSettings("config.xml");
+=======
+            Config = new GameSettings("config.xml");
+>>>>>>> master
             if (Config.WasGameUpdated)
             {
                 UpdaterUtil.CleanOldFiles();
                 Config.WasGameUpdated = false;
+<<<<<<< HEAD
                 Config.Save("config.xml");
+=======
+                Config.Save("config.xml");
+>>>>>>> master
             }
 
             NilMod = new NilMod();
@@ -155,6 +164,7 @@ namespace Barotrauma
             Init();
             StartServer();
 
+<<<<<<< HEAD
             DefaultServerStartup();
 
             Timing.Accumulator = 0.0;
@@ -186,6 +196,35 @@ namespace Barotrauma
                 int frameTime = (int)(stopwatch.ElapsedTicks - prevTicks);
                 Thread.Sleep(Math.Max(((int)(Timing.Step * 1000.0) - frameTime) / 2, 0));
             }
+=======
+            Timing.Accumulator = 0.0;
+
+            double frequency = (double)Stopwatch.Frequency;
+            if (frequency <= 1500)
+            {
+                DebugConsole.NewMessage("WARNING: Stopwatch frequency under 1500 ticks per second. Expect significant syncing accuracy issues.", Color.Yellow);
+            }
+            
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            long prevTicks = stopwatch.ElapsedTicks;
+            while (ShouldRun)
+            {
+                long currTicks = stopwatch.ElapsedTicks;
+                Timing.Accumulator += (double)(currTicks - prevTicks) / frequency;
+                prevTicks = currTicks;
+                while (Timing.Accumulator>=Timing.Step)
+                {
+                    DebugConsole.Update();
+                    if (Screen.Selected != null) Screen.Selected.Update((float)Timing.Step);
+                    Server.Update((float)Timing.Step);
+                    CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
+            
+                    Timing.Accumulator -= Timing.Step;
+                }
+                int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency)*1000.0);
+                Thread.Sleep(Math.Max(((int)(Timing.Step * 1000.0) - frameTime)/2,0));
+            }
+>>>>>>> master
             stopwatch.Stop();
 
             CloseServer();

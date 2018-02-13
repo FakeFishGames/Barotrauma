@@ -6,9 +6,9 @@ namespace Barotrauma
 {
     public class GUIDropDown : GUIComponent
     {
-
         public delegate bool OnSelectedHandler(GUIComponent selected, object obj = null);
         public OnSelectedHandler OnSelected;
+        public OnSelectedHandler OnDropped;
 
         private GUIButton button;
         private GUIListBox listBox;
@@ -115,10 +115,11 @@ namespace Barotrauma
             listBox.AddChild(child);
         }
 
-        public void AddItem(string text, object userData = null)
+        public void AddItem(string text, object userData = null, string toolTip = "")
         {
             GUITextBlock textBlock = new GUITextBlock(new Rectangle(0,0,0,20), text, "ListBoxElement", Alignment.TopLeft, Alignment.CenterLeft, listBox);
             textBlock.UserData = userData;
+            textBlock.ToolTip = toolTip;
         }
 
         public override void ClearChildren()
@@ -134,9 +135,13 @@ namespace Barotrauma
         private bool SelectItem(GUIComponent component, object obj)
         {
             GUITextBlock textBlock = component as GUITextBlock;
-            if (textBlock==null) return false;
-            button.Text = textBlock.Text;
+            if (textBlock == null)
+            {
+                textBlock = component.GetChild<GUITextBlock>();
+                if (textBlock == null) return false;
+            }
 
+            button.Text = textBlock.Text;
             Dropped = false;
 
             if (OnSelected != null) OnSelected(component, component.UserData);
@@ -170,10 +175,14 @@ namespace Barotrauma
             wasOpened = true;
             Dropped = !Dropped;
 
-            if (Dropped && parent.children[parent.children.Count-1]!=this)
+            if (Dropped)
             {
-                parent.children.Remove(this);
-                parent.children.Add(this);
+                OnDropped?.Invoke(this, userData);
+                if (parent.children[parent.children.Count - 1] != this)
+                {
+                    parent.children.Remove(this);
+                    parent.children.Add(this);
+                }
             }
 
             return true;
@@ -218,7 +227,6 @@ namespace Barotrauma
             button.Draw(spriteBatch);
 
             if (!Dropped) return;
-
             listBox.Draw(spriteBatch);
         }
     }

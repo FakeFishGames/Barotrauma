@@ -29,6 +29,13 @@ namespace Barotrauma.Tutorials
                 }
             }
 
+            //remove all characters except the controlled one to prevent any unintended monster attacks
+            var existingCharacters = Character.CharacterList.FindAll(c => c != Controlled);
+            foreach (Character c in existingCharacters)
+            {
+                c.Remove();
+            }
+            
             yield return new WaitForSeconds(4.0f);
 
             infoBox = CreateInfoFrame("Use WASD to move and the mouse to look around");
@@ -559,8 +566,13 @@ namespace Barotrauma.Tutorials
 
                     while (true)
                     {
+<<<<<<< HEAD
                         if (Controlled.SelectedConstruction != null &&
                             Controlled.SelectedConstruction.GetComponent<PowerTransfer>() != null &&
+=======
+                        if (Controlled.SelectedConstruction!=null && 
+                            Controlled.SelectedConstruction.GetComponent<PowerTransfer>() != null && 
+>>>>>>> master
                             Controlled.SelectedConstruction.Condition == 0.0f)
                         {
                             brokenBox = Controlled.SelectedConstruction;

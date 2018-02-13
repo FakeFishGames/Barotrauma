@@ -30,6 +30,8 @@ namespace Barotrauma
 
     partial class Submarine : Entity, IServerSerializable
     {
+        public byte TeamID = 1;
+
         public static string SavePath = "Submarines";
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);
@@ -82,6 +84,11 @@ namespace Barotrauma
         private float networkUpdateTimer;
 
         private EntityGrid entityGrid = null;
+
+        public int RecommendedCrewSizeMin = 1, RecommendedCrewSizeMax = 2;
+        public string RecommendedCrewExperience;
+
+        public HashSet<string> CompatibleContentPackages = new HashSet<string>();
         
         //properties ----------------------------------------------------
 
@@ -98,7 +105,7 @@ namespace Barotrauma
             get; 
             set; 
         }
-
+        
         public static Vector2 LastPickedPosition
         {
             get { return lastPickedPosition; }
@@ -152,14 +159,20 @@ namespace Barotrauma
         public Rectangle Borders
         {
             get 
-            { 
-                return subBody.Borders;                
+            {
+                return subBody.Borders;
             }
         }
-        
+
+        public Vector2 Dimensions
+        {
+            get;
+            private set;
+        }
+
         public override Vector2 Position
         {
-            get { return subBody==null ? Vector2.Zero : subBody.Position - HiddenSubPosition; }
+            get { return subBody == null ? Vector2.Zero : subBody.Position - HiddenSubPosition; }
         }
 
         public override Vector2 WorldPosition
@@ -269,11 +282,30 @@ namespace Barotrauma
                 {
                     Description = doc.Root.GetAttributeString("description", "");
                     Enum.TryParse(doc.Root.GetAttributeString("tags", ""), out tags);
+                    Dimensions = doc.Root.GetAttributeVector2("dimensions", Vector2.Zero);
+                    RecommendedCrewSizeMin = doc.Root.GetAttributeInt("recommendedcrewsizemin", 0);
+                    RecommendedCrewSizeMax = doc.Root.GetAttributeInt("recommendedcrewsizemax", 0);
+                    RecommendedCrewExperience = doc.Root.GetAttributeString("recommendedcrewexperience", "Unknown");
+                    string[] contentPackageNames = doc.Root.GetAttributeStringArray("compatiblecontentpackages", new string[0]);
+                    foreach (string contentPackageName in contentPackageNames)
+                    {
+                        CompatibleContentPackages.Add(contentPackageName);
+                    }
+
+#if CLIENT                    
+                    string previewImageData = doc.Root.GetAttributeString("previewimage", "");
+                    if (!string.IsNullOrEmpty(previewImageData))
+                    {
+                        using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
+                        {
+                            PreviewImage = new Sprite(TextureLoader.FromStream(mem), null, null);
+                        }
+                    }
+#endif
                 }
             }
 
             DockedTo = new List<Submarine>();
-
 
             ID = ushort.MaxValue;
             base.Remove();
@@ -472,6 +504,28 @@ namespace Barotrauma
 
             return position;
         }
+
+        public Rectangle CalculateDimensions(bool onlyHulls = true)
+        {
+            List<MapEntity> entities = onlyHulls ? 
+                Hull.hullList.FindAll(h => h.Submarine == this).Cast<MapEntity>().ToList() : 
+                MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
+
+            if (entities.Count == 0) return Rectangle.Empty;
+
+            float minX = entities[0].Rect.X, minY = entities[0].Rect.Y - entities[0].Rect.Height;
+            float maxX = entities[0].Rect.Right, maxY = entities[0].Rect.Y;
+
+            for (int i = 1; i < entities.Count; i++)
+            {
+                minX = Math.Min(minX, entities[i].Rect.X);
+                minY = Math.Min(minY, entities[i].Rect.Y - entities[i].Rect.Height);
+                maxX = Math.Max(maxX, entities[i].Rect.Right);
+                maxY = Math.Max(maxY, entities[i].Rect.Y);
+            }
+
+            return new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
+        }
         
         public static Rectangle AbsRect(Vector2 pos, Vector2 size)
         {
@@ -489,10 +543,18 @@ namespace Barotrauma
             return new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
         }
 
-        public static bool RectContains(Rectangle rect, Vector2 pos)
+        public static bool RectContains(Rectangle rect, Vector2 pos, bool inclusive = false)
         {
-            return (pos.X > rect.X && pos.X < rect.X + rect.Width
-                && pos.Y < rect.Y && pos.Y > rect.Y - rect.Height);
+            if (inclusive)
+            {
+                return (pos.X >= rect.X && pos.X <= rect.X + rect.Width
+                    && pos.Y <= rect.Y && pos.Y >= rect.Y - rect.Height);
+            }
+            else
+            {
+                return (pos.X > rect.X && pos.X < rect.X + rect.Width
+                    && pos.Y < rect.Y && pos.Y > rect.Y - rect.Height);
+            }
         }
 
         public static bool RectsOverlap(Rectangle rect1, Rectangle rect2, bool inclusive=true)
@@ -861,9 +923,9 @@ namespace Barotrauma
             {
                 SavedSubmarines.Add(new Submarine(path));
             }
-
-            //if (GameMain.NetLobbyScreen!=null) GameMain.NetLobbyScreen.UpdateSubList(Submarine.SavedSubmarines);
         }
+
+        static readonly string TempFolder = Path.Combine("Submarine", "Temp");
 
         public static XDocument OpenFile(string file)
         {
@@ -952,7 +1014,7 @@ namespace Barotrauma
 
             Description = submarineElement.GetAttributeString("description", "");
             Enum.TryParse(submarineElement.GetAttributeString("tags", ""), out tags);
-
+            
             //place the sub above the top of the level
             HiddenSubPosition = HiddenSubStartPosition;
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
@@ -1101,27 +1163,23 @@ namespace Barotrauma
 
             Submarine sub = new Submarine(path);
             sub.Load(unloadPrevious);
-
-            //Entity.dictionary.Add(int.MaxValue, sub);
-
+            
             return sub;            
         }
-
-
-        public bool Save()
+        
+        public bool SaveAs(string filePath, MemoryStream previewImage = null)
         {
-            return SaveAs(filePath);
-        }
-
-        public bool SaveAs(string filePath)
-        {
-            name = System.IO.Path.GetFileNameWithoutExtension(filePath);
+            name = Path.GetFileNameWithoutExtension(filePath);
 
             XDocument doc = new XDocument(new XElement("Submarine"));
             SaveToXElement(doc.Root);
 
             hash = new Md5Hash(doc);
             doc.Root.Add(new XAttribute("md5hash", hash.Hash));
+            if (previewImage != null)
+            {
+                doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
+            }
 
             try
             {
@@ -1139,9 +1197,15 @@ namespace Barotrauma
         public void SaveToXElement(XElement element)
         {
             element.Add(new XAttribute("name", name));
-            element.Add(new XAttribute("description", Description == null ? "" : Description));
-
+            element.Add(new XAttribute("description", Description ?? ""));
             element.Add(new XAttribute("tags", tags.ToString()));
+
+            Rectangle dimensions = CalculateDimensions();
+            element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
+            element.Add(new XAttribute("recommendedcrewsizemin", RecommendedCrewSizeMin));
+            element.Add(new XAttribute("recommendedcrewsizemax", RecommendedCrewSizeMax));
+            element.Add(new XAttribute("recommendedcrewexperience", RecommendedCrewExperience ?? ""));
+            element.Add(new XAttribute("compatiblecontentpackages", string.Join(", ", CompatibleContentPackages)));
 
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
@@ -1198,9 +1262,9 @@ namespace Barotrauma
                 Item.ItemList.Clear();
             }
 
-            PhysicsBody.RemoveAll();
+            Ragdoll.RemoveAll();
 
-            Ragdoll.list.Clear();
+            PhysicsBody.RemoveAll();
 
             GameMain.World.Clear();
 
@@ -1256,7 +1320,7 @@ namespace Barotrauma
                 return;
             }
             
-            subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, sendingTime));
+            subBody.MemPos.Insert(index, new PosInfo(newTargetPosition, 0.0f, sendingTime));
         }
     }
 

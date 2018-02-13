@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,7 +14,7 @@ namespace Barotrauma
         readonly RenderTarget2D renderTargetBackground;
         readonly RenderTarget2D renderTarget;
         readonly RenderTarget2D renderTargetWater;
-        readonly RenderTarget2D renderTargetAir;
+        readonly RenderTarget2D renderTargetFinal;
 
         private Effect damageEffect;
 
@@ -27,9 +27,9 @@ namespace Barotrauma
             cam.Translate(new Vector2(-10.0f, 50.0f));
 
             renderTargetBackground = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
             renderTargetWater = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            renderTargetAir = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            renderTargetFinal = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight, false, SurfaceFormat.Color, DepthFormat.None);
 
 
 #if LINUX
@@ -108,7 +108,6 @@ namespace Barotrauma
 
         public void DrawMap(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
-
             foreach (Submarine sub in Submarine.Loaded)
             {
                 sub.UpdateTransform();
@@ -124,219 +123,138 @@ namespace Barotrauma
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }
 
-            //----------------------------------------------------------------------------------------
-            //1. draw the background, characters and the parts of the submarine that are behind them
-            //----------------------------------------------------------------------------------------
-
             graphics.SetRenderTarget(renderTargetBackground);
-
             if (Level.Loaded == null)
             {
                 graphics.Clear(new Color(11, 18, 26, 255));
             }
             else
             {
+                //graphics.Clear(new Color(255, 255, 255, 255));
                 Level.Loaded.DrawBack(graphics, spriteBatch, cam);
             }
 
+			//draw alpha blended particles that are in water and behind subs
 #if LINUX
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
 #else
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            null, DepthStencilState.DepthRead, null, null,
-            cam.Transform);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
 #endif
-            GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.AlphaBlend);
-            spriteBatch.End();
+			GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.AlphaBlend);
+			spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Additive,
-                null, DepthStencilState.Default, null, null,
-                cam.Transform);
-            GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.Additive);
-            spriteBatch.End();
-
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend,
-                null, null, null, null,
-                cam.Transform);
-
-            Submarine.DrawBack(spriteBatch, false, s => s is Structure);
-
-            spriteBatch.End();
-
+			//draw additive particles that are in water and behind subs
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.None, null, null, cam.Transform);
+			GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.Additive);
+			spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
+			Submarine.DrawBack(spriteBatch, false, s => s is Structure && ((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal);
+			foreach (Structure s in Structure.WallList)
+			{
+				if ((s.ResizeVertical != s.ResizeHorizontal) && s.CastShadow)
+				{
+					GUI.DrawRectangle(spriteBatch, new Vector2(s.DrawPosition.X-s.WorldRect.Width/2,-s.DrawPosition.Y-s.WorldRect.Height/2), new Vector2(s.WorldRect.Width, s.WorldRect.Height), Color.Black, true);
+				}
+			}
+			spriteBatch.End();
             graphics.SetRenderTarget(renderTarget);
-
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Opaque);
-            spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-            spriteBatch.End();
-
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend,
-                null, null, null, null,
-                cam.Transform);
-
-            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
-
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, null);
+			spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+			spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
+			Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
+			Submarine.DrawBack(spriteBatch, false, s => s is Structure && !(((Structure)s).ResizeVertical && ((Structure)s).ResizeHorizontal));
             foreach (Character c in Character.CharacterList) c.Draw(spriteBatch);
-
             spriteBatch.End();
-
-            //----------------------------------------------------------------------------------------
-            //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
-            graphics.SetRenderTarget(renderTargetWater);
-
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Opaque);
-            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), waterColor);
-            spriteBatch.End();
-
-#if LINUX
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
-#else
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            null, DepthStencilState.DepthRead, null, null,
-            cam.Transform);
-#endif
-            GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.AlphaBlend);
-            spriteBatch.End();
-
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Additive,
-                null, DepthStencilState.Default, null, null,
-                cam.Transform);
-            GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.Additive);
-            spriteBatch.End();
-
-            //----------------------------------------------------------------------------------------
-            //draw the rendertarget and particles that are only supposed to be drawn in air into renderTargetAir
-
-            graphics.SetRenderTarget(renderTargetAir);
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Opaque);
-            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-            spriteBatch.End();
-#if LINUX
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
-#else
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
-#endif
-
-            GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.AlphaBlend);
-            spriteBatch.End();
-
-            spriteBatch.Begin(SpriteSortMode.Deferred,
-                BlendState.Additive,
-                null, DepthStencilState.DepthRead, null, null,
-                cam.Transform);
-            GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
-            spriteBatch.End();
-
-            if (Character.Controlled != null && GameMain.LightManager.LosEnabled)
-            {
-                graphics.SetRenderTarget(renderTarget);
-                spriteBatch.Begin(SpriteSortMode.Deferred,
-                    BlendState.Opaque, null, null, null, lightBlur.Effect);
-
-                spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-
-                spriteBatch.End();
-
-                spriteBatch.Begin(SpriteSortMode.BackToFront,
-                    BlendState.AlphaBlend, SamplerState.LinearWrap,
-                    null, null, null,
-                    cam.Transform);
-
-                Submarine.DrawDamageable(spriteBatch, null, false);
-                Submarine.DrawFront(spriteBatch, false, s => s is Structure);
-
-                spriteBatch.End();
-
-                GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect, true);
-            }
-
-            graphics.SetRenderTarget(null);
-
-            //----------------------------------------------------------------------------------------
-            //2. pass the renderTarget to the water shader to do the water effect
-            //----------------------------------------------------------------------------------------
-
-            Hull.renderer.RenderBack(spriteBatch, renderTargetWater);
-
-            Array.Clear(Hull.renderer.vertices, 0, Hull.renderer.vertices.Length);
-            Hull.renderer.PositionInBuffer = 0;
-            foreach (Hull hull in Hull.hullList)
-            {
-                hull.Render(graphics, cam);
-            }
-
-            Hull.renderer.Render(graphics, cam, renderTargetAir, Cam.ShaderTransform);
-
-            //----------------------------------------------------------------------------------------
-            //3. draw the sections of the map that are on top of the water
-            //----------------------------------------------------------------------------------------
-
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend, SamplerState.LinearWrap,
-                null, null, null,
-                cam.Transform);
+			spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, null, null, cam.Transform);
 
             Submarine.DrawFront(spriteBatch, false, null);
-
             spriteBatch.End();
 
-            spriteBatch.Begin(SpriteSortMode.Immediate,
-                BlendState.NonPremultiplied, SamplerState.LinearWrap,
-                null, null,
-                damageEffect,
-                cam.Transform);
+			//draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
+			graphics.SetRenderTarget(renderTargetWater);
 
-            Submarine.DrawDamageable(spriteBatch, damageEffect, false);
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
+			spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), waterColor);
+			spriteBatch.End();
 
-            spriteBatch.End();
+			//draw alpha blended particles that are inside a sub
+#if LINUX
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
+#else
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.DepthRead, null, null, cam.Transform);
+#endif
+			GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.AlphaBlend);
+			spriteBatch.End();
 
-            GameMain.LightManager.DrawLightMap(spriteBatch, lightBlur.Effect);
+			graphics.SetRenderTarget(renderTarget);
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront,
-                BlendState.AlphaBlend, SamplerState.LinearWrap,
-                null, null, null,
-                cam.Transform);
+			//draw alpha blended particles that are not in water
+#if LINUX
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
+#else
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.DepthRead, null, null, cam.Transform);
+#endif
+			GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.AlphaBlend);
+			spriteBatch.End();
 
-            if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch);
+			//draw additive particles that are not in water
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.None, null, null, cam.Transform);
+			GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
+			spriteBatch.End();
 
-            foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch, cam);
+			graphics.SetRenderTarget(renderTargetFinal);
+			Hull.renderer.RenderBack(spriteBatch, renderTargetWater);
 
-            spriteBatch.End();
+			Array.Clear(Hull.renderer.vertices, 0, Hull.renderer.vertices.Length);
+			Hull.renderer.PositionInBuffer = 0;
+			foreach (Hull hull in Hull.hullList)
+			{
+				hull.Render(graphics, cam);
+			}
 
-            if (Character.Controlled != null && GameMain.LightManager.LosEnabled)
-            {
-                GameMain.LightManager.DrawLOS(spriteBatch, lightBlur.Effect, false);
+			Hull.renderer.Render(graphics, cam, renderTarget, Cam.ShaderTransform);
 
-                spriteBatch.Begin(SpriteSortMode.Immediate,
-                    BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, RasterizerState.CullNone, null);
+			spriteBatch.Begin(SpriteSortMode.Immediate,
+				BlendState.NonPremultiplied, SamplerState.LinearWrap,
+				null, null,
+				damageEffect,
+				cam.Transform);
+			Submarine.DrawDamageable(spriteBatch, damageEffect, false);
+			spriteBatch.End();
 
-                float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
-                spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                    Color.Lerp(GameMain.LightManager.AmbientLight * 0.5f, Color.Red, r));
+			//draw additive particles that are inside a sub
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.Default, null, null, cam.Transform);
+			GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.Additive);
+			spriteBatch.End();
+			if (GameMain.LightManager.LightingEnabled)
+			{
+				spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None, null, null, null);
+				spriteBatch.Draw(GameMain.LightManager.lightMap, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+				spriteBatch.End();
+			}
 
-                spriteBatch.End();
-            }
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, null, null, cam.Transform);
+			foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch, cam);
 
+			if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch);
+			spriteBatch.End();
+
+			graphics.SetRenderTarget(null);
+			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, null, null);
+			if (GameMain.LightManager.LosEnabled && Character.Controlled!=null)
+			{
+				float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
+				spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+				                 Color.Lerp(GameMain.LightManager.AmbientLight * 0.5f, Color.Red, r));
+				spriteBatch.End();
+                GameMain.LightManager.losEffect.CurrentTechnique = GameMain.LightManager.losEffect.Techniques["LosShader"];
+                GameMain.LightManager.losEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
+                GameMain.LightManager.losEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.losTexture);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, null, GameMain.LightManager.losEffect, null);
+			}
+			spriteBatch.Draw(renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+			spriteBatch.End();
         }
     }
 }

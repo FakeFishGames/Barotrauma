@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -11,7 +11,8 @@ namespace Barotrauma
         Up, Down, Left, Right,
         Attack,
         Run, Crouch,
-        Chat, RadioChat, CrewOrders
+        Chat, RadioChat, CrewOrders,
+        Ragdoll
     }
 
     public class KeyOrMouse
@@ -93,9 +94,9 @@ namespace Barotrauma
         }
     }
 
-	class Key
-	{
-		private bool hit, hitQueue;
+    class Key
+    {
+        private bool hit, hitQueue;
         private bool held, heldQueue;
 
 
@@ -105,23 +106,23 @@ namespace Barotrauma
         //{
         //    get { return canBeHeld; }
         //}
-		
-		public Key(KeyOrMouse binding)
-		{
+        
+        public Key(KeyOrMouse binding)
+        {
             this.binding = binding;
-		}
+        }
 
-		public bool Hit
-		{
-			get 
-			{
-				return hit; 
-			}
-			set
-			{
-				hit = value;
-			}
-		}
+        public bool Hit
+        {
+            get 
+            {
+                return hit; 
+            }
+            set
+            {
+                hit = value;
+            }
+        }
 
         public bool Held
         {
@@ -140,14 +141,14 @@ namespace Barotrauma
             get { return binding; }
         }
 
-		public void SetState()
-		{
-			hit = binding.IsHit();
-			if (hit) hitQueue = true;
+        public void SetState()
+        {
+            hit = binding.IsHit();
+            if (hit) hitQueue = true;
 
             held = binding.IsDown();
             if (held) heldQueue = true;
-		}
+        }
 
         public void SetState(bool hit, bool held)
         {
@@ -155,12 +156,12 @@ namespace Barotrauma
             if (held) heldQueue = true;
         }
 
-		public bool DequeueHit()
-		{
-			bool value = hitQueue;
-			hitQueue = false;
-			return value;			
-		}
+        public bool DequeueHit()
+        {
+            bool value = hitQueue;
+            hitQueue = false;
+            return value;            
+        }
 
         public bool DequeueHeld()
         {
@@ -186,11 +187,11 @@ namespace Barotrauma
             held = false;
         }
 
-		public void ResetHit()
-		{
-			hit = false;
-			//stateQueue = false;
-		}
+        public void ResetHit()
+        {
+            hit = false;
+            //stateQueue = false;
+        }
 
 
         public void ResetHeld()
@@ -198,5 +199,5 @@ namespace Barotrauma
             held = false;
             //stateQueue = false;
         }
-	}
+    }
 }

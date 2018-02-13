@@ -3,8 +3,8 @@
   <Item
     name="Oxygen Tank"
     category="Equipment,Misc"
-    Tags="smallitem"
-    
+    Tags="smallitem,oxygensource"
+    cargocontainername="Metal Crate"    
     price="50">
 
     <Deconstruct time="10">
@@ -27,7 +27,7 @@
     name="Diving Mask"
     category="Equipment"
     Tags="smallitem,diving"
-    
+    cargocontainername="Metal Crate"    
     price="50"
     description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach.">
 
@@ -41,7 +41,7 @@
 
     <Wearable limbtype="Head" slots="Any,Face">
       <sprite texture="DivingMask.png" limb="Head" sourcerect="1,1,37,38"/>
-      <StatusEffect type="OnWearing" target="Character" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
+      <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character" OxygenAvailable="1000.0" Condition="-0.5">
         <RequiredItem type="Contained" name="Oxygen Tank"/>
       </StatusEffect>
@@ -68,6 +68,14 @@
     fireproof="true"
     description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust.">
 
+    <Deconstruct time="30">
+      <Item name="Steel Bar"/>
+      <Item name="Aluminium"/>
+      <Item name="Aluminium"/>
+      <Item name="Polycarbonate Bar"/>
+      <Item name="Polycarbonate Bar"/>
+    </Deconstruct>
+
     <Sprite texture ="DivingSuit.png" sourcerect="85,0,43,128" depth="0.55"/>
 
     <Body width="37" height="113" density="15"/>
@@ -89,10 +97,10 @@
       <sprite texture="DivingSuit.png" limb="RightLeg" sourcerect="17,47,21,51" origin="0.5,0.55" hidelimb="true"/>
       <sprite texture="DivingSuit.png" limb="LeftLeg" sourcerect="17,47,21,51" origin="0.5,0.55" hidelimb="true"/>
 
-      <sprite texture="DivingSuit.png" limb="RightFoot" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
-      <sprite texture="DivingSuit.png" limb="LeftFoot" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="RightFoot" sound="footstep_armor" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
+      <sprite texture="DivingSuit.png" limb="LeftFoot" sound="footstep_armor" sourcerect="30,100,20,25" origin="0.5,0.5" depth="0.13" inheritlimbdepth="false" hidelimb="true"/>
 
-      <StatusEffect type="OnWearing" target="Character" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
+      <StatusEffect type="OnWearing" target="Character" HideFace="true" ObstructVision="true" PressureProtection="100.0" SpeedMultiplier="0.6" LowPassMultiplier="0.2" setvalue="true" disabledeltatime="true"/>
       <StatusEffect type="OnWearing" target="Contained,Character"  OxygenAvailable="1000.0" Condition="-0.5">
         <RequiredItem type="Contained" name="Oxygen Tank"/>
       </StatusEffect>
@@ -120,14 +128,15 @@
     name="Underwater Scooter"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="50"
     description="A battery-powered underwater propulsion device.">
 
     <Deconstruct time="20">
       <Item name="Steel Bar"/>
-      <Item name="Copper Bar"/>
       <Item name="Polycarbonate Bar"/>
+      <Item name="Polycarbonate Bar"/>
+      <Item name="FPGA Circuit"/>
     </Deconstruct>
     
     <Sprite texture ="Scooter.png" depth="0.55"/>

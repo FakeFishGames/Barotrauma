@@ -69,7 +69,10 @@ namespace Barotrauma.Networking
                     textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
                     break;
                 default:
-                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+                    if (command != "") //PMing
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
+                    else
+                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
                     break;
             }
 
@@ -110,7 +113,7 @@ namespace Barotrauma.Networking
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen) return;
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen || GUI.DisableHUD) return;
 
             GameMain.GameSession.CrewManager.Draw(spriteBatch);
 
@@ -137,8 +140,8 @@ namespace Barotrauma.Networking
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
                     respawnManager.CountdownStarted)
                 {
-                    respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : "Respawn Shuttle dispatching in " + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
-
+                    respawnInfo = respawnManager.UsingShuttle ? "Respawn Shuttle dispatching in " : "Respawning players in ";
+                    respawnInfo = respawnManager.RespawnTimer <= 0.0f ? "" : respawnInfo + ToolBox.SecondsToReadableTime(respawnManager.RespawnTimer);
                 }
                 else if (respawnManager.CurrentState == RespawnManager.State.Transporting)
                 {

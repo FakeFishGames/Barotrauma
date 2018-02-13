@@ -86,9 +86,18 @@ namespace Barotrauma.Items.Components
             if (connection.IsPower) voltage = power;                
         }
 
-        public override void Update(float deltaTime, Camera cam)
+        protected void UpdateOnActiveEffects(float deltaTime)
         {
-            if (currPowerConsumption == 0.0f) return;
+            if (currPowerConsumption == 0.0f)
+            {
+                //if the item consumes no power, ignore the voltage requirement and
+                //apply OnActive statuseffects as long as this component is active
+                if (powerConsumption == 0.0f)
+                {
+                    ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+                }
+                return;
+            }
 
 #if CLIENT
             if (voltage > minVoltage)
@@ -100,7 +109,7 @@ namespace Barotrauma.Items.Components
                     powerOnSoundPlayed = true;
                 }
             }
-            else if (voltage < 0.1f)            
+            else if (voltage < 0.1f)
             {
                 powerOnSoundPlayed = false;
             }
@@ -110,6 +119,13 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
 #endif
+        }
+
+        public override void Update(float deltaTime, Camera cam)
+        {
+            UpdateOnActiveEffects(deltaTime);
+
+            voltage = 0.0f;
         }
 
 

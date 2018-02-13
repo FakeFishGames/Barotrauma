@@ -149,6 +149,7 @@ namespace Barotrauma
         {
             if (GameMain.Client != null) return;
 
+<<<<<<< HEAD
             //Nilmod Deactivate players turning into husks on death optionally
             if (!GameMain.NilMod.PlayerHuskAiOnDeath)
             {
@@ -159,6 +160,19 @@ namespace Barotrauma
             //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it 
             //CoroutineManager.StartCoroutine(CreateAIHusk(character));
             CoroutineManager.StartCoroutine(CreateAIHuskDelayed(character));
+=======
+            //don't turn the character into a husk if any of its limbs are severed
+            if (character.AnimController?.LimbJoints != null)
+            {
+                foreach (var limbJoint in character.AnimController.LimbJoints)
+                {
+                    if (limbJoint.IsSevered) return;
+                }
+            }
+            
+            //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
+            CoroutineManager.StartCoroutine(CreateAIHusk(character));
+>>>>>>> master
         }
 
         private IEnumerable<object> CreateAIHusk(Character character)
@@ -166,6 +180,7 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
+<<<<<<< HEAD
             if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
 
             var husk = Character.Create(
@@ -173,6 +188,18 @@ namespace Barotrauma
                 character.WorldPosition,
                 character.Info,
                 false, true);
+=======
+            var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
+            var configFile = characterFiles.Find(f => Path.GetFileNameWithoutExtension(f) == "humanhusk");
+
+            if (string.IsNullOrEmpty(configFile))
+            {
+                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - humanhusk config file not found.");
+                yield return CoroutineStatus.Success;
+            }
+
+            var husk = Character.Create(configFile, character.WorldPosition, character.Info, false, true);
+>>>>>>> master
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {

@@ -46,14 +46,21 @@ namespace Barotrauma
             private set;
         }
 
-        public bool Centered;
 
-        public GUIMessage(string text, Color color, Vector2 position, float lifeTime, Alignment textAlignment, bool centered)
+        /// <summary>
+        /// Autocentered messages are automatically placed at the center of the screen and prevented from overlapping with each other
+        /// </summary>
+        public bool AutoCenter;
+
+        public GUIMessage(string text, Color color, Vector2 position, float lifeTime, Alignment textAlignment, bool autoCenter)
         {
-            coloredText = new ColoredText(text, color);
+            coloredText = new ColoredText(text, color, false);
             pos = position;
             this.lifeTime = lifeTime;
             this.Alignment = textAlignment;
+            this.AutoCenter = autoCenter;
+
+            size = GUI.Font.MeasureString(text);
 
             if (textAlignment.HasFlag(Alignment.Left))
                 Origin.X += size.X * 0.5f;
@@ -67,13 +74,9 @@ namespace Barotrauma
             if (textAlignment.HasFlag(Alignment.Bottom))
                 Origin.Y -= size.Y * 0.5f;
 
-            if (centered)
+            if (autoCenter)
             {
                 Origin = new Vector2((int)(0.5f * size.X), (int)(0.5f * size.Y));
-            }
-            else
-            {
-                size = GUI.Font.MeasureString(text);
             }
         }
     }

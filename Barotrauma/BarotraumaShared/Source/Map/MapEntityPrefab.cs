@@ -59,14 +59,14 @@ namespace Barotrauma
             get;
             protected set;
         }
-
+        
         [Serialize(false, false)]
         public bool Linkable
         {
             get;
             private set;
         }
-
+                
         public MapEntityCategory Category
         {
             get;

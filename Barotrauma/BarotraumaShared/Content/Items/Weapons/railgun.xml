@@ -36,11 +36,12 @@
     category="Machine"
     type="Controller"
     linkable="true"
+    disableitemusagewhenselected="true"
     >
 
     <Sprite texture ="railgunetc.png" depth="0.8" sourcerect="182,0,61,97"/>
     
-    <Controller UserPos="-35.0, -50.0" direction ="Right" canbeselected = "true">
+    <Controller UserPos="-35.0, -50.0" direction ="Right" canbeselected="true">
       <limbposition limb="Head" position="-5,-62"/>
       <limbposition limb="Torso" position="-5,-108"/>
       <limbposition limb="LeftHand" position="43,-85"/>
@@ -123,7 +124,7 @@
       
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/bigexplosion.ogg"/>
-        <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0" severlimbsprobability="0.8" decal="explosion" decalsize="1.0"/>
+        <Explosion range="1000.0" structuredamage="1000" damage="1000" stun="10" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0"/>
       </StatusEffect>
 
       <StatusEffect type="OnActive" target="This">

@@ -50,22 +50,25 @@ namespace Barotrauma
 
             innerFrame.Padding = new Vector4(10.0f, 10.0f, 10.0f, 10.0f);
 
-            var crewButton = new GUIButton(new Rectangle(0, -30, 100, 20), "Crew", "", innerFrame);
+            var crewButton = new GUIButton(new Rectangle(0, -30, 100, 20), TextManager.Get("Crew"), "", innerFrame);
+            crewButton.ClampMouseRectToParent = false;
             crewButton.UserData = InfoFrameTab.Crew;
             crewButton.OnClicked = SelectInfoFrameTab;
 
-            var missionButton = new GUIButton(new Rectangle(100, -30, 100, 20), "Mission", "", innerFrame);
+            var missionButton = new GUIButton(new Rectangle(100, -30, 100, 20), TextManager.Get("Mission"), "", innerFrame);
+            missionButton.ClampMouseRectToParent = false;
             missionButton.UserData = InfoFrameTab.Mission;
             missionButton.OnClicked = SelectInfoFrameTab;
 
             if (GameMain.Server != null)
             {
-                var manageButton = new GUIButton(new Rectangle(200, -30, 130, 20), "Manage players", "", innerFrame);
+                var manageButton = new GUIButton(new Rectangle(200, -30, 130, 20), TextManager.Get("ManagePlayers"), "", innerFrame);
+                manageButton.ClampMouseRectToParent = false;
                 manageButton.UserData = InfoFrameTab.ManagePlayers;
                 manageButton.OnClicked = SelectInfoFrameTab;
             }
 
-            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), "Close", Alignment.BottomCenter, "", innerFrame);
+            var closeButton = new GUIButton(new Rectangle(0, 0, 80, 20), TextManager.Get("Close"), Alignment.BottomCenter, "", innerFrame);
             closeButton.OnClicked = ToggleInfoFrame;
 
         }
@@ -96,16 +99,14 @@ namespace Barotrauma
         {
             if (Mission == null)
             {
-                new GUITextBlock(new Rectangle(0, 0, 0, 50), "No mission", "", infoFrame, true);
+                new GUITextBlock(new Rectangle(0, 0, 0, 50), TextManager.Get("NoMission"), "", infoFrame, true);
                 return;
             }
 
             new GUITextBlock(new Rectangle(0, 0, 0, 40), Mission.Name, "", infoFrame, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 50, 0, 20), "Reward: " + Mission.Reward, "", infoFrame, true);
+            new GUITextBlock(new Rectangle(0, 50, 0, 20), TextManager.Get("MissionReward").Replace("[reward]", Mission.Reward.ToString()), "", infoFrame, true);
             new GUITextBlock(new Rectangle(0, 70, 0, 50), Mission.Description, "", infoFrame, true);
-
-
         }
 
         public void AddToGUIUpdateList()

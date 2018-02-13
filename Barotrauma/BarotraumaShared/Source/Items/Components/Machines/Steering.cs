@@ -98,7 +98,6 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-
             InitProjSpecific();
         }
 
@@ -128,8 +127,10 @@ namespace Barotrauma.Items.Components
                     unsentChanges = false;
                 }
             }
-     
-            if (voltage < minVoltage && powerConsumption > 0.0f) return;
+
+            currPowerConsumption = powerConsumption;
+
+            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 

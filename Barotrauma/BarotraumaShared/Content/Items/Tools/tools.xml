@@ -4,7 +4,7 @@
     name="Welding Tool"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="100"
     description="One of the most crucial tools on board the submarine. Also works underwater.">
 
@@ -27,6 +27,13 @@
     <RepairTool structurefixamount="5.0" limbfixamount="-0.5" range="100" barrelpos="19,8" particles="weld">
       <!-- the item must contain a welding fuel tank for it to work -->
       <RequiredItems name="Welding Fuel Tank" type="Contained" msg="Welding fuel required"/>
+
+      <ParticleEmitter particle="weld" particlespersecond="50"/>
+      <ParticleEmitterHitStructure particle="weldspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>
+      <ParticleEmitterHitItem particle="weldspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>
+      <ParticleEmitterHitStructure particle="weldsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20"/>
+      <ParticleEmitterHitItem particle="weldsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
+      <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
 
       <sound file="weldingTool.ogg" type="OnUse" range="500.0" loop="true"/>
 
@@ -60,7 +67,7 @@
     name="Plasma Cutter"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="100"
     description="Cuts through various materials using a jet of ionized oxygen.">
 
@@ -77,10 +84,17 @@
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true"
               aimpos="50,0" handle1="-12,4"/>
 
-    <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8" particles="plasma">
+    <RepairTool structurefixamount="-2.0" limbfixamount="-0.5" range="100" barrelpos="28,8">
       <RequiredItems name="Oxygen Tank" type="Contained" msg="Oxygen tank required"/>
       <StatusEffect type="OnUse" target="Contained" targetnames="Oxygen Tank" Condition="-1.0"/>
       <StatusEffect type="OnUse" target="UseTarget" targetnames="Door,Windowed Door" Stuck="-20.0" Condition="-3.0"/>
+
+      <ParticleEmitter particle="plasma" particlespersecond="50"/>
+      <ParticleEmitterHitStructure particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>
+      <ParticleEmitterHitItem particle="plasmaspark" particlespersecond="100" anglemin="-40" anglemax="40" velocitymin="100" velocitymax="800"/>
+      <ParticleEmitterHitStructure particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="20"/>
+      <ParticleEmitterHitItem particle="plasmasmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
+      <ParticleEmitterHitCharacter particle="fleshsmoke" particlespersecond="3" anglemin="-5" anglemax="5" velocitymin="10" velocitymax="100"/>
 
       <sound file="plasmaCutter.ogg" type="OnUse" range="500.0" loop="true"/>
 
@@ -105,7 +119,7 @@
     name="Welding Fuel Tank"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="50">
 
     <Deconstruct time="10">
@@ -116,7 +130,7 @@
 
     <Body width="12" height="33" density="5"/>
 
-    <Holdable slots="RightHand,Any" holdpos="30,-15" handle1="0,5" handle2="0,-5">
+    <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5">
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true">
         <sound file="Content/Items/Reactor/explosion.ogg"/>
         <Explosion range="250.0" structuredamage="15" damage="25" stun="5" force="3.0"/>
@@ -128,7 +142,7 @@
     name="Fire Extinguisher"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="100"
     description="A handheld carbon dioxide extinguisher.">
 
@@ -144,7 +158,8 @@
     <Holdable slots="Any,RightHand+LeftHand" controlpose="false"
               aimpos="40,-20" handle1="-2,30"/>
 
-    <RepairTool extinquishamount="30.0" range="300" barrelpos="21,25" particles="extinguisher" particlespeed="650.0">
+    <RepairTool extinquishamount="60.0" range="500" barrelpos="21,25">
+      <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50"/>
       <StatusEffect type="OnUse" target="This" Condition="-2.0"/>
       <sound file="extinguisher.ogg" type="OnUse" range="500.0" loop="true"/>
     </RepairTool>
@@ -157,7 +172,7 @@
     name="Screwdriver"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="10">
        
     <Sprite texture ="tools.png" sourcerect="0,58,31,6" depth="0.55"/>
@@ -172,16 +187,33 @@
     name="Wrench"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="10">
 
-    <Sprite  texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
+    <Sprite texture ="tools.png" sourcerect="0,50,26,7" depth="0.55"/>
 
     <Body width="30" height="7" density="50"/>
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
           aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
-      <Attack damage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack damage="5" structuredamage="5" stun="0.2" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
+    </MeleeWeapon>
+  </Item>
+
+  <Item
+    name="Crowbar"
+    category="Equipment"
+    Tags="smallitem"
+    cargocontainername="Metal Crate"    
+    price="15">
+
+    <Sprite texture ="tools.png" sourcerect="0,65,64,12" depth="0.55"/>
+
+    <Body width="60" height="10" density="50"/>
+
+    <MeleeWeapon slots="RightHand+LeftHand,Any"
+          controlpose="true" aimpos="50,0" handle1="-5,0" handle2="-3,5" holdangle="30" reload="1.7">
+      <Attack damage="20" structuredamage="10" stun="0.6" damagetype="Blunt" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 
@@ -189,7 +221,7 @@
     name="Handheld Sonar"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"    
     price="10">
 
     <Sprite texture ="tools.png" sourcerect="42,0,22,9" depth="0.55"/>
@@ -219,7 +251,7 @@
     name="Flashlight"
     category="Equipment"
     Tags="smallitem"
-    
+    cargocontainername="Metal Crate"
     price="10">
 
     <Deconstruct time="15">
@@ -231,12 +263,11 @@
 
     <Body width="27" height="10" density="15"/>
 
-    <Holdable slots="Any,RightHand,LeftHand" aimpos="100,0" handle1="0,0">
+    <Holdable slots="Any,RightHand,LeftHand,Face" holdpos="30,-15" aimpos="100,0" handle1="-13,0" handle2="-13,0">
       <StatusEffect type="OnActive" target="Contained" Condition="-0.2"/>
     </Holdable>
 
     <LightComponent LightColor="1.0,1.0,1.0,1.0" Flicker="0.1" range="800" powerconsumption="10" IsOn="true">
-
       <LightTexture texture="Content/Lights/lightcone.png" origin="0.0, 0.5" size="2.0,1.0"/>
     </LightComponent>
     
@@ -250,14 +281,16 @@
   <Item
     name="Flare"
     category="Equipment"
-    
+    cargocontainername="Metal Crate"    
     price="5"
     spritecolor="1.0,0.0,0.0,1.0"
     tags="smallitem">
 
     <Deconstruct time="10">
-      <Item name="Phosphorus"/>
-      <Item name="Aluminium"/>
+      <Item name="Phosphorus" mincondition="0.9" outcondition="0.25"/>
+      <Item name="Aluminium" mincondition="0.9" outcondition="0.25"/>
+      <Item name="Phosphorus" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
+      <Item name="Aluminium" mincondition="0.5" maxcondition="0.9" outcondition="0.1"/>
     </Deconstruct>
 
 

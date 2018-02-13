@@ -17,7 +17,7 @@ namespace Barotrauma
 
         public override Sprite Sprite
         {
-            get { return prefab.sprite; }
+            get { return prefab.GetActiveSprite(condition); }
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
@@ -26,22 +26,53 @@ namespace Barotrauma
             Color color = (IsSelected && editing) ? color = Color.Red : spriteColor;
             if (isHighlighted) color = Color.Orange;
 
-            SpriteEffects oldEffects = prefab.sprite.effects;
-            prefab.sprite.effects ^= SpriteEffects;
-
-            if (prefab.sprite != null)
+            Sprite activeSprite = prefab.sprite;
+            BrokenItemSprite fadeInBrokenSprite = null;
+            float fadeInBrokenSpriteAlpha = 0.0f;
+            if (condition < 100.0f)
             {
+                for (int i = 0; i < prefab.BrokenSprites.Count; i++)
+                {
+                    if (condition <= prefab.BrokenSprites[i].MaxCondition)
+                    {
+                        activeSprite = prefab.BrokenSprites[i].Sprite;
+                        break;
+                    }
+
+                    if (prefab.BrokenSprites[i].FadeIn)
+                    {
+                        float min = i > 0 ? prefab.BrokenSprites[i].MaxCondition : 0.0f;
+                        float max = i < prefab.BrokenSprites.Count - 1 ? prefab.BrokenSprites[i + 1].MaxCondition : 100.0f;
+                        fadeInBrokenSpriteAlpha = 1.0f - ((condition - min) / (max - min));
+                        if (fadeInBrokenSpriteAlpha > 0.0f && fadeInBrokenSpriteAlpha < 1.0f)
+                        {
+                            fadeInBrokenSprite = prefab.BrokenSprites[i];
+                        }
+                    }
+                }
+            }
+
+            Sprite selectedSprite = prefab.GetActiveSprite(condition);
+
+            if (selectedSprite != null)
+            {
+                SpriteEffects oldEffects = selectedSprite.effects;
+                selectedSprite.effects ^= SpriteEffects;
+
                 float depth = GetDrawDepth();
 
                 if (body == null)
                 {
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical || SpriteEffects.HasFlag(SpriteEffects.FlipHorizontally) || SpriteEffects.HasFlag(SpriteEffects.FlipVertically))
                     {
-                        prefab.sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color);
+                        selectedSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color);
+                        fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color * fadeInBrokenSpriteAlpha, Point.Zero, selectedSprite.Depth - 0.000001f);
+
                     }
                     else
                     {
-                        prefab.sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, 1.0f, SpriteEffects.None, depth);
+                        selectedSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, 0.0f, 1.0f, SpriteEffects.None, depth);
+                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, 0.0f, 1.0f, SpriteEffects.None, depth - 0.000001f);
                     }
 
                 }
@@ -58,17 +89,14 @@ namespace Barotrauma
                         {
                             depth = holdable.Picker.AnimController.GetLimb(LimbType.LeftArm).sprite.Depth - 0.000001f;
                         }
-
-                        body.Draw(spriteBatch, prefab.sprite, color, depth);
                     }
-                    else
-                    {
-                        body.Draw(spriteBatch, prefab.sprite, color, depth);
-                    }
+                    body.Draw(spriteBatch, selectedSprite, color, depth);
+                    if (fadeInBrokenSprite != null) body.Draw(spriteBatch, fadeInBrokenSprite.Sprite, color * fadeInBrokenSpriteAlpha, depth - 0.000001f);
                 }
+
+                selectedSprite.effects = oldEffects;
             }
 
-            prefab.sprite.effects = oldEffects;
 
             List<IDrawableComponent> staticDrawableComponents = new List<IDrawableComponent>(drawableComponents); //static list to compensate for drawable toggling
             for (int i = 0; i < staticDrawableComponents.Count; i++)
@@ -127,6 +155,7 @@ namespace Barotrauma
 
             if (Screen.Selected != GameMain.SubEditorScreen) return;
 
+<<<<<<< HEAD
             if (!Linkable) return;
 
             if (!PlayerInput.KeyDown(Keys.Space)) return;
@@ -146,6 +175,40 @@ namespace Barotrauma
                     linkedTo.Add(entity);
                     if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
                 }
+=======
+            if (!Linkable) return;
+
+            if (!PlayerInput.KeyDown(Keys.Space)) return;
+            bool lClick = PlayerInput.LeftButtonClicked();
+            bool rClick = PlayerInput.RightButtonClicked();
+            if (!lClick && !rClick) return;
+
+            Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+
+            if (lClick)
+            {
+                foreach (MapEntity entity in mapEntityList)
+                {
+                    if (entity == this || !entity.IsHighlighted) continue;
+                    if (linkedTo.Contains(entity)) continue;
+                    if (!entity.IsMouseOn(position)) continue;
+
+                    linkedTo.Add(entity);
+                    if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
+                }
+            }
+            else
+            {
+                foreach (MapEntity entity in mapEntityList)
+                {
+                    if (entity == this || !entity.IsHighlighted) continue;
+                    if (!linkedTo.Contains(entity)) continue;
+                    if (!entity.IsMouseOn(position)) continue;
+
+                    linkedTo.Remove(entity);
+                    if (entity.linkedTo != null && entity.linkedTo.Contains(this)) entity.linkedTo.Remove(this);
+                }
+>>>>>>> master
             }
             else
             {
@@ -177,9 +240,15 @@ namespace Barotrauma
             GUIListBox listBox = (GUIListBox)editingHUD;
             listBox.Spacing = 5;
             
+<<<<<<< HEAD
             var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
 
             if (!inGame && Linkable)
+=======
+            var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
+            
+            if (!inGame && Linkable)
+>>>>>>> master
             {
                 itemEditor.AddCustomContent(new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", "", null, GUI.SmallFont), 1);
             }            
@@ -302,60 +371,7 @@ namespace Barotrauma
                 }
             }
         }
-
-        private bool EnterProperty(GUITickBox tickBox)
-        {
-            var property = tickBox.UserData as SerializableProperty;
-            if (property == null) return false;
-
-            property.TrySetValue(tickBox.Selected);
-
-            return true;
-        }
-
-        private bool EnterProperty(GUITextBox textBox, string text)
-        {
-            textBox.Color = Color.DarkGreen;
-
-            var property = textBox.UserData as SerializableProperty;
-            if (property == null) return false;
-
-            object prevValue = property.GetValue();
-
-            textBox.Deselect();
-
-            if (property.TrySetValue(text))
-            {
-                textBox.Text = text;
-
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
-                }
-                else if (GameMain.Client != null)
-                {
-                    GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
-                }
-
-                return true;
-            }
-            else
-            {
-                if (prevValue != null)
-                {
-                    textBox.Text = prevValue.ToString();
-                }
-                return false;
-            }
-        }
-
-        private bool PropertyChanged(GUITextBox textBox, string text)
-        {
-            textBox.Color = Color.Red;
-
-            return true;
-        }
-
+        
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
             if (type == ServerNetObject.ENTITY_POSITION)
@@ -479,7 +495,18 @@ namespace Barotrauma
             }
             else
             {
-                body.FarseerBody.Enabled = false;
+                try
+                {
+                    body.FarseerBody.Enabled = false;
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Exception in PhysicsBody.Enabled = false (" + body.PhysEnabled + ")", e);
+                    if (body.UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + body.UserData.GetType().ToString(), Color.Red);
+                    if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", Color.Red);
+                    else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", Color.Red);
+                    if (body.FarseerBody.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", Color.Red);
+                }
             }
 
             if ((newPosition - SimPosition).Length() > body.LinearVelocity.Length() * 2.0f)

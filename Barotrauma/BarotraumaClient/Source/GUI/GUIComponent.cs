@@ -1,4 +1,4 @@
-﻿using EventInput;
+using EventInput;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -28,19 +28,11 @@ namespace Barotrauma
             if (!Visible) return;
             if (ComponentsToUpdate.Contains(this)) return;
             ComponentsToUpdate.Add(this);
-
-            try
+            
+            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+            foreach (GUIComponent c in fixedChildren)
             {
-                List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
-                foreach (GUIComponent c in fixedChildren)
-                {
-                    c.AddToGUIUpdateList();
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.NewMessage("Error in AddToGUIUPdateList! GUIComponent runtime type: "+this.GetType().ToString()+"; children count: "+children.Count.ToString(),Color.Red);
-                throw;
+                c.AddToGUIUpdateList();
             }
         }
 
@@ -137,7 +129,38 @@ namespace Barotrauma
         {
             get { return new Vector2(rect.Center.X, rect.Center.Y); }
         }
-                
+
+        protected Rectangle ClampRect(Rectangle r)
+        {
+            if (parent == null || !ClampMouseRectToParent) return r;
+            Rectangle parentRect = parent.ClampRect(parent.rect);
+            if (parentRect.Width <= 0 || parentRect.Height <= 0) return Rectangle.Empty;
+            if (parentRect.X > r.X)
+            {
+                int diff = parentRect.X - r.X;
+                r.X = parentRect.X;
+                r.Width -= diff;
+            }
+            if (parentRect.Y > r.Y)
+            {
+                int diff = parentRect.Y - r.Y;
+                r.Y = parentRect.Y;
+                r.Height -= diff;
+            }
+            if (parentRect.X + parentRect.Width < r.X + r.Width)
+            {
+                int diff = (r.X + r.Width) - (parentRect.X + parentRect.Width);
+                r.Width -= diff;
+            }
+            if (parentRect.Y + parentRect.Height < r.Y + r.Height)
+            {
+                int diff = (r.Y + r.Height) - (parentRect.Y + parentRect.Height);
+                r.Height -= diff;
+            }
+            if (r.Width <= 0 || r.Height <= 0) return Rectangle.Empty;
+            return r;
+        }
+
         public virtual Rectangle Rect
         {
             get { return rect; }
@@ -167,10 +190,15 @@ namespace Barotrauma
                 }            
             }
         }
-        
+
+        public bool ClampMouseRectToParent = true;
         public virtual Rectangle MouseRect
         {
-            get { return CanBeFocused ? rect : Rectangle.Empty; }
+            get
+            {
+                if (!CanBeFocused) return Rectangle.Empty;
+                return ClampMouseRectToParent ? ClampRect(rect) : rect;
+            }
         }
 
         public Dictionary<ComponentState, List<UISprite>> sprites;
@@ -437,22 +465,14 @@ namespace Barotrauma
                 }
 
             }*/
-
-            try
+            
+            //use a fixed list since children can change their order in the main children list
+            //TODO: maybe find a more efficient way of handling changes in list order
+            List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
+            foreach (GUIComponent c in fixedChildren)
             {
-                //use a fixed list since children can change their order in the main children list
-                //TODO: maybe find a more efficient way of handling changes in list order
-                List<GUIComponent> fixedChildren = new List<GUIComponent>(children);
-                foreach (GUIComponent c in fixedChildren)
-                {
-                    if (!c.Visible) continue;
-                    c.Update(deltaTime);
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.NewMessage("Error in Update! GUIComponent runtime type: " + this.GetType().ToString() + "; children count: " + children.Count.ToString(), Color.Red);
-                throw;
+                if (!c.Visible) continue;
+                c.Update(deltaTime);
             }
         }
 

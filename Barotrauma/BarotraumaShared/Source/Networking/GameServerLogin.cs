@@ -248,16 +248,24 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
                 return;
             }
+<<<<<<< HEAD
 
             //Nilmod prevent players rejoining as server hosts current name OR server name.
             if (Homoglyphs.Compare(clName.ToLower(), Name.ToLower()) || Homoglyphs.Compare(clName.ToLower(), GameMain.NilMod.PlayYourselfName.ToLower()))
+=======
+            if (Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
+>>>>>>> master
             {
                 DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Connection);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", Color.Red);
                 return;
             }
+<<<<<<< HEAD
             Client nameTaken = ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), clName.ToLower()));
+=======
+            Client nameTaken = ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), clName.ToLower()));
+>>>>>>> master
             if (nameTaken != null)
             {
                 if (nameTaken.Connection.RemoteEndPoint.Address.ToString() == inc.SenderEndPoint.Address.ToString())
@@ -461,11 +469,11 @@ namespace Barotrauma.Networking
             var savedPermissions = clientPermissions.Find(cp => cp.IP == newClient.Connection.RemoteEndPoint.Address.ToString());
             if (savedPermissions != null)
             {
-                newClient.SetPermissions(savedPermissions.Permissions);
+                newClient.SetPermissions(savedPermissions.Permissions, savedPermissions.PermittedCommands);
             }
             else
             {
-                newClient.SetPermissions(ClientPermissions.None);
+                newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
             }
         }
 

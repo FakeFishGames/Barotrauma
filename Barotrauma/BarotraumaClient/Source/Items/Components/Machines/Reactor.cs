@@ -11,6 +11,15 @@ namespace Barotrauma.Items.Components
     {
         private GUITickBox autoTempTickBox;
         
+        private const int GraphSize = 25;
+        private float graphTimer;
+        private int updateGraphInterval = 500;
+
+        private float[] fissionRateGraph = new float[GraphSize];
+        private float[] coolingRateGraph = new float[GraphSize];
+        private float[] tempGraph = new float[GraphSize];
+        private float[] loadGraph = new float[GraphSize];
+
         partial void InitProjSpecific()
         {
             var button = new GUIButton(new Rectangle(410, 70, 40, 40), "-", "", GuiFrame);
@@ -41,7 +50,7 @@ namespace Barotrauma.Items.Components
                 return false;
             };
 
-            autoTempTickBox = new GUITickBox(new Rectangle(410, 170, 20, 20), "Automatic temperature control", Alignment.TopLeft, GuiFrame);
+            autoTempTickBox = new GUITickBox(new Rectangle(410, 170, 20, 20), TextManager.Get("ReactorAutoTemp"), Alignment.TopLeft, GuiFrame);
             autoTempTickBox.OnSelected = ToggleAutoTemp;
 
             button = new GUIButton(new Rectangle(210, 290, 40, 40), "+", "", GuiFrame);
@@ -139,12 +148,10 @@ namespace Barotrauma.Items.Components
             GuiFrame.Draw(spriteBatch);
 
             float xOffset = graphTimer / updateGraphInterval;
-
-            //GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black, true);
-
-            GUI.Font.DrawString(spriteBatch, "Output: " + (int)temperature + " kW",
+            
+            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorOutput") + ": " + (int)temperature + " kW",
                 new Vector2(x + 450, y + 30), Color.Red);
-            GUI.Font.DrawString(spriteBatch, "Grid load: " + (int)load + " kW",
+            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorGridLoad") + ": " + (int)load + " kW",
                 new Vector2(x + 600, y + 30), Color.Yellow);
 
             float maxLoad = 0.0f;
@@ -159,23 +166,18 @@ namespace Barotrauma.Items.Components
             DrawGraph(loadGraph, spriteBatch,
                 new Rectangle(x + 30, y + 30, 400, 250), Math.Max(10000.0f, maxLoad), xOffset, Color.Yellow);
 
-            GUI.Font.DrawString(spriteBatch, "Shutdown Temperature: " + (int)shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
-
-            //GUI.Font.DrawString(spriteBatch, "Automatic Temperature Control: " + ((autoTemp) ? "ON" : "OFF"), new Vector2(x + 450, y + 180), Color.White);
+            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorShutdownTemp") + ": " + (int)shutDownTemp, new Vector2(x + 450, y + 80), Color.White);
 
             y += 300;
 
-            GUI.Font.DrawString(spriteBatch, "Fission rate: " + (int)fissionRate + " %", new Vector2(x + 30, y), Color.White);
+            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorFissionRate") + ": " + (int)fissionRate + " %", new Vector2(x + 30, y), Color.White);
             DrawGraph(fissionRateGraph, spriteBatch,
                 new Rectangle(x + 30, y + 30, 200, 100), 100.0f, xOffset, Color.Orange);
 
 
-            GUI.Font.DrawString(spriteBatch, "Cooling rate: " + (int)coolingRate + " %", new Vector2(x + 320, y), Color.White);
+            GUI.Font.DrawString(spriteBatch, TextManager.Get("ReactorCoolingRate") + ": " + (int)coolingRate + " %", new Vector2(x + 320, y), Color.White);
             DrawGraph(coolingRateGraph, spriteBatch,
                 new Rectangle(x + 320, y + 30, 200, 100), 100.0f, xOffset, Color.LightBlue);
-
-
-            //y = y - 260;
         }
 
         public override void AddToGUIUpdateList()

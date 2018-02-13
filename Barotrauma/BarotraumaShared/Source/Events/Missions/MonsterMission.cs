@@ -28,7 +28,7 @@ namespace Barotrauma
         public override void Start(Level level)
         {
             Vector2 spawnPos;
-            Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, true, out spawnPos);
+            Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out spawnPos);
 
             monster = Character.Create(monsterFile, spawnPos, null, GameMain.Client != null, true, false);
             monster.Enabled = false;

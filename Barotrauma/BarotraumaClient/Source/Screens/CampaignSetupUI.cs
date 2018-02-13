@@ -28,25 +28,25 @@ namespace Barotrauma
             this.newGameContainer = newGameContainer;
             this.loadGameContainer = loadGameContainer;
 
-            new GUITextBlock(new Rectangle(0, 0, 0, 30), "Selected submarine:", null, null, Alignment.Left, "", newGameContainer);
+            new GUITextBlock(new Rectangle(0, 0, 0, 30), TextManager.Get("SelectedSub") + ":", null, null, Alignment.Left, "", newGameContainer);
             subList = new GUIListBox(new Rectangle(0, 30, 230, newGameContainer.Rect.Height - 100), "", newGameContainer);
 
             UpdateSubList();
 
             new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 0, 100, 20),
-                "Save name: ", "", Alignment.Left, Alignment.Left, newGameContainer);
+                TextManager.Get("SaveName") + ": ", "", Alignment.Left, Alignment.Left, newGameContainer);
 
             saveNameBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 30, 180, 20),
                 Alignment.TopLeft, "", newGameContainer);
 
             new GUITextBlock(new Rectangle((int)(subList.Rect.Width + 20), 60, 100, 20),
-                "Map Seed: ", "", Alignment.Left, Alignment.Left, newGameContainer);
+                TextManager.Get("MapSeed") + ": ", "", Alignment.Left, Alignment.Left, newGameContainer);
 
             seedBox = new GUITextBox(new Rectangle((int)(subList.Rect.Width + 30), 90, 180, 20),
                 Alignment.TopLeft, "", newGameContainer);
             seedBox.Text = ToolBox.RandomSeed(8);
             
-            var startButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.BottomRight, "", newGameContainer);
+            var startButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartCampaignButton"), Alignment.BottomRight, "", newGameContainer);
             startButton.OnClicked = (GUIButton btn, object userData) =>
             {
                 if (string.IsNullOrWhiteSpace(saveNameBox.Text))
@@ -54,25 +54,45 @@ namespace Barotrauma
                     saveNameBox.Flash(Color.Red);
                     return false;
                 }
-
+                
                 Submarine selectedSub = subList.SelectedData as Submarine;
-                if (selectedSub != null && selectedSub.HasTag(SubmarineTag.Shuttle))
+                if (selectedSub == null) return false;
+
+                string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
+                if (selectedSub.HasTag(SubmarineTag.Shuttle) || !selectedSub.CompatibleContentPackages.Contains(GameMain.SelectedPackage.Name))
                 {
-                    var msgBox = new GUIMessageBox("Shuttle selected",
-                        "Most shuttles are not adequately equipped to deal with the dangers of the Europan depths. " +
-                        "Are you sure you want to choose a shuttle as your vessel?",
-                        new string[] { "Yes", "No" });
+                    if (!selectedSub.CompatibleContentPackages.Contains(GameMain.SelectedPackage.Name))
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
+                            TextManager.Get("ContentPackageMismatchWarning")
+                                .Replace("[selectedcontentpackage]", GameMain.SelectedPackage.Name),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
-                    string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
-                    msgBox.Buttons[0].OnClicked = (button, obj) => { StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text); return true; };
-                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[0].OnClicked = msgBox.Close;
+                        msgBox.Buttons[0].OnClicked += (button, obj) => 
+                        {
+                            if (GUIMessageBox.MessageBoxes.Count == 0) StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                            return true;
+                        };
 
-                    msgBox.Buttons[1].OnClicked = msgBox.Close;
-                    return false;
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    }
+
+                    if (selectedSub.HasTag(SubmarineTag.Shuttle))
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("ShuttleSelected"),
+                            TextManager.Get("ShuttleWarning"),
+                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+                        msgBox.Buttons[0].OnClicked = (button, obj) => { StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text); return true; };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                        return false;
+                    }
                 }
                 else
                 {
-                    string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
                     StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
                 }
 
@@ -110,10 +130,19 @@ namespace Barotrauma
                 {
                     textBlock.TextColor = textBlock.TextColor * 0.85f;
 
-                    var shuttleText = new GUITextBlock(new Rectangle(0, 0, 0, 25), "Shuttle", "", Alignment.Left, Alignment.CenterY | Alignment.Right, textBlock, false, GUI.SmallFont);
+                    var shuttleText = new GUITextBlock(new Rectangle(-20, 0, 0, 25), TextManager.Get("Shuttle"), "", Alignment.CenterRight, Alignment.CenterRight, textBlock, false, GUI.SmallFont);
                     shuttleText.TextColor = textBlock.TextColor * 0.8f;
                     shuttleText.ToolTip = textBlock.ToolTip;
                 }
+
+                GUIButton infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterRight, "", textBlock);
+                infoButton.UserData = sub;
+                infoButton.OnClicked += (component, userdata) =>
+                {
+                    var msgBox = new GUIMessageBox("", "", 550, 350);
+                    ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                    return true;
+                };
             }
             if (Submarine.SavedSubmarines.Count > 0) subList.Select(Submarine.SavedSubmarines[0]);
         }
@@ -140,7 +169,7 @@ namespace Barotrauma
                 textBlock.UserData = saveFile;
             }
 
-            loadGameButton = new GUIButton(new Rectangle(0, 0, 100, 30), "Start", Alignment.Right | Alignment.Bottom, "", loadGameContainer);
+            loadGameButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("LoadButton"), Alignment.Right | Alignment.Bottom, "", loadGameContainer);
             loadGameButton.OnClicked = (btn, obj) => 
             {
                 if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) return false;
@@ -176,16 +205,16 @@ namespace Barotrauma
 
             new GUITextBlock(new Rectangle(0, 0, 0, 20), Path.GetFileNameWithoutExtension(fileName), "", Alignment.TopLeft, Alignment.TopLeft, saveFileFrame, false, GUI.LargeFont);
 
-            new GUITextBlock(new Rectangle(0, 35, 0, 20), "Submarine: ", "", saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 35, 0, 20), TextManager.Get("Submarine") + ":", "", saveFileFrame).Font = GUI.SmallFont;
             new GUITextBlock(new Rectangle(15, 52, 0, 20), subName, "", saveFileFrame).Font = GUI.SmallFont;
 
-            new GUITextBlock(new Rectangle(0, 70, 0, 20), "Last saved: ", "", saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 70, 0, 20), TextManager.Get("LastSaved") + ":", "", saveFileFrame).Font = GUI.SmallFont;
             new GUITextBlock(new Rectangle(15, 85, 0, 20), saveTime, "", saveFileFrame).Font = GUI.SmallFont;
 
-            new GUITextBlock(new Rectangle(0, 105, 0, 20), "Map seed: ", "", saveFileFrame).Font = GUI.SmallFont;
+            new GUITextBlock(new Rectangle(0, 105, 0, 20), TextManager.Get("MapSeed") + ":", "", saveFileFrame).Font = GUI.SmallFont;
             new GUITextBlock(new Rectangle(15, 120, 0, 20), mapseed, "", saveFileFrame).Font = GUI.SmallFont;
 
-            var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), "Delete", Alignment.BottomCenter, "", saveFileFrame);
+            var deleteSaveButton = new GUIButton(new Rectangle(0, 0, 100, 20), TextManager.Get("Delete"), Alignment.BottomCenter, "", saveFileFrame);
             deleteSaveButton.UserData = fileName;
             deleteSaveButton.OnClicked = DeleteSave;
 

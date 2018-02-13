@@ -1,29 +1,10 @@
 ﻿using Lidgren.Network;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    [Flags]
-    enum ClientPermissions
-    {
-        None = 0,
-        [Description("End round")]
-        EndRound = 1,
-        [Description("Kick")]
-        Kick = 2,
-        [Description("Ban")]
-        Ban = 4,
-        [Description("Select submarine")]
-        SelectSub = 8,
-        [Description("Select game mode")]
-        SelectMode = 16,
-        [Description("Manage campaign")]
-        ManageCampaign = 32
-    }
-
     class Client
     {
         //NilMod
@@ -33,6 +14,23 @@ namespace Barotrauma.Networking
 
         public string Name;
         public byte ID;
+
+        private float karma = 1.0f;
+        public float Karma
+        {
+            get
+            {
+                if (GameMain.Server == null) return 1.0f;
+                if (!GameMain.Server.KarmaEnabled) return 1.0f;
+                return karma;
+            }
+            set
+            {
+                if (GameMain.Server == null) return;
+                if (!GameMain.Server.KarmaEnabled) return;
+                karma = Math.Min(Math.Max(value,0.0f),1.0f);
+            }
+        }
 
         public byte TeamID = 0;
 
@@ -84,6 +82,11 @@ namespace Barotrauma.Networking
         public float DeleteDisconnectedTimer;
 
         public ClientPermissions Permissions = ClientPermissions.None;
+        public List<DebugConsole.Command> PermittedConsoleCommands
+        {
+            get;
+            private set;
+        }
 
         public bool SpectateOnly;
 
@@ -120,6 +123,7 @@ namespace Barotrauma.Networking
             this.Name = name;
             this.ID = ID;
 
+            PermittedConsoleCommands = new List<DebugConsole.Command>();
             kickVoters = new List<Client>();
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
@@ -129,7 +133,7 @@ namespace Barotrauma.Networking
 
         public static bool IsValidName(string name)
         {
-            if (name.Contains("\n") || name.Contains("\r\n")) return false;
+            if (name.Contains("\n") || name.Contains("\r")) return false;
 
             return (name.All(c =>
                 c != ';' &&
@@ -161,9 +165,10 @@ namespace Barotrauma.Networking
             return rName;
         }
 
-        public void SetPermissions(ClientPermissions permissions)
+        public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
         {
             this.Permissions = permissions;
+            this.PermittedConsoleCommands = new List<DebugConsole.Command>(permittedConsoleCommands);
         }
 
         public void GivePermission(ClientPermissions permission)
