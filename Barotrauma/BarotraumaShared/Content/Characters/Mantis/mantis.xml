@@ -21,7 +21,13 @@
     attachtowalls="true"
     attachtosub="true"
     aggressiveboarding="true"
-    fleehealththreshold="20"/>
+    fleehealththreshold="20">
+    <latchonto
+      attachtowalls="true"
+      attachtosub="true"
+      mindeattachspeed="3.0"
+      maxdeattachspeed="10.0"/>
+  </ai>
   
   <ragdoll headposition="120" headangle="-90" 
            waveamplitude="50.0" wavelength="2500" 

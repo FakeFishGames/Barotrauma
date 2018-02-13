@@ -6,20 +6,24 @@
   <sound file="Content/Characters/Crawler/idle1.ogg" state="None" range="500"/>
   <sound file="Content/Characters/Crawler/idle2.ogg" state="None" range="500"/>
 
-  <ai 
+  <ai
     combatstrength="100"
     attackpriorityhumans="500"
     attackpriorityrooms="50.0"
     attackpriorityweaker="50"
     attackprioritystronger="-60"
     eatpriority="55"
-    sight="0.5" 
+    sight="0.5"
     hearing="1.0"
     fleehealththreshold="10"
-    attachtowalls="true"
-    attachtosub="true"
     aggressiveboarding="true"
-    attackcooldown="3.0"/>
+    attackcooldown="3.0">
+    <latchonto 
+      attachtowalls="true"
+      attachtosub="true"
+      mindeattachspeed="3.0"
+      maxdeattachspeed="10.0"/>
+  </ai>
 
   <ragdoll headposition="50" headangle="-70" 
            waveamplitude="2.0" wavelength="3000" 
