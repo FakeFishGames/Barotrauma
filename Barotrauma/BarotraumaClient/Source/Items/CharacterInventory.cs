@@ -237,6 +237,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < capacity - 1; i++)
             {
+                slots[i].State = GUIComponent.ComponentState.None;
                 if (slots[i].Disabled || Items[i] == null) continue;
 
                 for (int n = i + 1; n < capacity; n++)
@@ -250,6 +251,8 @@ namespace Barotrauma
                 }
             }
 
+            highlightedSubInventory = null;
+            highlightedSubInventorySlot = null;
             selectedSlot = null;
         }
 
