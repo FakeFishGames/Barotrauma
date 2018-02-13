@@ -190,10 +190,12 @@ namespace Barotrauma
         {
             Rectangle hullDrawRect = rect;
             if (Submarine != null) hullDrawRect.Location += Submarine.DrawPosition.ToPoint();
-                        
+
+            float depth = 1.0f;
             foreach (Decal d in decals)
             {
-                d.Draw(spriteBatch, this);
+                d.Draw(spriteBatch, this, depth);
+                depth -= 0.000001f;
             }
         }
 
