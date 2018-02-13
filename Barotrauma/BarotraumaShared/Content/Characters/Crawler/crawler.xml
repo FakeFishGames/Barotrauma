@@ -25,12 +25,13 @@
       maxdeattachspeed="10.0"/>
   </ai>
 
-  <ragdoll headposition="50" headangle="-70" 
-           waveamplitude="2.0" wavelength="3000" 
+  <ragdoll headposition="50" headangle="-70"
+           waveamplitude="2.0" wavelength="3000"
            swimspeed="2.0" walkspeed="2.0"
            runspeedmultiplier="2" swimspeedmultiplier="2.0"
-           stepsize ="15.0,20.0"           
+           stepsize ="15.0,20.0"
            legtorque="10"
+           impacttolerance="10"
            flip="true">
 
     <collider width="45" radius="22"/>

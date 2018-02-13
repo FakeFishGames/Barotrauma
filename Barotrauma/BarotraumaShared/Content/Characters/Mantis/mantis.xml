@@ -36,6 +36,7 @@
            stepsize ="20.0,20.0"
            legtorque="10"
            footrotation ="180.0"
+           impacttolerance="10"
            flip="true">
 
     <collider radius="60"/>

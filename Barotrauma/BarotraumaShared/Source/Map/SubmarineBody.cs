@@ -16,6 +16,8 @@ namespace Barotrauma
 {
     class SubmarineBody
     {
+        const float MaxDrag = 0.1f;
+
         public const float DamageDepth = -30000.0f;
         private const float ImpactDamageMultiplier = 10.0f;
 
@@ -254,8 +256,7 @@ namespace Barotrauma
             //-------------------------
 
             Vector2 totalForce = CalculateBuoyancy();
-
-
+            
             if (Body.LinearVelocity.LengthSquared() > 0.000001f)
             {
                 //TODO: sync current drag with clients?
@@ -270,7 +271,7 @@ namespace Barotrauma
                     jointEdge = jointEdge.Next;
                 }
                 
-                float dragCoefficient = 0.01f + MathHelper.Clamp(attachedMass / 5000.0f, 0.0f, 0.2f);
+                float dragCoefficient = MathHelper.Clamp(0.01f + attachedMass / 5000.0f, 0.0f, MaxDrag);
 
                 float speedLength = (Body.LinearVelocity == Vector2.Zero) ? 0.0f : Body.LinearVelocity.Length();
                 float drag = speedLength * speedLength * dragCoefficient * Body.Mass;
