@@ -31,12 +31,16 @@ namespace Barotrauma
             GUI.Font.DrawString(spriteBatch, "updatetargets: " + updateTargetsTimer, pos - Vector2.UnitY * 100.0f, Color.Red);
             GUI.Font.DrawString(spriteBatch, "cooldown: " + coolDownTimer, pos - Vector2.UnitY * 120.0f, Color.Red);
 
-            foreach (Joint attachJoint in attachJoints)
+            if (latchOntoAI != null)
             {
-                GUI.DrawLine(spriteBatch,
-                    ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorA.X, -attachJoint.WorldAnchorA.Y)),
-                    ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), Color.Orange);
+                foreach (Joint attachJoint in latchOntoAI.AttachJoints)
+                {
+                    GUI.DrawLine(spriteBatch,
+                        ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorA.X, -attachJoint.WorldAnchorA.Y)),
+                        ConvertUnits.ToDisplayUnits(new Vector2(attachJoint.WorldAnchorB.X, -attachJoint.WorldAnchorB.Y)), Color.Orange);
+                }
             }
+
 
             IndoorsSteeringManager pathSteering = steeringManager as IndoorsSteeringManager;
             if (pathSteering == null || pathSteering.CurrentPath == null || pathSteering.CurrentPath.CurrentNode == null) return;

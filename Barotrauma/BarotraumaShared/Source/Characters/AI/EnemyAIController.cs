@@ -37,17 +37,9 @@ namespace Barotrauma
 
         private Pair<Structure, int> selectedWallSection;
 
-        private Body attachedToBody;
-
         private bool aggressiveBoarding;
-        private bool attachToSub;
-        private bool attachToWalls;
 
-        private float minDeattachSpeed = 3.0f, maxDeattachSpeed = 10.0f;
-
-        private float deattachTimer;
-
-        private List<Joint> attachJoints = new List<Joint>();
+        private LatchOntoAI latchOntoAI;
         
         //a point in a wall which the Character is currently targeting
         private Vector2 wallAttackPos;
@@ -88,6 +80,11 @@ namespace Barotrauma
             get { return attackRooms; }
         }
 
+        public Limb AttackingLimb
+        {
+            get { return attackingLimb; }
+        }
+
         public float CombatStrength
         {
             get { return combatStrength; }
@@ -120,17 +117,22 @@ namespace Barotrauma
 
             fleeHealthThreshold = aiElement.GetAttributeFloat("fleehealththreshold", 0.0f);
 
-            attachToWalls = aiElement.GetAttributeBool("attachtowalls", false);
-            attachToSub = aiElement.GetAttributeBool("attachtosub", false);
             aggressiveBoarding = aiElement.GetAttributeBool("aggressiveboarding", false);
+
+            foreach (XElement subElement in aiElement.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "latchonto":
+                        latchOntoAI = new LatchOntoAI(subElement, this);
+                        break;
+                }
+            }
 
             outsideSteering = new SteeringManager(this);
             insideSteering = new IndoorsSteeringManager(this, false);
 
             steeringManager = outsideSteering;
-
-            c.OnDeath += OnCharacterDeath;
-
             State = AIState.None;
         }
 
@@ -195,31 +197,15 @@ namespace Barotrauma
                 }
             }
 
+            latchOntoAI?.Update(this, deltaTime);
+
             if (Character.Submarine == null)
             {
                 steeringManager = outsideSteering;
-                deattachTimer -= deltaTime;
-                if (attachedToBody != null && deattachTimer < 0.0f)
-                {
-                    Entity entity = attachedToBody.UserData as Entity;
-                    Submarine attachedSub = entity is Submarine ? (Submarine)entity : entity?.Submarine;
-                    if (attachedSub != null)
-                    {
-                        float velocityFactor = (attachedSub.Velocity.X - minDeattachSpeed) / (maxDeattachSpeed - minDeattachSpeed);
-                        if (Rand.Range(0.0f, 1.0f) < velocityFactor)
-                        {
-                            DeattachFromBody();
-                            coolDownTimer = 5.0f;
-                        }
-                    }
-
-                    deattachTimer = 5.0f;
-                }
             }
             else
             {
                 steeringManager = insideSteering;
-                DeattachFromBody();
             }
 
             bool run = false;
@@ -254,41 +240,6 @@ namespace Barotrauma
             }
         }
 
-        private void AttachToBody(PhysicsBody collider, PhysicsBody attachLimb, Body targetBody, Vector2 attachPos)
-        {
-            //already attached to something
-            if (attachJoints.Count > 0)
-            {
-                //already attached to the target body, no need to do anything
-                if (attachJoints[0].BodyB == targetBody) return;
-                DeattachFromBody();
-            }
-            
-            var limbJoint = new DistanceJoint(attachLimb.FarseerBody, targetBody, attachLimb.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
-            {
-                CollideConnected = false,
-                Length = 0.1f
-            };
-            GameMain.World.AddJoint(limbJoint);
-            attachJoints.Add(limbJoint);
-
-            var colliderJoint = new DistanceJoint(collider.FarseerBody, targetBody, collider.GetFrontLocal(), targetBody.GetLocalPoint(attachPos), false)
-            {
-                CollideConnected = true, Length = 0.1f
-            };
-            GameMain.World.AddJoint(colliderJoint);
-            attachJoints.Add(colliderJoint);
-        }
-
-        private void DeattachFromBody()
-        {
-            foreach (Joint joint in attachJoints)
-            {
-                GameMain.World.RemoveJoint(joint);
-            }
-            attachJoints.Clear();
-        }
-
         #region Idle
 
         private void UpdateNone(float deltaTime)
@@ -299,61 +250,15 @@ namespace Barotrauma
             {
                 //steer straight up if very deep
                 steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
-                DeattachFromBody();
                 return;
-            }
-
-            if (attachToWalls && Character.Submarine == null && Level.Loaded != null)
-            {
-                raycastTimer -= deltaTime;
-                //check if there are any walls nearby the character could attach to
-                if (raycastTimer < 1.0f)
-                {
-                    wallAttackPos = Vector2.Zero;
-
-                    var cells = Level.Loaded.GetCells(WorldPosition, 1);
-                    if (cells.Count > 0)
-                    {
-                        Body closestBody = Submarine.CheckVisibility(Character.SimPosition, ConvertUnits.ToSimUnits(cells[0].Center));
-                        if (closestBody != null && closestBody.UserData is Voronoi2.VoronoiCell)
-                        {
-                            attachedToBody = closestBody;
-                            wallAttackPos = Submarine.LastPickedPosition;
-                        }
-                    }
-                    raycastTimer = RaycastInterval;
-                }                
-            }
-            else
-            {
-                wallAttackPos = Vector2.Zero;
             }
 
             if (wallAttackPos == Vector2.Zero)
             {
-                DeattachFromBody();
                 //wander around randomly
                 steeringManager.SteeringAvoid(deltaTime, 0.1f);
                 steeringManager.SteeringWander(0.5f);
                 return;
-            }
-
-            float dist = Vector2.Distance(SimPosition, wallAttackPos);
-            if (dist < Math.Max(Math.Max(Character.AnimController.Collider.radius, Character.AnimController.Collider.width), Character.AnimController.Collider.height) * 1.2f)
-            {
-                //close enough to a wall -> attach
-                Character.AnimController.Collider.MoveToPos(wallAttackPos, 1.0f);
-                var/* attachLimb = Array.Find(Character.AnimController.Limbs, l => l.attack != null);
-                if (attachLimb == null) */attachLimb = Character.AnimController.MainLimb;
-                AttachToBody(Character.AnimController.Collider, attachLimb.body, attachedToBody, wallAttackPos);
-                steeringManager.Reset();
-            }
-            else
-            {
-                //move closer to the wall
-                DeattachFromBody();
-                steeringManager.SteeringAvoid(deltaTime, 0.1f);
-                steeringManager.SteeringSeek(wallAttackPos);
             }
         }
 
@@ -363,7 +268,6 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
-            DeattachFromBody();
             SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
             SteeringManager.SteeringWander(1.0f);
             SteeringManager.SteeringAvoid(deltaTime, 2f);
@@ -428,7 +332,7 @@ namespace Barotrauma
                         targetPos.X = targetHull.WorldRect.Center.X;
                     }
 
-                    DeattachFromBody();
+                    latchOntoAI?.DeattachFromBody();
                     if (steeringManager is IndoorsSteeringManager)
                     {
                         steeringManager.SteeringManual(deltaTime, targetPos - Character.WorldPosition);
@@ -503,12 +407,6 @@ namespace Barotrauma
                 if (attackingLimb != null)
                 {
                     UpdateLimbAttack(deltaTime, attackingLimb, attackSimPosition);
-                    
-                    if (attachToSub && wallAttackPos != Vector2.Zero && attachedToBody != null &&
-                        Vector2.DistanceSquared(attackSimPosition, attackingLimb.SimPosition) < attackingLimb.attack.Range * attackingLimb.attack.Range)
-                    {
-                        AttachToBody(Character.AnimController.Collider, Character.AnimController.MainLimb.body, attachedToBody, attackSimPosition);                        
-                    }
                 }
             }
         }
@@ -544,13 +442,11 @@ namespace Barotrauma
             if (wall == null)
             {
                 wallAttackPos = Submarine.LastPickedPosition;
+                latchOntoAI?.SetAttachTarget(closestBody, selectedAiTarget.Entity.Submarine, wallAttackPos);
                 if (selectedAiTarget.Entity.Submarine != null && Character.Submarine == null) wallAttackPos -= ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
-                attachedToBody = closestBody;
             }
             else
             {
-                attachedToBody = wall.Submarine.PhysicsBody.FarseerBody;
-
                 int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition));
                 int passableHoleCount = GetMinimumPassableHoleCount();
 
@@ -580,6 +476,9 @@ namespace Barotrauma
                     wallAttackPos.X = ConvertUnits.ToSimUnits(sectionPos.X);
                 else
                     wallAttackPos.Y = ConvertUnits.ToSimUnits(sectionPos.Y);
+
+                Vector2 attachPos = wallAttackPos;
+                latchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, attachPos);
             }
             
             targetEntity = closestBody.UserData as IDamageable;            
@@ -876,7 +775,7 @@ namespace Barotrauma
 
         protected override void OnStateChanged(AIState from, AIState to)
         {
-            DeattachFromBody();
+            latchOntoAI?.DeattachFromBody();
         }
 
         private int GetMinimumPassableHoleCount()
@@ -918,12 +817,6 @@ namespace Barotrauma
             }
 
             return holeCount >= requiredHoleCount;
-        }
-
-        private void OnCharacterDeath(Character character, CauseOfDeath causeOfDeath)
-        {
-            DeattachFromBody();
-            character.OnDeath -= OnCharacterDeath;
         }
     }
 
