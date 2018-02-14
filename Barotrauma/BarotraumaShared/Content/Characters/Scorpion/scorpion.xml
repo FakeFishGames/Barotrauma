@@ -31,7 +31,7 @@
 
     <limb id = "5" width="26" height="98" mass = "6" ignorecollisions="true">
       <sprite texture="Content/Characters/Scorpion/scorpion.png" sourcerect="190,30,49,98" depth="0.15" origin="0.3,0.5"/>
-      <attack type="PinchCW" range="120" duration="0.5" damage="80"/>
+      <attack type="PinchCW" range="120" duration="0.5" bluntdamage="80"/>
     </limb>
 
     <!-- head to body -->

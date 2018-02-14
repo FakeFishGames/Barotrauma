@@ -94,6 +94,8 @@ namespace Barotrauma
         
         public float AttackTimer;
 
+        public readonly int HealthIndex;
+
         public bool IsSevered
         {
             get { return isSevered; }
@@ -190,17 +192,15 @@ namespace Barotrauma
         public Limb (Character character, XElement element, float scale = 1.0f)
         {
             this.character = character;
-
-            wearingItems = new List<WearableSprite>();
-            
+            wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
+            this.scale = scale;
+
+            HealthIndex = element.GetAttributeInt("healthindex", 0);
 
             doesFlip = element.GetAttributeBool("flip", false);
 
-            this.scale = scale;
-
             body = new PhysicsBody(element, scale);
-
             if (element.GetAttributeBool("ignorecollisions", false))
             {
                 body.CollisionCategories = Category.None;
@@ -216,11 +216,8 @@ namespace Barotrauma
             }
             
             body.UserData = this;
-
             refJointIndex = -1;
-
             Vector2 pullJointPos = Vector2.Zero;
-
             if (element.Attribute("type") != null)
             {
                 try
@@ -339,14 +336,14 @@ namespace Barotrauma
             body.MoveToPos(pos, force, pullPos);
         }
 
-        public AttackResult AddDamage(Vector2 position, DamageType damageType, float amount, float bleedingAmount, bool playSound)
+        public AttackResult AddDamage(Vector2 position, float bluntDamage, float bleedingDamage, float burnDamage, bool playSound)
         {
             List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
 
             foreach (DamageModifier damageModifier in damageModifiers)
             {
                 if (damageModifier.DamageType == DamageType.None) continue;
-                if (damageModifier.DamageType.HasFlag(damageType) && SectorHit(damageModifier.ArmorSector, position))
+                if (SectorHit(damageModifier.ArmorSector, position))
                 {
                     appliedDamageModifiers.Add(damageModifier);
                 }
@@ -357,7 +354,7 @@ namespace Barotrauma
                 foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                 {
                     if (damageModifier.DamageType == DamageType.None) continue;
-                    if (damageModifier.DamageType.HasFlag(damageType) && SectorHit(damageModifier.ArmorSector, position))
+                    if (SectorHit(damageModifier.ArmorSector, position))
                     {
                         appliedDamageModifiers.Add(damageModifier);
                     }
@@ -366,14 +363,20 @@ namespace Barotrauma
 
             foreach (DamageModifier damageModifier in appliedDamageModifiers)
             {
-                amount *= damageModifier.DamageMultiplier;
-                bleedingAmount *= damageModifier.BleedingMultiplier;
+                if (damageModifier.DamageType.HasFlag(DamageType.Blunt))
+                    bluntDamage *= damageModifier.DamageMultiplier;
+
+                if (damageModifier.DamageType.HasFlag(DamageType.Slash))
+                    bleedingDamage *= damageModifier.DamageMultiplier;
+
+                if (damageModifier.DamageType.HasFlag(DamageType.Burn))
+                    burnDamage *= damageModifier.DamageMultiplier;            
             }
 
 #if CLIENT
             if (playSound)
             {
-                string damageSoundType = (damageType == DamageType.Blunt) ? "LimbBlunt" : "LimbSlash";
+                string damageSoundType = (bluntDamage > bleedingDamage) ? "LimbBlunt" : "LimbSlash";
 
                 foreach (DamageModifier damageModifier in appliedDamageModifiers)
                 {
@@ -384,13 +387,13 @@ namespace Barotrauma
                     }
                 }
                 
-                SoundPlayer.PlayDamageSound(damageSoundType, amount, position);
+                SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(bluntDamage, bleedingDamage), position);
             }
             
             if (character.UseBloodParticles)
             {
-                float bloodParticleAmount = bleedingAmount <= 0.0f ? 0 : (int)Math.Min(amount / 5, 10);
-                float bloodParticleSize = MathHelper.Clamp(amount / 50.0f, 0.1f, 1.0f);
+                float bloodParticleAmount = (int)Math.Min(bleedingDamage * 5, 10);
+                float bloodParticleSize = MathHelper.Clamp(bleedingDamage, 0.1f, 1.0f);
 
                 for (int i = 0; i < bloodParticleAmount; i++)
                 {
@@ -408,14 +411,15 @@ namespace Barotrauma
             }
 #endif
 
-            if (damageType == DamageType.Burn)
+            //TODO: reimplement
+            /*if (damageType == DamageType.Burn)
             {
                 Burnt += amount * 10.0f;
             }
 
-            damage += Math.Max(amount,bleedingAmount) / character.MaxHealth * 100.0f;
+            damage += Math.Max(amount,bleedingAmount) / character.MaxHealth * 100.0f;*/
 
-            return new AttackResult(amount, bleedingAmount, appliedDamageModifiers);
+            return new AttackResult(bluntDamage, bleedingDamage, burnDamage, appliedDamageModifiers);
         }
 
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)

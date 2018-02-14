@@ -88,7 +88,8 @@ namespace Barotrauma
                 state = InfectionState.Active;
             }
 
-            character.AddDamage(CauseOfDeath.Husk, 0.5f * deltaTime, null);
+            //TODO: reimplement
+            //character.AddDamage(CauseOfDeath.Husk, 0.5f * deltaTime, null);
         }
 
 

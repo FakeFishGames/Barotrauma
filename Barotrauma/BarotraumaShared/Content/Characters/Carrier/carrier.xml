@@ -34,7 +34,7 @@
       <damagemodifier armorsector="0.0,180.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="SctructureBlunt" deflectprojectiles="true"/>
       <damagemodifier armorsector="0.0,360.0" damagesound="SctructureBlunt" deflectprojectiles="true"/>
       
-      <attack range="400" damagerange="250" duration="0.08" damage="100" stun="5" force="20" damagetype="blunt" targetforce="100"/>
+      <attack range="400" damagerange="250" duration="0.08" bluntdamage="100" stun="5" force="20" damagetype="blunt" targetforce="100"/>
     </limb>
     
     <limb id = "1" width="50" height="240" flip="true">

@@ -98,7 +98,7 @@ namespace Barotrauma
                         statusText = TextManager.Get("Unconscious");
                         statusColor = Color.DarkOrange;
                     }
-                    else if (character.Health / character.MaxHealth < 0.8f)
+                    else if (character.Vitality / character.MaxVitality < 0.8f)
                     {
                         statusText = TextManager.Get("Injured");
                         statusColor = Color.DarkOrange;

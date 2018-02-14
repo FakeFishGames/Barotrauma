@@ -21,7 +21,7 @@
     <!-- head -->
     <limb id = "0" radius="80" height="30" type="Head" steerforce="3.0">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="299,0,171,208" depth="0.05"/>
-      <attack type="Hit" range="120" damagerange="60" duration="0.2" damage="50" stun="2" force="10" damagetype="blunt" targetforce="100"/>
+      <attack type="Hit" range="120" damagerange="60" duration="0.2" bluntdamage="50" stun="2" force="10" targetforce="100"/>
     </limb>
 
 
@@ -30,7 +30,7 @@
     </limb>
     <limb id = "2" width="30" height="175">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-      <attack range="150" damagerange="75" duration="0.5" damage="30" stun="1.0" torque="150" damagetype="slash"/>      
+      <attack range="150" damagerange="75" duration="0.5" damage="10" bleedingdamage="20" stun="1.0" torque="150"/>      
     </limb>
     
     <limb id = "3" width="30" height="178">
@@ -39,7 +39,7 @@
 
     <limb id = "4" width="30" height="175">
       <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-      <attack range="150" damagerange="75" duration="0.5" damage="30" stun="1.0" torque="-150" damagetype="slash"/>            
+      <attack range="150" damagerange="75" duration="0.5" damage="10" bleedingdamage="20" stun="1.0" torque="150"/>
     </limb>        
 
     <!-- head to body -->

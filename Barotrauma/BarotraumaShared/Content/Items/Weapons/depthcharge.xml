@@ -52,7 +52,7 @@
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false"/>
 
     <Projectile launchimpulse="5.0">
-      <Attack damage="1" structuredamage="1" damagetype="Blunt"/>
+      <Attack bluntdamage="1" structuredamage="1" damagetype="Blunt"/>
       <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
     </Projectile>
 

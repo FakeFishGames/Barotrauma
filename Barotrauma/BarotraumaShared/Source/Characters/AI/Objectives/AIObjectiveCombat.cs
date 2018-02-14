@@ -29,7 +29,7 @@ namespace Barotrauma
             foreach (Limb limb in enemy.AnimController.Limbs)
             {
                 if (limb.attack == null) continue;
-                enemyStrength += limb.attack.GetDamage(1.0f);
+                enemyStrength += limb.attack.GetBluntDamage(1.0f);
             }
 
             coolDownTimer = CoolDown;

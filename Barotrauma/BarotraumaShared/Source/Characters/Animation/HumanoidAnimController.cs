@@ -934,7 +934,8 @@ namespace Barotrauma
 
             Vector2 colliderPos = GetColliderBottom();
 
-            if (GameMain.Client == null) //Serverside code
+            //TODO: reimplement
+            /*if (GameMain.Client == null) //Serverside code
             {
                 if (target.Bleeding <= 0.5f && target.Oxygen <= 0.0f) //If they're bleeding too hard CPR will hurt them
                 {
@@ -1011,7 +1012,7 @@ namespace Barotrauma
                     }
                 }
                 cprPump += deltaTime;
-            }
+            }*/
 
             cprAnimState += deltaTime;
         }

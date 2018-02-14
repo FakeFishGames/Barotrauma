@@ -153,19 +153,20 @@ namespace Barotrauma.Items.Components
                 if (target.IsUnconscious) texts.Add(TextManager.Get("Unconscious"));
                 if (target.Stun > 0.01f) texts.Add(TextManager.Get("Stunned"));
 
-                int healthTextIndex = target.Health > 95.0f ? 0 :
-                    MathHelper.Clamp((int)Math.Ceiling((1.0f - (target.Health / 200.0f + 0.5f)) * HealthTexts.Length), 0, HealthTexts.Length - 1);
+                int healthTextIndex = target.Vitality > 0.9f ? 0 :
+                    MathHelper.Clamp((int)Math.Ceiling((1.0f - (target.Health + 0.5f)) * HealthTexts.Length), 0, HealthTexts.Length - 1);
 
                 texts.Add(HealthTexts[healthTextIndex]);
 
                 int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 100.0f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
                 texts.Add(OxygenTexts[oxygenTextIndex]);
 
-                if (target.Bleeding > 0.0f)
+                //TODO: reimplement
+                /*if (target.Bleeding > 0.0f)
                 {
                     int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 4.0f) * BleedingTexts.Length, 0, BleedingTexts.Length - 1);
                     texts.Add(BleedingTexts[bleedingTextIndex]);
-                }
+                }*/
 
                 if (target.huskInfection != null)
                 {

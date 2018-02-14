@@ -18,14 +18,7 @@ namespace Barotrauma
             get;
             private set;
         }
-
-        [Serialize(1.0f, false)]
-        public float BleedingMultiplier
-        {
-            get;
-            private set;
-        }
-
+        
         [Serialize("0.0,360", false)]
         public Vector2 ArmorSector
         {

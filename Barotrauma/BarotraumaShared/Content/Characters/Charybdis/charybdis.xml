@@ -31,7 +31,7 @@
     <!-- lower yaw -->
     <limb id = "1" radius="70" height="100">
       <sprite texture="Content/Characters/Charybdis/charybdis.png" sourcerect="416,0,192,256" depth="0.025" origin="0.65,0.5"/>
-      <attack range="500" damagerange="250" duration="0.5" damage="500" bleedingdamage="50" structuredamage="500" damagetype="slash" torque="100" force="50" targetforce="-50" severlimbsprobability="1.0"/>
+      <attack range="500" damagerange="250" duration="0.5" bluntdamage="10" bleedingdamage="50" structuredamage="500" damagetype="slash" torque="100" force="50" targetforce="-50" severlimbsprobability="1.0"/>
     </limb>
 
     <!-- front fins -->    
