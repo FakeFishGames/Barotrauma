@@ -233,7 +233,7 @@ namespace Barotrauma
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, null, null, null);
 			if (GameMain.LightManager.LosEnabled && Character.Controlled!=null)
 			{
-				float r = Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
+                float r = 0.0f;// Math.Min(CharacterHUD.damageOverlayTimer * 0.5f, 0.5f);
 				spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
 				                 Color.Lerp(GameMain.LightManager.AmbientLight * 0.5f, Color.Red, r));
 				spriteBatch.End();

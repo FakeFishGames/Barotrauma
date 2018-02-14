@@ -501,7 +501,8 @@ namespace Barotrauma
                 return;
             }
 
-            msg.Write(isDead);
+            //TODO: reimplement
+            /*msg.Write(isDead);
             if (isDead)
             {
                 msg.Write((byte)causeOfDeath);
@@ -553,7 +554,7 @@ namespace Barotrauma
                 msg.Write(IsRagdolled);
 
                 msg.Write(HuskInfectionState > 0.0f);
-            }
+            }*/
         }
 
         public void WriteSpawnData(NetBuffer msg)

@@ -221,7 +221,7 @@ namespace Barotrauma
                 if (eatTimer % 1.0f < 0.5f && (eatTimer - (float)Timing.Step * eatSpeed) % 1.0f > 0.5f)
                 {
                     //apply damage to the target character to get some blood particles flying 
-                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), 10.0f, false);
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, 0.0f, 1.0f, 0.0f, false);
 
                     //keep severing joints until there is only one limb left
                     LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered && l.CanBeSevered);
@@ -230,7 +230,6 @@ namespace Barotrauma
                         //only one limb left, the character is now full eaten
                         Entity.Spawner.AddToRemoveQueue(targetCharacter);
                         character.SelectedCharacter = null;
-                        character.Health += 10.0f;
                     }
                     else //sever a random joint
                     {

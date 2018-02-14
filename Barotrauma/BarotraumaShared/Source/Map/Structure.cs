@@ -652,8 +652,8 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
-            if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f);
-            if (!prefab.Body || prefab.Platform) return new AttackResult(0.0f, 0.0f);
+            if (Submarine != null && Submarine.GodMode) return new AttackResult(0.0f, 0.0f, 0.0f);
+            if (!prefab.Body || prefab.Platform) return new AttackResult(0.0f, 0.0f, 0.0f);
 
             Vector2 transformedPos = worldPosition;
             if (Submarine != null) transformedPos -= Submarine.Position;
@@ -665,22 +665,21 @@ namespace Barotrauma
                 {
                     damageAmount = attack.GetStructureDamage(deltaTime);
                     AddDamage(i, damageAmount, attacker);
-
 #if CLIENT
-            GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
+                    GameMain.ParticleManager.CreateParticle("dustcloud", SectionPosition(i), 0.0f, 0.0f);
 #endif
                 }
             }
 
 #if CLIENT
-            if (playSound)// && !SectionBodyDisabled(i))
+            if (playSound)
             {
                 string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
                 SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
 
-            return new AttackResult(damageAmount, 0.0f);
+            return new AttackResult(damageAmount, 0.0f, 0.0f);
         }
 
         private void SetDamage(int sectionIndex, float damage, Character attacker = null)

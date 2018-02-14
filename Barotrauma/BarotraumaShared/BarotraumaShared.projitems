@@ -697,6 +697,36 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\damageOverlay.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorHead.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorLeftArm.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorLeftFoot.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorLeftHand.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorLeftLeg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorRightArm.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorRightFoot.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorRightHand.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorRightLeg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\UI\Health\HealthIndicatorTorso.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\UI\inventoryIcons.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1462,9 +1492,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\Ragdoll.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Attack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Character.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\CharacterHealth.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterNetworking.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\DamageModifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Health\DamageModifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\DelayedEffect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\HuskInfection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Jobs\Job.cs" />

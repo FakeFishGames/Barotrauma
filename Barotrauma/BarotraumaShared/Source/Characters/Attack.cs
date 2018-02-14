@@ -29,17 +29,19 @@ namespace Barotrauma
 
     struct AttackResult
     {
-        public readonly float Damage;
-        public readonly float Bleeding;
+        public readonly float BluntDamage;
+        public readonly float BleedingDamage;
+        public readonly float BurnDamage;
 
         public readonly List<DamageModifier> AppliedDamageModifiers;
 
-        public AttackResult(float damage, float bleeding, List<DamageModifier> appliedDamageModifiers = null)
+        public AttackResult(float bluntDamage, float bleedingDamage, float burnDamage, List<DamageModifier> appliedDamageModifiers = null)
         {
-            this.Damage = damage;
-            this.Bleeding = bleeding;
+            BluntDamage = bluntDamage;
+            BleedingDamage = bleedingDamage;
+            BurnDamage = burnDamage;
 
-            this.AppliedDamageModifiers = appliedDamageModifiers;
+            AppliedDamageModifiers = appliedDamageModifiers;
         }
     }
     
@@ -64,10 +66,13 @@ namespace Barotrauma
         public float StructureDamage { get; private set; }
 
         [Serialize(0.0f, false)]
-        public float Damage { get; private set; }
+        public float BluntDamage { get; private set; }
 
         [Serialize(0.0f, false)]
         public float BleedingDamage { get; private set; }
+
+        [Serialize(0.0f, false)]
+        public float BurnDamage { get; private set; }
 
         [Serialize(0.0f, false)]
         public float Stun { get; private set; }
@@ -96,9 +101,9 @@ namespace Barotrauma
         
         private readonly List<StatusEffect> statusEffects;
 
-        public float GetDamage(float deltaTime)
+        public float GetBluntDamage(float deltaTime)
         {
-            return (Duration == 0.0f) ? Damage : Damage * deltaTime;
+            return (Duration == 0.0f) ? BluntDamage : BluntDamage * deltaTime;
         }
 
         public float GetBleedingDamage(float deltaTime)
@@ -106,18 +111,24 @@ namespace Barotrauma
             return (Duration == 0.0f) ? BleedingDamage : BleedingDamage * deltaTime;
         }
 
+        public float GetBurnDamage(float deltaTime)
+        {
+            return (Duration == 0.0f) ? BurnDamage : BurnDamage * deltaTime;
+        }
+
         public float GetStructureDamage(float deltaTime)
         {
             return (Duration == 0.0f) ? StructureDamage : StructureDamage * deltaTime;
         }
 
-        public Attack(float damage, float structureDamage, float bleedingDamage, float range = 0.0f)
+        public Attack(float bluntDamage, float bleedingDamage, float burnDamage, float structureDamage, float range = 0.0f)
         {
             Range = range;
             DamageRange = range;
-            this.Damage = damage;
-            this.StructureDamage = structureDamage;
-            this.BleedingDamage = bleedingDamage;
+            BluntDamage = bluntDamage;
+            BleedingDamage = bleedingDamage;
+            BurnDamage = burnDamage;
+            StructureDamage = structureDamage;
         }
 
         public Attack(XElement element)
@@ -170,7 +181,7 @@ namespace Barotrauma
             DamageParticles(deltaTime, worldPosition);
 
             var attackResult = target.AddDamage(attacker, worldPosition, this, deltaTime, playSound);
-            var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+            var effectType = attackResult.BluntDamage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
             if (statusEffects == null) return attackResult;
 
             foreach (StatusEffect effect in statusEffects)
@@ -200,7 +211,7 @@ namespace Barotrauma
             DamageParticles(deltaTime, worldPosition);
 
             var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb);
-            var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
+            var effectType = attackResult.BluntDamage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
             if (statusEffects == null) return attackResult;            
 
             foreach (StatusEffect effect in statusEffects)

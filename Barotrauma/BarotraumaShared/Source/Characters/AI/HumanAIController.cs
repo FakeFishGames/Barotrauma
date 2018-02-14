@@ -137,9 +137,10 @@ namespace Barotrauma
             }
         }
 
-        public override void OnAttacked(Character attacker, float amount)
+        public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
-            if (amount <= 0.0f) return;
+            float totalDamage = attackResult.BluntDamage + attackResult.BleedingDamage + attackResult.BurnDamage;
+            if (totalDamage <= 0.0f) return;
 
             var enemy = attacker as Character;
             if (enemy == null || enemy == Character) return;
@@ -149,7 +150,7 @@ namespace Barotrauma
             //the objective in the manager is not necessarily the same as the one we just instantiated,
             //because the objective isn't added if there's already an identical objective in the manager
             var combatObjective = objectiveManager.GetObjective<AIObjectiveCombat>();
-            combatObjective.MaxEnemyDamage = Math.Max(amount, combatObjective.MaxEnemyDamage);
+            combatObjective.MaxEnemyDamage = Math.Max(totalDamage, combatObjective.MaxEnemyDamage);
         }
 
         public void SetOrder(Order order, string option)

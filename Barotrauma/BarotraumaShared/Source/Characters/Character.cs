@@ -89,10 +89,12 @@ namespace Barotrauma
         private Vector2 cursorPosition;
 
         protected bool needsAir;
-        protected float oxygen, oxygenAvailable;
+        protected float oxygenAvailable;
 
-        private float health, lastSentHealth;
-        protected float minHealth, maxHealth;
+        /*private float health, lastSentHealth;
+        protected float minHealth, maxHealth;*/
+
+        private readonly CharacterHealth health;
 
         protected Item focusedItem;
         private Character focusedCharacter, selectedCharacter, selectedBy;
@@ -295,7 +297,7 @@ namespace Barotrauma
 
         public bool IsUnconscious
         {
-            get { return (needsAir && oxygen <= 0.0f) || health <= 0.0f; }
+            get { return health.IsUnconscious; }
         }
 
         public bool NeedsAir
@@ -304,7 +306,7 @@ namespace Barotrauma
             set { needsAir = value; }
         }
 
-        public float Oxygen
+        /*public float Oxygen
         {
             get { return oxygen; }
             set
@@ -313,7 +315,7 @@ namespace Barotrauma
                 oxygen = MathHelper.Clamp(value, -100.0f, 100.0f);
                 if (oxygen == -100.0f) Kill(AnimController.InWater ? CauseOfDeath.Drowning : CauseOfDeath.Suffocation);
             }
-        }
+        }*/
 
         public float OxygenAvailable
         {
@@ -335,7 +337,7 @@ namespace Barotrauma
             }
         }
 
-        public float Health
+        /*public float Health
         {
             get { return health; }
             set
@@ -348,41 +350,44 @@ namespace Barotrauma
 
                 health = newHealth;
 
-                /*if (GameMain.Server != null)
-                {
-                    if (Math.Abs(health - lastSentHealth) > (maxHealth - minHealth) / 255.0f || Math.Sign(health) != Math.Sign(lastSentHealth))
-                    {
-                        GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                        lastSentHealth = health;
-                    }
-                }*/
+                //if (GameMain.Server != null)
+                //{
+                //    if (Math.Abs(health - lastSentHealth) > (maxHealth - minHealth) / 255.0f || Math.Sign(health) != Math.Sign(lastSentHealth))
+                //    {
+                //        GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                //        lastSentHealth = health;
+                //    }
+                //}
             }
         }
 
-        public float MaxHealth
+        */
+
+        public float Vitality
         {
-            get { return maxHealth; }
+            get { return health.Vitality; }
         }
 
-        public float Bleeding
+        public float Health
         {
-            get { return bleeding; }
-            set
-            {
-                if (!MathUtils.IsValid(value)) return;
-                if (GameMain.Client != null) return;
-                if (!DoesBleed) return;
-
-                float newBleeding = MathHelper.Clamp(value, 0.0f, 5.0f);
-                //if (newBleeding == bleeding) return;
-
-                bleeding = newBleeding;
-                
-                /*if (GameMain.Server != null)
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });*/
-            }
+            get { return health.Vitality; }
         }
 
+        public float MaxVitality
+        {
+            get { return health.MaxVitality; }
+        }
+
+        public float Oxygen
+        {
+            get { return health.OxygenAmount; }
+        }
+
+        public bool UseBloodParticles
+        {
+            get { return health.UseBloodParticles; }
+        }
+        
         public HuskInfection huskInfection;
         public float HuskInfectionState
         {
@@ -418,24 +423,6 @@ namespace Barotrauma
             {
                 return !IsUnconscious && Stun <= 0.0f && (huskInfection == null || huskInfection.CanSpeak);
             }
-        }
-
-        public bool DoesBleed
-        {
-            get;
-            private set;
-        }
-
-        public bool UseBloodParticles
-        {
-            get;
-            private set;
-        }
-
-        public float BleedingDecreaseSpeed
-        {
-            get;
-            private set;
         }
 
         public float PressureTimer
@@ -518,7 +505,11 @@ namespace Barotrauma
 
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
         public OnDeathHandler OnDeath;
-        
+
+        public delegate void OnAttackedHandler(Character attacker, AttackResult attackResult);
+        public OnAttackedHandler OnAttacked;
+
+
         public static Character Create(CharacterInfo characterInfo, Vector2 position, bool isRemotePlayer = false, bool hasAi=true)
         {
             return Create(characterInfo.File, position, characterInfo, isRemotePlayer, hasAi);
@@ -562,7 +553,7 @@ namespace Barotrauma
                 var ai = new EnemyAIController(aiCharacter, file);
                 aiCharacter.SetAI(ai);
 
-                aiCharacter.minHealth = 0.0f;
+                //aiCharacter.minVitality = 0.0f;
                 
                 newCharacter = aiCharacter;
             }
@@ -572,14 +563,14 @@ namespace Barotrauma
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
 
-                aiCharacter.minHealth = -100.0f;
+                //aiCharacter.minVitality = -100.0f;
 
                 newCharacter = aiCharacter;
             }
             else
             {
                 newCharacter = new Character(file, position, characterInfo, isRemotePlayer);
-                newCharacter.minHealth = -100.0f;
+                //newCharacter.minVitality = -100.0f;
             }
 
             if (GameMain.Server != null && Spawner != null && createNetworkEvent)
@@ -598,8 +589,7 @@ namespace Barotrauma
             selectedItems = new Item[2];
 
             IsRemotePlayer = isRemotePlayer;
-
-            oxygen = 100.0f;
+            
             oxygenAvailable = 100.0f;
             aiTarget = new AITarget(this);
 
@@ -635,14 +625,10 @@ namespace Barotrauma
             }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
+
+            XElement healthElement = doc.Root.Element("health") ?? doc.Root.Element("Health");
+            health = healthElement == null ? new CharacterHealth(this) : new CharacterHealth(healthElement, this);
             
-            maxHealth = doc.Root.GetAttributeFloat("health", 100.0f);
-            health = maxHealth;
-
-            DoesBleed = doc.Root.GetAttributeBool("doesbleed", true);
-            UseBloodParticles = doc.Root.GetAttributeBool("usebloodparticles", true);
-            BleedingDecreaseSpeed = doc.Root.GetAttributeFloat("bleedingdecreasespeed", 0.05f);
-
             needsAir = doc.Root.GetAttributeBool("needsair", false);
             
             if (file == humanConfigFile)
@@ -1566,7 +1552,8 @@ namespace Barotrauma
                 } */
             }
 
-            //Skip health effects as critical health handles it differently
+            health.Update(deltaTime);
+            
             if (IsUnconscious)
             {
                 UpdateUnconscious(deltaTime);
@@ -1581,11 +1568,6 @@ namespace Barotrauma
 
             //Health effects
             if (needsAir) UpdateOxygen(deltaTime);
-
-            Health -= bleeding * deltaTime;
-            Bleeding -= BleedingDecreaseSpeed * deltaTime;
-
-            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
 
             if (!IsDead) LockHands = false;
 
@@ -1618,15 +1600,7 @@ namespace Barotrauma
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
-
-            if (DoesBleed)
-            {
-                Health -= bleeding * deltaTime;
-                Bleeding -= BleedingDecreaseSpeed * deltaTime;
-            }
-
-            if (health <= minHealth) Kill(CauseOfDeath.Bloodloss);
-
+            
             if (!IsDead) LockHands = false;
             //CPR stuff is handled in the UpdateCPR function in HumanoidAnimController
         }
@@ -1637,15 +1611,8 @@ namespace Barotrauma
 
         private void UpdateOxygen(float deltaTime)
         {
-            float prevOxygen = oxygen;
-            Oxygen += deltaTime * (oxygenAvailable < 30.0f ? -5.0f : 10.0f);
-
-            UpdateOxygenProjSpecific(prevOxygen);
-
             PressureProtection -= deltaTime * 100.0f;
-
             float hullAvailableOxygen = 0.0f;
-
             if (!AnimController.HeadInWater && AnimController.CurrentHull != null)
             {
                 //don't decrease the amount of oxygen in the hull if the character has more oxygen available than the hull
@@ -1656,7 +1623,7 @@ namespace Barotrauma
                 }
                 hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
             }
-            
+
             OxygenAvailable += MathHelper.Clamp(hullAvailableOxygen - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
         }
         partial void UpdateOxygenProjSpecific(float prevOxygen);
@@ -1667,18 +1634,6 @@ namespace Barotrauma
 
             AnimController.ResetPullJoints();
             selectedConstruction = null;
-
-            Oxygen -= deltaTime * 0.5f; //We're critical - our heart stopped!
-
-            if (health <= 0.0f) //Critical health - use current state for crit time
-            {
-                AddDamage(bleeding > 0.5f ? CauseOfDeath.Bloodloss : CauseOfDeath.Damage, Math.Max(bleeding, 1.0f) * deltaTime, null);
-            }
-            else //Keep on bleedin'
-            {
-                Health -= bleeding * deltaTime;
-                Bleeding -= BleedingDecreaseSpeed * deltaTime;
-            }
         }
 
         private void UpdateSightRange()
@@ -1710,7 +1665,8 @@ namespace Barotrauma
                             if (attackerCharacter.TeamID == TeamID)
                             {
                                 attackerClient.Karma -= amount * 0.01f;
-                                if (health <= minHealth) attackerClient.Karma = 0.0f;
+                                //TODO: reimplement
+                                //if (health <= minHealth) attackerClient.Karma = 0.0f;
                             }
                         }
                     }
@@ -1721,8 +1677,11 @@ namespace Barotrauma
         /// <summary>
         /// Directly reduce the health of the character without any additional effects (particles, sounds, status effects...)
         /// </summary>
-        public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, Character attacker)
+        /*public virtual void AddDamage(CauseOfDeath causeOfDeath, float bluntDamage, float bleedingDamage, float burnDamage, Character attacker)
         {
+            health.ApplyDamage();
+
+            //TODO: reimplement
             Health = health - amount;
             if (amount > 0.0f)
             {
@@ -1732,7 +1691,7 @@ namespace Barotrauma
             }
             AdjustKarma(attacker, amount);
             if (health <= minHealth) Kill(causeOfDeath);
-        }
+        }*/
         partial void DamageHUD(float amount);
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
@@ -1743,24 +1702,23 @@ namespace Barotrauma
         /// <summary>
         /// Apply the specified attack to this character. If the targetLimb is not specified, the limb closest to worldPosition will receive the damage.
         /// </summary>
-        public virtual AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
+        public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
         {
             Limb limbHit = targetLimb;
             var attackResult = targetLimb == null ?
-                AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit, attacker) :
-                DamageLimb(worldPosition, targetLimb, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, attacker);
+                AddDamage(worldPosition, attack.GetBluntDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.GetBurnDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit, attacker) :
+                DamageLimb(worldPosition, targetLimb, attack.GetBluntDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.GetBurnDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, attacker);
 
             if (limbHit == null) return new AttackResult();
 
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
-                GameServer.Log(LogName + " attacked by " + attackingCharacter.LogName +". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
+                GameServer.Log(LogName + " attacked by " + attackingCharacter.LogName + ". Damage: " + attackResult.BluntDamage + " Bleeding damage: " + attackResult.BleedingDamage, ServerLog.MessageType.Attack);
             }
-            
+
             if (GameMain.Client == null &&
-                isDead && 
-                health - attackResult.Damage <= minHealth && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
+                isDead && Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability)
             {
                 foreach (LimbJoint joint in AnimController.LimbJoints)
                 {
@@ -1789,14 +1747,14 @@ namespace Barotrauma
 
             return attackResult;
         }
-
-        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce = 0.0f)
+        
+        public AttackResult AddDamage(Vector2 worldPosition, float bluntDamage, float bleedingDamage, float burnDamage, float stun, bool playSound, float attackForce = 0.0f)
         {
             Limb temp = null;
-            return AddDamage(worldPosition, damageType, amount, bleedingAmount, stun, playSound, attackForce, out temp);
+            return AddDamage(worldPosition, bluntDamage, bleedingDamage, burnDamage, stun, playSound, attackForce, out temp);
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
+        public AttackResult AddDamage(Vector2 worldPosition, float bluntDamage, float bleedingDamage, float burnDamage, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
         {
             hitLimb = null;
 
@@ -1805,7 +1763,7 @@ namespace Barotrauma
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
             {
-                float distance = Vector2.Distance(worldPosition, limb.WorldPosition);
+                float distance = Vector2.DistanceSquared(worldPosition, limb.WorldPosition);
                 if (hitLimb == null || distance < closestDistance)
                 {
                     hitLimb = limb;
@@ -1813,10 +1771,11 @@ namespace Barotrauma
                 }
             }
 
-            return DamageLimb(worldPosition, hitLimb, damageType, amount, bleedingAmount, stun, playSound, attackForce, attacker);
+            return DamageLimb(worldPosition, hitLimb,bluntDamage, bleedingDamage, burnDamage, stun, playSound, attackForce, attacker);
         }
 
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, Character attacker = null)
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb,
+            float bluntDamage, float bleedingDamage, float burnDamage, float stun, bool playSound, float attackForce, Character attacker = null)
         {
             if (Removed) return new AttackResult();
 
@@ -1827,17 +1786,11 @@ namespace Barotrauma
                 Vector2 diff = hitLimb.WorldPosition - worldPosition;
                 if (diff == Vector2.Zero) diff = Rand.Vector(1.0f);
                 hitLimb.body.ApplyForce(Vector2.Normalize(diff) * attackForce, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
-            }            
-
-            AttackResult attackResult = hitLimb.AddDamage(worldPosition, damageType, amount, bleedingAmount, playSound);
-
-            AddDamage(damageType == DamageType.Burn ? CauseOfDeath.Burn : causeOfDeath, attackResult.Damage, attacker);
-
-            if (DoesBleed)
-            {
-                Bleeding += attackResult.Bleeding;
             }
-            
+
+            AttackResult attackResult = hitLimb.AddDamage(worldPosition, bluntDamage, bleedingDamage, burnDamage, playSound);
+
+            health.ApplyDamage(hitLimb, attackResult);
             return attackResult;
         }
 
@@ -1871,7 +1824,8 @@ namespace Barotrauma
                 if (GameMain.Client != null) return; 
             }
             
-            Health = minHealth;
+            //TODO: reimplement
+            //Health = minHealth;
 
             BreakJoints();
             
@@ -1884,7 +1838,7 @@ namespace Barotrauma
 
             foreach (Limb limb in AnimController.Limbs)
             {
-                limb.AddDamage(limb.SimPosition, DamageType.Blunt, 500.0f, 0.0f, false);
+                limb.AddDamage(limb.SimPosition, 500.0f, 0.0f, 0.0f, false);
 
                 Vector2 diff = centerOfMass - limb.SimPosition;
                 if (diff == Vector2.Zero) continue;
@@ -1961,7 +1915,8 @@ namespace Barotrauma
 
             aiTarget = new AITarget(this);
 
-            Health = Math.Max(maxHealth * 0.1f, health);
+            //TODO: reimplement
+            //Health = Math.Max(maxHealth * 0.1f, health);
 
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {
@@ -1998,12 +1953,12 @@ namespace Barotrauma
 
             DisposeProjSpecific();
 
-            if (aiTarget != null) aiTarget.Remove();            
-
+            if (aiTarget != null) aiTarget.Remove();
             if (AnimController != null) AnimController.Remove();
-
             if (selectedItems[0] != null) selectedItems[0].Drop(this);
             if (selectedItems[1] != null) selectedItems[1].Drop(this);
+
+            health.Remove();
 
             foreach (Character c in CharacterList)
             {

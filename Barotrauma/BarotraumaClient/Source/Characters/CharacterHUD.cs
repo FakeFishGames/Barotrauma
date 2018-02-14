@@ -10,31 +10,17 @@ namespace Barotrauma
     {
         private static Sprite statusIcons;
 
-        private static Sprite noiseOverlay, damageOverlay;
-
         private static GUIButton cprButton;
         
         private static GUIButton grabHoldButton;
 
         private static GUIButton suicideButton;
 
-        private static GUIProgressBar oxygenBar, healthBar;
-
         private static bool oxyMsgShown, pressureMsgShown;
         private static float pressureMsgTimer;
-
-        public static float damageOverlayTimer { get; private set; }
-
-        public static void Reset()
-        {
-            damageOverlayTimer = 0.0f;
-        }
-
+        
         public static void TakeDamage(float amount)
         {
-            healthBar.Flash();
-
-            damageOverlayTimer = MathHelper.Clamp(amount * 0.1f, 0.2f, 5.0f);
         }
 
         public static void AddToGUIUpdateList(Character character)
@@ -83,13 +69,6 @@ namespace Barotrauma
                     pressureMsgTimer = 0.0f;
                 }
             }
-
-            if (oxygenBar != null)
-            {
-                oxygenBar.Update(deltaTime);
-                if (character.Oxygen < 10.0f) oxygenBar.Flash();
-            }
-            if (healthBar != null) healthBar.Update(deltaTime);
             
             if (Inventory.SelectedSlot == null)
             {
@@ -98,8 +77,6 @@ namespace Barotrauma
             }
 
             if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
-
-            if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
@@ -136,16 +113,6 @@ namespace Barotrauma
             if (statusIcons == null)
             {
                 statusIcons = new Sprite("Content/UI/statusIcons.png", Vector2.Zero);
-            }
-
-            if (noiseOverlay == null)
-            {
-                noiseOverlay = new Sprite("Content/UI/noise.png", Vector2.Zero);
-            }
-
-            if (damageOverlay == null)
-            {
-                damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);
             }
 
             if (GUI.DisableHUD) return;
@@ -285,31 +252,7 @@ namespace Barotrauma
             }
 
             if (Screen.Selected == GameMain.SubEditorScreen) return;
-
-            if (character.IsUnconscious || (character.Oxygen < 80.0f && !character.IsDead))
-            {
-                Vector2 offset = Rand.Vector(noiseOverlay.size.X);
-                offset.X = Math.Abs(offset.X);
-                offset.Y = Math.Abs(offset.Y);
-
-                float alpha = character.IsUnconscious ? 1.0f : Math.Min((80.0f - character.Oxygen)/50.0f, 0.8f);
-
-                noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero - offset, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) + offset,
-                    Vector2.Zero,
-                    Color.White * alpha);
-
-            }
-            else
-            {
-                if (suicideButton != null) suicideButton.Visible = false;
-            }
-
-            if (damageOverlayTimer>0.0f)
-            {
-                damageOverlay.Draw(spriteBatch, Vector2.Zero, Color.White * damageOverlayTimer, Vector2.Zero, 0.0f,
-                    new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
-            }
-
+                        
             if (character.IsUnconscious && !character.IsDead)
             {
                 if (suicideButton == null)
@@ -342,6 +285,10 @@ namespace Barotrauma
                 suicideButton.Visible = true;
                 suicideButton.Draw(spriteBatch);                
             }
+            else if (suicideButton != null)
+            {
+                 suicideButton.Visible = false;
+            }
         }
 
         private static void DrawStatusIcons(SpriteBatch spriteBatch, Character character)
@@ -351,7 +298,8 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, new Vector2(30, GameMain.GraphicsHeight - 260), TextManager.Get("Stun") + ": " + character.Stun, Color.White);
             }
 
-            if (oxygenBar == null)
+            //TODO: reimplement
+            /*if (oxygenBar == null)
             {
                 int width = 100, height = 20;
 
@@ -403,7 +351,7 @@ namespace Barotrauma
                 }
 
                 spriteBatch.Draw(statusIcons.Texture, new Vector2(10.0f, healthBar.Rect.Y - 60.0f), new Rectangle(0, 24, 24, 25), Color.White * indicatorAlpha);            
-            }
+            }*/
         }
     }
 }

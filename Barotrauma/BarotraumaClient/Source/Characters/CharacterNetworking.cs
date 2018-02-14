@@ -317,7 +317,8 @@ namespace Barotrauma
 
         private void ReadStatus(NetBuffer msg)
         {
-            bool isDead = msg.ReadBoolean();
+            //TODO: reimplement
+            /*bool isDead = msg.ReadBoolean();
             if (isDead)
             {
                 causeOfDeath = (CauseOfDeath)msg.ReadByte();
@@ -390,7 +391,7 @@ namespace Barotrauma
                     HuskInfectionState = 0.0f;
                 }
 
-            }
+            }*/
         }
 
     }
