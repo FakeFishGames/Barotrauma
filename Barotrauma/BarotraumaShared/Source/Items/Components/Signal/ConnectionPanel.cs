@@ -235,7 +235,7 @@ namespace Barotrauma.Items.Components
                             //wires that are not in anyone's inventory (i.e. not currently being rewired) 
                             //can never be connected to only one connection
                             // -> the client must have dropped the wire from the connection panel
-                            if (existingWire.Item.ParentInventory == null)
+                            if (existingWire.Item.ParentInventory == null && !wires.Any(w => w.Contains(existingWire)))
                             {
                                 //let other clients know the item was also disconnected from the other connection
                                 existingWire.Connections[0].Item.CreateServerEvent(existingWire.Connections[0].Item.GetComponent<ConnectionPanel>());
@@ -247,7 +247,7 @@ namespace Barotrauma.Items.Components
                             GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
 
-                            if (existingWire.Item.ParentInventory == null)
+                            if (existingWire.Item.ParentInventory == null && !wires.Any(w => w.Contains(existingWire)))
                             {
                                 //let other clients know the item was also disconnected from the other connection
                                 existingWire.Connections[1].Item.CreateServerEvent(existingWire.Connections[1].Item.GetComponent<ConnectionPanel>());
@@ -304,6 +304,10 @@ namespace Barotrauma.Items.Components
             foreach (Connection connection in Connections)
             {
                 connection.ClearConnections();
+            }
+
+            foreach (Connection connection in Connections)
+            {
                 int wireCount = msg.ReadRangedInteger(0, Connection.MaxLinked);
                 for (int i = 0; i < wireCount; i++)
                 {
