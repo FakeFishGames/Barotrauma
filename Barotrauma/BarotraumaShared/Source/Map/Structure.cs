@@ -670,12 +670,13 @@ namespace Barotrauma
 #endif
                 }
             }
-
+            
 #if CLIENT
             if (playSound)
             {
-                string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
-                SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
+                //TODO: reimplement
+                //string damageSoundType = (attack.DamageType == DamageType.Blunt) ? "StructureBlunt" : "StructureSlash";
+                //SoundPlayer.PlayDamageSound(damageSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
 

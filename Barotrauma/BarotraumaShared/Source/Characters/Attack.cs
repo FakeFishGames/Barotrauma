@@ -11,17 +11,7 @@ namespace Barotrauma
     {
         Damage, Bloodloss, Pressure, Suffocation, Drowning, Burn, Husk, Disconnected
     }
-
-    [Flags]
-    public enum DamageType
-    {
-        None = 0,
-        Blunt = 1,
-        Slash = 2,
-        Burn = 4,
-        Any = Blunt | Slash | Burn
-    }
-
+    
     public enum HitDetection
     {
         Distance,
@@ -69,10 +59,7 @@ namespace Barotrauma
 
         [Serialize(0.0f, false)]
         public float Duration { get; private set; }
-
-        [Serialize(DamageType.None, false)]
-        public DamageType DamageType { get; private set; }
-
+        
         [Serialize(0.0f, false)]
         public float StructureDamage { get; private set; }
         

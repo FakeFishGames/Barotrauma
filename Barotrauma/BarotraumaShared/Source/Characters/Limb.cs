@@ -386,40 +386,31 @@ namespace Barotrauma
         public AttackResult AddDamage(Vector2 position, List<Affliction> afflictions, bool playSound)
         {
             List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
-
-            foreach (DamageModifier damageModifier in damageModifiers)
+            for (int i = 0; i < afflictions.Count; i++)
             {
-                if (damageModifier.DamageType == DamageType.None) continue;
-                if (SectorHit(damageModifier.ArmorSector, position))
+                foreach (DamageModifier damageModifier in damageModifiers)
                 {
-                    appliedDamageModifiers.Add(damageModifier);
-                }
-            }
-            
-            foreach (WearableSprite wearable in wearingItems)
-            {
-                foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
-                {
-                    if (damageModifier.DamageType == DamageType.None) continue;
+                    if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
                     if (SectorHit(damageModifier.ArmorSector, position))
                     {
+                        afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
                         appliedDamageModifiers.Add(damageModifier);
                     }
                 }
+
+                foreach (WearableSprite wearable in wearingItems)
+                {
+                    foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
+                    {
+                        if (!damageModifier.MatchesAffliction(afflictions[i])) continue;
+                        if (SectorHit(damageModifier.ArmorSector, position))
+                        {
+                            afflictions[i] = afflictions[i].CreateMultiplied(damageModifier.DamageMultiplier);
+                            appliedDamageModifiers.Add(damageModifier);
+                        }
+                    }
+                }
             }
-
-            //TODO: reimplement
-            /*foreach (DamageModifier damageModifier in appliedDamageModifiers)
-            {
-                if (damageModifier.DamageType.HasFlag(DamageType.Blunt))
-                    damage *= damageModifier.DamageMultiplier;
-
-                if (damageModifier.DamageType.HasFlag(DamageType.Slash))
-                    bleedingDamage *= damageModifier.DamageMultiplier;
-
-                if (damageModifier.DamageType.HasFlag(DamageType.Burn))
-                    burnDamage *= damageModifier.DamageMultiplier;            
-            }*/
 
 #if CLIENT
             float bleedingDamage = afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease());
