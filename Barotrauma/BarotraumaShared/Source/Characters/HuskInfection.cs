@@ -88,8 +88,13 @@ namespace Barotrauma
                 state = InfectionState.Active;
             }
 
-            //TODO: reimplement
-            //character.AddDamage(CauseOfDeath.Husk, 0.5f * deltaTime, null);
+            foreach (Limb limb in character.AnimController.Limbs)
+            {
+                character.DamageLimb(
+                    limb.WorldPosition, limb,
+                    new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(0.5f * deltaTime / character.AnimController.Limbs.Length) }, 
+                    0.0f, false, 0.0f);
+            }
         }
 
 

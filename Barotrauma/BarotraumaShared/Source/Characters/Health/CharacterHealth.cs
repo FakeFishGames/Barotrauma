@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -12,21 +13,28 @@ namespace Barotrauma
             public Sprite IndicatorSprite;
 
             //all values withing the range of 0-100
-            public float BluntDamageAmount;
+            /*public float DamageAmount;
             public float BurnDamageAmount;
             //units per minute
             public float BleedingAmount;
+            */
+            public readonly List<Affliction> Afflictions = new List<Affliction>();
 
-            //how much blunt damage to this limb decreases vitality
-            public float BluntDamageVitalityMultiplier = 1.0f;
+            //how much damage to this limb decreases vitality
+            public float DamageVitalityMultiplier = 1.0f;
             public float BurnDamageVitalityMultiplier = 1.0f;
             public float BleedingSpeedMultiplier = 1.0f;
+
+            public float TotalDamage
+            {
+                get { return Afflictions.Sum(a => a.GetVitalityDecrease()); }
+            }
 
             public LimbHealth() { }
 
             public LimbHealth(XElement element)
             {
-                BluntDamageVitalityMultiplier = element.GetAttributeFloat("bluntdamagevitalitymultiplier", 1.0f);
+                DamageVitalityMultiplier = element.GetAttributeFloat("damagevitalitymultiplier", 1.0f);
                 BurnDamageVitalityMultiplier = element.GetAttributeFloat("burndamagevitalitymultiplier", 1.0f);
                 BleedingSpeedMultiplier = element.GetAttributeFloat("bleedingspeedmultiplier", 1.0f);
 
@@ -35,6 +43,15 @@ namespace Barotrauma
                     if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
                     IndicatorSprite = new Sprite(subElement);
                 }
+            }
+
+            public List<Affliction> GetActiveAfflictions(AfflictionPrefab prefab)
+            {
+                return Afflictions.FindAll(a => a.Prefab == prefab);
+            }
+            public List<Affliction> GetActiveAfflictions(string afflictionType)
+            {
+                return Afflictions.FindAll(a => a.Prefab.AfflictionType == afflictionType);
             }
         }
 
@@ -74,9 +91,21 @@ namespace Barotrauma
             get { return maxVitality; }
         }
 
+        public float MinVitality
+        {
+            get { return minVitality; }
+        }
+
         public float OxygenAmount
         {
             get { return oxygenAmount; }
+            set { oxygenAmount = MathHelper.Clamp(value, 0.0f, 100.0f); }
+        }
+
+        public float BloodlossAmount
+        {
+            get { return bloodlossAmount; }
+            set { bloodlossAmount = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
         
         public CharacterHealth(Character character)
@@ -97,7 +126,7 @@ namespace Barotrauma
 
             DoesBleed               = element.GetAttributeBool("doesbleed", true);
             UseBloodParticles       = element.GetAttributeBool("usebloodparticles", true);
-            BleedingDecreaseSpeed   = element.GetAttributeFloat("bleedingdecreasespeed", 0.05f);
+            BleedingDecreaseSpeed   = element.GetAttributeFloat("bleedingdecreasespeed", 0.5f);
             
             minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;
 
@@ -126,12 +155,13 @@ namespace Barotrauma
                 return;
             }
 
-            limbHealths[hitLimb.HealthIndex].BluntDamageAmount  += attackResult.BluntDamage;
-            limbHealths[hitLimb.HealthIndex].BleedingAmount     += attackResult.BleedingDamage;
-            limbHealths[hitLimb.HealthIndex].BurnDamageAmount   += attackResult.BurnDamage;
+            foreach (Affliction newAffliction in attackResult.Afflictions)
+            {
+                AddLimbAffliction(hitLimb, newAffliction);
+            }
         }
 
-        public void ApplyDamage(Limb hitLimb, DamageType damageType, float bluntDamage, float bleedingDamage, float burnDamage, float stun)
+        public void ApplyDamage(Limb hitLimb, DamageType damageType, float damage, float bleedingDamage, float burnDamage, float stun)
         {
             if (hitLimb.HealthIndex < 0 || hitLimb.HealthIndex >= limbHealths.Count)
             {
@@ -140,22 +170,94 @@ namespace Barotrauma
                 return;
             }
             
-            limbHealths[hitLimb.HealthIndex].BluntDamageAmount  += bluntDamage;
-            limbHealths[hitLimb.HealthIndex].BleedingAmount     += bleedingDamage;
-            limbHealths[hitLimb.HealthIndex].BurnDamageAmount   += burnDamage;
+            if (damage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.InternalDamage.Instantiate(damage));            
+            if (bleedingDamage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));            
+            if (burnDamage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.Burn.Instantiate(burnDamage));            
         }
+
+        public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
+        {
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                limbHealth.Afflictions.RemoveAll(a => 
+                    a.Prefab.AfflictionType == AfflictionPrefab.InternalDamage.AfflictionType ||
+                    a.Prefab.AfflictionType == AfflictionPrefab.Burn.AfflictionType ||
+                    a.Prefab.AfflictionType == AfflictionPrefab.Bleeding.AfflictionType);
+
+                if (damageAmount > 0.0f) limbHealth.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damageAmount));
+                if (bleedingDamageAmount > 0.0f) limbHealth.Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamageAmount));
+                if (burnDamageAmount > 0.0f) limbHealth.Afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamageAmount));
+            }
+        }
+
+        private void AddLimbAffliction(Limb limb, Affliction newAffliction)
+        {
+            foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
+            {
+                if (newAffliction.Prefab.AfflictionType == affliction.Prefab.AfflictionType)
+                {
+                    affliction.Merge(newAffliction);
+                    return;
+                }
+            }
+
+            limbHealths[limb.HealthIndex].Afflictions.Add(newAffliction);
+        }
+        
+        /*public float GetDamage(Limb limb)
+        {
+            return limbHealths[limb.HealthIndex].GetActiveAfflictions(AfflictionPrefab.InternalDamage.AfflictionType).Sum(a => a.GetVitalityDecrease());
+        }
+
+        public void SetDamage(Limb limb, float damage)
+        {
+            limbHealths[limb.HealthIndex].DamageAmount = damage;
+        }
+
+        public float GetBleedingAmount(Limb limb)
+        {
+            return limbHealths[limb.HealthIndex].BleedingAmount;
+        }
+
+        public void SetBleedingAmount(Limb limb, float bleedingAmount)
+        {
+            limbHealths[limb.HealthIndex].BleedingAmount = bleedingAmount;
+        }
+
+        public float GetBurnDamage(Limb limb)
+        {
+            return limbHealths[limb.HealthIndex].BurnDamageAmount;
+        }
+
+        public void SetBurnDamage(Limb limb, float damage)
+        {
+            limbHealths[limb.HealthIndex].BurnDamageAmount = damage;
+        }*/
 
         public void Update(float deltaTime)
         {
-            UpdateBleeding(deltaTime);
+            //UpdateBleeding(deltaTime);
             UpdateOxygen(deltaTime);
+
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                limbHealth.Afflictions.RemoveAll(a => a.Strength <= 0.0f);
+            }
+
+            foreach (Limb limb in character.AnimController.Limbs)
+            {
+                limb.BurnOverlayStrength = limbHealths[limb.HealthIndex].Afflictions.Sum(a=> a.Strength / a.Prefab.MaxStrength * a.Prefab.BurnOverlayAlpha);
+                limb.DamageOverlayStrength = limb.IsSevered ? 
+                    100.0f : 
+                    limbHealths[limb.HealthIndex].Afflictions.Sum(a => a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha);
+            }
 
             CalculateVitality();
 
             if (IsUnconscious) UpdateUnconscious(deltaTime);
         }
 
-        private void UpdateBleeding(float deltaTime)
+        /*private void UpdateBleeding(float deltaTime)
         {
             if (!DoesBleed) return;
 
@@ -164,12 +266,23 @@ namespace Barotrauma
                 bloodlossAmount += limbHealth.BleedingAmount * (1.0f / 60.0f) * limbHealth.BleedingSpeedMultiplier * deltaTime;
                 limbHealth.BleedingAmount = Math.Max(limbHealth.BleedingAmount - BleedingDecreaseSpeed * deltaTime, 0.0f);
             }         
-        }
+        }*/
         
         private void UpdateOxygen(float deltaTime)
         {
             float prevOxygen = oxygenAmount;
-            oxygenAmount = MathHelper.Clamp(oxygenAmount + deltaTime * (character.OxygenAvailable < 30.0f ? -5.0f : 10.0f), 0.0f, 100.0f);
+            if (IsUnconscious)
+            {
+                if (character.OxygenAvailable < 30.0f)
+                {
+                    //the character dies of oxygen deprivation in 100 seconds after losing consciousness
+                    oxygenAmount = MathHelper.Clamp(oxygenAmount - 1.0f * deltaTime, -100.0f, 100.0f);
+                }
+            }
+            else
+            {
+                oxygenAmount = MathHelper.Clamp(oxygenAmount + deltaTime * (character.OxygenAvailable < 30.0f ? -5.0f : 10.0f), 0.0f, 100.0f);
+            }
 
             UpdateOxygenProjSpecific(prevOxygen);
         }
@@ -196,8 +309,10 @@ namespace Barotrauma
             vitality = maxVitality;
             foreach (LimbHealth limbHealth in limbHealths)
             {
-                vitality -= limbHealth.BluntDamageAmount * limbHealth.BluntDamageVitalityMultiplier;
-                vitality -= limbHealth.BurnDamageAmount * limbHealth.BurnDamageVitalityMultiplier;
+                foreach (Affliction affliction in limbHealth.Afflictions)
+                {
+                    vitality -= affliction.GetVitalityDecrease();
+                }
             }
 
             vitality -= bloodlossAmount;

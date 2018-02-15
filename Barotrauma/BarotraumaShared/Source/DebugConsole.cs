@@ -849,11 +849,10 @@ namespace Barotrauma
 
                 if (healedCharacter != null)
                 {
-                    //TODO: reimplement
-                    /*healedCharacter.AddDamage(CauseOfDeath.Damage, -healedCharacter.MaxHealth, null);
+                    healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                     healedCharacter.Oxygen = 100.0f;
-                    healedCharacter.Bleeding = 0.0f;
-                    healedCharacter.SetStun(0.0f, true);*/
+                    healedCharacter.Bloodloss = 0.0f;
+                    healedCharacter.SetStun(0.0f, true);
                 }
             },
             null,
@@ -871,11 +870,10 @@ namespace Barotrauma
 
                 if (healedCharacter != null)
                 {
-                    //TODO: reimplement
-                    /*healedCharacter.AddDamage(CauseOfDeath.Damage, -healedCharacter.MaxHealth, null);
+                    healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                     healedCharacter.Oxygen = 100.0f;
-                    healedCharacter.Bleeding = 0.0f;
-                    healedCharacter.SetStun(0.0f, true);*/
+                    healedCharacter.Bloodloss = 0.0f;
+                    healedCharacter.SetStun(0.0f, true);
                 }
             },
             () =>
@@ -1092,8 +1090,7 @@ namespace Barotrauma
 
                 if (killedCharacter != null)
                 {
-                    //TODO: reimplement
-                    //killedCharacter.AddDamage(CauseOfDeath.Damage, killedCharacter.MaxHealth * 2, null);
+                    killedCharacter.SetAllDamage(killedCharacter.MaxVitality, 0.0f, 0.0f);
                 }
             }));
 
@@ -1102,8 +1099,7 @@ namespace Barotrauma
                 foreach (Character c in Character.CharacterList)
                 {
                     if (!(c.AIController is EnemyAIController)) continue;
-                    //TODO: reimplement
-                    //c.AddDamage(CauseOfDeath.Damage, c.MaxHealth * 2, null);
+                    c.SetAllDamage(c.MaxVitality, 0.0f, 0.0f);
                 }
             }, null, null));
 

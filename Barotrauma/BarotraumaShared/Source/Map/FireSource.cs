@@ -203,11 +203,10 @@ namespace Barotrauma
                 if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) continue;
 
                 float dmg = (float)Math.Sqrt(size.X) * deltaTime / c.AnimController.Limbs.Length;
-                //TODO: reimplement
-                /*foreach (Limb limb in c.AnimController.Limbs)
+                foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
-                }*/
+                    c.DamageLimb(WorldPosition, limb, new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(dmg) }, 0.0f, false, 0.0f);
+                }
             }
         }
 

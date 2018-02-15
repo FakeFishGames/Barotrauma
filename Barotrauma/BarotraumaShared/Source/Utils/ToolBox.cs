@@ -11,13 +11,10 @@ namespace Barotrauma
         public T1 First { get; set; }
         public T2 Second { get; set; }
 
-        public static Pair<T1, T2> Create(T1 first, T2 second)
+        public Pair(T1 first, T2 second)
         {
-            Pair<T1, T2> pair = new Pair<T1, T2>();
-            pair.First  = first;
-            pair.Second = second;
-
-            return pair;
+            First  = first;
+            Second = second;
         }
     }
 
