@@ -45,13 +45,13 @@ namespace Barotrauma
                 switch (element.Name.ToString().ToLowerInvariant())
                 {
                     case "internaldamage":
-                        InternalDamage = new AfflictionPrefab(element, typeof(Affliction));
+                        List.Add(InternalDamage = new AfflictionPrefab(element, typeof(Affliction)));
                         break;
                     case "bleeding":
-                        Bleeding = new AfflictionPrefab(element, typeof(AfflictionBleeding));
+                        List.Add(Bleeding = new AfflictionPrefab(element, typeof(AfflictionBleeding)));
                         break;
                     case "burn":
-                        Burn = new AfflictionPrefab(element, typeof(Affliction));
+                        List.Add(Burn = new AfflictionPrefab(element, typeof(Affliction)));
                         break;
                     default:
                         List.Add(new AfflictionPrefab(element));

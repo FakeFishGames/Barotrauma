@@ -173,6 +173,7 @@ namespace Barotrauma
                     
                     distFactors.Add(limb, distFactor);
 
+                    //TODO: multiply affliction strengts by distfactor
                     c.AddDamage(limb.WorldPosition, attack.Afflictions, attack.Stun * distFactor, false);
 
                     if (limb.WorldPosition != worldPosition && force > 0.0f)
