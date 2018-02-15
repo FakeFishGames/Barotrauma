@@ -139,7 +139,7 @@ namespace Barotrauma
 
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
-            float totalDamage = attackResult.BluntDamage + attackResult.BleedingDamage + attackResult.BurnDamage;
+            float totalDamage = attackResult.Damage;
             if (totalDamage <= 0.0f) return;
 
             var enemy = attacker as Character;

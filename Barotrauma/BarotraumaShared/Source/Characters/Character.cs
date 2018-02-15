@@ -306,16 +306,17 @@ namespace Barotrauma
             set { needsAir = value; }
         }
 
-        /*public float Oxygen
+        public float Oxygen
         {
-            get { return oxygen; }
+            get { return health.OxygenAmount; }
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                oxygen = MathHelper.Clamp(value, -100.0f, 100.0f);
-                if (oxygen == -100.0f) Kill(AnimController.InWater ? CauseOfDeath.Drowning : CauseOfDeath.Suffocation);
+                health.OxygenAmount = MathHelper.Clamp(value, -100.0f, 100.0f);
+                //TODO: reimplement
+                //if (oxygen == -100.0f) Kill(AnimController.InWater ? CauseOfDeath.Drowning : CauseOfDeath.Suffocation);
             }
-        }*/
+        }
 
         public float OxygenAvailable
         {
@@ -337,31 +338,10 @@ namespace Barotrauma
             }
         }
 
-        /*public float Health
+        public CharacterHealth CharacterHealth
         {
             get { return health; }
-            set
-            {
-                if (!MathUtils.IsValid(value)) return;
-                if (GameMain.Client != null) return;
-
-                float newHealth = MathHelper.Clamp(value, minHealth, maxHealth);
-                //if (newHealth == health) return;
-
-                health = newHealth;
-
-                //if (GameMain.Server != null)
-                //{
-                //    if (Math.Abs(health - lastSentHealth) > (maxHealth - minHealth) / 255.0f || Math.Sign(health) != Math.Sign(lastSentHealth))
-                //    {
-                //        GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                //        lastSentHealth = health;
-                //    }
-                //}
-            }
         }
-
-        */
 
         public float Vitality
         {
@@ -378,9 +358,14 @@ namespace Barotrauma
             get { return health.MaxVitality; }
         }
 
-        public float Oxygen
+        public float Bloodloss
         {
-            get { return health.OxygenAmount; }
+            get { return health.BloodlossAmount; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) return;
+                health.BloodlossAmount = MathHelper.Clamp(value, 0.0f, 100.0f);
+            }
         }
 
         public bool UseBloodParticles
@@ -1552,6 +1537,8 @@ namespace Barotrauma
                 } */
             }
 
+            //Health effects
+            if (needsAir) UpdateOxygen(deltaTime);
             health.Update(deltaTime);
             
             if (IsUnconscious)
@@ -1565,10 +1552,7 @@ namespace Barotrauma
                 IsRagdolled = IsForceRagdolled;
             else if ((GameMain.Server == null || GameMain.Server.AllowRagdollButton) && (!IsRagdolled || AnimController.Collider.LinearVelocity.Length() < 1f)) //Keep us ragdolled if we were forced or we're too speedy to unragdoll
                 IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
-
-            //Health effects
-            if (needsAir) UpdateOxygen(deltaTime);
-
+            
             if (!IsDead) LockHands = false;
 
             //ragdoll button
@@ -1649,50 +1633,30 @@ namespace Barotrauma
             speechBubbleColor = color;
         }
 
-        private void AdjustKarma(Character attacker, float amount)
+        private void AdjustKarma(Character attacker, AttackResult attackResult)
         {
-            if (GameMain.Server != null)
+            if (GameMain.Server == null) return;
+            
+            Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attacker);
+            if (attackerClient == null) return;
+            
+            Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
+            if (targetClient != null || this == Controlled)
             {
-                if (attacker is Character)
+                if (attacker.TeamID == TeamID)
                 {
-                    Character attackerCharacter = attacker as Character;
-                    Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attackerCharacter);
-                    if (attackerClient != null)
-                    {
-                        Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
-                        if (targetClient != null || this == Controlled)
-                        {
-                            if (attackerCharacter.TeamID == TeamID)
-                            {
-                                attackerClient.Karma -= amount * 0.01f;
-                                //TODO: reimplement
-                                //if (health <= minHealth) attackerClient.Karma = 0.0f;
-                            }
-                        }
-                    }
+                    attackerClient.Karma -= attackResult.Damage * 0.01f;
+                    if (health.MaxVitality <= health.MinVitality) attackerClient.Karma = 0.0f;
                 }
-            }
+            }                              
         }
-
-        /// <summary>
-        /// Directly reduce the health of the character without any additional effects (particles, sounds, status effects...)
-        /// </summary>
-        /*public virtual void AddDamage(CauseOfDeath causeOfDeath, float bluntDamage, float bleedingDamage, float burnDamage, Character attacker)
-        {
-            health.ApplyDamage();
-
-            //TODO: reimplement
-            Health = health - amount;
-            if (amount > 0.0f)
-            {
-                lastAttackCauseOfDeath = causeOfDeath;
-
-                DamageHUD(amount);
-            }
-            AdjustKarma(attacker, amount);
-            if (health <= minHealth) Kill(causeOfDeath);
-        }*/
+        
         partial void DamageHUD(float amount);
+
+        public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
+        {
+            health.SetAllDamage(damageAmount, bleeding, burnDamageAmount);
+        }
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
         {
@@ -1706,15 +1670,16 @@ namespace Barotrauma
         {
             Limb limbHit = targetLimb;
             var attackResult = targetLimb == null ?
-                AddDamage(worldPosition, attack.GetBluntDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.GetBurnDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit, attacker) :
-                DamageLimb(worldPosition, targetLimb, attack.GetBluntDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.GetBurnDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, attacker);
+                AddDamage(worldPosition, attack.Afflictions, attack.Stun, playSound, attack.TargetForce, out limbHit, attacker) :
+                DamageLimb(worldPosition, targetLimb, attack.Afflictions, attack.Stun, playSound, attack.TargetForce, attacker);
 
             if (limbHit == null) return new AttackResult();
 
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
-                GameServer.Log(LogName + " attacked by " + attackingCharacter.LogName + ". Damage: " + attackResult.BluntDamage + " Bleeding damage: " + attackResult.BleedingDamage, ServerLog.MessageType.Attack);
+                //TODO: reimplement
+                //GameServer.Log(LogName + " attacked by " + attackingCharacter.LogName + ". Damage: " + attackResult.Damage + " Bleeding damage: " + attackResult.BleedingDamage, ServerLog.MessageType.Attack);
             }
 
             if (GameMain.Client == null &&
@@ -1748,13 +1713,13 @@ namespace Barotrauma
             return attackResult;
         }
         
-        public AttackResult AddDamage(Vector2 worldPosition, float bluntDamage, float bleedingDamage, float burnDamage, float stun, bool playSound, float attackForce = 0.0f)
+        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce = 0.0f)
         {
             Limb temp = null;
-            return AddDamage(worldPosition, bluntDamage, bleedingDamage, burnDamage, stun, playSound, attackForce, out temp);
+            return AddDamage(worldPosition, afflictions, stun, playSound, attackForce, out temp);
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, float bluntDamage, float bleedingDamage, float burnDamage, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
+        public AttackResult AddDamage(Vector2 worldPosition, List<Affliction> afflictions, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
         {
             hitLimb = null;
 
@@ -1771,11 +1736,10 @@ namespace Barotrauma
                 }
             }
 
-            return DamageLimb(worldPosition, hitLimb,bluntDamage, bleedingDamage, burnDamage, stun, playSound, attackForce, attacker);
+            return DamageLimb(worldPosition, hitLimb, afflictions, stun, playSound, attackForce, attacker);
         }
 
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb,
-            float bluntDamage, float bleedingDamage, float burnDamage, float stun, bool playSound, float attackForce, Character attacker = null)
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, List<Affliction> afflictions, float stun, bool playSound, float attackForce, Character attacker = null)
         {
             if (Removed) return new AttackResult();
 
@@ -1788,9 +1752,11 @@ namespace Barotrauma
                 hitLimb.body.ApplyForce(Vector2.Normalize(diff) * attackForce, hitLimb.SimPosition + ConvertUnits.ToSimUnits(diff));
             }
 
-            AttackResult attackResult = hitLimb.AddDamage(worldPosition, bluntDamage, bleedingDamage, burnDamage, playSound);
-
+            AttackResult attackResult = hitLimb.AddDamage(worldPosition, afflictions, playSound);
             health.ApplyDamage(hitLimb, attackResult);
+            OnAttacked?.Invoke(attacker, attackResult);
+            AdjustKarma(attacker, attackResult);
+
             return attackResult;
         }
 
@@ -1823,12 +1789,9 @@ namespace Barotrauma
             {
                 if (GameMain.Client != null) return; 
             }
-            
-            //TODO: reimplement
-            //Health = minHealth;
 
-            BreakJoints();
-            
+            health.SetAllDamage(health.MaxVitality, 0.0f, 0.0f);
+            BreakJoints();            
             Kill(CauseOfDeath.Pressure, isNetworkMessage);
         }
 
@@ -1873,9 +1836,9 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
 
-            GameServer.Log(LogName+" has died (Cause of death: "+causeOfDeath+")", ServerLog.MessageType.Attack);
+            GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
 
-            if (OnDeath != null) OnDeath(this, causeOfDeath);
+            OnDeath?.Invoke(this, causeOfDeath);
 
             KillProjSpecific();
 
@@ -1912,11 +1875,10 @@ namespace Barotrauma
         public void Revive(bool isNetworkMessage)
         {
             isDead = false;
-
             aiTarget = new AITarget(this);
-
-            //TODO: reimplement
-            //Health = Math.Max(maxHealth * 0.1f, health);
+            SetAllDamage(0.0f, 0.0f, 0.0f);
+            Oxygen = 100.0f;
+            Bloodloss = 0.0f;
 
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {

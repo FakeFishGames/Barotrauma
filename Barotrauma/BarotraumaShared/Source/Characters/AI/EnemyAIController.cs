@@ -450,7 +450,7 @@ namespace Barotrauma
             updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
             coolDownTimer *= 0.1f;
 
-            if ((attackResult.BurnDamage > 0.0f || attackResult.BleedingDamage > 0.0f || attackResult.BurnDamage > 0.0f) && attackWhenProvoked)
+            if (attackResult.Damage > 0.0f && attackWhenProvoked)
             {
                 if (!(attacker is AICharacter) || (((AICharacter)attacker).AIController is HumanAIController))
                 {
@@ -461,7 +461,7 @@ namespace Barotrauma
 
             if (attacker == null || attacker.AiTarget == null) return;
             AITargetMemory targetMemory = FindTargetMemory(attacker.AiTarget);
-            targetMemory.Priority += (attackResult.BurnDamage + attackResult.BleedingDamage + attackResult.BurnDamage) / Math.Max(Character.Vitality, 1.0f);
+            targetMemory.Priority += attackResult.Damage / Math.Max(Character.Vitality, 1.0f);
         }
 
         private void UpdateLimbAttack(float deltaTime, Limb limb, Vector2 attackPosition)
@@ -552,7 +552,7 @@ namespace Barotrauma
                 if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
                 {
                     //apply damage to the target character to get some blood particles flying 
-                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, Rand.Range(10.0f, 25.0f), 10.0f, 0.0f,false);
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, Rand.Range(10.0f, 25.0f), 10.0f, 0.0f, false);
 
                     //keep severing joints until there is only one limb left
                     LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered && l.CanBeSevered);

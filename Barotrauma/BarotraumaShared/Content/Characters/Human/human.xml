@@ -6,10 +6,10 @@
   <health
     vitality="100"
     doesbleed="true">
-    <Limb bluntdamagevitalitymultiplier="2.0">
+    <Limb damagevitalitymultiplier="2.0">
       <Sprite texture="Content/UI/Health/HealthIndicatorHead.png" origin="0.2,0" size="0.5,0.5"/>
     </Limb>
-    <Limb bluntdamagevitalitymultiplier="1.2" bleedingspeedmultiplier="1.5">
+    <Limb damagevitalitymultiplier="1.2" bleedingspeedmultiplier="1.5">
       <Sprite texture="Content/UI/Health/HealthIndicatorTorso.png" origin="0.2,0" size="0.5,0.5"/>
     </Limb>
     <Limb>

@@ -22,6 +22,7 @@ namespace Barotrauma
 
             SlotPositions = new Vector2[limbSlots.Length];
 
+            int x = 110;
             int rectWidth = 40, rectHeight = 40;
             int spacing = 10;
             for (int i = 0; i < SlotPositions.Length; i++)
@@ -33,14 +34,14 @@ namespace Barotrauma
                     case 1:
                     case 2:
                         SlotPositions[i] = new Vector2(
-                            spacing,
+                            x + spacing,
                             GameMain.GraphicsHeight - (spacing + rectHeight) * (3 - i));
                         break;
                     //lefthand, righthand
                     case 3:
                     case 4:
                         SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 1),
+                            x + spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 1),
                             GameMain.GraphicsHeight - (spacing + rectHeight) * 3);
 
                         useOnSelfButton[i - 3] = new GUIButton(
@@ -56,20 +57,20 @@ namespace Barotrauma
                     //face
                     case 5:
                         SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 5),
+                            x + spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 5),
                             GameMain.GraphicsHeight - (spacing + rectHeight) * 3);
 
                         break;
                     //id card
                     case 6:
                         SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 5),
+                            x + spacing * 2 + rectWidth + (spacing + rectWidth) * (i - 5),
                             GameMain.GraphicsHeight - (spacing + rectHeight) * 3);
 
                         break;
                     default:
                         SlotPositions[i] = new Vector2(
-                            spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 7) % 5),
+                            x + spacing * 2 + rectWidth + (spacing + rectWidth) * ((i - 7) % 5),
                             GameMain.GraphicsHeight - (spacing + rectHeight) * ((i > 11) ? 2 : 1));
                         break;
                 }

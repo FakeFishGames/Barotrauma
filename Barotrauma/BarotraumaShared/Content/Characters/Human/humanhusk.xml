@@ -94,7 +94,7 @@
 
     <limb id = "13" width="10" height="30" mass = "6" attackpriority="2" flip="true" pullpos="0.0,25.0">
       <sprite texture="Content/Characters/Husk/DivingSuit.png" sourcerect="110,76,18,52" depth="0.5" origin="0.5,0.5"/>
-      <attack range="70" damagerange="35" duration="0.1" bleedingdamage="20" bluntdamage="5" stun="0.5" targetforce="10"
+      <attack range="70" damagerange="35" duration="0.1" bleedingdamage="20" damage="5" stun="0.5" targetforce="10"
               force="5" applyforceonlimbs="1" torque="-10">
         <StatusEffect type="OnUse" target="Character" HuskInfectionState="0.01" disabledeltatime="true"/>
         <StatusEffect type="OnUse" target="This" Health="20.0" disabledeltatime="true"/>

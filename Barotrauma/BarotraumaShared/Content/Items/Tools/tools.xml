@@ -196,7 +196,7 @@
 
     <MeleeWeapon slots="Any,RightHand,LeftHand"
           aimpos="50,0" handle1="-5,0" holdangle="30" reload="1.0">
-      <Attack bluntdamage="5" structuredamage="5" stun="0.2" sound="Content/Items/Weapons/smack.ogg"/>
+      <Attack damage="5" structuredamage="5" stun="0.2" sound="Content/Items/Weapons/smack.ogg"/>
     </MeleeWeapon>
   </Item>
 

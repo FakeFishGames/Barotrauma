@@ -173,7 +173,7 @@
     <Propulsion force="-40" usablein="both"/>
 
     <Projectile launchimpulse="80.0">
-      <Attack damage="1000" bluntdamage="50" bleedingdamage="10" structuredamage="500"/>
+      <Attack damage="1000" bleedingdamage="10" structuredamage="500"/>
 
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
         <sound file="Content/Items/Artifacts/alienweapon.ogg"/>

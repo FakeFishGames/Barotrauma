@@ -8,8 +8,6 @@ namespace Barotrauma
 {
     class CharacterHUD
     {
-        private static Sprite statusIcons;
-
         private static GUIButton cprButton;
         
         private static GUIButton grabHoldButton;
@@ -110,11 +108,6 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
-            if (statusIcons == null)
-            {
-                statusIcons = new Sprite("Content/UI/statusIcons.png", Vector2.Zero);
-            }
-
             if (GUI.DisableHUD) return;
 
             if (character.Inventory != null)

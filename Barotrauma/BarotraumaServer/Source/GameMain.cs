@@ -83,11 +83,10 @@ namespace Barotrauma
 
             JobPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Jobs));
             StructurePrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Structure));
-
             ItemPrefab.LoadAll(SelectedPackage.GetFilesOfType(ContentType.Item));
 
+            AfflictionPrefab.Init();
             GameModePreset.Init();
-
             LocationType.Init();
 
             Submarine.RefreshSavedSubs();

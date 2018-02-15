@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Afflictions>
+  <InternalDamage
+    name="Internal Damage"
+    description="Internal damage"
+    type="damage"
+    limbspecific="true"
+    maxvitalitydecrease="100"
+    maxstrength="100"
+    damageoverlayalpha="1">
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>  
+  </InternalDamage>
+
+  <Bleeding
+    name="Bleeding"
+    description="Bleeding"
+    type="bleeding"
+    limbspecific="true"
+    maxvitalitydecrease="100"
+    maxstrength="100"
+    damageoverlayalpha="1">
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
+   </Bleeding>
+
+  <Burn
+    name="Burn"
+    description="Burns"
+    type="burn"
+    limbspecific="true"
+    maxvitalitydecrease="100"
+    maxstrength="100"
+    burnoverlayalpha="1">
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+  </Burn>
+</Afflictions>

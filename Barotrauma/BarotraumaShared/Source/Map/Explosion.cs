@@ -100,7 +100,7 @@ namespace Barotrauma
                 }
             }
 
-            if (force == 0.0f && attack.Stun == 0.0f && attack.GetBluntDamage(1.0f) == 0.0f) return;
+            if (force == 0.0f && attack.Stun == 0.0f && attack.GetTotalDamage(false) == 0.0f) return;
 
             ApplyExplosionForces(worldPosition, attack, force);
 
@@ -173,12 +173,7 @@ namespace Barotrauma
                     
                     distFactors.Add(limb, distFactor);
 
-                    c.AddDamage(limb.WorldPosition,
-                        attack.GetBluntDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 
-                        attack.GetBleedingDamage(1.0f) / c.AnimController.Limbs.Length * distFactor,
-                        attack.GetBurnDamage(1.0f) / c.AnimController.Limbs.Length * distFactor,
-                        attack.Stun * distFactor, 
-                        false);
+                    c.AddDamage(limb.WorldPosition, attack.Afflictions, attack.Stun * distFactor, false);
 
                     if (limb.WorldPosition != worldPosition && force > 0.0f)
                     {
