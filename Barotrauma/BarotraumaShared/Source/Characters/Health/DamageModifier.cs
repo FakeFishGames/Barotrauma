@@ -5,13 +5,6 @@ namespace Barotrauma
 {
     class DamageModifier
     {
-        [Serialize(DamageType.None, false)]
-        public DamageType DamageType
-        {
-            get;
-            private set;
-        }
-
         [Serialize(1.0f, false)]
         public float DamageMultiplier
         {
@@ -33,12 +26,25 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(true, false)]
+        [Serialize(false, false)]
         public bool DeflectProjectiles
         {
             get;
             private set;
         }
+
+        public string[] AfflictionNames
+        {
+            get;
+            private set;
+        }
+
+        public string[] AfflictionTypes
+        {
+            get;
+            private set;
+        }
+
 
 
 #if CLIENT
@@ -54,6 +60,30 @@ namespace Barotrauma
         {
             SerializableProperty.DeserializeProperties(this, element);
             ArmorSector = new Vector2(MathHelper.ToRadians(ArmorSector.X), MathHelper.ToRadians(ArmorSector.Y));
+
+            AfflictionNames = element.GetAttributeStringArray("afflictionnames", new string[0]);
+            for (int i = 0; i < AfflictionNames.Length; i++)
+            {
+                AfflictionNames[i] = AfflictionNames[i].ToLowerInvariant();
+            }
+            AfflictionTypes = element.GetAttributeStringArray("afflictiontypes", new string[0]);
+            for (int i = 0; i < AfflictionTypes.Length; i++)
+            {
+                AfflictionTypes[i] = AfflictionTypes[i].ToLowerInvariant();
+            }
+        }
+
+        public bool MatchesAffliction(Affliction affliction)
+        {
+            foreach (string afflictionName in AfflictionNames)
+            {
+                if (affliction.Prefab.Name.ToLowerInvariant() == afflictionName) return true;
+            }
+            foreach (string afflictionType in AfflictionTypes)
+            {
+                if (affliction.Prefab.AfflictionType.ToLowerInvariant() == afflictionType) return true;
+            }
+            return false;
         }
     }
 }

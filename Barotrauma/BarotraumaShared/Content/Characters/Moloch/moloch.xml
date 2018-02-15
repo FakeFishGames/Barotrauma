@@ -22,7 +22,8 @@
     <limb id = "0" radius="230" height="500" type="Head" steerforce="1.0" flip="true">
       <sprite texture="Content/Characters/Moloch/moloch.png" sourcerect="0,0,628,1024" depth="0.02" origin ="0.4,0.5"/>
       <attack range="700" damagerange="350" duration="0.05" damage="200" stun="5" force="20" targetforce="100"/>
-      <damagemodifier damagetype="Any" armorsector="0.0,180.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>
     
     <limb id = "1" width="50" height="440" flip="true">

@@ -35,25 +35,29 @@
     <!-- head -->
     <limb id = "0" radius="30" height="86"  mass = "6" type="Head" flip="true" steerforce="1.0" mouthpos="30,65">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53"/>
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.5" bleedingmultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>
 
     <!-- middle part -->
     <limb id = "1" width="42" height="61"  mass = "6" flip="true">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="3,168,59,64" depth="0.021" origin="0.3,0.65"/>
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.2" bleedingmultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>
 
     <!-- middle part -->
     <limb id = "2" width="35" height="52"  mass = "6" flip="true">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65"/>
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.5" bleedingmultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>
 
     <!-- tail -->
     <limb id = "3" radius="20"  mass = "6" type="Tail" flip="true">
       <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3"/>
-      <damagemodifier damagetype="Blunt,Slash" armorsector="0.0,180.0" damagemultiplier="0.5" bleedingmultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="true"/>
+      <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true"/>
     </limb>      
 
     <limb id = "4" width="15" height="63" mass = "4" refjoint="3" flip="true">

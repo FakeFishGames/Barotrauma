@@ -176,7 +176,7 @@ namespace Barotrauma
             }
         }
 
-        public void ApplyDamage(Limb hitLimb, DamageType damageType, float damage, float bleedingDamage, float burnDamage, float stun)
+        public void ApplyDamage(Limb hitLimb, float damage, float bleedingDamage, float burnDamage, float stun)
         {
             if (hitLimb.HealthIndex < 0 || hitLimb.HealthIndex >= limbHealths.Count)
             {
