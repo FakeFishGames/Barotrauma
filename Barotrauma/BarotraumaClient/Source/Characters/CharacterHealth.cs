@@ -78,7 +78,7 @@ namespace Barotrauma
             {
                 if (limbHealth.IndicatorSprite == null) continue;
 
-                float damageLerp = limbHealth.TotalDamage > 0.0f ? MathHelper.Lerp(limbHealth.TotalDamage / 100.0f, 0.2f, 1.0f) : 0.0f;
+                float damageLerp = limbHealth.TotalDamage > 0.0f ? MathHelper.Lerp(0.2f, 1.0f, limbHealth.TotalDamage / 100.0f) : 0.0f;
 
                 Color color = damageLerp < 0.5f ?
                     Color.Lerp(Color.Green, Color.Orange, damageLerp * 2.0f) : Color.Lerp(Color.Orange, Color.Red, (damageLerp - 0.5f) * 2.0f);

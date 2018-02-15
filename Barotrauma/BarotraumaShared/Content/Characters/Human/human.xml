@@ -6,35 +6,45 @@
   <health
     vitality="100"
     doesbleed="true">
-    <Limb damagevitalitymultiplier="2.0">
+    <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorHead.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="damage" multiplier="2.0"/>
     </Limb>
-    <Limb damagevitalitymultiplier="1.2" bleedingspeedmultiplier="1.5">
+    <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorTorso.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="bleeding" multiplier="2.0"/>
     </Limb>
     <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorLeftArm.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
     <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorLeftHand.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
     <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorRightArm.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
     <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorRightHand.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
     <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorLeftLeg.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
     <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorLeftFoot.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
     <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorRightLeg.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
     <Limb>
       <Sprite texture="Content/UI/Health/HealthIndicatorRightFoot.png" origin="0.2,0" size="0.5,0.5"/>
+      <VitalityMultiplier type="damage" multiplier="0.5"/>
     </Limb>
   </health>
   
