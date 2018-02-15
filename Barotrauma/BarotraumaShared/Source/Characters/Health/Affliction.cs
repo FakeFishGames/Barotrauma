@@ -16,6 +16,11 @@ namespace Barotrauma
             Strength = strength;
         }
 
+        public Affliction CreateMultiplied(float multiplier)
+        {
+            return Prefab.Instantiate(Strength * multiplier);
+        }
+
         public void Merge(Affliction affliction)
         {
             Strength = Math.Min(Strength + affliction.Strength, Prefab.MaxStrength);

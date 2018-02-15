@@ -75,16 +75,7 @@ namespace Barotrauma
 
         [Serialize(0.0f, false)]
         public float StructureDamage { get; private set; }
-
-        /*[Serialize(0.0f, false)]
-        public float Damage { get; private set; }
-
-        [Serialize(0.0f, false)]
-        public float BleedingDamage { get; private set; }
-
-        [Serialize(0.0f, false)]
-        public float BurnDamage { get; private set; }*/
-
+        
         [Serialize(0.0f, false)]
         public float Stun { get; private set; }
 
@@ -113,22 +104,7 @@ namespace Barotrauma
         public readonly List<Affliction> Afflictions = new List<Affliction>();
 
         private readonly List<StatusEffect> statusEffects;
-
-        /*public float GetDamage(float deltaTime)
-        {
-            return (Duration == 0.0f) ? Damage : Damage * deltaTime;
-        }
-
-        public float GetBleedingDamage(float deltaTime)
-        {
-            return (Duration == 0.0f) ? BleedingDamage : BleedingDamage * deltaTime;
-        }
-
-        public float GetBurnDamage(float deltaTime)
-        {
-            return (Duration == 0.0f) ? BurnDamage : BurnDamage * deltaTime;
-        }*/
-
+        
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {
             List<Affliction> multipliedAfflictions = new List<Affliction>();

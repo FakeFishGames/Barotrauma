@@ -767,6 +767,15 @@ namespace Barotrauma
 
             if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
 
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+            {
+                //TODO: wat do
+            }
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+            {
+                targets.AddRange(character.AnimController.Limbs.ToList());
+            }
+
             if (Container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
