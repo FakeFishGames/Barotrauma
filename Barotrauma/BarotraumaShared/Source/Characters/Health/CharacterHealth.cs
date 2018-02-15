@@ -11,19 +11,11 @@ namespace Barotrauma
         class LimbHealth
         {
             public Sprite IndicatorSprite;
-
-            //all values withing the range of 0-100
-            /*public float DamageAmount;
-            public float BurnDamageAmount;
-            //units per minute
-            public float BleedingAmount;
-            */
+            
             public readonly List<Affliction> Afflictions = new List<Affliction>();
 
-            //how much damage to this limb decreases vitality
-            public float DamageVitalityMultiplier = 1.0f;
-            public float BurnDamageVitalityMultiplier = 1.0f;
-            public float BleedingSpeedMultiplier = 1.0f;
+            public readonly Dictionary<string, float> VitalityNameMultipliers = new Dictionary<string, float>();
+            public readonly Dictionary<string, float> VitalityTypeMultipliers = new Dictionary<string, float>();
 
             public float TotalDamage
             {
@@ -34,14 +26,27 @@ namespace Barotrauma
 
             public LimbHealth(XElement element)
             {
-                DamageVitalityMultiplier = element.GetAttributeFloat("damagevitalitymultiplier", 1.0f);
-                BurnDamageVitalityMultiplier = element.GetAttributeFloat("burndamagevitalitymultiplier", 1.0f);
-                BleedingSpeedMultiplier = element.GetAttributeFloat("bleedingspeedmultiplier", 1.0f);
-
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
-                    IndicatorSprite = new Sprite(subElement);
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "sprite":
+                            IndicatorSprite = new Sprite(subElement);
+                            break;
+                        case "vitalitymultiplier":
+                            string afflictionName = subElement.GetAttributeString("name", "");
+                            string afflictionType = subElement.GetAttributeString("type", "");
+                            float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
+                            if (!string.IsNullOrEmpty(afflictionName))
+                            {
+                                VitalityNameMultipliers.Add(afflictionName.ToLowerInvariant(), multiplier);
+                            }
+                            else
+                            {
+                                VitalityTypeMultipliers.Add(afflictionType.ToLowerInvariant(), multiplier);
+                            }
+                            break;
+                    }
                 }
             }
 
@@ -292,7 +297,16 @@ namespace Barotrauma
             {
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
-                    vitality -= affliction.GetVitalityDecrease();
+                    float vitalityDecrease = affliction.GetVitalityDecrease();
+                    if (limbHealth.VitalityNameMultipliers.ContainsKey(affliction.Prefab.Name.ToLowerInvariant()))
+                    {
+                        vitalityDecrease *= limbHealth.VitalityNameMultipliers[affliction.Prefab.Name.ToLowerInvariant()];
+                    }
+                    if (limbHealth.VitalityTypeMultipliers.ContainsKey(affliction.Prefab.AfflictionType.ToLowerInvariant()))
+                    {
+                        vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType.ToLowerInvariant()];
+                    }
+                    vitality -= vitalityDecrease;
                 }
             }
 
