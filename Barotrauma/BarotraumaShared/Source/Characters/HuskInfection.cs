@@ -145,7 +145,7 @@ namespace Barotrauma
                 character.OnDeath -= CharacterDead;
         }
 
-        private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
+        private void CharacterDead(Character character, CauseOfDeathType causeOfDeath)
         {
             if (GameMain.Client != null) return;
 

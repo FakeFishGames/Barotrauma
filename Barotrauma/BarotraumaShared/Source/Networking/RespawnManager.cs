@@ -416,8 +416,8 @@ namespace Barotrauma.Networking
                             Entity.Spawner.AddToRemoveQueue(item);
                         }
                     }
-                    
-                    c.Kill(CauseOfDeath.Damage, true);
+
+                    c.Kill(new Pair<CauseOfDeathType, Affliction>(CauseOfDeathType.Unknown, null), true);
                 }
             }
 

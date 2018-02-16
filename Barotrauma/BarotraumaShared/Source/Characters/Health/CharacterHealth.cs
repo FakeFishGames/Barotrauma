@@ -166,6 +166,37 @@ namespace Barotrauma
             }            
         }
 
+        public void ReduceAffliction(Limb targetLimb, string affliction, float amount)
+        {
+            affliction = affliction.ToLowerInvariant();
+
+            List<Affliction> matchingAfflictions = (targetLimb == null ? afflictions : limbHealths[targetLimb.HealthIndex].Afflictions)
+                .FindAll(a => a.Prefab.Name.ToLowerInvariant() != affliction && a.Prefab.AfflictionType.ToLowerInvariant() != affliction);
+
+            if (matchingAfflictions.Count == 0) return;
+
+            do
+            {
+                float reduceAmount = amount / matchingAfflictions.Count;
+                for (int i = matchingAfflictions.Count - 1; i >= 0; i--)
+                {
+                    var matchingAffliction = matchingAfflictions[i];
+                    if (matchingAffliction.Strength < reduceAmount)
+                    {
+                        amount -= matchingAffliction.Strength;
+                        matchingAffliction.Strength = 0.0f;
+                        matchingAfflictions.RemoveAt(i);
+                    }
+                    else
+                    {
+                        matchingAffliction.Strength -= reduceAmount;
+                        amount -= reduceAmount;
+                    }
+                }
+            } while (matchingAfflictions.Count > 0 && amount > 0.0f);
+            
+        }
+
         public void ApplyDamage(Limb hitLimb, AttackResult attackResult)
         {
             if (hitLimb.HealthIndex < 0 || hitLimb.HealthIndex >= limbHealths.Count)
@@ -216,7 +247,7 @@ namespace Barotrauma
 
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
             {
-                if (newAffliction.Prefab.AfflictionType == affliction.Prefab.AfflictionType)
+                if (newAffliction.Prefab == affliction.Prefab)
                 {
                     affliction.Merge(newAffliction);
                     return;
@@ -232,7 +263,7 @@ namespace Barotrauma
         {
             foreach (Affliction affliction in afflictions)
             {
-                if (newAffliction.Prefab.AfflictionType == affliction.Prefab.AfflictionType)
+                if (newAffliction.Prefab == affliction.Prefab)
                 {
                     affliction.Merge(newAffliction);
                     return;
@@ -267,18 +298,17 @@ namespace Barotrauma
             }
 
             CalculateVitality();
+            
+            if (vitality <= minVitality) character.Kill(GetCauseOfDeath());            
         }
-        
+
         private void UpdateOxygen(float deltaTime)
         {
             float prevOxygen = oxygenAmount;
             if (IsUnconscious)
             {
-                if (character.OxygenAvailable < 30.0f)
-                {
-                    //the character dies of oxygen deprivation in 100 seconds after losing consciousness
-                    oxygenAmount = MathHelper.Clamp(oxygenAmount - 1.0f * deltaTime, -100.0f, 100.0f);
-                }
+                //the character dies of oxygen deprivation in 100 seconds after losing consciousness
+                oxygenAmount = MathHelper.Clamp(oxygenAmount - 1.0f * deltaTime, -100.0f, 100.0f);                
             }
             else
             {
@@ -313,6 +343,66 @@ namespace Barotrauma
             vitality -= bloodlossAmount;
             vitality -= (100.0f - oxygenAmount);
             vitality -= (100.0f - mentalHealth);
+        }
+
+        public Pair<CauseOfDeathType, Affliction> GetCauseOfDeath()
+        {
+            List<Affliction> currentAfflictions = GetAllAfflictions(true);
+
+            Affliction strongestAffliction = null;
+            float largestStrength = 0.0f;
+            foreach (Affliction affliction in currentAfflictions)
+            {
+                if (strongestAffliction == null || affliction.GetVitalityDecrease() > largestStrength)
+                {
+                    strongestAffliction = affliction;
+                    largestStrength = affliction.GetVitalityDecrease();
+                }
+            }
+
+            CauseOfDeathType causeOfDeath = strongestAffliction == null ? CauseOfDeathType.Unknown : CauseOfDeathType.Affliction;
+            if (bloodlossAmount > largestStrength)
+            {
+                largestStrength = bloodlossAmount;
+                causeOfDeath = CauseOfDeathType.Bloodloss;
+            }
+            if (oxygenAmount > largestStrength)
+            {
+                largestStrength = oxygenAmount;
+                causeOfDeath = character.AnimController.InWater ? CauseOfDeathType.Drowning : CauseOfDeathType.Suffocation;
+            }
+
+            return new Pair<CauseOfDeathType, Affliction>(causeOfDeath, strongestAffliction);
+        }
+
+        private List<Affliction> GetAllAfflictions(bool mergeSameAfflictions)
+        {
+            List<Affliction> allAfflictions = new List<Affliction>(afflictions);
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                allAfflictions.AddRange(limbHealth.Afflictions);
+            }
+
+            if (mergeSameAfflictions)
+            {
+                List<Affliction> mergedAfflictions = new List<Affliction>(afflictions);
+                foreach (Affliction affliction in allAfflictions)
+                {
+                    var existingAffliction = mergedAfflictions.Find(a => a.Prefab == affliction.Prefab);
+                    if (existingAffliction == null)
+                    {
+                        mergedAfflictions.Add(affliction);
+                    }
+                    else
+                    {
+                        existingAffliction.Merge(affliction);
+                    }
+                }
+
+                return mergedAfflictions;
+            }
+
+            return allAfflictions;
         }
 
         public void Remove()

@@ -354,7 +354,7 @@ namespace Barotrauma
 
                             if (IsUnconscious)
                             {
-                                Kill(lastAttackCauseOfDeath);
+                                Kill(health.GetCauseOfDeath());
                             }
                             break;
                         case 3:

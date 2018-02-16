@@ -178,7 +178,7 @@ namespace Barotrauma
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
             }
-
+            
             PlaySound(CharacterSound.SoundType.Die);
         }
 
@@ -222,6 +222,11 @@ namespace Barotrauma
                     }
                     hudInfoTimer = Rand.Range(0.5f, 1.0f);
                 }
+            }
+
+            if (controlled == this)
+            {
+                health.UpdateHUD(deltaTime);
             }
         }
 

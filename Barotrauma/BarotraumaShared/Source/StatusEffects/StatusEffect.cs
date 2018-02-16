@@ -85,6 +85,8 @@ namespace Barotrauma
             private set;
         }
 
+        private List<Pair<string, float>> ReduceAffliction;
+
         public string Tags
         {
             get { return string.Join(",", tags); }
@@ -117,6 +119,7 @@ namespace Barotrauma
         {
             requiredItems = new List<RelatedItem>();
             Afflictions = new List<Affliction>();
+            ReduceAffliction = new List<Pair<string, float>>();
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
 
 #if CLIENT
@@ -246,6 +249,11 @@ namespace Barotrauma
                         {
                             Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
                         }
+                        break;
+                    case "reduceaffliction":
+                        ReduceAffliction.Add(new Pair<string, float>(
+                            subElement.GetAttributeString("name", "").ToLowerInvariant(),
+                            subElement.GetAttributeFloat("reduceamount", 1.0f)));
                         break;
 #if CLIENT
                     case "particleemitter":
@@ -500,7 +508,20 @@ namespace Barotrauma
                         {
                             Limb limb = (Limb)target;
                             limb.character.CharacterHealth.ApplyAffliction(limb, affliction.CreateMultiplied(deltaTime));
-                        }                        
+                        }
+                    }
+
+                    foreach (Pair<string,float> reduceAffliction in element.Parent.ReduceAffliction)
+                    {
+                        if (target is Character)
+                        {
+                            ((Character)target).CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                        }
+                        else if (target is Limb)
+                        {
+                            Limb limb = (Limb)target;
+                            limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                        }
                     }
                 }
 

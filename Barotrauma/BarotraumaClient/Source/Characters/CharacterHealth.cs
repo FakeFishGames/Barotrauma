@@ -48,8 +48,16 @@ namespace Barotrauma
         {
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
             
-            healthBar.Color = (vitality > 0.0f) ? Color.Lerp(Color.Orange, Color.Green, vitality / MaxVitality) : healthBar.Color = Color.Red;
-            healthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / minVitality;
+            if (character.IsDead)
+            {
+                healthBar.Color = Color.Black;
+                healthBar.BarSize = 1.0f;
+            }
+            else
+            {
+                healthBar.Color = (vitality > 0.0f) ? Color.Lerp(Color.Orange, Color.Green, vitality / MaxVitality) : healthBar.Color = Color.Red;
+                healthBar.BarSize = (vitality > 0.0f) ? vitality / MaxVitality : 1.0f - vitality / minVitality;
+            }
             
             healthBar.Update(deltaTime);
         }
@@ -99,7 +107,7 @@ namespace Barotrauma
             {
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
-                    if (afflictions.Any(a => a.Prefab.AfflictionType == affliction.Prefab.AfflictionType)) continue;
+                    if (afflictions.Any(a => a.Prefab == affliction.Prefab)) continue;
                     statusIcons.Add(new Pair<Sprite, string>(affliction.Prefab.Icon, affliction.Prefab.Description));
                     afflictions.Add(affliction);
                 }
