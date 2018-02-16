@@ -1,5 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Afflictions>
+
+  <!-- Basic afflictions. 
+  Internal damage, bleeding and burn afflictions are required by the vanilla game; 
+  modifying these may require modifications to the code. -->
+  
   <InternalDamage
     name="Internal Damage"
     description="Internal damage"
@@ -18,7 +23,8 @@
     limbspecific="true"
     maxvitalitydecrease="10"
     maxstrength="100"
-    damageoverlayalpha="1">
+    damageoverlayalpha="1"
+    strengthchange="-0.1">
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
    </Bleeding>
 
@@ -32,4 +38,18 @@
     burnoverlayalpha="1">
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
   </Burn>
+  
+  <!-- Special afflictions -->
+
+  <Affliction
+    name="Drunk"
+    description="Drunk"
+    type="poison"
+    limbspecific="false"
+    activationthreshold="20"
+    maxvitalitydecrease="10"
+    maxstrength="100"
+    strengthchange="-0.1">
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
+  </Affliction>
 </Afflictions>

@@ -13,6 +13,7 @@ namespace Barotrauma
 
         public override void Update(CharacterHealth characterHealth, float deltaTime)
         {
+            base.Update(characterHealth, deltaTime);
             characterHealth.BloodlossAmount += Strength * (1.0f / 60.0f) * deltaTime;
         }
     }

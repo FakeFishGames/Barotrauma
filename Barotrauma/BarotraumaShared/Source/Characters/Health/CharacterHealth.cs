@@ -11,7 +11,9 @@ namespace Barotrauma
         class LimbHealth
         {
             public Sprite IndicatorSprite;
-            
+
+            public Rectangle HighlightArea;
+                        
             public readonly List<Affliction> Afflictions = new List<Affliction>();
 
             public readonly Dictionary<string, float> VitalityNameMultipliers = new Dictionary<string, float>();
@@ -32,6 +34,7 @@ namespace Barotrauma
                     {
                         case "sprite":
                             IndicatorSprite = new Sprite(subElement);
+                            HighlightArea = subElement.GetAttributeRect("highlightarea", new Rectangle(0, 0, (int)IndicatorSprite.size.X, (int)IndicatorSprite.size.Y));
                             break;
                         case "vitalitymultiplier":
                             string afflictionName = subElement.GetAttributeString("name", "");
@@ -49,7 +52,7 @@ namespace Barotrauma
                     }
                 }
             }
-
+            
             public List<Affliction> GetActiveAfflictions(AfflictionPrefab prefab)
             {
                 return Afflictions.FindAll(a => a.Prefab == prefab);
@@ -68,7 +71,6 @@ namespace Barotrauma
         //bleeding settings
         public bool DoesBleed { get; private set; }
         public bool UseBloodParticles { get; private set; }
-        public float BleedingDecreaseSpeed { get; private set; }
 
         private List<LimbHealth> limbHealths = new List<LimbHealth>();
         //non-limb-specific afflictions
@@ -133,7 +135,6 @@ namespace Barotrauma
 
             DoesBleed               = element.GetAttributeBool("doesbleed", true);
             UseBloodParticles       = element.GetAttributeBool("usebloodparticles", true);
-            BleedingDecreaseSpeed   = element.GetAttributeFloat("bleedingdecreasespeed", 0.5f);
             
             minVitality = (character.ConfigPath == Character.HumanConfigFile) ? -100.0f : 0.0f;
 
@@ -340,6 +341,11 @@ namespace Barotrauma
                 }
             }
 
+            foreach (Affliction affliction in afflictions)
+            {
+                vitality -= affliction.GetVitalityDecrease();
+            }
+
             vitality -= bloodlossAmount;
             vitality -= (100.0f - oxygenAmount);
             vitality -= (100.0f - mentalHealth);
@@ -385,13 +391,13 @@ namespace Barotrauma
 
             if (mergeSameAfflictions)
             {
-                List<Affliction> mergedAfflictions = new List<Affliction>(afflictions);
+                List<Affliction> mergedAfflictions = new List<Affliction>();
                 foreach (Affliction affliction in allAfflictions)
                 {
                     var existingAffliction = mergedAfflictions.Find(a => a.Prefab == affliction.Prefab);
                     if (existingAffliction == null)
                     {
-                        mergedAfflictions.Add(affliction);
+                        mergedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength));
                     }
                     else
                     {

@@ -154,7 +154,6 @@ namespace Barotrauma
 
             Lights.LightManager.ViewTarget = this;
             CharacterHUD.Update(deltaTime, this);
-            health.UpdateHUD(deltaTime);
 
             foreach (HUDProgressBar progressBar in hudProgressBars.Values)
             {
@@ -243,6 +242,7 @@ namespace Barotrauma
             if (controlled == this)
             {
                 CharacterHUD.AddToGUIUpdateList(this);
+                health.AddToGUIUpdateList();
             }
         }
         

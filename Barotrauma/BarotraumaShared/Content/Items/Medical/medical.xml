@@ -139,7 +139,9 @@
 
     <ItemComponent>
       <StatusEffect type="OnUse" target="This" Condition="-25.0" disabledeltatime="true"/>
-      <StatusEffect tags="drunk" type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0"/>      
+      <StatusEffect type="OnUse" target="Character" delay="20">
+        <Affliction name="drunk" strength="5"/>
+      </StatusEffect>
     </ItemComponent>
 
     <Sprite texture ="med.png" sourcerect="15,15,8,17" depth="0.6"/>
@@ -147,8 +149,9 @@
     <Body width="8" height="7" density="10"/>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect tags="drunk" type="OnUse" target="Character" SpeedMultiplier="0.8" setvalue="true" duration="20.0">
+      <StatusEffect type="OnUse" target="Character" delay="5">
         <RequiredItem name="Medical Syringe" type="Container"/>
+        <Affliction name="drunk" strength="10"/>
       </StatusEffect>
     </Throwable>
   </Item>

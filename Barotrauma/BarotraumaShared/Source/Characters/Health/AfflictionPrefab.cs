@@ -23,6 +23,12 @@ namespace Barotrauma
 
         public readonly string Name, Description;
 
+        //how high the strength has to be for the affliction to take affect
+        public readonly float ActivationThreshold = 0.0f;
+
+        //how much the strength of the affliction changes per second
+        public readonly float StrengthChange = 0.0f;
+
         public readonly float MaxVitalityDecrease = 100.0f;
         public readonly float MaxStrength = 100.0f;
 
@@ -70,8 +76,11 @@ namespace Barotrauma
 
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
 
+            ActivationThreshold = element.GetAttributeFloat("activationthreshold", 0.0f);
+
             MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 100.0f);
             MaxStrength = element.GetAttributeFloat("maxstrength", 100.0f);
+            StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 
             DamageOverlayAlpha = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
             BurnOverlayAlpha = element.GetAttributeFloat("burnoverlayalpha", 0.0f);

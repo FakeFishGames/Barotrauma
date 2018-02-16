@@ -25,7 +25,7 @@ namespace Barotrauma
 
         public Explosion(float range, float force, float damage, float structureDamage, float empStrength = 0.0f)
         {
-            attack = new Attack(damage, structureDamage, 0.0f, range);
+            attack = new Attack(damage, 0.0f, 0.0f, structureDamage, range);
             attack.SeverLimbsProbability = 1.0f;
             this.force = force;
             this.empStrength = empStrength;
@@ -174,7 +174,12 @@ namespace Barotrauma
                     distFactors.Add(limb, distFactor);
 
                     //TODO: multiply affliction strengts by distfactor
-                    c.AddDamage(limb.WorldPosition, attack.Afflictions, attack.Stun * distFactor, false);
+                    List<Affliction> modifiedAfflictions = new List<Affliction>();
+                    foreach (Affliction affliction in attack.Afflictions)
+                    {
+                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor));
+                    }
+                    c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false);
 
                     if (limb.WorldPosition != worldPosition && force > 0.0f)
                     {
