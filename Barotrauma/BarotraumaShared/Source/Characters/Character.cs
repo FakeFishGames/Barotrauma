@@ -100,16 +100,13 @@ namespace Barotrauma
         private Character focusedCharacter, selectedCharacter, selectedBy;
 
         private bool isDead;
-        private CauseOfDeath lastAttackCauseOfDeath;
-        private CauseOfDeath causeOfDeath;
+        private Pair<CauseOfDeathType, Affliction> causeOfDeath;
 
         public readonly bool IsHumanoid;
 
         //the name of the species (e.q. human)
         public readonly string SpeciesName;
-
-        private float bleeding;
-
+        
         private float attackCoolDown;
 
         public Entity ViewTarget
@@ -313,8 +310,6 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value)) return;
                 health.OxygenAmount = MathHelper.Clamp(value, -100.0f, 100.0f);
-                //TODO: reimplement
-                //if (oxygen == -100.0f) Kill(AnimController.InWater ? CauseOfDeath.Drowning : CauseOfDeath.Suffocation);
             }
         }
 
@@ -460,7 +455,7 @@ namespace Barotrauma
             get { return isDead; }
         }
 
-        public CauseOfDeath CauseOfDeath
+        public Pair<CauseOfDeathType, Affliction> CauseOfDeath
         {
             get { return causeOfDeath; }
         }
@@ -488,7 +483,7 @@ namespace Barotrauma
             get { return AnimController.MainLimb.body.DrawPosition; }
         }
 
-        public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
+        public delegate void OnDeathHandler(Character character, CauseOfDeathType causeOfDeath);
         public OnDeathHandler OnDeath;
 
         public delegate void OnAttackedHandler(Character attacker, AttackResult attackResult);
@@ -1457,7 +1452,7 @@ namespace Barotrauma
                 (Submarine != null && Submarine.WorldPosition.Y < Level.MaxEntityDepth))
             {
                 Enabled = false;
-                Kill(CauseOfDeath.Pressure);
+                Kill(CauseOfDeathType.Pressure, null);
                 return;
             }
 
@@ -1655,7 +1650,7 @@ namespace Barotrauma
 
         public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
         {
-            health.SetAllDamage(damageAmount, bleeding, burnDamageAmount);
+            health.SetAllDamage(damageAmount, bleedingDamageAmount, burnDamageAmount);
         }
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
@@ -1678,8 +1673,13 @@ namespace Barotrauma
             var attackingCharacter = attacker as Character;
             if (attackingCharacter != null && attackingCharacter.AIController == null)
             {
-                //TODO: reimplement
-                //GameServer.Log(LogName + " attacked by " + attackingCharacter.LogName + ". Damage: " + attackResult.Damage + " Bleeding damage: " + attackResult.BleedingDamage, ServerLog.MessageType.Attack);
+                string logMsg = LogName + " attacked by " + attackingCharacter.LogName + ".";
+                foreach (Affliction affliction in attackResult.Afflictions)
+                {
+                    if (affliction.Strength == 0.0f) continue;
+                    logMsg += affliction.Prefab.Name + ": " + affliction.Strength;
+                }
+                GameServer.Log(logMsg, ServerLog.MessageType.Attack);            
             }
 
             if (GameMain.Client == null &&
@@ -1792,7 +1792,7 @@ namespace Barotrauma
 
             health.SetAllDamage(health.MaxVitality, 0.0f, 0.0f);
             BreakJoints();            
-            Kill(CauseOfDeath.Pressure, isNetworkMessage);
+            Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
         }
 
         public void BreakJoints()
@@ -1818,7 +1818,13 @@ namespace Barotrauma
 
         partial void ImplodeFX();
 
-        public void Kill(CauseOfDeath causeOfDeath, bool isNetworkMessage = false)
+
+        public void Kill(Pair<CauseOfDeathType, Affliction> causeOfDeath, bool isNetworkMessage = false)
+        {
+            Kill(causeOfDeath.First, causeOfDeath.Second, isNetworkMessage);
+        }
+
+        public void Kill(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool isNetworkMessage = false)
         {
             if (isDead) return;
 
@@ -1843,9 +1849,9 @@ namespace Barotrauma
             KillProjSpecific();
 
             isDead = true;
-            
-            this.causeOfDeath = causeOfDeath;
-            if (info != null) info.CauseOfDeath = causeOfDeath;
+
+            this.causeOfDeath = new Pair<CauseOfDeathType, Affliction>(causeOfDeath, causeOfDeathAffliction);
+            if (info != null) info.CauseOfDeath = this.causeOfDeath;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
 

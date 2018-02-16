@@ -769,7 +769,7 @@ namespace Barotrauma
                 {
                     if (c.Submarine == this)
                     {
-                        c.Kill(CauseOfDeath.Pressure);
+                        c.Kill(CauseOfDeathType.Pressure, null);
                         c.Enabled = false;
                     }
                 }

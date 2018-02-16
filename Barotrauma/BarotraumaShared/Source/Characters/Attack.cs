@@ -7,9 +7,9 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    enum CauseOfDeath
+    enum CauseOfDeathType
     {
-        Damage, Bloodloss, Pressure, Suffocation, Drowning, Burn, Husk, Disconnected
+        Unknown, Bloodloss, Pressure, Suffocation, Drowning, Affliction, Disconnected
     }
     
     public enum HitDetection
