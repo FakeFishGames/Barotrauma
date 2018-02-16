@@ -119,6 +119,10 @@ namespace Barotrauma
 
         public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float range = 0.0f)
         {
+            if (damage > 0.0f) Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage));
+            if (bleedingDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));
+            if (burnDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamage));
+
             Range = range;
             DamageRange = range;
             StructureDamage = structureDamage;

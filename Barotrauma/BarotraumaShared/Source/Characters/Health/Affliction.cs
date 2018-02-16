@@ -28,12 +28,13 @@ namespace Barotrauma
 
         public float GetVitalityDecrease()
         {
+            if (Strength < Prefab.ActivationThreshold) return 0.0f;
             return Prefab.MaxVitalityDecrease * (Strength / 100.0f);
         }
 
         public virtual void Update(CharacterHealth characterHealth, float deltaTime)
         {
-
+            Strength += Prefab.StrengthChange * deltaTime;
         }
     }
 }
