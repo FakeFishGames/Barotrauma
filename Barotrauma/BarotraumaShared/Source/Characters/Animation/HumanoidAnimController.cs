@@ -2,6 +2,7 @@
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -941,7 +942,7 @@ namespace Barotrauma
                 {
                     target.Oxygen += deltaTime * 0.5f; //Stabilize them
                 }
-            }
+            }*/
 
 
             int skill = character.GetSkillLevel("Medical");
@@ -955,10 +956,14 @@ namespace Barotrauma
 
                 if (GameMain.Client == null) //Serverside code
                 {
-                    float cpr = skill / 2.0f; //Max possible oxygen addition is 20 per second
-                    character.Oxygen -= (30.0f - cpr) * deltaTime; //Worse skill = more oxygen required
-                    if (character.Oxygen > 0.0f) //we didn't suffocate yet did we
-                        target.Oxygen += cpr * deltaTime;
+                    //stabilize the oxygen level but don't allow it to go positive and revive the character yet
+                    if (character.Oxygen < -10.0f)
+                    {
+                        float cpr = skill / 2.0f; //Max possible oxygen addition is 20 per second
+                        character.Oxygen -= (30.0f - cpr) * deltaTime; //Worse skill = more oxygen required
+                        if (character.Oxygen > 0.0f) //we didn't suffocate yet did we
+                            target.Oxygen += cpr * deltaTime;
+                    }
 
                     //DebugConsole.NewMessage("CPR Us: " + character.Oxygen + " Them: " + target.Oxygen + " How good we are: restore " + cpr + " use " + (30.0f - cpr), Color.Aqua);
                 }
@@ -975,44 +980,34 @@ namespace Barotrauma
                     targetTorso.body.ApplyForce(new Vector2(0, -1000f));
                     cprPump = 0;
 
-                    if (target.Bleeding <= 0.5f && target.Health <= 0.0f && !target.IsDead) //Have a chance to revive them to 2 HP if they were damaged.
+                    if (skill < 50.0f)
+                    {
+                        //10% skill causes 0.8 damage per pump, 40% skill causes only 0.2
+                        target.DamageLimb(
+                            targetTorso.WorldPosition, targetTorso, 
+                            new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate((50 - skill) * 0.02f) },
+                            0.0f, true, 0.0f, character);
+                    }
+                    else
                     {
                         if (GameMain.Client == null) //Serverside code
                         {
                             float reviveChance = (cprAnimState % 17) * (skill / 50.0f); //~5% max chance for 10 skill, ~50% max chance for 100 skill
-                            float rng = Rand.Int(100, Rand.RandSync.Server);
 
                             //DebugConsole.NewMessage("CPR Pump cprAnimState: " + (cprAnimState % 17) + " revive chance: " + reviveChance + " rng: " + rng, Color.Aqua);
-                            if (rng <= reviveChance) //HOLY CRAP YOU SAVED HIM!!!
+                            if (Rand.Int(100, Rand.RandSync.Server) <= reviveChance)
                             {
-                                target.Oxygen = Math.Max(target.Oxygen, 10.0f);
-                                target.Health = 2.0f;
+                                //increase oxygen and clamp it above zero 
+                                // -> the character should be revived if there are no major afflictions in addition to lack of oxygen
+                                target.Oxygen = Math.Max(target.Oxygen + 10.0f, 10.0f);
                                 Anim = Animation.None;
                                 return;
                             }
                         }
                     }
-                    else if (target.Bleeding > 0.5f || skill < 50) //We will hurt them if they're bleeding or we suck
-                    {
-                        //If not bleeding: 10% skill causes 0.8 damage per pump, 40% skill causes only 0.2
-                        if (target.Bleeding <= 0.5f)
-                            target.AddDamage(CauseOfDeath.Damage, (50 - skill) * 0.02f, character);
-                        else //If bleeding: 2 HP damage per pump. Basically speeds up their death. Don't pump bleeding people!
-                        {
-                            target.AddDamage(CauseOfDeath.Bloodloss, 1.0f, character);
-#if CLIENT
-                            SoundPlayer.PlayDamageSound("LimbBlunt", 25.0f, targetTorso.body);
-
-                            for (int i = 0; i < 4; i++)
-                            {
-                                var blood = GameMain.ParticleManager.CreateParticle(inWater ? "waterblood" : "blood", targetTorso.WorldPosition, Rand.Vector(10.0f), 0.0f, target.AnimController.CurrentHull);
-                            }
-#endif
-                        }
-                    }
                 }
                 cprPump += deltaTime;
-            }*/
+            }
 
             cprAnimState += deltaTime;
         }
