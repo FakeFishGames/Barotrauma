@@ -690,7 +690,7 @@ namespace Barotrauma
         }
 
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (statusEffectLists == null) return;
 
@@ -699,11 +699,11 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
-                ApplyStatusEffect(effect, type, deltaTime, character, isNetworkEvent);
+                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent);
             }
         }
         
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (!isNetworkEvent)
             {
@@ -769,7 +769,7 @@ namespace Barotrauma
 
             if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
             {
-                //TODO: wat do
+                targets.Add(limb);
             }
             if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
             {
