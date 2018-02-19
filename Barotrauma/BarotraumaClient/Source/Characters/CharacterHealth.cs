@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -24,6 +25,7 @@ namespace Barotrauma
         private GUIProgressBar healthWindowHealthBar;
         private GUIFrame limbIndicatorContainer;
         private GUIListBox afflictionContainer;
+        private GUIListBox healItemContainer;
         private bool healthWindowOpen;
         private int highlightedLimbIndex = -1;
         private int selectedLimbIndex = -1;
@@ -44,14 +46,43 @@ namespace Barotrauma
             healthBar.IsHorizontal = false;
 
             healthWindow = new GUIFrame(new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Black * 0.5f, null);
-            GUIFrame healthFrame = new GUIFrame(new Rectangle(0, 0, (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 500, 700), (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 400, 600)),
+            GUIFrame healthFrame = new GUIFrame(new Rectangle(0, 0, (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 500, 800), (int)MathHelper.Clamp(GameMain.GraphicsWidth * 0.7f, 400, 600)),
                 null, Alignment.Center, "", healthWindow);
             healthFrame.Color *= 0.8f;
             limbIndicatorContainer = new GUIFrame(new Rectangle(20, 0, 240, 0), Color.Black * 0.5f, "", healthFrame);
             healthWindowHealthBar = new GUIProgressBar(new Rectangle(0,0,30,0), Color.Green, 1.0f, healthFrame);
             healthWindowHealthBar.IsHorizontal = false;
-            afflictionContainer = new GUIListBox(new Rectangle(limbIndicatorContainer.Rect.Right - healthFrame.Rect.X, 0, (healthFrame.Rect.Width - limbIndicatorContainer.Rect.Width) / 2, 0),
+
+            int listBoxWidth = (int)(healthFrame.Rect.Width - limbIndicatorContainer.Rect.Width - healthFrame.Padding.X - healthFrame.Padding.Z) / 2;
+            afflictionContainer = new GUIListBox(new Rectangle(limbIndicatorContainer.Rect.Right - healthFrame.Rect.X - (int)healthFrame.Padding.X, 30, listBoxWidth, 0),
                 "", healthFrame);
+            new GUITextBlock(new Rectangle(limbIndicatorContainer.Rect.Right - healthFrame.Rect.X - (int)healthFrame.Padding.X, 0,20,20), "Afflictions", "", healthFrame);
+
+            healItemContainer = new GUIListBox(new Rectangle(afflictionContainer.Rect.Right - healthFrame.Rect.X - (int)healthFrame.Padding.X, 30, listBoxWidth, 0),
+                "", healthFrame);
+            new GUITextBlock(new Rectangle(afflictionContainer.Rect.Right - healthFrame.Rect.X - (int)healthFrame.Padding.X, 0, 20, 20), "Items", "", healthFrame);
+
+            healItemContainer.OnSelected += (GUIComponent component, object userdata) =>
+            {
+                Item item = userdata as Item;
+                if (item == null) return false;
+#if CLIENT
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect });
+                    return true;
+                }
+#endif
+
+                if (GameMain.Server != null)
+                {
+                    GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID });
+                }
+
+                item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex));
+                UpdateItemContainer();
+                return true;
+            };
         }
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
@@ -70,6 +101,7 @@ namespace Barotrauma
             if (PlayerInput.KeyHit(Keys.H))
             {
                 healthWindowOpen = !healthWindowOpen;
+                UpdateItemContainer();
             }
             
             if (character.IsDead)
@@ -128,6 +160,7 @@ namespace Barotrauma
             if (limbArea.Contains(PlayerInput.MousePosition) && PlayerInput.LeftButtonClicked())
             {
                 healthWindowOpen = true;
+                UpdateItemContainer();
             }
             
             List<Pair<Sprite, string>> statusIcons = new List<Pair<Sprite, string>>();
@@ -207,6 +240,24 @@ namespace Barotrauma
             });
         }
 
+        private void UpdateItemContainer()
+        {
+            healItemContainer.ClearChildren();
+
+            foreach (Item item in character.Inventory.Items)
+            {
+                if (item == null) continue;
+                if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
+
+                var child = new GUIFrame(new Rectangle(0, 0, healItemContainer.Rect.Width, 50), "ListBoxElement", healItemContainer);
+                child.Padding = Vector4.Zero;
+                child.UserData = item;
+
+                new GUIImage(new Rectangle(0, 0, 0, 0), item.Sprite, Alignment.CenterLeft, child).Color = item.SpriteColor;
+                new GUITextBlock(new Rectangle(50, 0, 0, 0), item.Name, "", child);                
+            }
+        }
+
         private void UpdateLimbIndicators(Rectangle drawArea)
         {
             highlightedLimbIndex = -1;
@@ -230,7 +281,7 @@ namespace Barotrauma
                 i++;
             }
 
-            if (PlayerInput.LeftButtonClicked())
+            if (PlayerInput.LeftButtonClicked() && highlightedLimbIndex > -1)
             {
                 selectedLimbIndex = highlightedLimbIndex;
             }

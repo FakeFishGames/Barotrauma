@@ -372,7 +372,8 @@ namespace Barotrauma
                     ushort targetID = msg.ReadUInt16();
 
                     Character target = FindEntityByID(targetID) as Character;
-                    ApplyStatusEffects(actionType, (float)Timing.Step, target, true);
+                    //TODO: sync target limb
+                    ApplyStatusEffects(actionType, (float)Timing.Step, target, null, true);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg);
