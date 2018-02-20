@@ -172,8 +172,7 @@ namespace Barotrauma
                     if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null) distFactor *= 0.1f;
                     
                     distFactors.Add(limb, distFactor);
-
-                    //TODO: multiply affliction strengts by distfactor
+                    
                     List<Affliction> modifiedAfflictions = new List<Affliction>();
                     foreach (Affliction affliction in attack.Afflictions)
                     {

@@ -176,9 +176,9 @@ namespace Barotrauma
 
             if (targetLimb != null)
             {
-                afflictions.AddRange(limbHealths[targetLimb.HealthIndex].Afflictions);
+                matchingAfflictions.AddRange(limbHealths[targetLimb.HealthIndex].Afflictions);
             }
-            afflictions.RemoveAll(a => 
+            matchingAfflictions.RemoveAll(a => 
                 a.Prefab.Name.ToLowerInvariant() != affliction && 
                 a.Prefab.AfflictionType.ToLowerInvariant() != affliction);
 
