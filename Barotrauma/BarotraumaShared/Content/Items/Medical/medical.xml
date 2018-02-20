@@ -17,7 +17,7 @@
     <MeleeWeapon slots="Any,RightHand,LeftHand"
               aimpos="5,0" handle1="-5,0" holdangle="10" reload="1.0">
 
-      <StatusEffect type="OnUse" target="Contained, Character" Condition="-25.0" disabledeltatime="true" >
+      <StatusEffect type="OnUse" target="Contained, Limb" Condition="-25.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem name="chem" type="Contained"/>
         <Use/>
@@ -30,7 +30,7 @@
 
     <Projectile launchimpulse="20.0" sticktocharacters="true">
       <Attack bleedingdamage="1" structuredamage="1" stun="0.1" targetforce="5"/>
-      <StatusEffect type="OnImpact" target="Contained, Character" Condition="-50.0" disabledeltatime="true" >
+      <StatusEffect type="OnImpact" target="Contained, Limb" Condition="-50.0" disabledeltatime="true" >
         <sound file="Content/Items/Medical/syringe.ogg" range="500"/>
         <RequiredItem name="chem" type="Contained"/>
         <Use/>
@@ -293,8 +293,7 @@
     category="Material"
     spritecolor="0.8,0.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"
-    
+    Tags="smallitem,chem,medical"    
     canuseonself="true"
     description="Highly effective at treating various types of physical trauma."
     price="50">
@@ -323,8 +322,7 @@
     category="Material"
     spritecolor="1.0,1.0,0.0,1.0"
     cargocontainername="Chemical Crate"
-    Tags="smallitem,chem,medical"
-    
+    Tags="smallitem,chem,medical"    
     description="A highly potent corrigodone-based stimulant."
     price="150">
 

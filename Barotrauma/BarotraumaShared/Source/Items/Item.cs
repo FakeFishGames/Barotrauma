@@ -1160,7 +1160,7 @@ namespace Barotrauma
         }
 
 
-        public void Use(float deltaTime, Character character = null)
+        public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
             if (condition == 0.0f) return;
 
@@ -1177,7 +1177,7 @@ namespace Barotrauma
                     ic.PlaySound(ActionType.OnUse, WorldPosition);
 #endif
     
-                    ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
+                    ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
 
                     if (ic.DeleteOnUse) remove = true;
                 }
