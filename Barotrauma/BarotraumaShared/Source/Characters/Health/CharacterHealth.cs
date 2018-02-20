@@ -177,7 +177,7 @@ namespace Barotrauma
             affliction = affliction.ToLowerInvariant();
 
             List<Affliction> matchingAfflictions = (targetLimb == null ? afflictions : limbHealths[targetLimb.HealthIndex].Afflictions)
-                .FindAll(a => a.Prefab.Name.ToLowerInvariant() != affliction && a.Prefab.AfflictionType.ToLowerInvariant() != affliction);
+                .FindAll(a => a.Prefab.Name.ToLowerInvariant() == affliction || a.Prefab.AfflictionType.ToLowerInvariant() == affliction);
 
             if (matchingAfflictions.Count == 0) return;
 
