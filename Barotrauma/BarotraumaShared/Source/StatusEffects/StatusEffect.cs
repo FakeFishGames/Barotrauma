@@ -58,7 +58,7 @@ namespace Barotrauma
 
         private readonly int useItemCount;
 
-        public readonly ActionType type;
+        public readonly ActionType type = ActionType.OnActive;
 
         private Explosion explosion;
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -8,6 +9,39 @@ namespace Barotrauma
 {
     class AfflictionPrefab
     {
+        public class Effect
+        {
+            //this effect is applied when the strength is within this range
+            public float MinStrength, MaxStrength;
+
+            public readonly float MaxVitalityDecrease = 100.0f;
+
+            //how much the strength of the affliction changes per second
+            public readonly float StrengthChange = 0.0f;
+
+            //statuseffects applied on the character when the affliction is active
+            public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
+
+            public Effect(XElement element)
+            {
+                MinStrength =  element.GetAttributeFloat("minstrength", 0);
+                MaxStrength =  element.GetAttributeFloat("maxstrength", 0);
+
+                MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 100.0f);
+                StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
+
+                foreach (XElement subElement in element.Elements())
+                {
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "statuseffect":
+                            StatusEffects.Add(StatusEffect.Load(subElement));
+                            break;
+                    }
+                }
+            }
+        }
+
         public static AfflictionPrefab InternalDamage;
         public static AfflictionPrefab Bleeding;
         public static AfflictionPrefab Burn;
@@ -21,21 +55,23 @@ namespace Barotrauma
         //Does the affliction affect a specific limb or the whole character
         public readonly bool LimbSpecific;
 
+        //If not a limb-specific affliction, which limb is the indicator shown on in the health menu
+        //(e.g. mental health problems on head, lack of oxygen on torso...)
+        public readonly LimbType IndicatorLimb;
+
         public readonly string Name, Description;
 
         //how high the strength has to be for the affliction to take affect
         public readonly float ActivationThreshold = 0.0f;
-
-        //how much the strength of the affliction changes per second
-        public readonly float StrengthChange = 0.0f;
-
-        public readonly float MaxVitalityDecrease = 100.0f;
         public readonly float MaxStrength = 100.0f;
-
-        public readonly Sprite Icon;
 
         public float BurnOverlayAlpha;
         public float DamageOverlayAlpha;
+
+        public readonly Sprite Icon;
+
+        private List<Effect> effects = new List<Effect>();
+
 
         private readonly string typeName;
 
@@ -75,21 +111,31 @@ namespace Barotrauma
             Description = element.GetAttributeString("description", "");
 
             LimbSpecific = element.GetAttributeBool("limbspecific", false);
+            if (!LimbSpecific)
+            {
+                string indicatorLimbName = element.GetAttributeString("indicatorlimb", "Torso");
+                if (!Enum.TryParse(indicatorLimbName, out IndicatorLimb))
+                {
+                    DebugConsole.ThrowError("Error in affliction prefab " + Name + " - limb type \"" + indicatorLimbName + "\" not found.");
+                }
+            }
 
             ActivationThreshold = element.GetAttributeFloat("activationthreshold", 0.0f);
-
-            MaxVitalityDecrease = element.GetAttributeFloat("maxvitalitydecrease", 100.0f);
             MaxStrength = element.GetAttributeFloat("maxstrength", 100.0f);
-            StrengthChange = element.GetAttributeFloat("strengthchange", 0.0f);
 
             DamageOverlayAlpha = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
             BurnOverlayAlpha = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "icon")
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    Icon = new Sprite(subElement);
+                    case "icon":
+                        Icon = new Sprite(subElement);
+                        break;
+                    case "effect":
+                        effects.Add(new Effect(subElement));
+                        break;
                 }
             }
 
@@ -127,6 +173,15 @@ namespace Barotrauma
             }
 
             return instance as Affliction;
+        }
+
+        public Effect GetActiveEffect(float currentStrength)
+        {
+            foreach (Effect effect in effects)
+            {
+                if (currentStrength > effect.MinStrength && currentStrength <= effect.MaxStrength) return effect;
+            }
+            return null;
         }
     }
 }

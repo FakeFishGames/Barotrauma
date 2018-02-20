@@ -116,6 +116,11 @@ namespace Barotrauma
             get { return bloodlossAmount; }
             set { bloodlossAmount = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
+
+        public Character Character
+        {
+            get { return character; }
+        }
         
         public CharacterHealth(Character character)
         {
@@ -281,20 +286,28 @@ namespace Barotrauma
         {
             UpdateOxygen(deltaTime);
 
+            int i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
             {
                 limbHealth.Afflictions.RemoveAll(a => a.Strength <= 0.0f);
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
-                    affliction.Update(this, deltaTime);
+                    affliction.Update(this, character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i), deltaTime);
                 }
+                i++;
+            }
+
+            afflictions.RemoveAll(a => a.Strength <= 0.0f);
+            foreach (Affliction affliction in afflictions)
+            {
+                affliction.Update(this, null, deltaTime);
             }
 
             foreach (Limb limb in character.AnimController.Limbs)
             {
-                limb.BurnOverlayStrength = limbHealths[limb.HealthIndex].Afflictions.Sum(a=> a.Strength / a.Prefab.MaxStrength * a.Prefab.BurnOverlayAlpha);
-                limb.DamageOverlayStrength = limb.IsSevered ? 
-                    100.0f : 
+                limb.BurnOverlayStrength = limbHealths[limb.HealthIndex].Afflictions.Sum(a => a.Strength / a.Prefab.MaxStrength * a.Prefab.BurnOverlayAlpha);
+                limb.DamageOverlayStrength = limb.IsSevered ?
+                    100.0f :
                     limbHealths[limb.HealthIndex].Afflictions.Sum(a => a.Strength / a.Prefab.MaxStrength * a.Prefab.DamageOverlayAlpha);
             }
 
