@@ -29,6 +29,7 @@ namespace Barotrauma
             set
             {
                 if (controlled == value) return;
+                CharacterHealth.OpenHealthWindow = null;
                 controlled = value;
 
                 if (controlled != null)

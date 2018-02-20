@@ -364,15 +364,26 @@ namespace Barotrauma
                     sound.Play(entity.WorldPosition);
                 }
             }
-#endif
-            
-            for (int i = 0; i < useItemCount; i++)
+#endif            
+
+            foreach (ISerializableEntity serializableEntity in targets)
             {
-                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                Item item = serializableEntity as Item;
+                if (item == null) continue;
+
+                Character targetCharacter = targets.FirstOrDefault(t => t is Character) as Character;
+                if (targetCharacter == null)
                 {
-                    item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
+                    foreach (var target in targets)
+                    {
+                        if (target is Limb) targetCharacter = ((Limb)target).character;
+                    }
                 }
-            }
+                for (int i = 0; i < useItemCount; i++)
+                {
+                    item.Use(deltaTime, targetCharacter, targets.FirstOrDefault(t => t is Limb) as Limb);
+                }
+            }                     
 
             if (duration > 0.0f)
             {

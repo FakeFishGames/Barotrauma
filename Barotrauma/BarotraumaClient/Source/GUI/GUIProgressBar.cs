@@ -63,6 +63,18 @@ namespace Barotrauma
             UpdateRect();
         }
 
+        public override Rectangle Rect
+        {
+            get
+            {
+                return base.Rect;
+            }
+            set
+            {
+                base.Rect = value;
+                UpdateRect();
+            }
+        }
         /*public override void ApplyStyle(GUIComponentStyle style)
         {
             if (frame == null) return;
