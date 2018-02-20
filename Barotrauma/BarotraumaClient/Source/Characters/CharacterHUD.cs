@@ -8,15 +8,9 @@ namespace Barotrauma
 {
     class CharacterHUD
     {
-        private static GUIButton cprButton;
-        
+        private static GUIButton cprButton;        
         private static GUIButton grabHoldButton;
-
-        private static GUIButton suicideButton;
-
-        private static bool oxyMsgShown, pressureMsgShown;
-        private static float pressureMsgTimer;
-        
+                
         public static void TakeDamage(float amount)
         {
         }
@@ -29,8 +23,6 @@ namespace Barotrauma
 
             if (grabHoldButton != null && cprButton.Visible) grabHoldButton.AddToGUIUpdateList();
 
-            if (suicideButton != null && suicideButton.Visible) suicideButton.AddToGUIUpdateList();
-            
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
 
@@ -51,30 +43,12 @@ namespace Barotrauma
         }
 
         public static void Update(float deltaTime, Character character)
-        {
-            if (!pressureMsgShown)
-            {
-                float pressureFactor = (character.AnimController.CurrentHull == null) ?
-                    100.0f : Math.Min(character.AnimController.CurrentHull.LethalPressure, 100.0f);
-                if (character.PressureProtection > 0.0f) pressureFactor = 0.0f;
-
-                if (pressureFactor > 0.0f)
-                {
-                    pressureMsgTimer += deltaTime;
-                }
-                else
-                {
-                    pressureMsgTimer = 0.0f;
-                }
-            }
-            
+        {            
             if (Inventory.SelectedSlot == null)
             {
                 if (cprButton != null && cprButton.Visible) cprButton.Update(deltaTime);
                 if (grabHoldButton != null && grabHoldButton.Visible) grabHoldButton.Update(deltaTime);
             }
-
-            if (suicideButton != null && suicideButton.Visible) suicideButton.Update(deltaTime);
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
@@ -242,45 +216,6 @@ namespace Barotrauma
                 {
                     progressBar.Draw(spriteBatch, cam);
                 }
-            }
-
-            if (Screen.Selected == GameMain.SubEditorScreen) return;
-                        
-            if (character.IsUnconscious && !character.IsDead)
-            {
-                if (suicideButton == null)
-                {
-                    suicideButton = new GUIButton(
-                        new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), TextManager.Get("GiveInButton"), "");
-
-
-                    suicideButton.ToolTip = TextManager.Get(GameMain.NetworkMember == null ? "GiveInHelpSingleplayer" : "GiveInHelpMultiplayer");
-
-                    suicideButton.OnClicked = (button, userData) =>
-                    {
-                        GUIComponent.ForceMouseOn(null);
-                        if (Character.Controlled != null)
-                        {
-                            if (GameMain.Client != null)
-                            {
-                                GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Status });
-                            }
-                            else
-                            {
-                                Character.Controlled.Kill(Character.Controlled.CauseOfDeath);
-                                Character.Controlled = null;
-                            }
-                        }
-                        return true;
-                    };
-                }
-
-                suicideButton.Visible = true;
-                suicideButton.Draw(spriteBatch);                
-            }
-            else if (suicideButton != null)
-            {
-                 suicideButton.Visible = false;
             }
         }
 

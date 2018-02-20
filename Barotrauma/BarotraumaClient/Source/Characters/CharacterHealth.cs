@@ -17,6 +17,8 @@ namespace Barotrauma
         private static Sprite statusIconPressure;
         private static Sprite statusIconBloodloss;
 
+        private static GUIButton suicideButton;
+
         private static GUIProgressBar healthBar;
 
         private float damageOverlayTimer;
@@ -83,6 +85,27 @@ namespace Barotrauma
                 UpdateItemContainer();
                 return true;
             };
+
+            suicideButton = new GUIButton(
+                        new Rectangle(new Point(GameMain.GraphicsWidth / 2 - 60, 20), new Point(120, 20)), TextManager.Get("GiveInButton"), "");
+            suicideButton.ToolTip = TextManager.Get(GameMain.NetworkMember == null ? "GiveInHelpSingleplayer" : "GiveInHelpMultiplayer");
+            suicideButton.OnClicked = (button, userData) =>
+            {
+                GUIComponent.ForceMouseOn(null);
+                if (Character.Controlled != null)
+                {
+                    if (GameMain.Client != null)
+                    {
+                        GameMain.Client.CreateEntityEvent(Character.Controlled, new object[] { NetEntityEvent.Type.Status });
+                    }
+                    else
+                    {
+                        Character.Controlled.Kill(GetCauseOfDeath());
+                        Character.Controlled = null;
+                    }
+                }
+                return true;
+            };
         }
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
@@ -128,11 +151,22 @@ namespace Barotrauma
             {
                 highlightedLimbIndex = -1;
             }
+
+            if (character.IsUnconscious && !character.IsDead)
+            {
+                suicideButton.Visible = true;
+                suicideButton.Update(deltaTime);
+            }
+            else if (suicideButton != null)
+            {
+                suicideButton.Visible = false;
+            }
         }
 
         public void AddToGUIUpdateList()
         {
             if (healthWindowOpen) healthWindow.AddToGUIUpdateList();
+            if (suicideButton.Visible) suicideButton.AddToGUIUpdateList();
         }
 
         public void DrawHUD(SpriteBatch spriteBatch)
@@ -190,6 +224,8 @@ namespace Barotrauma
                 healthWindow.Draw(spriteBatch);                
                 DrawLimbIndicators(spriteBatch, limbIndicatorContainer.Rect, true, false);
             }
+
+            if (suicideButton.Visible) suicideButton.Draw(spriteBatch);
         }
 
         private void UpdateAfflictionContainer(LimbHealth selectedLimb)
@@ -302,9 +338,9 @@ namespace Barotrauma
 
                 Color color = damageLerp < 0.5f ?
                     Color.Lerp(Color.Green, Color.Orange, damageLerp * 2.0f) : Color.Lerp(Color.Orange, Color.Red, (damageLerp - 0.5f) * 2.0f);
-                
+
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
-                
+
                 if ((i == highlightedLimbIndex && allowHighlight) || highlightAll)
                 {
                     color = Color.Lerp(color, Color.White, 0.5f);
@@ -312,8 +348,42 @@ namespace Barotrauma
 
                 limbHealth.IndicatorSprite.Draw(spriteBatch,
                     drawArea.Center.ToVector2(), color,
-                    limbHealth.IndicatorSprite.Origin, 
+                    limbHealth.IndicatorSprite.Origin,
                     0, scale);
+                i++;
+            }
+
+            i = 0;
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
+
+                Rectangle highlightArea = new Rectangle(
+                    (int)(drawArea.Center.X - (limbHealth.IndicatorSprite.Texture.Width / 2 - limbHealth.HighlightArea.X) * scale),
+                    (int)(drawArea.Center.Y - (limbHealth.IndicatorSprite.Texture.Height / 2 - limbHealth.HighlightArea.Y) * scale),
+                    (int)(limbHealth.HighlightArea.Width * scale),
+                    (int)(limbHealth.HighlightArea.Height * scale));
+
+                float iconScale = 0.4f * scale;
+                Vector2 iconPos = highlightArea.Center.ToVector2() - new Vector2(24.0f, 24.0f) * iconScale;
+                foreach (Affliction affliction in limbHealth.Afflictions)
+                {
+                    if (affliction.Strength < affliction.Prefab.ActivationThreshold) continue;
+                    affliction.Prefab.Icon.Draw(spriteBatch, iconPos, 0, iconScale);
+                    iconPos += new Vector2(10.0f, 10.0f) * iconScale;
+                    iconScale *= 0.9f;
+                }
+
+                foreach (Affliction affliction in afflictions)
+                {
+                    if (affliction.Strength < affliction.Prefab.ActivationThreshold) continue;
+                    if (character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb).HealthIndex == i)
+                    {
+                        affliction.Prefab.Icon.Draw(spriteBatch, iconPos, 0, iconScale);
+                        iconPos += new Vector2(10.0f, 10.0f) * iconScale;
+                        iconScale *= 0.9f;
+                    }
+                }
                 i++;
             }
         }
