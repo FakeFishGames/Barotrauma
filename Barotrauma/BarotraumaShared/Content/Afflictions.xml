@@ -2,8 +2,8 @@
 <Afflictions>
 
   <!-- Basic afflictions. 
-  Internal damage, bleeding and burn afflictions are required by the vanilla game; 
-  modifying these may require modifications to the code. -->
+  These afflictions are required by the vanilla game; 
+  modifying them may require modifications to the code. -->
   
   <InternalDamage
     name="Internal Damage"
@@ -41,6 +41,33 @@
       maxvitalitydecrease="50"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
   </Burn>
+
+  <OxygenLow
+    name="Oxygen low"
+    description="Oxygen low"
+    type="oxygenlow"
+    limbspecific="false"
+    indicatorlimb="Torso"    
+    activationthreshold="1"
+    maxstrength="200">
+    <Effect minstrength="0" maxstrength="200"
+      maxvitalitydecrease="200"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+  </OxygenLow>
+
+  <Bloodloss
+    name="Bloodloss"
+    description="Bloodloss"
+    type="bloodloss"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    activationthreshold="5"
+    maxstrength="100"
+    strengthchange="-0.1">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="200"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,0,48,48" origin="0,0"/>
+  </Bloodloss>
   
   <!-- Special afflictions -->
 

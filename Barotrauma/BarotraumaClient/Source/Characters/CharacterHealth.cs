@@ -110,7 +110,7 @@ namespace Barotrauma
 
         partial void UpdateOxygenProjSpecific(float prevOxygen)
         {
-            if (prevOxygen > 0.0f && oxygenAmount <= 0.0f && Character.Controlled == character)
+            if (prevOxygen > 0.0f && OxygenAmount <= 0.0f && Character.Controlled == character)
             {
                 SoundPlayer.PlaySound("drown");
             }
@@ -171,7 +171,7 @@ namespace Barotrauma
 
         public void DrawHUD(SpriteBatch spriteBatch)
         {
-            float noiseAlpha = character.IsUnconscious ? 1.0f : MathHelper.Clamp(1.0f - oxygenAmount / 100.0f, 0.0f, 0.8f);
+            float noiseAlpha = character.IsUnconscious ? 1.0f : MathHelper.Clamp(1.0f - OxygenAmount / 100.0f, 0.0f, 0.8f);
 
             if (noiseAlpha > 0.0f)
             {
@@ -198,9 +198,9 @@ namespace Barotrauma
             }
             
             List<Pair<Sprite, string>> statusIcons = new List<Pair<Sprite, string>>();
-            if (oxygenAmount < 98.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconOxygen, "Oxygen low"));
+            //if (oxygenAmount < 98.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconOxygen, "Oxygen low"));
             if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconPressure, "High pressure"));
-            if (bloodlossAmount > 10.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconBloodloss, "Bloodloss"));
+            //if (bloodlossAmount > 10.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconBloodloss, "Bloodloss"));
 
             var allAfflictions = GetAllAfflictions(true);
             foreach (Affliction affliction in allAfflictions)
