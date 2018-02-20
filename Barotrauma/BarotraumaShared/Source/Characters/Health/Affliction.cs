@@ -32,7 +32,7 @@ namespace Barotrauma
             if (Strength < Prefab.ActivationThreshold) return 0.0f;
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
             if (currentEffect == null) return 0.0f;
-            return currentEffect.MaxVitalityDecrease * (Strength / 100.0f);
+            return currentEffect.MaxVitalityDecrease * (Strength / Prefab.MaxStrength);
         }
 
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)

@@ -76,15 +76,9 @@ namespace Barotrauma
         //non-limb-specific afflictions
         private List<Affliction> afflictions = new List<Affliction>();
 
-        //0-100
-        private float bloodlossAmount;
-
-        //0-100
-        private float mentalHealth;
-
-        //0-100
-        private float oxygenAmount;
-
+        private Affliction bloodlossAffliction;
+        private Affliction oxygenLowAffliction;
+        
         public bool IsUnconscious
         {
             get { return vitality <= 0.0f; }
@@ -107,14 +101,14 @@ namespace Barotrauma
 
         public float OxygenAmount
         {
-            get { return oxygenAmount; }
-            set { oxygenAmount = MathHelper.Clamp(value, 0.0f, 100.0f); }
+            get { return -oxygenLowAffliction.Strength + 100; }
+            set { oxygenLowAffliction.Strength = MathHelper.Clamp(-value + 100, 0.0f, 200.0f); }
         }
 
         public float BloodlossAmount
         {
-            get { return bloodlossAmount; }
-            set { bloodlossAmount = MathHelper.Clamp(value, 0.0f, 100.0f); }
+            get { return bloodlossAffliction.Strength; }
+            set { bloodlossAffliction.Strength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
         public Character Character
@@ -127,8 +121,10 @@ namespace Barotrauma
             this.character = character;
             vitality = 100.0f;
             maxVitality = 100.0f;
-            oxygenAmount = 100.0f;
-            mentalHealth = 100.0f;
+
+            afflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
+            afflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
+
             limbHealths.Add(new LimbHealth());
         }
 
@@ -297,7 +293,7 @@ namespace Barotrauma
                 i++;
             }
 
-            afflictions.RemoveAll(a => a.Strength <= 0.0f);
+            afflictions.RemoveAll(a => a.Strength <= 0.0f && a != bloodlossAffliction && a != oxygenLowAffliction);
             foreach (Affliction affliction in afflictions)
             {
                 affliction.Update(this, null, deltaTime);
@@ -318,15 +314,15 @@ namespace Barotrauma
 
         private void UpdateOxygen(float deltaTime)
         {
-            float prevOxygen = oxygenAmount;
+            float prevOxygen = OxygenAmount;
             if (IsUnconscious)
             {
                 //the character dies of oxygen deprivation in 100 seconds after losing consciousness
-                oxygenAmount = MathHelper.Clamp(oxygenAmount - 1.0f * deltaTime, -100.0f, 100.0f);                
+                OxygenAmount = MathHelper.Clamp(OxygenAmount - 1.0f * deltaTime, -100.0f, 100.0f);                
             }
             else
             {
-                oxygenAmount = MathHelper.Clamp(oxygenAmount + deltaTime * (character.OxygenAvailable < 30.0f ? -5.0f : 10.0f), 0.0f, 100.0f);
+                OxygenAmount = MathHelper.Clamp(OxygenAmount + deltaTime * (character.OxygenAvailable < 30.0f ? -5.0f : 10.0f), 0.0f, 100.0f);
             }
 
             UpdateOxygenProjSpecific(prevOxygen);
@@ -357,11 +353,7 @@ namespace Barotrauma
             foreach (Affliction affliction in afflictions)
             {
                 vitality -= affliction.GetVitalityDecrease();
-            }
-
-            vitality -= bloodlossAmount;
-            vitality -= (100.0f - oxygenAmount);
-            vitality -= (100.0f - mentalHealth);
+            }            
         }
 
         public Pair<CauseOfDeathType, Affliction> GetCauseOfDeath()
@@ -380,14 +372,8 @@ namespace Barotrauma
             }
 
             CauseOfDeathType causeOfDeath = strongestAffliction == null ? CauseOfDeathType.Unknown : CauseOfDeathType.Affliction;
-            if (bloodlossAmount > largestStrength)
+            if (strongestAffliction == oxygenLowAffliction)
             {
-                largestStrength = bloodlossAmount;
-                causeOfDeath = CauseOfDeathType.Bloodloss;
-            }
-            if (oxygenAmount > largestStrength)
-            {
-                largestStrength = oxygenAmount;
                 causeOfDeath = character.AnimController.InWater ? CauseOfDeathType.Drowning : CauseOfDeathType.Suffocation;
             }
 
