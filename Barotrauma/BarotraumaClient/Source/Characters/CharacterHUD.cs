@@ -25,7 +25,6 @@ namespace Barotrauma
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-
                 if (character.Inventory != null)
                 {
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
@@ -38,6 +37,11 @@ namespace Barotrauma
                             if (ic.DrawHudWhenEquipped) ic.AddToGUIUpdateList();
                         }
                     }
+                }
+
+                if (character.IsHumanoid && character.SelectedCharacter != null)
+                {
+                    character.SelectedCharacter.CharacterHealth.AddToGUIUpdateList();
                 }
             }
         }
@@ -74,6 +78,7 @@ namespace Barotrauma
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
                     character.SelectedCharacter.Inventory.Update(deltaTime);
+                    character.SelectedCharacter.CharacterHealth.UpdateHUD(deltaTime);
                 }
 
                 Inventory.UpdateDragging();
@@ -98,7 +103,13 @@ namespace Barotrauma
                 }
             }
 
-            DrawStatusIcons(spriteBatch, character);
+            //DrawStatusIcons(spriteBatch, character);
+
+            if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+            {
+                character.Inventory.DrawOffset = Vector2.Zero;
+                character.Inventory.DrawOwn(spriteBatch);
+            }
 
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
@@ -107,7 +118,7 @@ namespace Barotrauma
                     if (cprButton == null)
                     {
                         cprButton = new GUIButton(
-                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(320, -30), new Point(130, 20)), "Perform CPR", "");
+                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(540, -30), new Point(140, 20)), "Perform CPR", "");
 
                         cprButton.OnClicked = (button, userData) =>
                         {
@@ -133,7 +144,7 @@ namespace Barotrauma
                     if (grabHoldButton == null)
                     {
                         grabHoldButton = new GUIButton(
-                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(320, -60), new Point(130, 20)),
+                            new Rectangle(character.SelectedCharacter.Inventory.SlotPositions[0].ToPoint() + new Point(540, -60), new Point(140, 20)),
                                 TextManager.Get("Grabbing") + ": " + TextManager.Get(character.AnimController.GrabLimb == LimbType.None ? "Hands" : character.AnimController.GrabLimb.ToString()), "");
 
                         grabHoldButton.OnClicked = (button, userData) =>
@@ -160,15 +171,11 @@ namespace Barotrauma
                     if (cprButton.Visible) cprButton.Draw(spriteBatch);
                     if (grabHoldButton.Visible) grabHoldButton.Draw(spriteBatch);
 
-                    character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f, 0.0f);
+                    character.SelectedCharacter.Inventory.DrawOffset = new Vector2(320.0f + 120.0f, 0.0f);
                     character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
+                    character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch, new Vector2(320.0f + 120, 0.0f));
                 }
 
-                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
-                {
-                    character.Inventory.DrawOffset = Vector2.Zero;
-                    character.Inventory.DrawOwn(spriteBatch);
-                }
                 if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
                 {
                     Inventory.DrawDragging(spriteBatch);
@@ -219,12 +226,12 @@ namespace Barotrauma
             }
         }
 
-        private static void DrawStatusIcons(SpriteBatch spriteBatch, Character character)
+        /*private static void DrawStatusIcons(SpriteBatch spriteBatch, Character character)
         {
             if (GameMain.DebugDraw)
             {
                 GUI.DrawString(spriteBatch, new Vector2(30, GameMain.GraphicsHeight - 260), TextManager.Get("Stun") + ": " + character.Stun, Color.White);
             }            
-        }
+        }*/
     }
 }

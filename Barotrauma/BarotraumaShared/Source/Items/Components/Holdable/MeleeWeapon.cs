@@ -276,9 +276,11 @@ namespace Barotrauma.Items.Components
                 logStr += " on " + targetCharacter.LogName + ".";
                 Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
             }
-            
+
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
-                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter != null ? targetCharacter : null);
+            {
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
+            }
 
             return true;
         }
