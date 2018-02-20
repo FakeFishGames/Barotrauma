@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Barotrauma
@@ -29,12 +30,32 @@ namespace Barotrauma
         public float GetVitalityDecrease()
         {
             if (Strength < Prefab.ActivationThreshold) return 0.0f;
-            return Prefab.MaxVitalityDecrease * (Strength / 100.0f);
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return 0.0f;
+            return currentEffect.MaxVitalityDecrease * (Strength / 100.0f);
         }
 
-        public virtual void Update(CharacterHealth characterHealth, float deltaTime)
+        public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
-            Strength += Prefab.StrengthChange * deltaTime;
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) return;
+
+            Strength += currentEffect.StrengthChange * deltaTime;
+            foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
+            {
+                if (statusEffect.Targets.HasFlag(StatusEffect.TargetType.Character))
+                {
+                    statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
+                }
+                if (targetLimb != null && statusEffect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+                {
+                    statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, targetLimb);
+                }
+                if (targetLimb != null && statusEffect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+                {
+                    statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                }
+            }
         }
     }
 }

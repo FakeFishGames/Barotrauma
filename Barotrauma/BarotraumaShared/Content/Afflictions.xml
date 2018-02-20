@@ -10,9 +10,10 @@
     description="Internal damage"
     type="damage"
     limbspecific="true"
-    maxvitalitydecrease="100"
     maxstrength="100"
     damageoverlayalpha="1">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="100"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,0,48,48" origin="0,0"/>  
   </InternalDamage>
 
@@ -21,10 +22,11 @@
     description="Bleeding"
     type="bleeding"
     limbspecific="true"
-    maxvitalitydecrease="10"
     maxstrength="100"
     damageoverlayalpha="1"
     strengthchange="-0.1">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="10"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
    </Bleeding>
 
@@ -33,9 +35,10 @@
     description="Burns"
     type="burn"
     limbspecific="true"
-    maxvitalitydecrease="100"
     maxstrength="100"
     burnoverlayalpha="1">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="10"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
   </Burn>
   
@@ -46,10 +49,31 @@
     description="Drunk"
     type="poison"
     limbspecific="false"
+    indicatorlimb="Head"
     activationthreshold="20"
-    maxvitalitydecrease="10"
-    maxstrength="100"
-    strengthchange="-0.1">
+    maxstrength="100">
+
+    <!-- Low level of drunkenness decreases vitality and speed slightly -->
+    <Effect minstrength="20" maxstrength="40"
+      maxvitalitydecrease="10"
+      strengthchange="-0.1">
+      <StatusEffect target="Character" SpeedMultiplier="0.8" setvalue="true"/>
+    </Effect>
+
+    <!-- Heavier drunkenness decreases vitality and speed more -->
+    <Effect minstrength="40" maxstrength="80"
+      maxvitalitydecrease="30"
+      strengthchange="-0.2">
+      <StatusEffect target="Character" SpeedMultiplier="0.7" setvalue="true"/>
+    </Effect>
+
+    <!-- After drinking enough the effect starts to get lethal -->
+    <Effect minstrength="80" maxstrength="100"
+      maxvitalitydecrease="100"
+      strengthchange="-0.2">
+      <StatusEffect target="Character" SpeedMultiplier="0.5" setvalue="true"/>
+    </Effect>
+    
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
   </Affliction>
 </Afflictions>

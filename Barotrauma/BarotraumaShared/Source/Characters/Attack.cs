@@ -246,6 +246,15 @@ namespace Barotrauma
                 {
                     effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character);
                 }
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+                {
+                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb);
+                }
+                if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+                {
+                    effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                }
+
             }
 
             return attackResult;

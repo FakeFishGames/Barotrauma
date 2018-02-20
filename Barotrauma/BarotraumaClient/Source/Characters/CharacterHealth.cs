@@ -167,8 +167,12 @@ namespace Barotrauma
                 return;
             }
 
+            List<Affliction> limbAfflictions = new List<Affliction>(selectedLimb.Afflictions);
+            limbAfflictions.AddRange(afflictions.FindAll(a =>
+                limbHealths[character.AnimController.GetLimb(a.Prefab.IndicatorLimb).HealthIndex] == selectedLimb));
+
             List<GUIComponent> currentChildren = new List<GUIComponent>();
-            foreach (Affliction affliction in selectedLimb.Afflictions)
+            foreach (Affliction affliction in limbAfflictions)
             {
                 if (affliction.Strength < affliction.Prefab.ActivationThreshold) continue;
                 var child = afflictionContainer.FindChild(affliction);
