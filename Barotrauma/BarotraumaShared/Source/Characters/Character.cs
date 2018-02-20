@@ -331,7 +331,7 @@ namespace Barotrauma
             {
                 if (GameMain.Client != null) return;
 
-                SetStun(value);
+                SetStun(value, true);
             }
         }
 
