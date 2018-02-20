@@ -28,7 +28,7 @@ namespace Barotrauma
         private GUIFrame limbIndicatorContainer;
         private GUIListBox afflictionContainer;
         private GUIListBox healItemContainer;
-        private bool healthWindowOpen;
+        private static CharacterHealth openHealthWindow;
         private int highlightedLimbIndex = -1;
         private int selectedLimbIndex = -1;
         
@@ -123,7 +123,7 @@ namespace Barotrauma
 
             if (PlayerInput.KeyHit(Keys.H))
             {
-                healthWindowOpen = !healthWindowOpen;
+                openHealthWindow = null;
                 UpdateItemContainer();
             }
             
@@ -139,10 +139,11 @@ namespace Barotrauma
             }
             
             healthBar.Update(deltaTime);
-            if (healthWindowOpen)
+            if (openHealthWindow == this)
             {
                 UpdateLimbIndicators(limbIndicatorContainer.Rect);
                 UpdateAfflictionContainer(selectedLimbIndex < 0 ? null : limbHealths[selectedLimbIndex]);
+                healItemContainer.Enabled = selectedLimbIndex > -1;
                 healthWindowHealthBar.Color = healthBar.Color;
                 healthWindowHealthBar.BarSize = healthBar.BarSize;
                 healthWindow.Update(deltaTime);
@@ -151,8 +152,8 @@ namespace Barotrauma
             {
                 highlightedLimbIndex = -1;
             }
-
-            if (character.IsUnconscious && !character.IsDead)
+            
+            if (character == Character.Controlled && character.IsUnconscious && !character.IsDead)
             {
                 suicideButton.Visible = true;
                 suicideButton.Update(deltaTime);
@@ -162,14 +163,14 @@ namespace Barotrauma
                 suicideButton.Visible = false;
             }
         }
-
+        
         public void AddToGUIUpdateList()
         {
-            if (healthWindowOpen) healthWindow.AddToGUIUpdateList();
-            if (suicideButton.Visible) suicideButton.AddToGUIUpdateList();
+            if (openHealthWindow == this) healthWindow.AddToGUIUpdateList();
+            if (suicideButton.Visible && character == Character.Controlled) suicideButton.AddToGUIUpdateList();
         }
 
-        public void DrawHUD(SpriteBatch spriteBatch)
+        public void DrawHUD(SpriteBatch spriteBatch, Vector2 drawOffset)
         {
             float noiseAlpha = character.IsUnconscious ? 1.0f : MathHelper.Clamp(1.0f - OxygenAmount / 100.0f, 0.0f, 0.8f);
 
@@ -189,18 +190,25 @@ namespace Barotrauma
                     new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
             }
 
-            Rectangle limbArea = new Rectangle(30, GameMain.GraphicsHeight - 135, 70, 128);
-            DrawLimbIndicators(spriteBatch, limbArea, false, limbArea.Contains(PlayerInput.MousePosition) && !healthWindowOpen);
+            DrawStatusHUD(spriteBatch, drawOffset);
+
+            if (suicideButton.Visible) suicideButton.Draw(spriteBatch);
+        }
+
+        public void DrawStatusHUD(SpriteBatch spriteBatch, Vector2 drawOffset)
+        {
+            healthBar.Rect = new Rectangle(5 + (int)drawOffset.X, GameMain.GraphicsHeight - 138 + (int)drawOffset.Y, 20, 128);
+
+            Rectangle limbArea = new Rectangle(30 + (int)drawOffset.X, GameMain.GraphicsHeight - 135 + (int)drawOffset.Y, 70, 128);
+            DrawLimbIndicators(spriteBatch, limbArea, false, limbArea.Contains(PlayerInput.MousePosition) && openHealthWindow != this);
             if (limbArea.Contains(PlayerInput.MousePosition) && PlayerInput.LeftButtonClicked())
             {
-                healthWindowOpen = true;
+                openHealthWindow = this;
                 UpdateItemContainer();
             }
-            
+
             List<Pair<Sprite, string>> statusIcons = new List<Pair<Sprite, string>>();
-            //if (oxygenAmount < 98.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconOxygen, "Oxygen low"));
             if (character.CurrentHull == null || character.CurrentHull.LethalPressure > 5.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconPressure, "High pressure"));
-            //if (bloodlossAmount > 10.0f) statusIcons.Add(new Pair<Sprite, string>(statusIconBloodloss, "Bloodloss"));
 
             var allAfflictions = GetAllAfflictions(true);
             foreach (Affliction affliction in allAfflictions)
@@ -209,7 +217,7 @@ namespace Barotrauma
                 statusIcons.Add(new Pair<Sprite, string>(affliction.Prefab.Icon, affliction.Prefab.Description));
             }
 
-            Vector2 pos = healthBar.Rect.Location.ToVector2() + new Vector2(0.0f, -55);
+            Vector2 pos = healthBar.Rect.Location.ToVector2() + new Vector2(0.0f, -55) + drawOffset;
             foreach (Pair<Sprite, string> statusIcon in statusIcons)
             {
                 if (statusIcon.First != null) statusIcon.First.Draw(spriteBatch, pos);
@@ -219,13 +227,11 @@ namespace Barotrauma
 
             healthBar.Draw(spriteBatch);
 
-            if (healthWindowOpen)
+            if (openHealthWindow == this)
             {
-                healthWindow.Draw(spriteBatch);                
+                healthWindow.Draw(spriteBatch);
                 DrawLimbIndicators(spriteBatch, limbIndicatorContainer.Rect, true, false);
             }
-
-            if (suicideButton.Visible) suicideButton.Draw(spriteBatch);
         }
 
         private void UpdateAfflictionContainer(LimbHealth selectedLimb)
@@ -284,14 +290,19 @@ namespace Barotrauma
         {
             healItemContainer.ClearChildren();
 
-            foreach (Item item in character.Inventory.Items)
+            List<Item> items = character.Inventory.Items.ToList();
+            if (character.SelectedCharacter != null) items.AddRange(character.SelectedCharacter.Inventory.Items);
+            if (character.SelectedBy != null) items.AddRange(character.SelectedBy.Inventory.Items);
+
+            foreach (Item item in items)
             {
                 if (item == null) continue;
                 if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
 
                 var child = new GUIFrame(new Rectangle(0, 0, healItemContainer.Rect.Width, 50), "ListBoxElement", healItemContainer);
-                child.Padding = Vector4.Zero;
+                child.Padding = new Vector4(10.0f, 0.0f, 0.0f, 0.0f);
                 child.UserData = item;
+                child.ToolTip = item.Description;
 
                 new GUIImage(new Rectangle(0, 0, 0, 0), item.Sprite, Alignment.CenterLeft, child).Color = item.SpriteColor;
                 new GUITextBlock(new Rectangle(50, 0, 0, 0), item.Name, "", child);                
@@ -341,7 +352,7 @@ namespace Barotrauma
 
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
 
-                if ((i == highlightedLimbIndex && allowHighlight) || highlightAll)
+                if (((i == highlightedLimbIndex || i == selectedLimbIndex) && allowHighlight) || highlightAll)
                 {
                     color = Color.Lerp(color, Color.White, 0.5f);
                 }
