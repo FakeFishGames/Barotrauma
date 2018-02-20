@@ -103,4 +103,17 @@
     
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,48,48,48" origin="0,0"/>
   </Affliction>
+
+  <AfflictionBleeding
+    name="Gunshot wound"
+    description="Gunshot wound"
+    type="bleeding"
+    limbspecific="true"
+    maxstrength="100"
+    damageoverlayalpha="1"
+    strengthchange="-0.1">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="10"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
+  </AfflictionBleeding>
 </Afflictions>
