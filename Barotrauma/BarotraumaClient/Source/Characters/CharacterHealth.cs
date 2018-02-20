@@ -28,10 +28,26 @@ namespace Barotrauma
         private GUIFrame limbIndicatorContainer;
         private GUIListBox afflictionContainer;
         private GUIListBox healItemContainer;
-        public static CharacterHealth OpenHealthWindow;
+
         private int highlightedLimbIndex = -1;
         private int selectedLimbIndex = -1;
         
+        private static CharacterHealth openHealthWindow;
+        public static CharacterHealth OpenHealthWindow
+        {
+            get { return openHealthWindow; }
+            set
+            {
+                if (openHealthWindow == value) return;
+                openHealthWindow = value;
+                if (openHealthWindow != null)
+                {
+                    openHealthWindow.UpdateAfflictionContainer(null);
+                    openHealthWindow.UpdateItemContainer();
+                }
+            }
+        }
+
         static CharacterHealth()
         {
             noiseOverlay = new Sprite("Content/UI/noise.png", Vector2.Zero);            
@@ -307,7 +323,7 @@ namespace Barotrauma
                 new GUIImage(new Rectangle(0, 0, 0, 0), item.Sprite, Alignment.CenterLeft, child).Color = item.SpriteColor;
 
                 string itemName = item.Name;
-                if (item.ContainedItems.Length > 0)
+                if (item.ContainedItems != null && item.ContainedItems.Length > 0)
                 {
                     itemName += " (" + item.ContainedItems[0].Name + ")";
                 }
