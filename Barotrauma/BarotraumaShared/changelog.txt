@@ -93,8 +93,8 @@ Multiplayer additions:
 	- Cutting and repairing walls is included in server logs.
 
 Multiplayer bugfixes:
-	- Fixed clients getting disconnected due to desync when a new monster is spawned mid-round by a repeating
-	monster event.
+	- Fixed clients getting disconnected due to desync when a new monster is spawned mid-round by 
+	a repeating	monster event.
 	- Fixed modified clients being able to chat while unconscious due to the lack of server-side checks.
 	- Fixed modified clients being able to disconnect locked wires due to the lack of server-side checks.
 	- Fixed chat messages being assigned to the wrong sender when their bodies have been eaten.
@@ -110,8 +110,8 @@ Multiplayer bugfixes:
 	- Fixed "selected mode" and "mission type" settings not being saved.
 	- Level seed randomization can be toggled on and off via the debug console.
 	- Fixed dedicated server not randomizing the submarine or game mode even if randomization is enabled.
-	- Lighting is forced back on when a client starts a round (-> can't disable lighting by using the console 
-	command before joining a server).
+	- Lighting is forced back on when a client starts a round (-> can't disable lighting by using the 
+	console command before joining a server).
 
 Bugfixes:
 	- Fixed wire connections being lost when copy-pasting in the submarine editor.
@@ -124,6 +124,9 @@ Bugfixes:
 	- Fixed damage modifiers being applied multiple times when wearing an item that takes up multiple slots.
 	Meaning that items such as the diving suit gave the players an excessive protection against damage.
 	- Messagebox overflow fixes.
+	- Fixed status effects not being able to decrease stun timers.
+	- Fixed anti-husk medicine being able to reduce husk infection state after the infection has reached
+	the active state.
 	- Fixed monsters being able to spawn right next to the spawnpoint of the sub.
 	- Fixed hulls not being linked to gaps if the center of the gap is exactly at the edge of the adjacent
 	hulls.
