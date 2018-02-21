@@ -393,13 +393,11 @@ namespace Barotrauma
             set
             {
                 if (ConfigPath != humanConfigFile) return;
-
+                
                 if (value <= 0.0f)
                 {
                     if (huskInfection != null)
                     {
-                        //already active, can't cure anymore
-                        if (huskInfection.State == HuskInfection.InfectionState.Active) return;
                         huskInfection.Remove(this);
                         huskInfection = null;
                     }

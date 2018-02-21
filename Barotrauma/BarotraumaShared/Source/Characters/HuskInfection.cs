@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
@@ -16,6 +15,8 @@ namespace Barotrauma
         const float IncubationDuration = 300.0f;
 
         private InfectionState state;
+
+        private Limb huskAppendage;
 
         private float incubationTimer;
         public float IncubationTimer
@@ -64,19 +65,24 @@ namespace Barotrauma
 
         private void UpdateDormantState(float deltaTime, Character character)
         {
+            if (state != InfectionState.Dormant)
+            {
+                DeactivateHusk(character);
+            }
+
             float prevTimer = IncubationTimer;
-
             state = InfectionState.Dormant;
-
             IncubationTimer += deltaTime / IncubationDuration;
-
-            if (Character.Controlled != character) return;
         }
 
         private void UpdateTransitionState(float deltaTime, Character character)
         {
-            IncubationTimer += deltaTime / IncubationDuration;
-            
+            if (state != InfectionState.Transition)
+            {
+                DeactivateHusk(character);                
+            }
+
+            IncubationTimer += deltaTime / IncubationDuration;            
             state = InfectionState.Transition;
         }
 
@@ -91,7 +97,6 @@ namespace Barotrauma
             character.AddDamage(CauseOfDeath.Husk, 0.5f * deltaTime, null);
         }
 
-
         private void ActivateHusk(Character character)
         {
             character.NeedsAir = false;
@@ -100,6 +105,9 @@ namespace Barotrauma
 
         private void AttachHuskAppendage(Character character)
         {
+            //husk appendage already created, don't do anything
+            if (huskAppendage != null) return;
+
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine("Content", "Characters", "Human", "huskappendage.xml"));
             if (doc == null || doc.Root == null) return;
 
@@ -125,18 +133,33 @@ namespace Barotrauma
 
             var torso = character.AnimController.GetLimb(LimbType.Torso);
 
-            var newLimb = new Limb(character, limbElement);
-            newLimb.body.Submarine = character.Submarine;
-            newLimb.body.SetTransform(torso.SimPosition, torso.Rotation);
+            huskAppendage = new Limb(character, limbElement);
+            huskAppendage.body.Submarine = character.Submarine;
+            huskAppendage.body.SetTransform(torso.SimPosition, torso.Rotation);
             
-            character.AnimController.AddLimb(newLimb);
+            character.AnimController.AddLimb(huskAppendage);
             character.AnimController.AddJoint(jointElement);
+        }
+
+        private void DeactivateHusk(Character character)
+        {
+            character.NeedsAir = true;
+            RemoveHuskAppendage(character);
+        }
+
+        private void RemoveHuskAppendage(Character character)
+        {
+            if (huskAppendage == null) return;
+
+            character.AnimController.RemoveLimb(huskAppendage);
+            huskAppendage = null;
         }
 
         public void Remove(Character character)
         {
-            if (character != null)
-                character.OnDeath -= CharacterDead;
+            DeactivateHusk(character);
+
+            if (character != null) character.OnDeath -= CharacterDead;
         }
 
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
