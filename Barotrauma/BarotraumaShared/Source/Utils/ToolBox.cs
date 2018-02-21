@@ -18,9 +18,22 @@ namespace Barotrauma
         }
     }
 
+    public class Triplet<T1, T2, T3>
+    {
+        public T1 First { get; set; }
+        public T2 Second { get; set; }
+        public T3 Third { get; set; }
+
+        public Triplet(T1 first, T2 second, T3 third)
+        {
+            First = first;
+            Second = second;
+            Third = third;
+        }
+    }
+
     public static partial class ToolBox
     {
-
         public static bool IsProperFilenameCase(string filename)
         {
             char[] delimiters = { '/','\\' };

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -418,6 +419,79 @@ namespace Barotrauma
                     }
                 }
                 i++;
+            }
+        }
+        
+        public void ClientRead(NetBuffer inc)
+        {
+            List<Pair<AfflictionPrefab, float>> newAfflictions = new List<Pair<AfflictionPrefab, float>>();
+
+            byte afflictionCount = inc.ReadByte();
+            for (int i = 0; i < afflictionCount; i++)
+            {
+                int afflictionPrefabIndex = inc.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1);
+                float afflictionStrength = inc.ReadSingle();
+
+                newAfflictions.Add(new Pair<AfflictionPrefab, float>(AfflictionPrefab.List[afflictionPrefabIndex], afflictionStrength));
+            }
+
+            foreach (Affliction affliction in afflictions)
+            {
+                //deactivate afflictions that weren't included in the network message
+                if (!newAfflictions.Any(a => a.First == affliction.Prefab))
+                {
+                    affliction.Strength = 0.0f;
+                }
+            }
+
+            foreach (Pair<AfflictionPrefab, float> newAffliction in newAfflictions)
+            {
+                Affliction existingAffliction = afflictions.Find(a => a.Prefab == newAffliction.First);
+                if (existingAffliction == null)
+                {
+                    afflictions.Add(newAffliction.First.Instantiate(newAffliction.Second));
+                }
+                else
+                {
+                    existingAffliction.Strength = newAffliction.Second;
+                }
+            }
+
+            List<Triplet<LimbHealth, AfflictionPrefab, float>> newLimbAfflictions = new List<Triplet<LimbHealth, AfflictionPrefab, float>>();
+            byte limbAfflictionCount = inc.ReadByte();
+            for (int i = 0; i < limbAfflictionCount; i++)
+            {
+                int limbIndex = inc.ReadRangedInteger(0, limbHealths.Count - 1);
+                int afflictionPrefabIndex = inc.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1);
+                float afflictionStrength = inc.ReadSingle();
+
+                newLimbAfflictions.Add(new Triplet<LimbHealth, AfflictionPrefab, float>(limbHealths[limbIndex], AfflictionPrefab.List[afflictionPrefabIndex], afflictionStrength));
+            }
+
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                foreach (Affliction affliction in limbHealth.Afflictions)
+                {
+                    //deactivate afflictions that weren't included in the network message
+                    if (!newLimbAfflictions.Any(a => a.First == limbHealth && a.Second == affliction.Prefab))
+                    {
+                        affliction.Strength = 0.0f;
+                    }
+                }
+
+                foreach (Triplet<LimbHealth, AfflictionPrefab, float> newAffliction in newLimbAfflictions)
+                {
+                    if (newAffliction.First != limbHealth) continue;
+                    Affliction existingAffliction = limbHealth.Afflictions.Find(a => a.Prefab == newAffliction.Second);
+                    if (existingAffliction == null)
+                    {
+                        limbHealth.Afflictions.Add(newAffliction.Second.Instantiate(newAffliction.Third));
+                    }
+                    else
+                    {
+                        existingAffliction.Strength = newAffliction.Third;
+                    }
+                }
             }
         }
 
