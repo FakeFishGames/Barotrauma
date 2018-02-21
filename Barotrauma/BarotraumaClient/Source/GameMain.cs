@@ -360,8 +360,11 @@ namespace Barotrauma
                 fixedTime.ElapsedGameTime = addTime;
                 fixedTime.TotalGameTime.Add(addTime);
                 base.Update(fixedTime);
-
-                PlayerInput.Update(Timing.Step);
+                
+                if (WindowActive)
+                {
+                    PlayerInput.Update(Timing.Step);
+                }
 
                 if (loadingScreenOpen)
                 {
