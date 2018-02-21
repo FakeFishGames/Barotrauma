@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Vanilla 0.7" path="Data/ContentPackages/Vanilla 0.7">
+<contentpackage name="Vanilla 0.8" path="Data/ContentPackages/Vanilla 0.8">
   <Item file="Content/Items/idcard.xml" />
   <Item file="Content/Items/itemlabel.xml" />
   <Item file="Content/Items/Artifacts/artifacts.xml" />
@@ -42,7 +42,6 @@
   <Character file="Content/Characters/Husk/husk.xml" />
   <Character file="Content/Characters/Mantis/mantis.xml" />
   <Character file="Content/Characters/Moloch/moloch.xml" />
-  <Character file="Content/Characters/Scorpion/scorpion.xml" />
   <Character file="Content/Characters/Tigerthresher/tigerthresher.xml" />
   <Character file="Content/Characters/Watcher/watcher.xml" />
   <Structure file="Content/Map/StructurePrefabs.xml" />
