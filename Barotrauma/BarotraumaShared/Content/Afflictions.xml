@@ -68,6 +68,20 @@
       maxvitalitydecrease="200"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,0,48,48" origin="0,0"/>
   </Bloodloss>
+
+  <Stun
+    name="Stun"
+    description="Stunned"
+    type="stun"
+    limbspecific="false"
+    indicatorlimb="Head"
+    activationthreshold="0.1"
+    strengthchange="-1.0"
+    maxstrength="30">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="0"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+  </Stun>
   
   <!-- Special afflictions -->
 

@@ -66,7 +66,7 @@ namespace Barotrauma
 
         private readonly Character character;
 
-        private float vitality, lastSentVitality;
+        private float vitality;
         protected float minVitality, maxVitality;
 
         //bleeding settings
@@ -79,6 +79,7 @@ namespace Barotrauma
 
         private Affliction bloodlossAffliction;
         private Affliction oxygenLowAffliction;
+        private Affliction stunAffliction;
         
         public bool IsUnconscious
         {
@@ -112,6 +113,12 @@ namespace Barotrauma
             set { bloodlossAffliction.Strength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
+        public float StunTimer
+        {
+            get { return stunAffliction.Strength; }
+            set { stunAffliction.Strength = MathHelper.Clamp(value, 0.0f, stunAffliction.Prefab.MaxStrength); }
+        }
+
         public Character Character
         {
             get { return character; }
@@ -125,6 +132,7 @@ namespace Barotrauma
 
             afflictions.Add(bloodlossAffliction = new Affliction(AfflictionPrefab.Bloodloss, 0.0f));
             afflictions.Add(oxygenLowAffliction = new Affliction(AfflictionPrefab.OxygenLow, 0.0f));
+            afflictions.Add(stunAffliction = new Affliction(AfflictionPrefab.Stun, 0.0f));
 
             limbHealths.Add(new LimbHealth());
         }
@@ -232,7 +240,7 @@ namespace Barotrauma
             }
             
             if (damage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.InternalDamage.Instantiate(damage));            
-            if (bleedingDamage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));            
+            if (bleedingDamage != 0.0f && DoesBleed) AddLimbAffliction(hitLimb, AfflictionPrefab.Bleeding.Instantiate(bleedingDamage));            
             if (burnDamage != 0.0f) AddLimbAffliction(hitLimb, AfflictionPrefab.Burn.Instantiate(burnDamage));            
         }
 
@@ -246,13 +254,14 @@ namespace Barotrauma
                     a.Prefab.AfflictionType == AfflictionPrefab.Bleeding.AfflictionType);
 
                 if (damageAmount > 0.0f) limbHealth.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damageAmount));
-                if (bleedingDamageAmount > 0.0f) limbHealth.Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamageAmount));
+                if (bleedingDamageAmount > 0.0f && DoesBleed) limbHealth.Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamageAmount));
                 if (burnDamageAmount > 0.0f) limbHealth.Afflictions.Add(AfflictionPrefab.Burn.Instantiate(burnDamageAmount));
             }
         }
 
         private void AddLimbAffliction(Limb limb, Affliction newAffliction)
         {
+            if (!DoesBleed && newAffliction is AfflictionBleeding) return;
             if (!newAffliction.Prefab.LimbSpecific) return;
 
             foreach (Affliction affliction in limbHealths[limb.HealthIndex].Afflictions)
@@ -271,6 +280,7 @@ namespace Barotrauma
 
         private void AddAffliction(Affliction newAffliction)
         {
+            if (!DoesBleed && newAffliction is AfflictionBleeding) return;
             foreach (Affliction affliction in afflictions)
             {
                 if (newAffliction.Prefab == affliction.Prefab)
@@ -301,7 +311,7 @@ namespace Barotrauma
                 i++;
             }
 
-            afflictions.RemoveAll(a => a.Strength <= 0.0f && a != bloodlossAffliction && a != oxygenLowAffliction);
+            afflictions.RemoveAll(a => a.Strength <= 0.0f && a != bloodlossAffliction && a != oxygenLowAffliction && a != stunAffliction);
             foreach (Affliction affliction in afflictions)
             {
                 affliction.Update(this, null, deltaTime);
@@ -417,9 +427,7 @@ namespace Barotrauma
 
             return allAfflictions;
         }
-
-
-
+        
         public void ServerWrite(NetBuffer msg)
         {
             List<Affliction> activeAfflictions = afflictions.FindAll(a => a.Strength > 0.0f && a.Strength >= a.Prefab.ActivationThreshold);

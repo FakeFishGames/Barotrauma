@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using System;
+﻿using System;
 using System.Linq;
 
 namespace Barotrauma

@@ -534,16 +534,8 @@ namespace Barotrauma
             }
             else
             {
-                health.ServerWrite(msg);
-
-                msg.Write(Stun > 0.0f);
-                if (Stun > 0.0f)
-                {
-                    msg.WriteRangedSingle(MathHelper.Clamp(Stun, 0.0f, MaxStun), 0.0f, MaxStun, 8);
-                }
-
+                health.ServerWrite(msg);                
                 msg.Write(IsRagdolled);
-
                 msg.Write(HuskInfectionState > 0.0f);
             }
         }

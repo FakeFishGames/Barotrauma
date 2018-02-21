@@ -354,18 +354,7 @@ namespace Barotrauma
                 this.isDead = false;
 
                 CharacterHealth.ClientRead(msg);
-
-                bool stunned = msg.ReadBoolean();
-                if (stunned)
-                {
-                    float newStunTimer = msg.ReadRangedSingle(0.0f, 60.0f, 8);
-                    SetStun(newStunTimer, true, true);
-                }
-                else
-                {
-                    SetStun(0.0f, true, true);
-                }
-
+                
                 bool ragdolled = msg.ReadBoolean();
                 IsRagdolled = ragdolled;
 
