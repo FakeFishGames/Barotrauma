@@ -370,10 +370,12 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);
                     ushort targetID = msg.ReadUInt16();
+                    byte targetLimbID = msg.ReadByte();
 
                     Character target = FindEntityByID(targetID) as Character;
-                    //TODO: sync target limb
-                    ApplyStatusEffects(actionType, (float)Timing.Step, target, null, true);
+                    Limb targetLimb = targetLimbID < target.AnimController.Limbs.Length ? target.AnimController.Limbs[targetLimbID] : null;
+
+                    ApplyStatusEffects(actionType, (float)Timing.Step, target, targetLimb, true);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg);
@@ -409,8 +411,13 @@ namespace Barotrauma
                     }
                     break;
                 case NetEntityEvent.Type.ApplyStatusEffect:
-                    //no further data needed, the server applies the effect
-                    //on the character of the client who sent the message                    
+                    UInt16 characterID = (UInt16)extraData[1];
+                    Limb targetLimb = (Limb)extraData[2];
+
+                    Character targetCharacter = FindEntityByID(characterID) as Character;
+
+                    msg.Write(characterID);
+                    msg.Write(targetCharacter == null ? (byte)255 : (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb));               
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData);

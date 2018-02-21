@@ -85,20 +85,21 @@ namespace Barotrauma
             {
                 Item item = userdata as Item;
                 if (item == null) return false;
+
+                Limb targetLimb = character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
 #if CLIENT
                 if (GameMain.Client != null)
                 {
-                    GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect });
+                    GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, character.ID, targetLimb });
                     return true;
                 }
 #endif
-
                 if (GameMain.Server != null)
                 {
-                    GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID });
+                    GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, character.ID, targetLimb });
                 }
 
-                item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex));
+                item.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb);
                 UpdateItemContainer();
                 return true;
             };
