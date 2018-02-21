@@ -139,7 +139,7 @@ namespace Barotrauma
                 infoButton.UserData = sub;
                 infoButton.OnClicked += (component, userdata) =>
                 {
-                    var msgBox = new GUIMessageBox("", "", 550, 350);
+                    var msgBox = new GUIMessageBox("", "", 550, 400);
                     ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
                     return true;
                 };
