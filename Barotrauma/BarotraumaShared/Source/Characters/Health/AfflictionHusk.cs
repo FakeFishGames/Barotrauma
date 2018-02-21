@@ -1,82 +1,96 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections;
+﻿#if CLIENT
+using Microsoft.Xna.Framework;
+#endif
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class HuskInfection
+    partial class AfflictionHusk : Affliction
     {
         public enum InfectionState
         {
             Dormant, Transition, Active
         }
 
-        const float IncubationDuration = 300.0f;
+        private bool subscribedToDeathEvent;
 
         private InfectionState state;
-
-        private float incubationTimer;
-        public float IncubationTimer
-        {
-            get { return incubationTimer; }
-            set
-            {
-                incubationTimer = MathHelper.Clamp(value, 0.0f, 1.0f);
-            }
-        }
-
         public InfectionState State
         {
             get { return state; }
         }
-        
+
         public bool CanSpeak
         {
-            get { return IncubationTimer < 0.5f; }
+            get { return Strength < Prefab.MaxStrength * 0.5f; }
         }
 
-        public HuskInfection(Character character)
+        public AfflictionHusk(AfflictionPrefab prefab, float strength) : 
+            base(prefab, strength)
         {
-            character.OnDeath += CharacterDead;
         }
 
-        public void Update(float deltaTime, Character character)
+        public override void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
-            float prevTimer = IncubationTimer;
+            float prevStrength = Strength;
+            base.Update(characterHealth, targetLimb, deltaTime);
 
-            UpdateProjSpecific(prevTimer,character);
-            if (IncubationTimer < 0.5f)
+            if (!subscribedToDeathEvent)
             {
-                UpdateDormantState(deltaTime, character);
+                characterHealth.Character.OnDeath += CharacterDead;
+                subscribedToDeathEvent = true;
             }
-            else if (IncubationTimer < 1.0f)
+
+            UpdateMessages(prevStrength, characterHealth.Character);
+            if (Strength < Prefab.MaxStrength * 0.5f)
             {
-                UpdateTransitionState(deltaTime, character);
+                UpdateDormantState(deltaTime, characterHealth.Character);
+            }
+            else if (Strength < Prefab.MaxStrength)
+            {
+                UpdateTransitionState(deltaTime, characterHealth.Character);
             }
             else
             {
-                UpdateActiveState(deltaTime, character);
+                UpdateActiveState(deltaTime, characterHealth.Character);
             }
         }
-        partial void UpdateProjSpecific(float prevTimer, Character character);
+
+        private void UpdateMessages(float prevStrength, Character character)
+        {
+#if CLIENT
+            if (Strength < Prefab.MaxStrength * 0.5f)
+            {
+                if (prevStrength % 10.0f > 0.05f && Strength % 10.0f < 0.05f)
+                {
+                    GUI.AddMessage(TextManager.Get("HuskDormant"), Color.Red, 4.0f);
+                }
+            }
+            else if (Strength < Prefab.MaxStrength)
+            {
+                if (state == InfectionState.Dormant && Character.Controlled == character)
+                {
+                    new GUIMessageBox("", TextManager.Get("HuskCantSpeak"));
+                }
+            }
+            else if (state != InfectionState.Active && Character.Controlled == character)
+            {
+                new GUIMessageBox("", TextManager.Get("HuskActivate"));
+            }
+#endif
+        }
 
         private void UpdateDormantState(float deltaTime, Character character)
         {
-            float prevTimer = IncubationTimer;
-
+            //TODO: remove husk appendage if reverting from active state
             state = InfectionState.Dormant;
-
-            IncubationTimer += deltaTime / IncubationDuration;
-
-            if (Character.Controlled != character) return;
         }
 
         private void UpdateTransitionState(float deltaTime, Character character)
         {
-            IncubationTimer += deltaTime / IncubationDuration;
-            
+            //TODO: remove husk appendage if reverting from active state
             state = InfectionState.Transition;
         }
 
@@ -92,7 +106,7 @@ namespace Barotrauma
             {
                 character.DamageLimb(
                     limb.WorldPosition, limb,
-                    new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(0.5f * deltaTime / character.AnimController.Limbs.Length) }, 
+                    new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(0.5f * deltaTime / character.AnimController.Limbs.Length) },
                     0.0f, false, 0.0f);
             }
         }
@@ -134,15 +148,15 @@ namespace Barotrauma
             var newLimb = new Limb(character, limbElement);
             newLimb.body.Submarine = character.Submarine;
             newLimb.body.SetTransform(torso.SimPosition, torso.Rotation);
-            
+
             character.AnimController.AddLimb(newLimb);
             character.AnimController.AddJoint(jointElement);
         }
 
         public void Remove(Character character)
         {
-            if (character != null)
-                character.OnDeath -= CharacterDead;
+            if (character != null) character.OnDeath -= CharacterDead;
+            subscribedToDeathEvent = false;
         }
 
         private void CharacterDead(Character character, CauseOfDeathType causeOfDeath)
@@ -157,7 +171,7 @@ namespace Barotrauma
                     if (limbJoint.IsSevered) return;
                 }
             }
-            
+
             //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
             CoroutineManager.StartCoroutine(CreateAIHusk(character));
         }

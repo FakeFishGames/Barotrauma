@@ -143,7 +143,8 @@ namespace Barotrauma.Items.Components
                 texts.Add(target.Name);
             }
 
-            if (target.IsDead)
+            //TODO: reimplement
+            /*if (target.IsDead)
             {
                 texts.Add(TextManager.Get("Deceased"));
                 texts.Add(TextManager.Get("CauseOfDeath") + ": " + TextManager.Get("CauseOfDeath." + target.CauseOfDeath.ToString()));
@@ -161,12 +162,11 @@ namespace Barotrauma.Items.Components
                 int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 100.0f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
                 texts.Add(OxygenTexts[oxygenTextIndex]);
 
-                //TODO: reimplement
-                /*if (target.Bleeding > 0.0f)
+                if (target.Bleeding > 0.0f)
                 {
                     int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 4.0f) * BleedingTexts.Length, 0, BleedingTexts.Length - 1);
                     texts.Add(BleedingTexts[bleedingTextIndex]);
-                }*/
+                }
 
                 if (target.huskInfection != null)
                 {
@@ -179,7 +179,7 @@ namespace Barotrauma.Items.Components
                         texts.Add(TextManager.Get("HuskInfectionActive"));
                     }
                 }
-            }
+            }*/
 
             foreach (string text in texts)
             {

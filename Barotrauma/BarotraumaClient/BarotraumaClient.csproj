@@ -91,7 +91,6 @@
     <Compile Include="Source\Characters\CharacterNetworking.cs" />
     <Compile Include="Source\Characters\CharacterSound.cs" />
     <Compile Include="Source\Characters\HUDProgressBar.cs" />
-    <Compile Include="Source\Characters\HuskInfection.cs" />
     <Compile Include="Source\Characters\Jobs\JobPrefab.cs" />
     <Compile Include="Source\Characters\Limb.cs" />
     <Compile Include="Source\DebugConsole.cs" />

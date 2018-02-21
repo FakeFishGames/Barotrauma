@@ -231,7 +231,7 @@ namespace Barotrauma
             var allAfflictions = GetAllAfflictions(true);
             foreach (Affliction affliction in allAfflictions)
             {
-                if (affliction.Strength < affliction.Prefab.ActivationThreshold) continue;
+                if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
                 statusIcons.Add(new Pair<Sprite, string>(affliction.Prefab.Icon, affliction.Prefab.Description));
             }
 
@@ -267,7 +267,7 @@ namespace Barotrauma
             List<GUIComponent> currentChildren = new List<GUIComponent>();
             foreach (Affliction affliction in limbAfflictions)
             {
-                if (affliction.Strength < affliction.Prefab.ActivationThreshold) continue;
+                if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
                 var child = afflictionContainer.FindChild(affliction);
                 if (child == null)
                 {
@@ -403,7 +403,7 @@ namespace Barotrauma
                 Vector2 iconPos = highlightArea.Center.ToVector2() - new Vector2(24.0f, 24.0f) * iconScale;
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
-                    if (affliction.Strength < affliction.Prefab.ActivationThreshold) continue;
+                    if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
                     affliction.Prefab.Icon.Draw(spriteBatch, iconPos, 0, iconScale);
                     iconPos += new Vector2(10.0f, 10.0f) * iconScale;
                     iconScale *= 0.9f;
@@ -411,8 +411,9 @@ namespace Barotrauma
 
                 foreach (Affliction affliction in afflictions)
                 {
-                    if (affliction.Strength < affliction.Prefab.ActivationThreshold) continue;
-                    if (character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb).HealthIndex == i)
+                    if (affliction.Strength < affliction.Prefab.ShowIconThreshold) continue;
+                    Limb indicatorLimb = character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb);
+                    if (indicatorLimb != null && indicatorLimb.HealthIndex == i)
                     {
                         affliction.Prefab.Icon.Draw(spriteBatch, iconPos, 0, iconScale);
                         iconPos += new Vector2(10.0f, 10.0f) * iconScale;

@@ -164,6 +164,25 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement element, Character character);
 
+        public Affliction GetAffliction(string afflictionType, bool allowLimbAfflictions = true)
+        {
+            foreach (Affliction affliction in afflictions)
+            {
+                if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+            }
+            if (!allowLimbAfflictions) return null;
+
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                foreach (Affliction affliction in limbHealth.Afflictions)
+                {
+                    if (affliction.Prefab.AfflictionType == afflictionType) return affliction;
+                }
+            }
+
+            return null;
+        }
+
         public void ApplyAffliction(Limb targetLimb, Affliction affliction)
         {
             if (affliction.Prefab.LimbSpecific)
@@ -226,7 +245,14 @@ namespace Barotrauma
 
             foreach (Affliction newAffliction in attackResult.Afflictions)
             {
-                AddLimbAffliction(hitLimb, newAffliction);
+                if (newAffliction.Prefab.LimbSpecific)
+                {
+                    AddLimbAffliction(hitLimb, newAffliction);
+                }
+                else
+                {
+                    AddAffliction(newAffliction);
+                }
             }
         }
 

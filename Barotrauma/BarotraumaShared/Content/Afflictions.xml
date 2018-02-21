@@ -23,10 +23,10 @@
     type="bleeding"
     limbspecific="true"
     maxstrength="100"
-    damageoverlayalpha="1"
-    strengthchange="-0.1">
+    damageoverlayalpha="1">
     <Effect minstrength="0" maxstrength="100"
-      maxvitalitydecrease="10"/>
+      maxvitalitydecrease="10"
+      strengthchange="-0.1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="0,0,48,48" origin="0,0"/>
    </Bleeding>
 
@@ -62,10 +62,10 @@
     limbspecific="false"
     indicatorlimb="Torso"
     activationthreshold="5"
-    maxstrength="100"
-    strengthchange="-0.1">
+    maxstrength="100">
     <Effect minstrength="0" maxstrength="100"
-      maxvitalitydecrease="200"/>
+      maxvitalitydecrease="200"
+      strengthchange="-0.1"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="48,0,48,48" origin="0,0"/>
   </Bloodloss>
 
@@ -75,13 +75,28 @@
     type="stun"
     limbspecific="false"
     indicatorlimb="Head"
-    activationthreshold="0.1"
-    strengthchange="-1.0"
+    activationthreshold="1.0"
     maxstrength="30">
     <Effect minstrength="0" maxstrength="100"
-      maxvitalitydecrease="0"/>
+      maxvitalitydecrease="0"
+      strengthchange="-1.0"/>
     <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
   </Stun>
+
+  <AfflictionHusk
+    name="Husk infection"
+    description="Husk infection"
+    type="huskinfection"
+    limbspecific="false"
+    indicatorlimb="Torso"
+    activationthreshold="0"
+    showiconthreshold="100"
+    maxstrength="100">
+    <Effect minstrength="0" maxstrength="100"
+      maxvitalitydecrease="0"
+      strengthchange="0.3"/>
+    <icon texture="Content/UI/Health/statusIcons.png" sourcerect="96,48,48,48" origin="0,0"/>
+  </AfflictionHusk>
   
   <!-- Special afflictions -->
 

@@ -365,32 +365,12 @@ namespace Barotrauma
             get { return health.UseBloodParticles; }
         }
         
-        public HuskInfection huskInfection;
         public float HuskInfectionState
         {
             get
             {
-                return huskInfection == null ? 0.0f : huskInfection.IncubationTimer;
-            }
-            set
-            {
-                if (ConfigPath != humanConfigFile) return;
-
-                if (value <= 0.0f)
-                {
-                    if (huskInfection != null)
-                    {
-                        //already active, can't cure anymore
-                        if (huskInfection.State == HuskInfection.InfectionState.Active) return;
-                        huskInfection.Remove(this);
-                        huskInfection = null;
-                    }
-                }
-                else
-                {
-                    if (huskInfection == null) huskInfection = new HuskInfection(this);
-                    huskInfection.IncubationTimer = MathHelper.Clamp(value, 0.0f, 1.0f);
-                }
+                var huskAffliction = health.GetAffliction("huskinfection", false) as AfflictionHusk;
+                return huskAffliction == null ? 0.0f : huskAffliction.Strength;
             }
         }
 
@@ -398,7 +378,9 @@ namespace Barotrauma
         {
             get
             {
-                return !IsUnconscious && Stun <= 0.0f && (huskInfection == null || huskInfection.CanSpeak);
+                var huskAffliction = health.GetAffliction("huskinfection", false) as AfflictionHusk;
+                if (huskAffliction != null && !huskAffliction.CanSpeak) return false;
+                return !IsUnconscious && Stun <= 0.0f;
             }
         }
 
@@ -1460,8 +1442,8 @@ namespace Barotrauma
             speechBubbleTimer = Math.Max(0.0f, speechBubbleTimer - deltaTime);
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
-            
-            if (inventory!=null)
+
+            if (inventory != null)
             {
                 foreach (Item item in inventory.Items)
                 {
@@ -1475,9 +1457,7 @@ namespace Barotrauma
             HideFace = false;
                         
             if (isDead) return;
-
-            if (huskInfection != null) huskInfection.Update(deltaTime, this);
-
+            
             if (GameMain.NetworkMember != null)
             {
                 UpdateNetInput();
