@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Lidgren.Network;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -363,7 +364,7 @@ namespace Barotrauma
             }            
         }
 
-        public Pair<CauseOfDeathType, Affliction> GetCauseOfDeath()
+        public Pair<CauseOfDeathType, AfflictionPrefab> GetCauseOfDeath()
         {
             List<Affliction> currentAfflictions = GetAllAfflictions(true);
 
@@ -384,7 +385,7 @@ namespace Barotrauma
                 causeOfDeath = character.AnimController.InWater ? CauseOfDeathType.Drowning : CauseOfDeathType.Suffocation;
             }
 
-            return new Pair<CauseOfDeathType, Affliction>(causeOfDeath, strongestAffliction);
+            return new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeath, strongestAffliction.Prefab);
         }
 
         private List<Affliction> GetAllAfflictions(bool mergeSameAfflictions)
@@ -415,6 +416,38 @@ namespace Barotrauma
             }
 
             return allAfflictions;
+        }
+
+
+
+        public void ServerWrite(NetBuffer msg)
+        {
+            List<Affliction> activeAfflictions = afflictions.FindAll(a => a.Strength > 0.0f && a.Strength >= a.Prefab.ActivationThreshold);
+
+            msg.Write((byte)activeAfflictions.Count);
+            foreach (Affliction affliction in activeAfflictions)
+            {
+                msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(affliction.Prefab));
+                msg.Write(affliction.Strength);
+            }
+
+            List<Pair<LimbHealth, Affliction>> limbAfflictions = new List<Pair<LimbHealth, Affliction>>();
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                foreach (Affliction limbAffliction in limbHealth.Afflictions)
+                {
+                    if (limbAffliction.Strength <= 0.0f || limbAffliction.Strength < limbAffliction.Prefab.ActivationThreshold) continue;
+                    limbAfflictions.Add(new Pair<LimbHealth, Affliction>(limbHealth, limbAffliction));
+                }
+            }
+
+            msg.Write((byte)limbAfflictions.Count);
+            foreach (var limbAffliction in limbAfflictions)
+            {
+                msg.WriteRangedInteger(0, limbHealths.Count - 1, limbHealths.IndexOf(limbAffliction.First));
+                msg.WriteRangedInteger(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(limbAffliction.Second.Prefab));
+                msg.Write(limbAffliction.Second.Strength);
+            }
         }
 
         public void Remove()

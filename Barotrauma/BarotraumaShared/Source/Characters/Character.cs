@@ -100,7 +100,7 @@ namespace Barotrauma
         private Character focusedCharacter, selectedCharacter, selectedBy;
 
         private bool isDead;
-        private Pair<CauseOfDeathType, Affliction> causeOfDeath;
+        private Pair<CauseOfDeathType, AfflictionPrefab> causeOfDeath;
 
         public readonly bool IsHumanoid;
 
@@ -455,7 +455,7 @@ namespace Barotrauma
             get { return isDead; }
         }
 
-        public Pair<CauseOfDeathType, Affliction> CauseOfDeath
+        public Pair<CauseOfDeathType, AfflictionPrefab> CauseOfDeath
         {
             get { return causeOfDeath; }
         }
@@ -1819,12 +1819,12 @@ namespace Barotrauma
         partial void ImplodeFX();
 
 
-        public void Kill(Pair<CauseOfDeathType, Affliction> causeOfDeath, bool isNetworkMessage = false)
+        public void Kill(Pair<CauseOfDeathType, AfflictionPrefab> causeOfDeath, bool isNetworkMessage = false)
         {
             Kill(causeOfDeath.First, causeOfDeath.Second, isNetworkMessage);
         }
 
-        public void Kill(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool isNetworkMessage = false)
+        public void Kill(CauseOfDeathType causeOfDeath, AfflictionPrefab causeOfDeathAffliction, bool isNetworkMessage = false)
         {
             if (isDead) return;
 
@@ -1850,7 +1850,7 @@ namespace Barotrauma
 
             isDead = true;
 
-            this.causeOfDeath = new Pair<CauseOfDeathType, Affliction>(causeOfDeath, causeOfDeathAffliction);
+            this.causeOfDeath = new Pair<CauseOfDeathType, AfflictionPrefab>(causeOfDeath, causeOfDeathAffliction);
             if (info != null) info.CauseOfDeath = this.causeOfDeath;
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;

@@ -417,7 +417,7 @@ namespace Barotrauma.Networking
                         }
                     }
 
-                    c.Kill(new Pair<CauseOfDeathType, Affliction>(CauseOfDeathType.Unknown, null), true);
+                    c.Kill(new Pair<CauseOfDeathType, AfflictionPrefab>(CauseOfDeathType.Unknown, null), true);
                 }
             }
 
