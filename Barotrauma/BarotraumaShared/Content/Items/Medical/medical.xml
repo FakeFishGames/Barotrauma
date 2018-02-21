@@ -367,7 +367,7 @@
     <Body width="8" height="16" density="10"/>
 
     <Throwable canBeCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
-      <StatusEffect type="OnUse" target="Character" HuskInfectionState="-0.2" setvalue="true">
+      <StatusEffect type="OnUse" target="Character" HuskInfectionState="-0.2">
         <Conditional HuskInfectionState="lt 1.0"/>
         <RequiredItem name="Medical Syringe" type="Container"/>
       </StatusEffect>
