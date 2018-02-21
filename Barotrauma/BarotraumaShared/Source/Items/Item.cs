@@ -1328,9 +1328,14 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)extraData[1];
                     ushort targetID = extraData.Length > 2 ? (ushort)extraData[2] : (ushort)0;
+                    Limb targetLimb = extraData.Length > 3 ? (Limb)extraData[3] : null;
+
+                    Character targetCharacter = FindEntityByID(targetID) as Character;
+                    byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
                     msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
                     msg.Write(targetID);
+                    msg.Write(targetLimbIndex);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData);
@@ -1375,7 +1380,15 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
 
-                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, c.Character);
+                    UInt16 characterID = msg.ReadUInt16();
+                    byte limbIndex = msg.ReadByte();
+
+                    Character targetCharacter = FindEntityByID(characterID) as Character;
+                    if (targetCharacter == null) break;
+                    if (targetCharacter != c.Character && c.Character.SelectedCharacter != targetCharacter) break;
+
+                    Limb targetLimb = limbIndex < targetCharacter.AnimController.Limbs.Length ? targetCharacter.AnimController.Limbs[limbIndex] : null;
+                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, targetCharacter, targetLimb);
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {
