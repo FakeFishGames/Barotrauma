@@ -318,13 +318,10 @@ namespace Barotrauma
             get { return oxygenAvailable; }
             set { oxygenAvailable = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
-
-        public const float MaxStun = 60.0f;
-
-        private float stunTimer;
+                
         public float Stun
         {
-            get { return IsRagdolled ? 1.0f : stunTimer; }
+            get { return IsRagdolled ? 1.0f : health.StunTimer; }
             set
             {
                 if (GameMain.Client != null) return;
@@ -1521,17 +1518,7 @@ namespace Barotrauma
             }
 
             UpdateControlled(deltaTime, cam);
-
-            if (stunTimer > 0.0f)
-            {
-                stunTimer -= deltaTime;
-                /*if (stunTimer < 0.0f && GameMain.Server != null)
-                {
-                    //stun ended -> notify clients
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                } */
-            }
-
+            
             //Health effects
             if (needsAir) UpdateOxygen(deltaTime);
             health.Update(deltaTime);
@@ -1763,20 +1750,12 @@ namespace Barotrauma
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
             if (GameMain.Client != null && !isNetworkMessage) return;
+            
+            if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
+            
+            if (Math.Sign(newStun) != Math.Sign(Stun)) AnimController.ResetPullJoints();
 
-            newStun = MathHelper.Clamp(newStun, 0.0f, MaxStun);
-
-            if ((newStun <= stunTimer && !allowStunDecrease) || !MathUtils.IsValid(newStun)) return;
-
-            /*if (GameMain.Server != null &&
-                (Math.Sign(newStun) != Math.Sign(stunTimer) || Math.Abs(newStun - stunTimer) > 0.1f))
-            {
-                GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-            }*/
-
-            if (Math.Sign(newStun) != Math.Sign(stunTimer)) AnimController.ResetPullJoints();
-
-            stunTimer = newStun;
+            health.StunTimer = newStun;
             if (newStun > 0.0f)
             {
                 selectedConstruction = null;
