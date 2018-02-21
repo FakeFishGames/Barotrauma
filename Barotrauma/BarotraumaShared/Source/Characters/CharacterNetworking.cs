@@ -536,7 +536,6 @@ namespace Barotrauma
             {
                 health.ServerWrite(msg);                
                 msg.Write(IsRagdolled);
-                msg.Write(HuskInfectionState > 0.0f);
             }
         }
 

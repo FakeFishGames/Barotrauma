@@ -357,17 +357,6 @@ namespace Barotrauma
                 
                 bool ragdolled = msg.ReadBoolean();
                 IsRagdolled = ragdolled;
-
-                bool huskInfected = msg.ReadBoolean();
-                if (huskInfected)
-                {
-                    HuskInfectionState = Math.Max(HuskInfectionState, 0.01f);
-                }
-                else
-                {
-                    HuskInfectionState = 0.0f;
-                }
-
             }
         }
 

@@ -48,6 +48,7 @@ namespace Barotrauma
         public static AfflictionPrefab OxygenLow;
         public static AfflictionPrefab Bloodloss;
         public static AfflictionPrefab Stun;
+        public static AfflictionPrefab Husk;
 
         public static List<AfflictionPrefab> List = new List<AfflictionPrefab>();
 
@@ -66,6 +67,8 @@ namespace Barotrauma
 
         //how high the strength has to be for the affliction to take affect
         public readonly float ActivationThreshold = 0.0f;
+        //how high the strength has to be for the affliction icon to be shown in the UI
+        public readonly float ShowIconThreshold = 0.0f;
         public readonly float MaxStrength = 100.0f;
 
         public float BurnOverlayAlpha;
@@ -133,6 +136,7 @@ namespace Barotrauma
             }
 
             ActivationThreshold = element.GetAttributeFloat("activationthreshold", 0.0f);
+            ShowIconThreshold = element.GetAttributeFloat("showiconthreshold", ActivationThreshold);
             MaxStrength = element.GetAttributeFloat("maxstrength", 100.0f);
 
             DamageOverlayAlpha = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
