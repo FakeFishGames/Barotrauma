@@ -1,4 +1,21 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.0.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing when creating items with a PowerTransfer component mid-round (e.g. when fabricating 
+a relay component)
+- Fixed dead/spectator chatting in multiplayer.
+- Chatboxes can be deselected with the chat hotkey again.
+- Fixed railgun shells not detonating their contents on impact.
+- Fixed clients failing to start a new round after downloading a missing submarine file from the server.
+- Fixed ruin doors and hatches being possible to open with the select key.
+- Unequipped headsets can't be used and don't consume batteries.
+- Fixed depth charge tubes launching the depth charges up by default.
+- Fixed some pre-placed items not appearing in mirrored subs in the combat missions.
+- Fixed text overflows in round summaries with large amounts of text.
+- Fixed crashing when attempting to save settings before player name has been set in the server list menu.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.0.0
 ---------------------------------------------------------------------------------------------------------
 
