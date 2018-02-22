@@ -679,10 +679,12 @@ namespace Barotrauma
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
-            
-            foreach (MapEntity e in MapEntity.mapEntityList)
+
+            List<MapEntity> subEntities = MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
+
+            foreach (MapEntity e in subEntities)
             {
-                if (e.MoveWithLevel || e.Submarine != this || e is Item) continue;
+                if (e.MoveWithLevel || e is Item) continue;
                 
                 if (e is LinkedSubmarine)
                 {
@@ -701,10 +703,9 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            foreach (MapEntity mapEntity in subEntities)
             {
-                if (MapEntity.mapEntityList[i].Submarine != this) continue;
-                MapEntity.mapEntityList[i].Move(-HiddenSubPosition);
+                mapEntity.Move(-HiddenSubPosition);
             }
 
             Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
@@ -719,10 +720,9 @@ namespace Barotrauma
             }
             entityGrid = Hull.GenerateEntityGrid(this);
 
-            for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+            foreach (MapEntity mapEntity in subEntities)
             {
-                if (MapEntity.mapEntityList[i].Submarine != this) continue;
-                MapEntity.mapEntityList[i].Move(HiddenSubPosition);
+                mapEntity.Move(HiddenSubPosition);
             }
 
             foreach (Item item in Item.ItemList)
