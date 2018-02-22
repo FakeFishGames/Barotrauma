@@ -16,15 +16,12 @@
     </WifiComponent>
 
     <ItemContainer capacity="1" hideitems="true">
-      <Containable name="Battery Cell">
-        <StatusEffect type="OnContaining" target="Contained" Condition="-0.05"/>
-      </Containable>
-      <Containable name="Fulgurium Battery Cell">
-        <StatusEffect type="OnContaining" target="Contained" Condition="-0.05"/>
-      </Containable>
+      <Containable name="Battery Cell"/>
+      <Containable name="Fulgurium Battery Cell"/>
     </ItemContainer>
-    
+
     <Wearable limbtype="Head" slots="Any,Face">
+      <StatusEffect type="OnWearing" target="Contained" Condition="-0.05"/>
       <sprite texture="headset.png" limb="Head" origin="0.5,0.5"/>
     </Wearable>
   </Item>
