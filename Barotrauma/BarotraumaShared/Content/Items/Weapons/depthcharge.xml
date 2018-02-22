@@ -11,7 +11,7 @@
     <Sprite texture ="railgunetc.png" depth="0.01" sourcerect="64,180,47,76"/>
 
     <Turret canbeselected = "true" linkable="true" barrelpos="23, 76"
-            rotationlimits="270,270"
+            rotationlimits="90,90"
             powerconsumption="0.0"/>
 
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="Rewire [Screwdriver]">
