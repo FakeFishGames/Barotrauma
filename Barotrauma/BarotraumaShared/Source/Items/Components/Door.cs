@@ -149,7 +149,8 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             isHorizontal = element.GetAttributeBool("horizontal", false);
-            
+            canBePicked = element.GetAttributeBool("canbepicked", false);
+
             foreach (XElement subElement in element.Elements())
             {
                 string texturePath = subElement.GetAttributeString("texture", "");
