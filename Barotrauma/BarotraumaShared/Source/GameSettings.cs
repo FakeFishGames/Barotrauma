@@ -110,7 +110,7 @@ namespace Barotrauma
         {
             get
             {
-                return defaultPlayerName;
+                return defaultPlayerName ?? "";
             }
             set
             {
