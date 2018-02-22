@@ -1187,16 +1187,43 @@ namespace Barotrauma.Networking
                             GameMain.NetLobbyScreen.ShuttleList.ListBox.children : 
                             GameMain.NetLobbyScreen.SubList.children;
 
-                        var textBlock = subListChildren.Find(c => 
+                        var subElement = subListChildren.Find(c => 
                             ((Submarine)c.UserData).Name == newSub.Name && 
-                            ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash) as GUITextBlock;
+                            ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash);
 
-                        if (textBlock == null) continue;
-                        textBlock.TextColor = new Color(textBlock.TextColor, 1.0f);
+                        if (subElement == null) continue;
+                        subElement.GetChild<GUITextBlock>().TextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
+                        subElement.UserData = newSub;
+                        subElement.ToolTip = newSub.Description;
 
-                        textBlock.UserData = newSub;
-                        textBlock.ToolTip = newSub.Description;
+                        GUIButton infoButton = subElement.GetChild<GUIButton>();
+                        if (infoButton == null)
+                        {
+                            infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterLeft, "", subElement);
+                        }
+                        infoButton.UserData = newSub;
+                        infoButton.OnClicked = (component, userdata) =>
+                        {
+                            var msgBox = new GUIMessageBox("", "", 550, 400);
+                            ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                            return true;
+                        };
                     }
+
+                    if (GameMain.NetLobbyScreen.FailedSelectedSub != null && 
+                        GameMain.NetLobbyScreen.FailedSelectedSub.First == newSub.Name &&
+                        GameMain.NetLobbyScreen.FailedSelectedSub.Second == newSub.MD5Hash.Hash)
+                    {
+                        GameMain.NetLobbyScreen.TrySelectSub(newSub.Name, newSub.MD5Hash.Hash, GameMain.NetLobbyScreen.SubList);
+                    }
+
+                    if (GameMain.NetLobbyScreen.FailedSelectedShuttle != null &&
+                        GameMain.NetLobbyScreen.FailedSelectedShuttle.First == newSub.Name &&
+                        GameMain.NetLobbyScreen.FailedSelectedShuttle.Second == newSub.MD5Hash.Hash)
+                    {
+                        GameMain.NetLobbyScreen.TrySelectSub(newSub.Name, newSub.MD5Hash.Hash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+                    }
+
                     break;
                 case FileTransferType.CampaignSave:
                     var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;
