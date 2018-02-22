@@ -265,7 +265,7 @@ namespace Barotrauma
             //respawn shuttle ------------------------------------------------------------------
 
             shuttleTickBox = new GUITickBox(new Rectangle(columnX, 110, 20, 20), TextManager.Get("RespawnShuttle"), Alignment.Left, defaultModeContainer);
-            shuttleList = new GUIDropDown(new Rectangle(columnX, 140, 200, 20), "", "", defaultModeContainer);
+            shuttleList = new GUIDropDown(new Rectangle(columnX, 140, columnWidth, 20), "", "", defaultModeContainer);
             shuttleTickBox.Selected = true;
             shuttleTickBox.OnSelected = (GUITickBox box) =>
             {
@@ -1421,6 +1421,9 @@ namespace Barotrauma
             GameMain.Config.JobNamePreferences = jobNamePreferences;
         }
 
+        public Pair<string, string> FailedSelectedSub;
+        public Pair<string, string> FailedSelectedShuttle;
+
         public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
         {
             if (GameMain.Client == null) return false;
@@ -1440,10 +1443,20 @@ namespace Barotrauma
                 subList.OnSelected -= VotableClicked;
                 subList.Select(subList.children.IndexOf(matchingListSub), true);
                 subList.OnSelected += VotableClicked;
+
+                if (subList == SubList)
+                    FailedSelectedSub = null;
+                else
+                    FailedSelectedShuttle = null;
             }
 
             if (sub == null || sub.MD5Hash.Hash != md5Hash)
             {
+                if (subList == SubList)
+                    FailedSelectedSub = Pair<string, string>.Create(subName, md5Hash);
+                else
+                    FailedSelectedShuttle = Pair<string, string>.Create(subName, md5Hash);
+
                 string errorMsg = "";
                 if (sub == null)
                 {

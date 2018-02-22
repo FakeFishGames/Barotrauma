@@ -170,14 +170,14 @@ namespace Barotrauma
 
         private bool OnClicked(GUIComponent component, object obj)
         {
-            if (wasOpened || !Enabled) return false;
+            if (wasOpened) return false;
             
             wasOpened = true;
             Dropped = !Dropped;
 
             if (Dropped)
             {
-                OnDropped?.Invoke(this, userData);
+                if (Enabled) OnDropped?.Invoke(this, userData);
                 if (parent.children[parent.children.Count - 1] != this)
                 {
                     parent.children.Remove(this);
