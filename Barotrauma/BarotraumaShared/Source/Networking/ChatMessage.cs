@@ -186,7 +186,10 @@ namespace Barotrauma.Networking
                 GameMain.Server.SendChatMessage(denyMsg, c);
                 return;
             }
-            if (c.Character != null && !c.Character.CanSpeak) return;
+
+            //dead characters are allowed to send chat messages, 
+            //we'll just switch the message type to dead chat in SendChatMessage
+            if (c.Character != null && (!c.Character.CanSpeak && !c.Character.IsDead)) return;
             GameMain.Server.SendChatMessage(txt, null, c);
         }
 
