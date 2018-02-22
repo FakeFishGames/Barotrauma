@@ -174,7 +174,14 @@ namespace Barotrauma.Items.Components
             var connections = item.Connections;
             foreach (Connection c in connections)
             {
-                if (!connectionDirty[c]) continue;
+                if (!connectionDirty.ContainsKey(c))
+                {
+                    connectionDirty[c] = true;
+                }
+                else if (!connectionDirty[c])
+                {
+                    continue;
+                }
 
                 HashSet<Connection> connected = new HashSet<Connection>();
                 if (!connectedRecipients.ContainsKey(c))
