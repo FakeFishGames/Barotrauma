@@ -73,6 +73,12 @@ namespace Barotrauma
 
             Collider.UpdateDrawPosition();
 
+            if (Limbs == null)
+            {
+                DebugConsole.ThrowError("Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace);
+                return;
+            }
+
             foreach (Limb limb in Limbs)
             {
                 limb.Draw(spriteBatch);
