@@ -447,7 +447,7 @@ namespace Barotrauma
                 if (Screen.Selected.Cam != null)
                 {
                     DrawString(spriteBatch, new Vector2(10, 55),
-                        "Camera pos: " + Screen.Selected.Cam.Position.ToPoint(),
+                        "Camera pos: " + Screen.Selected.Cam.Position.ToPoint() + ", zoom: " + Screen.Selected.Cam.Zoom,
                         Color.White, Color.Black * 0.5f, 0, SmallFont);
                 }
 
@@ -462,13 +462,13 @@ namespace Barotrauma
                 {
                     Color clr = Color.White;
 
-                    string soundStr = i+": ";
+                    string soundStr = i + ": ";
 
                     var playingSound = Sounds.SoundManager.GetPlayingSound(i);
 
                     if (playingSound == null)
                     {
-                        soundStr+= "none";
+                        soundStr += "none";
                         clr *= 0.5f;
                     }
                     else
@@ -482,7 +482,7 @@ namespace Barotrauma
                         }
                     }
 
-                    GUI.DrawString(spriteBatch, new Vector2(200, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
+                    GUI.DrawString(spriteBatch, new Vector2(300, i * 15), soundStr, clr, Color.Black * 0.5f, 0, GUI.SmallFont);
                 }
             }
             
