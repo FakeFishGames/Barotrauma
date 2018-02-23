@@ -131,8 +131,21 @@ namespace Barotrauma
             }
 
             outsideSteering = new SteeringManager(this);
-            insideSteering = new IndoorsSteeringManager(this, false);
 
+            bool canBreakDoors = false;
+            if (attackRooms > 0.0f)
+            {
+                foreach (Limb limb in Character.AnimController.Limbs)
+                {
+                    if (limb.attack != null && limb.attack.StructureDamage > 0.0f)
+                    {
+                        canBreakDoors = true;
+                        break;
+                    }
+                }
+            }
+
+            insideSteering = new IndoorsSteeringManager(this, false, canBreakDoors);
             steeringManager = outsideSteering;
             State = AIState.None;
         }
@@ -416,7 +429,7 @@ namespace Barotrauma
                 if (steeringManager is IndoorsSteeringManager)
                 {
                     var indoorsSteering = (IndoorsSteeringManager)steeringManager;
-                    if (indoorsSteering.CurrentPath != null)
+                    if (indoorsSteering.CurrentPath != null && !indoorsSteering.IsPathDirty)
                     {
                         if (indoorsSteering.CurrentPath.Unreachable)
                         {
@@ -427,6 +440,16 @@ namespace Barotrauma
                         else if (indoorsSteering.CurrentPath.Finished)
                         {                            
                             steeringManager.SteeringManual(deltaTime, attackSimPosition - attackLimb.SimPosition);
+                        }
+                        else if (indoorsSteering.CurrentPath.CurrentNode?.ConnectedDoor != null)
+                        {
+                            wallAttackPos = Vector2.Zero;
+                            selectedAiTarget = indoorsSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget;
+                        }
+                        else if (indoorsSteering.CurrentPath.NextNode?.ConnectedDoor != null)
+                        {
+                            wallAttackPos = Vector2.Zero;
+                            selectedAiTarget = indoorsSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget;
                         }
                     }
                 }
@@ -717,8 +740,6 @@ namespace Barotrauma
                 }
                 else if (target.Entity != null && attackRooms != 0.0f)
                 {
-
-
                     //skip the target if it's a room and the character is already inside a sub
                     if (character.AnimController.CurrentHull != null && target.Entity is Hull) continue;
                     

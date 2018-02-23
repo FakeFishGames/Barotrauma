@@ -31,7 +31,7 @@ namespace Barotrauma
 
         public HumanAIController(Character c) : base(c)
         {
-            steeringManager = new IndoorsSteeringManager(this, true);
+            steeringManager = new IndoorsSteeringManager(this, true, false);
 
             objectiveManager = new AIObjectiveManager(c);
             objectiveManager.AddObjective(new AIObjectiveFindSafety(c));

@@ -10,7 +10,7 @@ namespace Barotrauma
         private PathFinder pathFinder;
         private SteeringPath currentPath;
 
-        private bool canOpenDoors;
+        private bool canOpenDoors, canBreakDoors;
 
         private Character character;
 
@@ -33,13 +33,20 @@ namespace Barotrauma
             get { return currentTarget; }
         }
 
-        public IndoorsSteeringManager(ISteerable host, bool canOpenDoors)
+        public bool IsPathDirty
+        {
+            get;
+            private set;
+        }
+
+        public IndoorsSteeringManager(ISteerable host, bool canOpenDoors, bool canBreakDoors)
             : base(host)
         {
             pathFinder = new PathFinder(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path), true);
             pathFinder.GetNodePenalty = GetNodePenalty;
 
             this.canOpenDoors = canOpenDoors;
+            this.canBreakDoors = canBreakDoors;
 
             character = (host as AIController).Character;
 
@@ -58,16 +65,18 @@ namespace Barotrauma
             currentPath = path;
             if (path.Nodes.Any()) currentTarget = path.Nodes[path.Nodes.Count - 1].SimPosition;
             findPathTimer = 1.0f;
+            IsPathDirty = false;
         }
-
 
         protected override Vector2 DoSteeringSeek(Vector2 target, float speed = 1)
         {
             //find a new path if one hasn't been found yet or the target is different from the current target
             if (currentPath == null || Vector2.Distance(target, currentTarget) > 1.0f || findPathTimer < -1.0f)
             {
-                if (findPathTimer > 0.0f) return Vector2.Zero;
+                IsPathDirty = true;
 
+                if (findPathTimer > 0.0f) return Vector2.Zero;
+                
                 currentTarget = target;
                 Vector2 pos = host.SimPosition;
                 if (character != null && character.Submarine == null)
@@ -83,7 +92,8 @@ namespace Barotrauma
 
                 findPathTimer = Rand.Range(1.0f, 1.2f);
 
-                return DiffToCurrentNode();
+                IsPathDirty = false;
+                return DiffToCurrentNode();                
             }
 
             Vector2 diff = DiffToCurrentNode();
@@ -117,7 +127,18 @@ namespace Barotrauma
                 return currentTarget - pos2;
             }
 
-            if (canOpenDoors && !character.LockHands) CheckDoorsInPath();
+            bool doorBlockingPath = false;
+            if (canOpenDoors && !character.LockHands)
+            {
+                CheckDoorsInPath();
+            }
+            else if (canBreakDoors)
+            {
+                if (currentPath.CurrentNode?.ConnectedDoor != null && !currentPath.CurrentNode.ConnectedDoor.IsOpen)
+                {
+                    doorBlockingPath = true;
+                }
+            }
             
             Vector2 pos = host.SimPosition;
 
@@ -134,10 +155,12 @@ namespace Barotrauma
                         pos -= FarseerPhysics.ConvertUnits.ToSimUnits(currentPath.CurrentNode.Submarine.Position-character.Submarine.Position);
                     }
                 }
-
             }
 
-            if (currentPath.CurrentNode != null && currentPath.CurrentNode.Ladders != null)
+            //only humanoids can climb ladders
+            if (currentPath.CurrentNode != null && 
+                currentPath.CurrentNode.Ladders != null &&
+                character.AnimController is HumanoidAnimController)
             {
                 if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item &&
                     currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
@@ -149,7 +172,8 @@ namespace Barotrauma
             var collider = character.AnimController.Collider;
             Vector2 colliderBottom = character.AnimController.GetColliderBottom();
 
-            if (Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius * 2 &&
+            if (!doorBlockingPath &&
+                Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X) < collider.radius * 2 &&
                 currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y &&
                 currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + 1.5f)
             {
@@ -192,8 +216,8 @@ namespace Barotrauma
             {
                 WayPoint node = null;
                 WayPoint nextNode = null;
-                
-                if (i==0)
+
+                if (i == 0)
                 {
                     node = currentPath.CurrentNode;
                     nextNode = currentPath.NextNode;
@@ -204,7 +228,7 @@ namespace Barotrauma
                     nextNode = currentPath.CurrentNode;
                 }
 
-                if (node == null || node.ConnectedGap == null || node.ConnectedGap.ConnectedDoor == null) continue;
+                if (node?.ConnectedDoor == null) continue;
 
                 if (nextNode == null) continue;
 
@@ -268,23 +292,37 @@ namespace Barotrauma
             float penalty = 0.0f;
             if (nextNode.Waypoint.ConnectedGap != null && nextNode.Waypoint.ConnectedGap.Open < 0.9f)
             {
-                if (nextNode.Waypoint.ConnectedGap.ConnectedDoor == null)
+                if (nextNode.Waypoint.ConnectedDoor == null)
                 {
                     penalty = 100.0f;
                 }
 
-                //door closed and the character can't open doors -> node can't be traversed
-                if (!canOpenDoors || character.LockHands) return null;
-
-                var doorButtons = nextNode.Waypoint.ConnectedGap.ConnectedDoor.Item.GetConnectedComponents<Controller>();
-                if (!doorButtons.Any()) return null;
-
-                foreach (Controller button in doorButtons)
+                if (!canBreakDoors)
                 {
-                    if (Math.Sign(button.Item.Position.X - nextNode.Waypoint.Position.X) !=
-                        Math.Sign(node.Position.X - nextNode.Position.X)) continue;
+                    //door closed and the character can't open doors -> node can't be traversed
+                    if (!canOpenDoors || character.LockHands) return null;
 
-                    if (!button.HasRequiredItems(character, false)) return null;
+                    var doorButtons = nextNode.Waypoint.ConnectedDoor.Item.GetConnectedComponents<Controller>();
+                    if (!doorButtons.Any()) return null;
+
+                    foreach (Controller button in doorButtons)
+                    {
+                        if (Math.Sign(button.Item.Position.X - nextNode.Waypoint.Position.X) !=
+                            Math.Sign(node.Position.X - nextNode.Position.X)) continue;
+
+                        if (!button.HasRequiredItems(character, false)) return null;
+                    }
+                }
+            }
+
+            //non-humanoids can't traverse between the nodes if it requires climbing ladders
+            if (!(character.AnimController is HumanoidAnimController))
+            {
+                if (node.Waypoint.Ladders != null && 
+                    nextNode.Waypoint.Ladders != null &&
+                    Math.Abs(node.Position.Y - nextNode.Position.Y) > 1.0f)
+                {
+                    return null;
                 }
             }
 

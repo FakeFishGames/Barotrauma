@@ -31,7 +31,7 @@
            runspeedmultiplier="2" swimspeedmultiplier="2.0"
            stepsize ="15.0,20.0"
            legtorque="10"
-           impacttolerance="10"
+           impacttolerance="5"
            flip="true">
 
     <collider width="45" radius="22"/>
