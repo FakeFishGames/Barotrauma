@@ -46,9 +46,22 @@ namespace Barotrauma
             }
             return -1;
         }
+        
+        /// Returns true if the item owns any of the parent inventories
+        public virtual bool ItemOwnsSelf(Item item)
+        {
+            if (Owner == null) return false;
+            if (!(Owner is Item)) return false;
+            Item ownerItem = Owner as Item;
+            if (ownerItem == item) return true;
+            if (ownerItem.ParentInventory == null) return false;
+            return ownerItem.ParentInventory.ItemOwnsSelf(item);
+        }
 
         public virtual int FindAllowedSlot(Item item)
         {
+            if (ItemOwnsSelf(item)) return -1;
+
             for (int i = 0; i < capacity; i++)
             {
                 //item is already in the inventory!
@@ -65,6 +78,7 @@ namespace Barotrauma
 
         public virtual bool CanBePut(Item item, int i)
         {
+            if (ItemOwnsSelf(item)) return false;
             if (i < 0 || i >= Items.Length) return false;
             return (Items[i] == null);            
         }
