@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
@@ -291,8 +292,7 @@ namespace Barotrauma
             if (wallAttackPos != Vector2.Zero && targetEntity != null)
             {
                 attackSimPosition = wallAttackPos;
-
-                if (selectedAiTarget.Entity != null && Character.Submarine == null && selectedAiTarget.Entity.Submarine != null) attackSimPosition += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
+                if (Character.Submarine == null && selectedAiTarget.Entity?.Submarine != null) attackSimPosition += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
             }
             else if (selectedAiTarget.Entity is Character)
             {
@@ -315,33 +315,60 @@ namespace Barotrauma
                 Character.AnimController.TargetDir = Character.SimPosition.X < attackSimPosition.X ? Direction.Right : Direction.Left;
             }
 
-            if (aggressiveBoarding && Character.CurrentHull == null && selectedWallSection != null &&
-                CanPassThroughHole(selectedWallSection.First, selectedWallSection.Second))
+            if (aggressiveBoarding)
             {
-                WallSection section = selectedWallSection.First.GetSection(selectedWallSection.Second);
-                Hull targetHull = section.gap?.FlowTargetHull;
-                if (targetHull != null)
+                //targeting a wall section that can be passed through -> steer manually through the hole
+                if (selectedWallSection != null && CanPassThroughHole(selectedWallSection.First, selectedWallSection.Second))
                 {
-                    Vector2 targetPos = selectedWallSection.First.SectionPosition(selectedWallSection.Second, true);
-                    if (selectedWallSection.First.IsHorizontal)
+                    WallSection section = selectedWallSection.First.GetSection(selectedWallSection.Second);
+                    Hull targetHull = section.gap?.FlowTargetHull;
+                    if (targetHull != null && !section.gap.IsRoomToRoom)
                     {
-                        targetPos.Y = targetHull.WorldRect.Y - targetHull.Rect.Height / 2;
-                    }
-                    else
-                    {
-                        targetPos.X = targetHull.WorldRect.Center.X;
-                    }
+                        Vector2 targetPos = selectedWallSection.First.SectionPosition(selectedWallSection.Second, true);
+                        if (selectedWallSection.First.IsHorizontal)
+                        {
+                            targetPos.Y = targetHull.WorldRect.Y - targetHull.Rect.Height / 2;
+                        }
+                        else
+                        {
+                            targetPos.X = targetHull.WorldRect.Center.X;
+                        }
 
-                    latchOntoAI?.DeattachFromBody();
-                    if (steeringManager is IndoorsSteeringManager)
-                    {
-                        steeringManager.SteeringManual(deltaTime, targetPos - Character.WorldPosition);
+                        latchOntoAI?.DeattachFromBody();
+                        if (steeringManager is IndoorsSteeringManager)
+                        {
+                            steeringManager.SteeringManual(deltaTime, targetPos - Character.WorldPosition);
+                        }
+                        else
+                        {
+                            steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetPos), 10.0f);
+                        }
+                        return;
                     }
-                    else
+                }
+                else if (selectedAiTarget.Entity is Item)
+                {
+                    var door = ((Item)selectedAiTarget.Entity).GetComponent<Door>();
+                    //steer through the door manually if it's open or broken
+                    if (door != null && door.LinkedGap?.FlowTargetHull != null && (door.IsOpen || door.Item.Condition <= 0.0f))
                     {
-                        steeringManager.SteeringSeek(ConvertUnits.ToSimUnits(targetPos), 10.0f);
+                        if (door.LinkedGap.IsHorizontal)
+                        {
+                            if (Character.WorldPosition.Y < door.Item.WorldRect.Y && Character.WorldPosition.Y > door.Item.WorldRect.Y - door.Item.Rect.Height)
+                            {
+                                steeringManager.SteeringManual(deltaTime, Vector2.UnitX * (door.LinkedGap.FlowTargetHull.WorldPosition.X - Character.WorldPosition.X));
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            if (Character.WorldPosition.X < door.Item.WorldRect.X && Character.WorldPosition.X > door.Item.WorldRect.Right)
+                            {
+                                steeringManager.SteeringManual(deltaTime, Vector2.UnitY * (door.LinkedGap.FlowTargetHull.WorldPosition.Y - Character.WorldPosition.Y));
+                                return;
+                            }
+                        }
                     }
-                    return;
                 }
             }
 
@@ -443,7 +470,7 @@ namespace Barotrauma
             {
                 wallAttackPos = Submarine.LastPickedPosition;
                 latchOntoAI?.SetAttachTarget(closestBody, selectedAiTarget.Entity.Submarine, wallAttackPos);
-                if (selectedAiTarget.Entity.Submarine != null && Character.Submarine == null) wallAttackPos -= ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
+                //if (selectedAiTarget.Entity.Submarine != null && Character.Submarine == null) wallAttackPos += ConvertUnits.ToSimUnits(selectedAiTarget.Entity.Submarine.Position);
             }
             else
             {
@@ -644,8 +671,7 @@ namespace Barotrauma
                 }
 
                 float valueModifier = 0.0f;
-                float dist = 0.0f;
-                
+                float dist = 0.0f;                
 
                 Character targetCharacter = target.Entity as Character;
 
@@ -654,7 +680,12 @@ namespace Barotrauma
 
                 if (targetCharacter != null)
                 {
-                    if (targetCharacter.IsDead)
+                    if (targetCharacter.Submarine != null && Character.Submarine == null)
+                    {
+                        //target inside, AI outside -> we'll be attacking a wall between the characters so use the priority for attacking rooms
+                        valueModifier = AttackRooms;
+                    }
+                    else if (targetCharacter.IsDead)
                     {
                         if (eatDeadPriority == 0.0f) continue;
                         valueModifier = eatDeadPriority;
@@ -684,15 +715,39 @@ namespace Barotrauma
                         }
                     }                
                 }
-                else if (target.Entity!=null && attackRooms != 0.0f)
+                else if (target.Entity != null && attackRooms != 0.0f)
                 {
-                    IDamageable targetDamageable = target.Entity as IDamageable;
-                    if (targetDamageable != null && targetDamageable.Health <= 0.0f) continue;
+
 
                     //skip the target if it's a room and the character is already inside a sub
                     if (character.AnimController.CurrentHull != null && target.Entity is Hull) continue;
-
+                    
                     valueModifier = attackRooms;
+
+                    //multiply the priority of the target if it's a door from outside to inside and the AI is an aggressive boarder
+                    Door door = null;
+                    if (target.Entity is Item)
+                    {
+                        door = ((Item)target.Entity).GetComponent<Door>();
+                    }
+
+                    if (door != null)
+                    { 
+                        //increase priority if the character is outside and an aggressive boarder, and the door is from outside to inside
+                        if (character.CurrentHull == null && aggressiveBoarding && !door.LinkedGap.IsRoomToRoom)
+                        {
+                            valueModifier = door.IsOpen ? 5.0f : 3.0f;
+                        }
+                        else if (door.IsOpen || door.Item.Condition <= 0.0f) //ignore broken and open doors
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        IDamageable targetDamageable = target.Entity as IDamageable;
+                        if (targetDamageable != null && targetDamageable.Health <= 0.0f) continue;
+                    }
                 }
 
                 if (valueModifier == 0.0f) continue;
@@ -735,8 +790,7 @@ namespace Barotrauma
             if (selectedAiTarget != prevAiTarget)
             {
                 wallAttackPos = Vector2.Zero;
-            }
-           
+            }           
         }
 
         //find the targetMemory that corresponds to some AItarget or create if there isn't one yet
