@@ -163,10 +163,13 @@ namespace Barotrauma.Items.Components
             }
 
 #if CLIENT
-            float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-            ParticleEmitter.Emit(
-                deltaTime, item.WorldPosition + TransformedBarrelPos, 
-                item.CurrentHull, particleAngle, -particleAngle);
+            if (ParticleEmitter != null)
+            {
+                float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                ParticleEmitter.Emit(
+                    deltaTime, item.WorldPosition + TransformedBarrelPos, 
+                    item.CurrentHull, particleAngle, -particleAngle);
+            }
 #endif
           
             return true;
@@ -174,26 +177,34 @@ namespace Barotrauma.Items.Components
 
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
+            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies,
+                Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
+
             if (ExtinquishAmount > 0.0f && item.CurrentHull != null)
             {
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f);
-
-                displayPos += item.CurrentHull.Submarine.Position;
-
-                Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
-                if (hull != null)
+                List<FireSource> fireSourcesInRange = new List<FireSource>();
+                //step along the ray in 10% intervals, collecting all fire sources in the range
+                for (float x = 0.0f; x <= Submarine.LastPickedFraction; x += 0.1f)
                 {
-                    hull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
-                    if (hull != item.CurrentHull)
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * x);
+                    displayPos += item.CurrentHull.Submarine.Position;
+
+                    Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
+                    if (hull == null) continue;
+                    foreach (FireSource fs in hull.FireSources)
                     {
-                        item.CurrentHull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
+                        if (fs.IsInDamageRange(displayPos, 100.0f) && !fireSourcesInRange.Contains(fs))
+                        {
+                            fireSourcesInRange.Add(fs);
+                        }
                     }
                 }
 
+                foreach (FireSource fs in fireSourcesInRange)
+                {
+                    fs.Extinguish(deltaTime, ExtinquishAmount);
+                }
             }
-
-            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies, 
-                Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
 
             if (targetBody == null || targetBody.UserData == null) return;
 
@@ -212,7 +223,10 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
                 Vector2 progressBarPos = targetStructure.SectionPosition(sectionIndex);
-                if (targetStructure.Submarine != null) progressBarPos += targetStructure.Submarine.DrawPosition;
+                if (targetStructure.Submarine != null)
+                {
+                    progressBarPos += targetStructure.Submarine.DrawPosition;
+                }
 
                 var progressBar = user.UpdateHUDProgressBar(
                     targetStructure,
@@ -221,17 +235,9 @@ namespace Barotrauma.Items.Components
                     Color.Red, Color.Green);
 
                 if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
-
-                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-                if (targetStructure.Submarine != null) particlePos += targetStructure.Submarine.DrawPosition; 
-                foreach (var emitter in ParticleEmitterHitStructure)
-                {
-                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
-                }
 #endif
 
-                targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess,user);
+                targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
 
                 //if the next section is small enough, apply the effect to it as well
                 //(to make it easier to fix a small "left-over" section)
@@ -253,7 +259,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
                 Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-                if (targetLimb.character.Submarine != null) particlePos += targetLimb.character.Submarine.DrawPosition; 
+                if (targetLimb.character.Submarine != null) particlePos += targetLimb.character.Submarine.DrawPosition;
                 foreach (var emitter in ParticleEmitterHitCharacter)
                 {
                     float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
@@ -283,7 +289,7 @@ namespace Barotrauma.Items.Components
                     if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
 
                     Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
-                    if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition; 
+                    if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition;
                     foreach (var emitter in ParticleEmitterHitItem)
                     {
                         float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
@@ -293,7 +299,7 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
-        
+
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             Gap leak = objective.OperateTarget as Gap;
