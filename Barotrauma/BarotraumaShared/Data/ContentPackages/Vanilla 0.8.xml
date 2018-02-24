@@ -52,5 +52,6 @@
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
   <Missions file="Content/Missions.xml" />
   <Jobs file="Content/Jobs.xml" />
+  <Sounds file="Content/Sounds/sounds.xml" />
   <Executable file="Barotrauma.exe" />
 </contentpackage>

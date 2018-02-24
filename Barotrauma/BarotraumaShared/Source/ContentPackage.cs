@@ -18,7 +18,8 @@ namespace Barotrauma
         LevelGenerationParameters,
         RandomEvents, 
         Missions, 
-        BackgroundCreaturePrefabs, BackgroundSpritePrefabs
+        BackgroundCreaturePrefabs, BackgroundSpritePrefabs,
+        Sounds
     }
 
     public class ContentPackage
