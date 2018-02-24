@@ -296,7 +296,7 @@
   <Force>Force</Force>
   <FabricatorRequiredItems>Required items</FabricatorRequiredItems>
   <FabricatorRequiredTime>Required time</FabricatorRequiredTime>
-  <FabricatorCondition>Condition</FabricatorCondition>
+  <FabricatorRequiredCondition>Condition</FabricatorRequiredCondition>
   <FabricatorRequiredSkills>Skills required to calibrate</FabricatorRequiredSkills>
   <FabricatorCreate>Create</FabricatorCreate>
   <Lvl>Lvl</Lvl>
