@@ -18,14 +18,19 @@ namespace Barotrauma
             {
                 Limb limb = (Limb)body.UserData;
 
-                if (impact > 3.0f && limb.HitSound != null && limb.SoundTimer <= 0.0f)
+                if (impact > 3.0f && limb.SoundTimer <= 0.0f)
                 {
                     limb.SoundTimer = Limb.SoundInterval;
-                    SoundPlayer.PlaySound(limb.HitSound, volume, impact * 100.0f, limb.WorldPosition);
-                    foreach(WearableSprite wearable in limb.WearingItems)
+                    if (!string.IsNullOrWhiteSpace(limb.HitSound))
                     {
-                        if (limb.type == wearable.Limb && wearable.Sound != null)
+                        SoundPlayer.PlaySound(limb.HitSound, volume, impact * 100.0f, limb.WorldPosition);
+                    }
+                    foreach (WearableSprite wearable in limb.WearingItems)
+                    {
+                        if (limb.type == wearable.Limb && !string.IsNullOrWhiteSpace(wearable.Sound))
+                        {
                             SoundPlayer.PlaySound(wearable.Sound, volume, impact * 100.0f, limb.WorldPosition);
+                        }
                     }
                 }
             }
