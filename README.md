@@ -1,6 +1,6 @@
 # Barotrauma
 
-Copyright © Undertow Games 2017
+Copyright © Undertow Games 2017-2018
 
 Before downloading the source code, please read the [EULA](EULA.txt).
 
