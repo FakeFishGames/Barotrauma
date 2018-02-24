@@ -119,35 +119,19 @@ namespace Barotrauma
             doc.Add(new XElement("contentpackage", 
                 new XAttribute("name", name), 
                 new XAttribute("path", Path)));
-
-            //doc.Root.Add(
-            //    new XElement("jobs", new XAttribute("file", JobFile)),
-            //    new XElement("structures", new XAttribute("file", StructureFile)));
-
+            
             foreach (ContentFile file in files)
             {
                 doc.Root.Add(new XElement(file.type.ToString(), new XAttribute("file", file.path)));
             }
-
-            //foreach (string itemFile in itemFiles)
-            //{
-            //    doc.Root.Add(new XElement("item", new XAttribute("file", itemFile)));
-            //}
+            
             doc.Save(System.IO.Path.Combine(filePath, name+".xml"));
         }
 
         private void CalculateHash()
         {
             List<byte[]> hashes = new List<byte[]>();
-
-            //foreach (ContentFile file in files)
-            //{
-            //    if (file.path.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
-            //    {
-            //        XDocument doc = ToolBox.TryLoadXml(file.path);
-            //        sb.Append(doc.ToString());
-            //    }          
-            //}
+            
             var md5 = MD5.Create();
             foreach (ContentFile file in files)
             {
@@ -155,10 +139,10 @@ namespace Barotrauma
 
                 try 
                 {
-                    if (file.path.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
-                        hashes.Add(CalculateXmlHash(file, ref md5));
-                    else
-                        hashes.Add(CalculateFileHash(file, ref md5));
+                    using (var stream = File.OpenRead(file.path))
+                    {
+                        hashes.Add(md5.ComputeHash(stream));
+                    }
                 }
 
                 catch (Exception e)
@@ -167,45 +151,14 @@ namespace Barotrauma
                 }
              
             }
-
-            //string str = sb.ToString();
-            byte[] bytes = new byte[hashes.Count*16];
-            for (int i = 0; i < hashes.Count; i++ )
+            
+            byte[] bytes = new byte[hashes.Count * 16];
+            for (int i = 0; i < hashes.Count; i++)
             {
-                hashes[i].CopyTo(bytes, i*16);
+                hashes[i].CopyTo(bytes, i * 16);
             }
-                //System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
 
             md5Hash = new Md5Hash(bytes);
-        }
-
- 
-        private byte[] CalculateXmlHash(ContentFile file, ref MD5 md5) //todo: Change ref to in (in C# 7.2)
-        {
-            var doc = XMLExtensions.TryLoadXml(file.path);
-
-            if (doc == null)
-                throw new Exception($"file {file.path} could not be opened as XML document");
-
-            using (var memoryStream = new MemoryStream())
-            {
-                using (var writer = new StreamWriter(memoryStream))
-                {
-                    writer.Write(doc.ToString());
-                    writer.Flush();
-
-                    memoryStream.Position = 0;
-                    return md5.ComputeHash(memoryStream);
-                }
-            }
-        }
-
-        private byte[] CalculateFileHash(ContentFile file, ref MD5 md5)
-        {
-            using (var stream = File.OpenRead(file.path))
-            {
-                return md5.ComputeHash(stream);
-            }
         }
 
         public List<string> GetFilesOfType(ContentType type)
