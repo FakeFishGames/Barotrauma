@@ -27,6 +27,8 @@ namespace Launcher
         private GameSettings settings;
 
         private string latestVersionFileList, latestVersionFolder;
+
+        private int updateCheckState;
         
         private List<DisplayMode> supportedModes;
 
@@ -177,18 +179,28 @@ namespace Launcher
             //var fullScreenTick = new GUITickBox(new Rectangle(x,y+150,20,20), "Fullscreen", Alignment.TopLeft, guiRoot);
             //fullScreenTick.OnSelected = ToggleFullScreen;
             //fullScreenTick.Selected = settings.FullScreenEnabled;
-
-            if (settings.AutoCheckUpdates)
-            {
-                CheckForUpdates();
-            }
         }
 
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-            
+
+
+            if (settings.AutoCheckUpdates)
+            {
+                if (updateCheckState == 0)
+                {
+                    updateInfoText.Text = "Checking for updates...";
+                    updateCheckState++;
+                }
+                else if (updateCheckState == 2)
+                {
+                    CheckForUpdates();
+                    updateCheckState++;
+                }
+            }
+
             base.Update(gameTime);
 
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -228,6 +240,8 @@ namespace Launcher
             if (GUIMessageBox.VisibleBox != null) GUIMessageBox.VisibleBox.Draw(spriteBatch);            
 
             spriteBatch.End();
+
+            if (updateCheckState == 1) updateCheckState = 2;
         }
 
         private bool TrySaveSettings(string filePath)
@@ -583,9 +597,13 @@ namespace Launcher
         {
             GUIFrame dummyFrame = new GUIFrame(new Rectangle(0, 0, graphicsWidth, graphicsHeight));
             dummyFrame.Padding = Vector4.Zero;
-
-            GUIMessageBox errorBox = new GUIMessageBox(header, message, new string[] { "OK" }, 400, 250, Alignment.TopLeft, dummyFrame);
+            GUIMessageBox errorBox = new GUIMessageBox(header, message, new string[] { "OK" }, 400, 250, Alignment.Center, dummyFrame);
             errorBox.Buttons[0].OnClicked = errorBox.Close;
+            errorBox.InnerFrame.Rect = new Rectangle(
+                (graphicsWidth - errorBox.InnerFrame.Rect.Width) / 2,
+                (graphicsHeight - errorBox.InnerFrame.Rect.Height) / 2,
+                errorBox.InnerFrame.Rect.Width,
+                errorBox.InnerFrame.Rect.Height);
         }
 
         private void Completed(object sender, AsyncCompletedEventArgs e)
@@ -604,7 +622,12 @@ namespace Launcher
                 GUIFrame dummyFrame = new GUIFrame(new Rectangle(0, 0, graphicsWidth, graphicsHeight));
                 dummyFrame.Padding = Vector4.Zero;
                 GUIMessageBox errorBox = new GUIMessageBox("Error while updating", "Downloading the update failed.",
-                    new string[] { "Retry", "Cancel" }, 400, 250, Alignment.TopLeft, dummyFrame);
+                    new string[] { "Retry", "Cancel" }, 400, 200, Alignment.Center, dummyFrame);
+                errorBox.InnerFrame.Rect = new Rectangle(
+                    (graphicsWidth - errorBox.InnerFrame.Rect.Width) / 2,
+                    (graphicsHeight - errorBox.InnerFrame.Rect.Height) / 2,
+                    errorBox.InnerFrame.Rect.Width,
+                    errorBox.InnerFrame.Rect.Height);
 
                 errorBox.Buttons[0].OnClicked += DownloadButtonClicked;
                 errorBox.Buttons[0].OnClicked += errorBox.Close;
