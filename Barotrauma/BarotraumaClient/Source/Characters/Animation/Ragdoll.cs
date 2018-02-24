@@ -21,9 +21,9 @@ namespace Barotrauma
                 if (impact > 3.0f && limb.SoundTimer <= 0.0f)
                 {
                     limb.SoundTimer = Limb.SoundInterval;
-                    if (!string.IsNullOrWhiteSpace(limb.HitSound))
+                    if (!string.IsNullOrWhiteSpace(limb.HitSoundTag))
                     {
-                        SoundPlayer.PlaySound(limb.HitSound, volume, impact * 100.0f, limb.WorldPosition);
+                        SoundPlayer.PlaySound(limb.HitSoundTag, volume, impact * 100.0f, limb.WorldPosition);
                     }
                     foreach (WearableSprite wearable in limb.WearingItems)
                     {
