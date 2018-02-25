@@ -358,7 +358,7 @@ namespace Barotrauma.Networking
             monsterEnabled = new Dictionary<string, bool>();
             foreach (string s in monsterNames)
             {
-                monsterEnabled.Add(s, true);
+                if (!monsterEnabled.ContainsKey(s)) monsterEnabled.Add(s, true);
             }
             extraCargo = new Dictionary<ItemPrefab, int>();
         }
