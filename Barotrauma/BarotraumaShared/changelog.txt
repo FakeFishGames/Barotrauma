@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v0.8.0.3
+---------------------------------------------------------------------------------------------------------
+
+- Another attempt to fix relay components: it should be now possible to use relays in series and pass
+power to junction boxes through relays.
+- Fixed creature disabling in server settings only taking character config files in the Content/Character
+folder into account.
+- Added ruin structure, particle and decal configuration files to content packages.
+
+---------------------------------------------------------------------------------------------------------
 v0.8.0.2
 ---------------------------------------------------------------------------------------------------------
 
