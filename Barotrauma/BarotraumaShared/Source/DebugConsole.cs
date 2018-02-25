@@ -2717,6 +2717,123 @@ namespace Barotrauma
                                 DebugConsole.NewMessage("Sprite Rotation: " + itemPrefab.sprite.rotation, Color.Green);
                                 DebugConsole.NewMessage("Sprite SourceRect: " + itemPrefab.sprite.SourceRect, Color.Green);
                             }
+                            //Create a temporary item that can be removed after the checks are done
+                            Item tempitem = new Item(itemPrefab, new Vector2(300000, 300000), null);
+
+                            if (tempitem.AllowedSlots != null && tempitem.AllowedSlots.Count() > 0)
+                            {
+                                temp = "";
+                                foreach (var slot in tempitem.AllowedSlots)
+                                {
+                                    temp = temp + ", " + slot.ToString();
+                                }
+
+                                DebugConsole.NewMessage("AllowedSlots: " + temp.Substring(2).Trim(), Color.Yellow);
+                            }
+                            else
+                            {
+                                DebugConsole.NewMessage("Item has no AllowedSlots.", Color.Yellow);
+                            }
+
+                            if (tempitem.components != null && tempitem.components.Count() > 0)
+                            {
+                                foreach (var component in tempitem.components)
+                                {
+                                    if (component.SerializableProperties != null && component.SerializableProperties.Count() > 0)
+                                    {
+                                        DebugConsole.NewMessage("   - Component: " + component.Name, Color.Green);
+
+                                        foreach (var property in component.SerializableProperties)
+                                        {
+                                            //Don't read a list of serializableproperties, the base list seems to grab them too.
+                                            if (property.Key.ToLowerInvariant() == "serializableproperties") continue;
+
+                                            //Code for reading different property types differently : >
+                                            switch (property.Value.PropertyType.ToString().Split('`')[0])
+                                            {
+                                                //Lists probably need more code
+                                                case "System.Collections.Generic.List":
+                                                    //Switch for specific types of list reading
+                                                    switch (property.Value.PropertyType.ToString().Split('`')[1])
+                                                    {
+                                                        case "1[Barotrauma.DamageModifier]":
+                                                            List<DamageModifier> damagemodifiers = (List<DamageModifier>)property.Value.GetValue();
+                                                            DebugConsole.NewMessage("      - Propertylist: " + property.Key + " = " + damagemodifiers.Count() + " Items.", Color.Yellow);
+                                                            foreach (DamageModifier modifier in damagemodifiers)
+                                                            {
+                                                                DebugConsole.NewMessage(
+                                                                    "         - DamageModifier: Damage Type:" + modifier.DamageType
+                                                                    + ", Damage:" + modifier.DamageMultiplier
+                                                                    + "%, Bleed:" + modifier.BleedingMultiplier
+                                                                    + "%, ArmorSector: (" + Math.Round(modifier.ArmorSector.X, 1)
+                                                                    + "," + Math.Round(modifier.ArmorSector.Y, 1)
+                                                                    + "), Deflect:" + modifier.DeflectProjectiles, Color.Yellow);
+                                                            }
+                                                            break;
+                                                        case "1[Barotrauma.InvSlotType]":
+                                                        //break;
+                                                        case "1[Barotrauma.RelatedItem]":
+                                                        //break;
+                                                        default:
+                                                            //property.Value.PropertyType.ToString()
+                                                            DebugConsole.NewMessage("      - Property: " + property.Key + " = LIST: " + property.Value.PropertyType.ToString().Split('`')[1] + " reading is Unimplemented.", Color.IndianRed);
+                                                            break;
+                                                    }
+                                                    /*
+                                                    List<object> list = (List<object>)property.Value.GetValue();
+                                                    if (list.Count() > 0)
+                                                    {
+                                                        foreach(string listitem in list)
+                                                        {
+                                                            DebugConsole.NewMessage(listitem.ToString(), Color.Yellow);
+                                                        }
+                                                    }
+                                                    */
+                                                    break;
+                                                case "System.Boolean":
+                                                    DebugConsole.NewMessage("      - Property: " + property.Key + " = " + property.Value.GetValue().ToString() + " (Bool)", Color.Yellow);
+                                                    break;
+                                                case "System.String":
+                                                    DebugConsole.NewMessage("      - Property: " + property.Key + @" = """ + property.Value.GetValue().ToString() + @""" (String)", Color.Yellow);
+                                                    break;
+                                                case "System.Single":
+                                                    DebugConsole.NewMessage("      - Property: " + property.Key + " = " + property.Value.GetValue().ToString() + " (Float)", Color.Yellow);
+                                                    break;
+                                                case "System.Int32":
+                                                    DebugConsole.NewMessage("      - Property: " + property.Key + " = " + property.Value.GetValue().ToString() + " (Int32)", Color.Yellow);
+                                                    break;
+                                                case "Microsoft.Xna.Framework.Vector2":
+                                                    Vector2 vector2value = (Vector2)property.Value.GetValue();
+                                                    DebugConsole.NewMessage("      - Property: " + property.Key + " = (" + vector2value.X + "," + vector2value.Y + ") (Vector2)", Color.Yellow);
+                                                    break;
+                                                case "Barotrauma.InputType":
+                                                    DebugConsole.NewMessage("      - Property: " + property.Key + " = " + property.Value.GetValue().ToString() + " (InputType)", Color.Yellow);
+                                                    break;
+                                                case "Barotrauma.Item":
+                                                    DebugConsole.NewMessage("      - Property: " + property.Key + " = " + property.Value.GetValue().ToString() + " (InputType)", Color.Yellow);
+                                                    break;
+                                                case "Barotrauma.Character":
+                                                    DebugConsole.NewMessage("      - Property: " + property.Key + " = " + " (Character - shouldn't be modified)", Color.Yellow);
+                                                    break;
+                                                default:
+                                                    DebugConsole.NewMessage("      - Property: " + property.Key + " = " + property.Value.PropertyType.ToString() + "(Reading not implemented yet).", Color.IndianRed);
+                                                    break;
+                                                    //DebugConsole.NewMessage("      - Property: " + property.Key + " = " + property.Value.ToString(), Color.Yellow);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        DebugConsole.NewMessage("      - No Properties.", Color.Yellow);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                DebugConsole.NewMessage("Item has no components to list.", Color.Yellow);
+                            }
+
+                            tempitem.Remove();
                             found = true;
                             break;
                         }
