@@ -82,7 +82,12 @@ namespace Barotrauma
             
             foreach (XElement subElement in doc.Root.Elements())
             {
-                ContentType type = (ContentType)Enum.Parse(typeof(ContentType), subElement.Name.ToString(), true);
+                ContentType type;
+                if (!Enum.TryParse(subElement.Name.ToString(), true, out type))
+                {
+                    DebugConsole.ThrowError("Error in content package \""+name+"\" - \""+subElement.Name.ToString()+"\" is not a valid content type.");
+                    continue;
+                }
                 files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));                
             }
         }
