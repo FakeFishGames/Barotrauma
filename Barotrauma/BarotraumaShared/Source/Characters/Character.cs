@@ -40,18 +40,7 @@ namespace Barotrauma
                 {
                     if (limb.body != null)
                     {
-                        try
-                        {
-                            limb.body.Enabled = enabled;
-                        }
-                        catch(NullReferenceException e)
-                        {
-                            DebugConsole.NewMessage("CRITICAL ERROR: Character " + Name + " Threw " + e.Message + " While enabling limbs.", Color.Red);
-                            enabled = false;
-                            DebugConsole.NewMessage("Attempting removal of problematic character.", Color.Red);
-                            Entity.Spawner.AddToRemoveQueue(this);
-                            return;
-                        }
+                        limb.body.Enabled = enabled;
                     }
 #if CLIENT
                     if (limb.LightSource != null)
@@ -60,22 +49,7 @@ namespace Barotrauma
                     }
 #endif
                 }
-
-                if (!Removed)
-                {
-                    try
-                    {
-                        AnimController.Collider.Enabled = value;
-                    }
-                    catch (NullReferenceException e)
-                    {
-                        DebugConsole.NewMessage("CRITICAL ERROR: Character " + Name + " Threw " + e.Message + " While enabling AnimController collider.", Color.Red);
-                        enabled = false;
-                        DebugConsole.NewMessage("Attempting removal of problematic character.", Color.Red);
-                        Entity.Spawner.AddToRemoveQueue(this);
-                        return;
-                    }
-                }
+                AnimController.Collider.Enabled = value;
             }
         }
 
@@ -119,7 +93,7 @@ namespace Barotrauma
         public float lastSentOxygen;
 
         private float health;
-        public float lastSentHealth;
+        //public float lastSentHealth;
         protected float minHealth, maxHealth;
 
         protected Item focusedItem;
@@ -135,7 +109,7 @@ namespace Barotrauma
         public readonly string SpeciesName;
 
         private float bleeding;
-        public float lastSentBleeding;
+        //public float lastSentBleeding;
 
         private float attackCoolDown;
 
@@ -346,13 +320,13 @@ namespace Barotrauma
 
         public float Oxygen
         {
-<<<<<<< HEAD
             get
             {
                 return oxygen;
             }
             set
             {
+                if (!MathUtils.IsValid(value)) return;
                 float newoxygen = CheckOxygen(value);
 
                 if (oxygen == newoxygen) return;
@@ -376,10 +350,6 @@ namespace Barotrauma
         {
             //Nilmod Prevent oxygen gains during progressive implode death
             if (PressureTimer >= 100.0f)
-=======
-            get { return oxygen; }
-            set
->>>>>>> master
             {
                 if (GameMain.NilMod.UseProgressiveImplodeDeath && GameMain.NilMod.PreventImplodeOxygen)
                 {
@@ -441,7 +411,7 @@ namespace Barotrauma
             {
                 if (GameMain.Client != null) return;
 
-                SetStun(value);
+                SetStun(value, true);
             }
         }
 
@@ -583,16 +553,10 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value)) return;
                 if (GameMain.Client != null) return;
 
-<<<<<<< HEAD
                 //float newHealth = MathHelper.Clamp(value, minHealth, maxHealth);
-=======
-                float newHealth = MathHelper.Clamp(value, minHealth, maxHealth);
-                //if (newHealth == health) return;
->>>>>>> master
 
                 float newHealth = value;
 
-<<<<<<< HEAD
                 newHealth = CheckHealth(newHealth);
 
                 if (health == newHealth) return;
@@ -676,20 +640,17 @@ namespace Barotrauma
             if (huskInfection != null && GameMain.Client == null)
             {
                 if (huskInfection.State == HuskInfection.InfectionState.Active)
-=======
-                /*if (GameMain.Server != null)
->>>>>>> master
                 {
                     if (newHealth > Health)
                     {
                         newHealth = Health;
                     }
-                }*/
+                }
             }
 
             return newHealth;
         }
-
+    
         public float MaxHealth
         {
             get { return maxHealth; }
@@ -702,14 +663,10 @@ namespace Barotrauma
 
         public float Bleeding
         {
-<<<<<<< HEAD
             get
             {
                 return bleeding;
             }
-=======
-            get { return bleeding; }
->>>>>>> master
             set
             {
                 if (!MathUtils.IsValid(value)) return;
@@ -717,7 +674,6 @@ namespace Barotrauma
                 if (!DoesBleed) return;
 
                 float newBleeding = MathHelper.Clamp(value, 0.0f, 5.0f);
-<<<<<<< HEAD
                 if (newBleeding == Bleeding) return;
 
 
@@ -725,9 +681,9 @@ namespace Barotrauma
 
                 if (newBleeding == bleeding) return;
                 bleeding = newBleeding;
-
-                if (GameMain.Server != null)
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                
+                /*if (GameMain.Server != null)
+                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });*/
             }
         }
 
@@ -748,17 +704,6 @@ namespace Barotrauma
             return newBleed;
         }
         
-=======
-                //if (newBleeding == bleeding) return;
-
-                bleeding = newBleeding;
-                
-                /*if (GameMain.Server != null)
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });*/
-            }
-        }
-
->>>>>>> master
         public HuskInfection huskInfection;
         public float HuskInfectionState
         {
@@ -774,8 +719,6 @@ namespace Barotrauma
                 {
                     if (huskInfection != null)
                     {
-                        //already active, can't cure anymore
-                        if (huskInfection.State == HuskInfection.InfectionState.Active) return;
                         GameServer.Log(Name + " has been cured of the husk infection.", Networking.ServerLog.MessageType.Husk);
                         huskInfection.Remove(this);
                         huskInfection = null;
@@ -906,7 +849,7 @@ namespace Barotrauma
             return Create(characterInfo.File, position, characterInfo, isRemotePlayer, hasAi);
         }
 
-        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true)
+        public static Character Create(string file, Vector2 position, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi=true, bool createNetworkEvent = true)
         {
 #if LINUX
             if (!System.IO.File.Exists(file)) 
@@ -1359,18 +1302,6 @@ namespace Barotrauma
                 }
             }
 
-<<<<<<< HEAD
-            if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
-            {
-                for (int i = 0; i < selectedItems.Length; i++)
-                {
-                    if (selectedItems[i] == null) continue;
-                    if (i == 1 && selectedItems[0] == selectedItems[1]) continue;
-
-                    if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
-                    if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);
-                }
-=======
             if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
             {
                 for (int i = 0; i < selectedItems.Length; i++ )
@@ -1381,7 +1312,6 @@ namespace Barotrauma
                     if (IsKeyDown(InputType.Use)) selectedItems[i].Use(deltaTime, this);
                     if (IsKeyDown(InputType.Aim) && selectedItems[i] != null) selectedItems[i].SecondaryUse(deltaTime, this);                
                 }
->>>>>>> master
             }
 
             if (selectedConstruction != null)
@@ -1548,7 +1478,7 @@ namespace Barotrauma
 
             return true;
         }
-
+        
         public bool CanInteractWith(Item item)
         {
             float distanceToItem;
@@ -1569,17 +1499,10 @@ namespace Barotrauma
             Wire wire = item.GetComponent<Wire>();
             if (wire != null)
             {
-<<<<<<< HEAD
-                //locked wires are never interactable 
-                if (wire.Locked) return false;
-
-                //wires are interactable if the character has selected either of the items the wire is connected to 
-=======
                 //locked wires are never interactable
                 if (wire.Locked) return false;
 
                 //wires are interactable if the character has selected either of the items the wire is connected to
->>>>>>> master
                 if (wire.Connections[0]?.Item != null && selectedConstruction == wire.Connections[0].Item) return true;
                 if (wire.Connections[1]?.Item != null && selectedConstruction == wire.Connections[1].Item) return true;
             }
@@ -1872,52 +1795,20 @@ namespace Barotrauma
                     if (GameMain.Server != null)
                     {
                         //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
-                        try
-                        {
                             //Enable visibility of far away corpses now (NilMod Edit)
                             c.Enabled =
-                            c == Character.controlled ||
+                            c == controlled ||
                             c.IsRemotePlayer ||
-                            CharacterList.Any(c2 =>
-                                (c2.IsRemotePlayer || (c2 == GameMain.Server.Character) &&
-                                Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr) && !c2.IsDead);
-                        }
-                        //Attempt to catch a crash related to setenabled on early round starts / respawns.
-                        catch(NullReferenceException e)
-                        {
-                            DebugConsole.NewMessage("ERROR OCCURED IN CHARACTER.UPDATEALL - Failiure to enable character to due error: " + e.Message,Color.Red);
-                            DebugConsole.NewMessage("Character: " + c.Name + " Has been removed to prevent server crash (Hopefully!)", Color.Red);
-                            GameMain.Server.ServerLog.WriteLine("ERROR OCCURED IN CHARACTER.UPDATEALL - Failiure to enable character to due error: " + e.Message, ServerLog.MessageType.Error);
-                            GameMain.Server.ServerLog.WriteLine("Character: " + c.Name + " Has been removed to prevent server crash (Hopefully!)", ServerLog.MessageType.Error);
-#if CLIENT
-                            if (c == Character.controlled) Character.controlled = null;
-#endif
-                            c.Enabled = false;
-                            Entity.Spawner.AddToRemoveQueue(c);
-                            continue;
-                        }
+                            CharacterList.Any(c2 => 
+                                c != c2 &&
+                                (c2.IsRemotePlayer || c2 == GameMain.Server.Character) && 
+                                Vector2.DistanceSquared(c2.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr && !c2.IsDead);
                     }
                     else if (Submarine.MainSub != null)
                     {
-                        try
-                        {
-                            //disable AI characters that are far away from the sub and the controlled character
-                            c.Enabled = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr ||
-                                (controlled != null && Vector2.DistanceSquared(controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
-                        }
-                        catch(NullReferenceException e)
-                        {
-                            DebugConsole.NewMessage("Critical error occured in CHARACTER.UPDATEALL - Failiure to enable character to due error: " + e.Message, Color.Red);
-                            DebugConsole.NewMessage("Character: " + c.Name + " Has been removed to prevent server crash (Hopefully!)", Color.Red);
-                            if(GameMain.Server != null) GameMain.Server.ServerLog.WriteLine("Critical error occured in CHARACTER.UPDATEALL - Failiure to enable character to due error: " + e.Message, ServerLog.MessageType.Error);
-                            if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine("Character: " + c.Name + " Has been removed to prevent server crash (Hopefully!)", ServerLog.MessageType.Error);
-#if CLIENT
-                            if (c == Character.controlled) Character.controlled = null;
-#endif
-                            c.Enabled = false;
-                            Entity.Spawner.AddToRemoveQueue(c);
-                            continue;
-                        }
+                        //disable AI characters that are far away from the sub and the controlled character
+                        c.Enabled = Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr ||
+                            (controlled != null && Vector2.DistanceSquared(controlled.WorldPosition, c.WorldPosition) < NetConfig.CharacterIgnoreDistanceSqr);
                     }
                 }
             }
@@ -2041,28 +1932,16 @@ namespace Barotrauma
             if (stunTimer > 0.0f)
             {
                 stunTimer -= deltaTime;
-<<<<<<< HEAD
-                if (stunTimer < 0.0f)
-=======
-                /*if (stunTimer < 0.0f && GameMain.Server != null)
->>>>>>> master
+                if (stunTimer < 0.0f && GameMain.Server != null)
                 {
                     if (GameMain.Client == null) Stunresistance *= stunresistendmult;
                     //stun ended -> notify clients
-<<<<<<< HEAD
-                    if(GameMain.Server != null) GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                }                
+                    //GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
+                } 
             }
 
             if (Stunresistance > stunresistbase && stunresistdecreasespeed > 0f) Stunresistance -= (stunresistdecreasespeed * deltaTime);
-
-=======
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-                } */
-            }
-
             //Skip health effects as critical health handles it differently
->>>>>>> master
             if (IsUnconscious)
             {
                 UpdateUnconscious(deltaTime);
@@ -2110,55 +1989,15 @@ namespace Barotrauma
                 selectedConstruction = null;
             }
 
-<<<<<<< HEAD
-            if (selectedCharacter != null && AnimController.Anim == AnimController.Animation.CPR)
-            {
-                //NilMod Modified code
-                if (GameMain.Client == null)
-                {
-                    //Beneficial stat gains only if Unconcious or while concious and stunned.
-                    if (GameMain.NilMod.PlayerCPROnlyWhileUnconcious && (selectedCharacter.Health <= selectedCharacter.MaxHealth * 0.01 || selectedCharacter.oxygen <= 10f) | !GameMain.NilMod.PlayerCPROnlyWhileUnconcious)
-                    {
-                        if (GetSkillLevel("Medical") >= GameMain.NilMod.PlayerCPRHealthSkillNeeded) selectedCharacter.Health += ((GameMain.NilMod.PlayerCPRHealthBaseValue + (GetSkillLevel("Medical") * (GameMain.NilMod.PlayerCPRHealthSkillMultiplier))) * deltaTime);
-                        if (GetSkillLevel("Medical") >= GameMain.NilMod.PlayerCPRClotSkillNeeded) selectedCharacter.Bleeding -= ((GameMain.NilMod.PlayerCPRClotBaseValue + (GetSkillLevel("Medical") * (GameMain.NilMod.PlayerCPRClotSkillMultiplier))) * deltaTime);
-                        if (selectedCharacter.oxygenAvailable >= GameMain.NilMod.HullUnbreathablePercent)
-                        {
-                            selectedCharacter.Oxygen += ((GameMain.NilMod.PlayerCPROxygenBaseValue + (GetSkillLevel("Medical") * (GameMain.NilMod.PlayerCPROxygenSkillMultiplier))) * deltaTime);
-                            //If their oxygen is passing 0 but below threshold, boost it with a little 2 second oxygen burst
-                            if (selectedCharacter.Oxygen >= 0f && selectedCharacter.Oxygen <= (selectedCharacter.Oxygen + (GameMain.NilMod.PlayerOxygenUsageAmount * 2.0f)))
-                            {
-                                selectedCharacter.Oxygen += (GameMain.NilMod.PlayerOxygenUsageAmount * 3.0f);
-                            }
-                        }
-                    }
-                    if (!selectedCharacter.IsUnconscious)
-                    {
-                        //Stun Removal if CPRing and they are not unconcious due to health/oxygen
-                        if (GetSkillLevel("Medical") >= GameMain.NilMod.PlayerCPRStunSkillNeeded) selectedCharacter.Stun -= ((GameMain.NilMod.PlayerCPRStunBaseValue + (GetSkillLevel("Medical") * (GameMain.NilMod.PlayerCPRStunSkillMultiplier))) * deltaTime);
-                    }
-                }
-            }
-
-=======
->>>>>>> master
             UpdateSightRange();
             if (aiTarget != null) aiTarget.SoundRange = 0.0f;
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
-<<<<<<< HEAD
-            if (needsAir) UpdateOxygen(deltaTime);
-
-            if (Bleeding > 0f)
+            if (DoesBleed && Bleeding > 0f)
             {
                 Health -= (Bleeding * GameMain.NilMod.CreatureBleedMultiplier) * deltaTime;
                 Bleeding -= BleedingDecreaseSpeed * deltaTime;
-=======
-            if (DoesBleed)
-            {
-                Health -= bleeding * deltaTime;
-                Bleeding -= BleedingDecreaseSpeed * deltaTime;
->>>>>>> master
             }
 
             //NilMod Anti death code
@@ -2261,7 +2100,7 @@ namespace Barotrauma
                 }
                 hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
             }
-
+            
             OxygenAvailable += MathHelper.Clamp(hullAvailableOxygen - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
         }
         partial void UpdateOxygenProjSpecific(float prevOxygen);
@@ -2273,36 +2112,13 @@ namespace Barotrauma
             AnimController.ResetPullJoints();
             selectedConstruction = null;
 
-<<<<<<< HEAD
             float HealthDamage = 0f;
             float BleedDamage = 0f;
             float OxygenDamage = 0f;
 
+            //Oxygen -= deltaTime * 0.5f; //We're critical - our heart stopped!
+
             Boolean ReceivingCPR = CharacterList.Find(c => c.SelectedCharacter == this && c.AnimController.Anim == AnimController.Animation.CPR) != null;
-
-            //NilMod stat loss at negative health
-            if (Health <= 0.0f)
-=======
-            Oxygen -= deltaTime * 0.5f; //We're critical - our heart stopped!
-
-            if (health <= 0.0f) //Critical health - use current state for crit time
->>>>>>> master
-            {
-                //Health decay or if its higher, bleeding damage rate instead
-                if (!GameMain.NilMod.PlayerCPRStopsHealthDecay || (GameMain.NilMod.PlayerCPRStopsHealthDecay && !ReceivingCPR))
-                {
-                    HealthDamage += GameMain.NilMod.HealthUnconciousDecayHealth;
-                }
-                if (!GameMain.NilMod.PlayerCPRStopsBleedDecay || (GameMain.NilMod.PlayerCPRStopsBleedDecay && !ReceivingCPR))
-                {
-                    BleedDamage += GameMain.NilMod.HealthUnconciousDecayBleed;
-                }
-                if (!GameMain.NilMod.PlayerCPRStopsOxygenDecay || (GameMain.NilMod.PlayerCPRStopsOxygenDecay && !ReceivingCPR))
-                {
-                    OxygenDamage += GameMain.NilMod.HealthUnconciousDecayOxygen;
-                }
-            }
-<<<<<<< HEAD
 
             //NilMod stat loss at negative oxygen
             if (Oxygen <= 0.0f)
@@ -2322,6 +2138,24 @@ namespace Barotrauma
                 }
             }
 
+            //NilMod stat loss at negative health
+            if (Health <= 0.0f)
+            {
+                //Health decay or if its higher, bleeding damage rate instead
+                if (!GameMain.NilMod.PlayerCPRStopsHealthDecay || (GameMain.NilMod.PlayerCPRStopsHealthDecay && !ReceivingCPR))
+                {
+                    HealthDamage += GameMain.NilMod.HealthUnconciousDecayHealth;
+                }
+                if (!GameMain.NilMod.PlayerCPRStopsBleedDecay || (GameMain.NilMod.PlayerCPRStopsBleedDecay && !ReceivingCPR))
+                {
+                    BleedDamage += GameMain.NilMod.HealthUnconciousDecayBleed;
+                }
+                if (!GameMain.NilMod.PlayerCPRStopsOxygenDecay || (GameMain.NilMod.PlayerCPRStopsOxygenDecay && !ReceivingCPR))
+                {
+                    OxygenDamage += GameMain.NilMod.HealthUnconciousDecayOxygen;
+                }
+            }
+
             if(GameMain.NilMod.AverageDecayIfBothNegative && Health <= 0.0f && Oxygen <= 0.0f)
             {
                 HealthDamage = HealthDamage / 2;
@@ -2336,13 +2170,16 @@ namespace Barotrauma
             Bleeding += BleedDamage * deltaTime;
             AddDamage(pressureFactor == 100f ? CauseOfDeath.Pressure : (Bleeding > 0.5f ? CauseOfDeath.Bloodloss : CauseOfDeath.Damage), (Math.Max(Bleeding * GameMain.NilMod.CreatureBleedMultiplier, HealthDamage)) * deltaTime, null);
             Oxygen -= OxygenDamage * deltaTime;
-=======
-            else //Keep on bleedin'
-            {
-                Health -= bleeding * deltaTime;
-                Bleeding -= BleedingDecreaseSpeed * deltaTime;
-            }
->>>>>>> master
+
+            //if (health <= 0.0f) //Critical health - use current state for crit time
+            //{
+            //    AddDamage(bleeding > 0.5f ? CauseOfDeath.Bloodloss : CauseOfDeath.Damage, Math.Max(bleeding, 1.0f) * deltaTime, null);
+            //}
+            //else //Keep on bleedin'
+            //{
+            //    Health -= bleeding * deltaTime;
+            //    Bleeding -= BleedingDecreaseSpeed * deltaTime;
+            //}
         }
 
         private void UpdateSightRange()
@@ -2356,16 +2193,6 @@ namespace Barotrauma
         {
             speechBubbleTimer = Math.Max(speechBubbleTimer, duration);
             speechBubbleColor = color;
-<<<<<<< HEAD
-        }
-
-        /// <summary> 
-        /// Directly reduce the health of the character without any additional effects (particles, sounds, status effects...) 
-        /// </summary> 
-        public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, Character attacker)
-        {
-            Health = Health-amount;
-=======
         }
 
         private void AdjustKarma(Character attacker, float amount)
@@ -2397,15 +2224,14 @@ namespace Barotrauma
         /// </summary>
         public virtual void AddDamage(CauseOfDeath causeOfDeath, float amount, Character attacker)
         {
-            Health = health - amount;
->>>>>>> master
+            Health = Health - amount;
             if (amount > 0.0f)
             {
                 lastAttackCauseOfDeath = causeOfDeath;
 
                 DamageHUD(amount);
             }
-<<<<<<< HEAD
+            AdjustKarma(attacker, amount);
 
             //Nilmod Death Code
             if (Health <= minHealth)
@@ -2441,9 +2267,9 @@ namespace Barotrauma
             return ApplyAttack(attacker, worldPosition, attack, deltaTime, playSound, null);
         }
 
-        /// <summary> 
-        /// Apply the specified attack to this character. If the targetLimb is not specified, the limb closest to worldPosition will receive the damage. 
-        /// </summary> 
+        /// <summary>
+        /// Apply the specified attack to this character. If the targetLimb is not specified, the limb closest to worldPosition will receive the damage.
+        /// </summary>
         public virtual AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
         {
             Limb limbHit = targetLimb;
@@ -2507,34 +2333,6 @@ namespace Barotrauma
                             + (Stunresistance > 0f ? " (" + Math.Round(Stunresistance * 100f, 2) + "% Resisted)" : ""), ServerLog.MessageType.Attack);
                     }
                 }
-=======
-            AdjustKarma(attacker, amount);
-            if (health <= minHealth) Kill(causeOfDeath);
-        }
-        partial void DamageHUD(float amount);
-
-        public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false)
-        {
-            return ApplyAttack(attacker, worldPosition, attack, deltaTime, playSound, null);
-        }
-
-        /// <summary>
-        /// Apply the specified attack to this character. If the targetLimb is not specified, the limb closest to worldPosition will receive the damage.
-        /// </summary>
-        public virtual AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
-        {
-            Limb limbHit = targetLimb;
-            var attackResult = targetLimb == null ?
-                AddDamage(worldPosition, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, out limbHit, attacker) :
-                DamageLimb(worldPosition, targetLimb, attack.DamageType, attack.GetDamage(deltaTime), attack.GetBleedingDamage(deltaTime), attack.Stun, playSound, attack.TargetForce, attacker);
-
-            if (limbHit == null) return new AttackResult();
-
-            var attackingCharacter = attacker as Character;
-            if (attackingCharacter != null && attackingCharacter.AIController == null)
-            {
-                GameServer.Log(LogName + " attacked by " + attackingCharacter.LogName +". Damage: "+attackResult.Damage+" Bleeding damage: "+attackResult.Bleeding, ServerLog.MessageType.Attack);
->>>>>>> master
             }
 
             if (GameMain.Client == null &&
@@ -2575,21 +2373,12 @@ namespace Barotrauma
             return AddDamage(worldPosition, damageType, amount, bleedingAmount, stun, playSound, attackForce, out temp);
         }
 
-<<<<<<< HEAD
-        public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
-        {
-            hitLimb = null;
-
-            if (Removed) return new AttackResult();
-            
-=======
         public AttackResult AddDamage(Vector2 worldPosition, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, out Limb hitLimb, Character attacker = null)
         {
             hitLimb = null;
 
             if (Removed) return new AttackResult();
 
->>>>>>> master
             float closestDistance = 0.0f;
             foreach (Limb limb in AnimController.Limbs)
             {
@@ -2601,7 +2390,6 @@ namespace Barotrauma
                 }
             }
 
-<<<<<<< HEAD
             return DamageLimb(worldPosition, hitLimb, damageType, amount, bleedingAmount, stun, playSound, attackForce, attacker);
         }
 
@@ -2611,17 +2399,6 @@ namespace Barotrauma
 
             SetStun(stun);
 
-=======
-            return DamageLimb(worldPosition, hitLimb, damageType, amount, bleedingAmount, stun, playSound, attackForce, attacker);
-        }
-
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, DamageType damageType, float amount, float bleedingAmount, float stun, bool playSound, float attackForce, Character attacker = null)
-        {
-            if (Removed) return new AttackResult();
-
-            SetStun(stun);
-
->>>>>>> master
             if (Math.Abs(attackForce) > 0.0f)
             {
                 Vector2 diff = hitLimb.WorldPosition - worldPosition;
@@ -2726,16 +2503,10 @@ namespace Barotrauma
                 }
                 health = minHealth;
 
-<<<<<<< HEAD
                 BreakJoints();
 
                 Kill(CauseOfDeath.Pressure, isNetworkMessage);
             }
-=======
-            BreakJoints();
-            
-            Kill(CauseOfDeath.Pressure, isNetworkMessage);
->>>>>>> master
         }
 
         public void BreakJoints()
@@ -2777,12 +2548,8 @@ namespace Barotrauma
                 {
                     //IsRemotePlayer = false;
                     GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
-<<<<<<< HEAD
                 }
-            }
-=======
             }*/
->>>>>>> master
 
             AnimController.Frozen = false;
 
@@ -2928,6 +2695,7 @@ namespace Barotrauma
             }
         }
 
+        /*
         public void CheckForStatusEvent()
         {
             //They should only check these if their alive and on loss of limb.
@@ -2955,5 +2723,6 @@ namespace Barotrauma
                 lastSentBleeding = bleeding;
             }
         }
+        */
     }
 }

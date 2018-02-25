@@ -62,7 +62,7 @@ namespace Barotrauma
 
         public float DamageRange
         {
-            get {  return (float)(Math.Sqrt(size.X) * 20.0f); }
+            get {  return (float)Math.Sqrt(size.X) * 20.0f; }
         }
 
         public Hull Hull
@@ -162,6 +162,7 @@ namespace Barotrauma
             //hull.Oxygen -= size.X * deltaTime * OxygenConsumption;
             hull.Oxygen -= size.X * deltaTime * GameMain.NilMod.FireOxygenConsumption;
 
+            position.X -= GrowSpeed * growModifier * 0.5f * deltaTime;
 
             if (growModifier > 0f)
             {
@@ -228,16 +229,16 @@ namespace Barotrauma
                 Character c = Character.CharacterList[i];
                 if (c.AnimController.CurrentHull == null || c.IsDead) continue;
 
-                float range = DamageRange * GameMain.NilMod.FireCharRangeMultiplier;
-                if (c.Position.X < position.X - range || c.Position.X > position.X + size.X + range) continue;
-                if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) continue;
+                if (!IsInDamageRange(c, DamageRange)) continue;
+
 
                 float dmg = (((float)Math.Sqrt(size.X) * deltaTime * GameMain.NilMod.FireCharDamageMultiplier) / c.AnimController.Limbs.Length);
                 foreach (Limb limb in c.AnimController.Limbs)
-<<<<<<< HEAD
                 {
                     if (GameMain.NilMod.FireUseRangedDamage)
                     {
+                        float range = DamageRange * GameMain.NilMod.FireCharRangeMultiplier;
+
                         float closestdistance = Math.Abs(limb.Position.X - position.X) / range;
                         if (closestdistance > Math.Abs(limb.Position.X - (position.X + size.X)) / range) closestdistance = Math.Abs((limb.Position.X - (position.X + size.X)) / range);
                         if (limb.Position.X > position.X && limb.Position.X < (position.X + size.X)) closestdistance = 0f;
@@ -248,13 +249,31 @@ namespace Barotrauma
                     {
                         c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
                     }
-=======
-                {
-                    c.AddDamage(limb.SimPosition, DamageType.Burn, dmg, 0, 0, false);
->>>>>>> master
                 }
             }
         }
+
+        public bool IsInDamageRange(Character c, float damageRange)
+        {
+            float range = damageRange * GameMain.NilMod.FireCharRangeMultiplier;
+            if (c.Position.X < position.X - range || c.Position.X > position.X + size.X + range) return false;
+            if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) return false;
+
+            //if (c.Position.X < position.X - damageRange || c.Position.X > position.X + size.X + damageRange) return false;
+            //if (c.Position.Y < position.Y - size.Y || c.Position.Y > hull.Rect.Y) return false;
+            return true;
+        }
+
+
+
+        public bool IsInDamageRange(Vector2 worldPosition, float damageRange)
+        {
+            if (worldPosition.X < WorldPosition.X - damageRange || worldPosition.X > WorldPosition.X + size.X + damageRange) return false;
+            if (worldPosition.Y < WorldPosition.Y - size.Y || worldPosition.Y > hull.WorldRect.Y) return false;
+
+            return true;
+        }
+
 
         private void DamageItems(float deltaTime)
         {
@@ -262,7 +281,6 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-<<<<<<< HEAD
                 if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
 
                 //don't apply OnFire effects if the item is inside a fireproof container 
@@ -275,20 +293,6 @@ namespace Barotrauma
                 }
 
                 float range = ((float)Math.Sqrt(size.X) * 10.0f) * GameMain.NilMod.FireItemRangeMultiplier;
-=======
-                if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
-
-                //don't apply OnFire effects if the item is inside a fireproof container
-                //(or if it's inside a container that's inside a fireproof container, etc)
-                Item container = item.Container;
-                while (container != null)
-                {
-                    if (container.FireProof) return;
-                    container = container.Container;
-                }
-
-                float range = (float)Math.Sqrt(size.X) * 10.0f;
->>>>>>> master
                 if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) continue;
                 if (item.Position.Y < position.Y - size.Y || item.Position.Y > hull.Rect.Y) continue;
 
@@ -337,20 +341,16 @@ namespace Barotrauma
             if (size.X < 1.0f) Remove();
         }
 
-        public void Extinguish(float deltaTime, float amount, Vector2 pos)
+        public void Extinguish(float deltaTime, float amount)
         {
-            float range = 100.0f;
-
-            if (pos.X < WorldPosition.X - range || pos.X > WorldPosition.X + size.X + range) return;
-            if (pos.Y < WorldPosition.Y - range || pos.Y > WorldPosition.Y + 500.0f) return;
-
             float extinquishAmount = (amount * deltaTime) * GameMain.NilMod.FireToolExtinguishMultiplier;
 
 #if CLIENT
             float steamCount = Rand.Range(-5.0f, (float)Math.Sqrt(amount));
             for (int i = 0; i < steamCount; i++)
             {
-                Vector2 spawnPos = new Vector2(pos.X + Rand.Range(-5.0f, 5.0f), Rand.Range(position.Y - size.Y, position.Y) + 10.0f);
+                //Vector2 spawnPos = new Vector2(pos.X + Rand.Range(-5.0f, 5.0f), Rand.Range(position.Y - size.Y, position.Y) + 10.0f); 
+                Vector2 spawnPos = new Vector2(Rand.Range(position.X, position.X + size.X), Rand.Range(position.Y - size.Y, position.Y) + 10.0f);
 
                 Vector2 speed = new Vector2((spawnPos.X - (position.X + size.X / 2.0f)), (float)Math.Sqrt(size.X) * Rand.Range(20.0f, 25.0f));
 
@@ -371,6 +371,11 @@ namespace Barotrauma
             if (GameMain.Client != null) return;
 
             if (size.X < 1.0f) Remove();
+        }
+
+        public void Extinguish(float deltaTime, float amount, Vector2 worldPosition)
+        {
+            if (IsInDamageRange(worldPosition, 100.0f)) Extinguish(deltaTime, amount);
         }
 
         public void Remove()

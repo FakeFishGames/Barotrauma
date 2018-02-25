@@ -124,6 +124,17 @@ namespace Barotrauma
             GUIButton hostButton = new GUIButton(new Rectangle(0, 0, 100, 30), TextManager.Get("StartServerButton"), Alignment.BottomRight, "", menuTabs[(int)Tab.HostServer]);
             hostButton.OnClicked = HostServerClicked;
 
+            if (GameMain.NilMod.OverrideServerSettings)
+            {
+                serverNameBox.Text = GameMain.NilMod.ServerName;
+                portBox.Text = GameMain.NilMod.ServerPort.ToString();
+                maxPlayersBox.Text = GameMain.NilMod.MaxPlayers.ToString();
+                if (GameMain.NilMod.PublicServer) isPublicBox.Selected = true;
+                if (GameMain.NilMod.UPNPForwarding) useUpnpBox.Selected = true;
+
+                if (GameMain.NilMod.UseServerPassword) passwordBox.Text = GameMain.NilMod.ServerPassword;
+            }
+
             this.game = game;
         }
 

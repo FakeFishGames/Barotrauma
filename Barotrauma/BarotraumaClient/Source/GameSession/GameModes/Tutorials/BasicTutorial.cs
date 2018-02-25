@@ -261,7 +261,7 @@ namespace Barotrauma.Tutorials
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
-            infoBox = CreateInfoFrame("You can take a look at the area around the sub by selecting the \"Sonar\" checkbox.");
+            infoBox = CreateInfoFrame("You can take a look at the area around the sub by selecting the \"Active Sonar\" checkbox.");
 
             while (!radar.IsActive)
             {
@@ -288,14 +288,14 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("Steer the submarine downwards, heading further into the cavern.");
 
-            while (Submarine.MainSub.WorldPosition.Y > 40000.0f)
+            while (Submarine.MainSub.WorldPosition.Y > 32000.0f)
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
             yield return new WaitForSeconds(1.0f);
 
             var moloch = Character.Create(
-                "Content/Characters/Moloch/moloch.xml",
+                "Content/Characters/Moloch/moloch.xml", 
                 steering.Item.WorldPosition + new Vector2(3000.0f, -500.0f));
 
             moloch.PlaySound(CharacterSound.SoundType.Attack);
@@ -308,7 +308,7 @@ namespace Barotrauma.Tutorials
             foreach (Structure s in Structure.WallList)
             {
                 if (s.CastShadow || !s.HasBody) continue;
-
+                
                 if (s.Rect.Right > steering.Item.CurrentHull.Rect.Right) windows.Add(s);
             }
 
@@ -318,14 +318,14 @@ namespace Barotrauma.Tutorials
             {
                 steering.TargetVelocity = Vector2.Zero;
 
-                slowdownTimer = Math.Max(0.0f, slowdownTimer - CoroutineManager.DeltaTime * 0.3f);
+                slowdownTimer = Math.Max(0.0f, slowdownTimer - CoroutineManager.DeltaTime*0.3f);
                 Submarine.MainSub.Velocity *= slowdownTimer;
 
                 moloch.AIController.SelectTarget(steering.Item.CurrentHull.AiTarget);
                 Vector2 steeringDir = windows[0].WorldPosition - moloch.WorldPosition;
                 if (steeringDir != Vector2.Zero) steeringDir = Vector2.Normalize(steeringDir);
 
-                moloch.AIController.SteeringManager.SteeringManual(CoroutineManager.DeltaTime, steeringDir * 100.0f);
+                moloch.AIController.SteeringManager.SteeringManual(CoroutineManager.DeltaTime, steeringDir*100.0f);
 
                 foreach (Structure window in windows)
                 {
@@ -373,11 +373,10 @@ namespace Barotrauma.Tutorials
 
             Door commandDoor1 = Item.ItemList.Find(i => i.HasTag("commanddoor1")).GetComponent<Door>();
             Door commandDoor2 = Item.ItemList.Find(i => i.HasTag("commanddoor2")).GetComponent<Door>();
-            Door commandDoor3 = Item.ItemList.Find(i => i.HasTag("commanddoor3")).GetComponent<Door>();
 
             //wait until the player is out of the room and the doors are closed
             while (Controlled.WorldPosition.X > commandDoor1.Item.WorldPosition.X ||
-                (commandDoor1.IsOpen || (commandDoor2.IsOpen || commandDoor3.IsOpen)))
+                (commandDoor1.IsOpen || (commandDoor2.IsOpen)))
             {
                 //prevent the hull from filling up completely and crushing the player
                 steering.Item.CurrentHull.WaterVolume = Math.Min(steering.Item.CurrentHull.WaterVolume, steering.Item.CurrentHull.Volume * 0.9f);
@@ -562,23 +561,18 @@ namespace Barotrauma.Tutorials
                     brokenMsgShown = true;
 
                     infoBox = CreateInfoFrame("Looks like the pump isn't getting any power. The water must have short-circuited some of the junction "
-                        + "boxes. You can check which boxes are broken by selecting them.");
+                        +"boxes. You can check which boxes are broken by selecting them.");
 
                     while (true)
                     {
-<<<<<<< HEAD
-                        if (Controlled.SelectedConstruction != null &&
-                            Controlled.SelectedConstruction.GetComponent<PowerTransfer>() != null &&
-=======
                         if (Controlled.SelectedConstruction!=null && 
                             Controlled.SelectedConstruction.GetComponent<PowerTransfer>() != null && 
->>>>>>> master
                             Controlled.SelectedConstruction.Condition == 0.0f)
                         {
                             brokenBox = Controlled.SelectedConstruction;
 
                             infoBox = CreateInfoFrame("Here's our problem: this junction box is broken. Luckily engineers are adept at fixing electrical devices - "
-                                + "you just need to find a spare wire and click the \"Fix\"-button to repair the box.");
+                                +"you just need to find a spare wire and click the \"Fix\"-button to repair the box.");
                             break;
                         }
 
@@ -622,7 +616,7 @@ namespace Barotrauma.Tutorials
 
             while (cinematic.Running)
             {
-                yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
+                yield return Controlled != null && Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
             Submarine.Unload();

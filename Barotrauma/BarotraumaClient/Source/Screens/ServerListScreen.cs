@@ -30,8 +30,6 @@ namespace Barotrauma
 
         private GUIButton joinButtonVanilla;
 
-        private GUIButton joinButtonNilmod;
-
         private GUITextBox clientNameBox, ipBox;
 
         private bool masterServerResponded;
@@ -89,14 +87,11 @@ namespace Barotrauma
             new GUITextBlock(new Rectangle(middleX + columnX[1], 30, 0, 30), TextManager.Get("ServerListPlayers"), "", menu).Font = font;
             new GUITextBlock(new Rectangle(middleX + columnX[2], 30, 0, 30), TextManager.Get("ServerListRoundStarted"), "", menu).Font = font;
 
-<<<<<<< HEAD
-            //-340
-
-            joinButtonVanilla = new GUIButton(new Rectangle(-340, 0, 150, 30), "Refresh", Alignment.BottomRight, "", menu);
+            joinButtonVanilla = new GUIButton(new Rectangle(-340, 0, 150, 30), TextManager.Get("ServerListRefresh"), Alignment.BottomRight, "", menu);
             joinButtonVanilla.OnClicked = RefreshServers;
 
+            //joinButtonVanilla = new GUIButton(new Rectangle(0,0,150,30), TextManager.Get("ServerListJoin"), Alignment.BottomRight, "", menu);
             joinButtonVanilla = new GUIButton(new Rectangle(-170, 0, 150, 30), "Join (Vanilla)", Alignment.BottomRight, "", menu);
-
             joinButtonVanilla.OnClicked += (btn, userData) =>
             {
                 JoinServer(btn, userData, false);
@@ -105,30 +100,19 @@ namespace Barotrauma
 
             joinButtonVanilla.Enabled = true;
 
-            joinButtonNilmod = new GUIButton(new Rectangle(0, 0, 150, 30), "Join (Nilmod)", Alignment.BottomRight, "", menu);
-            joinButtonNilmod.OnClicked += (btn, userData) =>
+            joinButtonVanilla = new GUIButton(new Rectangle(0, 0, 150, 30), "Join (Nilmod)", Alignment.BottomRight, "", menu);
+            joinButtonVanilla.OnClicked += (btn, userData) =>
             {
                 JoinServer(btn, userData, true);
                 return true;
             };
-            joinButtonNilmod.Enabled = true;
-=======
-            joinButton = new GUIButton(new Rectangle(-170, 0, 150, 30), TextManager.Get("ServerListRefresh"), Alignment.BottomRight, "", menu);
-            joinButton.OnClicked = RefreshServers;
-
-            joinButton = new GUIButton(new Rectangle(0,0,150,30), TextManager.Get("ServerListJoin"), Alignment.BottomRight, "", menu);
-            joinButton.OnClicked = JoinServer;
->>>>>>> master
+            joinButtonVanilla.Enabled = true;
 
             //--------------------------------------------------------
 
             int y = 180;
 
-<<<<<<< HEAD
-            new GUITextBlock(new Rectangle(0, y, 200, 30), "Filter servers:", "", menu);
-=======
             new GUITextBlock(new Rectangle(0, y, 200, 30), TextManager.Get("FilterServers"), "", menu);
->>>>>>> master
             searchBox = new GUITextBox(new Rectangle(0, y + 30, 200, 30), "", menu);
             searchBox.OnTextChanged += (txtBox, txt) => { FilterServers(); return true; };
             filterPassword = new GUITickBox(new Rectangle(0, y + 60, 30, 30), TextManager.Get("FilterPassword"), Alignment.TopLeft, menu);
@@ -159,11 +143,7 @@ namespace Barotrauma
             
             foreach (GUIComponent child in serverList.children)
             {
-<<<<<<< HEAD
                 if (!(child.UserData is ServerInfo)) continue;
-=======
-                if (!(child.UserData is ServerInfo)) continue;
->>>>>>> master
                 ServerInfo serverInfo = (ServerInfo)child.UserData;
 
                 child.Visible =
@@ -395,6 +375,7 @@ namespace Barotrauma
             }
 
             CoroutineManager.StartCoroutine(ConnectToServer(ip, useNilmod));
+
 
             return true;
         }

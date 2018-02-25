@@ -288,8 +288,8 @@ namespace Barotrauma.Networking
                         string errorMessage = "";
                         if (ValidateReceivedData(activeTransfer, out errorMessage))
                         {
-                            OnFinished(activeTransfer);
                             StopTransfer(activeTransfer);
+                            OnFinished(activeTransfer);
                         }
                         else
                         {

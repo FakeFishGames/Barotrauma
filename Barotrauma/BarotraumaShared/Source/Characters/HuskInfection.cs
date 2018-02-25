@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
@@ -16,6 +15,8 @@ namespace Barotrauma
         const float IncubationDuration = 300.0f;
 
         private InfectionState state;
+
+        private Limb huskAppendage;
 
         private float incubationTimer;
         public float IncubationTimer
@@ -64,19 +65,26 @@ namespace Barotrauma
 
         private void UpdateDormantState(float deltaTime, Character character)
         {
-            float prevTimer = IncubationTimer;
+            if (state != InfectionState.Dormant)
+            {
+                DeactivateHusk(character);
+            }
 
+            float prevTimer = IncubationTimer;
             state = InfectionState.Dormant;
 
             IncubationTimer += deltaTime / IncubationDuration;
 
             character.AddDamage(CauseOfDeath.Husk, GameMain.NilMod.PlayerHuskInfectedDrain * deltaTime, null);
-
-            if (Character.Controlled != character) return;
         }
 
         private void UpdateTransitionState(float deltaTime, Character character)
         {
+            if (state != InfectionState.Transition)
+            {
+                DeactivateHusk(character);
+            }
+
             IncubationTimer += deltaTime / IncubationDuration;
 
             character.AddDamage(CauseOfDeath.Husk, GameMain.NilMod.PlayerHuskInfectedDrain * deltaTime, null);
@@ -106,6 +114,9 @@ namespace Barotrauma
 
         private void AttachHuskAppendage(Character character)
         {
+            //husk appendage already created, don't do anything 
+            if (huskAppendage != null) return;
+
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine("Content", "Characters", "Human", "huskappendage.xml"));
             if (doc == null || doc.Root == null) return;
 
@@ -131,25 +142,48 @@ namespace Barotrauma
 
             var torso = character.AnimController.GetLimb(LimbType.Torso);
 
-            var newLimb = new Limb(character, limbElement);
-            newLimb.body.Submarine = character.Submarine;
-            newLimb.body.SetTransform(torso.SimPosition, torso.Rotation);
-            
-            character.AnimController.AddLimb(newLimb);
+            huskAppendage = new Limb(character, limbElement);
+            huskAppendage.body.Submarine = character.Submarine;
+            huskAppendage.body.SetTransform(torso.SimPosition, torso.Rotation);
+
+            character.AnimController.AddLimb(huskAppendage);
             character.AnimController.AddJoint(jointElement);
+        }
+
+        private void DeactivateHusk(Character character)
+        {
+            character.NeedsAir = true;
+            RemoveHuskAppendage(character);
+        }
+
+        private void RemoveHuskAppendage(Character character)
+        {
+            if (huskAppendage == null) return;
+
+            character.AnimController.RemoveLimb(huskAppendage);
+            huskAppendage = null;
         }
 
         public void Remove(Character character)
         {
-            if (character != null)
-                character.OnDeath -= CharacterDead;
+            DeactivateHusk(character);
+
+            if (character != null) character.OnDeath -= CharacterDead;
         }
 
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.Client != null) return;
 
-<<<<<<< HEAD
+            //don't turn the character into a husk if any of its limbs are severed
+            if (character.AnimController?.LimbJoints != null)
+            {
+                foreach (var limbJoint in character.AnimController.LimbJoints)
+                {
+                    if (limbJoint.IsSevered) return;
+                }
+            }
+
             //Nilmod Deactivate players turning into husks on death optionally
             if (!GameMain.NilMod.PlayerHuskAiOnDeath)
             {
@@ -160,19 +194,6 @@ namespace Barotrauma
             //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it 
             //CoroutineManager.StartCoroutine(CreateAIHusk(character));
             CoroutineManager.StartCoroutine(CreateAIHuskDelayed(character));
-=======
-            //don't turn the character into a husk if any of its limbs are severed
-            if (character.AnimController?.LimbJoints != null)
-            {
-                foreach (var limbJoint in character.AnimController.LimbJoints)
-                {
-                    if (limbJoint.IsSevered) return;
-                }
-            }
-            
-            //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
-            CoroutineManager.StartCoroutine(CreateAIHusk(character));
->>>>>>> master
         }
 
         private IEnumerable<object> CreateAIHusk(Character character)
@@ -180,15 +201,7 @@ namespace Barotrauma
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-<<<<<<< HEAD
             if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
-
-            var husk = Character.Create(
-                Path.Combine("Content", "Characters", "Human", "humanhusk.xml"),
-                character.WorldPosition,
-                character.Info,
-                false, true);
-=======
             var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
             var configFile = characterFiles.Find(f => Path.GetFileNameWithoutExtension(f) == "humanhusk");
 
@@ -199,7 +212,6 @@ namespace Barotrauma
             }
 
             var husk = Character.Create(configFile, character.WorldPosition, character.Info, false, true);
->>>>>>> master
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {
@@ -232,12 +244,17 @@ namespace Barotrauma
             //Entity.Spawner.AddToRemoveQueue(character);
 
             if (GameMain.Server != null) GameMain.Server.ServerLog.WriteLine(character.Name + " Converted into an AI Husk!", Networking.ServerLog.MessageType.Husk);
+            var characterFiles = GameMain.SelectedPackage.GetFilesOfType(ContentType.Character);
+            var configFile = characterFiles.Find(f => Path.GetFileNameWithoutExtension(f) == "humanhusk");
 
-            var husk = Character.Create(
-                Path.Combine("Content", "Characters", "Human", "humanhusk.xml"),
-                character.WorldPosition,
-                character.Info,
-                false, true);
+            if (string.IsNullOrEmpty(configFile))
+            {
+                DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - humanhusk config file not found.");
+                yield return CoroutineStatus.Success;
+            }
+
+            var husk = Character.Create(configFile, character.WorldPosition, character.Info, false, true);
+
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {

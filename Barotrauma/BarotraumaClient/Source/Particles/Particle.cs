@@ -176,7 +176,12 @@ namespace Barotrauma.Particles
             {
                 if (velocityChange != Vector2.Zero || angularVelocity != 0.0f)
                 {
-                    rotation = MathUtils.VectorToAngle(new Vector2(velocity.X, -velocity.Y));
+                    Vector2 relativeVel = velocity;
+                    if (currentHull?.Submarine != null)
+                    {
+                        relativeVel -= ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+                    }
+                    rotation = MathUtils.VectorToAngle(new Vector2(relativeVel.X, -relativeVel.Y));
                 }
             }
             else

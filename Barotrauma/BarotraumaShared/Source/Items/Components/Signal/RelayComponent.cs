@@ -45,24 +45,13 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        public override void OnMapLoaded()
-        {
-            base.OnMapLoaded();
-
-            ConnectionPanel connectionPanel = item.GetComponent<ConnectionPanel>();
-            var powerIn = connectionPanel.Connections.Find(c => c.Name == "power_in");
-            var powerOut = connectionPanel.Connections.Find(c => c.Name == "power_out");
-
-            if (powerIn != null) powerIn.InternalConnection = powerOut;
-        }
-
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
 
             item.SendSignal(0, IsOn ? "1" : "0", "state_out", null);
 
-            if (-currPowerConsumption > maxPower) item.Condition = 0.0f;
+            if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower) item.Condition = 0.0f;
         }
         
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power=0.0f)

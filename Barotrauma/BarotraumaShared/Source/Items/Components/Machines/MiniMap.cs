@@ -59,8 +59,9 @@ namespace Barotrauma.Items.Components
             }
 
             currPowerConsumption = powerConsumption;
-            
-            if (voltage > minVoltage)
+
+            hasPower = voltage > minVoltage;
+            if (hasPower)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }

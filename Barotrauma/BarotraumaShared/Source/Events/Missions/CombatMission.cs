@@ -129,9 +129,9 @@ namespace Barotrauma
             }
             */
 
-            List<Client> CoalitionPreference = GameMain.NilMod.RandomizeClientOrder(clients.FindAll(c => c.PreferredTeam == 1));
-            List<Client> RenegadePreference = GameMain.NilMod.RandomizeClientOrder(clients.FindAll(c => c.PreferredTeam == 2));
-            List<Client> RandomPreference = GameMain.NilMod.RandomizeClientOrder(clients.FindAll(c => c.PreferredTeam == 0));
+            List<Client> CoalitionPreference = GameMain.NilMod.RandomizeClientOrder(clients.FindAll(c => c.PreferredTeam == 1 && !c.SpectateOnly));
+            List<Client> RenegadePreference = GameMain.NilMod.RandomizeClientOrder(clients.FindAll(c => c.PreferredTeam == 2 && !c.SpectateOnly));
+            List<Client> RandomPreference = GameMain.NilMod.RandomizeClientOrder(clients.FindAll(c => c.PreferredTeam == 0 && !c.SpectateOnly));
 
             int hostpreference = GameMain.NilMod.HostTeamPreference;
             int CoalitionCount = CoalitionPreference.Count();
@@ -141,11 +141,19 @@ namespace Barotrauma
             if (hostpreference == 0)
             {
                 hostpreference = Rand.Range(1, 2);
+            }
+#if CLIENT
+            //Only count the host in the team counts if he has a character.
+            if (GameMain.NetworkMember.CharacterInfo != null)
+            {
                 if (hostpreference == 1) CoalitionCount += 1;
                 if (hostpreference == 2) RenegadeCount += 1;
             }
+#endif
 
-            for(int i = RandomPreference.Count - 1; i >= 0; i--)
+
+
+            for (int i = RandomPreference.Count - 1; i >= 0; i--)
             {
                 if(CoalitionCount > RenegadeCount)
                 {

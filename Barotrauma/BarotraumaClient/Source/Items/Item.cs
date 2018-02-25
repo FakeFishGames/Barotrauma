@@ -155,27 +155,6 @@ namespace Barotrauma
 
             if (Screen.Selected != GameMain.SubEditorScreen) return;
 
-<<<<<<< HEAD
-            if (!Linkable) return;
-
-            if (!PlayerInput.KeyDown(Keys.Space)) return;
-            bool lClick = PlayerInput.LeftButtonClicked();
-            bool rClick = PlayerInput.RightButtonClicked();
-            if (!lClick && !rClick) return;
-
-            Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-            if (lClick)
-            {
-                foreach (MapEntity entity in mapEntityList)
-                {
-                    if (entity == this || !entity.IsHighlighted) continue;
-                    if (linkedTo.Contains(entity)) continue;
-                    if (!entity.IsMouseOn(position)) continue;
-
-                    linkedTo.Add(entity);
-                    if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
-                }
-=======
             if (!Linkable) return;
 
             if (!PlayerInput.KeyDown(Keys.Space)) return;
@@ -196,19 +175,6 @@ namespace Barotrauma
                     linkedTo.Add(entity);
                     if (entity.Linkable && entity.linkedTo != null) entity.linkedTo.Add(this);
                 }
-            }
-            else
-            {
-                foreach (MapEntity entity in mapEntityList)
-                {
-                    if (entity == this || !entity.IsHighlighted) continue;
-                    if (!linkedTo.Contains(entity)) continue;
-                    if (!entity.IsMouseOn(position)) continue;
-
-                    linkedTo.Remove(entity);
-                    if (entity.linkedTo != null && entity.linkedTo.Contains(this)) entity.linkedTo.Remove(this);
-                }
->>>>>>> master
             }
             else
             {
@@ -240,15 +206,9 @@ namespace Barotrauma
             GUIListBox listBox = (GUIListBox)editingHUD;
             listBox.Spacing = 5;
             
-<<<<<<< HEAD
-            var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
-
-            if (!inGame && Linkable)
-=======
             var itemEditor = new SerializableEntityEditor(this, inGame, editingHUD, true);
             
             if (!inGame && Linkable)
->>>>>>> master
             {
                 itemEditor.AddCustomContent(new GUITextBlock(new Rectangle(0, 0, 0, 20), "Hold space to link to another item", "", null, GUI.SmallFont), 1);
             }            

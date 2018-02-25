@@ -202,12 +202,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\moloch.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Scorpion\scorpion.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Scorpion\scorpion.xml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\damagedtigerthresher.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
@@ -743,7 +737,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Data\clientpermissions.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.7.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Data\ContentPackages\Vanilla 0.8.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Data\NilModEventChatterSettings.xml">
@@ -755,6 +749,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Data\NilModSettings.xml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Data\permissionpresets.xml" />
     <Content Include="$(MSBuildThisFileDirectory)Icon.ico" />
     <Content Include="$(MSBuildThisFileDirectory)Mods\info.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -869,13 +864,13 @@
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Moloch\idle2.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Scorpion\scorpionattack1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\thresherattack1.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Scorpion\scorpionidle1.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\thresheridle1.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Scorpion\scorpionidle2.ogg">
+    <None Include="$(MSBuildThisFileDirectory)Content\Characters\Tigerthresher\thresheridle2.ogg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Include="$(MSBuildThisFileDirectory)Content\Characters\Watcher\attack1.ogg">

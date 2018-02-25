@@ -80,11 +80,7 @@ namespace Barotrauma
 
 #if DEBUG && CLIENT
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
-<<<<<<< HEAD
                 !DebugConsole.IsOpen && GUIComponent.KeyboardDispatcher.Subscriber == null)
-=======
-                !DebugConsole.IsOpen && GUIComponent.KeyboardDispatcher.Subscriber == null)
->>>>>>> master
             {
                 /*
                 var closestSub = Submarine.FindClosest(cam.WorldViewCenter);
@@ -145,13 +141,13 @@ namespace Barotrauma
             }
 
 #if CLIENT
-
             if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
             {
                 Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled);                
             }
             GameMain.NilModProfiler.SWCharacterUpdate.Start();
 #endif
+
             Character.UpdateAll((float)deltaTime, cam);
 
 #if CLIENT
@@ -184,7 +180,7 @@ namespace Barotrauma
 
 #if CLIENT
             GameMain.NilModProfiler.RecordStatusEffect();
-            if (Character.Controlled != null && Lights.LightManager.ViewTarget != null || Character.Spied != null && Lights.LightManager.ViewTarget != null)
+            if ((Character.Controlled != null && Lights.LightManager.ViewTarget != null) || (Character.Spied != null && Lights.LightManager.ViewTarget != null))
             {
                 cam.TargetPos = Lights.LightManager.ViewTarget.WorldPosition;
             }
@@ -311,10 +307,10 @@ namespace Barotrauma
                         character = (Character)Arguments[0];
                         WorldCoordinate = new Vector2(float.Parse(Arguments[1].ToString()), float.Parse(Arguments[2].ToString()));
 
-                        Character.Controlled.AnimController.CurrentHull = null;
-                        Character.Controlled.Submarine = null;
-                        Character.Controlled.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(WorldCoordinate));
-                        Character.Controlled.AnimController.FindHull(WorldCoordinate, true);
+                        character.AnimController.CurrentHull = null;
+                        character.Submarine = null;
+                        character.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(WorldCoordinate));
+                        character.AnimController.FindHull(WorldCoordinate, true);
                         break;
 
                     //case "handcuff":

@@ -183,24 +183,6 @@ namespace Barotrauma
             }
             else
             {
-<<<<<<< HEAD
-                UpdateSubInventory(deltaTime, selectedSlot);
-            }
-
-            if (character == Character.Spied)
-            {
-                for (int i = 0; i < capacity; i++)
-                {
-                    if (selectedSlot != i &&
-                        Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
-                    {
-                        //-3 because selected items are in slots 3 and 4 (hands)
-                        useOnSelfButton[i - 3].Update(deltaTime);
-                    }
-                }
-            }
-            else if (character == Character.Controlled)
-=======
                 if (selectedSlot?.Inventory == this)
                 {
                     var subInventory = GetSubInventory(selectedSlot.SlotIndex);
@@ -213,8 +195,19 @@ namespace Barotrauma
                 }
             }
 
-            if (character == Character.Controlled)
->>>>>>> master
+            if (character == Character.Spied)
+            {
+                for (int i = 0; i < capacity; i++)
+                {
+                    if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
+                        Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
+                    {
+                        //-3 because selected items are in slots 3 and 4 (hands)
+                        useOnSelfButton[i - 3].Update(deltaTime);
+                    }
+                }
+            }
+            else if (character == Character.Controlled)
             {
                 for (int i = 0; i < capacity; i++)
                 {
@@ -268,6 +261,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < capacity - 1; i++)
             {
+                slots[i].State = GUIComponent.ComponentState.None;
                 if (slots[i].Disabled || Items[i] == null) continue;
 
                 for (int n = i + 1; n < capacity; n++)
@@ -281,6 +275,8 @@ namespace Barotrauma
                 }
             }
 
+            highlightedSubInventory = null;
+            highlightedSubInventorySlot = null;
             selectedSlot = null;
         }
 
@@ -331,7 +327,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (selectedSlot != i &&
+                    if ((selectedSlot == null || selectedSlot.SlotIndex != i) &&
                         Items[i] != null && Items[i].CanUseOnSelf && character.HasSelectedItem(Items[i]))
                     {
                         useOnSelfButton[i - 3].Draw(spriteBatch);

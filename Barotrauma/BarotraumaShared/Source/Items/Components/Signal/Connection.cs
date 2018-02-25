@@ -41,25 +41,7 @@ namespace Barotrauma.Items.Components
                     Connection recipient = Wires[i].OtherConnection(this);
                     if (recipient != null) recipients.Add(recipient);
                 }
-                if (internalConnection != null) recipients.Add(internalConnection);
                 return recipients;
-            }
-        }
-
-        //another connection in the same connection panel
-        private Connection internalConnection;
-        public Connection InternalConnection
-        {
-            get
-            {
-                return internalConnection;
-            }
-            set
-            {
-                if (internalConnection != null) internalConnection.internalConnection = null;
-
-                internalConnection = value;
-                if (internalConnection != null) internalConnection.internalConnection = this;
             }
         }
 

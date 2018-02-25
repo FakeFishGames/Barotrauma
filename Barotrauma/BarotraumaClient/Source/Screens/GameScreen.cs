@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     partial class GameScreen : Screen
     {
-        public Color waterColor = GameMain.NilMod.WaterColour;
+        //public Color waterColor = GameMain.NilMod.WaterColour;
 
         private BlurEffect lightBlur;
         
@@ -175,10 +175,10 @@ namespace Barotrauma
 			graphics.SetRenderTarget(renderTargetWater);
 
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
-			spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), waterColor);
-			spriteBatch.End();
+            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), GameMain.NilMod.WaterColour);
+            spriteBatch.End();
 
-			//draw alpha blended particles that are inside a sub
+            //draw alpha blended particles that are inside a sub
 #if LINUX
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
 #else

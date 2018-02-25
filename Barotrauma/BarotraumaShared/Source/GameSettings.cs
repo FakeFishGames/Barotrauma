@@ -110,7 +110,7 @@ namespace Barotrauma
         {
             get
             {
-                return defaultPlayerName;
+                return defaultPlayerName ?? "";
             }
             set
             {
@@ -342,7 +342,7 @@ namespace Barotrauma
             doc.Root.Add(gameplay);
 
             var playerElement = new XElement("player");
-            playerElement.Add(new XAttribute("name", defaultPlayerName));
+            playerElement.Add(new XAttribute("name", defaultPlayerName ?? ""));
             doc.Root.Add(playerElement);
 
             doc.Save(filePath);

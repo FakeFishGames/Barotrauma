@@ -12,16 +12,6 @@ namespace Barotrauma.Items.Components
 {
     class Projectile : ItemComponent
     {
-<<<<<<< HEAD
-        //continuous collision detection is used while the projectile is moving faster than this 
-        const float ContinuousCollisionThreshold = 5.0f;
-
-        //a duration during which the projectile won't drop from the body it's stuck to 
-        private const float PersistentStickJointDuration = 1.0f;
-
-        private float launchImpulse;
-
-=======
         //continuous collision detection is used while the projectile is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
 
@@ -30,7 +20,6 @@ namespace Barotrauma.Items.Components
 
         private float launchImpulse;
         
->>>>>>> master
         private PrismaticJoint stickJoint;
         private Body stickTarget;
 
@@ -40,13 +29,8 @@ namespace Barotrauma.Items.Components
 
         public Character User;
 
-<<<<<<< HEAD
         private float persistentStickJointTimer;
 
-=======
-        private float persistentStickJointTimer;
-
->>>>>>> master
         [Serialize(10.0f, false)]
         public float LaunchImpulse
         {
@@ -62,36 +46,6 @@ namespace Barotrauma.Items.Components
         }
 
         [Serialize(false, false)]
-<<<<<<< HEAD
-        //backwards compatibility, can stick to anything 
-        public bool DoesStick
-        {
-            get;
-            set;
-        }
-
-        [Serialize(false, false)]
-        public bool StickToCharacters
-        {
-            get;
-            set;
-        }
-
-        [Serialize(false, false)]
-        public bool StickToStructures
-        {
-            get;
-            set;
-        }
-
-        [Serialize(false, false)]
-        public bool StickToItems
-        {
-            get;
-            set;
-        }
-
-=======
         //backwards compatibility, can stick to anything
         public bool DoesStick
         {
@@ -120,7 +74,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
->>>>>>> master
         [Serialize(false, false)]
         public bool Hitscan
         {
@@ -135,8 +88,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public Projectile(Item item, XElement element)
-            : base(item, element)
+        public Projectile(Item item, XElement element) 
+            : base (item, element)
         {
             IgnoredBodies = new List<Body>();
 
@@ -171,9 +124,9 @@ namespace Barotrauma.Items.Components
         {
             item.Drop();
 
-            item.body.Enabled = true;
+            item.body.Enabled = true;            
             item.body.ApplyLinearImpulse(impulse);
-
+            
             item.body.FarseerBody.OnCollision += OnProjectileCollision;
             item.body.FarseerBody.IsBullet = true;
 
@@ -182,13 +135,8 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
 
-<<<<<<< HEAD
             if (stickJoint == null) return;
 
-=======
-            if (stickJoint == null) return;
-
->>>>>>> master
             if (stickTarget != null)
             {
                 try
@@ -222,11 +170,7 @@ namespace Barotrauma.Items.Components
             Vector2 rayStart = item.SimPosition;
             Vector2 rayEnd = item.SimPosition + dir * 1000.0f;
 
-<<<<<<< HEAD
             List<Tuple<Fixture, Vector2, Vector2>> hits = new List<Tuple<Fixture, Vector2, Vector2>>();
-=======
-            List<Tuple<Fixture, Vector2, Vector2>> hits = new List<Tuple<Fixture, Vector2, Vector2>>();
->>>>>>> master
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (fixture == null || fixture.IsSensor) return -1;
@@ -243,33 +187,6 @@ namespace Barotrauma.Items.Components
                     return 0;
                 }*/
 
-<<<<<<< HEAD
-                hits.Add(new Tuple<Fixture, Vector2, Vector2>(fixture, point, normal));
-
-                return hits.Count < 25 ? 1 : 0;
-            }, rayStart, rayEnd);
-
-            bool hitSomething = false;
-            hits = hits.OrderBy(t => Vector2.DistanceSquared(rayStart, t.Item2)).ToList();
-            foreach (Tuple<Fixture, Vector2, Vector2> t in hits)
-            {
-                Fixture fixture = t.Item1;
-                Vector2 point = t.Item2;
-                Vector2 normal = t.Item3;
-                item.body.SetTransform(point, rotation);
-                if (OnProjectileCollision(fixture, normal))
-                {
-                    hitSomething = true;
-                    //Character.Controlled.AnimController.Teleport(point - Character.Controlled.SimPosition, Vector2.Zero); 
-                    break;
-                }
-            }
-
-            //the raycast didn't hit anything -> the projectile flew somewhere outside the level and is permanently lost
-            if (!hitSomething)
-            {
-                Entity.Spawner.AddToRemoveQueue(item);
-=======
                 hits.Add(new Tuple<Fixture, Vector2, Vector2>(fixture,point,normal));
 
                 return hits.Count<25 ? 1 : 0;
@@ -295,36 +212,11 @@ namespace Barotrauma.Items.Components
             if (!hitSomething)
             {
                 Entity.Spawner.AddToRemoveQueue(item);
->>>>>>> master
             }
         }
-
+        
         public override void Update(float deltaTime, Camera cam)
         {
-<<<<<<< HEAD
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-
-            if (item.body != null && item.body.FarseerBody.IsBullet)
-            {
-                if (item.body.LinearVelocity.LengthSquared() < ContinuousCollisionThreshold * ContinuousCollisionThreshold)
-                {
-                    item.body.FarseerBody.IsBullet = false;
-                    //projectiles with a stickjoint don't become inactive until the stickjoint is detached 
-                    if (stickJoint == null) IsActive = false;
-                }
-            }
-
-            if (stickJoint == null) return;
-
-            if (persistentStickJointTimer > 0.0f)
-            {
-                persistentStickJointTimer -= deltaTime;
-                return;
-            }
-
-            if (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f)
-            {
-=======
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null); 
 
             if (item.body != null && item.body.FarseerBody.IsBullet)
@@ -347,7 +239,6 @@ namespace Barotrauma.Items.Components
 
             if (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f)  
             {
->>>>>>> master
                 if (stickTarget != null)
                 {
                     try
@@ -371,17 +262,10 @@ namespace Barotrauma.Items.Components
                     //the body that the projectile was stuck to has been removed
                 }
 
-<<<<<<< HEAD
-                stickJoint = null;
-
-                if (!item.body.FarseerBody.IsBullet) IsActive = false;
-            }
-=======
                 stickJoint = null; 
              
                 if (!item.body.FarseerBody.IsBullet) IsActive = false; 
             }           
->>>>>>> master
         }
 
         private bool OnProjectileCollision(Fixture f1, Fixture f2, Contact contact)
@@ -411,7 +295,6 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
 
-<<<<<<< HEAD
                 Limb limb = target.Body.UserData as Limb;
                 Structure structure;
                 if (limb != null)
@@ -419,15 +302,6 @@ namespace Barotrauma.Items.Components
                     attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f);
                     if (limb.character != null)
                         character = limb.character;
-=======
-                Limb limb = target.Body.UserData as Limb;
-                Structure structure;
-                if (limb != null)
-                {
-                    attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f);
-                    if (limb.character != null)
-                        character = limb.character;
->>>>>>> master
                 }
                 else if ((structure = (target.Body.UserData as Structure)) != null)
                 {
@@ -435,17 +309,9 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-<<<<<<< HEAD
-            ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
-            ApplyStatusEffects(ActionType.OnImpact, 1.0f, character);
-
-            IsActive = false;
-
-=======
             ApplyStatusEffects(ActionType.OnUse, 1.0f, character);
             ApplyStatusEffects(ActionType.OnImpact, 1.0f, character);
             
->>>>>>> master
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
 
             item.body.CollisionCategories = Physics.CollisionItem;
@@ -460,22 +326,6 @@ namespace Barotrauma.Items.Components
             {
                 item.body.LinearVelocity *= 0.1f;
             }
-<<<<<<< HEAD
-            else if (Vector2.Dot(item.body.LinearVelocity, collisionNormal) < 0.0f &&
-                        (DoesStick ||
-                        (StickToCharacters && target.Body.UserData is Limb) ||
-                        (StickToStructures && target.Body.UserData is Structure) ||
-                        (StickToItems && target.Body.UserData is Item)))
-            {
-                Vector2 dir = new Vector2(
-                    (float)Math.Cos(item.body.Rotation),
-                    (float)Math.Sin(item.body.Rotation));
-
-                StickToTarget(target.Body, dir);
-                item.body.LinearVelocity *= 0.5f;
-
-                return Hitscan;
-=======
             else if (Vector2.Dot(item.body.LinearVelocity, collisionNormal) < 0.0f &&
                         (DoesStick ||
                         (StickToCharacters && target.Body.UserData is Limb) ||
@@ -490,7 +340,6 @@ namespace Barotrauma.Items.Components
                 item.body.LinearVelocity *= 0.5f;
 
                 return Hitscan;                
->>>>>>> master
             }
             else
             {
@@ -506,11 +355,7 @@ namespace Barotrauma.Items.Components
                     {
                         contained.SetTransform(item.SimPosition, contained.body.Rotation);
                     }
-<<<<<<< HEAD
-                    //contained.Condition = 0.0f; //Let the freaking .xml handle it jeez 
-=======
                     //contained.Condition = 0.0f; //Let the freaking .xml handle it jeez
->>>>>>> master
                 }
             }
 
@@ -537,13 +382,8 @@ namespace Barotrauma.Items.Components
                 stickJoint.UpperLimit = ConvertUnits.ToSimUnits(item.Sprite.size.X * 0.3f);
             }
 
-<<<<<<< HEAD
             persistentStickJointTimer = PersistentStickJointDuration;
 
-=======
-            persistentStickJointTimer = PersistentStickJointDuration;
-
->>>>>>> master
             item.body.FarseerBody.IgnoreCollisionWith(targetBody);
             stickTarget = targetBody;
             GameMain.World.AddJoint(stickJoint);

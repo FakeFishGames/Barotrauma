@@ -577,7 +577,14 @@ namespace Barotrauma
             }
             else
             {
-                msg.WriteRangedSingle(health, minHealth, maxHealth, 8);
+                if (GameMain.NilMod.HideConciousCreatureHealth && (!(AIController is HumanAIController || SpeciesName.ToLowerInvariant() == "human")) && Stun <= 2f)
+                {
+                    msg.WriteRangedSingle(100f, 0f, 100f, 8);
+                }
+                else
+                {
+                    msg.WriteRangedSingle(health, minHealth, maxHealth, 8);
+                }
 
                 msg.Write(oxygen < 100.0f);
                 if (oxygen < 100.0f)

@@ -120,19 +120,11 @@ namespace Barotrauma.Items.Components
             return componentElement;
         }
 
-<<<<<<< HEAD
-        protected override void ShallowRemoveComponentSpecific()
-        {
-            //do nothing 
-        }
-
-=======
         protected override void ShallowRemoveComponentSpecific()
         {
             //do nothing
         }
 
->>>>>>> master
         protected override void RemoveComponentSpecific()
         {
             foreach (Connection c in Connections)
@@ -205,8 +197,6 @@ namespace Barotrauma.Items.Components
                     if (!Connections.Any(connection => connection.Wires.Contains(wire)))
                     {
                         if (!wire.Item.CanClientAccess(c)) return;
-<<<<<<< HEAD
-=======
                     }                    
                 }
             }
@@ -218,85 +208,24 @@ namespace Barotrauma.Items.Components
                 {
                     Wire existingWire = Connections[i].Wires[j];
                     if (existingWire == null) continue;
-                    
+                    //NilMod Deny changes to locked wiring
+                    if (existingWire.Locked == true) continue;
+
                     //existing wire not in the list of new wires -> disconnect it
                     if (!wires[i].Contains(existingWire))
                     {
                         if (existingWire.Locked)
                         {
-                            //this should not be possible unless the client is running a modified version of the game
-                            GameServer.Log(c.Character.LogName + " attempted to disconnect a locked wire from " +
-                                Connections[i].Item.Name + " (" + Connections[i].Name + ")", ServerLog.MessageType.Error);
-                            continue;
-                        }
-
-                        existingWire.RemoveConnection(item);
-
-                        if (existingWire.Connections[0] == null && existingWire.Connections[1] == null)
-                        {
-                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
-                                Connections[i].Item.Name + " (" + Connections[i].Name + ")", ServerLog.MessageType.ItemInteraction);
-                        }
-                        else if (existingWire.Connections[0] != null)
-                        {
-                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
-                                Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[0].Item.Name + " (" + existingWire.Connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
-
-                            //wires that are not in anyone's inventory (i.e. not currently being rewired) 
-                            //can never be connected to only one connection
-                            // -> the client must have dropped the wire from the connection panel
-                            if (existingWire.Item.ParentInventory == null)
-                            {
-                                //let other clients know the item was also disconnected from the other connection
-                                existingWire.Connections[0].Item.CreateServerEvent(existingWire.Connections[0].Item.GetComponent<ConnectionPanel>());
-                                existingWire.Item.Drop(c.Character);
-                            }
-                        }
-                        else if (existingWire.Connections[1] != null)
-                        {
-                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
-                                Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
-
-                            if (existingWire.Item.ParentInventory == null)
-                            {
-                                //let other clients know the item was also disconnected from the other connection
-                                existingWire.Connections[1].Item.CreateServerEvent(existingWire.Connections[1].Item.GetComponent<ConnectionPanel>());
-                                existingWire.Item.Drop(c.Character);
-                            }
-                        }
-                        
-                        Connections[i].Wires[j] = null;
->>>>>>> master
-                    }
-                }
-            }
-
-            //go through existing wire links 
-            for (int i = 0; i < Connections.Count; i++)
-            {
-                for (int j = 0; j < Connection.MaxLinked; j++)
-                {
-                    Wire existingWire = Connections[i].Wires[j];
-                    if (existingWire == null) continue;
-                    //NilMod Deny changes to locked wiring
-                    if (existingWire.Locked == true) continue;
-
-                    //existing wire not in the list of new wires -> disconnect it 
-                    if (!wires[i].Contains(existingWire))
-                    {
-<<<<<<< HEAD
-                        if (existingWire.Locked)
-                        {
                             if (!GameMain.NilMod.CanRewireMainSubs)
                             {
                                 //this should not be possible unless the client is running a modified version of the game 
-                                GameServer.Log(c.Character.Name + " attempted to disconnect a locked wire from " +
+                                GameServer.Log(c.Character.LogName + " attempted to disconnect a locked wire from " +
                                     Connections[i].Item.Name + " (" + Connections[i].Name + ") - Could be a modified client.", ServerLog.MessageType.Rewire);
                             }
                             else
                             {
                                 //this is simply the rewire protection from CanRewireMainSubs
-                                GameServer.Log(c.Character.Name + " attempted to disconnect a locked wire from " +
+                                GameServer.Log(c.Character.LogName + " attempted to disconnect a locked wire from " +
                                     Connections[i].Item.Name + " (" + Connections[i].Name + ") - but CanRewireMainSubs Prevented it.", ServerLog.MessageType.Rewire);
                             }
                             continue;
@@ -306,48 +235,48 @@ namespace Barotrauma.Items.Components
 
                         if (existingWire.Connections[0] == null && existingWire.Connections[1] == null)
                         {
-                            GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ")", ServerLog.MessageType.Rewire);
                         }
                         else if (existingWire.Connections[0] != null)
                         {
-                            GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[0].Item.Name + " (" + existingWire.Connections[0].Name + ")", ServerLog.MessageType.Rewire);
 
-                            //wires that are not in anyone's inventory (i.e. not currently being rewired)  
-                            //can never be connected to only one connection 
-                            // -> the client must have dropped the wire from the connection panel 
-                            if (existingWire.Item.ParentInventory == null)
+                            //wires that are not in anyone's inventory (i.e. not currently being rewired) 
+                            //can never be connected to only one connection
+                            // -> the client must have dropped the wire from the connection panel
+                            if (existingWire.Item.ParentInventory == null && !wires.Any(w => w.Contains(existingWire)))
                             {
-                                //let other clients know the item was also disconnected from the other connection 
+                                //let other clients know the item was also disconnected from the other connection
                                 existingWire.Connections[0].Item.CreateServerEvent(existingWire.Connections[0].Item.GetComponent<ConnectionPanel>());
                                 existingWire.Item.Drop(c.Character);
                             }
                         }
                         else if (existingWire.Connections[1] != null)
                         {
-                            GameServer.Log(c.Character.Name + " disconnected a wire from " +
+                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")", ServerLog.MessageType.Rewire);
 
-                            if (existingWire.Item.ParentInventory == null)
+                            if (existingWire.Item.ParentInventory == null && !wires.Any(w => w.Contains(existingWire)))
                             {
-                                //let other clients know the item was also disconnected from the other connection 
+                                //let other clients know the item was also disconnected from the other connection
                                 existingWire.Connections[1].Item.CreateServerEvent(existingWire.Connections[1].Item.GetComponent<ConnectionPanel>());
                                 existingWire.Item.Drop(c.Character);
                             }
                         }
-
+                        
                         Connections[i].Wires[j] = null;
                     }
+                    
                 }
             }
 
-            //go through new wires 
+            //go through new wires
             for (int i = 0; i < Connections.Count; i++)
             {
                 foreach (Wire newWire in wires[i])
                 {
-
                     //already connected, no need to do anything
                     if (Connections[i].Wires.Contains(newWire)) continue;
                     //NilMod Deny changes to locked wiring
@@ -360,30 +289,17 @@ namespace Barotrauma.Items.Components
 
                     if (otherConnection == null)
                     {
-                        GameServer.Log(c.Character.Name + " connected a wire to " +
-                            Connections[i].Item.Name + " (" + Connections[i].Name + ")",
-                            ServerLog.MessageType.Rewire);
-                    }
-                    else
-                    {
-                        GameServer.Log(c.Character.Name + " connected a wire from " +
-                            Connections[i].Item.Name + " (" + Connections[i].Name + ") to " +
-                            (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"),
-                            ServerLog.MessageType.Rewire);
-                    }
-=======
                         GameServer.Log(c.Character.LogName + " connected a wire to " +
                             Connections[i].Item.Name + " (" + Connections[i].Name + ")", 
-                            ServerLog.MessageType.ItemInteraction);
+                            ServerLog.MessageType.Rewire);
                     }
                     else
                     {
                         GameServer.Log(c.Character.LogName + " connected a wire from " +
                             Connections[i].Item.Name + " (" + Connections[i].Name + ") to " +
                             (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"), 
-                            ServerLog.MessageType.ItemInteraction);
+                            ServerLog.MessageType.Rewire);
                     }
->>>>>>> master
                 }
             }
         }
@@ -395,32 +311,24 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, NetBuffer msg, float sendingTime)
         {
-<<<<<<< HEAD
             List<Wire> prevWires = Connections.SelectMany(c => Array.FindAll(c.Wires, w => w != null)).ToList();
             List<Wire> newWires = new List<Wire>();
 
-=======
-            List<Wire> prevWires = Connections.SelectMany(c => Array.FindAll(c.Wires, w => w != null)).ToList();
-            List<Wire> newWires = new List<Wire>();
-
->>>>>>> master
             foreach (Connection connection in Connections)
             {
                 connection.ClearConnections();
+            }
+
+            foreach (Connection connection in Connections)
+            {
                 int wireCount = msg.ReadRangedInteger(0, Connection.MaxLinked);
                 for (int i = 0; i < wireCount; i++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
-<<<<<<< HEAD
                     Item wireItem = Entity.FindEntityByID(wireId) as Item;
                     if (wireItem == null) continue;
 
-=======
-                    Item wireItem = Entity.FindEntityByID(wireId) as Item;
-                    if (wireItem == null) continue;
-
->>>>>>> master
                     Wire wireComponent = wireItem.GetComponent<Wire>();
                     if (wireComponent == null) continue;
 
@@ -431,22 +339,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-<<<<<<< HEAD
-            foreach (Wire wire in prevWires)
-            {
-                if (wire.Connections[0] == null && wire.Connections[1] == null)
-                {
-                    wire.Item.Drop(null);
-                }
-                //wires that are not in anyone's inventory (i.e. not currently being rewired) can never be connected to only one connection 
-                // -> someone must have dropped the wire from the connection panel 
-                else if (wire.Item.ParentInventory == null &&
-                    (wire.Connections[0] != null ^ wire.Connections[1] != null))
-                {
-                    wire.Item.Drop(null);
-                }
-            }
-=======
             foreach (Wire wire in prevWires)
             {
                 if (wire.Connections[0] == null && wire.Connections[1] == null)
@@ -461,7 +353,6 @@ namespace Barotrauma.Items.Components
                     wire.Item.Drop(null);
                 }
             }
->>>>>>> master
         }        
     }
 }

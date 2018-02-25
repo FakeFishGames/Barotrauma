@@ -9,9 +9,9 @@ namespace Barotrauma.Items.Components
     {
         static float fullPower;
         static float fullLoad;
-        
-        private int updateTimer;
-        
+
+        private int updateCount;
+
         const float FireProbability = 0.15f;
 
         //affects how fast changes in power/load are carried over the grid
@@ -19,7 +19,20 @@ namespace Barotrauma.Items.Components
 
         private HashSet<PowerTransfer> connectedPoweredList = new HashSet<PowerTransfer>();
         private List<Connection> powerConnections;
-        
+        public List<Connection> PowerConnections
+        {
+            get
+            {
+                if (powerConnections == null)
+                {
+                    var connections = Item.Connections;
+                    powerConnections = connectedPoweredList == null ? new List<Connection>() : connections.FindAll(c => c.IsPower);
+
+                }
+                return powerConnections;
+            }
+        }
+
         private Dictionary<Connection, bool> connectionDirty = new Dictionary<Connection, bool>();
 
         //a list of connections a given connection is connected to, either directly or via other power transfer components
@@ -58,6 +71,8 @@ namespace Barotrauma.Items.Components
             {
                 if (base.IsActive == value) return;
                 base.IsActive = value;
+                powerLoad = 0.0f;
+                currPowerConsumption = 0.0f;
 
                 SetAllConnectionsDirty();
                 if (!base.IsActive)
@@ -73,8 +88,6 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
             canTransfer = true;
-
-            powerConnections = new List<Connection>();
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -83,6 +96,8 @@ namespace Barotrauma.Items.Components
 
             if (!isBroken)
             {
+                powerLoad = 0.0f;
+                currPowerConsumption = 0.0f;
                 SetAllConnectionsDirty();
                 RefreshConnections();
                 isBroken = true;
@@ -100,10 +115,10 @@ namespace Barotrauma.Items.Components
                 isBroken = false;
             }
 
-            if (updateTimer > 0)
+            if (updateCount > 0)
             {
                 //this junction box has already been updated this frame
-                updateTimer--;
+                updateCount--;
                 return;
             }
 
@@ -115,7 +130,7 @@ namespace Barotrauma.Items.Components
             connectedPoweredList.Clear();
 
             CheckPower(deltaTime);
-            updateTimer = 0;
+            updateCount = 0;
 
             int n = 0;
             foreach (PowerTransfer pt in connectedPoweredList)
@@ -128,9 +143,11 @@ namespace Barotrauma.Items.Components
                 //Nilmod Regenerate the health of a damaged junction over time
                 if (GameMain.NilMod.ElectricalRegenerateCondition && pt.item.Condition > 0f && pt.item.Condition < 100f) pt.item.Condition += deltaTime * GameMain.NilMod.ElectricalRegenAmount;
 
-                //damage the item if voltage is too high 
-                //(except if running as a client)
-                if (GameMain.Client != null) continue;
+                //damage the item if voltage is too high (except if running as a client) 
+
+                //relay components work differently, they can be connected to a high-powered junction box 
+                //and only break if the output (~the power running through the relay) is too high 
+                if (GameMain.Client != null || this is RelayComponent) continue;
                 if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(GameMain.NilMod.ElectricalOverloadVoltRangeMin, GameMain.NilMod.ElectricalOverloadVoltRangeMax), GameMain.NilMod.ElectricalOverloadMinPower)) continue;
                                 
                 float prevCondition = pt.item.Condition;
@@ -178,7 +195,14 @@ namespace Barotrauma.Items.Components
             var connections = item.Connections;
             foreach (Connection c in connections)
             {
-                if (!connectionDirty[c]) continue;
+                if (!connectionDirty.ContainsKey(c))
+                {
+                    connectionDirty[c] = true;
+                }
+                else if (!connectionDirty[c])
+                {
+                    continue;
+                }
 
                 HashSet<Connection> connected = new HashSet<Connection>();
                 if (!connectedRecipients.ContainsKey(c))
@@ -244,11 +268,11 @@ namespace Barotrauma.Items.Components
         //all the generated/consumed power of the constructions connected to the grid
         private void CheckPower(float deltaTime)
         {
-            updateTimer = 1;
+            updateCount = 1;
 
             connectedPoweredList.Clear();
 
-            foreach (Connection c in powerConnections)
+            foreach (Connection c in PowerConnections)
             {
                 HashSet<Connection> recipients = connectedRecipients[c];
                 foreach (Connection recipient in recipients)
@@ -264,8 +288,21 @@ namespace Barotrauma.Items.Components
                         PowerTransfer powerTransfer = powered as PowerTransfer;
                         if (powerTransfer != null)
                         {
-                            connectedPoweredList.Add(powerTransfer);
-                            powerTransfer.updateTimer = 1;
+                            if (!powerTransfer.CanTransfer) continue;
+                            if (powerTransfer is RelayComponent != this is RelayComponent && c.IsPower)
+                            {
+                                //relay components and junction boxes aren't treated as parts of the same power grid 
+                                //connected relays simply increase the load of the grid (and jbs connected to relays increase the load of the relay) 
+                                if (c.IsOutput)
+                                {
+                                    fullLoad += powerTransfer.powerLoad;
+                                }
+                            }
+                            else
+                            {
+                                connectedPoweredList.Add(powerTransfer);
+                                powerTransfer.updateCount = 1;
+                            }
                             continue;
                         }
 
@@ -274,7 +311,8 @@ namespace Barotrauma.Items.Components
                         {
                             if (recipient.Name == "power_in")
                             {
-                                fullLoad += powerContainer.CurrPowerConsumption;
+                                //batteries connected to power_in never increase load 
+                                if (c.IsOutput) fullLoad += powerContainer.CurrPowerConsumption;
                             }
                             else
                             {
@@ -286,10 +324,10 @@ namespace Barotrauma.Items.Components
                             //positive power consumption = the construction requires power -> increase load
                             if (powered.CurrPowerConsumption > 0.0f)
                             {
-                                fullLoad += powered.CurrPowerConsumption;
+                                //items connected to power_in never increase load 
+                                if (c.IsOutput) fullLoad += powered.CurrPowerConsumption;
                             }
-                            else if (powered.CurrPowerConsumption < 0.0f)
-                            //negative power consumption = the construction is a /generator/battery
+                            else if (powered.CurrPowerConsumption < 0.0f) //negative power consumption = the construction is a generator/battery 
                             {
                                 fullPower -= powered.CurrPowerConsumption;
                             }
@@ -324,8 +362,6 @@ namespace Barotrauma.Items.Components
                 return;
             }
             
-            powerConnections = connections.FindAll(c => c.IsPower);
-            if (powerConnections.Count == 0) IsActive = false;
 
             SetAllConnectionsDirty();
         }

@@ -148,11 +148,14 @@ namespace Barotrauma
                 TextManager.Get("RecommendedCrewExperience") + ": " + (string.IsNullOrEmpty(RecommendedCrewExperience) ? TextManager.Get("unknown") : RecommendedCrewExperience),
                 "", frame, GUI.SmallFont);
 
-            new GUITextBlock(new Rectangle(246, 120, 100, 20),
-                TextManager.Get("CompatibleContentPackages") + ": " + string.Join(", ", CompatibleContentPackages),
+            new GUITextBlock(new Rectangle(246, 120, 0, 20),
+                TextManager.Get("CompatibleContentPackages") + ":\n" + string.Join(", ", CompatibleContentPackages),
                 "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
 
-            var descr = new GUITextBlock(new Rectangle(0, 200, 0, 100), Description, "", Alignment.TopLeft, Alignment.TopLeft, frame, true, GUI.SmallFont);
+            var descrBox = new GUIListBox(new Rectangle(0, 200, 0, 120), "", frame);
+
+            var descr = new GUITextBlock(new Rectangle(0, 0, descrBox.Rect.Width - 15, 0), Description + "\n", "", Alignment.TopLeft, Alignment.TopLeft, null, true, GUI.SmallFont);
+            descrBox.AddChild(descr);
             descr.CanBeFocused = false;
         }
 

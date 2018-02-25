@@ -97,6 +97,9 @@ namespace Barotrauma
             {
                 base.Rect = value;
                 frame.Rect = value;
+                scrollBar.Rect = scrollBar.IsHorizontal ?
+                    new Rectangle(rect.X, rect.Bottom - 20, rect.Width, 20) :
+                    new Rectangle(rect.Right - 20, rect.Y, 20, rect.Height);
             }
         }
 
@@ -408,7 +411,7 @@ namespace Barotrauma
             if (!scrollBarHidden) scrollBar.Draw(spriteBatch);
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
-            spriteBatch.GraphicsDevice.ScissorRectangle = frame.Rect;
+            spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, frame.Rect);
 
             int lastVisible = 0;
             for (int i = 0; i < children.Count; i++)

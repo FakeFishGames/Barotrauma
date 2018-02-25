@@ -133,11 +133,11 @@ namespace Barotrauma
             {
                 if(topic != null)
                 {
-                    DebugConsole.ExecuteCommand("messagebox " + chosentopic.Pages[page], GameMain.Instance);
+                    DebugConsole.ExecuteCommand("messagebox " + chosentopic.Pages[page]);
                 }
                 else
                 {
-                    DebugConsole.ExecuteCommand("messagebox " + DefaultHelpstring, GameMain.Instance);
+                    DebugConsole.ExecuteCommand("messagebox " + DefaultHelpstring);
                 }
                 
             }

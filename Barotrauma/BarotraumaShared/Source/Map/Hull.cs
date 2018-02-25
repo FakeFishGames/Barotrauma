@@ -107,11 +107,7 @@ namespace Barotrauma
             }
         }
 
-<<<<<<< HEAD
         public override bool Linkable
-=======
-        public override bool Linkable
->>>>>>> master
         {
             get { return true; }
         }

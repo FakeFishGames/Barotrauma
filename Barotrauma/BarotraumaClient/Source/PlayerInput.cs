@@ -143,26 +143,23 @@ namespace Barotrauma
         {
             timeSinceClick += deltaTime;
 
-            if (GameMain.Instance.IsActive)
+            oldMouseState = mouseState;
+            mouseState = latestMouseState;
+            UpdateVariable();
+
+            oldKeyboardState = keyboardState;
+            keyboardState = Keyboard.GetState();
+
+            doubleClicked = false;
+            if (LeftButtonClicked())
             {
-                oldMouseState = mouseState;
-                mouseState = latestMouseState;
-                UpdateVariable();
-
-                oldKeyboardState = keyboardState;
-                keyboardState = Keyboard.GetState();
-
-                doubleClicked = false;
-                if (LeftButtonClicked())
+                if (timeSinceClick < DoubleClickDelay &&
+                    (mouseState.Position - lastClickPosition).ToVector2().Length() < MaxDoubleClickDistance)
                 {
-                    if (timeSinceClick < DoubleClickDelay &&
-                        (mouseState.Position - lastClickPosition).ToVector2().Length() < MaxDoubleClickDistance)
-                    {
-                        doubleClicked = true;
-                    }
-                    lastClickPosition = mouseState.Position;
-                    timeSinceClick = 0.0;
+                    doubleClicked = true;
                 }
+                lastClickPosition = mouseState.Position;
+                timeSinceClick = 0.0;
             }
         }
 

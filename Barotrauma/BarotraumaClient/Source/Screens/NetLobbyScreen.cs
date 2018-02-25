@@ -269,7 +269,7 @@ namespace Barotrauma
             //respawn shuttle ------------------------------------------------------------------
 
             shuttleTickBox = new GUITickBox(new Rectangle(columnX, 110, 20, 20), TextManager.Get("RespawnShuttle"), Alignment.Left, defaultModeContainer);
-            shuttleList = new GUIDropDown(new Rectangle(columnX, 140, 200, 20), "", "", defaultModeContainer);
+            shuttleList = new GUIDropDown(new Rectangle(columnX, 140, columnWidth, 20), "", "", defaultModeContainer);
             shuttleTickBox.Selected = true;
             shuttleTickBox.OnSelected = (GUITickBox box) =>
             {
@@ -603,33 +603,19 @@ namespace Barotrauma
                 toggleHead.UserData = 1;
                 toggleHead.OnClicked = ToggleHead;
 
-<<<<<<< HEAD
-                new GUITextBlock(new Rectangle(100, 40, 200, 30), "Gender: ", "", myPlayerFrame);
+                new GUITextBlock(new Rectangle(100, 40, 200, 30), TextManager.Get("Gender"), "", myPlayerFrame);
 
-                GUIButton maleButton = new GUIButton(new Rectangle(100, 60, 60, 20), "Male",
-=======
-                new GUITextBlock(new Rectangle(100, 30, 200, 30), TextManager.Get("Gender"), "", myPlayerFrame);
-
-                GUIButton maleButton = new GUIButton(new Rectangle(100, 50, 60, 20), TextManager.Get("Male"),
->>>>>>> master
+                GUIButton maleButton = new GUIButton(new Rectangle(100, 60, 60, 20), TextManager.Get("Male"),
                     Alignment.TopLeft, "", myPlayerFrame);
                 maleButton.UserData = Gender.Male;
                 maleButton.OnClicked += SwitchGender;
 
-<<<<<<< HEAD
-                GUIButton femaleButton = new GUIButton(new Rectangle(170, 60, 60, 20), "Female",
-=======
-                GUIButton femaleButton = new GUIButton(new Rectangle(170, 50, 60, 20), TextManager.Get("Female"),
->>>>>>> master
+                GUIButton femaleButton = new GUIButton(new Rectangle(170, 60, 60, 20), TextManager.Get("Female"),
                     Alignment.TopLeft, "", myPlayerFrame);
                 femaleButton.UserData = Gender.Female;
                 femaleButton.OnClicked += SwitchGender;
 
-<<<<<<< HEAD
-                new GUITextBlock(new Rectangle(0, 130, 20, 30), "Job preferences:", "", myPlayerFrame);
-=======
-                new GUITextBlock(new Rectangle(0, 120, 20, 30), TextManager.Get("JobPreferences"), "", myPlayerFrame);
->>>>>>> master
+                new GUITextBlock(new Rectangle(0, 130, 20, 30), TextManager.Get("JobPreferences"), "", myPlayerFrame);
 
                 jobList = new GUIListBox(new Rectangle(0, 160, 0, 0), "", myPlayerFrame);
                 jobList.Enabled = false;
@@ -846,7 +832,7 @@ namespace Barotrauma
                 infoButton.UserData = sub;
                 infoButton.OnClicked += (component, userdata) =>
                 {
-                    var msgBox = new GUIMessageBox("", "", 550, 350);
+                    var msgBox = new GUIMessageBox("", "", 550, 400);
                     ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
                     return true;
                 };
@@ -1205,7 +1191,7 @@ namespace Barotrauma
                 {
                     return false;
                 }
-            }            
+            }
 
             if(component.children.Find(c => c.State == GUIComponent.ComponentState.Hover
             || c.State == GUIComponent.ComponentState.Selected 
@@ -1521,7 +1507,7 @@ namespace Barotrauma
             GUIComponent existing = myPlayerFrame.FindChild("playerhead");
             if (existing != null) myPlayerFrame.RemoveChild(existing);
 
-            GUIImage image = new GUIImage(new Rectangle(20, 45, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, myPlayerFrame);
+            GUIImage image = new GUIImage(new Rectangle(20, 40, 30, 30), characterInfo.HeadSprite, Alignment.TopLeft, myPlayerFrame);
             image.UserData = "playerhead";
         }
 
@@ -1725,17 +1711,10 @@ namespace Barotrauma
                         buttonX += 110;
                     }
 
-<<<<<<< HEAD
-                    var moneyText = new GUITextBlock(new Rectangle(120,0,200,20), "Money", "", Alignment.BottomLeft, Alignment.TopLeft, campaignContainer);
-                    moneyText.TextGetter = campaignUI.GetMoney;
-
-                    var restartText = new GUITextBlock(new Rectangle(-backButton.Rect.Width - 30, -10, 130, 30), "", "", Alignment.BottomRight, Alignment.BottomRight, campaignContainer);
-=======
                     var moneyText = new GUITextBlock(new Rectangle(120,0,200,20), TextManager.Get("Credit"), "", Alignment.BottomLeft, Alignment.TopLeft, campaignContainer);
                     moneyText.TextGetter = campaignUI.GetMoney;
 
                     var restartText = new GUITextBlock(new Rectangle(-backButton.Rect.Width - 30, -10, 130, 30), "", "", Alignment.BottomRight, Alignment.BottomRight, campaignContainer);
->>>>>>> master
                     restartText.Font = GUI.SmallFont;
                     restartText.TextGetter = AutoRestartText;
                 }
@@ -1819,6 +1798,9 @@ namespace Barotrauma
             GameMain.Config.JobNamePreferences = jobNamePreferences;
         }
 
+        public Pair<string, string> FailedSelectedSub;
+        public Pair<string, string> FailedSelectedShuttle;
+
         public bool TrySelectSub(string subName, string md5Hash, GUIListBox subList)
         {
             if (GameMain.Client == null) return false;
@@ -1838,10 +1820,19 @@ namespace Barotrauma
                 subList.OnSelected -= VotableClicked;
                 subList.Select(subList.children.IndexOf(matchingListSub), true);
                 subList.OnSelected += VotableClicked;
+                if (subList == SubList)
+                    FailedSelectedSub = null;
+                else
+                    FailedSelectedShuttle = null;
             }
 
             if (sub == null || sub.MD5Hash.Hash != md5Hash)
             {
+                if (subList == SubList)
+                    FailedSelectedSub = Pair<string, string>.Create(subName, md5Hash);
+                else
+                    FailedSelectedShuttle = Pair<string, string>.Create(subName, md5Hash);
+
                 string errorMsg = "";
                 if (sub == null)
                 {

@@ -88,7 +88,6 @@ namespace Barotrauma.Items.Components
 
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 
-<<<<<<< HEAD
 #if CLIENT 
                 if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Spied)
                 {
@@ -98,17 +97,12 @@ namespace Barotrauma.Items.Components
                 {
                     GUI.PlayUISound(GUISoundType.PickItem);
                 }
-=======
-#if CLIENT
-                if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) GUI.PlayUISound(GUISoundType.PickItem);
                 PlaySound(ActionType.OnPicked, item.WorldPosition);
->>>>>>> master
 #endif
 
                 return true;
             }
 
-<<<<<<< HEAD
 #if CLIENT 
             if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Spied)
             {
@@ -118,10 +112,6 @@ namespace Barotrauma.Items.Components
             {
                 GUI.PlayUISound(GUISoundType.PickItemFail);
             }
-=======
-#if CLIENT
-            if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) GUI.PlayUISound(GUISoundType.PickItemFail);
->>>>>>> master
 #endif
 
             return false;

@@ -190,10 +190,12 @@ namespace Barotrauma
         {
             Rectangle hullDrawRect = rect;
             if (Submarine != null) hullDrawRect.Location += Submarine.DrawPosition.ToPoint();
-                        
+
+            float depth = 1.0f;
             foreach (Decal d in decals)
             {
-                d.Draw(spriteBatch, this);
+                d.Draw(spriteBatch, this, depth);
+                depth -= 0.000001f;
             }
         }
 
@@ -275,6 +277,14 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / MaxCompress)), Color.Red, true);
                 }
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
+
+                foreach (FireSource fs in fireSources)
+                {
+                    Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
+                    GUI.DrawRectangle(spriteBatch, fireSourceRect, Color.Orange, false, 0, 5);
+
+                    //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true); 
+                }
             }
 
             if ((IsSelected || isHighlighted) && editing)

@@ -45,6 +45,7 @@ namespace Barotrauma.Networking
             Spawns,
             Connection,
             ServerMessage,
+            ConsoleUsage,
             Error,
             NilMod
         }
@@ -74,6 +75,7 @@ namespace Barotrauma.Networking
             Color.DarkMagenta,      //Spawns
             Color.DarkCyan,         //Connection
             Color.Cyan,             //ServerMessage
+            Color.Aquamarine,       //ConsoleUsage
             Color.Red,              //Error
             Color.Violet            //NilMod
         };
@@ -103,6 +105,7 @@ namespace Barotrauma.Networking
             "Spawning",
             "Connection Info",
             "Server message",
+            "Console usage",
             "Error",
             "NilMod Extras"
         };

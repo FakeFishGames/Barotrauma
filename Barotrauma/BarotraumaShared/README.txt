@@ -1,7 +1,7 @@
 ﻿BAROTRAUMA
 
 www.undertowgames.com/barotrauma
-Copyright © Undertow Games 2017
+Copyright © Undertow Games 2018
 
 Default controls:
 WASD			-	move

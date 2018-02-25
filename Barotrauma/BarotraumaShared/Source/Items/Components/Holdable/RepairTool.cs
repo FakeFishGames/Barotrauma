@@ -163,37 +163,51 @@ namespace Barotrauma.Items.Components
             }
 
 #if CLIENT
-            float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-            ParticleEmitter.Emit(
-                deltaTime, item.WorldPosition + TransformedBarrelPos, 
-                item.CurrentHull, particleAngle, -particleAngle);
+            if (ParticleEmitter != null)
+            {
+                float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                ParticleEmitter.Emit(
+                    deltaTime, item.WorldPosition + TransformedBarrelPos,
+                    item.CurrentHull, particleAngle, -particleAngle);
+            }
 #endif
-          
+
             return true;
         }
 
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
+            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies,
+                Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel, false);
+
             if (ExtinquishAmount > 0.0f && item.CurrentHull != null)
             {
-                Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * Submarine.LastPickedFraction * 0.9f);
+                List<FireSource> fireSourcesInRange = new List<FireSource>();
 
-                displayPos += item.CurrentHull.Submarine.Position;
-
-                Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
-                if (hull != null)
+                //step along the ray in 10% intervals, collecting all fire sources in the range 
+                for (float x = 0.0f; x <= Submarine.LastPickedFraction; x += 0.1f)
                 {
-                    hull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
-                    if (hull != item.CurrentHull)
+                    Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * x);
+                    displayPos += item.CurrentHull.Submarine.Position;
+
+                    Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
+                    foreach (FireSource fs in hull.FireSources)
                     {
-                        item.CurrentHull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
+                        hull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
+                        if (fs.IsInDamageRange(displayPos, 125.0f) && !fireSourcesInRange.Contains(fs))
+                        {
+                            fireSourcesInRange.Add(fs);
+                        }
                     }
+                }
+
+                foreach (FireSource fs in fireSourcesInRange)
+                {
+                    fs.Extinguish(deltaTime, ExtinquishAmount);
                 }
 
             }
 
-            Body targetBody = Submarine.PickBody(rayStart, rayEnd, ignoredBodies, 
-                Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair, false);
 
             if (targetBody == null || targetBody.UserData == null) return;
 

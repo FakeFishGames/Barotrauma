@@ -217,7 +217,7 @@ namespace Barotrauma.Networking
             ShowLagDiagnosticsButton.Enabled = true;
             ShowLagDiagnosticsButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("lagprofiler", GameMain.Instance);
+                DebugConsole.ExecuteCommand("lagprofiler");
                 return true;
             };
             tempbuttonpagelist.Add(ShowLagDiagnosticsButton);
@@ -231,7 +231,7 @@ namespace Barotrauma.Networking
             ShowNetStatsButton.Enabled = true;
             ShowNetStatsButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("netstats", GameMain.Instance);
+                DebugConsole.ExecuteCommand("netstats");
                 return true;
             };
             tempbuttonpagelist.Add(ShowNetStatsButton);
@@ -245,7 +245,7 @@ namespace Barotrauma.Networking
             NilModReload.Enabled = true;
             NilModReload.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("nilmodreload",GameMain.Instance);
+                DebugConsole.ExecuteCommand("nilmodreload");
                 return true;
             };
             tempbuttonpagelist.Add(NilModReload);
@@ -275,7 +275,7 @@ namespace Barotrauma.Networking
             ToggleDebugDrawButton.Enabled = true;
             ToggleDebugDrawButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("debugdraw", GameMain.Instance);
+                DebugConsole.ExecuteCommand("debugdraw");
                 return true;
             };
             tempbuttonpagelist.Add(ToggleDebugDrawButton);
@@ -288,7 +288,7 @@ namespace Barotrauma.Networking
             ToggleAITargetsButton.Enabled = true;
             ToggleAITargetsButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("aitargets", GameMain.Instance);
+                DebugConsole.ExecuteCommand("aitargets");
                 return true;
             };
             tempbuttonpagelist.Add(ToggleAITargetsButton);
@@ -302,8 +302,8 @@ namespace Barotrauma.Networking
             ToggleVisibilityButton.Enabled = true;
             ToggleVisibilityButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("los", GameMain.Instance);
-                DebugConsole.ExecuteCommand("lights", GameMain.Instance);
+                DebugConsole.ExecuteCommand("los");
+                DebugConsole.ExecuteCommand("lights");
                 return true;
             };
             tempbuttonpagelist.Add(ToggleVisibilityButton);
@@ -316,7 +316,7 @@ namespace Barotrauma.Networking
             ToggleFollowSubButton.Enabled = true;
             ToggleFollowSubButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("followsub", GameMain.Instance);
+                DebugConsole.ExecuteCommand("followsub");
                 return true;
             };
             tempbuttonpagelist.Add(ToggleFollowSubButton);
@@ -330,7 +330,7 @@ namespace Barotrauma.Networking
             ToggleHudButton.Enabled = true;
             ToggleHudButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("togglehud", GameMain.Instance);
+                DebugConsole.ExecuteCommand("togglehud");
                 return true;
             };
             tempbuttonpagelist.Add(ToggleHudButton);
@@ -343,7 +343,7 @@ namespace Barotrauma.Networking
             DetachFromBodyButton.Enabled = true;
             DetachFromBodyButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("freecam", GameMain.Instance);
+                DebugConsole.ExecuteCommand("freecam");
                 return true;
             };
             tempbuttonpagelist.Add(DetachFromBodyButton);
@@ -387,7 +387,7 @@ namespace Barotrauma.Networking
             ForceShuttleButton.Enabled = true;
             ForceShuttleButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("forceshuttle", GameMain.Instance);
+                DebugConsole.ExecuteCommand("forceshuttle");
                 return true;
             };
             tempbuttonpagelist.Add(ForceShuttleButton);
@@ -400,7 +400,7 @@ namespace Barotrauma.Networking
             RecallShuttleButton.Enabled = true;
             RecallShuttleButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("recallshuttle", GameMain.Instance);
+                DebugConsole.ExecuteCommand("recallshuttle");
                 return true;
             };
             tempbuttonpagelist.Add(RecallShuttleButton);
@@ -416,11 +416,11 @@ namespace Barotrauma.Networking
             {
                 if(HumanAIController.DisableCrewAI)
                 {
-                    DebugConsole.ExecuteCommand("enablecrewai", GameMain.Instance);
+                    DebugConsole.ExecuteCommand("enablecrewai");
                 }
                 else
                 {
-                    DebugConsole.ExecuteCommand("disablecrewai", GameMain.Instance);
+                    DebugConsole.ExecuteCommand("disablecrewai");
                 }
                 return true;
             };
@@ -434,7 +434,7 @@ namespace Barotrauma.Networking
             KillMonstersButtons.Enabled = true;
             KillMonstersButtons.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("killmonsters", GameMain.Instance);
+                DebugConsole.ExecuteCommand("killmonsters");
                 return true;
             };
             tempbuttonpagelist.Add(KillMonstersButtons);
@@ -448,7 +448,7 @@ namespace Barotrauma.Networking
             LockSubXButton.Enabled = true;
             LockSubXButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("lockx", GameMain.Instance);
+                DebugConsole.ExecuteCommand("lockx");
                 return true;
             };
             tempbuttonpagelist.Add(LockSubXButton);
@@ -461,7 +461,7 @@ namespace Barotrauma.Networking
             LockSubYButton.Enabled = true;
             LockSubYButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("locky", GameMain.Instance);
+                DebugConsole.ExecuteCommand("locky");
                 return true;
             };
             tempbuttonpagelist.Add(LockSubYButton);
@@ -475,7 +475,7 @@ namespace Barotrauma.Networking
             ToggleCrushButton.Enabled = true;
             ToggleCrushButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("togglecrush", GameMain.Instance);
+                DebugConsole.ExecuteCommand("togglecrush");
                 return true;
             };
             tempbuttonpagelist.Add(ToggleCrushButton);
@@ -488,7 +488,7 @@ namespace Barotrauma.Networking
             ToggleGodmodeButton.Enabled = true;
             ToggleGodmodeButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("godmode", GameMain.Instance);
+                DebugConsole.ExecuteCommand("godmode");
                 return true;
             };
             tempbuttonpagelist.Add(ToggleGodmodeButton);
@@ -605,7 +605,7 @@ namespace Barotrauma.Networking
             FixWallsButton.Enabled = true;
             FixWallsButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("fixwalls", GameMain.Instance);
+                DebugConsole.ExecuteCommand("fixwalls");
                 return true;
             };
             tempbuttonpagelist.Add(FixWallsButton);
@@ -618,7 +618,7 @@ namespace Barotrauma.Networking
             FixItemsButton.Enabled = true;
             FixItemsButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("fixitems", GameMain.Instance);
+                DebugConsole.ExecuteCommand("fixitems");
                 return true;
             };
             tempbuttonpagelist.Add(FixItemsButton);
@@ -632,7 +632,7 @@ namespace Barotrauma.Networking
             OxygenButton.Enabled = true;
             OxygenButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("oxygen", GameMain.Instance);
+                DebugConsole.ExecuteCommand("oxygen");
                 return true;
             };
             tempbuttonpagelist.Add(OxygenButton);
@@ -645,7 +645,7 @@ namespace Barotrauma.Networking
             FiresButton.Enabled = true;
             FiresButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("fire", GameMain.Instance);
+                DebugConsole.ExecuteCommand("fire");
                 return true;
             };
             tempbuttonpagelist.Add(FiresButton);
@@ -659,7 +659,7 @@ namespace Barotrauma.Networking
             WaterButton.Enabled = true;
             WaterButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("water", GameMain.Instance);
+                DebugConsole.ExecuteCommand("water");
                 return true;
             };
             tempbuttonpagelist.Add(WaterButton);
@@ -674,7 +674,7 @@ namespace Barotrauma.Networking
             {
                 if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && Character.Controlled != null)
                 {
-                    DebugConsole.ExecuteCommand("heal", GameMain.Instance);
+                    DebugConsole.ExecuteCommand("heal");
                 }
                 else
                 {
@@ -699,7 +699,7 @@ namespace Barotrauma.Networking
             {
                 if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) && Character.Controlled != null)
                 {
-                    DebugConsole.ExecuteCommand("revive", GameMain.Instance);
+                    DebugConsole.ExecuteCommand("revive");
                 }
                 else
                 {
@@ -721,7 +721,7 @@ namespace Barotrauma.Networking
             SetClientControlButton.Enabled = false;
             SetClientControlButton.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("godmode", GameMain.Instance);
+                DebugConsole.ExecuteCommand("godmode");
                 return true;
             };
             tempbuttonpagelist.Add(SetClientControlButton);
@@ -772,7 +772,7 @@ namespace Barotrauma.Networking
             RechargePowerTeam1Button.Enabled = true;
             RechargePowerTeam1Button.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("rechargepower 0", GameMain.Instance);
+                DebugConsole.ExecuteCommand("rechargepower 0");
                 return true;
             };
             tempbuttonpagelist.Add(RechargePowerTeam1Button);
@@ -785,7 +785,7 @@ namespace Barotrauma.Networking
             RechargePowerTeam2Button.Enabled = true;
             RechargePowerTeam2Button.OnClicked = (GUIButton button, object userData) =>
             {
-                DebugConsole.ExecuteCommand("rechargepower 1", GameMain.Instance);
+                DebugConsole.ExecuteCommand("rechargepower 1");
                 return true;
             };
             tempbuttonpagelist.Add(RechargePowerTeam2Button);

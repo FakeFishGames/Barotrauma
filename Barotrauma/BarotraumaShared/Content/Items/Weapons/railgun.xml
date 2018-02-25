@@ -96,6 +96,8 @@
       </StatusEffect>
     </Projectile>
 
+    <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
+
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
       <Containable name="smallitem"/>
     </ItemContainer>    
@@ -131,6 +133,8 @@
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="10" velocitymin="0" velocitymax="50" scalemin="2" scalemax="5"/>
       </StatusEffect>
     </Projectile>
+
+    <StatusEffect type="OnImpact" target="Contained" Condition="-100.0"/>
 
     <ItemContainer hideitems="true" capacity="1" canbeselected = "true">
       <Containable name="smallitem"/>

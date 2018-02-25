@@ -14,6 +14,7 @@ namespace Barotrauma
         //This is to make it so the hosts original characters are, essentially, also treated as clients for filtering purposes.
         public Boolean IsHostCharacter;
         public Client client;
+        public Client previousclient;
         public Character character;
         public Boolean Removed = false;
         public float RemovalTimer = 3f;
@@ -255,6 +256,26 @@ namespace Barotrauma
         }
     }
 
+    class ControlWidget : GUIComponent
+    {
+        Character character;
+
+        public ControlWidget(Rectangle rect, Alignment alignment, Character character, GUIComponent parent = null)
+            : base(null)
+        {
+            this.rect = rect;
+            this.alignment = alignment;
+            this.character = character;
+            color = new Color(15, 15, 15, 125);
+            int barheight = rect.Y;
+
+            //Widget code goes here
+
+            if (parent != null) parent.AddChild(this);
+            this.parent = parent;
+        }
+    }
+
 
     class InGameInfo
     {
@@ -275,6 +296,10 @@ namespace Barotrauma
 
         private List<InGameInfoCharacter> filteredcharacterlist;
 
+        private float Guiupdatetimer;
+        private Boolean GuiUpdateRequired;
+        //Used to re-draw controls and other such for characters.
+        private const float GuiUpdateTime = 0.5f;
         int currentfilter = 0;
         float IngameInfoScroll;
         int LastCharacterCount;
@@ -328,8 +353,15 @@ namespace Barotrauma
                     //This is not a client, safe to completely remove.
                     RemoveEntry(inGameInfoClienttoremove);
                 }
-                
-                UpdateGameInfoGUIList();
+
+                TriggerGUIUpdate();
+            }
+            List<InGameInfoCharacter> inGameInfoPreviousClients = characterlist.FindAll(c => c.previousclient == removedclient);
+
+            //Clear references of "Previous client"
+            foreach(InGameInfoCharacter previousclient in inGameInfoPreviousClients)
+            {
+                previousclient.previousclient = null;
             }
         }
 
@@ -339,19 +371,45 @@ namespace Barotrauma
             newingameinfocharacter.character = newcharacter;
             newingameinfocharacter.IsHostCharacter = IsHost;
             characterlist.Add(newingameinfocharacter);
-            UpdateGameInfoGUIList();
+            TriggerGUIUpdate();
         }
 
         //Setting of a clients character or respawning characters need their entry (And thus the GUI) Updated.
+        //This also includes modifying their current character and handling of their old characters.
         public void UpdateClientCharacter(Client clienttoupdate, Character newcharacter, Boolean UpdateGUIList = false)
         {
-            InGameInfoCharacter inGameInfoClienttoremove = characterlist.Find(c => c.client == clienttoupdate);
-            if (inGameInfoClienttoremove != null)
+            InGameInfoCharacter inGameInfoClienttochange = characterlist.Find(c => c.client == clienttoupdate);
+            if (inGameInfoClienttochange != null)
             {
-                inGameInfoClienttoremove.character = newcharacter;
+                if(inGameInfoClienttochange.character != null)
+                {
+                    //Create a new InGameInfoCharacter for the now orphened char
+                    InGameInfoCharacter newingameinfocharacter = new InGameInfoCharacter();
+                    newingameinfocharacter.character = inGameInfoClienttochange.character;
+                    //newingameinfocharacter.IsHostCharacter = inGameInfoClienttochange.IsHostCharacter;
+                    newingameinfocharacter.previousclient = inGameInfoClienttochange.client;
+                    characterlist.Add(newingameinfocharacter);
+                }
+                if(newcharacter != null)
+                {
+                    InGameInfoCharacter existingingameinfocharacter = characterlist.Find(c => c.character == newcharacter);
+                    if(existingingameinfocharacter != null)
+                    {
+                        if(existingingameinfocharacter.client == null)
+                        {
+                            RemoveCharacter(existingingameinfocharacter.character);
+                        }
+                        else
+                        {
+                            DebugConsole.NewMessage("NILMOD ERROR - InGameInfo GUI changed clientname: " + existingingameinfocharacter.client.Name + "'s character to be controlled by client: " + inGameInfoClienttochange.client.Name + " (This shouldn't be possible and is a severe error)", Color.Red, false);
+                            existingingameinfocharacter.client = null;
+                        }
+                    }
+                }
+                inGameInfoClienttochange.character = newcharacter;
+                inGameInfoClienttochange.previousclient = null;
 
-                //Don't spam updates for looped respawns
-                if (UpdateGUIList) UpdateGameInfoGUIList();
+                TriggerGUIUpdate();
             }
         }
 
@@ -370,7 +428,7 @@ namespace Barotrauma
                     //This is not a client, safe to completely remove.
                     RemoveEntry(inGameInfoCharactertoremove);
                 }
-                UpdateGameInfoGUIList();
+                TriggerGUIUpdate();
             }
         }
 
@@ -387,22 +445,23 @@ namespace Barotrauma
             }
         }
 
-        //Remove None-Client characters and clients character references (For end of round purposes)
+        //Wipe the characters clean and Reset all character data (Keep clients if applicable)
+        //close the ingameinfo and reset the filter to 0
         public void ResetGUIListData()
         {
-            List<InGameInfoCharacter> noneClients = characterlist.FindAll(c => c.client == null);
+            if (ingameInfoFrame != null) ToggleGameInfoFrame(null, null);
+            currentfilter = 0;
 
-            for (int i = 0; i < noneClients.Count; i++)
+            for (int i = characterlist.Count() - 1; i >= 0; i--)
             {
-                characterlist.Remove(noneClients[i]);
-            }
-
-            List<InGameInfoCharacter> clients = characterlist.FindAll(c => c.client != null);
-
-            //Remove Clients character entries
-            for (int i = 0; i < clients.Count; i++)
-            {
-                clients[i].character = null;
+                if (characterlist[i].client != null)
+                {
+                    characterlist[i].character = null;
+                }
+                else if (characterlist[i].client == null)
+                {
+                    characterlist.RemoveAt(i);
+                }
             }
         }
 
@@ -411,29 +470,58 @@ namespace Barotrauma
             if (ingameInfoFrame != null) ingameInfoFrame.AddToGUIUpdateList();
         }
 
+        public void TriggerGUIUpdate()
+        {
+            if (GuiUpdateRequired) return;
+
+            GuiUpdateRequired = true;
+            Guiupdatetimer = GuiUpdateTime;
+        }
+
         public void Update(float deltaTime)
         {
             if (characterlist != null && characterlist.Count > 0)
             {
-                Boolean UpdateGUIList = false;
+                Boolean NeedsRemoval = false;
                 float LowestTimer = 100f;
                 for (int i = characterlist.Count - 1; i >= 0; i--)
                 {
                     if (characterlist[i].Removed)
                     {
                         characterlist[i].RemovalTimer -= deltaTime;
+                        if (LowestTimer > characterlist[i].RemovalTimer) LowestTimer = characterlist[i].RemovalTimer;
                         if (characterlist[i].RemovalTimer <= 0f)
                         {
                             characterlist.RemoveAt(i);
+                            NeedsRemoval = true;
                         }
                     }
                 }
 
-                if(UpdateGUIList) UpdateGameInfoGUIList();
+                if (GuiUpdateRequired)
+                {
+                    Guiupdatetimer -= deltaTime;
+
+                    if (Guiupdatetimer <= 0f)
+                    {
+                        UpdateGameInfoGUIList();
+                        GuiUpdateRequired = false;
+                    }
+                }
+                else if (NeedsRemoval)
+                {
+                    for (int i = characterlist.Count - 1; i >= 0; i--)
+                    {
+                        if (characterlist[i].Removed) characterlist.RemoveAt(i);
+                    }
+                    UpdateGameInfoGUIList();
+                    Guiupdatetimer = 0f;
+                    GuiUpdateRequired = false;
+                }
 
                 if (timerwarning != null)
                 {
-                    if (LowestTimer <= 3f)
+                    if (LowestTimer <= 5f)
                     {
                         timerwarning.Visible = true;
                         timerwarning.Text = "Removal in: " + Math.Round(LowestTimer, 1) + "s";
@@ -931,6 +1019,12 @@ namespace Barotrauma
             if (currentfilter < 0) currentfilter = 5;
             if (currentfilter > 5) currentfilter = 0;
 
+            if (characterlist.Count() == 0)
+            {
+                currentfilter = 0;
+                return;
+            }
+
             filteredcharacterlist = new List<InGameInfoCharacter>();
             //Server Filters
             if (GameMain.Server != null)
@@ -940,41 +1034,50 @@ namespace Barotrauma
                     case 0:     //0 - All Clients
                         ingameInfoFilterText.Text = "Filter: All Clients";
                         //Include the hosts original spawns and respawns, but only if their actually alive or controlled.
-                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && (cl.client != null || (cl.character != null && (cl.IsHostCharacter && !cl.character.IsDead))) | (cl.character != null && cl.character == Character.Controlled)));
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed));
+                        filteredcharacterlist = filteredcharacterlist.FindAll(cl => cl.client != null || (cl.character != null && (cl.IsHostCharacter || cl.character == Character.Controlled)));
                         break;
                     case 1:     //1 - Coalition Clients
                         ingameInfoFilterText.Text = "Filter: Coalition Clients";
-                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && (cl.client != null || cl.IsHostCharacter) | (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 1);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed));
+                        filteredcharacterlist = filteredcharacterlist.FindAll(cl => ((cl.client != null || cl.IsHostCharacter) || (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 1);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 2:     //2 - Renegade Clients
                         ingameInfoFilterText.Text = "Filter: Renegade Clients";
-                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && (cl.client != null || cl.IsHostCharacter) | (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 2);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed));
+                        filteredcharacterlist = filteredcharacterlist.FindAll(cl => ((cl.client != null || cl.IsHostCharacter) || (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 2);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 3:     //3 - Creature Clients
                         ingameInfoFilterText.Text = "Filter: Creature Clients";
-                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && (cl.client != null || cl.IsHostCharacter) | (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 0);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed));
+                        filteredcharacterlist = filteredcharacterlist.FindAll(cl => ((cl.client != null || cl.IsHostCharacter) || (cl.character != null && cl.character == Character.Controlled)) && cl.character != null && cl.character.TeamID == 0);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 4:     //4 - Creature AI
                         ingameInfoFilterText.Text = "Filter: Creature AI";
-                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && cl.client == null || !cl.IsHostCharacter) && (cl.character != null && cl.character != Character.Controlled) && (cl.character != null && cl.character.TeamID == 0));
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed));
+                        filteredcharacterlist = filteredcharacterlist.FindAll(cl => (cl.client == null || !cl.IsHostCharacter) && (cl.character != null && cl.character != Character.Controlled) && (cl.character != null && cl.character.TeamID == 0));
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 5:     //4 - Human AI
                         ingameInfoFilterText.Text = "Filter: Human AI";
-                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed && cl.client == null || !cl.IsHostCharacter) && cl.character != Character.Controlled && (cl.character != null && cl.character.AIController is HumanAIController));
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed));
+                        filteredcharacterlist = filteredcharacterlist.FindAll(cl => cl.client == null || !cl.IsHostCharacter);
+                        filteredcharacterlist = filteredcharacterlist.FindAll(cl => cl.character != null && cl.character.AIController is HumanAIController);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 6:
                         ingameInfoFilterText.Text = "Filter: Player Corpses";
-                        filteredcharacterlist = characterlist.FindAll(cl => !cl.Removed && cl.character != null && (cl.character.IsRemotePlayer || cl.IsHostCharacter) && cl.character.IsDead);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed));
+                        filteredcharacterlist = filteredcharacterlist.FindAll(cl => cl.character != null && (cl.character.IsRemotePlayer || cl.IsHostCharacter) && cl.character.IsDead);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     case 7:
                         ingameInfoFilterText.Text = "Filter: AI Corpses";
-                        filteredcharacterlist = characterlist.FindAll(cl => cl.character != null && !cl.character.IsRemotePlayer && cl.character.IsDead);
+                        filteredcharacterlist = characterlist.FindAll(cl => (!cl.Removed));
+                        filteredcharacterlist = filteredcharacterlist.FindAll(cl => cl.character != null && !cl.character.IsRemotePlayer && cl.character.IsDead);
                         if (filteredcharacterlist.Count == 0) ChangeFilter(filterincrement);
                         break;
                     default:

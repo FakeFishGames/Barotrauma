@@ -101,11 +101,11 @@ namespace Barotrauma
 
             if (damageOverlayTimer > 0.0f) damageOverlayTimer -= deltaTime;
 
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if ((!character.IsUnconscious && character.Stun <= 0.0f) || character == Character.Spied)
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun >= -0.1f)
+                    if ((!character.LockHands && character.Stun >= -0.1f) || character == Character.Spied)
                     {
                         character.Inventory.Update(deltaTime);
                     }
@@ -166,7 +166,7 @@ namespace Barotrauma
 
             DrawStatusIcons(spriteBatch, character);
 
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if ((!character.IsUnconscious && character.Stun <= 0.0f) || character == Character.Spied)
             {
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {
@@ -230,12 +230,12 @@ namespace Barotrauma
                     character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
                 }
 
-                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                if (character.Inventory != null && ((!character.LockHands && character.Stun >= -0.1f) || character == Character.Spied))
                 {
                     character.Inventory.DrawOffset = Vector2.Zero;
                     character.Inventory.DrawOwn(spriteBatch);
                 }
-                if (character.Inventory != null && !character.LockHands && character.Stun >= -0.1f)
+                if (character.Inventory != null && ((!character.LockHands && character.Stun >= -0.1f) || character == Character.Spied))
                 {
                     Inventory.DrawDragging(spriteBatch);
                 }
@@ -323,6 +323,18 @@ namespace Barotrauma
                     suicideButton.OnClicked = (button, userData) =>
                     {
                         GUIComponent.ForceMouseOn(null);
+                        if (Character.Spied != null)
+                        {
+                            if (GameMain.Client != null)
+                            {
+                                GameMain.Client.CreateEntityEvent(Character.Spied, new object[] { NetEntityEvent.Type.Status });
+                            }
+                            else
+                            {
+                                Character.Spied.Kill(Character.Spied.CauseOfDeath);
+                                //Character.Spied = null;
+                            }
+                        }
                         if (Character.Controlled != null)
                         {
                             if (GameMain.Client != null)

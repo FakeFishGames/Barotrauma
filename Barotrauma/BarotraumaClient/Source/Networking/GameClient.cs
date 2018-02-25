@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
 {
     class GameClient : NetworkMember
     {
-        private NetClient client;
+        public NetClient client;
 
         private ClientLog clientLog;
         private GUIButton clientLogButton;
@@ -845,21 +845,11 @@ namespace Barotrauma.Networking
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level, true, false);
             }
             
-<<<<<<< HEAD
-            if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.SelectedShuttle);
-            
-            if (isTraitor)
-            {
-                TraitorManager.CreateStartPopUp(traitorTargetName);
-            }
-
-            GameMain.NilMod.GameInitialize(false);
-
-
-=======
             if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
                         
->>>>>>> master
+            
+            GameMain.NilMod.GameInitialize(false);
+
             gameStarted = true;
 
             GameMain.GameScreen.Select();
@@ -1072,7 +1062,6 @@ namespace Barotrauma.Networking
 
         private void ReadIngameUpdate(NetIncomingMessage inc)
         {
-<<<<<<< HEAD
             List<IServerSerializable> entities = new List<IServerSerializable>();
 
             float sendingTime = inc.ReadFloat() - inc.SenderConnection.RemoteTimeOffset;
@@ -1081,16 +1070,6 @@ namespace Barotrauma.Networking
             long prevBitPos = 0;
             long prevBytePos = 0;
 
-=======
-            List<IServerSerializable> entities = new List<IServerSerializable>();
-
-            float sendingTime = inc.ReadFloat() - inc.SenderConnection.RemoteTimeOffset;
-
-            ServerNetObject? prevObjHeader = null;
-            long prevBitPos = 0;
-            long prevBytePos = 0;
-
->>>>>>> master
             ServerNetObject objHeader;
             while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
             {
@@ -1119,18 +1098,13 @@ namespace Barotrauma.Networking
                         break;
                     case ServerNetObject.ENTITY_EVENT:
                     case ServerNetObject.ENTITY_EVENT_INITIAL:
-<<<<<<< HEAD
                         entityEventManager.Read(objHeader, inc, sendingTime, entities);
-=======
-                        entityEventManager.Read(objHeader, inc, sendingTime, entities);
->>>>>>> master
                         break;
                     case ServerNetObject.CHAT_MESSAGE:
                         ChatMessage.ClientRead(inc);
                         break;
                     default:
                         DebugConsole.ThrowError("Error while reading update from server (unknown object header \""+objHeader+"\"!)");
-<<<<<<< HEAD
                         if (prevObjHeader != null)
                         {
                             DebugConsole.ThrowError("Previous object type: " + prevObjHeader.ToString());
@@ -1163,51 +1137,11 @@ namespace Barotrauma.Networking
                         sw.Close();
                         fl.Close();
 
-                        throw new Exception("Error while reading update from server: please send us \"crashreport_object" + "_" + DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString() + ".bin!");
-                        break;
-                }
-                prevObjHeader = objHeader;
-                prevBitPos = inc.Position;
-                prevBytePos = inc.PositionInBytes;
-=======
-                        if (prevObjHeader != null)
-                        {
-                            DebugConsole.ThrowError("Previous object type: " + prevObjHeader.ToString());
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError("Error occurred on the very first object!");
-                        }
-                        DebugConsole.ThrowError("Previous object was " + (inc.Position - prevBitPos) + " bits long (" + (inc.PositionInBytes - prevBytePos) + " bytes)");
-                        if (prevObjHeader == ServerNetObject.ENTITY_EVENT || prevObjHeader == ServerNetObject.ENTITY_EVENT_INITIAL)
-                        {
-                            foreach (IServerSerializable ent in entities)
-                            {
-                                if (ent == null)
-                                {
-                                    DebugConsole.ThrowError(" - NULL");
-                                    continue;
-                                }
-                                Entity e = ent as Entity;
-                                DebugConsole.ThrowError(" - "+e.ToString());
-                            }
-                        }
-                        DebugConsole.ThrowError("Writing object data to \"crashreport_object.bin\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
-
-                        FileStream fl = File.Open("crashreport_object.bin", FileMode.Create);
-                        BinaryWriter sw = new BinaryWriter(fl);
-
-                        sw.Write(inc.Data, (int)prevBytePos, (int)(inc.LengthBytes - prevBytePos));
-
-                        sw.Close();
-                        fl.Close();
-
                         throw new Exception("Error while reading update from server: please send us \"crashreport_object.bin\"!");
                 }
                 prevObjHeader = objHeader;
                 prevBitPos = inc.Position;
                 prevBytePos = inc.PositionInBytes;
->>>>>>> master
             }
         }
 
@@ -1293,11 +1227,7 @@ namespace Barotrauma.Networking
             ChatMessage chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
                 message, 
-<<<<<<< HEAD
-                ChatMessageType.Default,
-=======
                 ChatMessageType.Default, 
->>>>>>> master
                 gameStarted && myCharacter != null ? myCharacter : null);
 
             lastQueueChatMsgID++;
@@ -1347,16 +1277,43 @@ namespace Barotrauma.Networking
                             GameMain.NetLobbyScreen.ShuttleList.ListBox.children : 
                             GameMain.NetLobbyScreen.SubList.children;
 
-                        var textBlock = subListChildren.Find(c => 
-                            ((Submarine)c.UserData).Name == newSub.Name && 
-                            ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash) as GUITextBlock;
+                        var subElement = subListChildren.Find(c =>
+                            ((Submarine)c.UserData).Name == newSub.Name &&
+                            ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash);
 
-                        if (textBlock == null) continue;
-                        textBlock.TextColor = new Color(textBlock.TextColor, 1.0f);
+                        if (subElement == null) continue;
+                        subElement.GetChild<GUITextBlock>().TextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
+                        subElement.UserData = newSub;
+                        subElement.ToolTip = newSub.Description;
 
-                        textBlock.UserData = newSub;
-                        textBlock.ToolTip = newSub.Description;
+                        GUIButton infoButton = subElement.GetChild<GUIButton>();
+                        if (infoButton == null)
+                        {
+                            infoButton = new GUIButton(new Rectangle(0, 0, 20, 20), "?", Alignment.CenterLeft, "", subElement);
+                        }
+                        infoButton.UserData = newSub;
+                        infoButton.OnClicked = (component, userdata) =>
+                        {
+                            var msgBox = new GUIMessageBox("", "", 550, 400);
+                            ((Submarine)userdata).CreatePreviewWindow(msgBox.InnerFrame);
+                            return true;
+                        };
                     }
+
+                    if (GameMain.NetLobbyScreen.FailedSelectedSub != null &&
+                        GameMain.NetLobbyScreen.FailedSelectedSub.First == newSub.Name &&
+                        GameMain.NetLobbyScreen.FailedSelectedSub.Second == newSub.MD5Hash.Hash)
+                    {
+                        GameMain.NetLobbyScreen.TrySelectSub(newSub.Name, newSub.MD5Hash.Hash, GameMain.NetLobbyScreen.SubList);
+                    }
+
+                    if (GameMain.NetLobbyScreen.FailedSelectedShuttle != null &&
+                        GameMain.NetLobbyScreen.FailedSelectedShuttle.First == newSub.Name &&
+                        GameMain.NetLobbyScreen.FailedSelectedShuttle.Second == newSub.MD5Hash.Hash)
+                    {
+                        GameMain.NetLobbyScreen.TrySelectSub(newSub.Name, newSub.MD5Hash.Hash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+                    }
+
                     break;
                 case FileTransferType.CampaignSave:
                     var campaign = GameMain.GameSession?.GameMode as MultiplayerCampaign;

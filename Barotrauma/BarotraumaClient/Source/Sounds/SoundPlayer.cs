@@ -92,10 +92,19 @@ namespace Barotrauma
         {
             OverrideMusicType = null;
 
-            XDocument doc = XMLExtensions.TryLoadXml("Content/Sounds/sounds.xml");
-            if (doc == null) yield return CoroutineStatus.Failure;
+            List<string> soundFiles = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Sounds);
 
-            SoundCount = 16 + doc.Root.Elements().Count();
+            List<XElement> soundElements = new List<XElement>();
+            foreach (string soundFile in soundFiles)
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(soundFile);
+                if (doc != null && doc.Root != null)
+                {
+                    soundElements.AddRange(doc.Root.Elements());
+                }
+            }
+
+            SoundCount = 16 + soundElements.Count();
 
             startDrone = Sound.Load("Content/Sounds/startDrone.ogg", false);
             startDrone.Play();
@@ -113,61 +122,58 @@ namespace Barotrauma
             flowSounds[2] = Sound.Load("Content/Sounds/Water/FlowLarge.ogg", false);
             yield return CoroutineStatus.Running;
 
-            for (int i = 0; i < 10; i++ )
+            for (int j = 0; j < 10; j++)
             {
-                SplashSounds[i] = Sound.Load("Content/Sounds/Water/Splash"+(i)+".ogg", false);
+                SplashSounds[j] = Sound.Load("Content/Sounds/Water/Splash" + j + ".ogg", false);
                 yield return CoroutineStatus.Running;
             }
-            
-            var xMusic = doc.Root.Elements("music").ToList();
 
-            if (xMusic.Any())
+            var musicElements = soundElements.FindAll(e => e.Name.ToString().ToLowerInvariant() == "music");
+
+            musicClips = new BackgroundMusic[musicElements.Count];
+            int i = 0;
+            foreach (XElement element in musicElements)
             {
-                musicClips = new BackgroundMusic[xMusic.Count];
-                int i = 0;
-                foreach (XElement element in xMusic)
-                {
-                    string file = element.GetAttributeString("file", "");
-                    string type = element.GetAttributeString("type", "").ToLowerInvariant();
-                    Vector2 priority = element.GetAttributeVector2("priorityrange", new Vector2(0.0f, 100.0f));
+                string file = element.GetAttributeString("file", "");
+                string type = element.GetAttributeString("type", "").ToLowerInvariant();
+                Vector2 priority = element.GetAttributeVector2("priorityrange", new Vector2(0.0f, 100.0f));
 
-                    musicClips[i] = new BackgroundMusic(file, type, priority);
+                musicClips[i] = new BackgroundMusic(file, type, priority);
 
-                    yield return CoroutineStatus.Running;
+                yield return CoroutineStatus.Running;
 
-                    i++;
-                }
+                i++;
             }
 
             List<KeyValuePair<string, Sound>> miscSoundList = new List<KeyValuePair<string, Sound>>();
             damageSounds = new List<DamageSound>();
-            
-            foreach (XElement subElement in doc.Root.Elements())
+
+            foreach (XElement soundElement in soundElements)
             {
                 yield return CoroutineStatus.Running;
 
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                switch (soundElement.Name.ToString().ToLowerInvariant())
                 {
                     case "music":
                         continue;
                     case "damagesound":
-                        Sound damageSound = Sound.Load(subElement.GetAttributeString("file", ""), false);
+                        Sound damageSound = Sound.Load(soundElement.GetAttributeString("file", ""), false);
                         if (damageSound == null) continue;
-                    
-                        string damageSoundType = subElement.GetAttributeString("damagesoundtype", "None");
+
+                        string damageSoundType = soundElement.GetAttributeString("damagesoundtype", "None");
 
                         damageSounds.Add(new DamageSound(
-                            damageSound, 
-                            subElement.GetAttributeVector2("damagerange", new Vector2(0.0f, 100.0f)), 
-                            damageSoundType, 
-                            subElement.GetAttributeString("requiredtag", "")));
+                            damageSound,
+                            soundElement.GetAttributeVector2("damagerange", new Vector2(0.0f, 100.0f)),
+                            damageSoundType,
+                            soundElement.GetAttributeString("requiredtag", "")));
 
                         break;
                     default:
-                        Sound sound = Sound.Load(subElement.GetAttributeString("file", ""), false);
+                        Sound sound = Sound.Load(soundElement.GetAttributeString("file", ""), false);
                         if (sound != null)
                         {
-                            miscSoundList.Add(new KeyValuePair<string, Sound>(subElement.Name.ToString().ToLowerInvariant(), sound));
+                            miscSoundList.Add(new KeyValuePair<string, Sound>(soundElement.Name.ToString().ToLowerInvariant(), sound));
                         }
 
                         break;
@@ -263,7 +269,7 @@ namespace Barotrauma
         public static Sound GetSound(string soundTag)
         {
             var matchingSounds = miscSounds[soundTag].ToList();
-            if (matchingSounds.Count == 0) return Sound.Load(soundTag);
+            if (matchingSounds.Count == 0) return null;
 
             return matchingSounds[Rand.Int(matchingSounds.Count)];
         }

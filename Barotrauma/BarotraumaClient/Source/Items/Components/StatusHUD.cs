@@ -8,83 +8,6 @@ namespace Barotrauma.Items.Components
 {
     partial class StatusHUD : ItemComponent
     {
-<<<<<<< HEAD
-        private static readonly string[] BleedingTexts = { "Minor bleeding", "Bleeding", "Bleeding heavily", "Catastrophic Bleeding" };
-
-        private static readonly string[] HealthTexts = { "No visible injuries", "Minor injuries", "Injured", "Major injuries", "Critically injured" };
-
-        private static readonly string[] OxygenTexts = { "Oxygen level normal", "Gasping for air", "Signs of oxygen deprivation", "Not breathing" };
-
-        [Serialize(500.0f, false)]
-        public float Range
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(50.0f, false)]
-        public float FadeOutRange
-        {
-            get;
-            private set;
-        }
-
-        private List<Character> visibleCharacters = new List<Character>();
-
-        private const float UpdateInterval = 0.5f;
-        private float updateTimer;
-
-        private Character equipper;
-
-        public override void Update(float deltaTime, Camera cam)
-        {
-            base.Update(deltaTime, cam);
-
-            if (equipper == null)
-            {
-                IsActive = false;
-                return;
-            }
-
-            if (updateTimer > 0.0f)
-            {
-                updateTimer -= deltaTime;
-                return;
-            }
-
-            visibleCharacters.Clear();
-            foreach (Character c in Character.CharacterList)
-            {
-                if (c == equipper) continue;
-
-                float dist = Vector2.DistanceSquared(equipper.WorldPosition, c.WorldPosition);
-                if (dist < Range * Range)
-                {
-                    Vector2 diff = c.WorldPosition - equipper.WorldPosition;
-                    if (Submarine.CheckVisibility(equipper.SimPosition, equipper.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
-                    {
-                        visibleCharacters.Add(c);
-                    }
-                }
-            }
-
-            updateTimer = UpdateInterval;
-        }
-
-        public override void Equip(Character character)
-        {
-            updateTimer = 0.0f;
-            equipper = character;
-            IsActive = true;
-        }
-
-        public override void Unequip(Character character)
-        {
-            equipper = null;
-            IsActive = false;
-        }
-
-=======
         private static readonly string[] BleedingTexts = 
         {
             TextManager.Get("MinorBleeding"),
@@ -179,40 +102,13 @@ namespace Barotrauma.Items.Components
             IsActive = false;
         }
 
->>>>>>> master
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             if (character == null) return;
-
+            
             GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
                 Color.Green * 0.1f, true);
 
-<<<<<<< HEAD
-            Character closestCharacter = null;
-            float closestDist = float.PositiveInfinity;
-
-            foreach (Character c in visibleCharacters)
-            {
-                if (c == character) continue;
-
-                float dist = Vector2.DistanceSquared(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), c.WorldPosition);
-                if (dist < closestDist)
-                {
-                    closestCharacter = c;
-                    closestDist = dist;
-                }
-            }
-
-            if (closestCharacter != null)
-            {
-                float dist = Vector2.Distance(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), closestCharacter.WorldPosition);
-                DrawCharacterInfo(spriteBatch, closestCharacter, 1.0f - MathHelper.Max((dist - (Range - FadeOutRange)) / FadeOutRange, 0.0f));
-            }
-        }
-
-        private void DrawCharacterInfo(SpriteBatch spriteBatch, Character target, float alpha = 1.0f)
-        {
-=======
             Character closestCharacter = null;
             float closestDist = float.PositiveInfinity;
 
@@ -237,23 +133,11 @@ namespace Barotrauma.Items.Components
 
         private void DrawCharacterInfo(SpriteBatch spriteBatch, Character target, float alpha = 1.0f)
         {
->>>>>>> master
             Vector2 hudPos = GameMain.GameScreen.Cam.WorldToScreen(target.WorldPosition);
             hudPos += Vector2.UnitX * 50.0f;
 
             List<string> texts = new List<string>();
 
-<<<<<<< HEAD
-            if (target.Info != null)
-            {
-                texts.Add(target.Name);
-            }
-
-            if (target.IsDead)
-            {
-                texts.Add("Deceased");
-                texts.Add("Cause of Death: " + target.CauseOfDeath.ToString());
-=======
             if (target.Info != null)
             {
                 texts.Add(target.Name);
@@ -263,7 +147,6 @@ namespace Barotrauma.Items.Components
             {
                 texts.Add(TextManager.Get("Deceased"));
                 texts.Add(TextManager.Get("CauseOfDeath") + ": " + TextManager.Get("CauseOfDeath." + target.CauseOfDeath.ToString()));
->>>>>>> master
             }
             else
             {
@@ -299,11 +182,7 @@ namespace Barotrauma.Items.Components
 
             foreach (string text in texts)
             {
-<<<<<<< HEAD
                 GUI.DrawString(spriteBatch, hudPos, text, Color.LightGreen * alpha, Color.Black * 0.7f * alpha, 2);
-=======
-                GUI.DrawString(spriteBatch, hudPos, text, Color.LightGreen * alpha, Color.Black * 0.7f * alpha, 2);
->>>>>>> master
                 hudPos.Y += 24.0f;
             }
         }

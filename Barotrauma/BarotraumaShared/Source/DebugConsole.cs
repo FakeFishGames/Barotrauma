@@ -33,11 +33,7 @@ namespace Barotrauma
         {
             public readonly string[] names;
             public readonly string help;
-<<<<<<< HEAD
             public readonly CommandType Type;
-=======
-            
->>>>>>> master
             private Action<string[]> onExecute;
 
             /// <summary>
@@ -75,6 +71,19 @@ namespace Barotrauma
             }
             
 
+            public Command(string name, CommandType type, string help, Action<string[]> onExecute, Action<string[]> onClientExecute, Action<Client, Vector2, string[]> onClientRequestExecute, Func<string[][]> getValidArgs = null)
+            {
+                names = name.Split('|');
+                this.help = help;
+                this.Type = type;
+
+                this.onExecute = onExecute;
+                this.onClientExecute = onClientExecute;
+                this.onClientRequestExecute = onClientRequestExecute;
+
+                this.GetValidArgs = getValidArgs;
+            }
+
             /// <summary>
             /// Use this constructor to create a command that executes the same action regardless of whether it's executed by a client or the server.
             /// </summary>
@@ -89,13 +98,19 @@ namespace Barotrauma
                 this.GetValidArgs = getValidArgs;
             }
 
-            public Command(string name, CommandType type, string help, Action<string[]> onExecute)
+            /// <summary>
+            /// Use this constructor to create a command that executes the same action regardless of whether it's executed by a client or the server.
+            /// </summary>
+            public Command(string name, CommandType type, string help, Action<string[]> onExecute, Func<string[][]> getValidArgs = null)
             {
                 names = name.Split('|');
                 this.help = help;
                 this.Type = type;
 
                 this.onExecute = onExecute;
+                this.onClientExecute = onExecute;
+
+                this.GetValidArgs = getValidArgs;
             }
 
             public void Execute(string[] args)
@@ -133,7 +148,7 @@ namespace Barotrauma
             Network
         }
 
-        const int MaxMessages = 200;
+        const int MaxMessages = 600;
 
         public static List<ColoredText> Messages = new List<ColoredText>();
 
@@ -141,15 +156,11 @@ namespace Barotrauma
         private static QuestionCallback activeQuestionCallback;
 
         private static List<Command> commands = new List<Command>();
-<<<<<<< HEAD
-
-=======
         public static List<Command> Commands
         {
             get { return commands; }
         }
         
->>>>>>> master
         private static string currentAutoCompletedCommand;
         private static int currentAutoCompletedIndex;
 
@@ -279,11 +290,7 @@ namespace Barotrauma
                 }
             }));
 
-<<<<<<< HEAD
             commands.Add(new Command("clientlist", CommandType.Network, "clientlist: List all the clients connected to the server.", (string[] args) =>
-=======
-            commands.Add(new Command("clientlist", "clientlist: List all the clients connected to the server.", (string[] args) =>
->>>>>>> master
             {
                 if (GameMain.Server == null) return;
                 NewMessage("***************", Color.Cyan);
@@ -327,16 +334,13 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
             }));
 
+
             commands.Add(new Command("createfilelist", CommandType.Debug, "", (string[] args) =>
             {
                 UpdaterUtil.SaveFileList("filelist.xml");
             }));
 
-<<<<<<< HEAD
-            commands.Add(new Command("spawn|spawncharacter", CommandType.Spawning, "spawn [creaturename] [near/inside/outside]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine).", (string[] args) =>
-=======
-            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename] [near/inside/outside/cursor]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine).", (string[] args) =>
->>>>>>> master
+            commands.Add(new Command("spawn|spawncharacter", CommandType.Spawning, "spawn [creaturename] [near/inside/outside/cursor]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine).", (string[] args) =>
             {
                 string errorMsg;
                 SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), out errorMsg);
@@ -370,7 +374,7 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory]: Spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted.",
+            commands.Add(new Command("spawnitem", CommandType.Spawning, "spawnitem [itemname] [cursor/inventory]: Spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted.",
             (string[] args) =>
             {
                 string errorMsg;
@@ -406,10 +410,17 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("disablecrewai", "disablecrewai: Disable the AI of the NPCs in the crew.", (string[] args) =>
+            commands.Add(new Command("disablecrewai", CommandType.Debug, "disablecrewai: Disable the AI of the NPCs in the crew.", (string[] args) =>
             {
                 HumanAIController.DisableCrewAI = true;
                 NewMessage("Crew AI disabled", Color.White);
+#if CLIENT
+                if (GameMain.Server != null)
+                {
+                    GameMain.Server.ToggleCrewAIButton.Text = "Crew AI On";
+                    GameMain.Server.ToggleCrewAIButton.ToolTip = "Turns the AI Crews AI On.";
+                }
+#endif
             },
             null,
             (Client client, Vector2 cursorWorldPos, string[] args) =>
@@ -419,10 +430,17 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("Crew AI disabled", client);
             }));
 
-            commands.Add(new Command("enablecrewai", "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
+            commands.Add(new Command("enablecrewai", CommandType.Debug, "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
             {
                 HumanAIController.DisableCrewAI = false;
                 NewMessage("Crew AI enabled", Color.White);
+#if CLIENT
+                if (GameMain.Server != null)
+                {
+                    GameMain.Server.ToggleCrewAIButton.Text = "Crew AI Off";
+                    GameMain.Server.ToggleCrewAIButton.ToolTip = "Turns the AI Crews AI Off.";
+                }
+#endif
             }, 
             null, 
             (Client client, Vector2 cursorWorldPos, string[] args) =>
@@ -432,7 +450,7 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("Crew AI enabled", client);
             }));
 
-            commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
+            commands.Add(new Command("autorestart", CommandType.Network, "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 bool enabled = GameMain.Server.AutoRestart;
@@ -446,25 +464,9 @@ namespace Barotrauma
                 }
                 if (enabled != GameMain.Server.AutoRestart)
                 {
-<<<<<<< HEAD
-                    spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
-                    //Custom NilMod Humans Code
-                    spawnedCharacter.TeamID = 1;
-                    //TODO - fix this for other translations where it may break?
-                    spawnedCharacter.Info = new CharacterInfo(Character.HumanConfigFile, spawnedCharacter.Name, Gender.None, JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == "mechanic" || jp.Name.ToLowerInvariant() != "captain" && (jp.Skills.Find(s => s.Name.ToLowerInvariant() == "construction")?.LevelRange.X >= 40)));
-                    spawnedCharacter.Info.TeamID = 1;
-                    HumanAIController humanai = (HumanAIController)spawnedCharacter.AIController;
-                    //Give the Fckr a use and make them run around being useful
-                    //Scratch that they turn into complete idiots usually
-                    //humanai.SetOrder(Order.PrefabList.Find(o => o.Name == "Fix Leaks"),"");
-
-                    spawnedCharacter.GiveJobItems(WayPoint.GetRandom(SpawnType.Human, spawnedCharacter.Info.Job));
-
-=======
                     if (GameMain.Server.AutoRestartInterval <= 0) GameMain.Server.AutoRestartInterval = 10;
                     GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
                     GameMain.Server.AutoRestart = enabled;
->>>>>>> master
 #if CLIENT
                     GameMain.NetLobbyScreen.SetAutoRestart(enabled, GameMain.Server.AutoRestartTimer);
 #endif
@@ -473,7 +475,7 @@ namespace Barotrauma
                 NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
             }, null, null));
             
-            commands.Add(new Command("autorestartinterval", "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", (string[] args) =>
+            commands.Add(new Command("autorestartinterval", CommandType.Network, "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 if (args.Length > 0)
@@ -501,7 +503,7 @@ namespace Barotrauma
                 }
             }, null, null));
             
-            commands.Add(new Command("autorestarttimer", "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", (string[] args) =>
+            commands.Add(new Command("autorestarttimer", CommandType.Network, "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
                 if (args.Length > 0)
@@ -511,24 +513,11 @@ namespace Barotrauma
                     {
                         if (parsedInt >= 0)
                         {
-<<<<<<< HEAD
-                            spawnedCharacter = Character.Create(characterFile, spawnPosition);
-
-#if CLIENT
-                            if (GameMain.Server != null)
-                            {
-                                GameSession.inGameInfo.AddNoneClientCharacter(spawnedCharacter);
-                                GameSession.inGameInfo.UpdateGameInfoGUIList();
-                            }
-#endif
-                            return;
-=======
                             GameMain.Server.AutoRestart = true;
                             GameMain.Server.AutoRestartTimer = parsedInt;
                             if (GameMain.Server.AutoRestartInterval <= GameMain.Server.AutoRestartTimer) GameMain.Server.AutoRestartInterval = GameMain.Server.AutoRestartTimer;
                             GameMain.NetLobbyScreen.LastUpdateID++;
                             NewMessage("Autorestart timer set to " + GameMain.Server.AutoRestartTimer + " seconds.", Color.White);
->>>>>>> master
                         }
                         else
                         {
@@ -540,33 +529,10 @@ namespace Barotrauma
 #endif
                         GameMain.NetLobbyScreen.LastUpdateID++;
                     }
-<<<<<<< HEAD
-
-                    ThrowError("No character matching the name \"" + args[0] + "\" found in the selected content package.");
-
-                    //attempt to open the config from the default path (the file may still be present even if it isn't included in the content package)
-                    string configPath = "Content/Characters/"
-                        + args[0].First().ToString().ToUpper() + args[0].Substring(1)
-                        + "/" + args[0].ToLower() + ".xml";
-                    spawnedCharacter = Character.Create(configPath, spawnPosition);
-                }
-#if CLIENT
-                if (spawnedCharacter != null && GameMain.Server != null)
-                {
-                    GameSession.inGameInfo.AddNoneClientCharacter(spawnedCharacter);
-                    GameSession.inGameInfo.UpdateGameInfoGUIList();
-                }
-#endif
-
-            }));
-
-            commands.Add(new Command("spawnitem", CommandType.Spawning, "spawnitem [itemname] [cursor/inventory]: Spawn an item at the position of the cursor, in the inventory of the controlled character or at a random spawnpoint if the last parameter is omitted.", (string[] args) =>
-=======
                 }
             }, null, null));
             
             commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", (string[] args) =>
->>>>>>> master
             {
                 //todo: allow client usage
 
@@ -582,30 +548,8 @@ namespace Barotrauma
                 var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
                 if (client == null)
                 {
-<<<<<<< HEAD
-                    case "cursor":
-                        extraParams = 1;
-                        spawnPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                        break;
-                    case "inventory":
-                        extraParams = 1;
-                        //Allow the spied characters inventory to have items spawned into it instead of the controlled character
-                        if(Character.Spied != null)
-                        {
-                            spawnInventory = Character.Spied.Inventory;
-                        }
-                        else
-                        {
-                            spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
-                        }
-                        break;
-                    default:
-                        extraParams = 0;
-                        break;
-=======
                     ThrowError("Client id \"" + id + "\" not found.");
                     return;
->>>>>>> master
                 }
 
                 NewMessage("Valid permissions are:",Color.White);
@@ -694,84 +638,6 @@ namespace Barotrauma
                 NewMessage(senderClient.Name + " granted " + perm + " permissions to " + client.Name + ".", Color.White);
             }));
 
-<<<<<<< HEAD
-            commands.Add(new Command("disablecrewai", CommandType.Debug, "disablecrewai: Disable the AI of the NPCs in the crew.", (string[] args) =>
-            {
-                HumanAIController.DisableCrewAI = true;
-                NewMessage("Crew AI disabled", Color.White);
-#if CLIENT
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.ToggleCrewAIButton.Text = "Crew AI On";
-                    GameMain.Server.ToggleCrewAIButton.ToolTip = "Turns the AI Crews AI On.";
-                }
-#endif
-            }));
-
-            commands.Add(new Command("enablecrewai", CommandType.Debug, "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
-            {
-                HumanAIController.DisableCrewAI = false;
-                NewMessage("Crew AI enabled", Color.White);
-#if CLIENT
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.ToggleCrewAIButton.Text = "Crew AI Off";
-                    GameMain.Server.ToggleCrewAIButton.ToolTip = "Turns the AI Crews AI Off.";
-                }
-#endif
-            }));
-
-            commands.Add(new Command("autorestart", CommandType.Network, "autorestart [true/false]: Enable or disable round auto-restart.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                bool enabled = GameMain.Server.AutoRestart;
-                if (args.Length > 0)
-                {
-                    bool.TryParse(args[0], out enabled);
-                }
-                else
-                {
-                    enabled = !enabled;
-                }
-                if (enabled != GameMain.Server.AutoRestart)
-                {
-                    if (GameMain.Server.AutoRestartInterval <= 0) GameMain.Server.AutoRestartInterval = 10;
-                    GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
-                    GameMain.Server.AutoRestart = enabled;
-#if CLIENT
-                    GameMain.NetLobbyScreen.SetAutoRestart(enabled, GameMain.Server.AutoRestartTimer);
-#endif
-                    GameMain.NetLobbyScreen.LastUpdateID++;
-                }
-                NewMessage(GameMain.Server.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
-            }));
-
-            commands.Add(new Command("autorestartinterval", CommandType.Network, "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length > 0)
-                {
-                    int parsedInt = 0;
-                    if (int.TryParse(args[0], out parsedInt))
-                    {
-                        if (parsedInt >= 0)
-                        {
-                            GameMain.Server.AutoRestart = true;
-                            GameMain.Server.AutoRestartInterval = parsedInt;
-                            if (GameMain.Server.AutoRestartTimer >= GameMain.Server.AutoRestartInterval) GameMain.Server.AutoRestartTimer = GameMain.Server.AutoRestartInterval;
-                            NewMessage("Autorestart interval set to " + GameMain.Server.AutoRestartInterval + " seconds.", Color.White);
-                        }
-                        else
-                        {
-                            GameMain.Server.AutoRestart = false;
-                            NewMessage("Autorestart disabled.", Color.White);
-                        }
-#if CLIENT
-                        GameMain.NetLobbyScreen.SetAutoRestart(GameMain.Server.AutoRestart, GameMain.Server.AutoRestartTimer);
-#endif
-                        GameMain.NetLobbyScreen.LastUpdateID++;
-                    }
-=======
             commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
@@ -827,12 +693,8 @@ namespace Barotrauma
                 {
                     ThrowError("\"" + id + "\" is not a valid client ID.");
                     return;
->>>>>>> master
                 }
 
-<<<<<<< HEAD
-            commands.Add(new Command("autorestarttimer", CommandType.Network, "autorestarttimer [seconds]: Set the current autorestart countdown to the specified value.", (string[] args) =>
-=======
                 NewMessage("Valid permissions are:", Color.White);
                 NewMessage(" - all", Color.White);
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
@@ -847,7 +709,6 @@ namespace Barotrauma
 #endif
             },
             (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
->>>>>>> master
             {
                 if (args.Length < 2) return;
 
@@ -856,92 +717,6 @@ namespace Barotrauma
                 var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
                 if (client == null)
                 {
-<<<<<<< HEAD
-                    int parsedInt = 0;
-                    if (int.TryParse(args[0], out parsedInt))
-                    {
-                        if (parsedInt >= 0)
-                        {
-                            GameMain.Server.AutoRestart = true;
-                            GameMain.Server.AutoRestartTimer = parsedInt;
-                            if (GameMain.Server.AutoRestartInterval <= GameMain.Server.AutoRestartTimer) GameMain.Server.AutoRestartInterval = GameMain.Server.AutoRestartTimer;
-                            GameMain.NetLobbyScreen.LastUpdateID++;
-                            NewMessage("Autorestart timer set to " + GameMain.Server.AutoRestartTimer + " seconds.", Color.White);
-                        }
-                        else
-                        {
-                            GameMain.Server.AutoRestart = false;
-                            NewMessage("Autorestart disabled.", Color.White);
-                        }
-#if CLIENT
-                        GameMain.NetLobbyScreen.SetAutoRestart(GameMain.Server.AutoRestart, GameMain.Server.AutoRestartTimer);
-#endif
-                        GameMain.NetLobbyScreen.LastUpdateID++;
-                    }
-                }
-            }));
-
-            commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length < 1) return;
-
-                int id;
-                int.TryParse(args[0], out id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
-                if (client == null)
-                {
-                    ThrowError("Client id \"" + id + "\" not found.");
-                    return;
-                }
-
-                ShowQuestionPrompt("Permission to grant to \"" + client.Name + "\"?", (perm) =>
-                {
-                    ClientPermissions permission = ClientPermissions.None;
-                    if (perm.ToLower() == "all")
-                    {
-                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban | ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign;
-                    }
-                    else
-                    {
-                        Enum.TryParse<ClientPermissions>(perm, out permission);
-                    }
-                    client.SetPermissions(client.Permissions | permission);
-                    GameMain.Server.UpdateClientPermissions(client);
-                    DebugConsole.NewMessage("Granted " + perm + " permissions to " + client.Name + ".", Color.White);
-                });
-            }));
-
-            commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", (string[] args) =>
-            {
-                if (GameMain.Server == null) return;
-                if (args.Length < 1) return;
-
-                int id;
-                int.TryParse(args[0], out id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
-                if (client == null)
-                {
-                    ThrowError("Client id \"" + id + "\" not found.");
-                    return;
-                }
-
-                ShowQuestionPrompt("Permission to revoke from \"" + client.Name + "\"?", (perm) =>
-                {
-                    ClientPermissions permission = ClientPermissions.None;
-                    if (perm.ToLower() == "all")
-                    {
-                        permission = ClientPermissions.EndRound | ClientPermissions.Kick | ClientPermissions.Ban | ClientPermissions.SelectSub | ClientPermissions.SelectMode | ClientPermissions.ManageCampaign;
-                    }
-                    else
-                    {
-                        Enum.TryParse<ClientPermissions>(perm, out permission);
-                    }
-                    client.SetPermissions(client.Permissions & ~permission);
-                    GameMain.Server.UpdateClientPermissions(client);
-                    DebugConsole.NewMessage("Revoked " + perm + " permissions from " + client.Name + ".", Color.White);
-                });
-=======
                     GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
                     return;
                 }
@@ -972,22 +747,17 @@ namespace Barotrauma
             {
                 if (GameMain.Server == null) return;
                 GameMain.Server.KarmaEnabled = !GameMain.Server.KarmaEnabled;
->>>>>>> master
             }));
 
             commands.Add(new Command("kick", CommandType.Network, "kick [name]: Kick a player out of the server.", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
-
+                
                 string playerName = string.Join(" ", args);
 
                 ShowQuestionPrompt("Reason for kicking \"" + playerName + "\"?", (reason) =>
                 {
-<<<<<<< HEAD
                     GameMain.NetworkMember.KickPlayer(playerName, reason, GameMain.NilMod.AdminKickStateNameTimer, GameMain.NilMod.AdminKickDenyRejoinTimer);
-                });
-=======
-                    GameMain.NetworkMember.KickPlayer(playerName, reason);
                 });                
             },
             () =>
@@ -998,7 +768,6 @@ namespace Barotrauma
                 {
                     GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
                 };
->>>>>>> master
             }));
 
             commands.Add(new Command("kickid", CommandType.Network, "kickid [id]: Kick the player with the specified client ID out of the server.", (string[] args) =>
@@ -1023,7 +792,7 @@ namespace Barotrauma
             commands.Add(new Command("ban", CommandType.Network, "ban [name]: Kick and ban the player from the server.", (string[] args) =>
             {
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
-
+                
                 string clientName = string.Join(" ", args);
                 ShowQuestionPrompt("Reason for banning \"" + clientName + "\"?", (reason) =>
                 {
@@ -1043,9 +812,6 @@ namespace Barotrauma
 
                         GameMain.NetworkMember.BanPlayer(clientName, reason, false, banDuration);
                     });
-<<<<<<< HEAD
-                });
-=======
                 });                
             },
             () =>
@@ -1056,7 +822,6 @@ namespace Barotrauma
                 {
                     GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
                 };
->>>>>>> master
             }));
 
             commands.Add(new Command("banid", CommandType.Network, "banid [id]: Kick and ban the player with the specified client ID from the server.", (string[] args) =>
@@ -1097,15 +862,10 @@ namespace Barotrauma
             commands.Add(new Command("banip", CommandType.Network, "banip [ip]: Ban the IP address from the server.", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
-<<<<<<< HEAD
 
-            ShowQuestionPrompt("Enter the name to give the ip \"" + commands[1] + "\"?", (name) =>
+            ShowQuestionPrompt("Enter the name to give the ip \"" + args[0] + "\"?", (name) =>
             {
-                ShowQuestionPrompt("Reason for banning the ip \"" + commands[1] + "\"?", (reason) =>
-=======
-                
                 ShowQuestionPrompt("Reason for banning the ip \"" + args[0] + "\"?", (reason) =>
->>>>>>> master
                 {
                     ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
                     {
@@ -1120,24 +880,17 @@ namespace Barotrauma
                             }
                             banDuration = parsedBanDuration;
                         }
-<<<<<<< HEAD
 
                         if (name == null || name == "") name = "IP Banned";
 
                         var client = GameMain.Server.ConnectedClients.Find(c => c.Connection.RemoteEndPoint.Address.ToString() == args[0]);
 
                         if (client == null)
-=======
-                        
-                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.Connection.RemoteEndPoint.Address.ToString() == args[0]);
-                        if (clients.Count == 0)
->>>>>>> master
                         {
                             GameMain.Server.BanList.BanPlayer(name, args[0], reason, banDuration);
                         }
                         else
                         {
-<<<<<<< HEAD
                             for(int i = GameMain.Server.ConnectedClients.Count - 1;i >= 0; i--)
                             {
                                 if(GameMain.Server.ConnectedClients[i].Connection.RemoteEndPoint.Address.ToString() == args[0])
@@ -1147,12 +900,6 @@ namespace Barotrauma
                             }
                             GameMain.Server.BanList.BanPlayer(name, args[0], reason, banDuration);
                             //GameMain.Server.BanClient(client, reason,false, banDuration);
-=======
-                            foreach (Client cl in clients)
-                            {
-                                GameMain.Server.BanClient(cl, reason, false, banDuration);
-                            }
->>>>>>> master
                         }
                     });
                 });
@@ -1162,7 +909,7 @@ namespace Barotrauma
 
             commands.Add(new Command("teleportcharacter|teleport", CommandType.Character, "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", (string[] args) =>
             {
-                Character tpCharacter = null;
+                Character tpCharacter = null; 
 
                 if (args.Length == 0)
                 {
@@ -1174,14 +921,11 @@ namespace Barotrauma
                 }
 
                 if (tpCharacter == null) return;
-
+                
                 var cam = GameMain.GameScreen.Cam;
                 tpCharacter.AnimController.CurrentHull = null;
                 tpCharacter.Submarine = null;
                 tpCharacter.AnimController.SetPosition(ConvertUnits.ToSimUnits(cam.ScreenToWorld(PlayerInput.MousePosition)));
-<<<<<<< HEAD
-                tpCharacter.AnimController.FindHull(cam.ScreenToWorld(PlayerInput.MousePosition), true);
-=======
                 tpCharacter.AnimController.FindHull(cam.ScreenToWorld(PlayerInput.MousePosition), true);                
             }, 
             null, 
@@ -1212,7 +956,6 @@ namespace Barotrauma
                 {
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
->>>>>>> master
             }));
 
             commands.Add(new Command("godmode", CommandType.GamePower, "godmode: Toggle submarine godmode. Makes the main submarine invulnerable to damage.", (string[] args) =>
@@ -1250,7 +993,6 @@ namespace Barotrauma
             commands.Add(new Command("lockx", CommandType.GamePower, "lockx: Lock horizontal movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockX = !Submarine.LockX;
-<<<<<<< HEAD
 #if CLIENT
                 if (GameMain.Server != null)
                 {
@@ -1266,15 +1008,11 @@ namespace Barotrauma
                     }
                 }
 #endif
-            }));
-=======
             }, null, null));
->>>>>>> master
 
             commands.Add(new Command("locky", CommandType.GamePower, "locky: Lock vertical movement of the main submarine.", (string[] args) =>
             {
                 Submarine.LockY = !Submarine.LockY;
-<<<<<<< HEAD
 #if CLIENT
                 if (GameMain.Server != null)
                 {
@@ -1290,10 +1028,7 @@ namespace Barotrauma
                     }
                 }
 #endif
-            }));
-=======
             }, null, null));
->>>>>>> master
 
             commands.Add(new Command("dumpids", CommandType.Debug, "", (string[] args) =>
             {
@@ -1340,10 +1075,7 @@ namespace Barotrauma
 
                 if (healedCharacter != null)
                 {
-                    healedCharacter.AddDamage(CauseOfDeath.Damage, -healedCharacter.MaxHealth, null);
-                    healedCharacter.Oxygen = 100.0f;
-                    healedCharacter.Bleeding = 0.0f;
-                    healedCharacter.SetStun(0.0f, true);
+                    healedCharacter.Heal();
                 }
             },
             () =>
@@ -1379,8 +1111,42 @@ namespace Barotrauma
                         GameMain.Server.SetClientCharacter(c, revivedCharacter);
                         break;
                     }
-<<<<<<< HEAD
+                }                
+            }, 
+            null,
+            (Client client, Vector2 cursorWorldPos, string[] args) => 
+            {
+                Character revivedCharacter = null;
+                if (args.Length == 0)
+                {
+                    revivedCharacter = client.Character;
                 }
+                else
+                {
+                    revivedCharacter = FindMatchingCharacter(args);
+                }
+
+                if (revivedCharacter == null) return;
+
+                revivedCharacter.Revive(false);
+                if (GameMain.Server != null)
+                {
+                    foreach (Client c in GameMain.Server.ConnectedClients)
+                    {
+                        if (c.Character != revivedCharacter) continue;
+
+                        //clients stop controlling the character when it dies, force control back
+                        GameMain.Server.SetClientCharacter(c, revivedCharacter);
+                        break;
+                    }
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }));
 
             commands.Add(new Command("freeze", CommandType.GamePower, "freeze [character name]: Freezes the controls of the specified client character", (string[] args) =>
@@ -1434,53 +1200,12 @@ namespace Barotrauma
 
                 //if (frozenCharacter != null) frozenCharacter.AnimController.Frozen = !frozenCharacter.AnimController.Frozen;
 
-=======
-                }                
-            }, 
-            null,
-            (Client client, Vector2 cursorWorldPos, string[] args) => 
-            {
-                Character revivedCharacter = null;
-                if (args.Length == 0)
-                {
-                    revivedCharacter = client.Character;
-                }
-                else
-                {
-                    revivedCharacter = FindMatchingCharacter(args);
-                }
-
-                if (revivedCharacter == null) return;
-
-                revivedCharacter.Revive(false);
-                if (GameMain.Server != null)
-                {
-                    foreach (Client c in GameMain.Server.ConnectedClients)
-                    {
-                        if (c.Character != revivedCharacter) continue;
-
-                        //clients stop controlling the character when it dies, force control back
-                        GameMain.Server.SetClientCharacter(c, revivedCharacter);
-                        break;
-                    }
-                }
-            },
-            () =>
-            {
-                return new string[][]
-                {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
-                };
-            }));
-
-            commands.Add(new Command("freeze", "", (string[] args) =>
-            {
-                if (Character.Controlled != null) Character.Controlled.AnimController.Frozen = !Character.Controlled.AnimController.Frozen;
             },
             null,
             (Client client, Vector2 cursorWorldPos, string[] args) => 
             {
-                if (client.Character != null) client.Character.AnimController.Frozen = !client.Character.AnimController.Frozen;
+                //Needs client support
+                //if (client.Character != null) client.Character.AnimController.Frozen = !client.Character.AnimController.Frozen;
             }));
 
             commands.Add(new Command("ragdoll", "ragdoll [character name]: Force-ragdoll the specified character. If the name parameter is omitted, the controlled character will be ragdolled.", (string[] args) =>
@@ -1506,7 +1231,6 @@ namespace Barotrauma
                 {
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
->>>>>>> master
             }));
 
             commands.Add(new Command("freecamera|freecam", CommandType.Render, "freecam: Detach the camera from the controlled character.", (string[] args) =>
@@ -1570,11 +1294,7 @@ namespace Barotrauma
                 }
             }));
 
-<<<<<<< HEAD
-            commands.Add(new Command("explosion", CommandType.GamePower, "explosion [range] [force] [damage] [structuredamage]: Creates an explosion at the position of the cursor.", (string[] args) =>
-=======
-            commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [emp strength]: Creates an explosion at the position of the cursor.", (string[] args) =>
->>>>>>> master
+            commands.Add(new Command("explosion", CommandType.GamePower, "explosion [range] [force] [damage] [structuredamage] [emp strength]: Creates an explosion at the position of the cursor.", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
                 float range = 500, force = 10, damage = 50, structureDamage = 10, empStrength = 0.0f;
@@ -1644,24 +1364,6 @@ namespace Barotrauma
                 }
             }, null, null));
 
-            commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
-            {
-                Character killedCharacter = null;
-                if (args.Length == 0)
-                {
-                    killedCharacter = Character.Controlled;
-                }
-                else
-                {
-                    killedCharacter = FindMatchingCharacter(args);
-                }
-
-                if (killedCharacter != null)
-                {
-                    killedCharacter.AddDamage(CauseOfDeath.Damage, killedCharacter.MaxHealth * 2, null);
-                }
-            }));
-
             commands.Add(new Command("kill", CommandType.GamePower, "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = null;
@@ -1688,14 +1390,10 @@ namespace Barotrauma
                 foreach (Character c in Character.CharacterList)
                 {
                     if (!(c.AIController is EnemyAIController)) continue;
-<<<<<<< HEAD
                     //Use high damage values due to health multipliers
                     c.AddDamage(CauseOfDeath.Damage, 1000000.0f, null);
                     //If still not dead make extra sure they are due to anti death code.
                     if (!c.IsDead) c.Kill(CauseOfDeath.Damage, true);
-=======
-                    c.AddDamage(CauseOfDeath.Damage, c.MaxHealth * 2, null);
->>>>>>> master
                 }
             }, null, null));
 
@@ -1916,8 +1614,9 @@ namespace Barotrauma
                         }
 
                         GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.Status });
+
+                        item.NeedsPositionUpdate = true;
                     }
-                    item.NeedsPositionUpdate = true;
                 }
 
                 foreach (Character c in Character.CharacterList)
@@ -1929,8 +1628,7 @@ namespace Barotrauma
                 {
                     GameMain.Server.CreateEntityEvent(wall);
                 }
-<<<<<<< HEAD
-            }));
+            }, null, null));
 
             commands.Add(new Command("messagebox", CommandType.Network, "messagebox [text here]: Sends a messagebox to all connected clients displaying the text.", (string[] args) =>
             {
@@ -1960,9 +1658,6 @@ namespace Barotrauma
                     {
                         new GUIMessageBox("", string.Join(" ", args));
                     }
-=======
-            }, null, null));
->>>>>>> master
 #endif
                 }
                 else
@@ -1987,7 +1682,7 @@ namespace Barotrauma
             int escape = 0;
             bool inQuotes = false;
             string piece = "";
-
+            
             for (int i = 0; i < command.Length; i++)
             {
                 if (command[i] == '\\')
@@ -2142,7 +1837,7 @@ namespace Barotrauma
             if (string.IsNullOrWhiteSpace(command)) return;
 
             string[] splitCommand = SplitCommand(command);
-
+            
             if (!splitCommand[0].ToLowerInvariant().Equals("admin"))
             {
                 NewMessage(command, Color.White, true);
@@ -2195,8 +1890,6 @@ namespace Barotrauma
             }
         }
 
-<<<<<<< HEAD
-=======
         public static void ExecuteClientCommand(Client client, Vector2 cursorWorldPos, string command)
         {
             if (GameMain.Server == null) return;
@@ -2234,7 +1927,6 @@ namespace Barotrauma
         }
 
 
->>>>>>> master
         private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false)
         {
             if (args.Length == 0) return null;
@@ -2251,12 +1943,11 @@ namespace Barotrauma
                 characterIndex = -1;
             }
 
-            
             var matchingCharacters = Character.CharacterList.FindAll(c => ((!ignoreRemotePlayers || !c.IsRemotePlayer) && c.Name.ToLowerInvariant() == characterName) && GameMain.NilMod.convertinghusklist.Find(ch => ch.character == c) == null);
 
             if (!matchingCharacters.Any())
             {
-                NewMessage("Character \"" + characterName + "\" not found", Color.Red);
+                NewMessage("Character \""+ characterName + "\" not found", Color.Red);
                 return null;
             }
 
@@ -2342,6 +2033,17 @@ namespace Barotrauma
             if (args[0].ToLowerInvariant() == "human")
             {
                 spawnedCharacter = Character.Create(Character.HumanConfigFile, spawnPosition);
+                //Custom NilMod Humans Code
+                spawnedCharacter.TeamID = 1;
+                //TODO - fix this for other translations where it may break?
+                spawnedCharacter.Info = new CharacterInfo(Character.HumanConfigFile, spawnedCharacter.Name, Gender.None, JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == "mechanic" || jp.Name.ToLowerInvariant() != "captain" && (jp.Skills.Find(s => s.Name.ToLowerInvariant() == "construction")?.LevelRange.X >= 40)));
+                spawnedCharacter.Info.TeamID = 1;
+                HumanAIController humanai = (HumanAIController)spawnedCharacter.AIController;
+                //Give the Fckr a use and make them run around being useful
+                //Scratch that they turn into complete idiots usually
+                //humanai.SetOrder(Order.PrefabList.Find(o => o.Name == "Fix Leaks"),"");
+
+                spawnedCharacter.GiveJobItems(WayPoint.GetRandom(SpawnType.Human, spawnedCharacter.Info.Job));
 
 #if CLIENT
                 if (GameMain.GameSession != null)
@@ -2364,7 +2066,15 @@ namespace Barotrauma
                 {
                     if (Path.GetFileNameWithoutExtension(characterFile).ToLowerInvariant() == args[0].ToLowerInvariant())
                     {
-                        Character.Create(characterFile, spawnPosition);
+                        spawnedCharacter = Character.Create(characterFile, spawnPosition);
+
+#if CLIENT
+                        if (GameMain.Server != null)
+                        {
+                            GameSession.inGameInfo.AddNoneClientCharacter(spawnedCharacter);
+                            GameSession.inGameInfo.UpdateGameInfoGUIList();
+                        }
+#endif
                         return;
                     }
                 }
@@ -2377,6 +2087,13 @@ namespace Barotrauma
                     + "/" + args[0].ToLower() + ".xml";
                 Character.Create(configPath, spawnPosition);
             }
+#if CLIENT
+            if (spawnedCharacter != null && GameMain.Server != null)
+            {
+                GameSession.inGameInfo.AddNoneClientCharacter(spawnedCharacter);
+                GameSession.inGameInfo.UpdateGameInfoGUIList();
+            }
+#endif
         }
 
         private static void SpawnItem(string[] args, Vector2 cursorPos, out string errorMsg)
@@ -2394,9 +2111,14 @@ namespace Barotrauma
                     extraParams = 1;
                     spawnPos = cursorPos;
                     break;
-                case "inventory":
-                    extraParams = 1;
-                    spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
+                    if (Character.Spied != null)
+                    {
+                        spawnInventory = Character.Spied.Inventory;
+                    }
+                    else
+                    {
+                        spawnInventory = Character.Controlled == null ? null : Character.Controlled.Inventory;
+                    }
                     break;
                 default:
                     extraParams = 0;
@@ -2434,18 +2156,14 @@ namespace Barotrauma
             if (string.IsNullOrEmpty((msg))) return;
 
 #if SERVER
-<<<<<<< HEAD
             if (GameMain.NilMod.DebugConsoleTimeStamp)
             {
-                Messages.Add(new ColoredText("[" + DateTime.Now.ToString() + "] " + msg, color));
+                Messages.Add(new ColoredText("[" + DateTime.Now.ToString() + "] " + msg, color, isCommand));
             }
             else
             {
-                Messages.Add(new ColoredText(msg, color));
+                Messages.Add(new ColoredText(msg, color, isCommand));
             }
-=======
-            Messages.Add(new ColoredText(msg, color, isCommand));
->>>>>>> master
 
             //TODO: REMOVE
             Console.ForegroundColor = XnaToConsoleColor.Convert(color);
@@ -2463,23 +2181,19 @@ namespace Barotrauma
             if (Messages.Count > MaxMessages)
             {
                 Messages.RemoveRange(0, Messages.Count - MaxMessages);
-            }
+            }            
 
 #elif CLIENT
             lock (queuedMessages)
             {
-<<<<<<< HEAD
                 if (GameMain.NilMod != null && GameMain.NilMod.DebugConsoleTimeStamp)
                 {
-                    queuedMessages.Enqueue(new ColoredText("[" + DateTime.Now.ToString() + "] " + msg, color));
+                    queuedMessages.Enqueue(new ColoredText("[" + DateTime.Now.ToString() + "] " + msg, color, isCommand));
                 }
                 else
                 {
-                    queuedMessages.Enqueue(new ColoredText(msg, color));
+                    queuedMessages.Enqueue(new ColoredText(msg, color, isCommand));
                 }
-=======
-                queuedMessages.Enqueue(new ColoredText(msg, color, isCommand));
->>>>>>> master
             }
 #endif
         }
@@ -2488,23 +2202,11 @@ namespace Barotrauma
         {
 
 #if CLIENT
-<<<<<<< HEAD
-            if (queuedMessages != null && queuedMessages.Count > 0)
-            {
-                DequeueMessages();
-            }
-                
-            if (listBox != null && listBox.children.Count > 0)
-            {
-                activeQuestionText = listBox.children[listBox.children.Count - 1];
-            }
-=======
             activeQuestionText = new GUITextBlock(new Rectangle(0, 0, listBox.Rect.Width, 30), "   >>" + question, "", Alignment.TopLeft, Alignment.Left, null, true, GUI.SmallFont);
             activeQuestionText.CanBeFocused = false;
             activeQuestionText.TextColor = Color.Cyan;
 #else
             NewMessage("   >>" + question, Color.Cyan);
->>>>>>> master
 #endif
             activeQuestionCallback += onAnswered;
         }
@@ -2777,7 +2479,7 @@ namespace Barotrauma
                     if(GameMain.Server.ConnectedClients.Count > 0)
                     {
                         int nilModClientCounter = 0;
-                        for (int i = 0; i < GameMain.Server.ConnectedClients.Count - 1; i++)
+                        for (int i = 0; i < GameMain.Server.ConnectedClients.Count; i++)
                         {
                             if(GameMain.Server.ConnectedClients[i].IsNilModClient)
                             {
@@ -2980,7 +2682,7 @@ namespace Barotrauma
                             {
                                 foreach (var deconstructitem in itemPrefab.DeconstructItems)
                                 {
-                                    DebugConsole.NewMessage(@"Deconstruct Item: """ + deconstructitem.ItemPrefabName.ToString() + @""" fullcondition: " + deconstructitem.RequireFullCondition, Color.Green);
+                                    DebugConsole.NewMessage(@"Deconstruct Item: """ + deconstructitem.ItemPrefabName.ToString() + @"""" + " Min: " + deconstructitem.MinCondition + ", Max: " + deconstructitem.MaxCondition, Color.Green);
                                 }
                             }
                             else
@@ -3024,7 +2726,7 @@ namespace Barotrauma
                 if (!found)
                 {
                     DebugConsole.NewMessage(@"Item: """ + SearchItemName + @""" not found, performing search", Color.Red);
-                    DebugConsole.ExecuteCommand("finditem " + SearchItemName, GameMain.Instance);
+                    DebugConsole.ExecuteCommand("finditem " + SearchItemName);
                 }
             }));
 
@@ -3037,7 +2739,8 @@ namespace Barotrauma
                     DebugConsole.NewMessage("No traitor existed this game.", Color.Cyan);
                     return;
                 }
-                DebugConsole.NewMessage(traitorManager.TraitorCharacter + " Is the traitor and his target is: " + traitorManager.TargetCharacter, Color.Cyan);
+                //Needs Fixing
+                //DebugConsole.NewMessage(traitorManager.TraitorCharacter + " Is the traitor and his target is: " + traitorManager.TargetCharacter, Color.Cyan);
             }));
 
             commands.Add(new Command("debugarmor|debugarmour", CommandType.Debug, "debugarmor|debugarmour [Armour Value]: Shows a series of damage estimations for a lone modifier using nilmod/Vanilla armour calculation! - 1.0 by default is no damage and 0.5 is half (Configure nilmodsettings.xml to change behaviour!)", (string[] args) =>

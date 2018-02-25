@@ -248,24 +248,16 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (invalid name)", Color.Red);
                 return;
             }
-<<<<<<< HEAD
 
             //Nilmod prevent players rejoining as server hosts current name OR server name.
             if (Homoglyphs.Compare(clName.ToLower(), Name.ToLower()) || Homoglyphs.Compare(clName.ToLower(), GameMain.NilMod.PlayYourselfName.ToLower()))
-=======
-            if (Homoglyphs.Compare(clName.ToLower(),Name.ToLower()))
->>>>>>> master
             {
                 DisconnectUnauthClient(inc, unauthClient, "That name is taken.");
                 Log(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", ServerLog.MessageType.Connection);
                 DebugConsole.NewMessage(clName + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (name taken by the server)", Color.Red);
                 return;
             }
-<<<<<<< HEAD
             Client nameTaken = ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), clName.ToLower()));
-=======
-            Client nameTaken = ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), clName.ToLower()));
->>>>>>> master
             if (nameTaken != null)
             {
                 if (nameTaken.Connection.RemoteEndPoint.Address.ToString() == inc.SenderEndPoint.Address.ToString())
@@ -476,7 +468,7 @@ namespace Barotrauma.Networking
                 newClient.SetPermissions(ClientPermissions.None, new List<DebugConsole.Command>());
             }
         }
-
+                
         private void DisconnectUnauthClient(NetIncomingMessage inc, UnauthenticatedClient unauthClient, string reason)
         {
             inc.SenderConnection.Disconnect(reason);

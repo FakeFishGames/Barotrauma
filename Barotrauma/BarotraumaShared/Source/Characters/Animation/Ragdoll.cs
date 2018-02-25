@@ -426,7 +426,47 @@ namespace Barotrauma
             Mass += limb.Mass;
             if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
         }
-          
+
+        public void RemoveLimb(Limb limb)
+        {
+            if (!Limbs.Contains(limb)) return;
+
+            Limb[] newLimbs = new Limb[Limbs.Length - 1];
+
+            int i = 0;
+            foreach (Limb existingLimb in Limbs)
+            {
+                if (existingLimb == limb) continue;
+                newLimbs[i] = existingLimb;
+                i++;
+            }
+
+            Limbs = newLimbs;
+            if (limbDictionary.ContainsKey(limb.type)) limbDictionary.Remove(limb.type);
+
+            //remove all joints that were attached to the removed limb 
+            LimbJoint[] attachedJoints = Array.FindAll(LimbJoints, lj => lj.LimbA == limb || lj.LimbB == limb);
+            if (attachedJoints.Length > 0)
+            {
+                LimbJoint[] newJoints = new LimbJoint[LimbJoints.Length - attachedJoints.Length];
+                i = 0;
+                foreach (LimbJoint limbJoint in LimbJoints)
+                {
+                    if (attachedJoints.Contains(limbJoint)) continue;
+                    newJoints[i] = limbJoint;
+                    i++;
+                }
+                LimbJoints = newJoints;
+            }
+
+
+            limb.Remove();
+            foreach (LimbJoint limbJoint in attachedJoints)
+            {
+                GameMain.World.RemoveJoint(limbJoint);
+            }
+        }
+
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)
         {
             Structure structure = f2.Body.UserData as Structure;

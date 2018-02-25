@@ -171,7 +171,6 @@ namespace Barotrauma
                         state = AIState.Eat;
                     }
                 }
-
                 else
                 {
                     state = (targetValue < 0.0f || Character.Health < fleeHealthThreshold) ? AIState.Escape : AIState.Attack;
@@ -282,11 +281,11 @@ namespace Barotrauma
 
         private void UpdateEscape(float deltaTime)
         {
-            if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
-            {
-                state = AIState.None;
-                return;
-            }
+            //if (selectedAiTarget == null || selectedAiTarget.Entity == null || selectedAiTarget.Entity.Removed)
+            //{
+            //    state = AIState.None;
+            //    return;
+            //}
 
             SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(SimPosition - selectedAiTarget.SimPosition) * 5);
             SteeringManager.SteeringWander(1.0f);
@@ -456,13 +455,8 @@ namespace Barotrauma
             targetEntity = closestBody.UserData as IDamageable;            
         }
 
-<<<<<<< HEAD
         public override void OnAttacked(Character attacker, float amount)
         {
-=======
-        public override void OnAttacked(Character attacker, float amount)
-        {
->>>>>>> master
             updateTargetsTimer = Math.Min(updateTargetsTimer, 0.1f);
             coolDownTimer *= 0.1f;
 
@@ -577,12 +571,12 @@ namespace Barotrauma
                     }
 
                     //apply damage to the target character to get some blood particles flying 
-                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), Rand.Range(15.0f, 40.0f), false);
 
                     //Lets make this extra bloody, perhaps a client will sync it.
-                    //targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
-                    //targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 45.0f), Rand.Range(15.0f, 40.0f), false);
-
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), Rand.Range(15.0f, 40.0f), false);
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), Rand.Range(15.0f, 40.0f), false);
+                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, DamageType.None, Rand.Range(10.0f, 25.0f), Rand.Range(15.0f, 40.0f), false);
 
                     //keep severing joints until there is only one limb left
                     LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints, l => !l.IsSevered && l.CanBeSevered);

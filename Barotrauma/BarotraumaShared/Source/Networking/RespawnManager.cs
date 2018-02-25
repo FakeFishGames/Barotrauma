@@ -80,7 +80,7 @@ namespace Barotrauma.Networking
                 respawnShuttle.Load(false);
 
                 ResetShuttle();
-                
+
                 //respawnShuttle.GodMode = true;
 
                 shuttleDoors = new List<Door>();
@@ -103,26 +103,19 @@ namespace Barotrauma.Networking
                             Array.ForEach(connection.Wires, w => { if (w != null) w.Locked = true; });
                         }
                     }
-                }
-
-                //Item Removal Prevention
-                if (item.body != null && item.body.Enabled && item.ParentInventory == null)
-                {
-                    item.AddTag("RespawnItem");
-                    continue;
+                    //Item Removal Prevention
+                    if (item.body != null && item.body.Enabled && item.ParentInventory == null)
+                    {
+                        item.AddTag("RespawnItem");
+                        continue;
+                    }
                 }
             }
-<<<<<<< HEAD
-
-            
-
-=======
             else
             {
                 respawnShuttle = null;
             }
             
->>>>>>> master
             var server = networkMember as GameServer;
             if (server != null)
             {
@@ -176,6 +169,11 @@ namespace Barotrauma.Networking
                 }
                 return;
             }
+
+            respawnShuttle.Velocity = Vector2.Zero;
+
+            shuttleSteering.AutoPilot = false;
+            shuttleSteering.MaintainPos = false;
 
             int characterToRespawnCount = GetClientsToRespawn().Count;
             int totalCharacterCount = server.ConnectedClients.Count;
@@ -395,11 +393,7 @@ namespace Barotrauma.Networking
 
                 shuttleSteering.TargetVelocity = Vector2.Zero;
 
-<<<<<<< HEAD
-            GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.Spawns);
-=======
-                GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.Spawning);
->>>>>>> master
+                GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.Spawns);
 
                 RespawnCharacters();
 
@@ -409,7 +403,7 @@ namespace Barotrauma.Networking
             else
             {
                 state = State.Waiting;
-                GameServer.Log("Respawning everyone in main sub.", ServerLog.MessageType.Spawning);
+                GameServer.Log("Respawning everyone in main sub.", ServerLog.MessageType.Spawns);
                 server.CreateEntityEvent(this);
 
                 RespawnCharacters();
@@ -506,10 +500,11 @@ namespace Barotrauma.Networking
                     }
                     
                     c.Kill(CauseOfDeath.Damage, true);
-                    Entity.Spawner.AddToRemoveQueue(c);
+                    //Need to use hide here
+                    //Entity.Spawner.AddToRemoveQueue(c);
                 }
             }
-            
+
             respawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + respawnShuttle.Borders.Height));
 
             respawnShuttle.Velocity = Vector2.Zero;
@@ -581,7 +576,7 @@ namespace Barotrauma.Networking
 
             var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnSub && wp.SpawnType == SpawnType.Cargo);
 
-            if (GameMain.NilMod.RespawnOnMainSub)
+            if (GameMain.NilMod.RespawnOnMainSub || respawnSub == null)
             {
                 GameServer.Log("MainSub Respawn crew added:", ServerLog.MessageType.Spawns);
             }
@@ -642,43 +637,14 @@ namespace Barotrauma.Networking
                     GameServer.Log("Respawn: " + clients[i].Character.Name + " As " + clients[i].Character.Info.Job.Name + " On " + clients[i].Connection.RemoteEndPoint.Address, ServerLog.MessageType.Spawns);
 
 #if CLIENT
-                    GameSession.inGameInfo.UpdateClientCharacter(clients[i], character, false);
+                    GameSession.inGameInfo.UpdateClientCharacter(clients[i], character, true);
                 }
 #endif
 
                 Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
 
-                //Only spawn these additional items if its actually spawning inside the shuttle
-                if (!GameMain.NilMod.RespawnOnMainSub)
+                if (divingSuitPrefab != null && oxyPrefab != null)
                 {
-<<<<<<< HEAD
-                    if (GameMain.NilMod.RespawnWearingSuitGear)
-                    {
-                        //Code here for respawning wearing suit gear : >
-
-                        if (scooterPrefab != null && batteryPrefab != null)
-                        {
-                            var scooter = new Item(scooterPrefab, pos, respawnShuttle);
-                            Entity.Spawner.CreateNetworkEvent(scooter, false);
-
-                            var battery = new Item(batteryPrefab, pos, respawnShuttle);
-                            Entity.Spawner.CreateNetworkEvent(battery, false);
-
-                            scooter.Combine(battery);
-                        }
-                    }
-                    else
-                    {
-                        if (divingSuitPrefab != null && oxyPrefab != null)
-                        {
-                            var divingSuit = new Item(divingSuitPrefab, pos, respawnShuttle);
-                            Entity.Spawner.CreateNetworkEvent(divingSuit, false);
-
-                            var oxyTank = new Item(oxyPrefab, pos, respawnShuttle);
-                            Entity.Spawner.CreateNetworkEvent(oxyTank, false);
-                            divingSuit.Combine(oxyTank);
-                        }
-=======
                     var divingSuit  = new Item(divingSuitPrefab, pos, respawnSub);
                     Entity.Spawner.CreateNetworkEvent(divingSuit, false);
 
@@ -694,39 +660,24 @@ namespace Barotrauma.Networking
 
                     var battery     = new Item(batteryPrefab, pos, respawnSub);
                     Spawner.CreateNetworkEvent(battery, false);
->>>>>>> master
 
-                        if (scooterPrefab != null && batteryPrefab != null)
-                        {
-                            var scooter = new Item(scooterPrefab, pos, respawnShuttle);
-                            Entity.Spawner.CreateNetworkEvent(scooter, false);
-
-                            var battery = new Item(batteryPrefab, pos, respawnShuttle);
-                            Entity.Spawner.CreateNetworkEvent(battery, false);
-
-                            scooter.Combine(battery);
-                        }
-                    }
+                    scooter.Combine(battery);
                 }
-
+                                
                 //give the character the items they would've gotten if they had spawned in the main sub
                 character.GiveJobItems(mainSubSpawnPoints[i]);
 
                 //add the ID card tags they should've gotten when spawning in the shuttle
                 foreach (Item item in character.Inventory.Items)
                 {
-                    if (item == null || item.Prefab.Name != "ID Card") continue;
+                    if (item == null || item.Prefab.Name != "ID Card") continue;                    
                     foreach (string s in shuttleSpawnPoints[i].IdCardTags)
                     {
                         item.AddTag(s);
                     }
-<<<<<<< HEAD
-                }
-=======
                     if (!string.IsNullOrWhiteSpace(shuttleSpawnPoints[i].IdCardDesc))
                         item.Description = shuttleSpawnPoints[i].IdCardDesc;
                 }
->>>>>>> master
 #if CLIENT
                 GameSession.inGameInfo.UpdateGameInfoGUIList();
                 GameMain.GameSession.CrewManager.AddCharacter(character);

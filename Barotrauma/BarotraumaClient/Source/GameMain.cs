@@ -20,15 +20,11 @@ namespace Barotrauma
         public static FrameCounter FrameCounter;
 
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
-<<<<<<< HEAD
 
         //NilMod Class
         public static NilMod NilMod;
         public static NilModLagDiagnostics NilModProfiler;
 
-=======
-        
->>>>>>> master
         public static GameScreen            GameScreen;
         public static MainMenuScreen        MainMenuScreen;
         public static LobbyScreen           LobbyScreen;
@@ -180,9 +176,9 @@ namespace Barotrauma
 
             if (Config.WindowMode == WindowMode.Windowed)
             {
-                //for whatever reason, window isn't centered automatically 
-                //since MonoGame 3.6 (nuget package might be broken), so 
-                //let's do it manually 
+                //for whatever reason, window isn't centered automatically
+                //since MonoGame 3.6 (nuget package might be broken), so
+                //let's do it manually
                 Window.Position = new Point((GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - GraphicsWidth) / 2,
                                             (GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - GraphicsHeight) / 2);
 
@@ -413,7 +409,10 @@ namespace Barotrauma
                 base.Update(fixedTime);
 
                 NilModProfiler.SWPlayerInput.Start();
-                PlayerInput.Update(Timing.Step);
+                if (WindowActive)
+                {
+                    PlayerInput.Update(Timing.Step);
+                }
                 NilModProfiler.RecordPlayerInput();
 
                 if (loadingScreenOpen)
@@ -464,13 +463,9 @@ namespace Barotrauma
 
                     NilModProfiler.SWDebugConsole.Start();
                     DebugConsole.Update(this, (float)Timing.Step);
-<<<<<<< HEAD
+                    paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
                     NilModProfiler.RecordDebugConsole();
 
-=======
-                    paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
-                    
->>>>>>> master
                     if (!paused)
                     {
                         NilModProfiler.SWGameScreen.Start();
