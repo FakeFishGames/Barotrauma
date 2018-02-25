@@ -1,4 +1,29 @@
---------------------------------------------------------------------------------------------------------- 
+---------------------------------------------------------------------------------------------------------
+v0.8.0.3
+---------------------------------------------------------------------------------------------------------
+ 
+- Another attempt to fix relay components: it should be now possible to use relays in series and pass
+power to junction boxes through relays.
+- Fixed creature disabling in server settings only taking character config files in the Content/Character
+folder into account.
+- Added ruin structure, particle and decal configuration files to content packages.
+ 
+---------------------------------------------------------------------------------------------------------
+v0.8.0.2
+---------------------------------------------------------------------------------------------------------
+ 
+- Doors can be opened with crowbars again.
+- Improved fire extinguisher aiming logic which makes it much easier to put out fires.
+- Fixed relays burning out when connected to a power grid that carries more power the relay can transfer.
+- Fixed crashing when trying to store jumpsuits in themselves.
+- Fixed "Text FabricatorRequiredCondition not found" errors when attempting to fabricate specific items.
+- Fixed Linux and Windows builds calculating different MD5 hashes for the same content packages.
+- Sound configuration files are included in content packages.
+- Fixed "file not found" errors when a character is wearing footwear with no configured footstep sounds.
+- MODDERS PLEASE NOTE: hit sounds on limbs and wearable items must now use tags instead of direct paths
+to the sound file. New sound files and tags can be added by editing the sound configuration files. 
+ 
+---------------------------------------------------------------------------------------------------------
 v0.8.0.1 
 --------------------------------------------------------------------------------------------------------- 
  

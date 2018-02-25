@@ -8,21 +8,24 @@ namespace Barotrauma.Particles
     {
         private Dictionary<string, DecalPrefab> prefabs;
 
-        public DecalManager(string configFile)
+        public DecalManager()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(configFile);
-            if (doc == null || doc.Root == null) return;
 
             prefabs = new Dictionary<string, DecalPrefab>();
-
-            foreach (XElement element in doc.Root.Elements())
+            foreach (string configFile in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Decals))
             {
-                if (prefabs.ContainsKey(element.Name.ToString()))
+                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                if (doc == null || doc.Root == null) continue;
+
+                foreach (XElement element in doc.Root.Elements())
                 {
-                    DebugConsole.ThrowError("Error in " + configFile + "! Each decal prefab must have a unique name.");
-                    continue;
+                    if (prefabs.ContainsKey(element.Name.ToString()))
+                    {
+                        DebugConsole.ThrowError("Error in " + configFile + "! Each decal prefab must have a unique name.");
+                        continue;
+                    }
+                    prefabs.Add(element.Name.ToString(), new DecalPrefab(element));
                 }
-                prefabs.Add(element.Name.ToString(), new DecalPrefab(element));
             }
         }
 

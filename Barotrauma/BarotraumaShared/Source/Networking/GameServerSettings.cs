@@ -357,15 +357,15 @@ namespace Barotrauma.Networking
             showLogButton.Visible = SaveServerLogs;
 #endif
 
-            List<string> monsterNames = Directory.GetDirectories("Content/Characters").ToList();
+            List<string> monsterNames = GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Character);
             for (int i = 0; i < monsterNames.Count; i++)
             {
-                monsterNames[i] = monsterNames[i].Replace("Content/Characters", "").Replace("/", "").Replace("\\", "");
+                monsterNames[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames[i]));
             }
             monsterEnabled = new Dictionary<string, bool>();
             foreach (string s in monsterNames)
             {
-                monsterEnabled.Add(s, true);
+                if (!monsterEnabled.ContainsKey(s)) monsterEnabled.Add(s, true);
             }
             extraCargo = new Dictionary<ItemPrefab, int>();
         }

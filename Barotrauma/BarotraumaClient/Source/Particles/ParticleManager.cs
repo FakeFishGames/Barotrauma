@@ -14,7 +14,6 @@ namespace Barotrauma.Particles
 
     class ParticleManager
     {
-        public readonly string ConfigFile;
         public static int particleCount;
 
         public int MaxOutOfViewDist = 500;
@@ -26,9 +25,8 @@ namespace Barotrauma.Particles
 
         private Camera cam;
         
-        public ParticleManager(string configFile, Camera cam)
+        public ParticleManager(Camera cam)
         {
-            ConfigFile = configFile;
             this.cam = cam;
 
             MaxParticles = GameMain.NilMod.MaxParticles;
@@ -38,19 +36,21 @@ namespace Barotrauma.Particles
 
         public void LoadPrefabs()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
-            if (doc == null || doc.Root == null) return;
-
             prefabs = new Dictionary<string, ParticlePrefab>();
-
-            foreach (XElement element in doc.Root.Elements())
+            foreach (string configFile in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.Particles))
             {
-                if (prefabs.ContainsKey(element.Name.ToString()))
+                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                if (doc == null || doc.Root == null) continue;
+
+                foreach (XElement element in doc.Root.Elements())
                 {
-                    DebugConsole.ThrowError("Error in " + ConfigFile + "! Each particle prefab must have a unique name.");
-                    continue;
+                    if (prefabs.ContainsKey(element.Name.ToString()))
+                    {
+                        DebugConsole.ThrowError("Error in " + configFile + "! Each particle prefab must have a unique name.");
+                        continue;
+                    }
+                    prefabs.Add(element.Name.ToString(), new ParticlePrefab(element));
                 }
-                prefabs.Add(element.Name.ToString(), new ParticlePrefab(element));
             }
         }
 
