@@ -45,8 +45,11 @@
   <Character file="Content/Characters/Tigerthresher/tigerthresher.xml" />
   <Character file="Content/Characters/Watcher/watcher.xml" />
   <Structure file="Content/Map/StructurePrefabs.xml" />
+  <RuinConfig file="Content/Map/RuinConfig.xml" />
   <BackgroundCreaturePrefabs file="Content/BackgroundSprites/BackgroundCreaturePrefabs.xml"/>
   <BackgroundSpritePrefabs file="Content/BackgroundSprites/BackgroundSpritePrefabs.xml" />
+  <Particles file="Content/Particles/ParticlePrefabs.xml"/>
+  <Decals file="Content/Particles/DecalPrefabs.xml"/>
   <RandomEvents file="Content/randomevents.xml" />
   <LocationTypes file="Content/Map/locationTypes.xml" />
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  

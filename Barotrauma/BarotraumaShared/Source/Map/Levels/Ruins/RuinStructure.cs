@@ -13,8 +13,6 @@ namespace Barotrauma.RuinGeneration
 
     class RuinStructure
     {
-        const string ConfigFile = "Content/Map/RuinConfig.xml";
-
         private static List<RuinStructure> list;
 
         public readonly MapEntityPrefab Prefab;
@@ -37,14 +35,14 @@ namespace Barotrauma.RuinGeneration
             }
 
             string alignmentStr = element.GetAttributeString("alignment", "Bottom");
-            if (!Enum.TryParse<Alignment>(alignmentStr, true, out Alignment))
+            if (!Enum.TryParse(alignmentStr, true, out Alignment))
             {
                 DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + alignmentStr + " is not a valid alignment");
             }
 
 
             string typeStr = element.GetAttributeString("type", "");
-            if (!Enum.TryParse<RuinStructureType>(typeStr, true, out Type))
+            if (!Enum.TryParse(typeStr, true, out Type))
             {
                 DebugConsole.ThrowError("Error in ruin structure \"" + name + "\" - " + typeStr + " is not a valid type");
                 return;
@@ -58,19 +56,21 @@ namespace Barotrauma.RuinGeneration
         private static void Load()
         {
             list = new List<RuinStructure>();
-
-            XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
-            if (doc == null || doc.Root == null) return;
-
-            foreach (XElement element in doc.Root.Elements())
+            foreach (string configFile in GameMain.Config.SelectedContentPackage.GetFilesOfType(ContentType.RuinConfig))
             {
-                new RuinStructure(element);
+                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                if (doc == null || doc.Root == null) continue;
+
+                foreach (XElement element in doc.Root.Elements())
+                {
+                    new RuinStructure(element);
+                }
             }
         }
 
         public static RuinStructure GetRandom(RuinStructureType type, Alignment alignment)
         {
-            if (list==null)
+            if (list == null)
             {
                 DebugConsole.Log("Loading ruin structures...");
                 Load();
