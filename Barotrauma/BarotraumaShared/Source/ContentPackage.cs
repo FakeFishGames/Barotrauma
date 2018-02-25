@@ -19,7 +19,10 @@ namespace Barotrauma
         RandomEvents, 
         Missions, 
         BackgroundCreaturePrefabs, BackgroundSpritePrefabs,
-        Sounds
+        Sounds,
+        RuinConfig,
+        Particles,
+        Decals
     }
 
     public class ContentPackage
