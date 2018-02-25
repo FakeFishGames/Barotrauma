@@ -144,6 +144,7 @@ namespace Barotrauma.Items.Components
 
                 //Nilmod Regenerate the health of a damaged junction over time
                 if (GameMain.NilMod.ElectricalRegenerateCondition && pt.item.Condition > 0f && pt.item.Condition < 100f) pt.item.Condition += deltaTime * GameMain.NilMod.ElectricalRegenAmount;
+                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad * Rand.Range(GameMain.NilMod.ElectricalOverloadVoltRangeMin, GameMain.NilMod.ElectricalOverloadVoltRangeMax), GameMain.NilMod.ElectricalOverloadMinPower)) continue;
 
                 //damage the item if voltage is too high  
                 //(except if running as a client) 

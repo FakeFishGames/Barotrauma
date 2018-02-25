@@ -2111,6 +2111,7 @@ namespace Barotrauma
                     extraParams = 1;
                     spawnPos = cursorPos;
                     break;
+                case "inventory":
                     if (Character.Spied != null)
                     {
                         spawnInventory = Character.Spied.Inventory;
