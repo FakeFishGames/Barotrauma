@@ -1,18 +1,21 @@
 ﻿BAROTRAUMA
 
 www.undertowgames.com/barotrauma
-Copyright © Undertow Games 2018
+Copyright © Undertow Games 2017-2018
 
 Default controls:
-WASD			-	move
-Shift			-	run
-E			-	use/activate items and devices
-Right click		-	aim with equipped item
-Left click		-	use equipped item
-C			-	open the crew command menu
-Left control		-	crouch
-Tab			-	select/deselect the chat box in multiplayer mode
-F3			-	open/close console
+WASD		- move
+Shift		- run
+E		- use/activate items and devices
+Right click	- aim with equipped item
+Left click	- use equipped item
+C		- open the crew command menu
+Left control	- crouch
+Tab		- select/deselect the chat box in multiplayer mode
+Tilde		- select the chat box in multiplayer mode and set 
+		  the message to be sent through the radio
+Space		- hold to stay in ragdoll mode
+F3		- open/close the debug console
 
 See the wiki for more detailed info and instructions:
 http://barotrauma.gamepedia.com
@@ -26,9 +29,9 @@ Play) port forwarding by selecting "Attempt UPnP port forwarding" in the
 
 However, UPnP isn't supported by all routers, so you may need to setup port 
 forwards manually. The exact steps for forwarding a port depend on your
-router's model, but you may you may be able to find a port forwarding 
-guide for your particular router/application on portforward.com or by 
-practicing your google-fu skills.
+router's model, but you may be able to find a port forwarding guide for 
+your particular router/application on portforward.com or by practicing 
+your google-fu skills.
 
 These are the values that you should use when forwarding a port to your
 Barotrauma server:
