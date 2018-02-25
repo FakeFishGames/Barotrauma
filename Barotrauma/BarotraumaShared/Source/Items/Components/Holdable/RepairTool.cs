@@ -191,6 +191,7 @@ namespace Barotrauma.Items.Components
                     displayPos += item.CurrentHull.Submarine.Position;
 
                     Hull hull = Hull.FindHull(displayPos, item.CurrentHull);
+                    if (hull == null) continue;
                     foreach (FireSource fs in hull.FireSources)
                     {
                         hull.Extinguish(deltaTime, ExtinquishAmount, displayPos);
@@ -205,7 +206,6 @@ namespace Barotrauma.Items.Components
                 {
                     fs.Extinguish(deltaTime, ExtinquishAmount);
                 }
-
             }
 
 

@@ -1193,7 +1193,7 @@ namespace Barotrauma
                 }
             }
 
-            if(component.children.Find(c => c.State == GUIComponent.ComponentState.Hover
+            if(component != null && component.children.Find(c => c.State == GUIComponent.ComponentState.Hover
             || c.State == GUIComponent.ComponentState.Selected 
             || c.State == GUIComponent.ComponentState.Pressed) != null)
             {
