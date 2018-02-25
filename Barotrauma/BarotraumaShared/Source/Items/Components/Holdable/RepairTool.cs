@@ -235,6 +235,14 @@ namespace Barotrauma.Items.Components
                     Color.Red, Color.Green);
 
                 if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
+
+                Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
+                if (targetStructure.Submarine != null) particlePos += targetStructure.Submarine.DrawPosition; 
+                foreach (var emitter in ParticleEmitterHitStructure)
+                {
+                    float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                    emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                }
 #endif
 
                 targetStructure.AddDamage(sectionIndex, -StructureFixAmount * degreeOfSuccess, user);
