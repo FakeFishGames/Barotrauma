@@ -456,7 +456,8 @@ namespace Barotrauma.Tutorials
 
             while (loader.Item.ContainedItems.FirstOrDefault(i => i != null && i.Name == "Railgun Shell") == null)
             {
-                moloch.Health = 50.0f;
+                //TODO: reimplement
+                //moloch.Health = 50.0f;
 
                 capacitor1.Charge += 5.0f;
                 capacitor2.Charge += 5.0f;
@@ -657,7 +658,8 @@ namespace Barotrauma.Tutorials
             {
                 if (enemy == null || Character.Controlled == null) break;
 
-                enemy.Health = 50.0f;
+                //TODO: reimplement
+                //enemy.Health = 50.0f;
 
                 enemy.AIController.State = AIController.AIState.None;
 

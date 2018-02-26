@@ -194,7 +194,7 @@ namespace Barotrauma
                     if (!teamDead[i] && teamDead[1-i])
                     {
                         //make sure nobody in the other team can be revived because that would be pretty weird
-                        crews[1-i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeath.Damage); });
+                        crews[1-i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeathType.Unknown, null); });
 
                         winner = i;
 

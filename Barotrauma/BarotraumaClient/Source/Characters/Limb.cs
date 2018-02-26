@@ -56,7 +56,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            float brightness = 1.0f - (burnt / 100.0f) * 0.5f;
+            float brightness = 1.0f - (burnOverLayStrength / 100.0f) * 0.5f;
             Color color = new Color(brightness, brightness, brightness);
 
             if (isSevered)
@@ -118,7 +118,7 @@ namespace Barotrauma
                     scale, spriteEffect, depth);
             }
 
-            if (damage > 0.0f && damagedSprite != null && !hideLimb)
+            if (damageOverlayStrength > 0.0f && damagedSprite != null && !hideLimb)
             {
                 SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
@@ -126,7 +126,7 @@ namespace Barotrauma
 
                 damagedSprite.Draw(spriteBatch,
                     new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),
-                    color * Math.Min(damage / 50.0f, 1.0f), sprite.Origin,
+                    color * Math.Min(damageOverlayStrength / 50.0f, 1.0f), sprite.Origin,
                     -body.DrawRotation,
                     1.0f, spriteEffect, depth);
             }

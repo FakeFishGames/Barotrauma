@@ -142,7 +142,7 @@ namespace Barotrauma
                 Character.AnimController.TargetDir = Character.AnimController.TargetMovement.X > 0.0f ? Direction.Right : Direction.Left;
             }
         }
-
+        
         private void ReportProblems()
         {
             if (GameMain.Client != null) return;
@@ -173,7 +173,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Bleeding > 1.0f || Character.Health < Character.MaxHealth * 0.1f)
+            if (Character.Bleeding > 1.0f || Character.Vitality < Character.MaxVitality * 0.1f)
             {
                 var orderPrefab = Order.PrefabList.Find(o => o.AITag == "requestfirstaid");
                 newOrder = new Order(orderPrefab, Character.CurrentHull, null);
@@ -213,19 +213,18 @@ namespace Barotrauma
                 Character.Speak(TextManager.Get("DialogPressure").Replace("[roomname]", Character.CurrentHull.RoomName), null, 0, "pressure", 30.0f);
             }
         }
-
-        public override void OnAttacked(Character attacker, float amount)
+        
+        public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
-            if (amount <= 0.0f) return;
-            
-            if (attacker == null || attacker == Character) return;
+            float totalDamage = attackResult.Damage;
+            if (totalDamage <= 0.0f) return;
 
             objectiveManager.AddObjective(new AIObjectiveCombat(Character, attacker));
 
             //the objective in the manager is not necessarily the same as the one we just instantiated,
             //because the objective isn't added if there's already an identical objective in the manager
             var combatObjective = objectiveManager.GetObjective<AIObjectiveCombat>();
-            combatObjective.MaxEnemyDamage = Math.Max(amount, combatObjective.MaxEnemyDamage);
+            combatObjective.MaxEnemyDamage = Math.Max(totalDamage, combatObjective.MaxEnemyDamage);
         }
 
         public void SetOrder(Order order, string option)

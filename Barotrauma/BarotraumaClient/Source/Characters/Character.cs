@@ -29,8 +29,8 @@ namespace Barotrauma
             set
             {
                 if (controlled == value) return;
+                CharacterHealth.OpenHealthWindow = null;
                 controlled = value;
-                CharacterHUD.Reset();
 
                 if (controlled != null)
                 {
@@ -152,11 +152,11 @@ namespace Barotrauma
             DisableControls = false;
         }
 
-        partial void UpdateControlled(float deltaTime,Camera cam)
+        partial void UpdateControlled(float deltaTime, Camera cam)
         {
             if (controlled != this) return;
-            
-            ControlLocalPlayer(deltaTime, cam);            
+
+            ControlLocalPlayer(deltaTime, cam);
 
             Lights.LightManager.ViewTarget = this;
             CharacterHUD.Update(deltaTime, this);
@@ -171,20 +171,7 @@ namespace Barotrauma
                 hudProgressBars.Remove(pb.Key);
             }
         }
-
-        partial void DamageHUD(float amount)
-        {
-            if (controlled == this) CharacterHUD.TakeDamage(amount);
-        }
-
-        partial void UpdateOxygenProjSpecific(float prevOxygen)
-        {
-            if (prevOxygen > 0.0f && Oxygen <= 0.0f && controlled == this)
-            {
-                SoundPlayer.PlaySound("drown");
-            }
-        }
-
+        
         partial void KillProjSpecific()
         {
             if (GameMain.NetworkMember != null && controlled == this)
@@ -196,7 +183,7 @@ namespace Barotrauma
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
             }
-
+            
             PlaySound(CharacterSound.SoundType.Die);
         }
 
@@ -217,7 +204,7 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            if (info != null || health < maxHealth * 0.98f)
+            if (info != null || Vitality < MaxVitality * 0.98f)
             {
                 hudInfoTimer -= deltaTime;
                 if (hudInfoTimer <= 0.0f)
@@ -241,6 +228,11 @@ namespace Barotrauma
                     hudInfoTimer = Rand.Range(0.5f, 1.0f);
                 }
             }
+
+            if (controlled == this)
+            {
+                health.UpdateHUD(deltaTime);
+            }
         }
 
         public static void AddAllToGUIUpdateList()
@@ -256,6 +248,7 @@ namespace Barotrauma
             if (controlled == this)
             {
                 CharacterHUD.AddToGUIUpdateList(this);
+                health.AddToGUIUpdateList();
             }
         }
         
@@ -269,6 +262,7 @@ namespace Barotrauma
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam)
         {
             CharacterHUD.Draw(spriteBatch, this, cam);
+            health.DrawHUD(spriteBatch, new Vector2(0.0f, 0.0f));
         }
 
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
@@ -331,13 +325,13 @@ namespace Barotrauma
             }
 
             if (isDead) return;
-
-            if (health < maxHealth * 0.98f && hudInfoVisible)
+            
+            if (Vitality < MaxVitality * 0.98f && hudInfoVisible)
             {
                 Vector2 healthBarPos = new Vector2(pos.X - 50, DrawPosition.Y + 100.0f);
-                GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f), 
-                    health / maxHealth, 
-                    Color.Lerp(Color.Red, Color.Green, health / maxHealth) * 0.8f * hudInfoAlpha,
+                GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f),
+                    Vitality / MaxVitality, 
+                    Color.Lerp(Color.Red, Color.Green, Vitality / MaxVitality) * 0.8f * hudInfoAlpha,
                     new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
             }
         }

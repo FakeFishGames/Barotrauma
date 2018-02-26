@@ -522,7 +522,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
         
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null)
         {
             if (statusEffectLists == null) return;
 
@@ -531,7 +531,7 @@ namespace Barotrauma.Items.Components
 
             foreach (StatusEffect effect in statusEffects)
             {
-                item.ApplyStatusEffect(effect, type, deltaTime, character);
+                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb);
             }
         }
         

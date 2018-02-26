@@ -498,8 +498,8 @@ namespace Barotrauma.Lights
                     }
                 }
             }
-
-            Pair<int,Vector2> retVal = new Pair<int,Vector2>(segment, closestIntersection == null ? rayEnd : (Vector2)closestIntersection);
+            
+            Pair<int, Vector2> retVal = new Pair<int, Vector2>(segment, closestIntersection == null ? rayEnd : (Vector2)closestIntersection);
             return retVal;
         }
 

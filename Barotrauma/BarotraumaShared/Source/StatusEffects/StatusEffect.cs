@@ -14,7 +14,7 @@ namespace Barotrauma
         public StatusEffect Parent;
         public Entity Entity;
         public List<ISerializableEntity> Targets;
-        public float StartTimer;
+        public float Timer;
     }
 
     partial class StatusEffect
@@ -22,7 +22,7 @@ namespace Barotrauma
         [Flags]
         public enum TargetType
         {
-            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget = 32, Hull = 64
+            This = 1, Parent = 2, Character = 4, Contained = 8, Nearby = 16, UseTarget = 32, Hull = 64, Limb = 128, AllLimbs = 256
         }
 
         private TargetType targetTypes;
@@ -58,7 +58,7 @@ namespace Barotrauma
 
         private readonly int useItemCount;
 
-        public readonly ActionType type;
+        public readonly ActionType type = ActionType.OnActive;
 
         private Explosion explosion;
 
@@ -78,6 +78,14 @@ namespace Barotrauma
         {
             get { return onContainingNames; }
         }
+
+        public List<Affliction> Afflictions
+        {
+            get;
+            private set;
+        }
+
+        private List<Pair<string, float>> ReduceAffliction;
 
         public string Tags
         {
@@ -110,6 +118,8 @@ namespace Barotrauma
         protected StatusEffect(XElement element)
         {
             requiredItems = new List<RelatedItem>();
+            Afflictions = new List<Affliction>();
+            ReduceAffliction = new List<Pair<string, float>>();
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
 
 #if CLIENT
@@ -226,6 +236,25 @@ namespace Barotrauma
                             propertyConditionals.Add(new PropertyConditional(attribute));
                         }
                         break;
+                    case "affliction":
+                        string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
+                        float afflictionStrength = subElement.GetAttributeFloat("strength", 1.0f);
+
+                        AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
+                        if (afflictionPrefab == null)
+                        {
+                            DebugConsole.ThrowError("Affliction prefab \"" + afflictionName + "\" not found.");
+                        }
+                        else
+                        {
+                            Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                        }
+                        break;
+                    case "reduceaffliction":
+                        ReduceAffliction.Add(new Pair<string, float>(
+                            subElement.GetAttributeString("name", "").ToLowerInvariant(),
+                            subElement.GetAttributeFloat("reduceamount", 1.0f)));
+                        break;
 #if CLIENT
                     case "particleemitter":
                         particleEmitters.Add(new ParticleEmitter(subElement));
@@ -335,21 +364,32 @@ namespace Barotrauma
                     sound.Play(entity.WorldPosition);
                 }
             }
-#endif
-            
-            for (int i = 0; i < useItemCount; i++)
+#endif            
+
+            foreach (ISerializableEntity serializableEntity in targets)
             {
-                foreach (Item item in targets.FindAll(t => t is Item).Cast<Item>())
+                Item item = serializableEntity as Item;
+                if (item == null) continue;
+
+                Character targetCharacter = targets.FirstOrDefault(t => t is Character) as Character;
+                if (targetCharacter == null)
                 {
-                    item.Use(deltaTime, targets.FirstOrDefault(t => t is Character) as Character);
+                    foreach (var target in targets)
+                    {
+                        if (target is Limb) targetCharacter = ((Limb)target).character;
+                    }
                 }
-            }
+                for (int i = 0; i < useItemCount; i++)
+                {
+                    item.Use(deltaTime, targetCharacter, targets.FirstOrDefault(t => t is Limb) as Limb);
+                }
+            }                     
 
             if (duration > 0.0f)
             {
                 DurationListElement element = new DurationListElement();
                 element.Parent = this;
-                element.StartTimer = duration;
+                element.Timer = duration;
                 element.Entity = entity;
                 element.Targets = targets;
 
@@ -370,9 +410,23 @@ namespace Barotrauma
                 }                
             }
 
-
             if (explosion != null) explosion.Explode(entity.WorldPosition);
 
+            foreach (Affliction affliction in Afflictions)
+            {
+                foreach (ISerializableEntity target in targets)
+                {
+                    if (target is Character)
+                    {
+                        ((Character)target).CharacterHealth.ApplyAffliction(null, affliction);
+                    }
+                    else if (target is Limb)
+                    {
+                        Limb limb = (Limb)target;
+                        limb.character.CharacterHealth.ApplyAffliction(limb, affliction);
+                    }
+                }
+            }
             
             Hull hull = null;
             if (entity is Character) 
@@ -451,16 +505,40 @@ namespace Barotrauma
                     for (int n = 0; n < element.Parent.propertyNames.Length; n++)
                     {
                         SerializableProperty property;
-
                         if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(element.Parent.propertyNames[n], out property)) continue;
-
                         element.Parent.ApplyToProperty(property, element.Parent.propertyEffects[n], CoroutineManager.UnscaledDeltaTime);
+                    }
+
+                    foreach (Affliction affliction in element.Parent.Afflictions)
+                    {
+                        if (target is Character)
+                        {
+                            ((Character)target).CharacterHealth.ApplyAffliction(null, affliction.CreateMultiplied(deltaTime));
+                        }
+                        else if (target is Limb)
+                        {
+                            Limb limb = (Limb)target;
+                            limb.character.CharacterHealth.ApplyAffliction(limb, affliction.CreateMultiplied(deltaTime));
+                        }
+                    }
+
+                    foreach (Pair<string,float> reduceAffliction in element.Parent.ReduceAffliction)
+                    {
+                        if (target is Character)
+                        {
+                            ((Character)target).CharacterHealth.ReduceAffliction(null, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                        }
+                        else if (target is Limb)
+                        {
+                            Limb limb = (Limb)target;
+                            limb.character.CharacterHealth.ReduceAffliction(limb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
+                        }
                     }
                 }
 
-                element.StartTimer -= deltaTime;
+                element.Timer -= deltaTime;
 
-                if (element.StartTimer > 0.0f) continue;
+                if (element.Timer > 0.0f) continue;
                 DurationList.Remove(element);
             }
         }

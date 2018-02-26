@@ -691,7 +691,7 @@ namespace Barotrauma
         }
 
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (statusEffectLists == null) return;
 
@@ -700,11 +700,11 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
-                ApplyStatusEffect(effect, type, deltaTime, character, isNetworkEvent);
+                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent);
             }
         }
         
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
         {
             if (!isNetworkEvent)
             {
@@ -768,6 +768,15 @@ namespace Barotrauma
 
             if (effect.Targets.HasFlag(StatusEffect.TargetType.Character)) targets.Add(character);
 
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.Limb))
+            {
+                targets.Add(limb);
+            }
+            if (effect.Targets.HasFlag(StatusEffect.TargetType.AllLimbs))
+            {
+                targets.AddRange(character.AnimController.Limbs.ToList());
+            }
+
             if (Container != null && effect.Targets.HasFlag(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
             effect.Apply(type, deltaTime, this, targets);            
@@ -781,7 +790,7 @@ namespace Barotrauma
             float damageAmount = attack.GetStructureDamage(deltaTime);
             Condition -= damageAmount;
 
-            return new AttackResult(damageAmount, 0.0f, null);
+            return new AttackResult(damageAmount, null);
         }
 
         private bool IsInWater()
@@ -1179,7 +1188,7 @@ namespace Barotrauma
         }
 
 
-        public void Use(float deltaTime, Character character = null)
+        public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
             if (condition == 0.0f) return;
 
@@ -1196,7 +1205,7 @@ namespace Barotrauma
                     ic.PlaySound(ActionType.OnUse, WorldPosition);
 #endif
     
-                    ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character);
+                    ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
 
                     if (ic.DeleteOnUse) remove = true;
                 }
@@ -1347,9 +1356,14 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     ActionType actionType = (ActionType)extraData[1];
                     ushort targetID = extraData.Length > 2 ? (ushort)extraData[2] : (ushort)0;
+                    Limb targetLimb = extraData.Length > 3 ? (Limb)extraData[3] : null;
+
+                    Character targetCharacter = FindEntityByID(targetID) as Character;
+                    byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
                     msg.WriteRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
                     msg.Write(targetID);
+                    msg.Write(targetLimbIndex);
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     WritePropertyChange(msg, extraData);
@@ -1394,7 +1408,15 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     if (c.Character == null || !c.Character.CanInteractWith(this)) return;
 
-                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, c.Character);
+                    UInt16 characterID = msg.ReadUInt16();
+                    byte limbIndex = msg.ReadByte();
+
+                    Character targetCharacter = FindEntityByID(characterID) as Character;
+                    if (targetCharacter == null) break;
+                    if (targetCharacter != c.Character && c.Character.SelectedCharacter != targetCharacter) break;
+
+                    Limb targetLimb = limbIndex < targetCharacter.AnimController.Limbs.Length ? targetCharacter.AnimController.Limbs[limbIndex] : null;
+                    ApplyStatusEffects(ActionType.OnUse, (float)Timing.Step, targetCharacter, targetLimb);
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {

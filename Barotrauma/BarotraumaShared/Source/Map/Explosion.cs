@@ -25,7 +25,7 @@ namespace Barotrauma
 
         public Explosion(float range, float force, float damage, float structureDamage, float empStrength = 0.0f)
         {
-            attack = new Attack(damage, structureDamage, 0.0f, range);
+            attack = new Attack(damage, 0.0f, 0.0f, structureDamage, range);
             attack.SeverLimbsProbability = 1.0f;
             this.force = force;
             this.empStrength = empStrength;
@@ -100,7 +100,7 @@ namespace Barotrauma
                 }
             }
 
-            if (force == 0.0f && attack.Stun == 0.0f && attack.GetDamage(1.0f) == 0.0f) return;
+            if (force == 0.0f && attack.Stun == 0.0f && attack.GetTotalDamage(false) == 0.0f) return;
 
             ApplyExplosionForces(worldPosition, attack, force);
 
@@ -172,12 +172,13 @@ namespace Barotrauma
                     if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null) distFactor *= 0.1f;
                     
                     distFactors.Add(limb, distFactor);
-
-                    c.AddDamage(limb.WorldPosition, DamageType.None,
-                        attack.GetDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 
-                        attack.GetBleedingDamage(1.0f) / c.AnimController.Limbs.Length * distFactor, 
-                        attack.Stun * distFactor, 
-                        false);
+                    
+                    List<Affliction> modifiedAfflictions = new List<Affliction>();
+                    foreach (Affliction affliction in attack.Afflictions)
+                    {
+                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor));
+                    }
+                    c.AddDamage(limb.WorldPosition, modifiedAfflictions, attack.Stun * distFactor, false);
 
                     if (limb.WorldPosition != worldPosition && force > 0.0f)
                     {
